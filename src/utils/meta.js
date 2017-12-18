@@ -54,15 +54,7 @@ export function removeMeta(action, metaType) {
   while (currentNode.action) {
 
     if (currentNode.metaType === metaType) {
-
-      // If the match is at the top layer, just return the next layer
-      if (!prevNode) return currentNode.action
-
-      // If the match is at least one layer deep, swap out the target layer
-      // and return the new root of the meta chain
-      prevNode.action = currentNode.action
-
-      return rootNode
+      return getNewRoot(currentNode, prevNode, rootNode)
     }
 
     // Move down the chain
@@ -81,4 +73,20 @@ export function removeMeta(action, metaType) {
 
   // No match found; return the original meta chain
   return action
+}
+
+
+
+
+
+function getNewRoot(currentNode, prevNode, rootNode) {
+
+  // If the match is at the top layer, just return the next layer
+  if (!prevNode) return currentNode.action
+
+  // If the match is at least one layer deep, swap out the target layer
+  // and return the new root of the meta chain
+  prevNode.action = currentNode.action
+
+  return rootNode
 }
