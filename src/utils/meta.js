@@ -60,15 +60,13 @@ export function removeMeta(action, metaType) {
     // Move down the chain
     let clonedNode = { ...currentNode }
 
-    if (prevNode) prevNode.action = clonedNode
+    prevNode && (prevNode.action = clonedNode)
 
     prevNode = clonedNode
     currentNode = currentNode.action
 
     // If this will be the new root, remember it
-    if (!rootNode) {
-      rootNode = prevNode
-    }
+    rootNode || (rootNode = prevNode)
   }
 
   // No match found; return the original meta chain
