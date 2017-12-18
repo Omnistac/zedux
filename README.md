@@ -1,5 +1,7 @@
 # Zedux
 
+[![Build Status](https://travis-ci.org/bowheart/zedux.svg?branch=master)](https://travis-ci.org/bowheart/zedux)
+
 The complete state management solution.
 
 Zedux is a futuristic Redux. It conforms to *almost* every philosophy of Redux, while opinionatedly straying when it thinks there may be a better way.
