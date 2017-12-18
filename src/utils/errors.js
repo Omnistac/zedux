@@ -15,6 +15,15 @@ export function assertAreFunctions(args, method) {
 }
 
 
+export function assertIsNullHierarchyDescriptorNode(node) {
+  if (node === null || typeof node === 'undefined') {
+    return
+  }
+
+  throw new TypeError(invalidHierarchyDescriptorNode(node))
+}
+
+
 export function assertIsPlainObject(action, entityName) {
   if (!isPlainObject(action)) {
     throw new TypeError(invalidNonPlainObject(action, entityName))
@@ -88,9 +97,9 @@ export function invalidDispatch() {
 }
 
 
-export function invalidNode(node) {
+export function invalidHierarchyDescriptorNode(node) {
   return `${PREFIX} store.use()
-    Nodes must be functions (reducers), plain objects, or other stores.
+    Hierarchy descriptor nodes must be reducers, plain objects, or stores.
     Received ${detailedTypeof(node)}`
 }
 

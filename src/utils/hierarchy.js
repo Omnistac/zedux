@@ -1,4 +1,8 @@
-import { invalidDelegation, invalidNode } from './errors'
+import {
+  assertIsNullHierarchyDescriptorNode,
+  invalidDelegation
+} from './errors'
+
 import { addMeta, getMetaPayload, removeMeta } from './meta'
 import { isPlainObject, isZeduxStore } from './general'
 import { actionTypes, metaTypes } from '../api/constants'
@@ -61,9 +65,9 @@ export function getHierarchyNodeType(node) {
   if (typeof node === 'function') return REACTOR
 
   if (!isPlainObject(node)) {
-    if (node === null || typeof node === 'undefined') return NULL
+    assertIsNullHierarchyDescriptorNode(node)
 
-    throw new TypeError(invalidNode(node))
+    return NULL
   }
 
   return isZeduxStore(node)

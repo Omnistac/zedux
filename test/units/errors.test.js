@@ -1,5 +1,6 @@
 import {
   assertAreFunctions,
+  assertIsNullHierarchyDescriptorNode,
   assertIsPlainObject,
   assertIsValidAction,
   assertIsValidActor,
@@ -9,7 +10,7 @@ import {
   invalidActor,
   invalidDelegation,
   invalidDispatch,
-  invalidNode,
+  invalidHierarchyDescriptorNode,
   invalidNodeOptionKey,
   invalidNonFunction,
   invalidNonPlainObject
@@ -20,7 +21,7 @@ import {
 } from '../utils'
 
 
-describe('assertAreFunctions', () => {
+describe('assertAreFunctions()', () => {
 
   test('throws a TypeError if any items are not functions', () => {
 
@@ -47,7 +48,28 @@ describe('assertAreFunctions', () => {
 })
 
 
-describe('assertIsPlainObject', () => {
+describe('assertIsNullHierarchyDescriptorNode()', () => {
+
+  test('throws a TypeError if the node is not null or undefined', () => {
+
+    nonPlainObjects.slice(0, 2).forEach(
+      nullObject => expect(
+        assertIsNullHierarchyDescriptorNode.bind(null, nullObject)
+      ).not.toThrow
+    )
+
+    nonPlainObjects.slice(2).forEach(
+      nonNullObject => expect(
+        assertIsNullHierarchyDescriptorNode.bind(null, nonNullObject)
+      ).toThrow(TypeError)
+    )
+
+  })
+
+})
+
+
+describe('assertIsPlainObject()', () => {
 
   test('throws a TypeError if the action is not a plain object', () => {
 
@@ -187,7 +209,7 @@ describe('invalidAccess()', () => {
 })
 
 
-describe('invalidAction', () => {
+describe('invalidAction()', () => {
 
   test('returns a string containing the detailed type of the invalid "type" property', () => {
 
@@ -212,7 +234,7 @@ describe('invalidAction', () => {
 })
 
 
-describe('invalidActor', () => {
+describe('invalidActor()', () => {
 
   test('returns a string containing the type of the invalid actor', () => {
 
@@ -267,17 +289,17 @@ describe('invalidDispatch()', () => {
 })
 
 
-describe('invalidNode()', () => {
+describe('invalidHierarchyDescriptorNode()', () => {
 
   test('returns a string containing the detailed type of the invalid node', () => {
 
-    expect(invalidNode('a')).toMatch(/received string/i)
+    expect(invalidHierarchyDescriptorNode('a')).toMatch(/received string/i)
 
-    expect(invalidNode(1)).toMatch(/received number/i)
+    expect(invalidHierarchyDescriptorNode(1)).toMatch(/received number/i)
 
-    expect(invalidNode([])).toMatch(/received array/i)
+    expect(invalidHierarchyDescriptorNode([])).toMatch(/received array/i)
 
-    expect(invalidNode(null)).toMatch(/received null/i)
+    expect(invalidHierarchyDescriptorNode(null)).toMatch(/received null/i)
 
   })
 
@@ -297,7 +319,7 @@ describe('invalidNodeOptionKey()', () => {
 })
 
 
-describe('invalidNonFunction', () => {
+describe('invalidNonFunction()', () => {
 
   test('returns a string containg the basic type of the invalid argument', () => {
 
