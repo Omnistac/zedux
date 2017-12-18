@@ -53,6 +53,19 @@ export function detailedTypeof(thing) {
   if (!thing) return NULL
   if (Array.isArray(thing)) return ARRAY
 
+  return getDetailedObjectType(thing)
+}
+
+
+
+
+
+/**
+  Determines which kind of object an "object" is.
+
+  Objects can be prototype-less, complex, or plain.
+*/
+function getDetailedObjectType(thing) {
   let prototype = Object.getPrototypeOf(thing)
 
   if (!prototype) return NO_PROTOTYPE
