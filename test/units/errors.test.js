@@ -4,7 +4,6 @@ import {
   assertIsValidAction,
   assertIsValidActor,
   assertIsValidNodeOption,
-  assertStoreIsConfigured,
   invalidAccess,
   invalidAction,
   invalidActor,
@@ -169,23 +168,6 @@ describe('assertIsValidNodeOption()', () => {
     expect(
       assertIsValidNodeOption.bind(null, validOptions, 'clone', 'a')
     ).toThrow(TypeError)
-
-  })
-
-})
-
-
-describe('assertStoreIsConfigured()', () => {
-
-  test('throws an Error if rootReactor is falsy', () => {
-
-    expect(
-      assertStoreIsConfigured
-    ).toThrow(Error)
-
-    expect(
-      assertStoreIsConfigured.bind(null, () => {})
-    ).not.toThrow()
 
   })
 

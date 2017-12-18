@@ -50,13 +50,6 @@ export function assertIsValidNodeOption(validOptions, optionKey, optionValue) {
 }
 
 
-export function assertStoreIsConfigured(rootReactor) {
-  if (!rootReactor) {
-    throw new Error(invalidDispatch())
-  }
-}
-
-
 export function invalidAccess(method) {
   return `${PREFIX} ${method}
     This method cannot be called within a reducer.`
