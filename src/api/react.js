@@ -1,4 +1,5 @@
 import { assertIsValidActor } from '../utils/errors'
+import { slice } from '../utils/general'
 import { processableToPromise } from '../utils/processable'
 
 
@@ -17,40 +18,17 @@ export function react(initialState) {
   let currentActionTypes = []
 
 
-  const reactor = (state = initialState, action) => {
-    const actionType = action.type
+  const reactor = (state = initialState, action) =>
+    handleReactorLayer(actionToReducersMap, runReducers, state, action)
 
-    const reducers = [
-      ...actionToReducersMap[actionType] || [],
-      ...actionToReducersMap[GLOBAL_ACTION_TYPE] || []
-    ]
 
-    return runReducers(reducers, state, action)
+  reactor.process = (a, b, c) => {
+    handleReactorLayer(actionToProcessorsMap, runProcessors, a, b, c)
   }
 
 
-  reactor.process = (dispatch, action, state) => {
-    const actionType = action.type
-
-    const processors = [
-      ...actionToProcessorsMap[actionType] || [],
-      ...actionToProcessorsMap[GLOBAL_ACTION_TYPE] || []
-    ]
-
-    runProcessors(processors, dispatch, action, state)
-  }
-
-
-  reactor.to = (...actors) => {
-    currentActionTypes = actors.map(actor => {
-
-      // The "actor" may be a literal action type string
-      if (typeof actor === 'string') return actor
-
-      assertIsValidActor(actor)
-
-      return actor.type
-    })
+  reactor.to = function() {
+    currentActionTypes = extractActionTypes(slice.call(arguments))
 
     return reactor // for chaining
   }
@@ -63,31 +41,23 @@ export function react(initialState) {
   }
 
 
-  reactor.withProcessors = (...processors) => {
-    currentActionTypes.forEach(actionType => {
-      processors.forEach(processor => {
-
-        if (!actionToProcessorsMap[actionType]) {
-          actionToProcessorsMap[actionType] = []
-        }
-        actionToProcessorsMap[actionType].push(processor)
-      })
-    })
+  reactor.withProcessors = function() {
+    mapActionTypesToConsumers(
+      actionToProcessorsMap,
+      currentActionTypes,
+      arguments
+    )
 
     return reactor // for chaining
   }
 
 
-  reactor.withReducers = (...reducers) => {
-    currentActionTypes.forEach(actionType => {
-      reducers.forEach(reducer => {
-
-        if (!actionToReducersMap[actionType]) {
-          actionToReducersMap[actionType] = []
-        }
-        actionToReducersMap[actionType].push(reducer)
-      })
-    })
+  reactor.withReducers = function() {
+    mapActionTypesToConsumers(
+      actionToReducersMap,
+      currentActionTypes,
+      arguments
+    )
 
     return reactor // for chaining
   }
@@ -100,9 +70,48 @@ export function react(initialState) {
 
 
 
-function runProcessors(processors, ...args) {
+function extractActionTypes(actors) {
+  return actors.map(actor => {
+
+    // The "actor" may be a literal action type string
+    if (typeof actor === 'string') return actor
+
+    assertIsValidActor(actor)
+
+    return actor.type
+  })
+}
+
+
+function handleReactorLayer(map, callback, a, action, b) {
+  const actionType = action.type
+
+  const reducers = [
+    ...map[actionType] || [],
+    ...map[GLOBAL_ACTION_TYPE] || []
+  ]
+
+  return callback.apply(null, [ reducers, a, action, b ])
+}
+
+
+function mapActionTypesToConsumers(map, actionTypes, consumers) {
+  actionTypes.forEach(actionType => {
+    for (let i = 0; i < consumers.length; i++) {
+
+      if (!map[actionType]) {
+        map[actionType] = []
+      }
+
+      map[actionType].push(consumers[i])
+    }
+  })
+}
+
+
+function runProcessors(processors, dispatch, action, state) {
   processors.forEach(processor => {
-    const processable = processor(...args)
+    const processable = processor(dispatch, action, state)
 
     processableToPromise(processable)
   })

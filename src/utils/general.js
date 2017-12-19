@@ -10,6 +10,30 @@ export const PLAIN_OBJECT = 'object'
 export const STORE_IDENTIFIER = Symbol.for('zedux.store')
 
 
+// We're avoiding parameter spreading for now, as each spread adds
+// 50+ bytes in the minified build. So, here's the old-school slicer:
+export const slice = [].slice
+
+
+/**
+  Returns a more informative description of thing's type.
+
+  Used to give users helpful error messages that detail exactly why
+  their input was rejected, rather than ux nightmares like:
+
+  "expected a plain object, received object"
+*/
+export function detailedTypeof(thing) {
+  let thingType = typeof thing
+
+  if (thingType !== 'object') return thingType
+  if (!thing) return NULL
+  if (Array.isArray(thing)) return ARRAY
+
+  return getDetailedObjectType(thing)
+}
+
+
 /**
   Checks whether thing is a plain old object.
 
@@ -35,25 +59,6 @@ export function isPlainObject(thing) {
 */
 export function isZeduxStore(thing) {
   return thing.$$typeof === STORE_IDENTIFIER
-}
-
-
-/**
-  Returns a more informative description of thing's type.
-
-  Used to give users helpful error messages that detail exactly why
-  their input was rejected, rather than ux nightmares like:
-
-  "expected a plain object, received object"
-*/
-export function detailedTypeof(thing) {
-  let thingType = typeof thing
-
-  if (thingType !== 'object') return thingType
-  if (!thing) return NULL
-  if (Array.isArray(thing)) return ARRAY
-
-  return getDetailedObjectType(thing)
 }
 
 
