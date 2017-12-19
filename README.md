@@ -168,7 +168,7 @@ const newState = store.dispatch()
 
 ### To be continued...
 
-That does it for the quick start. Check out the [full documentation](https://bowheart.github.io/zedux/docs/overview) for the real cool stuff. Here's a little taste of what's in store (Yes, that pun was an accident. No, I don't like calamari):
+That does it for the quick start. Check out the [full documentation](https://bowheart.github.io/zedux/docs/overview) for the real cool stuff. Here's a little taste of what's in store (yes, that pun was an accident):
 
 - Standardized reducer creation (kills string constants and switch statements/action-reducer maps).
 
