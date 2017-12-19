@@ -4,21 +4,21 @@
 
 Zedux is a complete tool for state management featuring:
 
-- (Optional) [Zero configuration](/docs/guides/zeroConfiguration.md)
+- (Optional) [Zero configuration](/docs/guides/zeroConfiguration.md).
 
-- [Dispatchable reducers](/docs/guides/dispatchableReducers.md)
+- [Dispatchable reducers](/docs/guides/dispatchableReducers.md).
 
-- Store composition
+- Store composition.
 
 - Built-in support for running generators and observables.
 
-- Easy code splitting
+- Easy code splitting.
 
-- State machines
+- State machines.
 
-- Composable, memoized [selectors](/docs/types/Selector.md)
+- Composable, memoized [selectors](/docs/types/Selector.md).
 
-- Giant [performance optimizations](/docs/guides/optimizingPerformance.md)
+- Giant [performance optimizations](/docs/guides/optimizingPerformance.md).
 
 - [Meta chains](/docs/guides/metaChains.md) with standard meta types.
 
@@ -70,7 +70,7 @@ And here are some differences:
 
 Zedux conforms to the Redux philosophy that a single store contains the state of the entire application. But it doesn't conform to the philosophy that there should only be one store. Zedux actually encourages that self-contained pieces of state be housed in their own store. This allows for massive performance optimizations and better modularization.
 
-But there should only be one **root** store. All other stores should find themselves somewhere in the hierarchy descriptor of another store.
+**But** there should only be one **root** store. All other stores should find themselves somewhere in the hierarchy descriptor of another store.
 
 ## Why does it try to do so much?
 
@@ -84,7 +84,7 @@ Because. Apps. Scale. This is a point that Redux doesn't address at all.
 
 How many small applications decided against Redux at first, then grew to the point of sorely regretting that decision? How many medium-sized applications chose Redux, then grew to the point that the verbosity became unmaintainable and the number of plugins spiked the learning curve beyond reason?
 
-While Zedux doesn't aim to eliminate plugins, it does aim to reduce their quantity. In their place, it offers a uniform, often orthogonal api across all common aspects of state management. This drastically reduces both boilerplate and the steepness of the learning curve.
+While Zedux doesn't aim to eliminate plugins, it does aim to reduce their quantity. In their place, it offers a uniform, often orthogonal api across all common aspects of state management. This drastically reduces boilerplate, overall code size, and the steepness of the learning curve.
 
 ## No more middleware?
 
