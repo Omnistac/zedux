@@ -38,7 +38,7 @@ To learn by example, check out the [examples doc page](https://bowheart.github.i
 
 To learn by getting dirty, have a play with [this codepen](https://codepen.io/bowheart/pen/MrKMmw?editors=0010).
 
-To learn from me, check out the [documentation](https://bowheart.github.io/zedux/docs/overview).
+To learn from us, check out the [documentation](https://bowheart.github.io/zedux/docs/overview).
 
 To learn comprehensively, check out [the tests](https://github.com/bowheart/zedux/tree/master/test).
 
@@ -241,7 +241,7 @@ todosStore.dispatch({
 
 ## It seems too big
 
-Mm. It really isn't. You may think this because Redux is so tiny. But compare it to something like Rx, which is a complete solution in its field, and Zedux is very tiny. Currently it's almost twice the size of Redux, but accomplishes way more than twice as much. In fact, given the reduced number of plugins, your app's dependencies will almost certainly be smaller with Zedux than with Redux.
+Mm. It really isn't. You may think this because Redux is so tiny. But compare it to something like [Rx](https://github.com/Reactive-Extensions/RxJS), which is a complete solution in its field, and Zedux is very tiny. Currently it's almost twice the size of Redux, but accomplishes way more than twice as much. In fact, given the reduced number of plugins, your app's dependencies will almost certainly be smaller with Zedux than with Redux.
 
 That said, if we find that anything is not used enough to make it worth including in Zedux core, we'll definitely take it out. On the flip side, if any features are sorely needed and not included, we'll gladly consider including them. Zedux has only a faint coat of feature-creep repellent.
 
