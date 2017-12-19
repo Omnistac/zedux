@@ -26,7 +26,7 @@ Zedux is a complete tool for state management featuring:
 
 Zedux is, as its name suggests, based on Redux. Here are some ideologies they both share:
 
-- A reactor hierarchy drives state creation and updates.
+- A reducer hierarchy drives state creation and updates.
 
 - A single store contains the state of the entire application.
 
