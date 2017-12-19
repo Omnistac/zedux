@@ -33,11 +33,11 @@ Or include the appropriate unpkg build on your page:
 
 ## Getting started
 
-To learn by example, check out the [examples doc page](https://bowheart.github.io/zedux/examples) or the [examples in the repo](https://github.com/bowheart/zedux/tree/master/examples).
+To learn by example, check out the [examples doc page](https://bowheart.github.io/zedux/docs/examples) or the [examples in the repo](https://github.com/bowheart/zedux/tree/master/examples).
 
 To learn by getting dirty, have a play with [this codepen](https://codepen.io/bowheart/pen/MrKMmw?editors=0010).
 
-To learn from me, check out the [documentation](https://bowheart.github.io/zedux/overview).
+To learn from me, check out the [documentation](https://bowheart.github.io/zedux/docs/overview).
 
 To learn comprehensively, check out [the tests](https://github.com/bowheart/zedux/tree/master/test).
 
@@ -169,7 +169,7 @@ const newState = store.dispatch()
 
 That does it for the quick start. Check out the [full documentation](https://bowheart.github.io/zedux/docs/overview) for the real cool stuff. Here's a little taste of what's in store (Yes, that pun was an accident. No, I don't like calamari):
 
-- Standardized reducer creation (kills string constants and switch statements/action-reducer maps)
+- Standardized reducer creation (kills string constants and switch statements/action-reducer maps).
 
 ```javascript
 import { act, react } from 'zedux'
@@ -185,7 +185,7 @@ function createTodoReducer(state, { payload: newTodo }) {
 }
 ```
 
-- Composable, memoized selectors
+- Composable, memoized selectors.
 
 ```javascript
 import { select } from 'zedux'
@@ -198,7 +198,7 @@ export const selectIncompleteTodos = select(
 )
 ```
 
-- meta chains and standard meta types for some sick optimizations
+- Meta chains and standard meta types that allow store composition and some sick optimizations.
 
 ```javascript
 import { metaTypes } from 'zedux'
@@ -212,7 +212,7 @@ store.dispatch({
 })
 ```
 
-- store composition! With a whole lot of support for loads of crazy inter-store communication. A benchmarker's dream.
+- Store composition! With a whole lot of support for loads of crazy inter-store communication. A benchmarker's dream.
 
 ```javascript
 import { createStore } from 'zedux'
