@@ -1,12 +1,15 @@
+const PREFIX = '@@zedux/'
+
+
 export const actionTypes = {
-  HYDRATE: '@@zedux/hydrate',
-  RECALCULATE: '@@zedux/recalculate'
+  HYDRATE: `${PREFIX}hydrate`,
+  RECALCULATE: `${PREFIX}recalculate`
 }
 
 
 export const metaTypes = {
-  DELEGATE: '@@zedux/delegate',
-  INHERIT: '@@zedux/inherit',
-  SKIP_PROCESSORS: '@@zedux/skipProcessors',
-  SKIP_REDUCERS: '@@zedux/skipReducers'
+  DELEGATE: `${PREFIX}delegate`,
+  INHERIT: `${PREFIX}inherit`,
+  SKIP_PROCESSORS: `${PREFIX}skipProcessors`,
+  SKIP_REDUCERS: `${PREFIX}skipReducers`
 }
