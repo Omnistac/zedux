@@ -90,12 +90,6 @@ export const invalidDelegation = isProd ? prodErr : subStorePath =>
     + `${subStorePath.join` -> `}`
 
 
-export const invalidDispatch = isProd ? prodErr : () =>
-  `${PREFIX} store.dispatch() - `
-    + 'Store not yet configured; cannot dispatch action. '
-    + '(Did you forget to pass your reactor hierarchy to "store.use()"?)'
-
-
 export const invalidHierarchyDescriptorNode = isProd ? prodErr : node =>
   `${PREFIX} store.use() - `
     + 'Hierarchy descriptor nodes must be reducers, plain objects, or stores. '

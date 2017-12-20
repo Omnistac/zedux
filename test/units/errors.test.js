@@ -9,7 +9,6 @@ import {
   invalidAction,
   invalidActor,
   invalidDelegation,
-  invalidDispatch,
   invalidHierarchyDescriptorNode,
   invalidNodeOptionKey,
   invalidNonFunction,
@@ -270,19 +269,6 @@ describe('invalidDelegation()', () => {
     let subStorePath = [ 'a', 'b', 'c' ]
 
     expect(invalidDelegation(subStorePath)).toMatch(subStorePath.join` -> `)
-
-  })
-
-})
-
-
-describe('invalidDispatch()', () => {
-
-  test('returns a helpful error message', () => {
-
-    expect(
-      invalidDispatch()
-    ).toMatch(/did you forget to pass your reactor hierarchy/i)
 
   })
 
