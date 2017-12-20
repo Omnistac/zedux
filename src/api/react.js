@@ -22,8 +22,8 @@ export function react(initialState) {
     handleReactorLayer(actionToReducersMap, runReducers, state, action)
 
 
-  reactor.process = (a, b, c) => {
-    handleReactorLayer(actionToProcessorsMap, runProcessors, a, b, c)
+  reactor.process = (...args) => {
+    handleReactorLayer(actionToProcessorsMap, runProcessors, ...args)
   }
 
 
@@ -83,15 +83,15 @@ function extractActionTypes(actors) {
 }
 
 
-function handleReactorLayer(map, callback, a, action, b) {
-  const actionType = action.type
+function handleReactorLayer(map, callback, ...args) {
+  const actionType = args[1].type
 
   const reducers = [
     ...map[actionType] || [],
     ...map[GLOBAL_ACTION_TYPE] || []
   ]
 
-  return callback.apply(null, [ reducers, a, action, b ])
+  return callback(reducers, ...args)
 }
 
 
