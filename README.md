@@ -19,6 +19,12 @@ Install using npm:
 npm install --save zedux
 ```
 
+Or yarn:
+
+```bash
+yarn add zedux
+```
+
 Or include the appropriate unpkg build on your page:
 
 ### Development
@@ -47,7 +53,7 @@ Or keep reading for a brief run-down:
 
 ## Intro
 
-Redux has landed itself in an awkward spot. It's often too much for small applications, yet nowhere near extensive enough for large apps. The low-level api and the sheer number of plugins required to make Redux work make it an impractical choice for many situations. While the simplicity of Redux is a huge asset, it is nevertheless a sad fact that many people reject Redux due to the side effects of simplicity.
+Redux has landed itself in an awkward spot, being too much for small applications, yet nowhere near extensive enough for large apps. The low-level api and the sheer number of plugins required to make Redux work make it an impractical choice for many situations. While the simplicity of Redux is a huge asset, it is nevertheless a sad fact that many people reject Redux due to the side effects of simplicity.
 
 Zedux believes in simplicity too. But Zedux approaches it from the user's perspective first, and a code perspective second. This means Zedux has an incredibly straight-forward, declarative api and almost none of the verbosity of Redux.
 
@@ -66,7 +72,6 @@ const rootReducer = (state = 'hello', action) =>
   action.payload || state
 
 store.use(rootReducer)
-
 store.subscribe(console.log)
 
 const prevState = store.getState()
@@ -176,13 +181,13 @@ That does it for the quick start. Check out the [full documentation](https://bow
 ```javascript
 import { act, react } from 'zedux'
 
-export const createTodo = act('createTodo')
+export const addTodo = act('addTodo')
 
 export default react([])
-  .to(createTodo)
-  .withReducers(createTodoReducer)
+  .to(addTodo)
+  .withReducers(addTodoReducer)
 
-function createTodoReducer(state, { payload: newTodo }) {
+function addTodoReducer(state, { payload: newTodo }) {
   return [ ...state, newTodo ]
 }
 ```
