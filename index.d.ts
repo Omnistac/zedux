@@ -74,6 +74,12 @@ export interface Selector<S = any, D = any> {
 }
 
 
+export interface State extends Actor {
+  enter?: Processor
+  leave?: Processor
+}
+
+
 export interface Store<S = any> {
   dispatch: Dispatcher<S>
   getState(): S
@@ -107,6 +113,13 @@ export interface ZeduxActor extends Actor {
 }
 
 
+export interface ZeduxMachine extends Reactor<string> {
+  from(...states: Transitionable[]): ZeduxMachine
+  to(...states: Transitionable[]): ZeduxMachine
+  undirected(...states: Transitionable[]): ZeduxMachine
+}
+
+
 export interface ZeduxReactor<S = any> extends Reactor<S> {
   to(...actions: Reactable[]): ZeduxReactor<S>
   toEverything(): ZeduxReactor<S>
@@ -117,6 +130,12 @@ export interface ZeduxReactor<S = any> extends Reactor<S> {
 
 export interface ZeduxSelector<S = any, D = any> extends Selector<S, D> {
   (...selectors: Selector<S>[]): D
+}
+
+
+export interface ZeduxState extends State {
+  onEnter(processor: Processor): ZeduxState
+  onLeave(processor: Processor): ZeduxState
 }
 
 
@@ -140,7 +159,7 @@ export interface act {
 
   @template S Root state object
 
-  @returns An empty, not-configured store
+  @returns An empty, not-yet-configured store
 */
 export function createStore<S = any>(): Store<S>
 
@@ -152,6 +171,8 @@ export function createStore<S = any>(): Store<S>
 
   @param initialState The initial state that the ZeduxReactor's
     reducer should return on initialization.
+
+  @returns A ZeduxReactor with no delegates.
 */
 export function react<S = any>(initialState: S): ZeduxReactor<S>
 
@@ -159,15 +180,39 @@ export function react<S = any>(initialState: S): ZeduxReactor<S>
 /**
   A factory for creating ZeduxSelectors
 
-  @param S The state shape consumed by this selector
-  @param D The derivation of the input state that this selector produces
+  @template S The state shape consumed by this selector
+  @template D The derivation of the input state that this selector produces
 
   @param selectors The selector dependencies
   @param calculator The calculator function that will receive as input.
     the result of all the selector dependencies and return the derived
     state.
+
+  @returns A memoized ZeduxSelector
 */
 export function select<S = any, D = any>(calculator: Selector<S>): ZeduxSelector<S, D>
+
+
+/**
+  A factory for creating ZeduxStates
+
+  @param stateName The name of this state.
+    A State is an actor. The stateName is the actor's `type` property.
+
+  @returns A ZeduxState - an actor that specifies how it should be processed
+*/
+export function state(stateName: string): ZeduxState
+
+
+/**
+  A factory for creating ZeduxMachines
+
+  @param initialState The starting state of the machine.
+    Can be either a valid State or action type string.
+
+  @returns A ZeduxMachine with no configured state transitions
+*/
+export function transition(initialState: Transitionable): ZeduxMachine
 
 
 export type ActionType = string
@@ -176,11 +221,14 @@ export type ActionType = string
 export type Dispatchable = MetaChainNode | Inducer
 
 
+export type HierarchyDescriptorNode
+  = HierarchyDescriptor | Store | Reactor | null
+
+
 export type MetaChainNode = MetaNode | Action
 
 
 export type Reactable = Actor | ActionType
 
 
-export type HierarchyDescriptorNode
-  = HierarchyDescriptor | Store | Reactor | null
+export type Transitionable = State | ActionType
