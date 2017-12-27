@@ -4,6 +4,9 @@ process.env.NODE_ENV = 'production'
 const { invalidAccess } = require('../../src/utils/errors')
 
 
+process.env.NODE_ENV = 'development'
+
+
 describe('production environment', () => {
 
   test('informs the user that zedux is running in production mode', () => {

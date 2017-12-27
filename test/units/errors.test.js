@@ -141,9 +141,9 @@ describe('assertIsValidActor()', () => {
     actor4.type = ''
 
     expect(assertIsValidActor.bind(null, actor1)).toThrow(TypeError)
-    expect(assertIsValidActor.bind(null, actor2)).not.toThrow()
+    expect(assertIsValidActor.bind(null, actor2)).toThrow(TypeError)
     expect(assertIsValidActor.bind(null, actor3)).toThrow(TypeError)
-    expect(assertIsValidActor.bind(null, actor4)).toThrow(TypeError)
+    expect(assertIsValidActor.bind(null, actor4)).not.toThrow()
 
   })
 

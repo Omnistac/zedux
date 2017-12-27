@@ -5,7 +5,7 @@ describe('ZeduxReactor()', () => {
 
   test('with no delegates, returns the state passed to it', () => {
 
-    const action = { type: 'test' }
+    const action = { type: 'a' }
 
     expect(react()(undefined, action)).toBeUndefined()
 
@@ -18,7 +18,7 @@ describe('ZeduxReactor()', () => {
 
   test('anything passed to react() becomes the ZeduxReactor\'s default state', () => {
 
-    const action = { type: 'test' }
+    const action = { type: 'a' }
 
     expect(react('a')(undefined, action)).toBe('a')
 
@@ -31,7 +31,7 @@ describe('ZeduxReactor()', () => {
 
   test('input state overrides the default state', () => {
 
-    const action = { type: 'test' }
+    const action = { type: 'a' }
 
     expect(react('a')('b', action)).toBe('b')
 

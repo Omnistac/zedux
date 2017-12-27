@@ -1,5 +1,4 @@
-import { assertIsValidActor } from '../utils/errors'
-import { slice } from '../utils/general'
+import { extractActionTypes } from '../utils/general'
 import { processableToPromise } from '../utils/processable'
 
 
@@ -27,8 +26,8 @@ export function react(initialState) {
   }
 
 
-  reactor.to = function() {
-    currentActionTypes = extractActionTypes(slice.call(arguments))
+  reactor.to = (...actors) => {
+    currentActionTypes = extractActionTypes(actors, 'ZeduxReactor.to()')
 
     return reactor // for chaining
   }
@@ -68,19 +67,6 @@ export function react(initialState) {
 
 
 
-
-
-function extractActionTypes(actors) {
-  return actors.map(actor => {
-
-    // The "actor" may be a literal action type string
-    if (typeof actor === 'string') return actor
-
-    assertIsValidActor(actor)
-
-    return actor.type
-  })
-}
 
 
 function handleReactorLayer(map, callback, ...args) {

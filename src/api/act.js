@@ -1,6 +1,3 @@
-import { slice } from '../utils/general'
-
-
 const identityFunction = arg => arg
 
 
@@ -15,8 +12,8 @@ const identityFunction = arg => arg
   They also have an error() method that'll create basic action objects
   with the actor's action type and `error: false`.
 */
-export function act() {
-  let actionType = slice.call(arguments).join`/`
+export function act(...namespaceNodes) {
+  let actionType = namespaceNodes.join`/`
 
   return createActor(actionType)
 }
@@ -28,8 +25,8 @@ export function act() {
   This will prefix all actors created with the bound act() function
   with the given namespace (joined by slashes - "/").
 */
-act.namespace = function() {
-  return act.bind.apply(act, [ null ].concat(slice.call(arguments)))
+act.namespace = function(...namespaceNodes) {
+  return act.bind(null, ...namespaceNodes)
 }
 
 
@@ -45,12 +42,12 @@ function createActor(type) {
   // The actor itself just returns a normal action object with the
   // `type` set and the `payload` determined by passing the arguments
   // along to the payload creator.
-  const actor = function() {
+  const actor = (...args) => {
     let action = {
       type: actor.type
     }
 
-    const payload = payloadCreator.apply(null, arguments)
+    const payload = payloadCreator(...args)
 
     if (typeof payload !== 'undefined') action.payload = payload
 
@@ -84,7 +81,7 @@ function createActor(type) {
   }
 
 
-  // expose the action `type` for this actor.
+  // Expose the action `type` for this actor.
   // Read only! There should never be any reason to modify this.
   actor.type = type
 

@@ -41,15 +41,15 @@ export function assertIsValidAction(action) {
 }
 
 
-export function assertIsValidActor(actor) {
+export function assertIsValidActor(actor, method) {
   if (
     typeof actor === 'function'
-    && actor.type
+    && typeof actor.type === 'string'
   ) {
     return
   }
 
-  throw new TypeError(invalidActor(actor))
+  throw new TypeError(invalidActor(actor, method))
 }
 
 
@@ -73,12 +73,12 @@ export const invalidAction = isProd ? prodErr : action =>
     + `Received ${detailedTypeof(action.type)}.`
 
 
-export const invalidActor = isProd ? prodErr : actor => {
+export const invalidActor = isProd ? prodErr : (actor, method) => {
   const type = typeof actor === 'function'
     ? `function with invalid "type" property - ${typeof actor.type}`
     : typeof actor
 
-  return `${PREFIX} ZeduxReactor.to() - `
+  return `${PREFIX} ${method} - `
     + 'Actor must be either a string or a function with a "type" property. '
     + `Received ${type}`
 }
