@@ -14,7 +14,7 @@ Zedux is a complete tool for state management featuring:
 
 - Easy code splitting.
 
-- State machines.
+- [State machines](/docs/guides/harnessingStateMachines.md).
 
 - Composable, memoized [selectors](/docs/types/Selector.md).
 

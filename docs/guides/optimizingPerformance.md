@@ -4,9 +4,9 @@ Zedux ships with 4 main methods of performance optimization.
 
 ## Memoized selectors
 
-[Selectors](/docs/types/Selector.md) are awesome performance tools. Use them. Use them all the time. [Memoized selectors](/docs/api/select.md) prevent heavy calculations from being performed unless absolutely necessary.
+[Memoized selectors](/docs/api/select.md) are awesome performance tools. They prevent heavy calculations from being performed unless absolutely necessary.
 
-Note that memoized selectors carry a little bit of overhead so "use them all the time" might be an overstatement in their case. But selectors are declarative and they're also a state shape abstraction. These benefits alone make the overhead of memoization almost never worth worrying about.
+Note that memoized selectors carry a little bit of overhead. But selectors are declarative and they're also a state shape abstraction. These benefits alone make the overhead of memoization almost never worth worrying about.
 
 ## Store composition
 
@@ -38,7 +38,7 @@ A well-structured store hierarchy will naturally be very performant.
 
 Inducers can be used to circumvent the reducer hierarchy in most situations. Use sparingly.
 
-Note that this optimization is only possible in stores that are not composed of other stores. When a store is composed of another store, Zedux still passes the special [hydrate action](/docs/api/actionTypes.md#hydrate) through the reducer layer in order to persist the inducer's imposed state to the child store. Of course, a store will eventually be reached that has no child stores. That store will still update in O(1) time.
+Note that this optimization is only possible in stores that are not composed of other stores. When a store is composed of another store, Zedux still passes the special [hydrate action](/docs/api/actionTypes.md#hydrate) through the reducer layer in order to persist the inducer's imposed state to child stores. Of course, a store will eventually be reached that has no child stores. That store will still update in O(1) time.
 
 ## The SKIP_* meta types
 
@@ -46,4 +46,4 @@ Note that this optimization is only possible in stores that are not composed of 
 
 Zedux has two special [meta types](/docs/api/metaTypes.md) that it uses internally but can technically be accessed. [`metaTypes.SKIP_REDUCERS`](/docs/api/metaTypes.md#skip_reducers) and [`metaTypes.SKIP_PROCESSORS`](/docs/api/metaTypes.md#skip_processors) can be used to skip the store's reducer and processor layers, respectively. These will also skip the reducer or processor layers of any child stores.
 
-These should almost never be necessary. Use sparingly.
+These should almost never be necessary. And they will obviously cause confusing bugs if used incorrectly. Use sparingly.

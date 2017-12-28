@@ -9,7 +9,7 @@ The complete state management solution.
 
 Zedux is a futuristic Redux. It conforms to *almost* every philosophy of Redux, while opinionatedly straying when it thinks there may be a better way.
 
-The goal of Zedux is to innovate Redux. In the Zedux world, ideas like state machines, easy hierarchical code splitting, zero-configuration, and composable stores are the norms.
+The goal of Zedux is to innovate Redux. In the Zedux world, ideas like [state machines](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines), [code splitting](https://bowheart.github.io/zedux/docs/api/Store#storeuse), [zero-configuration](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration), and [composable stores](https://bowheart.github.io/zedux/docs/api/Store.md) are the norms.
 
 ## Installation
 
@@ -47,7 +47,7 @@ To learn by getting dirty, have a play with [this codepen](https://codepen.io/bo
 
 To learn from us, check out the [documentation](https://bowheart.github.io/zedux/docs/overview).
 
-To learn comprehensively, check out [the tests](https://github.com/bowheart/zedux/tree/master/test).
+To learn comprehensively, check out the [tests](https://github.com/bowheart/zedux/tree/master/test).
 
 Or keep reading for a brief run-down:
 
@@ -120,7 +120,7 @@ By default, this'll make our store's state look like so:
 }
 ```
 
-Yes, immutable fans, "by default" means the actual hierarchical data type representing the intermediate nodes can be changed. See the guide on [Configuring the Hierarchy](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy).
+> Yes, immutable fans, "by default" means the actual hierarchical data type representing the intermediate nodes can be changed. See the guide on [Configuring the Hierarchy](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy).
 
 (Some async amount of time later:) Oh, we also need the famed visibility filter in our store:
 
@@ -146,8 +146,10 @@ Awesome. But how about a nested structure?
 ```javascript
 store.use({
   entities: {
-    normalTodos: todosReducer,
-    urgentTodos: todosReducer
+    todos: {
+      normal: todosReducer,
+      urgent: todosReducer
+    }
   },
   visibilityFilter
 })

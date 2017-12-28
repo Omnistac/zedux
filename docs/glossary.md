@@ -60,7 +60,7 @@ const selectEquippedWeaponStats = select(
 
 ## Shape Agnostic
 
-A shape agnostic entity does not know the shape of the state. It either doesn't deal with the state, or is handed the piece of state relevant to it and that's all it needs to know about.
+A shape agnostic entity does not know the shape of the state. It either doesn't deal with the state, or is handed the piece of state relevant to it and doesn't know where that state came from.
 
 Shape agnostic entities can be re-used in different parts of the store, or in different stores completely.
 
