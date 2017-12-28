@@ -53,3 +53,12 @@ export function createActor(actionType) {
 
   return actor
 }
+
+
+export function createActorCreator(createActorImplementation) {
+  return (...namespaceNodes) => {
+    const actionType = namespaceNodes.join`/`
+
+    return createActorImplementation(actionType)
+  }
+}

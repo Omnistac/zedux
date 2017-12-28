@@ -1,4 +1,4 @@
-import { createActor } from '../utils/actor'
+import { createActor, createActorCreator } from '../utils/actor'
 import { assertAreFunctions } from '../utils/errors'
 
 
@@ -11,11 +11,7 @@ import { assertAreFunctions } from '../utils/errors'
   A Zedux state is just a state with a few special methods for
   creating the processing hooks.
 */
-export function state(...namespaceNodes) {
-  let stateName = namespaceNodes.join`/`
-
-  return createState(stateName)
-}
+export const state = createActorCreator(createState)
 
 
 /**

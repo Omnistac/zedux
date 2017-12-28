@@ -1,4 +1,4 @@
-import { createActor } from '../utils/actor'
+import { createActor, createActorCreator } from '../utils/actor'
 
 
 /**
@@ -6,17 +6,13 @@ import { createActor } from '../utils/actor'
 
   Actors are like action creators with a little extra functionality.
 
-  They can be passed directly to a reactor's `to*()` methods, thus
+  They can be passed directly to a ZeduxReactor's `to*()` methods, thus
   removing the necessity of string constants.
 
   They also have an error() method that'll create basic action objects
   with the actor's action type and `error: false`.
 */
-export function act(...namespaceNodes) {
-  let actionType = namespaceNodes.join`/`
-
-  return createActor(actionType)
-}
+export const act = createActorCreator(createActor)
 
 
 /**
