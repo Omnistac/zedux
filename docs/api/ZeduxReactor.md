@@ -8,7 +8,7 @@ A ZeduxReactor is a normal [reactor](/docs/types/Reactor.md) with a couple extra
 
 To create a declarative, easy-to-remember api, we must ask, "What will it do?", as opposed to the imperative, "How will it do it?" Asking, "What will the reactor do?" gives us the answer, "React to certain actions with certain reducers and/or certain processors."
 
-What could be simpler than an api that says "React to these actions with these reducers and/or these processors?" This is the ZeduxReactor api.
+What could be simpler than an api that says, "React to these actions with these reducers and/or these processors"? This is the ZeduxReactor api.
 
 ## Definition
 
@@ -28,7 +28,7 @@ Note that all methods return the ZeduxReactor for chaining.
 ```javascript
 import { react } from 'zedux'
 
-react(/* default initial state here */)
+const reactor = react(/* default initial state here */)
   .to(action1)
   .withReducers(reducer1, reducer2)
 
@@ -52,6 +52,8 @@ Tells the reactor which action type(s) to react to. Subsequent calls wipe out th
 #### Examples
 
 ```javascript
+import { react } from 'zedux'
+
 react()
 
   // we can pass a literal action type...
@@ -89,6 +91,8 @@ Which doesn't make any sense, but is technically possible. This would result in 
 Can be used to port existing reducer hierarchies over to the reactor system &ndash; e.g. to take advantage of the processor layer:
 
 ```javascript
+import { react } from 'zedux'
+
 react()
   .toEverything()
   .withReducers(existingReducerHierarchy)
@@ -108,6 +112,8 @@ Specify one or more [processors](/docs/types/Processor.md) that'll be called whe
 #### Examples
 
 ```javascript
+import { react } from 'zedux'
+
 react()
   .to(actor)
   .withProcessors(reducer)
@@ -131,6 +137,8 @@ Specify one or more [reducers](/docs/types/Reducer.md) (yes, just normal reducer
 #### Examples
 
 ```javascript
+import { react } from 'zedux'
+
 react()
   .to(actor)
   .withReducers(reducer)

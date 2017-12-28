@@ -14,4 +14,5 @@
 * [Reactor](/docs/types/Reactor.md)
 * [Reducer](/docs/types/Reducer.md)
 * [Selector](/docs/types/Selector.md)
+* [State](/docs/types/State.md)
 * [Subscription](/docs/types/Subscription.md)

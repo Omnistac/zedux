@@ -2,13 +2,15 @@
 
 A standard tool for creating reactors. It's mostly just syntactic sugar for switch statements or action-reducer maps, but, of course, with [processors](/docs/types/Processor.md) rolled in.
 
-`react()` is a factory for creating [`ZeduxReactor`](/docs/api/ZeduxReactor.md)s.
+`react()` is a factory for creating [ZeduxReactors](/docs/api/ZeduxReactor.md).
 
 ## Definition
 
 ```javascript
 (initialState: any) => ZeduxReactor
 ```
+
+**initialState** - The initial state of the reducer. This will define the state shape handled by all sub-reducers and sub-processors of the reactor.
 
 ## Usage
 

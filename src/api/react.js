@@ -9,7 +9,8 @@ const GLOBAL_ACTION_TYPE = '*'
   Creates a new Zedux reactor.
 
   A Zedux reactor is just a reactor with a few special methods for
-  easily mapping action types to sub-reducers that handle them.
+  easily mapping action types to sub-reducers and sub-processors
+  that handle them.
 */
 export function react(initialState) {
   const actionToProcessorsMap = {}

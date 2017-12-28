@@ -1,3 +1,4 @@
+import { createActor } from '../utils/actor'
 import { assertAreFunctions } from '../utils/errors'
 
 
@@ -34,12 +35,9 @@ state.namespace = function(...namespaceNodes) {
 function createState(stateName) {
 
   /**
-    A Zedux state is an actor that creates payload-less actions.
-    The `type` property communicates everything we need to know.
+    A Zedux state is an actor whose `type` is the state's name.
   */
-  const zeduxState = () => ({
-    type: zeduxState.type
-  })
+  const zeduxState = createActor(stateName)
 
 
   /**

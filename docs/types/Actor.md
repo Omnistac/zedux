@@ -42,7 +42,7 @@ const reducer = (state = 0, action) {
 }
 ```
 
-This doesn't seem like much in this example, but it allows us to create awesome apis like [`act()`](/docs/api/act.md) and [`react()`](/docs/api/react.md):
+This doesn't seem like much in this example, but it allows us to create awesome apis like [`state()`](/docs/api/state.md) and [`transition()`](/docs/api/transition.md) or [`act()`](/docs/api/act.md) and [`react()`](/docs/api/react.md):
 
 ```javascript
 import { act, react } from 'zedux'

@@ -14,11 +14,7 @@ export function transition(initialState) {
   const stateMap = {} // used for easy lookup of a state's data given its name
   const stateTransitionMap = {} // tracks directed edges between states
   let currentStates = [ initialStateName ]
-
-  // Setting the currentState to initialState here instead of letting
-  // the processor pick up on it ensures that we don't fire `enter`
-  // hooks for the initial state:
-  let currentState = initialStateName
+  let currentState
 
 
   // Register the initial state.
@@ -60,7 +56,7 @@ export function transition(initialState) {
 
     currentState = state
 
-    if (oldStateDefinition.leave) {
+    if (oldStateDefinition && oldStateDefinition.leave) {
       oldStateDefinition.leave(dispatch, action, state)
     }
 

@@ -133,7 +133,7 @@ export interface ZeduxSelector<S = any, D = any> extends Selector<S, D> {
 }
 
 
-export interface ZeduxState extends State {
+export interface ZeduxState extends State, ZeduxActor {
   onEnter(processor: Processor): ZeduxState
   onLeave(processor: Processor): ZeduxState
 }

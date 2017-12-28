@@ -1,6 +1,6 @@
 # ZeduxActor
 
-The actor created by the built-in [`act()`](/docs/api/react.md) factory.
+The actor created by the built-in [`act()` factory](/docs/api/react.md).
 
 A ZeduxActor is a normal [actor](/docs/types/Actor.md) with a few extra capabilities.
 
@@ -96,4 +96,17 @@ Overwrites the default payload creator function (the identity function - `arg =>
 
 ```typescript
 (payloadCreator: Function) => ZeduxActor
+```
+
+#### Examples
+
+```javascript
+import { act } from 'zedux'
+
+const addTodo = act('addTodo')
+  .payload(text => ({ text, isComplete: false }))
+
+addTodo('pown') /* ->
+  { type: 'addTodo', payload: { text: 'pown', isComplete: false } }
+*/
 ```

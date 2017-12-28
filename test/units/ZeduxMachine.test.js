@@ -69,6 +69,7 @@ describe('ZeduxMachine.process()', () => {
     const machine = transition('a')
 
     expect(machine.process(null, null, 'a')).toBeUndefined()
+    expect(machine.process(null, null, 'a')).toBeUndefined()
 
   })
 
@@ -87,7 +88,8 @@ describe('ZeduxMachine.process()', () => {
       .to(state2)
       .to('c')
 
-    machine.process(null, null, 'b')
+    machine.process(null, null, 'a') // enter the start state first
+    machine.process(null, null, 'b') // then leave it
 
     expect(state1.leave).toHaveBeenCalledWith(null, null, 'b')
 
@@ -114,14 +116,14 @@ describe('ZeduxMachine.process()', () => {
       .to(state2)
       .to(state1)
 
-    machine.process(null, null, 'b')
-
-    expect(state1.enter).not.toHaveBeenCalled()
-    expect(state2.enter).toHaveBeenCalledWith(null, null, 'b')
-
     machine.process(null, null, 'a')
 
     expect(state1.enter).toHaveBeenCalledWith(null, null, 'a')
+    expect(state2.enter).not.toHaveBeenCalled()
+
+    machine.process(null, null, 'b')
+
+    expect(state2.enter).toHaveBeenCalledWith(null, null, 'b')
     expect(state1.enter).toHaveBeenCalledTimes(1)
     expect(state2.enter).toHaveBeenCalledTimes(1)
 

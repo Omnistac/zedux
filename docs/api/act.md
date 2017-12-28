@@ -1,14 +1,16 @@
 # `act()`
 
-A standard tool for creating actors. It's mostly just syntactic sugar for creating a string constant action type and corresponding action creator.
+A standard tool for creating [actors](/docs/types/Actor.md). It's mostly just syntactic sugar for creating a string constant action type and corresponding action creator.
 
-`act()` is a factory for creating [`ZeduxActor`s](/docs/api/ZeduxActor.md).
+`act()` is a factory for creating [ZeduxActors](/docs/api/ZeduxActor.md).
 
 ## Definition
 
 ```javascript
 (actionType: string) => ZeduxActor
 ```
+
+**actionType** - Required - The `type` of all actions created by this actor. (remember that an actor is an [action creator](/docs/types/ActionCreator.md)). Will be set as the actor's `type` property.
 
 ## Usage
 

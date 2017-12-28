@@ -7,3 +7,4 @@
 * [Configuring the Hierarchy](/docs/guides/configuringTheHierarchy.md)
 * [Merging Hierarchies](/docs/guides/mergingHierarchies.md)
 * [Optimizing Performance](/docs/guides/optimizingPerformance.md)
+* [Harnessing State Machines](/docs/guides/harnessingStateMachines.md)

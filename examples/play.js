@@ -299,8 +299,9 @@ const reactor = react()
   Todos:
 
   - kill `ErrorAction`s and `actor.error()`
-  - implement state machines
   - beef up processors
   - add "state can't be undefined" error checking/messages
+  - add React usage guide
+  - add Store composition guide
 
 */
