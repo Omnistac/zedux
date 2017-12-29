@@ -25,7 +25,14 @@ const addTodo = act('addTodo')
 ```javascript
 import { act } from 'zedux'
 
+// Create an "increment" actor that enforces multiples of 5
 const increment = act('increment')
+  .payload(amount => Math.round(amount / 5) * 5)
+
+// Try it out
+increment(4) // { type: 'increment', payload: 5 }
+increment(7) // { type: 'increment', payload: 5 }
+increment(8) // { type: 'increment', payload: 10 }
 ```
 
 ## Static methods
@@ -38,7 +45,7 @@ A utility for namespacing action types. Cool enough for its own [doc page](/docs
 
 We've seen what happens when a library leaves the implementation of low-level details (read: boilerplate) up to the user. We get a massive divide between those who think explicitly creating all boilerplate is best, and a couple hundred libraries offering a "better" way.
 
-Zedux provides a high-level api for action and reducer creation out of the box. Since its actually a pretty good one, the number of competing libraries will be minimal. And the low-level people, while unhindered, will at least not be joined by those whose only reason for writing boilerplate is, "Well, that's how the docs do it."
+Zedux provides a high-level api for action and reducer creation out of the box. Since it's actually a pretty good one, the number of competing libraries will be minimal. And the low-level people, while unhindered, will at least not be joined by those whose only reason for writing boilerplate is, "Well, that's how the docs do it."
 
 ## Notes
 

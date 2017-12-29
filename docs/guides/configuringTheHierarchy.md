@@ -1,9 +1,9 @@
 # Configuring the Hierarchy
 
-By default, the reactor hierarchy created by Zedux will return a JavaScript object for every ReactorHierarchy node found in the hierarchy descriptor. So:
+By default, the reactor hierarchy created by Zedux will return a JavaScript object for every [HierarchyDescriptor](/docs/types/HierarchyDescriptor.md) node found in the hierarchy descriptor passed to the store. So:
 
 ```javascript
-store.use({ // this object is a ReactorHierarchy node
+store.use({ // this object is a HierarchyDescriptor
   a: () => 1
 })
 ```
