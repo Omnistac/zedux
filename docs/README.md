@@ -46,6 +46,7 @@
   * [Reducer](/docs/types/Reducer.md)
   * [Selector](/docs/types/Selector.md)
   * [State](/docs/types/State.md)
+  * [StoreBase](/docs/types/StoreBase.md)
   * [Subscription](/docs/types/Subscription.md)
 * [Glossary](/docs/glossary.md)
 * [Shape Relation Problems](/docs/shapeRelationProblems.md)
