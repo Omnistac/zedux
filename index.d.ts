@@ -19,11 +19,6 @@ export interface Dispatcher<S = any> {
 }
 
 
-export interface ErrorAction extends Action {
-  error: true
-}
-
-
 export interface HierarchyDescriptor {
   [s: string]: HierarchyDescriptorNode
 }
@@ -108,7 +103,6 @@ export interface Subscription {
 
 
 export interface ZeduxActor extends Actor {
-  error(reason: any): ErrorAction
   payload(payloadCreator: Function): void
 }
 
