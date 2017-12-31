@@ -20,22 +20,6 @@ export function createActor(actionType) {
   }
 
 
-  // actor.error() accepts a single argument.
-  // That argument should be an instance of Error (not required).
-  // It'll return a normal action whose `payload` is the passed argument.
-  // It'll also set `error` to true
-  actor.error = payload => {
-    const action = {
-      type: actor.type,
-      error: true
-    }
-
-    if (typeof payload !== 'undefined') action.payload = payload
-
-    return action
-  }
-
-
   // actor.payload() - overwrite the default payload creator.
   // Shouldn't be used much, and should never be used more than once
   // for any given actor, as it is mutating.

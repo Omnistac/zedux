@@ -67,37 +67,6 @@ describe('ZeduxActor.payload()', () => {
 })
 
 
-describe('ZeduxActor.error()', () => {
-
-  test('returns a form of the action with error set to true', () => {
-
-    expect(act('a').error()).toEqual({
-      type: 'a',
-      error: true
-    })
-
-  })
-
-
-  test('sets the payload to whatever is passed', () => {
-
-    expect(act('a').error(1)).toEqual({
-      type: 'a',
-      payload: 1,
-      error: true
-    })
-
-    expect(act('a').error(0)).toEqual({
-      type: 'a',
-      payload: 0,
-      error: true
-    })
-
-  })
-
-})
-
-
 describe('ZeduxActor.type', () => {
 
   test('is a string', () => {
