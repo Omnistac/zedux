@@ -47,10 +47,14 @@ const config = {
   name: 'Zedux',
   plugins,
   external: [
+    'react',
+    'react-dom',
     'redux',
     'zedux'
   ],
   globals: {
+    react: 'React',
+    'react-dom': 'ReactDOM',
     redux: 'Redux',
     zedux: 'Zedux'
   }
