@@ -34,7 +34,6 @@
   * [ActionCreator](/docs/types/ActionCreator.md)
   * [Actor](/docs/types/Actor.md)
   * [Dispatchable](/docs/types/Dispatchable.md)
-  * [ErrorAction](/docs/types/ErrorAction.md)
   * [HierarchyDescriptor](/docs/types/HierarchyDescriptor.md)
   * [HierarchyDescriptorNode](/docs/types/HierarchyDescriptorNode.md)
   * [Inducer](/docs/types/Inducer.md)

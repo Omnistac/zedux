@@ -1,6 +1,6 @@
 # Action
 
-An action is a plain object containing a `type` property and optional `payload` property. While this interface can be extended, as it is with [`ErrorAction`s](/docs/types/ErrorAction.md), actions should never contain `metaType`, `metaPayload`, or `action` properties, as these are reserved for [meta nodes](/docs/types/MetaNode.md).
+An action is a plain object containing a `type` property and optional `payload` property. While this interface can be extended, actions should never contain `metaType`, `metaPayload`, or `action` properties, as these are reserved for [meta nodes](/docs/types/MetaNode.md).
 
 ## Definition
 

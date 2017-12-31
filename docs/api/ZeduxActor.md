@@ -12,7 +12,6 @@ Creating actors manually is completely unnecessary boilerplate in almost every c
 
 ```typescript
 interface ZeduxActor extends Actor {
-  error(reason: any): ErrorAction
   payload(payloadCreator: Function): ZeduxActor
 }
 ```
@@ -62,35 +61,9 @@ A string. This will be the `type` property of all actions created by this actor.
 
 ## Method API
 
-### `zeduxActor.error()`
-
-Create an [error action](/docs/types/ErrorAction.md) with the actor's `type`. Since this is rather analogous to rejecting a promise or throwing an error, the identity function is used as the payload creator in all cases and cannot be overwritten. You should never need to pass more than one argument.
-
-#### Definition
-
-```typescript
-(reason: any) => ErrorAction
-```
-
-#### Examples
-
-```javascript
-import { act } from 'zedux'
-
-const imageFetched = act('imageFetched')
-
-imageFetched.error('failed to fetch image', 'ignored param') /* ->
-{
-  type: 'imageFetched',
-  payload: 'failed to fetch image',
-  isError: true
-}
-*/
-```
-
 ### `zeduxActor.payload()`
 
-Overwrites the default payload creator function (the identity function - `arg => arg`). Returns the ZeduxActor for chaining.
+Overwrites the default payload creator function (the identity function &ndash; `arg => arg`). Returns the ZeduxActor for chaining.
 
 #### Definition
 
@@ -107,6 +80,9 @@ const addTodo = act('addTodo')
   .payload(text => ({ text, isComplete: false }))
 
 addTodo('pown') /* ->
-  { type: 'addTodo', payload: { text: 'pown', isComplete: false } }
+  {
+    type: 'addTodo',
+    payload: { text: 'pown', isComplete: false }
+  }
 */
 ```
