@@ -10,7 +10,7 @@ export default store => {
 
 
   // Set up the devTools
-  devTools.send('initialState', initialState)
+  devTools.init(initialState)
   devTools.subscribe(({ payload, state, type }) => {
     if (type !== DISPATCH) return
 
@@ -19,9 +19,12 @@ export default store => {
         return devTools.init(store.getState())
 
       case 'IMPORT_STATE':
-        const { nextLiftedState: { computedStates } } = payload
+        const { nextLiftedState } = payload
+        const { computedStates } = nextLiftedState
+        const newState = computedStates[computedStates.length - 1].state
 
-        store.hydrate(computedStates[computedStates.length - 1].state)
+        store.hydrate(newState)
+
         return devTools.send(null, nextLiftedState)
 
       case 'JUMP_TO_ACTION':

@@ -1,7 +1,7 @@
 import { createStore } from 'zedux'
 
 import counter from './counter'
-import wrapInDevTools from './wrapInDevTools'
+import withDevTools from './withDevTools'
 
 
 const devTools = window.__REDUX_DEVTOOLS_EXTENSION__
@@ -12,4 +12,4 @@ const store = createStore()
   .use(counter)
 
 
-export default wrapInDevTools(store)
+export default withDevTools(store)
