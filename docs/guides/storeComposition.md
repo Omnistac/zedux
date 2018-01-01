@@ -135,7 +135,7 @@ And so on down and up the chain. Sick, huh?
 
 We've probably answered this satisfactorily, but just to review:
 
-Zedux takes special care to make sure that a store's inspectors are called every time the store's state will change. So [`store.hydrate()`](/docs/api/Store.md#storehydrate), [inducers](/docs/types/Inducer.md), and actions dispatched to child stores will all find a way to notify the store's inspectors of the action causing the state update.
+Zedux takes special care to make sure that a store's inspectors are called every time the store's state may change. So [`store.hydrate()`](/docs/api/Store.md#storehydrate), [inducers](/docs/types/Inducer.md), and actions dispatched to child stores will all find a way to notify the store's inspectors of a serializable action that can be used to reproduce the state update (#timetravel).
 
 Typically, time travel will be implemented in the Root Store's inspectors. But every store has the capability.
 
@@ -260,6 +260,8 @@ storeB.inspect((storeBase, action) => {
 ```
 
 Now we can go crazy:
+
+### `crazy.js`
 
 ```javascript
 import { increment } from './reducers/counter'
