@@ -12,6 +12,25 @@ Zedux dispatches this action to the store in two scenarios:
 
 2. When an [inducer](/docs/types/Inducer.md) is dispatched to the store.
 
+The hydrate action's `payload` property will be the value of the new state. Thus a store's [inspectors](/docs/types/Inspector.md) can be notified of otherwise unserializable "actions". The idea here is that dispatching an hydrate action is **exactly** equivalent to dispatching a corresponding inducer or calling `store.hydrate()`.
+
+For example, dispatching the following inducer:
+
+```javascript
+store.dispatch(() => 'new state')
+```
+
+is exactly equivalent to dispatching the following hydrate action:
+
+```javascript
+store.dispatch({
+  type: '@@zedux/hydrate',
+  payload: 'new state'
+})
+```
+
+In short, this action makes time travel possible even when using inducers and `store.hydrate()`.
+
 #### Usage
 
 ```javascript
@@ -22,7 +41,7 @@ const { HYDRATE } = actionTypes
 
 ### `RECALCULATE`
 
-Zedux dispatches this action to the store when the store's reactor hierarchy is changed via [`store.use()`](/docs/api/Store.md#storeuse).
+Zedux dispatches this action to the store when the store's reactor hierarchy is changed via [`store.use()`](/docs/api/Store.md#storeuse). As such, this is the action that typically calculates the initial state of the store.
 
 #### Usage
 
