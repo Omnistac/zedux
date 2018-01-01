@@ -9,7 +9,7 @@ The complete state management solution.
 
 Zedux is a futuristic Redux. It conforms to *almost* every philosophy of Redux, while opinionatedly straying when it thinks there may be a better way.
 
-The goal of Zedux is to innovate Redux. In the Zedux world, ideas like [state machines](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines), [code splitting](https://bowheart.github.io/zedux/docs/api/Store#storeuse), [zero-configuration](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration), and [composable stores](https://bowheart.github.io/zedux/docs/api/Store) are the norms.
+The goal of Zedux is to innovate Redux. In the Zedux world, ideas like [state machines](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines), [code splitting](https://bowheart.github.io/zedux/docs/api/Store#storeuse), [zero-configuration](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration), and [composable stores](https://bowheart.github.io/zedux/docs/guides/storeComposition) are the norms.
 
 ## Installation
 
@@ -221,7 +221,7 @@ store.dispatch({
 })
 ```
 
-- Store composition! With a whole lot of support for loads of crazy inter-store communication. A benchmarker's dream.
+- [Store composition!](https://bowheart.github.io/zedux/docs/guides/storeComposition) Seriously cool stuff. A benchmarker's dream.
 
 ```javascript
 import { createStore } from 'zedux'

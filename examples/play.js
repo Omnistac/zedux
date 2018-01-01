@@ -1,4 +1,4 @@
-import { act, react, select } from 'vedux'
+import { act, react, select } from 'zedux'
 
 
 // will prefix all actor action types with 'todos/':
@@ -53,7 +53,7 @@ function addTodoProcessor({ dispatch, getState }, action) {
 
 
 
-import { hold } from 'vedux'
+import { hold } from 'zedux'
 
 import todos from './reactors/todos'
 
@@ -113,7 +113,7 @@ selectIncompleteTodos.bind(store)()
 
 
 {
-  meta: '@@vedux/delegate',
+  meta: '@@zedux/delegate',
   data: [ 'd', 'e', 'f' ],
   action: {
     type: 'addTodo',
@@ -125,10 +125,10 @@ selectIncompleteTodos.bind(store)()
 
 
 {
-  meta: '@@vedux/delegate',
+  meta: '@@zedux/delegate',
   data: [ 'a', 'b', 'c' ],
   action: {
-    meta: '@@vedux/delegate',
+    meta: '@@zedux/delegate',
     data: [ 'd', 'e', 'f' ],
     action: {
       type: 'addTodo',
@@ -142,7 +142,7 @@ selectIncompleteTodos.bind(store)()
 
 
 {
-  meta: '@@vedux/inherit',
+  meta: '@@zedux/inherit',
   action: {
     type: 'addTodo',
     payload: 'be awesome'
@@ -298,10 +298,9 @@ const reactor = react()
 /*
   Todos:
 
-  - kill `ErrorAction`s and `actor.error()`
-  - beef up processors
+  - beef up processors (add generator/observable support for ZeduxMachines)
   - add "state can't be undefined" error checking/messages
   - add React usage guide
-  - add Store composition guide
+  - add tests to examples
 
 */
