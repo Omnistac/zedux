@@ -11,16 +11,11 @@
     "index.d.ts"
   ],
   "scripts": {
-    "build": "npm run build:umd && npm run build:umd:min && npm run build:es && npm run build:examples",
+    "build": "npm run build:umd && npm run build:umd:min && npm run build:es",
     "build:umd": "cross-env NODE_ENV=development rollup -c",
     "build:umd:min": "cross-env NODE_ENV=production rollup -c -o dist/zedux.min.js",
     "build:es": "rollup -c -f es -o dist/zedux.es.js",
-    "build:rpg": "rollup -c -i examples/rpg/index.js -o dist/rpg-example.js",
-    "build:time-travel": "rollup -c -i examples/time-travel/index.js -o dist/time-travel-example.js",
-    "build:todos": "rollup -c -i examples/todos/index.js -o dist/todos-example.js",
-    "build:examples": "npm run build:rpg && npm run build:time-travel && npm run build:todos",
-    "dev": "npm run build:umd -- -w & npm run build:umd:min -- -w & npm run build:es -- -w & npm run dev:examples",
-    "dev:examples": "npm run build:rpg -- -w & npm run build:time-travel -- -w & npm run build:todos -- -w",
+    "dev": "npm run build:umd -- -w & npm run build:umd:min -- -w & npm run build:es -- -w",
     "docs:build": "npm run docs:prepare && gitbook build -g bowheart/zedux",
     "docs:clean": "rimraf _book",
     "docs:prepare": "gitbook install",
