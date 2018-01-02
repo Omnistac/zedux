@@ -77,7 +77,7 @@ const addTodo = newTodo => todosAdapter(
 
 ### Composite inducers
 
-Did you notice? Inducers have the form `State => State`. Oh, snap...Must...Compose. Use this technique to update separate, dependent pieces of the state tree at once:
+Did you notice? Inducers have the form `State => State`. Oh, snap...Must...Compose. Use this technique to update multiple separate but dependent pieces of the state tree at once:
 
 ```javascript
 import { compose } from 'zedux'
@@ -97,11 +97,11 @@ store.dispatch(buyAndSpend)
 
 Actually, it's still possible. After calculating the new state, Zedux will dispatch the special [hydrate action](/docs/api/actionTypes.md#hydrate) to the store, which inspectors can plug in to.
 
-This gives Zedux a big boost up from other zero-configuration Redux libraries like Repatch, Redux-Zero, and Noredux.
+This gives Zedux a big boost up from other zero-configuration Redux libraries like [Repatch](https://github.com/jaystack/repatch) and [Redux-Zero](https://github.com/concretesolutions/redux-zero).
 
 ## Refactoring
 
-Eventually our app may grow to the point where we need the scalability of a [reducer hierarchy](/docs/guides/theReducerLayer.md). Well-made inducer hierarchies are very easy to move piece-by-piece over to a reducer hierarchy setup.
+Eventually our app may grow to the point where we need the scalability of a [reducer hierarchy](/docs/guides/theReducerLayer.md). Well-made inducer hierarchies are very easy to incrementally migrate to a reducer hierarchy setup.
 
 Let's take the `addTodo` inducer factory from our shape abstraction example above and port it over to a reducer hierarchy. Here it is again:
 
@@ -114,7 +114,10 @@ const addTodo = newTodo => todosAdapter(
 Let's create the action creator first:
 
 ```javascript
-const addTodo = newTodo => newTodo
+const addTodo = newTodo => ({
+  type: 'addTodo',
+  payload: newTodo
+})
 ```
 
 And the reducer:

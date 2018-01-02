@@ -62,19 +62,17 @@ And here are some differences:
 
 - [Processors](/docs/guides/theProcessorLayer.md) process specific actions, performing side effects like ajax requests and setting timeouts.
 
-- Action namespacing is considered necessary and [is facilitated](/docs/api/act.namespace.md) (e.g. Zedux favors `todos/create` over `CREATE_TODO` name collision nastiness).
-
-- Enforces a slightly modified version of Flux Standard Actions. See the [meta chains guide](/docs/guides/metaChains.md).
+- Action namespacing is considered necessary and [is facilitated](/docs/api/act.namespace.md) (e.g. Zedux favors `todos/add` over `ADD_TODO` name collision nastiness).
 
 ## Multiple stores
 
-Zedux conforms to the Redux philosophy that a single store contains the state of the entire application. But it doesn't conform to the philosophy that there should only be one store. Zedux actually encourages that self-contained pieces of state be housed in their own store. This allows for massive performance optimizations and better modularization.
+Zedux conforms to the Redux philosophy that a single store contains the state of the entire application. But it doesn't conform to the philosophy that there should only be one store. Zedux actually encourages that self-contained pieces of state be housed in their own store. This allows for massive performance optimizations and better encapsulation.
 
-**But** there should only be one **root** store. All other stores should find themselves somewhere in the hierarchy descriptor of another store.
+**But** there should only be one **root** store. All other stores should find themselves somewhere in the [hierarchy descriptor](/docs/types/HierarchyDescriptor.md) of another store.
 
 ## Why does it try to do so much?
 
-It really doesn't. Really. But that's me dodging the question.
+It really doesn't. Really. But we dodge the question.
 
 Zedux offers a high-level api and performance optimizations through the roof. It does this so that apps of all sizes, from very small to gigantic, will be able to use it comfortably.
 
@@ -82,7 +80,7 @@ So why is this important?
 
 Because. Apps. Scale. This is a point that Redux doesn't address at all.
 
-How many small applications decided against Redux at first, then grew to the point of sorely regretting that decision? How many medium-sized applications chose Redux, then grew to the point that the verbosity became unmaintainable and the number of plugins spiked the learning curve beyond reason?
+How many small applications decided against Redux at first, then grew to the point of sorely regretting that decision? How many mid-sized applications chose Redux, then grew to the point that the verbosity became unmaintainable and the number of plugins spiked the learning curve beyond reason?
 
 While Zedux doesn't aim to eliminate plugins, it does aim to reduce their quantity. In their place, it offers a uniform, often orthogonal api across all common aspects of state management. This drastically reduces boilerplate, overall code size, and the steepness of the learning curve.
 
