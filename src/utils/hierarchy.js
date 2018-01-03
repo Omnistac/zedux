@@ -132,9 +132,13 @@ export function hierarchyDescriptorToReactor(reactors, { create, get, set }) {
   }
 
 
-  reactor.process = (...args) => {
-    Object.values(reactors).forEach(({ process }) => {
-      if (typeof process === 'function') process(...args)
+  reactor.process = (dispatch, action, state) => {
+    Object.entries(reactors).forEach(([ key, { process } ]) => {
+      if (typeof process !== 'function') return
+
+      const statePiece = get(state, key)
+
+      process(dispatch, action, statePiece)
     })
   }
 
