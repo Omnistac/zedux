@@ -22,7 +22,7 @@
     "docs:publish": "npm run docs:clean && npm run docs:build && cd _book && git init && git commit --allow-empty -m 'update docs' && git checkout -b gh-pages && git add --all && git commit -m 'update docs' && git push git@github.com:bowheart/zedux gh-pages --force",
     "docs:watch": "npm run docs:prepare && gitbook serve",
     "lint": "eslint src test",
-    "publish": "npm run build && npm publish",
+    "prepublishOnly": "npm run build",
     "test": "jest"
   },
   "keywords": [
