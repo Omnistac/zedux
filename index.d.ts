@@ -122,11 +122,6 @@ export interface ZeduxReactor<S = any> extends Reactor<S> {
 }
 
 
-export interface ZeduxSelector<S = any, D = any> extends Selector<S, D> {
-  (...selectors: Selector<S>[]): D
-}
-
-
 export interface ZeduxState extends State, ZeduxActor {
   onEnter(processor: Processor): ZeduxState
   onLeave(processor: Processor): ZeduxState
@@ -182,9 +177,37 @@ export function react<S = any>(initialState: S): ZeduxReactor<S>
     the result of all the selector dependencies and return the derived
     state.
 
-  @returns A memoized ZeduxSelector
+  @returns A memoized Selector
 */
-export function select<S = any, D = any>(calculator: Selector<S>): ZeduxSelector<S, D>
+export function select<S = any, D = any>(
+  calculator: (state: S) => D
+): Selector<S, D>
+
+export function select<S = any, D = any, D1 = any>(
+  inputSelector1: Selector<S, D1>,
+  calculator: (input1: D1) => D
+): Selector<S, D>
+
+export function select<S = any, D = any, D1 = any, D2 = any>(
+  inputSelector1: Selector<S, D1>,
+  inputSelector2: Selector<S, D2>,
+  calculator: (input1: D1, input2: D2) => D
+): Selector<S, D>
+
+export function select<S = any, D = any, D1 = any, D2 = any, D3 = any>(
+  inputSelector1: Selector<S, D1>,
+  inputSelector2: Selector<S, D2>,
+  inputSelector3: Selector<S, D3>,
+  calculator: (input1: D1, input2: D2, input3: D3) => D
+): Selector<S, D>
+
+export function select<S = any, D = any, D1 = any, D2 = any, D3 = any, D4 = any>(
+  inputSelector1: Selector<S, D1>,
+  inputSelector2: Selector<S, D2>,
+  inputSelector3: Selector<S, D3>,
+  inputSelector4: Selector<S, D4>,
+  calculator: (input1: D1, input2: D2, input3: D3, input4: D4) => D
+): Selector<S, D>
 
 
 /**

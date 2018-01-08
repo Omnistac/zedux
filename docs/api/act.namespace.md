@@ -25,12 +25,11 @@ const namespacedAct = act.namespace('myNamespace')
 ```javascript
 import { act } from 'zedux'
 
-// overwrite the local "act" variable so everything in this file
-// uses the namespaced version:
-act = act.namespace('todos', 'urgent')
+// Create an actor factory that creates namespaced actors.
+const createTodosActor = act.namespace('todos', 'urgent')
 
-export const addTodo = act('add')
-export const removeTodo = act('remove')
+export const addTodo = createTodosActor('add')
+export const removeTodo = createTodosActor('remove')
 
 addTodo() // { type: 'todos/urgent/add' }
 removeTodo() // { type: 'todos/urgent/removeTodo' }

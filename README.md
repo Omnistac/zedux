@@ -57,195 +57,322 @@ Redux has landed itself in an awkward spot, being too much for small application
 
 Zedux believes in simplicity too. But Zedux approaches it from the user's perspective first, and a code perspective second. This means Zedux has an incredibly straight-forward, declarative api and almost none of the verbosity of Redux.
 
-Zedux does not, however, conform to the philosophy that simple equals bare. Zedux aims to offer a complete api for all common state management needs. This includes asynchronicity, performance optimizations, state hydration, code splitting, and memoization/state derivation.
+Zedux does not, however, conform to the philosophy that simple equals bare. Zedux aims to offer a complete api for all common state management needs. This includes asynchronicity, state hydration, code splitting, state machines, and memoization/state derivation.
 
 ## Quick Start
 
 At the most basic level, Zedux is still Redux. A reducer hierarchy drives state creation and updates. Let's get some code:
 
 ```javascript
-import { createStore } from 'zedux'
+import { act, createStore, react } from 'zedux'
 
+/*
+  Meet your first Zedux store.
+  He's a fast, composable, predictable state container.
+  And the best part is that he's all ready to go.
+*/
 const store = createStore()
 
-const rootReducer = (state = 'hello', action) =>
-  action.payload || state
+/*
+  These are actors.
+  An actor is just a function that returns an action.
+  An action is just a plain object with a "type" property.
+  Actions are how we tell the store to update.
 
-store.use(rootReducer)
-store.subscribe(console.log)
+  (For Redux peoples): An actor is just a fancy action creator.
+*/
+const increment = act('increment')
+const decrement = act('decrement')
 
-const prevState = store.getState()
-const newState = store.dispatch({
-  type: 'doThisThing',
-  payload: 'world'
-}) // logs "hello world"
+/*
+  This is a reactor (in Zedux we emphasize the act-react
+  relationship between actions and reducers).
+  A reactor is just a fancy reducer.
+  A reducer is just a pure function with the signature:
+    (state, action) => state
+
+  This reactor translates the "increment" and "decrement"
+  actions into a corresponding state update by delegating
+  to sub-reducers.
+  A sub-reducer is just a reducer that doesn't control its
+  initial state and is only called for specific actions.
+*/
+const counterReactor = react(0) // 0 - the initial state
+  .to(increment)
+  .withReducers(state => state + 1)
+
+  .to(decrement)
+  .withReducers(state => state - 1)
+
+/*
+  So we said the store is all ready to go. And that's true.
+  But in Zedux, Zero-Configuration is optional <fireworks here>.
+  We're not gonna use it here. But check it out in the docs.
+
+  Here we're introducing our reactor hierarchy to Zedux.
+  In this example it's a very simple one, but `store.use()`
+  actually accepts complex objects containing reactors, stores,
+  and nested objects containing reactors, stores, and...you
+  get the picture.
+*/
+store.use(counterReactor)
+
+/*
+  Here we're subscribing to the store.
+  Zedux calls this function every time the store's state changes.
+*/
+store.subscribe((oldState, newState) => {
+  console.log(`counter went from ${oldState} to ${newState}`)
+})
+
+/*
+  Alright! Let's take this thing for a spin!
+  We will do said spin by dispatching actions to the store.
+*/
+store.dispatch(increment())
+// counter went from 0 to 1
+store.dispatch(increment())
+// counter went from 1 to 2
+store.dispatch(decrement())
+// counter went from 2 to 1
 ```
 
-If you know Redux, almost every bit of this will seem instantly familiar. This example is meant to show the similarities...So let's focus on the differences:
+If you know Redux, almost every bit of this will seem instantly familiar (and not just because it's similar to the one in the Redux docs). At this point, you should know enough to get started using Zedux. But don't worry, there's [a](https://bowheart.github.io/zedux/docs/guides/theInspectorLayer) [ton](https://bowheart.github.io/zedux/docs/api/Store#storehydrate) [of](https://bowheart.github.io/zedux/docs/guides/mergingHierarchies) [cool](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration) [stuff](https://bowheart.github.io/zedux/docs/guides/theProcessorLayer) [we](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy) [haven't](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines) [covered](https://bowheart.github.io/zedux/docs/guides/storeComposition).
 
-### Creating the store
+Here's a small taste of what's in store (yes, that pun was an accident):
 
-Zedux cleans up the `createStore()` api; no more optional initial state parameter and, more importantly, [no more middleware](https://bowheart.github.io/zedux/docs/guides/theInspectorLayer)! :O `createStore()` has the form:
+### Zero configuration
+
+Zedux stores are so dynamic, you can just create one and go. Here's what the above counter example looks like if we leverage zero configuration:
 
 ```javascript
-() => Store
+import { createStore } from 'zedux'
+
+/*
+  We use `store.hydrate()` to force-update the store's
+  entire state tree:
+*/
+const store = createStore()
+  .hydrate(0) // set the initial state to 0
+
+/*
+  These are inducers.
+  Inducers are like reducers (hence the name), but have the form:
+    state => newState
+
+  Inducers are dispatchable - they can be passed directly to
+  `store.dispatch()`
+*/
+const inrement = state => state + 1
+const decrement = state => state - 1
+
+/*
+  And that's it! The fun starts now.
+*/
+store.dispatch(increment)
+store.dispatch(decrement)
+
+/*
+  Inducers are super easy to create on the fly...
+*/
+store.dispatch(state => state + 6)
+
+/*
+  ...but in this case we'll typically want to use `store.setState()`
+*/
+store.setState(store.getState() + 6)
 ```
 
-And that's all! This simplicity makes [zero-configuration](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration) a possibility. Perfect for small applications. But if we want some more advanced functionality, we'll have to look at:
-
-### Modifying the store
-
-[`store.use()`](https://bowheart.github.io/zedux/docs/api/Store#storeuse) is our friend here. This is how we'll dynamically introduce our reducer hierarchy to the store. Consequently, this is the mechanism that makes code splitting a breeze. We could use it like so to mimic the `replaceReducer()` functionality of Redux:
+The advantage of using `store.setState()` over `store.hydrate()` is that the new state is deeply merged into the existing state. Thus headaches like:
 
 ```javascript
-store.use(rootReducer)
-store.use(newRootReducer)
-```
-
-But that's somewhere between lame and a yawn. Let's be awesome:
-
-```javascript
-import todos from './reducers/todos'
-
-store.use({
-  todos
+store.hydrate({
+  ...state,
+  todos: {
+    ...state[todos],
+    urgent
+  }
 })
 ```
 
-By default, this'll make our store's state look like so:
+become simple:
 
 ```javascript
-{
-  todos: /* result of calling our todos reducer */
-}
-```
-
-> Yes, immutable fans, "by default" means the actual hierarchical data type representing the intermediate nodes can be changed. See the guide on [Configuring the Hierarchy](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy).
-
-(Some async amount of time later:) Oh, we also need the famed visibility filter in our store:
-
-```javascript
-import visibilityFilter from './reducers/visibilityFilter'
-
-store.use({
-  visibilityFilter
+store.setState({
+  todos: { urgent }
 })
 ```
 
-Zedux will merge the new shape into the existing hierarchy and recalculate the state of our store. We'll end up with our state tree looking like so:
+since Zedux clones the nested nodes for us.
+
+See:
+
+- [`store.hydrate()`](https://bowheart.github.io/zedux/docs/api/Store#storehydrate)
+- [the `Inducer` type](https://bowheart.github.io/zedux/docs/types/Inducer)
+- [`store.setState()`](https://bowheart.github.io/zedux/docs/api/Store#storesetstate)
+- [the dispatchable reducers guide](https://bowheart.github.io/zedux/docs/guides/dispatchableReducers)
+
+### Selectors
+
+Zedux ships with a basic api for creating one of the most powerful state management performance tools: Memoized selectors. A selector is just a function with the form:
 
 ```javascript
-{
-  todos: /* result of calling our todos reducer */,
-  visibilityFilter: /* result of calling our visibilityFilter reducer */
-}
+state => derivedState
 ```
 
-Awesome. But how about a nested structure?
-
-```javascript
-store.use({
-  entities: {
-    todos: {
-      normal: todosReducer,
-      urgent: todosReducer
-    }
-  },
-  visibilityFilter
-})
-```
-
-Check out the [merging hierarchies guide](https://bowheart.github.io/zedux/docs/guides/mergingHierarchies) for a comprehensive run-down of `store.use()`.
-
-### Using the store
-
-`store.subscribe()`, `store.dispatch()`, and `store.getState()` work almost exactly how you'd expect. Two little exceptions:
-
-```javascript
-store.subscribe((prevState, newState) => {
-  // Subscribers are passed both the old state and new state
-  // This is what made our "hello world" example work
-})
-```
-
-```javascript
-// Since Zedux stores are completely synchronous,
-// the new state is returned directly from a dispatch.
-const newState = store.dispatch()
-```
-
-### To be continued...
-
-That does it for the quick start. Check out the [full documentation](https://bowheart.github.io/zedux/docs/overview) for the real cool stuff. Here's a little taste of what's in store (yes, that pun was an accident):
-
-- Standardized reducer creation (kills string constants and switch statements/action-reducer maps).
-
-```javascript
-import { act, react } from 'zedux'
-
-export const addTodo = act('addTodo')
-
-export default react([])
-  .to(addTodo)
-  .withReducers(addTodoReducer)
-
-function addTodoReducer(state, { payload: newTodo }) {
-  return [ ...state, newTodo ]
-}
-```
-
-- Composable, memoized selectors.
+In other words, it takes a state tree and plucks a piece off of it and/or applies some transformation to it. A memoized selector is a smart selector that only recalculates its value when absolutely necessary.
 
 ```javascript
 import { select } from 'zedux'
 
-export const selectTodos = state => state.todos
+/*
+  This is a normal selector.
+  He just grabs the list of todos off the state tree.
+  Not only is `selectTodos(state)` very declarative, but it
+  abstracts away the shape of the state tree from consumers.
+  Compare:
+    `selectTodos(state)` vs `state.entities.todos`
+*/
+const selectTodos = state => state.entities.todos
 
-export const selectIncompleteTodos = select(
+/*
+  This is a memoized selector.
+  He consists of a list of input selectors and a calculator
+  function. The calculator function's arguments are the outputs
+  of the input selectors. The calculator function will only be
+  called when BOTH the state and the output of one or more
+  input selectors change.
+*/
+const selectIncompleteTodos = select(
   selectTodos,
   todos => todos.filter(todo => !todo.isComplete)
 )
 ```
 
-- Meta chains and standard meta types that allow store composition and some sick optimizations.
+Selectors are an absolutely necessary ingredient for well-managed state. Use them. Use them all the time. Memoized selectors carry some overhead, so only use them when the performance benefit is obvious &ndash; e.g. when iterating over a list.
+
+See:
+
+- [`select()`](https://bowheart.github.io/zedux/docs/api/select)
+- [the performance optimization guide](https://bowheart.github.io/zedux/docs/guides/optimizingPerformance)
+- [the `Selector` type](https://bowheart.github.io/zedux/docs/types/Selector)
+
+### State machines
+
+Don't get too excited. But yes, state machines are very powerful and yes, Zedux includes a basic implementation.
+
+A state machine is just a graph. The possible states are the nodes of the graph. The possible transitions between states are directed edges connecting the nodes.
 
 ```javascript
-import { metaTypes } from 'zedux'
+import { state, transition } from 'zedux'
 
-store.dispatch({
-  metaType: metaTypes.SKIP_REDUCERS,
-  action: {
-    type: 'addTodo',
-    payload: 'be awesome'
-  }
-})
+/*
+  Behold the states.
+  A state is just a fancy actor.
+*/
+const open = state('open')
+const closing = state('closing')
+const closed = state('closed')
+const opening = state('opening')
+
+/*
+  Once we have our states, we create the machine by defining
+  how the machine transitions from one state to the next
+
+  A machine is just a fancy reactor.
+*/
+const doorMachine = transition(open)
+  .to(closing)
+  .to(opening, closed)
+
+  .from(opening)
+  .to(closing, open)
+
+  .from(closed)
+  .to(opening)
+
+/*
+  Since our doorMachine is just a very fancy reducer,
+  it's super easy to test (and just have a blast with).
+*/
+doorMachine(open.type, closing()) // closing - valid transition
+doorMachine(closing.type, open()) // closing - invalid transition
+doorMachine(opening.type, open()) // open - valid transition
 ```
 
-- [Store composition!](https://bowheart.github.io/zedux/docs/guides/storeComposition) Seriously cool stuff. A benchmarker's dream.
+See:
+
+- [`state()`](https://bowheart.github.io/zedux/docs/api/state)
+- [`transition()`](https://bowheart.github.io/zedux/docs/api/transition)
+- [the state machine guide](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines)
+- [the `ZeduxMachine` api](https://bowheart.github.io/zedux/docs/api/ZeduxMachine)
+
+### Store composition
+
+Too good to be true? Think again. The store composition model of Zedux is unprecedented and extremely powerful. The Zedux store's disposable and highly performant nature combined with its uncanny time traveling ability will make you weep. With joy, of course.
 
 ```javascript
-import { createStore } from 'zedux'
-import { entities, visibilityFilter } from './reducers'
+import { act, createStore, react } from 'zedux'
 
-const todosStore = createStore()
-  .use({ entities, visibilityFilter })
-
+/*
+  While a Zedux app can have many stores, we'll typically always
+  create a single "root" store. This gives us the best of both
+  worlds - The time traveling ability of the singleton model
+  and the encapsulation of component-bound stores.
+*/
 const rootStore = createStore()
-  .use({
-    todos: todosStore
-  })
 
-rootStore.subscribe(() => {
-  console.log('root store updated!')
-})
+// Some basic setup for this example:
+const increment = act('increment')
 
-todosStore.dispatch({
-  type: 'addTodo',
-  payload: 'be just like wow'
-}) // logs "root store updated!"
+const counterReactor = react(0)
+  .to(increment)
+  .withReducers(state => state + 1)
+
+let storeIdCounter = 0
+
+/*
+  A simple factory for creating a "counter" store and appending
+  it to the root store's reactor hierarchy.
+*/
+const createCounterStore = () => {
+  const storeId = storeIdCounter++
+
+  const counterStore = createStore()
+    .use(counterReactor)
+
+  rootStore.use({ [storeId]: counterStore })
+
+  return counterStore
+}
+
+// And enjoy
+const counter1 = createCounterStore()
+const counter2 = createCounterStore()
+
+// We can increment each counter individually...
+counter1.dispatch(increment())
+counter1.dispatch(increment())
+
+counter2.dispatch(increment())
+
+// ...or the whole lot of 'em:
+rootStore.dispatch(increment())
+
+rootStore.getState() // { 0: 3, 1: 2 }
 ```
 
-- We haven't even touched inspectors/processors, time travel, asynchronicity, dispatchable reducers, action namespacing, or state machines. Check out [the docs](https://bowheart.github.io/zedux/docs/overview) already!
+The ability to create stores whose lifecycle parallels the lifecycle of a component while still maintaining time-traversable state and replayable actions is an exciting new possibility that Zedux has blown wide open.
+
+See:
+
+- [`createStore()`](https://bowheart.github.io/zedux/docs/api/createStore)
+- [the `Store` api](https://bowheart.github.io/zedux/docs/api/Store)
+- [the store composition guide](https://bowheart.github.io/zedux/docs/guides/storeComposition)
+
+### To be continued...
+
+At this point you should have a pretty good idea of what Zedux is all about. Check out the [full documentation](https://bowheart.github.io/zedux/docs/overview) for the rest of the awesomeness.
 
 ## It seems too big
 

@@ -16,7 +16,7 @@ Let's work with the following store setup:
 
 Hopefully your mind is reeling right now. Here are a few questions we'll answer in this guide:
 
-- "What happens if I dispatch an action to The Root Store? Store A? B? C?"
+- "What happens if I dispatch an action to the Root Store? Store A? B? C?"
 - "How does the Root Store know of a change in Store C?"
 - "What if I dispatch an [inducer](/docs/types/Inducer.md) to the Root Store?"
 - "What if I hydrate the state of Store B?"
@@ -34,7 +34,7 @@ When a child store's wrapper reactor is hit, it dispatches a special `INHERIT` a
 
 > We'll use red arrows to indicate downward flow and a red box to indicate that an action is wrapped in the [special `INHERIT` meta type](/docs/api/metaTypes.md#inherit).
 
-These wrapped actions behave exactly like normal actions, except that the child store's inspectors can see that the action is inherited. Zedux uses this internally to ensure that the action doesn't propagate back up the chain. But most inspector tasks (time travel, logging) will want to ignore inherited actions.
+These wrapped actions behave exactly like normal actions, except that the child store's inspectors can see that the action is inherited. Zedux uses this internally to ensure that the action doesn't propagate back up the chain. But most inspector tasks will want to ignore inherited actions.
 
 Good so far? Let's continue.
 
@@ -88,7 +88,7 @@ The same goes for grandchild and great-grandchild stores (and so on...). An acti
 
 Zedux takes special care to ensure that every store can reproduce every last bit of its state.
 
-## One step further
+## Unwinding
 
 Let's dispatch a doubly-wrapped `DELEGATE` action to the Root Store and see what happens:
 
@@ -97,10 +97,15 @@ Let's dispatch a doubly-wrapped `DELEGATE` action to the Root Store and see what
 Let's walk through this one:
 
 - [action dispatched to Root Store]
+
 - Root Store: "Oh, delegate to Store B, huh? You got it."
+
 - [Root Store unwraps the "delegate" instruction and dispatches the result to Store B]
+
 - Store B: "Oh, delegate to Store C, huh? Fine..."
+
 - [Store B unwraps the "delegate" instruction and dispatches the result to Store C]
+
 - Store C: "Oh look, a normal action. Inform my inspectors! Call out the reducers and hit up the processors! Long live Zedux!"
 
 Note that the action is dispatched to Store C normally. Store C has no idea where it came from. Thus the action will actually travel back up the inspector chain, being wrapped in `DELEGATE` meta nodes as normal.
@@ -135,7 +140,7 @@ And so on down and up the chain. Sick, huh?
 
 We've probably answered this satisfactorily, but just to review:
 
-Zedux takes special care to make sure that a store's inspectors are called every time the store's state may change. So [`store.hydrate()`](/docs/api/Store.md#storehydrate), [inducers](/docs/types/Inducer.md), and actions dispatched to child stores will all find a way to notify the store's inspectors of a serializable action that can be used to reproduce the state update (#timetravel).
+Zedux takes special care to make sure that a store's inspectors are called every time the store's state may change. So [`store.hydrate()`](/docs/api/Store.md#storehydrate), [inducers](/docs/types/Inducer.md), and actions dispatched to child stores will all find a way to notify the store's inspectors of a serializable action that can be used to reproduce the state update.
 
 Typically, time travel will be implemented in the Root Store's inspectors. But every store has the capability.
 

@@ -60,7 +60,7 @@ const fiveStarMovies = selectByRating(state, 5)
 
 Since we called the `selectByRating` selector with different arguments, we just killed our memoization. In many situations this is fine. But sometimes we need a workaround.
 
-The solution is to create "selector factories" whose job is to return unique instances of the selector. This way we can have multiple parallel selector caches.
+The solution is to create selector factories whose job is to return unique instances of the selector. This way we can have multiple parallel selector caches.
 
 ```javascript
 const createByRatingSelector = rating => state =>

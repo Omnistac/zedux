@@ -95,7 +95,7 @@ store.dispatch(buyAndSpend)
 
 ## But inducers aren't serializable! What about time travel?
 
-Actually, it's still possible. After calculating the new state, Zedux will dispatch the special [hydrate action](/docs/api/actionTypes.md#hydrate) to the store, which inspectors can plug in to.
+Actually, it's still possible. After calculating the new state, Zedux will dispatch the special [hydrate action](/docs/api/actionTypes.md#hydrate) to the store, which inspectors can plug in to. Zedux always has this covered! All non-serializable or otherwise non-standard actions are transformed into a serializable action that has all the information a time travel implementation needs.
 
 This gives Zedux a big boost up from other zero-configuration Redux libraries like [Repatch](https://github.com/jaystack/repatch) and [Redux-Zero](https://github.com/concretesolutions/redux-zero).
 
@@ -135,7 +135,7 @@ const addTodo = act('addTodo')
 
 const addTodoReactor = react([])
   .to(addTodo)
-  .withReducers((state = []) => [ ...state, newTodo ])
+  .withReducers(state => [ ...state, newTodo ])
 
 const store = createStore()
   .use({
