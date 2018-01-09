@@ -1,6 +1,6 @@
 {
   "name": "zedux",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "A high-level, declarative, composable form of Redux",
   "main": "dist/zedux.js",
   "module": "dist/zedux.es.js",
