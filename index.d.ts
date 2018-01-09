@@ -138,9 +138,38 @@ export interface ZeduxState extends State, ZeduxActor {
     of the given type.
 */
 export interface act {
-  (actionType: string): ZeduxActor
-  namespace(...namespaceNodes: string[]): (actionType: string) => ZeduxActor
+  (...actionTypeNodes: string[]): ZeduxActor
+  namespace(...namespaceNodes: string[]):
+    (...actionTypeNodes: string[]) => ZeduxActor
 }
+
+
+/**
+  A functional programming utility.
+  Composes single-argument functions together from right-to-left
+  For example
+
+    compose(f, g, h)(x)
+
+  is equivalent to
+
+    f(g(h(x)))
+
+  When called with no arguments, returns the identity function.
+
+  When called with one argument, returns the passed function as-is
+
+  @template F The type of the single function when called
+    with one argument
+  @template C The type of the resulting, composite function.
+
+  @returns A function that, when called, invokes the given
+    functions from right to left. The signature of this function
+    will be the signature of the right-most input function.
+*/
+export function compose<T>(): (arg: T) => T
+export function compose<F = Function>(func: F): F
+export function compose<C = (...args: any[]) => any>(...funcs: Function[]): C
 
 
 /**
@@ -148,7 +177,7 @@ export interface act {
 
   @template S Root state object
 
-  @returns An empty, not-yet-configured store
+  @returns {Store} An empty, not-yet-configured store
 */
 export function createStore<S = any>(): Store<S>
 
@@ -158,10 +187,10 @@ export function createStore<S = any>(): Store<S>
 
   @template S The state shape consumed and produced by this reactor
 
-  @param initialState The initial state that the ZeduxReactor's
+  @param {S} initialState The initial state that the ZeduxReactor's
     reducer should return on initialization.
 
-  @returns A ZeduxReactor with no delegates.
+  @returns {ZeduxReactor} A ZeduxReactor with no delegates.
 */
 export function react<S = any>(initialState: S): ZeduxReactor<S>
 
@@ -172,42 +201,47 @@ export function react<S = any>(initialState: S): ZeduxReactor<S>
   @template S The state shape consumed by this selector
   @template D The derivation of the input state that this selector produces
 
-  @param selectors The selector dependencies
+  @param {Selector} inputSelectors The input selectors
   @param calculator The calculator function that will receive as input.
     the result of all the selector dependencies and return the derived
     state.
 
   @returns A memoized Selector
 */
-export function select<S = any, D = any>(
-  calculator: (state: S) => D
-): Selector<S, D>
+export interface select {
+  <S = any, D = any>(
+    calculator: (state: S) => D
+  ): Selector<S, D>
 
-export function select<S = any, D = any, D1 = any>(
-  inputSelector1: Selector<S, D1>,
-  calculator: (input1: D1) => D
-): Selector<S, D>
+  <S = any, D = any, D1 = any>(
+    inputSelector1: Selector<S, D1>,
+    calculator: (input1: D1) => D
+  ): Selector<S, D>
 
-export function select<S = any, D = any, D1 = any, D2 = any>(
-  inputSelector1: Selector<S, D1>,
-  inputSelector2: Selector<S, D2>,
-  calculator: (input1: D1, input2: D2) => D
-): Selector<S, D>
+  <S = any, D = any, D1 = any, D2 = any>(
+    inputSelector1: Selector<S, D1>,
+    inputSelector2: Selector<S, D2>,
+    calculator: (input1: D1, input2: D2) => D
+  ): Selector<S, D>
 
-export function select<S = any, D = any, D1 = any, D2 = any, D3 = any>(
-  inputSelector1: Selector<S, D1>,
-  inputSelector2: Selector<S, D2>,
-  inputSelector3: Selector<S, D3>,
-  calculator: (input1: D1, input2: D2, input3: D3) => D
-): Selector<S, D>
+  <S = any, D = any, D1 = any, D2 = any, D3 = any>(
+    inputSelector1: Selector<S, D1>,
+    inputSelector2: Selector<S, D2>,
+    inputSelector3: Selector<S, D3>,
+    calculator: (input1: D1, input2: D2, input3: D3) => D
+  ): Selector<S, D>
 
-export function select<S = any, D = any, D1 = any, D2 = any, D3 = any, D4 = any>(
-  inputSelector1: Selector<S, D1>,
-  inputSelector2: Selector<S, D2>,
-  inputSelector3: Selector<S, D3>,
-  inputSelector4: Selector<S, D4>,
-  calculator: (input1: D1, input2: D2, input3: D3, input4: D4) => D
-): Selector<S, D>
+  <S = any, D = any, D1 = any, D2 = any, D3 = any, D4 = any>(
+    inputSelector1: Selector<S, D1>,
+    inputSelector2: Selector<S, D2>,
+    inputSelector3: Selector<S, D3>,
+    inputSelector4: Selector<S, D4>,
+    calculator: (input1: D1, input2: D2, input3: D3, input4: D4) => D
+  ): Selector<S, D>
+
+  namespace(...namespaceNodes: string[]):
+    (...actionTypeNodes: string[]) => select
+}
 
 
 /**
