@@ -46,13 +46,13 @@ Thus there are two things the Root Store needs to do:
 
 ### 1) Inspect Store A's actions
 
-Parent stores register an inspector with their child stores. When an action is dispatched to a child store, the parent's inspector is notified and propagates the notification to the parent store's inspectors. And so on up the chain.
+Parent stores register an [inspector](/docs/types/Inspector.md) with their child stores. When an action is dispatched to a child store, the parent's inspector is notified and propagates the notification to the parent store's inspectors. And so on up the chain.
 
 The key here is that the parent store wraps the action in a special `DELEGATE` meta node before passing it up the chain. This meta node contains all the information the parent store needs to "delegate" the action to the child store. The idea here is that dispatching an action to a child store is **exactly** equivalent to dispatching a configured `DELEGATE` action to the parent store.
 
 This allows the Root Store to plug in to all actions dispatched to all child stores in such a way that the Root Store can easily reproduce all state changes across the whole hierarchy. Since this is recursive, even deeply nested stores can have their state easily reproduced by any store up the chain (including itself). This is the key to time travel.
 
-Note that the action is not dispatched to the parent store. Only the inspectors of the parent store (and parent's parent store, and parent's parent's parent store, etc...) are notified.
+Note that the action is not dispatched to the parent store. Only the inspectors of the parent store (and grandparent store, and great-grandparent store, etc...) are notified.
 
 ### 2) Subscribe to changes in Store A
 
@@ -130,7 +130,7 @@ Since an inducer is essentially just a partial state hydration &ndash; in fact, 
 
 ## What if I hydrate the state of Store B?
 
-The hydration will create the special [hydrate](/docs/api/actionTypes.md#hydrate) action, wrap it in a `DELEGATE` meta node and inform the Root Store's inspectors. During hydration, Store C will also be hydrated with the appropriate slice of state. Once the state is updated, the state change in Store B will be propagated to the Root Store.
+The hydration will create the special [hydrate](/docs/api/actionTypes.md#hydrate) action, wrap it in a `DELEGATE` meta node, and inform the Root Store's inspectors. During hydration, Store C will also be hydrated with the appropriate slice of state. Once the state is updated, the state change in Store B will be propagated to the Root Store.
 
 ![middle store hydration](/docs/img/middle-store-hydration.png)
 
