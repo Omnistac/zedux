@@ -99,7 +99,7 @@ export const invalidHierarchyDescriptorNode = isProd ? prodErr : node =>
 export const invalidNodeOptionKey = isProd ? prodErr : key =>
   `${PREFIX} store.setNodeOptions() - `
     + `Received invalid node option, "${key}". Valid options are: `
-    + '[ "clone", "create", "get", "set" ]'
+    + '[ "clone", "create", "get", "isNode", "iterate", "set" ]'
 
 
 export const invalidNonFunction = isProd ? prodErr : (nonFunction, method) =>

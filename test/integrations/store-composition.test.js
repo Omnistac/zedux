@@ -160,4 +160,119 @@ describe('store composition', () => {
 
   })
 
+
+  test('hydrating the parent hydrates the child', () => {
+
+    const parent = createStore()
+    const child = createStore()
+
+    parent.use({
+      a: {
+        b: child.use({
+          c: (state = 1) => state,
+          d: {
+            e: (state = 2) => state
+          }
+        })
+      }
+    })
+
+    const initialState = parent.getState()
+
+    parent.hydrate({
+      a: {
+        b: {
+          ...initialState.a.b,
+          c: 3
+        }
+      }
+    })
+
+    const newState = parent.getState()
+
+    expect(newState).toEqual({
+      a: {
+        b: {
+          c: 3,
+          d: {
+            e: 2
+          }
+        }
+      }
+    })
+
+    expect(newState.a.b.d).toBe(initialState.a.b.d)
+
+  })
+
+
+  test('setState() on the parent hydrates the child', () => {
+
+    const parent = createStore()
+    const child = createStore()
+
+    parent.use({
+      a: {
+        b: child.use({
+          c: (state = 1) => state,
+          d: {
+            e: (state = 2) => state
+          }
+        })
+      }
+    })
+
+    const childInspector = jest.fn()
+    child.inspect(childInspector)
+
+    const initialParentState = parent.getState()
+    const initialChildState = child.getState()
+
+    parent.setState({
+      a: {
+        b: {
+          c: 3
+        }
+      }
+    })
+
+    const newParentState = parent.getState()
+    const newChildState = child.getState()
+
+    expect(newParentState).toEqual({
+      a: {
+        b: {
+          c: 3,
+          d: {
+            e: 2
+          }
+        }
+      }
+    })
+
+    expect(newChildState).toEqual({
+      c: 3,
+      d: {
+        e: 2
+      }
+    })
+
+    expect(newParentState.a.b.d).toBe(initialParentState.a.b.d)
+    expect(newChildState.d).toBe(initialChildState.d)
+
+    expect(childInspector).toHaveBeenCalledWith({
+      dispatch: child.dispatch,
+      getState: child.getState
+    }, {
+      type: actionTypes.HYDRATE,
+      payload: {
+        c: 3,
+        d: {
+          e: 2
+        }
+      }
+    })
+
+  })
+
 })

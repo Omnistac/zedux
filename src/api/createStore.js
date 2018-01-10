@@ -11,14 +11,16 @@ import { STORE_IDENTIFIER } from '../utils/general'
 
 import {
   delegate, hierarchyNodeToReactor, mergeHierarchyDescriptorNodes,
-  propagateChange
+  mergeStateTrees, propagateChange
 } from '../utils/hierarchy'
 
 import {
   addMeta, hasMeta, removeAllMeta
 } from '../utils/meta'
 
-import { clone, create, get, set } from '../utils/nodeOptions'
+import {
+  clone, create, get, isNode, iterate, set
+} from '../utils/nodeOptions'
 
 
 /**
@@ -29,7 +31,7 @@ import { clone, create, get, set } from '../utils/nodeOptions'
 */
 export function createStore() {
   let nodeOptions = {
-    clone, create, get, set
+    clone, create, get, isNode, iterate, set
   }
   let currentHierarchy = null
   let currentState
@@ -87,7 +89,9 @@ export function createStore() {
     Do not mutate this value.
   */
   const getState = () => {
-    if (isDispatchingToReducers) throw new Error(invalidAccess('store.getState()'))
+    if (isDispatchingToReducers) {
+      throw new Error(invalidAccess('store.getState()'))
+    }
 
     return currentState
   }
@@ -104,19 +108,11 @@ export function createStore() {
     Throws an Error if called from the reducer layer.
   */
   const hydrate = newState => {
-    if (isDispatchingToReducers) throw new Error(invalidAccess('store.hydrate()'))
-
-    let action = {
-      type: actionTypes.HYDRATE,
-      payload: newState
+    if (isDispatchingToReducers) {
+      throw new Error(invalidAccess('store.hydrate()'))
     }
 
-    if (currentState === newState) return store // nothing to do
-
-    dispatchToInspectors(action)
-
-    // Propagate the change to child stores
-    dispatchToReducers(action, newState)
+    dispatchHydration(newState)
 
     return store // for chaining
   }
@@ -157,6 +153,39 @@ export function createStore() {
     })
 
     return store // for chaining
+  }
+
+
+  /**
+    Applies a partial state update to the store.
+
+    Dispatches the special PARTIAL_HYDRATE action to the store's inspectors
+    and reducers. The PARTIAL_HYDRATE action's `payload` property will be
+    set to the partial state update, allowing inspectors to pick up on
+    the changes and implement time travel and whatnot.
+
+    Works similar to React's `setState()` but deeply merges nested nodes.
+
+    Note that this method cannot remove properties from the
+    state tree. If that functionality is needed, use store.hydrate()
+    or create a reactor hierarchy.
+
+    Throws an error if called from the reducer layer.
+  */
+  const setState = partialStateTree => {
+    if (isDispatchingToReducers) {
+      throw new Error(invalidAccess('store.setState()'))
+    }
+
+    const newState = mergeStateTrees(
+      currentState,
+      partialStateTree,
+      nodeOptions
+    )
+
+    dispatchHydration(newState, actionTypes.PARTIAL_HYDRATE)
+
+    return currentState
   }
 
 
@@ -210,14 +239,27 @@ export function createStore() {
   }
 
 
+  function dispatchHydration(newState, actionType = actionTypes.HYDRATE) {
+    if (newState === currentState) return // nothing to do
+
+    let action = {
+      type: actionType,
+      payload: newState
+    }
+
+    dispatchToInspectors(action)
+
+    // Propagate the change to child stores
+    dispatchToReducers(action, newState)
+  }
+
+
   function dispatchInducer(inducer) {
-    const newState = inducer(currentState)
+    const partialStateTree = inducer(currentState)
 
-    if (newState === currentState) return newState
+    setState(partialStateTree)
 
-    hydrate(newState)
-
-    return newState
+    return currentState
   }
 
 
@@ -312,6 +354,7 @@ export function createStore() {
     hydrate,
     inspect,
     setNodeOptions,
+    setState,
     subscribe,
     use,
     $$typeof: STORE_IDENTIFIER

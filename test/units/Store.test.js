@@ -497,6 +497,135 @@ describe('store.setNodeOptions()', () => {
 })
 
 
+describe('Store.setState()', () => {
+
+  test('cannot be called inside a reducer; throws an Error', () => {
+
+    const store = createStore()
+
+    const reducer = state => {
+      if (state) store.setState()
+
+      return state || 'a'
+    }
+
+    store.use(reducer)
+
+    const action = {
+      type: 'b'
+    }
+
+    expect(store.dispatch.bind(null, action)).toThrow(Error)
+
+  })
+
+
+  test('short-circuits if the new state === the current state', () => {
+
+    const obj = {}
+    const store = createStore()
+      .use(() => obj)
+
+    store.setState(obj)
+
+    expect(store.getState()).toBe(obj)
+
+  })
+
+
+  test('informs inspectors of the special PARTIAL_HYDRATE action', () => {
+
+    const inspector = jest.fn()
+    const store = createStore()
+      .inspect(inspector)
+
+    const hydratedState = { a: 1 }
+
+    store.setState(hydratedState)
+
+    expect(inspector).toHaveBeenCalledWith({
+      dispatch: expect.any(Function),
+      getState: expect.any(Function)
+    }, {
+      type: actionTypes.PARTIAL_HYDRATE,
+      payload: hydratedState
+    })
+
+  })
+
+
+  test('informs subscribers of the new state', () => {
+
+    const subscriber = jest.fn()
+    const store = createStore()
+    const hydratedState = { a: 1 }
+
+    store.subscribe(subscriber)
+    store.setState(hydratedState)
+
+    expect(subscriber).toHaveBeenCalledWith(undefined, hydratedState)
+
+  })
+
+
+  test('does nothing if the state did not change', () => {
+
+    const store = createStore()
+      .hydrate(1)
+
+    const initialState = store.getState()
+
+    const subscriber = jest.fn()
+    store.subscribe(subscriber)
+
+    const newState = store.setState(1)
+
+    expect(subscriber).not.toHaveBeenCalled()
+    expect(newState).toBe(initialState)
+
+  })
+
+
+  test('deeply merges the new state into the old state', () => {
+
+    const initialState = {
+      a: 1,
+      b: {
+        c: 2,
+        d: {
+          e: 3
+        }
+      }
+    }
+
+    const store = createStore()
+      .hydrate(initialState)
+
+    const newState = store.setState({
+      b: {
+        c: 4,
+        f: 5
+      }
+    })
+
+    expect(newState).toEqual({
+      a: 1,
+      b: {
+        c: 4,
+        d: {
+          e: 3
+        },
+        f: 5
+      }
+    })
+
+    expect(newState.b.d).toBe(initialState.b.d)
+
+  })
+
+})
+
+
 describe('store.subscribe()', () => {
 
   test('throws a TypeError if the subscriber is not a function', () => {

@@ -9,7 +9,7 @@ export const PLAIN_OBJECT = 'object'
 
 
 // Create a unique symbol in the global symbol registry
-//  to identify zedux stores
+// to identify zedux stores
 export const STORE_IDENTIFIER = Symbol.for('zedux.store')
 
 

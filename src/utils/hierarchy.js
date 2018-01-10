@@ -241,6 +241,38 @@ export function mergeHierarchyDescriptors(
 
 
 /**
+  Deeply merges the new state tree into the old one.
+*/
+export function mergeStateTrees(
+  oldStateTree,
+  newStateTree,
+  nodeOptions
+) {
+  if (!nodeOptions.isNode(oldStateTree)) return newStateTree
+
+  const mergedTree = nodeOptions.clone(oldStateTree)
+
+  nodeOptions.iterate(newStateTree, (key, val) => {
+    const clonedVal = nodeOptions.isNode(val)
+
+      // Recursively merge the nested nodes.
+      ? mergeStateTrees(nodeOptions.get(mergedTree, key), val, nodeOptions)
+
+      // Not a nested node (anymore, at least)
+      : val
+
+    nodeOptions.set(
+      mergedTree,
+      key,
+      clonedVal
+    )
+  })
+
+  return mergedTree
+}
+
+
+/**
   Propagates a state change from a child store to a parent.
 
   Recursively finds the child store's node in the parent store's
@@ -285,7 +317,10 @@ export function wrapStoreInReactor(store) {
 
     // If this is the special hydrate action, re-create the action's
     // payload using the current state slice
-    if (action.type === actionTypes.HYDRATE) {
+    if (
+      action.type === actionTypes.HYDRATE
+      || action.type === actionTypes.PARTIAL_HYDRATE
+    ) {
       action = {
         type: actionTypes.HYDRATE,
         payload: state
