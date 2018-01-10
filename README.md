@@ -57,7 +57,7 @@ Redux has landed itself in an awkward spot, being too much for small application
 
 Zedux believes in simplicity too. But Zedux approaches it from the user's perspective first, and a code perspective second. This means Zedux has an incredibly straight-forward, declarative api and almost none of the verbosity of Redux.
 
-Zedux does not, however, conform to the philosophy that simple equals bare. Zedux aims to offer a complete api for all common state management needs. This includes asynchronicity, state hydration, code splitting, state machines, and memoization/state derivation.
+Zedux does not, however, conform to the philosophy that simple equals bare. Zedux aims to offer a complete api for all common state management needs. This includes asynchronicity, state hydration, code splitting, state machines, and memoization/state derivation. Apps of all sizes, from tiny to gigantic, should be able to use Zedux comfortably.
 
 ## Quick Start
 
@@ -180,16 +180,18 @@ store.dispatch(state => state + 6)
 /*
   ...but in this case we'll typically want to use `store.setState()`
 */
-store.setState(store.getState() + 6)
+store.setState(9)
 ```
 
-The advantage of using `store.setState()` over `store.hydrate()` is that the new state is deeply merged into the existing state. Thus headaches like:
+The difference between dispatching an inducer and calling `store.setState()` is just semantics. Inducers are nice for creating predefined state updater packages. `store.setState()` is nice for on-the-fly state updates &ndash; use cases are similar to React's [`setState()`](https://reactjs.org/docs/react-component.html#setstate).
+
+The advantage of using inducers and `store.setState()` over `store.hydrate()` is that the new state is deeply merged into the existing state. Thus headaches like:
 
 ```javascript
 store.hydrate({
   ...state,
   todos: {
-    ...state[todos],
+    ...state.todos,
     urgent
   }
 })
@@ -201,9 +203,20 @@ become simple:
 store.setState({
   todos: { urgent }
 })
+
+// or, with an inducer:
+store.dispatch(() => ({
+  todos: { urgent }
+}))
 ```
 
 since Zedux clones the nested nodes for us.
+
+> You may have noticed that the nodes of our state trees are all plain objects. But Zedux can actually be taught to understand any hierarchical data type. Immutable fans rejoice and check out the guide on [configuring the hierarchy](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy).
+
+#### But what about time travel??
+
+Ooh. You're gonna love this. Zedux translates every pseudo-action of every sort into a serializable action that a store's [inspectors](https://bowheart.github.io/zedux/docs/types/Inspector) can plug in to. `store.hydrate()`, `store.setState()`, and actions/inducers dispatched to child stores will all find a way to notify a store's inspectors of a serializable action that can be used to reproduce the state update. In short, you never have to worry about whether a state update is reproducible. Zedux has you covered.
 
 See:
 
@@ -220,7 +233,7 @@ Zedux ships with a basic api for creating one of the most powerful state managem
 state => derivedState
 ```
 
-In other words, it takes a state tree and plucks a piece off of it and/or applies some transformation to it. A memoized selector is a smart selector that only recalculates its value when absolutely necessary.
+In other words, it takes a state tree and plucks a piece off of it and/or applies some transformation to it. A memoized selector is a smart selector that only recalculates its value when absolutely necessary. When a recalculation is not necessary, it returns a cached value.
 
 ```javascript
 import { select } from 'zedux'
@@ -277,7 +290,7 @@ const opening = state('opening')
 
 /*
   Once we have our states, we create the machine by defining
-  how the machine transitions from one state to the next
+  how the machine transitions from one state to the next.
 
   A machine is just a fancy reactor.
 */
@@ -329,7 +342,7 @@ const counterReactor = react(0)
   .to(increment)
   .withReducers(state => state + 1)
 
-let storeIdCounter = 0
+let storeIdCounter = 1
 
 /*
   A simple factory for creating a "counter" store and appending
@@ -341,7 +354,8 @@ const createCounterStore = () => {
   const counterStore = createStore()
     .use(counterReactor)
 
-  rootStore.use({ [storeId]: counterStore })
+  // Where the magic happens; tell rootStore to "use" counterStore
+  rootStore.use({ [`counter${storeId}`]: counterStore })
 
   return counterStore
 }
@@ -359,7 +373,7 @@ counter2.dispatch(increment())
 // ...or the whole lot of 'em:
 rootStore.dispatch(increment())
 
-rootStore.getState() // { 0: 3, 1: 2 }
+rootStore.getState() // { counter1: 3, counter2: 2 }
 ```
 
 The ability to create stores whose lifecycle parallels the lifecycle of a component while still maintaining time-traversable state and replayable actions is an exciting new possibility that Zedux has blown wide open.
