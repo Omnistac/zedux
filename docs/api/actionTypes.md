@@ -6,13 +6,9 @@ There are a few action types that Zedux uses internally. While there should neve
 
 ### `HYDRATE`
 
-Zedux dispatches this action to the store in two scenarios:
+Zedux dispatches this action when the store's [`.hydrate()`](/docs/api/Store.md#storehydrate) method is called.
 
-1. When the store's [`.hydrate()`](/docs/api/Store.md#storehydrate) method is called.
-
-2. When an [inducer](/docs/types/Inducer.md) is dispatched to the store.
-
-The hydrate action's `payload` property will be the value of the new state. Thus a store's [inspectors](/docs/types/Inspector.md) can be notified of otherwise unserializable "actions". The idea here is that dispatching an hydrate action is **exactly** equivalent to dispatching a corresponding inducer or calling `store.hydrate()`.
+The hydrate action's `payload` property will be the value of the new state. Thus a store's [inspectors](/docs/types/Inspector.md) can be notified of otherwise unserializable "actions". The idea here is that dispatching an hydrate action is **exactly** equivalent to calling `store.hydrate()`.
 
 For example, dispatching the following inducer:
 
@@ -29,7 +25,7 @@ store.dispatch({
 })
 ```
 
-In short, this action makes time travel possible even when using inducers and `store.hydrate()`.
+In short, this action makes time travel possible even when using `store.hydrate()`.
 
 #### Usage
 
@@ -38,6 +34,18 @@ import { actionTypes } from 'zedux'
 
 const { HYDRATE } = actionTypes
 ```
+
+### `PARTIAL_HYDRATE`
+
+Zedux dispatches this action in two scenarios:
+
+1. When the store's [`setState()`](/docs/api/Store.md#setstate) method is called.
+
+2. When an [inducer](/docs/types/Inducer.md) is dispatched to the store.
+
+Behavior is very similar to the [HYDRATE action](#hydrate). The only difference being that the PARTIAL_HYDRATE action's `payload` is a partial state update that should be merged into the existing state, whereas a HYDRATE action's payload replaces the state entirely.
+
+In short, this action makes time travel possible even when using inducers and `store.setState()`.
 
 ### `RECALCULATE`
 

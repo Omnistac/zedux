@@ -30,15 +30,15 @@ dispatching an action to store `C` will not affect store `B` in the slightest an
 
 A well-structured store hierarchy will naturally be very performant.
 
-## Inducers
+## Inducers and `store.setState()`
 
 > Don't use this method as a performance optimization unless you're positive you need it. #prematureoptimization.
 
-[Inducers](/docs/types/Inducer.md) have the unique capability of updating any piece of the store in O(1) time. A normal action dispatched to the store is passed through the entire reducer hierarchy to calculate the new state. While this is almost never a big deal, it is an O(n) algorithm.
+[Inducers](/docs/types/Inducer.md) and `store.setState()` have the unique capability of updating any piece of the store in O(1) time. A normal action dispatched to the store is passed through the entire reducer hierarchy to calculate the new state. While this is almost never a big deal, it is an O(n) algorithm.
 
-Inducers can be used to circumvent the reducer hierarchy in most situations. Use sparingly.
+Inducers and `store.setState()` can be used to circumvent the reducer hierarchy. Use sparingly &ndash; standards are there for a reason.
 
-Note that this optimization is only possible in stores that are not composed of other stores. When a store is composed of another store, Zedux still passes the special [hydrate action](/docs/api/actionTypes.md#hydrate) through the reducer layer in order to persist the inducer's imposed state to child stores. Of course, a store will eventually be reached that has no child stores. That store will still update in O(1) time.
+Note that this optimization is only possible in stores that are not composed of other stores. When a store is composed of another store, Zedux still shuttles the special [partial hydrate action](/docs/api/actionTypes.md#partialhydrate) through the reducer layer in order to persist the inducer's imposed state to child stores. Of course, a store will eventually be reached that has no child stores. That store will still update in O(1) time.
 
 ## The SKIP_* meta types
 

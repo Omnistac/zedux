@@ -105,14 +105,18 @@ const store = createStore()
 
 store.getState() // { weapon: 'dagger' }
 
-// hydrate() is essentially a shorthand for a simple inducer:
-store.dispatch(() => ({ weapon: 'crossbow' }))
+// Whereas `setState()` merges the partial state update into
+// the existing state...
+store.setState({ helmet: 'iron' }) /* ->
+  {
+    weapon: 'dagger',
+    helmet: 'iron'
+  }
+*/
 
-store.getState() // { weapon: 'crossbow' }
-
-store.hydrate({ weapon: 'katana' })
-
-store.getState() // { weapon: 'katana' }
+// ...`hydrate()` replaces the state tree entirely:
+store.hydrate({ helmet: 'bronze' })
+store.getState() // { helmet: 'bronze' }
 ```
 
 ### `store.inspect()`
@@ -176,6 +180,55 @@ const nodeOptions = {
 const store = createStore()
   .setNodeOptions(options)
 ```
+
+### `store.setState()`
+
+Applies a partial state update to the store. The partial state tree will be merged into the existing state tree (immutably, of course).
+
+Will also trigger the special [PARTIAL_HYDRATE](/docs/api/actionTypes.md#partialhydrate) action which the store's inspectors can plug in to in order to implement time travel debugging, etc.
+
+This is the king of the zero-configuration model of Zedux. Very small apps may want to use this method often and will find extreme joy in its ease of use. Large apps may want to avoid it entirely, sticking to a more pure, Redux-y approach. But that's entirely up to you. You're welcome.
+
+#### Definition
+
+```typescript
+(partialUpdate: any) => S
+```
+
+**partialUpdate** - The partial state update to merge into the existing state. Does not have to clone the root node or any nested nodes in the state tree. Zedux takes care of that.
+
+Returns the new state of the store.
+
+#### Examples
+
+```javascript
+import { createStore } from 'zedux'
+
+const store = createStore()
+  .hydrate({
+    equipment: {
+      helmet: 'iron helm',
+      weapon: 'broadsword'
+    },
+    health: 22
+  })
+
+const newState = store.setState({
+  equipment: { weapon: 'crossbow' }
+})
+
+newState /* ->
+  {
+    equipment: {
+      helmet: 'iron helm',
+      weapon: 'crossbow'
+    },
+    health: 22
+  }
+*/
+```
+
+Notice that `store.hydrate()` returns the store for chaining, while `store.setState()` returns the new state of the tree. This illustrates the different use cases &ndash; `store.hydrate()` is for setting the initial state of the store or fully wiping/recreating it. `store.setState()` is for on-the-fly state updates.
 
 ### `store.subscribe()`
 

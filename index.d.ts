@@ -24,8 +24,8 @@ export interface HierarchyDescriptor {
 }
 
 
-export interface Inducer<S = any> {
-  (state: S): S
+export interface Inducer<S = any, P = any> {
+  (state: S): P
 }
 
 
@@ -81,6 +81,7 @@ export interface Store<S = any> {
   hydrate(newState: S): Store<S>
   inspect(inspector: Inspector): Store<S>
   setNodeOptions(options: NodeOptions): Store<S>
+  setState(partialUpdate: any): S
   subscribe(subscriber: Subscriber<S>): Subscription
   use(newHierarchy: HierarchyDescriptorNode): Store<S>
 }

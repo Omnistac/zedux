@@ -30,18 +30,40 @@ There are 4 functions that define the node creation process.
 
 4. `set` - A function that accepts a node, a key, and a value and sets the value of `key` to `value` in `node`.
 
+In addition to these, when using [`store.setState()`](/docs/api/Store.md#storesetstate) Zedux requires 2 more functions to deeply merge state trees:
+
+1. `isNode` - A function that accepts anything and returns a boolean indicating whether the given argument is a node.
+
+2. `iterate` - A function that accepts a node and a callback function, iterates over all the key-value pairs, and passes them to the callback function as `callback(key, value)`.
+
 The default value of all these is pretty straight-forward:
 
 ```javascript
 const defaultNodeOptions = {
   clone: node => { ...node },
+
   create: () => ({}),
+
   get: (node, key) => node[key],
-  set: (node, key, val) => (node[key] = val, node)
+
+  set: (node, key, val) => {
+    node[key] = val
+
+    return node
+  },
+
+  isNode: isPlainObject, // (an internal helper function)
+
+  iterate: (node, callback) => {
+
+    // Iterate over the object's entries and pass each pair off
+    // to the callback function
+    Object.entries(node).forEach(
+      ([ key, val ]) => callback(key, val)
+    )
+  }
 }
 ```
-
-(Yeah, that's a comma expression. So shoot me.)
 
 This is the stuff that tells Zedux how to work with plain objects as the intermediate nodes in the reactor hierarchy. But using `store.setNodeOptions()`, we can teach Zedux how to use something else. Let's take the `Map` class from ImmutableJS for example:
 
@@ -51,9 +73,20 @@ import { Map } from 'immutable'
 
 const nodeOptions = {
   clone: node => node,
+
   create: () => new Map(),
+
   get: (node, key) => node.get(key),
-  set: (node, key, val) => node.set(key, val)
+
+  set: (node, key, val) => node.set(key, val),
+
+  isNode: node => node instanceof Map,
+
+  iterate: (node, callback) => {
+    node.forEach(
+      (val, key) => callback(key, val)
+    )
+  }
 }
 
 const store = createStore()
@@ -70,6 +103,4 @@ If you are wanting to use ImmutableJS, consider the `zedux-immutable` plugin. It
 import { createImmutableStore } from 'zedux-immutable'
 
 const store = createImmutableStore()
-  .use(...)
-  // etc...
 ```

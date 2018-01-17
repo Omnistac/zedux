@@ -26,28 +26,30 @@ Processors created with the [react](/docs/api/react.md) api can return iterators
 import { act, createStore, react } from 'zedux'
 import { post } from 'axios'
 
-const store = createStore()
-
+// An actor and its sub-actors
 const addTodo = act('addTodo')
 
 addTodo.requested = act('addTodo/requested')
 addTodo.success = act('addTodo/success')
 addTodo.failure = act('addTodo/failure')
 
+// Our processor. He'll send the request to the server, keeping
+// the store updated on the request's progress
 const addTodoProcessor = (dispatch, action, state) => {
-  dispatch(addTodo.requested)
+  dispatch(addTodo.requested())
 
   post('/todos/add', action.payload)
     .then(response => dispatch(addTodo.success(response)))
     .catch(error => dispatch(addTodo.failure(error)))
 }
 
+// A good old reactor
 const addTodoReactor = react({
     isAddingTodo: false,
     todos: []
   })
   .to(addTodo)
-  .withProcessors(addTodoProcessor)
+  .withProcessors(addTodoProcessor) // use our processor
 
   .to(addTodo.requested)
   .withReducers(state => ({ ...state, isAddingTodo: true }))
@@ -56,10 +58,15 @@ const addTodoReactor = react({
   .withReducers(state => ({ ...state, isAddingTodo: false }))
 
   .to(addTodo.success)
-  .withReducers((state, { payload }) => ({
+  .withReducers((state, { payload: newTodo }) => ({
     ...state,
-    todos: [ ...state.todos, payload ]
+    todos: [ ...state.todos, newTodo ]
   }))
 
-store.use(addTodoReactor)
+// Create the store
+const store = createStore()
+  .use(addTodoReactor)
+
+// And enjoy
+store.dispatch(addTodo('pown processor proliferation'))
 ```

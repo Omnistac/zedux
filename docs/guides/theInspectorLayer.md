@@ -16,30 +16,29 @@ Since inspectors are [shape bound](/docs/glossary.md#shape-bound), they can perf
 
 ## The gist
 
-The inspector layer will be hit for every action and internal pseudo-action that could possibly change the state of the store. This includes [hydration](/docs/api/Store.md#storehydrate), [induction](/docs/guides/dispatchableReducers.md), [code splitting](/docs/api/Store.md#storeuse), [normal action dispatches](/docs/api/Store.md#storedispatch), and actions dispatched to child stores.
+The inspector layer will be hit for every action and internal pseudo-action that could possibly change the state of the store. This includes [hydration](/docs/api/Store.md#storehydrate), [induction](/docs/guides/dispatchableReducers.md), [code splitting](/docs/api/Store.md#storeuse), [normal action dispatches](/docs/api/Store.md#storedispatch), and actions/pseudo-actions dispatched to child stores.
 
-The goal of Zedux regarding the inspector layer is to ensure that it receives all the information necessary to re-create the store's state tree, including the state of all child stores.
+The goal of Zedux regarding the inspector layer is to ensure that it receives all the information necessary to re-create the store's entire state tree, including the state of all child stores.
 
 ## Examples
 
 ```javascript
 import { createStore } from 'zedux'
 
-const store = createStore()
+const childStore = createStore()
+const parentStore = createStore()
+
+  // Register a basic logger inspector with the parent store
   .inspect((storeBase, action) => console.log(action))
 
-const rootReducer = (state = 'a', action) =>
-  action.payload || state
+parentStore.hydrate('b')
+// { type: '@@zedux/hydrate', payload: 'b' }
 
-store.use(rootReducer) // logs { type: '@@zedux/recalculate' }
+parentStore.use(childStore)
+// { type: '@@zedux/recalculate' }
 
-store.hydrate('b') // logs { type: '@@zedux/hydrate', payload: 'b' }
-
-const childStore = createStore().use(rootReducer)
-
-store.use(childStore) // logs { type: '@@zedux/recalculate' }
-
-childStore.dispatch(() => 'c') /* logs ->
+childStore.dispatch(() => 'c')
+/*
   {
     metaType: '@@zedux/delegate',
     metaPayload: [],
@@ -50,7 +49,8 @@ childStore.dispatch(() => 'c') /* logs ->
 childStore.dispatch({
   type: 'cool-action',
   payload: 'd'
-}) /* logs ->
+})
+/*
   {
     metaType: '@@zedux/delegate',
     metaPayload: [],

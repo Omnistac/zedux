@@ -13,11 +13,6 @@ export const PLAIN_OBJECT = 'object'
 export const STORE_IDENTIFIER = Symbol.for('zedux.store')
 
 
-// We're avoiding parameter spreading for now, as each spread adds
-// 50+ bytes in the minified build. So, here's the old-school slicer:
-export const slice = [].slice
-
-
 /**
   Returns a more informative description of thing's type.
 

@@ -302,5 +302,7 @@ const reactor = react()
   - add "state can't be undefined" error checking/messages
   - add React usage guide
   - add tests to examples
+  - .withReducerMap() and .withProcessorMap()
+  - optional createStore(initialState) argument that calls store.use()
 
 */
