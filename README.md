@@ -59,7 +59,7 @@ Zedux believes in simplicity too. But Zedux approaches it from the user's perspe
 
 Zedux does not, however, conform to the philosophy that simple equals bare. Zedux aims to offer a complete api for all common state management needs. This includes asynchronicity, state hydration, code splitting, state machines, and memoization/state derivation. Apps of all sizes, from tiny to gigantic, should be able to use Zedux comfortably.
 
-## Quick Start
+## Quick start
 
 At the most basic level, Zedux is still Redux. A reducer hierarchy drives state creation and updates. Let's get some code:
 
@@ -106,7 +106,7 @@ const counterReactor = react(0) // 0 - the initial state
 
 /*
   So we said the store is all ready to go. And that's true.
-  But in Zedux, Zero-Configuration is optional <fireworks here>.
+  But in Zedux, zero configuration is optional <fireworks here>.
   We're not gonna use it here. But check it out in the docs.
 
   Here we're introducing our reactor hierarchy to Zedux.
@@ -158,12 +158,12 @@ const store = createStore()
 /*
   These are inducers.
   Inducers are like reducers (hence the name), but have the form:
-    state => newState
+    state => partialStateUpdate
 
   Inducers are dispatchable - they can be passed directly to
   `store.dispatch()`
 */
-const inrement = state => state + 1
+const increment = state => state + 1
 const decrement = state => state - 1
 
 /*
@@ -183,7 +183,7 @@ store.dispatch(state => state + 6)
 store.setState(9)
 ```
 
-The difference between dispatching an inducer and calling `store.setState()` is just semantics. Inducers are nice for creating predefined state updater packages. `store.setState()` is nice for on-the-fly state updates &ndash; use cases are similar to React's [`setState()`](https://reactjs.org/docs/react-component.html#setstate).
+Dispatching an inducer and calling `store.setState()` are functionally similar, but have different use cases. Inducers are nice for creating predefined state updater packages. `store.setState()` is nice for on-the-fly state updates &ndash; use cases are similar to React's [`setState()`](https://reactjs.org/docs/react-component.html#setstate).
 
 The advantage of using inducers and `store.setState()` over `store.hydrate()` is that the new state is deeply merged into the existing state. Thus headaches like:
 
@@ -216,14 +216,14 @@ since Zedux clones the nested nodes for us.
 
 #### But what about time travel??
 
-Ooh. You're gonna love this. Zedux translates every pseudo-action of every sort into a serializable action that a store's [inspectors](https://bowheart.github.io/zedux/docs/types/Inspector) can plug in to. `store.hydrate()`, `store.setState()`, and actions/inducers dispatched to child stores will all find a way to notify a store's inspectors of a serializable action that can be used to reproduce the state update. In short, you never have to worry about whether a state update is reproducible. Zedux has you covered.
+Ooh. You're gonna love this. Zedux translates every pseudo-action into a serializable action that a store's [inspectors](https://bowheart.github.io/zedux/docs/types/Inspector) can plug in to. `store.hydrate()`, `store.setState()`, and actions/inducers dispatched to child stores will all find a way to notify a store's inspectors of a serializable action that can be used to reproduce the state update. In short, you never have to worry about whether a state update is reproducible. Zedux has you covered.
 
 See:
 
 - [`store.hydrate()`](https://bowheart.github.io/zedux/docs/api/Store#storehydrate)
 - [the `Inducer` type](https://bowheart.github.io/zedux/docs/types/Inducer)
 - [`store.setState()`](https://bowheart.github.io/zedux/docs/api/Store#storesetstate)
-- [the dispatchable reducers guide](https://bowheart.github.io/zedux/docs/guides/dispatchableReducers)
+- [the zero configuration guide](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration)
 
 ### Selectors
 

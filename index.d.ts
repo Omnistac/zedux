@@ -49,6 +49,11 @@ export interface NodeOptions<T = Object> {
 }
 
 
+export interface Observable<S = any> {
+  subscribe(subscriber: Subscriber<S>): Subscription
+}
+
+
 export interface Processor<S = any> {
   (dispatch: Dispatcher, action: Action, state: S): void
 }
@@ -75,14 +80,13 @@ export interface State extends Actor {
 }
 
 
-export interface Store<S = any> {
+export interface Store<S = any> extends Observable<S> {
   dispatch: Dispatcher<S>
   getState(): S
   hydrate(newState: S): Store<S>
   inspect(inspector: Inspector): Store<S>
   setNodeOptions(options: NodeOptions): Store<S>
   setState(partialUpdate: any): S
-  subscribe(subscriber: Subscriber<S>): Subscription
   use(newHierarchy: HierarchyDescriptorNode): Store<S>
 }
 
