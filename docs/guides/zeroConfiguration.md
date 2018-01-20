@@ -121,7 +121,7 @@ function handleInput(event) {
 `store.setState()` can be used instead of reducers whose whose only job is to set the state to `action.payload`. The obvious downside is the risk of typos.  We can easily use [inducer factories](/docs/guides/dispatchableReducers.md#inducer-factories) to mitigate this:
 
 ```javascript
-const setFirstName = firstName => ({
+const setFirstName = firstName => state => ({
   forms: {
     billingInfo: { firstName }
   }
@@ -165,7 +165,7 @@ const userStatusMachine = transition(asleep)
 
 ### Isolated state
 
-Even small applications will often find pieces of state that are totally isolated from the rest of the application. A form is the glaring example here:
+Even small applications will often find pieces of state that are totally isolated from the rest of the application. Isolated stores handle isolated state just beautifully. App size aside. A form is the glaring example here:
 
 ```javascript
 import { createStore } from 'zedux'
@@ -173,9 +173,7 @@ import { rootStore } from './store'
 
 const formStore = createStore()
   .hydrate({
-    email: '',
-    firstName: '',
-    favoriteFood: ''
+    firstName: ''
   })
 
 // Not necessary, but we usually try to register all stores
@@ -183,11 +181,13 @@ const formStore = createStore()
 rootStore.use({ form: formStore })
 
 // A simple event listener for a fun and complete example:
-document.getElementById('email')
-  .addEventListener('input', event => {
-    formStore.setState({ email: event.currentTarget.value })
+document.getElementById('firstName')
+  .addEventListener('input', ({ currentTarget: { value }}) => {
+    formStore.setState({ firstName: value })
   })
 ```
+
+It is usually fine for isolated stores to use a zero configuration setup even in very large applications.
 
 ## The initial state
 
@@ -273,7 +273,7 @@ This is essentially a fusion of solutions 2 and 3, but with the caveat of soluti
 
 ## Conclusion
 
-Let's look at the advantages of zero configuration in general:
+**pros**
 
 - Easy to get started &ndash; not much code to write.
 
@@ -281,9 +281,9 @@ Let's look at the advantages of zero configuration in general:
 
 - Zedux ensures that every state update is reproducible, so our time travel debugging desires are satiated satisfactorily.
 
-- Updating the state in a zero configuration setup is much, much more efficient than a reducer setup. To update one tiny corner of state, a reducer hierarchy must traverse the whole tree &ndash; O(n). Inducers, however, pluck the piece they need and update just that &ndash; O(1).
+- Updating the state in a zero configuration setup is much, much more efficient than a reducer setup. To update one tiny corner of state, a reducer hierarchy must traverse the whole tree &ndash; O(n). Inducers, however, pluck the piece they need and update just that &ndash; O(1). This difference probably never matters, but it's there for you to feel good about.
 
-And the disadvantages:
+**cons**
 
 - Inducers are [shape bound](/docs/glossary.md#shape-bound), whereas reducers are [shape agnostic](/docs/glossary.md#shape-agnostic).
 
