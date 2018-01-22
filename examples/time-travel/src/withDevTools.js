@@ -51,7 +51,7 @@ export default store => {
 
 
   // Add an inspector to the store
-  store.inspect((storeBase, action) => {
+  const inspection = store.inspect((storeBase, action) => {
     if (pendingAction) return
 
     pendingAction = action

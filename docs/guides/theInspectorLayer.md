@@ -28,8 +28,10 @@ import { createStore } from 'zedux'
 const childStore = createStore()
 const parentStore = createStore()
 
-  // Register a basic logger inspector with the parent store
-  .inspect((storeBase, action) => console.log(action))
+// Register a basic logger inspector with the parent store
+parentStore.inspect(
+  (storeBase, action) => console.log('received action:', action)
+)
 
 parentStore.hydrate('b')
 // { type: '@@zedux/hydrate', payload: 'b' }

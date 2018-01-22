@@ -29,6 +29,11 @@ export interface Inducer<S = any, P = any> {
 }
 
 
+export interface Inspection {
+  uninspect(): void
+}
+
+
 export interface Inspector {
   (storeBase: StoreBase, action: MetaChainNode): void
 }
@@ -84,7 +89,7 @@ export interface Store<S = any> extends Observable<S> {
   dispatch: Dispatcher<S>
   getState(): S
   hydrate(newState: S): Store<S>
-  inspect(inspector: Inspector): Store<S>
+  inspect(inspector: Inspector): Inspection
   setNodeOptions(options: NodeOptions): Store<S>
   setState(partialUpdate: any): S
   use(newHierarchy: HierarchyDescriptorNode): Store<S>

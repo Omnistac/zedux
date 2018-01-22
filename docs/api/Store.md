@@ -126,10 +126,12 @@ Registers a new [inspector](/docs/types/Inspector.md). Unlike subscribers, inspe
 #### Definition
 
 ```typescript
-(inspector: Inspector) => Store
+(inspector: Inspector) => Inspection
 ```
 
 **inspector** - The [inspector](/docs/types/Inspector.md) to register with the store.
+
+Returns an [Inspection](/docs/types/Inspection.md). The inspection's `uninspect()` method can be used to unregister the inspector from the store.
 
 #### Examples
 
@@ -139,7 +141,7 @@ A simple logger:
 import { createStore } from 'zedux'
 
 const store = createStore()
-  .inspect(logger)
+const inspection = store.inspect(logger)
 
 function logger(storeBase, action) {
   console.log('action received:', action)
@@ -147,7 +149,10 @@ function logger(storeBase, action) {
 
 store.dispatch({
   type: 'useAntidote'
-}) // logs "action received: { type: 'useAntidote' }"
+})
+// action received: { type: 'useAntidote' }
+
+inspection.uninspect()
 ```
 
 ### `store.setNodeOptions()`
@@ -251,13 +256,16 @@ import { createStore } from 'zedux'
 
 const store = createStore()
 
-store.subscribe((prevState, newState) => {
+const subscription = store.subscribe((prevState, newState) => {
   console.log('state changed from', prevState, 'to', newState)
 })
 
 store.dispatch(
   () => 'new state'
-) // logs "state changed from undefined to new state"
+)
+// state changed from undefined to new state
+
+subscription.unsubscribe()
 ```
 
 ### `store.use()`

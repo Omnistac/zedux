@@ -255,7 +255,7 @@ rootStore.inspect((storeBase, action) => {
   console.log('Root Store inspector received action', action)
 })
 
-const rootSubscription = rootStore.subscribe((oldState, newState) => {
+rootStore.subscribe((oldState, newState) => {
   console.log('Root Store state updated', newState)
 })
 
