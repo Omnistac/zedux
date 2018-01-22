@@ -1,9 +1,9 @@
 # Configuring the Hierarchy
 
-By default, the reactor hierarchy created by Zedux will return a JavaScript object for every [HierarchyDescriptor](/docs/types/HierarchyDescriptor.md) node found in the hierarchy descriptor passed to the store. So:
+By default, the reactor hierarchy created by Zedux will return a JavaScript object for every [branch node](/docs/types/Branch.md) found in the hierarchy descriptor passed to the store. So:
 
 ```javascript
-store.use({ // this object is a HierarchyDescriptor
+store.use({ // this object is a b node
   a: () => 1
 })
 ```
@@ -20,7 +20,7 @@ But what if we don't want an object? Say we want to enforce immutability in our 
 
 ## The gist
 
-There are 4 functions that define the node creation process.
+There are 7 functions that Zedux uses to work with state tree nodes:
 
 1. `clone` - A function that accepts a node and returns a clone (shallow copy) of that node.
 
@@ -28,13 +28,13 @@ There are 4 functions that define the node creation process.
 
 3. `get` - A function that accepts a node and key and returns the value of `key` in `node`.
 
-4. `set` - A function that accepts a node, a key, and a value and sets the value of `key` to `value` in `node`.
+4. `isNode` - A function that accepts anything and returns a boolean indicating whether the given argument is a node.
 
-In addition to these, when using [`store.setState()`](/docs/api/Store.md#storesetstate) Zedux requires 2 more functions to deeply merge state trees:
+5. `iterate` - A function that accepts a node and a callback function and iterates over all the key-value pairs, passing them to the callback function as `callback(key, value)`.
 
-1. `isNode` - A function that accepts anything and returns a boolean indicating whether the given argument is a node.
+6. `set` - A function that accepts a node, a key, and a value and sets the value of `key` to `value` in `node`.
 
-2. `iterate` - A function that accepts a node and a callback function, iterates over all the key-value pairs, and passes them to the callback function as `callback(key, value)`.
+7. `size` - A function that accepts a node and returns its size &ndash; an integer representing the number of key-value pairs contained in the node.
 
 The default value of all these is pretty straight-forward:
 
@@ -46,12 +46,6 @@ const defaultNodeOptions = {
 
   get: (node, key) => node[key],
 
-  set: (node, key, val) => {
-    node[key] = val
-
-    return node
-  },
-
   isNode: isPlainObject, // (an internal helper function)
 
   iterate: (node, callback) => {
@@ -61,11 +55,23 @@ const defaultNodeOptions = {
     Object.entries(node).forEach(
       ([ key, val ]) => callback(key, val)
     )
-  }
+  },
+
+  set: (node, key, val) => {
+    node[key] = val
+
+    return node
+  },
+
+  size: node => Object.keys(node).length
 }
 ```
 
-This is the stuff that tells Zedux how to work with plain objects as the intermediate nodes in the reactor hierarchy. But using `store.setNodeOptions()`, we can teach Zedux how to use something else. Let's take the `Map` class from ImmutableJS for example:
+This is the stuff that tells Zedux how to work with plain objects as the intermediate nodes in the reactor hierarchy. But using `store.setNodeOptions()`, we can teach Zedux how to use something else.
+
+## Implementing
+
+Let's teach Zedux a new data type. We'll use the `Map` class from ImmutableJS for this example:
 
 ```javascript
 import { createStore } from 'zedux'
@@ -78,29 +84,37 @@ const nodeOptions = {
 
   get: (node, key) => node.get(key),
 
-  set: (node, key, val) => node.set(key, val),
-
   isNode: node => node instanceof Map,
 
   iterate: (node, callback) => {
     node.forEach(
       (val, key) => callback(key, val)
     )
-  }
+  },
+
+  set: (node, key, val) => node.set(key, val),
+
+  size: node => node.size
 }
 
+// A simple reducer for this example
+const counterReducer = (state = 0, action) => {
+  const amount = action.type === increment.type
+
+  return state + amount
+}
+
+// And create the store
 const store = createStore()
   .setNodeOptions(options)
+  .use({
+    counter: counterReducer
+  })
+
+// Now the root state tree node created by Zedux will be an Immutable map:
+store.getState().get('counter') // 0
 ```
 
 ## Notes
 
 There are probably no reasons for overwriting just one or two options. If you specify one node option, you should definitely specify them all.
-
-If you are wanting to use ImmutableJS, consider the `zedux-immutable` plugin. It exports a higher-order store creator that'll create pre-configured stores for you.
-
-```javascript
-import { createImmutableStore } from 'zedux-immutable'
-
-const store = createImmutableStore()
-```

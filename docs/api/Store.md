@@ -277,10 +277,10 @@ After the reactor hierarchy has been modified, it dispatches a special recalcula
 #### Definition
 
 ```typescript
-(newHierarchy: HierarchyDescriptorNode) => Store
+(newHierarchy: HierarchyDescriptor) => Store
 ```
 
-**newHierarchy** - The new [hierarchy descriptor node](/docs/types/HierarchyDescriptorNode). Will be recursively merged into the existing hierarchy or create it if it doesn't exist.
+**newHierarchy** - The new [hierarchy descriptor](/docs/types/HierarchyDescriptor). Will be recursively merged into the existing hierarchy (assuming both the old and new hierarchies are [branch nodes](/docs/types/Branch.md)) or create it if it doesn't exist.
 
 #### Examples
 

@@ -306,3 +306,18 @@ const reactor = react()
   - optional createStore(initialState) argument that calls store.use()
 
 */
+
+
+
+
+
+
+/*
+  If you are wanting to use ImmutableJS, consider the `zedux-immutable` plugin. It exports a higher-order store creator that'll create pre-configured stores for you.
+
+  ```javascript
+  import { createImmutableStore } from 'zedux-immutable'
+
+  const store = createImmutableStore()
+  ```
+*/

@@ -19,8 +19,8 @@ export interface Dispatcher<S = any> {
 }
 
 
-export interface HierarchyDescriptor {
-  [s: string]: HierarchyDescriptorNode
+export interface Branch {
+  [s: string]: HierarchyDescriptor
 }
 
 
@@ -50,7 +50,10 @@ export interface NodeOptions<T = Object> {
   clone?: (node: T) => T
   create?: () => T
   get?: (node: T, key: string) => any
+  isNode?: (node: any) => boolean
+  iterate?: (node: T, callback: (key: string, val: any) => void) => void
   set?: (node: T, key: string, val: any) => T
+  size?: (node: T) => Number
 }
 
 
@@ -92,7 +95,7 @@ export interface Store<S = any> extends Observable<S> {
   inspect(inspector: Inspector): Inspection
   setNodeOptions(options: NodeOptions): Store<S>
   setState(partialUpdate: any): S
-  use(newHierarchy: HierarchyDescriptorNode): Store<S>
+  use(newHierarchy: HierarchyDescriptor): Store<S>
 }
 
 
@@ -282,8 +285,7 @@ export type ActionType = string
 export type Dispatchable = MetaChainNode | Inducer
 
 
-export type HierarchyDescriptorNode
-  = HierarchyDescriptor | Store | Reactor | null
+export type HierarchyDescriptor = Branch | Store | Reactor | null
 
 
 export type MetaChainNode = MetaNode | Action

@@ -68,7 +68,7 @@ And here are some differences:
 
 Zedux conforms to the Redux philosophy that a single store contains the state of the entire application. But it doesn't conform to the philosophy that there should only be one store. Zedux actually encourages that self-contained pieces of state be housed in their own store. This allows for massive performance optimizations and better encapsulation.
 
-**But** there should only be one **root** store. All other stores should find themselves somewhere in the [hierarchy descriptor](/docs/types/HierarchyDescriptor.md) of another store.
+**But** there should only be one **root** store. All other stores should find themselves somewhere in the [hierarchy descriptor](/docs/types/HierarchyDescriptor.md) of another store. There can be exceptions, of course &ndash; Zedux stores can be composed or not composed however you wish. Having a root store is just a good rule of thumb that Redux has demonstrated to be effective for most cases.
 
 ## Why does it try to do so much?
 
