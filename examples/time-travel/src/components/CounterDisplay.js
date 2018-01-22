@@ -1,12 +1,12 @@
 import React from 'react'
 
+import { withCounter } from '../providers/CounterProvider'
 
-export default function CounterDisplay({
-  counter
-}) {
+export default withCounter(CounterDisplay)
+
+
+function CounterDisplay({ counterStore: { state } }) {
   return (
-    <section>
-      <span>The current counter value: {counter}</span>
-    </section>
+    <p className="counter__display">Counter value: {state}</p>
   )
 }

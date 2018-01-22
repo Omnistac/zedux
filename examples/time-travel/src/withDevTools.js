@@ -11,6 +11,7 @@ export default store => {
 
   // Set up the devTools
   devTools.init(initialState)
+
   devTools.subscribe(({ payload, state, type }) => {
     if (type !== DISPATCH) return
 

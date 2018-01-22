@@ -14,8 +14,10 @@
     "parcel-bundler": "^1.4.1"
   },
   "dependencies": {
+    "prop-types": "^15.6.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
-    "zedux": "0.0.7"
+    "react-zedux": "^0.1.2",
+    "zedux": "0.0.14"
   }
 }

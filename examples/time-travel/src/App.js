@@ -1,54 +1,17 @@
 import React, { Component, Fragment } from 'react'
+import { render } from 'react-dom'
+import { Provider, act, createStore, react, withStores } from 'react-zedux'
 
-import store from './store/store'
-import { increment, decrement } from './store/counter'
-import CounterButtons from './components/CounterButtons'
-import CounterDisplay from './components/CounterDisplay'
-
-
-export default class App extends Component {
-  constructor(props) {
-    super(props)
-
-    this.state = {
-      counter: store.getState()
-    }
-  }
+import Counter from './components/Counter'
+import RootProvider from './providers/RootProvider'
 
 
-  componentWillMount() {
-    this.subscription = store.subscribe((oldState, newState) => {
-      this.setState({
-        counter: newState
-      })
-    })
-  }
-
-
-  componentWillUnmount() {
-    this.subscription.unsubscribe()
-  }
-
-
-  increment() {
-    store.dispatch(increment())
-  }
-
-
-  decrement() {
-    store.dispatch(decrement())
-  }
-
-
-  render() {
-    const { increment, decrement } = this
-    const { counter } = this.state
-
-    return (
-      <Fragment>
-        <CounterButtons {...{ increment, decrement }} />
-        <CounterDisplay counter={counter} />
-      </Fragment>
-    )
-  }
+export default function App() {
+  return (
+    <RootProvider>
+      <Counter />
+      <Counter />
+      <Counter />
+    </RootProvider>
+  )
 }
