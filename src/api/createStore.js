@@ -127,9 +127,9 @@ export function createStore() {
   const inspect = inspector => {
     assertAreFunctions([ inspector ], 'store.inspect()')
 
-    nextInspectors = [ ...nextInspectors, inspector ]
+    const uninspect = register(nextInspectors, inspector)
 
-    return store // for chaining
+    return { uninspect }
   }
 
 
@@ -201,18 +201,7 @@ export function createStore() {
   const subscribe = subscriber => {
     assertAreFunctions([ subscriber ], 'store.subscribe()')
 
-    nextSubscribers = [ ...nextSubscribers, subscriber ]
-
-    const unsubscribe = () => {
-      const index = nextSubscribers.indexOf(subscriber)
-
-      if (index === -1) return
-
-      nextSubscribers = [
-        ...nextSubscribers.slice(0, index),
-        ...nextSubscribers.slice(index + 1)
-      ]
-    }
+    const unsubscribe = register(nextSubscribers, subscriber)
 
     return { unsubscribe }
   }
@@ -242,7 +231,7 @@ export function createStore() {
   function dispatchHydration(newState, actionType = actionTypes.HYDRATE) {
     if (newState === currentState) return // nothing to do
 
-    let action = {
+    const action = {
       type: actionType,
       payload: newState
     }
@@ -309,11 +298,29 @@ export function createStore() {
     // The state has changed; update it
     currentState = newState
 
-    subscribers = nextSubscribers
+    subscribers = [ ...nextSubscribers ]
 
     subscribers.forEach(
       subscriber => subscriber(oldState, newState)
     )
+  }
+
+
+  /**
+    Registers a listener (e.g. subscriber, inspector) with the store.
+
+    @returns {Function} An unregister function. Call to remove the listener.
+  */
+  function register(list, listener) {
+    list.push(listener)
+
+    return () => {
+      const index = list.indexOf(listener)
+
+      if (index === -1) return
+
+      list.splice(index, 1)
+    }
   }
 
 

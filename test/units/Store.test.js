@@ -113,7 +113,6 @@ describe('Store.dispatch()', () => {
     const inspector = jest.fn()
     const store = createStore()
       .use(() => 'a')
-      .inspect(inspector)
 
     const action = {
       metaType: 'b',
@@ -122,6 +121,7 @@ describe('Store.dispatch()', () => {
       }
     }
 
+    store.inspect(inspector)
     store.dispatch(action)
 
     expect(inspector).toHaveBeenLastCalledWith({
@@ -371,10 +371,9 @@ describe('Store.hydrate()', () => {
 
     const inspector = jest.fn()
     const store = createStore()
-      .inspect(inspector)
-
     const hydratedState = { a: 1 }
 
+    store.inspect(inspector)
     store.hydrate(hydratedState)
 
     expect(inspector).toHaveBeenCalledWith({
@@ -430,13 +429,15 @@ describe('store.inspect()', () => {
   })
 
 
-  test('returns the store for chaining', () => {
+  test('returns an inspection object', () => {
 
     const store = createStore()
-      .inspect(() => {})
-      .inspect(() => {})
 
-    expect(store.$$typeof).toBe(Symbol.for('zedux.store'))
+    const inspection = store.inspect(() => {})
+
+    expect(inspection).toEqual({
+      uninspect: expect.any(Function)
+    })
 
   })
 
@@ -537,10 +538,9 @@ describe('Store.setState()', () => {
 
     const inspector = jest.fn()
     const store = createStore()
-      .inspect(inspector)
-
     const hydratedState = { a: 1 }
 
+    store.inspect(inspector)
     store.setState(hydratedState)
 
     expect(inspector).toHaveBeenCalledWith({

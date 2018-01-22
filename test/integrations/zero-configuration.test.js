@@ -24,8 +24,9 @@ describe('zero-configuration', () => {
 
     const inspector = jest.fn()
     const store = createStore()
-      .inspect(inspector)
-      .hydrate(1)
+
+    store.inspect(inspector)
+    store.hydrate(1)
 
     expect(inspector).toHaveBeenCalledWith({
       dispatch: store.dispatch,
@@ -43,8 +44,8 @@ describe('zero-configuration', () => {
     const inspector = jest.fn()
     const store = createStore()
       .hydrate(1)
-      .inspect(inspector)
 
+    store.inspect(inspector)
     store.setState(2)
 
     expect(inspector).toHaveBeenCalledWith({
@@ -63,8 +64,8 @@ describe('zero-configuration', () => {
     const inspector = jest.fn()
     const store = createStore()
       .hydrate(1)
-      .inspect(inspector)
 
+    store.inspect(inspector)
     store.dispatch(() => 2)
 
     expect(inspector).toHaveBeenCalledWith({
