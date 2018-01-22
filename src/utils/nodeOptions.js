@@ -54,3 +54,9 @@ export const set = (node, key, val) => {
 
   return node
 }
+
+
+/**
+  The default method for finding the size of a state tree node.
+*/
+export const size = node => Object.keys(node).length

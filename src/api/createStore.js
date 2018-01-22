@@ -1,6 +1,7 @@
-import {
-  actionTypes, metaTypes
-} from './constants'
+import { actionTypes, metaTypes } from './constants'
+import { hierarchyDescriptorToDiffTree } from '../hierarchy/create'
+import { mergeDiffTrees, mergeStateTrees } from '../hierarchy/merge'
+import { delegate, propagateChange } from '../hierarchy/traverse'
 
 import {
   assertAreFunctions, assertIsValidAction, assertIsValidNodeOption,
@@ -8,18 +9,10 @@ import {
 } from '../utils/errors'
 
 import { STORE_IDENTIFIER } from '../utils/general'
+import { addMeta, hasMeta, removeAllMeta } from '../utils/meta'
 
 import {
-  delegate, hierarchyNodeToReactor, mergeHierarchyDescriptorNodes,
-  mergeStateTrees, propagateChange
-} from '../utils/hierarchy'
-
-import {
-  addMeta, hasMeta, removeAllMeta
-} from '../utils/meta'
-
-import {
-  clone, create, get, isNode, iterate, set
+  clone, create, get, isNode, iterate, set, size
 } from '../utils/nodeOptions'
 
 
@@ -28,12 +21,14 @@ import {
 
   A store is just a collection of functions and a special $$typeof
   symbol that identifies it internally.
+
+  Zedux stores are fast, composable, and pretty much just awesome.
 */
 export function createStore() {
   let nodeOptions = {
-    clone, create, get, isNode, iterate, set
+    clone, create, get, isNode, iterate, set, size
   }
-  let currentHierarchy = null
+  let currentDiffTree
   let currentState
   let inspectors = []
   let isDispatchingToReducers = false
@@ -55,7 +50,7 @@ export function createStore() {
 
     assertIsPlainObject(action, 'Action')
 
-    if (delegate(currentHierarchy, action)) {
+    if (delegate(currentDiffTree, action)) {
       return currentState
     }
 
@@ -211,16 +206,13 @@ export function createStore() {
     Merges a hierarchy descriptor into the existing hierarchy descriptor.
   */
   const use = newHierarchy => {
-    currentHierarchy = mergeHierarchyDescriptorNodes(
-      currentHierarchy,
-      newHierarchy
-    )
-
-    rootReactor = hierarchyNodeToReactor(
-      currentHierarchy,
-      nodeOptions,
+    const newDiffTree = hierarchyDescriptorToDiffTree(
+      newHierarchy,
       registerSubStore
     )
+
+    currentDiffTree = mergeDiffTrees(currentDiffTree, newDiffTree, nodeOptions)
+    rootReactor = currentDiffTree.reactor
 
     if (rootReactor) dispatch({ type: actionTypes.RECALCULATE })
 
@@ -325,7 +317,7 @@ export function createStore() {
 
 
   function registerSubStore(subStorePath, subStore) {
-    subStore.inspect((storeBase, action) => {
+    const inspector = (storeBase, action) => {
 
       // If this store delegated this action in the first place, ignore it
       if (hasMeta(action, metaTypes.INHERIT)) return
@@ -333,10 +325,10 @@ export function createStore() {
       const wrappedAction = addMeta(action, metaTypes.DELEGATE, subStorePath)
 
       dispatchToInspectors(wrappedAction)
-    })
+    }
 
 
-    subStore.subscribe((prevSubStoreState, newSubStoreState) => {
+    const subscriber = (prevSubStoreState, newSubStoreState) => {
 
       // If this store's reducer layer dispatched this action to this
       // substore in the first place, ignore the propagation; this store
@@ -351,7 +343,18 @@ export function createStore() {
       )
 
       informSubscribers(newState)
-    })
+    }
+
+
+    const inspection = subStore.inspect(inspector)
+    const subscription = subStore.subscribe(subscriber)
+
+
+    // Return a function that destroys these registrations
+    return () => {
+      inspection.uninspect()
+      subscription.unsubscribe()
+    }
   }
 
 

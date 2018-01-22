@@ -84,6 +84,32 @@ describe('registrations', () => {
 
     })
 
+
+    test('a parent store unsubscribes from a removed child store', () => {
+
+      const parent = createStore()
+      const child = createStore()
+
+      parent.use({
+        a: () => 1,
+        b: {
+          c: {
+            d: child,
+            e: () => 2
+          }
+        }
+      })
+      parent.use(null)
+
+      const subscriber = jest.fn()
+      parent.subscribe(subscriber)
+
+      child.dispatch(() => 'a')
+
+      expect(subscriber).not.toHaveBeenCalled()
+
+    })
+
   })
 
 
@@ -177,9 +203,32 @@ describe('registrations', () => {
 
     })
 
+
+    test('a parent store unregisters its child store inspector', () => {
+
+      const parent = createStore()
+      const child = createStore()
+
+      parent.use({
+        a: () => 1,
+        b: {
+          c: {
+            d: child,
+            e: () => 2
+          }
+        }
+      })
+      parent.use(null)
+
+      const inspector = jest.fn()
+      parent.inspect(inspector)
+
+      child.dispatch(() => 'a')
+
+      expect(inspector).not.toHaveBeenCalled()
+
+    })
+
   })
-
-
-  test('a parent store unsubscribes from ')
 
 })
