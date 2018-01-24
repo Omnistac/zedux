@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { Provider, createStore, withStores } from 'react-zedux'
+import { Provider, withStores } from 'react-zedux'
 
-import withDevTools from '../withDevTools'
+import rootStoreInterface from './root/interface'
 
 
 export default class RootProvider extends Component {
@@ -11,12 +11,9 @@ export default class RootProvider extends Component {
   }
 
 
-  store = withDevTools(createStore())
-
-
   render() {
     return (
-      <Provider id={RootProvider} store={this.store}>
+      <Provider id={RootProvider} store={rootStoreInterface}>
         {this.props.children}
       </Provider>
     )
@@ -24,8 +21,6 @@ export default class RootProvider extends Component {
 }
 
 
-// Partially apply the withStores() HOC to get a withRoot() HOC.
-// All components enhanced by withRoot() will receive a `rootStore` prop.
 export const withRoot = withStores({
   rootStore: RootProvider
 })

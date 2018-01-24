@@ -1,0 +1,47 @@
+body {
+  display: flex;
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-flow: row wrap;
+  font-family: helvetica;
+  font-size: 2rem;
+  justify-content: center;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.counter {
+  background: #f7f7f7;
+  flex: 1;
+  margin: 20px;
+  padding: 15px;
+}
+
+.counter__display {
+  white-space: nowrap;
+}
+
+.counter__controls {
+  display: flex;
+}
+
+button {
+  background: #dc1fff;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  flex: 1;
+  margin: 10px;
+  outline: none;
+  padding: 12px;
+}
+
+button:hover {
+  background: #bd00d5;
+}
