@@ -9,7 +9,7 @@ describe('areArgsEqual()', () => {
 
   test('short-circuits and returns false if oldArgs is null', () => {
 
-    let oldArgs = null
+    const oldArgs = null
 
     expect(areArgsEqual(oldArgs)).toBe(false)
 
@@ -18,8 +18,8 @@ describe('areArgsEqual()', () => {
 
   test('short-circuits and returns false if oldArgs and newArgs do not have the same length', () => {
 
-    let oldArgs = []
-    let newArgs = [ 1 ]
+    const oldArgs = []
+    const newArgs = [ 1 ]
 
     oldArgs.every = jest.fn()
 
@@ -31,10 +31,10 @@ describe('areArgsEqual()', () => {
 
   test('returns true only if all arguments are strictly equal', () => {
 
-    let arr = []
-    let obj = {}
-    let int = 1
-    let str = 'a'
+    const arr = []
+    const obj = {}
+    const int = 1
+    const str = 'a'
 
     expect(areArgsEqual(
       [ arr ],
@@ -95,8 +95,8 @@ describe('memoize()', () => {
 
   test('the memoized function calls the stateless function when subsequently invoked with different arguments', () => {
 
-    let statelessFn = jest.fn()
-    let memoizedFn = memoize(statelessFn)
+    const statelessFn = jest.fn()
+    const memoizedFn = memoize(statelessFn)
 
     memoizedFn()
     memoizedFn(1)
@@ -112,9 +112,9 @@ describe('memoize()', () => {
 
   test('the memoized function does not call the stateless function when subsequently invoked with the same arguments', () => {
 
-    let obj = {}
-    let statelessFn = jest.fn()
-    let memoizedFn = memoize(statelessFn)
+    const obj = {}
+    const statelessFn = jest.fn()
+    const memoizedFn = memoize(statelessFn)
 
     memoizedFn()
     memoizedFn()
@@ -136,8 +136,8 @@ describe('memoize()', () => {
 
   test('the memoized function returns the exact (===) same value when subsequently invoked with the same arguments', () => {
 
-    let obj = {}
-    let memoizedFn = memoize(
+    const obj = {}
+    const memoizedFn = memoize(
       () => ({}) // return an empty object
     )
 
@@ -152,18 +152,52 @@ describe('memoize()', () => {
 
 describe('createSelector()', () => {
 
-  test('the dependencies receive the arguments passed to the selector; the calculator receives the result of the dependencies + the original args', () => {
+  test('the input selectors receive the arguments passed to the selector; the calculator receives the output of the input selectors', () => {
 
-    let calculator = jest.fn()
-    let dep1 = jest.fn(() => 'a')
-    let dep2 = jest.fn(() => 1)
-    let selector = createSelector(calculator, [ dep1, dep2 ])
+    const calculator = jest.fn()
+    const dep1 = jest.fn(() => 'a')
+    const dep2 = jest.fn(() => 1)
+    const selector = createSelector(calculator, [ dep1, dep2 ])
 
     selector('b', 2)
 
     expect(dep1).toHaveBeenCalledWith('b', 2)
     expect(dep2).toHaveBeenCalledWith('b', 2)
-    expect(calculator).toHaveBeenCalledWith('a', 1, 'b', 2)
+    expect(calculator).toHaveBeenCalledWith('a', 1)
+
+  })
+
+
+  test('does not call the calculator function if the state has not changed', () => {
+
+    const calculator = jest.fn()
+    const selector = createSelector(calculator, [])
+
+    selector('a')
+    selector('a')
+
+    expect(calculator).toHaveBeenCalledTimes(1)
+    expect(calculator).toHaveBeenLastCalledWith('a')
+
+    selector('b')
+
+    expect(calculator).toHaveBeenCalledTimes(2)
+    expect(calculator).toHaveBeenLastCalledWith('b')
+
+  })
+
+
+  test('does not call the calculator function if the output of the input selectors has not changed', () => {
+
+    const calculator = jest.fn()
+    const dep1 = jest.fn(() => 'a')
+    const selector = createSelector(calculator, [ dep1 ])
+
+    selector('a')
+    selector('b')
+
+    expect(calculator).toHaveBeenCalledTimes(1)
+    expect(calculator).toHaveBeenLastCalledWith('a')
 
   })
 

@@ -15,23 +15,29 @@ export function areArgsEqual(oldArgs, newArgs) {
 
 /**
   Takes a calculator function and a list of the calculator's
-  dependencies.
+  inputSelectors.
 
   Returns a memoized function that calculates the values of the
-  given dependencies and passes them to a memoized version of
+  given inputSelectors and passes them to a memoized version of
   the calculator.
 */
-export function createSelector(calculator, dependencies) {
-  let memoizedCalculator = memoize(calculator)
+export function createSelector(calculator, inputSelectors) {
+
+  // If there are no input selectors, we assume the selector is
+  // dependent on the whole state tree. Implicitly create an
+  // identity function input selector that just grabs the state:
+  if (!inputSelectors.length) inputSelectors = [ state => state ]
+
+  const memoizedCalculator = memoize(calculator)
 
   return memoize((...args) => {
-    let resolvedDependencies = Array(dependencies.length)
+    const resolvedDependencies = Array(inputSelectors.length)
 
-    for (let i = 0; i < dependencies.length; i++) {
-      resolvedDependencies[i] = dependencies[i](...args)
+    for (let i = 0; i < inputSelectors.length; i++) {
+      resolvedDependencies[i] = inputSelectors[i](...args)
     }
 
-    return memoizedCalculator(...resolvedDependencies, ...args)
+    return memoizedCalculator(...resolvedDependencies)
   })
 }
 

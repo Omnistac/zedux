@@ -1,4 +1,5 @@
 const DISPATCH = 'DISPATCH'
+const START = 'START'
 
 
 export default store => {
@@ -10,9 +11,11 @@ export default store => {
 
 
   // Set up the devTools
-  devTools.init(initialState)
-
   devTools.subscribe(({ payload, state, type }) => {
+    if (type === START) {
+      devTools.init(store.getState())
+    }
+
     if (type !== DISPATCH) return
 
     switch (payload.type) {

@@ -345,7 +345,7 @@ const counterReactor = react(0)
 let storeIdCounter = 1
 
 /*
-  A simple factory for creating a "counter" store and appending
+  A simple factory for creating a "counter" store and attaching
   it to the root store's reactor hierarchy.
 */
 const createCounterStore = () => {
@@ -375,6 +375,8 @@ rootStore.dispatch(increment())
 
 rootStore.getState() // { counter1: 3, counter2: 2 }
 ```
+
+Treating the store as the basic application building block opens the door for embedded applications. The Zedux store is an autonomous unit that can simultaneously handle a sub-module's internal workings and present a standardized api to consumers.
 
 The ability to create stores whose lifecycle parallels the lifecycle of a component while still maintaining time-traversable state and replayable actions is an exciting new possibility that Zedux has blown wide open.
 

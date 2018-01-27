@@ -19,19 +19,19 @@ describe('Zedux.select()', () => {
   })
 
 
-  test('returns a selector with no dependencies if one function is passed', () => {
+  test('returns a selector with a single, automatically-created state input selector if one function is passed', () => {
 
     const calculator = jest.fn()
     const selector = select(calculator)
 
     selector('a', 1)
 
-    expect(calculator).toHaveBeenLastCalledWith('a', 1)
+    expect(calculator).toHaveBeenLastCalledWith('a')
 
   })
 
 
-  test('returns a selector whose dependencies are all input parameters but the last', () => {
+  test('returns a selector whose input selectors are all args but the last, and whose calculator function is the last arg', () => {
 
     const selector1 = jest.fn(() => 'a')
     const selector2 = jest.fn(() => 1)
@@ -42,13 +42,13 @@ describe('Zedux.select()', () => {
     memoizedSelector1('b', 2)
 
     expect(selector1).toHaveBeenLastCalledWith('b', 2)
-    expect(calculator).toHaveBeenLastCalledWith('a', 'b', 2)
+    expect(calculator).toHaveBeenLastCalledWith('a')
 
     memoizedSelector2('c', 3)
 
     expect(selector1).toHaveBeenLastCalledWith('c', 3)
     expect(selector2).toHaveBeenLastCalledWith('c', 3)
-    expect(calculator).toHaveBeenLastCalledWith('a', 1, 'c', 3)
+    expect(calculator).toHaveBeenLastCalledWith('a', 1)
 
   })
 

@@ -81,7 +81,7 @@ export function destroyTree(tree) {
 
   if (destroy) destroy()
 
-  if (!children) return // base case; all done
+  if (!children) return // base case; this branch is now destroyed
 
   Object.values(children).forEach(destroyTree)
 }
