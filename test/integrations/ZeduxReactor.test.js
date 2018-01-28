@@ -175,6 +175,7 @@ describe('ZeduxReactor configuration', () => {
         done()
       })
     })
+
     const reactor = react()
       .to('a')
       .withProcessors(processor)
@@ -187,7 +188,6 @@ describe('ZeduxReactor configuration', () => {
   test('a registered sub-processor can return an iterator', done => {
 
     const processor = function*() {
-
       const val1 = yield new Promise(resolve => {
         setTimeout(() => {
           resolve(1)
@@ -206,8 +206,8 @@ describe('ZeduxReactor configuration', () => {
 
       expect(val1 + val2 + val3).toBe(6)
       done()
-
     }
+
     const reactor = react()
       .to('a')
       .withProcessors(processor)
@@ -234,6 +234,7 @@ describe('ZeduxReactor configuration', () => {
         })
       }
     })
+
     const reactor = react()
       .to('a')
       .withProcessors(processor)
@@ -241,4 +242,5 @@ describe('ZeduxReactor configuration', () => {
     reactor.process(null, { type: 'a' })
 
   })
+
 })

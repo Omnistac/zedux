@@ -1,4 +1,5 @@
 import { extractActionType, extractActionTypes } from '../utils/general'
+import { processableToPromise } from '../utils/processable'
 
 
 /**
@@ -57,11 +58,15 @@ export function transition(initialState) {
     currentState = state
 
     if (oldStateDefinition && oldStateDefinition.leave) {
-      oldStateDefinition.leave(dispatch, action, state)
+      const processable = oldStateDefinition.leave(dispatch, action, state)
+
+      processableToPromise(processable)
     }
 
     if (newStateDefinition.enter) {
-      newStateDefinition.enter(dispatch, action, state)
+      const processable = newStateDefinition.enter(dispatch, action, state)
+
+      processableToPromise(processable)
     }
   }
 
