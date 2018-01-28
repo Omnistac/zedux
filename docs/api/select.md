@@ -23,6 +23,55 @@ No, that isn't valid typescript. But:
 
 **calculator** - A function that takes the output of its selector dependencies as arguments and returns a state derivation.
 
+## Examples
+
+If no arguments are passed, `select()` returns the identity function (`state => state`). Note that any other arguments will be ignored:
+
+```javascript
+import { select } from 'zedux'
+
+const selector = select()
+
+selector('a') // 'a' (that's the identity function hard at work...)
+selector(1, 2, 3) // 1 (all other arguments are ignored)
+```
+
+If one argument is passed (the calculator function), Zedux creates an identity input selector for you:
+
+```javascript
+import { select } from 'zedux'
+
+const selector = select(state => state.todos)
+
+selector({
+  todos: [ 'todo or not todo' ] // (hah, that's a tautology)
+}) // [ 'todo or not todo' ]
+```
+
+Two or more args === normal selector goodness:
+
+```javascript
+import { select } from 'zedux'
+
+const selectTodos = select(state => state.todos)
+
+const selectIncompleteTodos = select(
+  selectTodos,
+  todos => todos.filter(todo => !todo.isComplete)
+)
+
+selectIncompleteTodos({
+  todos: [
+    { text: 'do thing 1', isComplete: false },
+    { text: 'do thing 2', isComplete: true }
+  ]
+}) /* ->
+  [
+    { text: 'do thing 1', isComplete: false }
+  ]
+*/
+```
+
 ## Memoization specifics
 
 Memoization is usually something that just works and you don't need to know the specifics. But I'll assume that if you're reading this, you either do need to know, or you're curious to learn &ndash; and who am I to stop you?
