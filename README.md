@@ -25,7 +25,7 @@ Or yarn:
 yarn add zedux
 ```
 
-Or include the appropriate unpkg build on your page:
+Or include the appropriate unpkg build on your page (module exposed as `Zedux`):
 
 ### Development
 
@@ -212,7 +212,7 @@ store.dispatch(() => ({
 
 since Zedux clones the nested nodes for us.
 
-> You may have noticed that the nodes of our state trees are all plain objects. But Zedux can actually be taught to understand any hierarchical data type. Immutable fans rejoice and check out the guide on [configuring the hierarchy](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy).
+> You may have noticed that the branch nodes of our state trees are all plain objects. But Zedux can actually be taught to understand any hierarchical data type. Immutable fans rejoice and check out the guide on [configuring the hierarchy](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy).
 
 #### But what about time travel??
 
@@ -241,10 +241,6 @@ import { select } from 'zedux'
 /*
   This is a normal selector.
   He just grabs the list of todos off the state tree.
-  Not only is `selectTodos(state)` very declarative, but it
-  abstracts away the shape of the state tree from consumers.
-  Compare:
-    `selectTodos(state)` vs `state.entities.todos`
 */
 const selectTodos = state => state.entities.todos
 
@@ -378,7 +374,7 @@ rootStore.getState() // { counter1: 3, counter2: 2 }
 
 Treating the store as the basic application building block opens the door for embedded applications. The Zedux store is an autonomous unit that can simultaneously handle a sub-module's internal workings and present a standardized api to consumers.
 
-The ability to create stores whose lifecycle parallels the lifecycle of a component while still maintaining time-traversable state and replayable actions is an exciting new possibility that Zedux has blown wide open.
+Additionally, the ability to create stores whose lifecycle parallels the lifecycle of a component while still maintaining time-traversable state and replayable actions is an exciting new possibility that Zedux has blown wide open.
 
 See:
 

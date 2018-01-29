@@ -4,6 +4,7 @@
 * [Overview](/docs/overview.md)
 * [Examples](/docs/examples.md)
 * [Guides](/docs/guides/README.md)
+  * [React Usage](/docs/guides/reactUsage.md)
   * [The Reducer Layer](/docs/guides/theReducerLayer.md)
   * [The Processor Layer](/docs/guides/theProcessorLayer.md)
   * [The Inspector Layer](/docs/guides/theInspectorLayer.md)
