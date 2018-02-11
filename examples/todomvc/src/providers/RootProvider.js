@@ -1,24 +1,17 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
+import React from 'react'
 import { Provider, withStores } from 'react-zedux'
 
-import rootStoreInterface from './root/interface'
+import api from './root/api'
 
 
-export default class RootProvider extends Component {
-  static propTypes = {
-    children: PropTypes.node.isRequired
-  }
+const RootProvider = ({ children }) => (
+  <Provider id={RootProvider} store={api}>
+    {children}
+  </Provider>
+)
 
 
-  render() {
-    return (
-      <Provider id={RootProvider} store={rootStoreInterface}>
-        {this.props.children}
-      </Provider>
-    )
-  }
-}
+export default RootProvider
 
 
 export const withRoot = withStores({

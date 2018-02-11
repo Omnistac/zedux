@@ -137,7 +137,7 @@ store.dispatch(decrement())
 // counter went from 2 to 1
 ```
 
-If you know Redux, almost every bit of this will seem instantly familiar (and not just because it's similar to the one in the Redux docs). At this point, you should know enough to get started using Zedux. But don't worry, there's [a](https://bowheart.github.io/zedux/docs/guides/theInspectorLayer) [ton](https://bowheart.github.io/zedux/docs/api/Store#storehydrate) [of](https://bowheart.github.io/zedux/docs/guides/mergingHierarchies) [cool](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration) [stuff](https://bowheart.github.io/zedux/docs/guides/theProcessorLayer) [we](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy) [haven't](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines) [covered](https://bowheart.github.io/zedux/docs/guides/storeComposition).
+If you know Redux, almost every bit of this will seem instantly familiar (and not just because it's similar to the one in the Redux docs). At this point, you should know enough to get started using Zedux. But don't worry, there's [a](https://bowheart.github.io/zedux/docs/guides/reactUsage) [ton](https://bowheart.github.io/zedux/docs/api/Store#storehydrate) [of](https://bowheart.github.io/zedux/docs/guides/mergingHierarchies) [cool](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration) [stuff](https://bowheart.github.io/zedux/docs/guides/theProcessorLayer) [we](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy) [haven't](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines) [covered](https://bowheart.github.io/zedux/docs/guides/storeComposition).
 
 Here's a small taste of what's in store (yes, that pun was an accident):
 
@@ -385,6 +385,11 @@ See:
 ### To be continued...
 
 At this point you should have a pretty good idea of what Zedux is all about. Check out the [full documentation](https://bowheart.github.io/zedux/docs/overview) for the rest of the awesomeness.
+
+## Official packages
+
+- [React Zedux](https://github.com/bowheart/react-zedux) - Official React bindings for Zedux.
+- [Zedux Immer](https://github.com/bowheart/zedux-immer) - Official Immer bindings for Zedux.
 
 ## It seems too big
 
