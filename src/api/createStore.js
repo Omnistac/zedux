@@ -293,7 +293,7 @@ export function createStore() {
     subscribers = [ ...nextSubscribers ]
 
     subscribers.forEach(
-      subscriber => subscriber(oldState, newState)
+      subscriber => subscriber(newState, oldState)
     )
   }
 
@@ -328,7 +328,7 @@ export function createStore() {
     }
 
 
-    const subscriber = (prevSubStoreState, newSubStoreState) => {
+    const subscriber = newSubStoreState => {
 
       // If this store's reducer layer dispatched this action to this
       // substore in the first place, ignore the propagation; this store

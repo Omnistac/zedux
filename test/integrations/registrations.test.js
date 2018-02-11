@@ -15,7 +15,7 @@ describe('registrations', () => {
       store.dispatch(() => 'a')
 
       subscribers.forEach(subscriber =>
-        expect(subscriber).toHaveBeenCalledWith(undefined, 'a')
+        expect(subscriber).toHaveBeenCalledWith('a', undefined)
       )
 
     })
@@ -41,8 +41,8 @@ describe('registrations', () => {
       store.dispatch(() => 'a')
 
       expect(subscriber1).not.toHaveBeenCalled()
-      expect(subscriber2).toHaveBeenCalledWith(undefined, 'a')
-      expect(subscriber3).toHaveBeenCalledWith(undefined, 'a')
+      expect(subscriber2).toHaveBeenCalledWith('a', undefined)
+      expect(subscriber3).toHaveBeenCalledWith('a', undefined)
 
       subscription2.unsubscribe()
 
@@ -50,9 +50,9 @@ describe('registrations', () => {
 
       store.dispatch(() => 'b')
 
-      expect(subscriber1).toHaveBeenCalledWith('a', 'b')
-      expect(subscriber2).toHaveBeenLastCalledWith(undefined, 'a')
-      expect(subscriber3).toHaveBeenLastCalledWith('a', 'b')
+      expect(subscriber1).toHaveBeenCalledWith('b', 'a')
+      expect(subscriber2).toHaveBeenLastCalledWith('a', undefined)
+      expect(subscriber3).toHaveBeenLastCalledWith('b', 'a')
 
       subscription3.unsubscribe()
 
@@ -66,21 +66,21 @@ describe('registrations', () => {
 
       store.dispatch(() => 'c')
 
-      expect(subscriber1).toHaveBeenLastCalledWith('b', 'c')
-      expect(subscriber2).toHaveBeenLastCalledWith(undefined, 'a')
-      expect(subscriber3).toHaveBeenLastCalledWith('a', 'b')
+      expect(subscriber1).toHaveBeenLastCalledWith('c', 'b')
+      expect(subscriber2).toHaveBeenLastCalledWith('a', undefined)
+      expect(subscriber3).toHaveBeenLastCalledWith('b', 'a')
       expect(subscriber4).not.toHaveBeenCalled()
-      expect(subscriber5).toHaveBeenCalledWith('b', 'c')
+      expect(subscriber5).toHaveBeenCalledWith('c', 'b')
 
       subscription1.unsubscribe()
 
       store.dispatch(() => 'd')
 
-      expect(subscriber1).toHaveBeenLastCalledWith('b', 'c')
-      expect(subscriber2).toHaveBeenLastCalledWith(undefined, 'a')
-      expect(subscriber3).toHaveBeenLastCalledWith('a', 'b')
-      expect(subscriber4).toHaveBeenCalledWith('c', 'd')
-      expect(subscriber5).toHaveBeenLastCalledWith('c', 'd')
+      expect(subscriber1).toHaveBeenLastCalledWith('c', 'b')
+      expect(subscriber2).toHaveBeenLastCalledWith('a', undefined)
+      expect(subscriber3).toHaveBeenLastCalledWith('b', 'a')
+      expect(subscriber4).toHaveBeenCalledWith('d', 'c')
+      expect(subscriber5).toHaveBeenLastCalledWith('d', 'c')
 
     })
 

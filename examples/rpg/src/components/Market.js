@@ -55,7 +55,7 @@ export default class Market extends Component {
 
 
   componentWillMount() {
-    this.subscription = this.store.subscribe((oldState, newState) => {
+    this.subscription = this.store.subscribe(newState => {
       this.setState({
         market: newState
       })

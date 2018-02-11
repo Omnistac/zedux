@@ -62,7 +62,7 @@ export default store => {
 
 
   // Add a subscriber to the store
-  const subscription = store.subscribe((oldState, newState) => {
+  const subscription = store.subscribe(newState => {
     devTools.send(pendingAction, newState)
 
     pendingAction = null

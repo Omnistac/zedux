@@ -58,7 +58,7 @@ const trafficLight = transition(green)
 const store = createStore()
   .use(trafficLight)
 
-store.subscribe((oldState, newState) => {
+store.subscribe((newState, oldState) => {
   console.log(`light went from ${oldState} to ${newState}`)
 })
 ```

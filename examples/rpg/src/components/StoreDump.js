@@ -14,7 +14,7 @@ export default class StoreDump extends Component {
 
 
   componentWillMount() {
-    this.subscription = store.subscribe((oldState, newState) => {
+    this.subscription = store.subscribe(newState => {
       this.setState({
         rootState: newState
       })

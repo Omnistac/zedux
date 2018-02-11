@@ -219,7 +219,7 @@ describe('Store.dispatch()', () => {
 
     store.dispatch(action)
 
-    expect(subscriber).toHaveBeenCalledWith({ a: 1 }, { a: 2 })
+    expect(subscriber).toHaveBeenCalledWith({ a: 2 }, { a: 1 })
     expect(subscriber).toHaveBeenCalledTimes(1)
 
   })
@@ -396,7 +396,7 @@ describe('Store.hydrate()', () => {
     store.subscribe(subscriber)
     store.hydrate(hydratedState)
 
-    expect(subscriber).toHaveBeenCalledWith(undefined, hydratedState)
+    expect(subscriber).toHaveBeenCalledWith(hydratedState, undefined)
 
   })
 
@@ -563,7 +563,7 @@ describe('Store.setState()', () => {
     store.subscribe(subscriber)
     store.setState(hydratedState)
 
-    expect(subscriber).toHaveBeenCalledWith(undefined, hydratedState)
+    expect(subscriber).toHaveBeenCalledWith(hydratedState, undefined)
 
   })
 

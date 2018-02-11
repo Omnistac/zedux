@@ -121,7 +121,7 @@ import store from './store/index'
 import { showAll, showIncomplete } from './store/visibilityFilter'
 import { addTodo, toggleTodo } from './store/todos'
 
-store.subscribe((oldState, newState) => {
+store.subscribe((newState, oldState) => {
   console.log('state changed! Old state:', oldState, 'New state:', newState)
 })
 

@@ -245,7 +245,7 @@ Registers a subscriber with the store. The subscriber will be notified when the 
 (subscriber: Subscriber) => Subscription
 ```
 
-**subscriber** - A [subscriber function](/docs/types/Subscriber) that will be passed the previous and new state when the state changes.
+**subscriber** - A [subscriber function](/docs/types/Subscriber) that will be passed `newState` and `oldState` when the state changes.
 
 Returns a [subscription](/docs/types/Subscription.md). The subscription's `unsubscribe()` method can be used to unregister the subscriber from the store.
 
@@ -256,8 +256,8 @@ import { createStore } from 'zedux'
 
 const store = createStore()
 
-const subscription = store.subscribe((prevState, newState) => {
-  console.log('state changed from', prevState, 'to', newState)
+const subscription = store.subscribe((newState, oldState) => {
+  console.log(`state changed from ${oldState} to ${newState}`)
 })
 
 store.dispatch(

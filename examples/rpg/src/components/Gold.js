@@ -39,7 +39,7 @@ export default class Gold extends Component {
 
 
   componentWillMount() {
-    this.subscription = this.store.subscribe((oldState, newState) => {
+    this.subscription = this.store.subscribe(newState => {
       this.setState({
         gold: newState
       })

@@ -51,12 +51,12 @@ describe('store composition', () => {
 
     child.dispatch(() => 'a')
 
-    expect(parentSubscriber).toHaveBeenLastCalledWith(undefined, 'a')
+    expect(parentSubscriber).toHaveBeenLastCalledWith('a', undefined)
     expect(parentSubscriber).toHaveBeenCalledTimes(1)
 
     grandchild.dispatch(() => 'b')
 
-    expect(parentSubscriber).toHaveBeenLastCalledWith('a', 'b')
+    expect(parentSubscriber).toHaveBeenLastCalledWith('b', 'a')
     expect(parentSubscriber).toHaveBeenCalledTimes(2)
 
     parent.use(grandchild)

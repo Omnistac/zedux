@@ -58,7 +58,7 @@ export default class Weapons extends Component {
 
 
   componentWillMount() {
-    this.subscription = this.store.subscribe((oldState, newState) => {
+    this.subscription = this.store.subscribe(newState => {
       this.setState({
         weapons: newState
       })
