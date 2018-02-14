@@ -2,6 +2,24 @@ import { BRANCH, NULL } from './general'
 
 
 /**
+  Creates just the processor of a branch reactor.
+*/
+export function createBranchProcessor(children, { get }) {
+  return (dispatch, action, state) => {
+    for (let key in children) {
+      const { reactor: { process } } = children[key]
+
+      if (typeof process !== 'function') return
+
+      const statePiece = get(state, key)
+
+      process(dispatch, action, statePiece)
+    }
+  }
+}
+
+
+/**
   Turns a diff tree into a single reactor.
 
   All child diff nodes must have `reactor` props themselves.
@@ -10,22 +28,33 @@ import { BRANCH, NULL } from './general'
   to get and set properties on that data type, to determine if the old
   state is a node, and to find the size of the node.
 */
-export function createBranchReactor(
+export function createBranchReactor(children, nodeOptions) {
+  const reactor = createBranchReducer(children, nodeOptions)
+
+  reactor.process = createBranchProcessor(children, nodeOptions)
+
+  return reactor
+}
+
+
+/**
+  Creates just the reducer of a branch reactor.
+*/
+export function createBranchReducer(
   children,
   { create, get, isNode, set, size }
 ) {
-  const reactor = (oldState = create(), action) => {
+  return (oldState = create(), action) => {
 
     // Make a new node to keep track of the values returned by
     // the child reactors.
     let newState = create()
     let hasChanges = false
 
-    const childrenEntries = Object.entries(children)
-
     // Iterate over the child reactors, passing them their state slice
     // and the action and recording their results.
-    childrenEntries.forEach(([ key, { reactor } ]) => {
+    for (let key in children) {
+      const { reactor } = children[key]
 
       // Grab the old state slice
       const oldStatePiece = isNode(oldState)
@@ -40,30 +69,18 @@ export function createBranchReactor(
 
       // Check for changes
       hasChanges || (hasChanges = newStatePiece !== oldStatePiece)
-    })
+    }
 
-    // Handle the case where `children` did not used to be an empty node
-    if (!isNode(oldState) || !childrenEntries.length && size(oldState)) {
+    // Handle the case where `children` did not used to be an empty node.
+    // This means there were changes, but our change detection failed
+    // since we didn't actually iterate over anything.
+    if (!isNode(oldState) || !Object.keys(children).length && size(oldState)) {
       return newState
     }
 
     // If nothing changed, discard the accumulated newState
     return hasChanges ? newState : oldState
   }
-
-
-  reactor.process = (dispatch, action, state) => {
-    Object.entries(children).forEach(([ key, { reactor: { process } } ]) => {
-      if (typeof process !== 'function') return
-
-      const statePiece = get(state, key)
-
-      process(dispatch, action, statePiece)
-    })
-  }
-
-
-  return reactor
 }
 
 
@@ -96,8 +113,8 @@ export function mergeBranches(oldTree, newTree, nodeOptions) {
   const mergedChildren = { ...oldTree.children }
 
   // Iterate over the new tree's children
-  Object.entries(newTree.children).forEach(([ key, newChild ]) => {
-
+  for (let key in newTree.children) {
+    const newChild = newTree.children[key]
     const oldChild = oldTree[key]
 
     // Attempt to recursively merge the two children
@@ -106,11 +123,13 @@ export function mergeBranches(oldTree, newTree, nodeOptions) {
 
     // If the new node is NULL, kill it.
     if (mergedChild.type === NULL) {
-      return delete mergedChildren[key]
+      delete mergedChildren[key]
+
+      continue
     }
 
     mergedChildren[key] = mergedChild
-  })
+  }
 
   return {
     type: BRANCH,
