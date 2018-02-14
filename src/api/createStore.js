@@ -120,9 +120,7 @@ export function createStore() {
     as well as pseudo-actions dispatched internally.
   */
   const inspect = inspector => {
-    assertAreFunctions([ inspector ], 'store.inspect()')
-
-    const uninspect = register(nextInspectors, inspector)
+    const uninspect = register(nextInspectors, inspector, 'store.inspect()')
 
     return { uninspect }
   }
@@ -194,9 +192,11 @@ export function createStore() {
     unregisters the subscriber.
   */
   const subscribe = subscriber => {
-    assertAreFunctions([ subscriber ], 'store.subscribe()')
-
-    const unsubscribe = register(nextSubscribers, subscriber)
+    const unsubscribe = register(
+      nextSubscribers,
+      subscriber,
+      'store.subscribe()'
+    )
 
     return { unsubscribe }
   }
@@ -303,7 +303,9 @@ export function createStore() {
 
     @returns {Function} An unregister function. Call to remove the listener.
   */
-  function register(list, listener) {
+  function register(list, listener, method) {
+    assertAreFunctions([ listener ], method)
+
     list.push(listener)
 
     return () => {
