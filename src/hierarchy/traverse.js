@@ -21,26 +21,36 @@ export function delegate(diffTree, action) {
 
   if (!subStorePath) return false
 
-  for (let i = 0; i < subStorePath.length; i++) {
-    if (!diffTree.children) {
-      throw new ReferenceError(invalidDelegation(subStorePath))
-    }
+  const child = findChild(diffTree, subStorePath, invalidDelegation)
 
-    const node = subStorePath[i]
-    diffTree = diffTree.children[node]
-
-    if (!diffTree) {
-      throw new ReferenceError(invalidDelegation(subStorePath))
-    }
-  }
-
-  if (diffTree.type !== STORE) {
+  if (child.type !== STORE) {
     throw new TypeError(invalidDelegation(subStorePath))
   }
 
-  diffTree.store.dispatch(removeMeta(action, metaTypes.DELEGATE))
+  child.store.dispatch(removeMeta(action, metaTypes.DELEGATE))
 
   return true
+}
+
+
+/**
+  Finds a node in a diffTree given a node path (array of nodes).
+*/
+export function findChild(diffTree, nodePath, getErrorMessage) {
+  for (let i = 0; i < nodePath.length; i++) {
+    if (!diffTree.children) {
+      throw new ReferenceError(getErrorMessage(nodePath))
+    }
+
+    const node = nodePath[i]
+    diffTree = diffTree.children[node]
+
+    if (!diffTree) {
+      throw new ReferenceError(getErrorMessage(nodePath))
+    }
+  }
+
+  return diffTree
 }
 
 
