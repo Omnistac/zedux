@@ -5,12 +5,15 @@ An actor is just a glorified [action creator](/docs/types/ActionCreator.md) &nda
 ## Definition
 
 ```typescript
-interface Actor extends ActionCreator {
-  type: string
+interface Actor<T extends string> extends ActionCreator<T> {
+  type: T
+  toString(): T
 }
 ```
 
 **type** - Some string that identifies the actions created by this actor. Avoid using names starting with `'@@zedux/'` as these are reserved for internal Zedux action types.
+
+**toString()** - An actor's `toString()` method should be overwritten with a function that returns the actor's `type`.
 
 ## Examples
 
@@ -34,6 +37,9 @@ we get:
 const increment = () => ({ type: increment.type })
 
 increment.type = 'increment'
+
+// not necessary here, but for the sake of completeness:
+increment.toString = () => increment.type
 
 const reducer = (state = 0, action) {
   const amount = action.type === increment.type

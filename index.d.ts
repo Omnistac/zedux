@@ -1,16 +1,17 @@
-export interface Action {
-  type: string
+export interface Action<T extends string = string> {
+  type: T
   payload?: any
 }
 
 
-export interface ActionCreator {
-  (...args: any[]): Action
+export interface ActionCreator<T extends string = string> {
+  (...args: any[]): Action<T>
 }
 
 
-export interface Actor extends ActionCreator {
-  type: ActionType
+export interface Actor<T extends string = string> extends ActionCreator<T> {
+  type: T
+  toString(): T
 }
 
 
@@ -82,7 +83,7 @@ export interface Selector<S = any, D = any> {
 }
 
 
-export interface State extends Actor {
+export interface State<T extends string = string> extends Actor<T> {
   enter?: Processor
   leave?: Processor
 }
@@ -115,8 +116,8 @@ export interface Subscription {
 }
 
 
-export interface ZeduxActor extends Actor {
-  payload(payloadCreator: Function): void
+export interface ZeduxActor<T extends string = string> extends Actor<T> {
+  payload(payloadCreator: Function): ZeduxActor<T>
 }
 
 
@@ -135,9 +136,11 @@ export interface ZeduxReactor<S = any> extends Reactor<S> {
 }
 
 
-export interface ZeduxState extends State, ZeduxActor {
-  onEnter(processor: Processor): ZeduxState
-  onLeave(processor: Processor): ZeduxState
+export interface ZeduxState<T extends string = string>
+  extends State<T>, ZeduxActor<T>
+{
+  onEnter(processor: Processor): ZeduxState<T>
+  onLeave(processor: Processor): ZeduxState<T>
 }
 
 

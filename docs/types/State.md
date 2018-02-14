@@ -5,7 +5,7 @@ A State is just a glorified [actor](/docs/types/Actor.md) &ndash; "glorified" me
 ## Definition
 
 ```typescript
-interface State extends Actor {
+interface State<T extends string> extends Actor<T> {
   enter?: Processor
   leave?: Processor
 }

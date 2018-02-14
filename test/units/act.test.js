@@ -24,6 +24,17 @@ describe('Zedux.act()', () => {
   })
 
 
+  test('overwrites the actor\'s toString() method with a function that returns the actor\'s type', () => {
+
+    expect(act('a').toString()).toBe('a')
+
+    expect(act(1) + '').toBe('1')
+
+    expect(act({}) + act({})).toBe({} + {})
+
+  })
+
+
   test('joins multiple arguments with "/"', () => {
 
     expect(act(1, 2, 3).type).toBe('1/2/3')

@@ -149,9 +149,9 @@ const online = state('online')
 While [States](/docs/types/State.md) are meant to be used in state machines, inducers can use them too:
 
 ```javascript
-const sleep = state => asleep.type
-const goOffline = state => offline.type
-const goOnline = state => online.type
+const sleep = () => asleep.type
+const goOffline = () => offline.type
+const goOnline = () => online.type
 ```
 
 This way, migrating to a reducer hierarchy later is a piece of cake:
@@ -243,6 +243,8 @@ const decrement = useCounter(state => state - 1)
 ```
 
 The caveat (or feature?) of this solution is that it prevents the store from containing state that hasn't been modified yet. In the above example, the store would not contain a `counter` property until we dispatched an `increment` or `decrement` action to it. Probably not what we want. But maybe. Your choice.
+
+Note that solution 1 suffers from this as well. We just didn't mention that because it wasn't worth the effort. It is now though. For some reason.
 
 3) Hydrate the store with the entire initial state tree upon creation:
 

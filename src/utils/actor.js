@@ -1,3 +1,8 @@
+const sharedToStringMethod = function() {
+  return this.type
+}
+
+
 export function createActor(actionType) {
 
   // The default payload creator is the identity function
@@ -33,6 +38,12 @@ export function createActor(actionType) {
   // Expose the action `type` for this actor.
   // Read only! There should never be any reason to modify this.
   actor.type = actionType
+
+
+  // For convenience, overwrite the function's .toString() method.
+  // Make it return the actor's `type`. Useful for stuff like:
+  // { [anActor]: aReducer }
+  actor.toString = sharedToStringMethod
 
 
   return actor

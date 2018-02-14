@@ -24,6 +24,17 @@ describe('Zedux.state()', () => {
   })
 
 
+  test('overwrites the state\'s toString() method with a function that returns the state\'s type', () => {
+
+    expect(state('a').toString()).toBe('a')
+
+    expect(state(1) + '').toBe('1')
+
+    expect(state({}) + state({})).toBe({} + {})
+
+  })
+
+
   test('joins multiple arguments with "/"', () => {
 
     expect(state(1, 2, 3).type).toBe('1/2/3')

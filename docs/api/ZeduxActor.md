@@ -11,8 +11,8 @@ Creating actors manually is completely unnecessary boilerplate in almost every c
 ## Definition
 
 ```typescript
-interface ZeduxActor extends Actor {
-  payload(payloadCreator: Function): ZeduxActor
+interface ZeduxActor<T extends string> extends Actor<T> {
+  payload(payloadCreator: Function): ZeduxActor<T>
 }
 ```
 

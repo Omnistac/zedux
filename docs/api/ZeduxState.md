@@ -9,9 +9,9 @@ A ZeduxState is *also* a valid [ZeduxActor](/docs/api/ZeduxActor.md), complete w
 ## Definition
 
 ```typescript
-interface ZeduxState extends State, ZeduxActor {
-  onEnter(processor: Processor): ZeduxState
-  onLeave(processor: Processor): ZeduxState
+interface ZeduxState<T extends string> extends State<T>, ZeduxActor<T> {
+  onEnter(processor: Processor): ZeduxState<T>
+  onLeave(processor: Processor): ZeduxState<T>
 }
 ```
 

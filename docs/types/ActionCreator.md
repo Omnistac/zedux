@@ -5,8 +5,8 @@ Essentially an action factory. An action creator is just a function that returns
 ## Definition
 
 ```typescript
-interface ActionCreator {
-  (...args: any[]): Action
+interface ActionCreator<T extends string> {
+  (...args: any[]): Action<T>
 }
 ```
 

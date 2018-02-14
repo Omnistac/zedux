@@ -50,11 +50,11 @@ import { react } from 'zedux'
 
 const potionsReactor = react([ 'health' ])
   .to('buy')
-  .withReducers((state, item) => [ ...state, item ])
+  .withReducers((state, { payload }) => [ ...state, payload ])
 
   .to('sell')
   .withReducers(
-    (state, soldItem) => state.filter(item => item !== soldItem)
+    (state, { payload }) => state.filter(item => item !== payload)
   )
 ```
 
@@ -82,8 +82,8 @@ And we're done! Here's all of that together (and simplified a little bit) ... (a
 ```javascript
 import { act, createStore, react } from 'zedux'
 
-// This is how we'll typically create action creators.
-// These are "actors" which are just fancy action creators.
+// This is how we'll typically create actors.
+// An actor is just a fancy action creator.
 const buy = act('buy')
 const sell = act('sell')
 
@@ -92,11 +92,11 @@ const potionsReactor = react([ 'health' ])
   // The neat thing about actors is they can be passed directly to
   // this reactor's `.to()` method, avoiding string literals/constants:
   .to(buy)
-  .withReducers((state, item) => [ ...state, item ])
+  .withReducers((state, { payload }) => [ ...state, payload ])
 
   .to(sell)
   .withReducers(
-    (state, soldItem) => state.filter(item => item !== soldItem)
+    (state, { payload }) => state.filter(item => item !== payload)
   )
 
 const store = createStore()

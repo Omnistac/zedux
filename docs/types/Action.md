@@ -5,8 +5,8 @@ An action is a plain object containing a `type` property and optional `payload` 
 ## Definition
 
 ```typescript
-interface Action {
-  type: string
+interface Action<T extends string> {
+  type: T
   payload?: any
 }
 ```

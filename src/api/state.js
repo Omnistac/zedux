@@ -68,10 +68,5 @@ function createState(stateName) {
   }
 
 
-  // Expose the action `type` for this state (a state is an actor).
-  // Read only! There should never be any reason to modify this.
-  zeduxState.type = stateName
-
-
   return zeduxState
 }
