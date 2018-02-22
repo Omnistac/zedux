@@ -42,15 +42,13 @@ export function branchToDiffNodeChildren(
 export function getHierarchyType(descriptor) {
   if (typeof descriptor === 'function') return REACTOR
 
-  if (!isPlainObject(descriptor)) {
-    assertIsNullHierarchyDescriptorNode(descriptor)
+  if (descriptor && isZeduxStore(descriptor)) return STORE
 
-    return NULL
-  }
+  if (isPlainObject(descriptor)) return BRANCH
 
-  return isZeduxStore(descriptor)
-    ? STORE
-    : BRANCH
+  assertIsNullHierarchyDescriptorNode(descriptor)
+
+  return NULL
 }
 
 

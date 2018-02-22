@@ -275,4 +275,22 @@ describe('store composition', () => {
 
   })
 
+
+  test('child store can be integrated into a complex object', () => {
+
+    const parent = createStore()
+    const child = Object.create(createStore().hydrate(1), {
+      a: { value: 2 }
+    })
+
+    parent.use({
+      b: child
+    })
+
+    expect(parent.getState()).toEqual({
+      b: 1
+    })
+
+  })
+
 })

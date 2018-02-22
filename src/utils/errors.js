@@ -92,7 +92,7 @@ export const invalidDelegation = isProd ? prodErr : subStorePath =>
 
 export const invalidHierarchyDescriptorNode = isProd ? prodErr : node =>
   `${PREFIX} store.use() - `
-    + 'Hierarchy descriptor nodes must be reducers, plain objects, or stores. '
+    + 'Hierarchy descriptor nodes must be reducers, stores, or plain objects. '
     + `Received ${detailedTypeof(node)}`
 
 
