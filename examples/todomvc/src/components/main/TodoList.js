@@ -1,7 +1,7 @@
 import React from 'react'
 
 import Todo from './Todo'
-import { withRoot } from '../../providers/RootProvider'
+import { withRoot } from '../../contexts/RootContext'
 
 
 export default withRoot(TodoList)

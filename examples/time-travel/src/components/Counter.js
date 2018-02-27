@@ -1,6 +1,6 @@
 import React from 'react'
 
-import CounterProvider from '../providers/CounterProvider'
+import { CounterProvider } from '../contexts/CounterContext'
 import CounterControls from './CounterControls'
 import CounterDisplay from './CounterDisplay'
 

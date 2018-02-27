@@ -17,6 +17,10 @@ pre[class*="language-"] {
   margin: auto;
 }
 
+.markdown-section a img {
+  display: inline-block;
+}
+
 .token.atrule, .token.attr-value, .token.keyword {
   color: #bd00d5;
 }

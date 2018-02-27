@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 
-import { withRoot } from '../../providers/RootProvider'
+import { withRoot } from '../../contexts/RootContext'
 
 
 const ENTER_KEY = 13

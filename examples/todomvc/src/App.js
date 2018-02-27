@@ -3,15 +3,15 @@ import React from 'react'
 import Footer from './components/Footer'
 import Header from './components/Header'
 import Main from './components/Main'
-import RootProvider from './providers/RootProvider'
+import RootContext from './contexts/RootContext'
 
 
 export default function App() {
   return (
-    <RootProvider>
+    <RootContext.Provider>
       <Header />
       <Main />
       <Footer />
-    </RootProvider>
+    </RootContext.Provider>
   )
 }

@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { withRoot } from '../providers/RootProvider'
+import { withRoot } from '../contexts/RootContext'
 
 
 export default withRoot(Footer)

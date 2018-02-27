@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { withCounter } from '../providers/CounterProvider'
+import { withCounter } from '../contexts/CounterContext'
 
 export default withCounter(CounterDisplay)
 

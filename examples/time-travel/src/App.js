@@ -3,15 +3,15 @@ import { render } from 'react-dom'
 import { Provider, act, createStore, react, withStores } from 'react-zedux'
 
 import Counter from './components/Counter'
-import RootProvider from './providers/RootProvider'
+import RootContext from './contexts/RootContext'
 
 
 export default function App() {
   return (
-    <RootProvider>
+    <RootContext.Provider>
       <Counter />
       <Counter />
       <Counter />
-    </RootProvider>
+    </RootContext.Provider>
   )
 }
