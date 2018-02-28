@@ -2,7 +2,7 @@
 
 Zedux is framework (and library...) agnostic. But it is designed especially to be used with React and React-like libraries.
 
-In this guide, we'll use [React Zedux](https://github.com/bowheart/react-zedux), the official React bindings for Zedux. React Zedux does all the hard stuff for us, plus it re-exports all the Zedux internals so our normal component files have one less dependency.
+In this guide, we'll use [React Zedux](https://github.com/bowheart/react-zedux), the official React bindings for Zedux. React Zedux does all the hard stuff for us.
 
 ## Overview
 
@@ -22,6 +22,8 @@ function CoolComponent() {
 Yikes! We've tightly coupled our component to a single store instance. This may be fine for a prototype or two, but it won't do well in the real world. Let's do better:
 
 ```javascript
+import coolStore from './coolStore'
+
 function CoolComponent({ coolStore }) {
   return 'cool stuff: ' + coolStore.getState()
 }
@@ -35,79 +37,74 @@ Much better. `CoolComponent` is no longer tightly coupled to a single store &nda
 
 ### But wait! Now `CoolParent` is tightly coupled to a store!
 
-Ah, yes. Well, you see, the truth of the matter is that we'll never be free of tightly-coupled components. The trick lies in isolating them and lifting them up to the lowest common parent of dependent components.
+Well somebody's gotta be. The trick lies in isolating store-bound compnents and lifting them up to the lowest common parent of dependents.
 
-## Providers
+## Context
 
-The component that passes a store to its children is called a Provider. But our current approach has limitations &ndash; passing the store as a prop can quickly become tedious with deeply nested components. To overcome this, we'll make use of a special component from React Zedux:
+Our current store-passing approach has limitations &ndash; namely the "prop drilling" problem: Passing the store as a prop can quickly become tedious with deeply nested components. To overcome this, we need to create a Context:
 
 ```javascript
 import React from 'react'
-import { Provider } from 'react-zedux'
+import { createContext } from 'react-zedux'
+import coolStore from './coolStore'
+
+const CoolContext = createContext(coolStore)
 
 function CoolParent() {
   return (
-    <Provider id={CoolParent} store={coolStore}>
+    <CoolContext.Provider>
       <CoolComponent />
-    </Provider>
+    </CoolContext.Provider>
   )
 }
 ```
 
-The `<Provider />` is just magic. That's all. All we need to know is that it takes two props: `id` and `store`. The store is a store. Yep. The id is an id, but it deserves a little more explanation:
+This is very similar to the context api of React 16.3. In fact, that's what it's using, under the hood.
 
-## The id
-
-A Zedux app has many stores composed together in a store hierarchy. We tie this store hierarchy into our component hierarchy using Providers. This means that a child component can have multiple stores provided to it from multiple ancestors! How does the child know which store to use?
-
-Each store needs a unique identifier. While this identifier can be anything, it'll typically be the component that provides the store (`CoolParent` in our example). Yes, the parent component itself is the id.
-
-## Isolating Providers
-
-Throwing `<Provider />` components all over the place gets messy quickly. We need to separate our data from our UI. To do this, we'll use custom Providers.
-
-A custom Provider is a component whose sole role is to create/find, decorate, and provide a store:
-
-```javascript
-import React, { Component } from 'react'
-import { Provider, createStore } from 'react-zedux'
-
-class CoolProvider extends Component {
-  store = createStore()
-    .hydrate('such coolness')
-
-  render() {
-    return (
-      <Provider id={CoolProvider} store={this.store}>
-        {this.props.children}
-      </Provider>
-    )
-  }
-}
-```
-
-This is a normal custom Provider layout. The custom Provider just takes a store and wraps his children in a `<Provider />`. In this example, we created a component-bound store that'll live and die with the component. This doesn't have to be the case &ndash; we could just as well use a global store.
+The `<Context.Provider />` is magic. That's all. Just remember that it allows its descendants to consume the store.
 
 ## Consuming the store
 
-React Zedux gives us an HOC that we can use to grab a store provided by an ancestor:
+The Context object contains a Consumer component that we can use to consume the provided store.
 
 ```javascript
-import { withStores } from 'react-zedux'
+import CoolContext from './contexts/CoolContext'
 
-export default withStores({
-  coolStore: CoolProvider
-})(CoolComponent)
-
-function CoolComponent({ coolStore }) {
-  return coolStore.getState()
+function CoolComponent() {
+  return (
+    <CoolContext.Consumer>
+      {coolStore => coolStore.getState()}
+    </CoolContext.Consumer>
+  )
 }
 ```
 
-And that's all there is to it. We pass `withStores()` a `propName`-to-`storeId` map. Zedux finds the appropriate stores for us (using that all-important `id`) and passes them to `CoolComponent` as the given props.
+We pass a render prop as the `<Consumer>`'s only child. This render prop is passed a wrapped form of the store. And it's called every time the store's state updates.
 
 The end.
 
 ## Notes
 
-We took a fairly low-level approach here. Don't worry. React Zedux has a couple layers of sugar on top of this to ease store interface creation, provision, and consumption. [Check it out](https://github.com/bowheart/react-zedux)!
+Unlike React 16.3's built-in contexts, a ReactZedux `<Consumer>` will throw an error if used without its matching `<Provider>`. If you really want to provide and consume the store, either explicitly include the `<Provider>` or use `<Context.Injector>` instead. The `<Injector>` is just a shorthand for providing and immediately consuming the store.
+
+The wrapped store passed to the Consumer's render prop contains a single additional property: `state`. This property will always be the current state of the store. In our last example, we could have done:
+
+```js
+<CoolContext.Consumer>
+  {coolStore => coolStore.state}
+</CoolContext.Consumer>
+```
+
+or simply:
+
+```js
+<CoolContext.Consumer>
+  {({ state }) => state}
+</CoolContext.Consumer>
+```
+
+and achieved the same result.
+
+React Zedux also comes with Higher-Order Component equivalents of the Context's normal components. Check those out in the React Zedux [Context documentation](https://bowheart.github.io/react-zedux/types/Context).
+
+In fact, overall we took a fairly low-level approach here. Don't worry. React Zedux has a couple layers of sugar on top of this to ease store api creation, provision, and consumption. [Check it out](https://github.com/bowheart/react-zedux)!
