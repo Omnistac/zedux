@@ -107,7 +107,7 @@ export interface StoreBase<S = any> {
 
 
 export interface Subscriber<S> {
-  (prevState: S, newState: S): void
+  (newState: S, prevState?: S): void
 }
 
 
