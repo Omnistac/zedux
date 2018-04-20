@@ -322,4 +322,26 @@ See the [merging hierarchies](/docs/guides/mergingHierarchies.md) guide for a mo
 
 ## Notes
 
-A Zedux store also contains a special `$$typeof` symbol that identifies it internally. This is mostly just important when passing a store as part of a [hierarchy descriptor](/docs/types/HierarchyDescriptor.md). Zedux won't recognize the store without this property.
+A Zedux store also contains two special symbols:
+
+- `$$observable` - Makes the Zedux store compliant with the [proposed observable spec](https://github.com/tc39/proposal-observable). Yes, this means you can do crazy stuff:
+
+```js
+import { Observable } from 'rxjs'
+import { createStore } from 'zedux'
+
+const store = createStore()
+const state$ = Observable.from(store)
+  .filter(state => state !== 'a')
+  .subscribe(newState => {
+    console.log('the state is not "a"! It is:', newState)
+  })
+
+store.setState('a')
+store.setState('b')
+store.setState('a')
+
+// the state is not "a"! It is: 'b'
+```
+
+- `$$typeof` - Identifies the store internally. This is mostly just important when passing a store as part of a [hierarchy descriptor](/docs/types/HierarchyDescriptor.md). Zedux won't recognize the store without this property.

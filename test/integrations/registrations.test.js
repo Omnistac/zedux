@@ -21,6 +21,21 @@ describe('registrations', () => {
     })
 
 
+    test('observer-style subscribers are notified of a state update', () => {
+
+      const store = createStore()
+      const observer = { next: jest.fn() }
+
+      store.subscribe(observer)
+
+      store.setState('a')
+
+      expect(observer.next).toHaveBeenCalledWith('a', undefined)
+      expect(observer.next).toHaveBeenCalledTimes(1)
+
+    })
+
+
     test('subscribers can be added or removed whenever', () => {
 
       const store = createStore()

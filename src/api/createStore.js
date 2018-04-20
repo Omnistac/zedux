@@ -1,3 +1,5 @@
+import $$observable from 'symbol-observable'
+
 import { actionTypes, metaTypes } from './constants'
 import { hierarchyDescriptorToDiffTree } from '../hierarchy/create'
 import { mergeDiffTrees, mergeStateTrees } from '../hierarchy/merge'
@@ -292,9 +294,11 @@ export function createStore() {
 
     subscribers = [ ...nextSubscribers ]
 
-    subscribers.forEach(
-      subscriber => subscriber(newState, oldState)
-    )
+    subscribers.forEach(subscriber => {
+      if (subscriber.next) return subscriber.next(newState, oldState)
+
+      subscriber(newState, oldState)
+    })
   }
 
 
@@ -304,7 +308,7 @@ export function createStore() {
     @returns {Function} An unregister function. Call to remove the listener.
   */
   function register(list, listener, method) {
-    assertAreFunctions([ listener ], method)
+    assertAreFunctions([ listener.next || listener ], method)
 
     list.push(listener)
 
@@ -369,6 +373,7 @@ export function createStore() {
     setState,
     subscribe,
     use,
+    [$$observable]: () => store,
     $$typeof: STORE_IDENTIFIER
   }
 

@@ -1,3 +1,5 @@
+import { Observable } from 'rxjs'
+
 import { createStore } from '../../src/index'
 import { actionTypes, metaTypes } from '../../src/index'
 import { dispatchables, nonDispatchables, nonPlainObjects } from '../utils'
@@ -628,7 +630,7 @@ describe('Store.setState()', () => {
 
 describe('store.subscribe()', () => {
 
-  test('throws a TypeError if the subscriber is not a function', () => {
+  test('throws a TypeError if the subscriber is not a function or observer object', () => {
 
     const store = createStore()
 
@@ -666,6 +668,53 @@ describe('store.use()', () => {
       .use(null)
 
     expect(store.$$typeof).toBe(Symbol.for('zedux.store'))
+
+  })
+
+})
+
+
+describe('store[$$observable]', () => {
+
+  test('returns the store (which is an observable)', () => {
+
+    const store = createStore()
+
+    expect(store[Symbol.observable]()).toBe(store)
+
+  })
+
+
+  test('can be converted to an RxJS observable', () => {
+
+    const store = createStore()
+    const state$ = Observable.from(store)
+    const subscriber = jest.fn()
+
+    state$.subscribe(subscriber)
+
+    store.setState('a')
+
+    expect(subscriber).toHaveBeenCalledWith('a')
+    expect(subscriber).toHaveBeenCalledTimes(1)
+
+  })
+
+
+  test('we can go RxJS crazy with the observable store', () => {
+
+    const store = createStore()
+    const subscriber = jest.fn()
+    const state$ = Observable.from(store)
+      .filter(state => state !== 'a')
+      .subscribe(subscriber)
+
+    store.setState('a')
+    store.setState('b')
+    store.setState('a')
+
+    expect(subscriber).toHaveBeenCalledWith('b')
+    expect(subscriber).toHaveBeenCalledTimes(1)
 
   })
 

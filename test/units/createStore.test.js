@@ -18,6 +18,7 @@ describe('Zedux.createStore()', () => {
       setState: expect.any(Function),
       subscribe: expect.any(Function),
       use: expect.any(Function),
+      [Symbol.observable]: expect.any(Function),
       $$typeof: Symbol.for('zedux.store')
     }))
 

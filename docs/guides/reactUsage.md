@@ -19,7 +19,7 @@ function CoolComponent() {
 }
 ```
 
-Yikes! We've tightly coupled our component to a single store instance. This may be fine for a prototype or two, but it won't do well in the real world. Let's do better:
+Yikes! We've tightly coupled our component to a single store instance. This may be fine for a prototype or two, but it won't do in the real world. Let's do better:
 
 ```javascript
 import coolStore from './coolStore'
@@ -37,11 +37,11 @@ Much better. `CoolComponent` is no longer tightly coupled to a single store &nda
 
 ### But wait! Now `CoolParent` is tightly coupled to a store!
 
-Well somebody's gotta be. The trick lies in isolating store-bound compnents and lifting them up to the lowest common parent of dependents.
+Well somebody's gotta be. The trick lies in isolating store-bound components and lifting them up to the lowest common parent of dependents.
 
 ## Context
 
-Our current store-passing approach has limitations &ndash; namely the "prop drilling" problem: Passing the store as a prop can quickly become tedious with deeply nested components. To overcome this, we need to create a Context:
+Our current store-passing approach has a big limitation &ndash; The view doesn't update when the store's state changes. How do we tell React about the update? Enter the Context:
 
 ```javascript
 import React from 'react'
@@ -61,7 +61,7 @@ function CoolParent() {
 
 This is very similar to the context api of React 16.3. In fact, that's what it's using, under the hood.
 
-The `<Context.Provider />` is magic. That's all. Just remember that it allows its descendants to consume the store.
+The `<Context.Provider />` magically allows its descendants to consume the store and react to/dispatch state updates, thus avoiding the prop drilling problem and achieving total stateful happiness.
 
 ## Consuming the store
 
