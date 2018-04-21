@@ -1,6 +1,6 @@
 {
   "name": "zedux",
-  "version": "0.0.17",
+  "version": "0.0.20",
   "description": "A high-level, declarative, composable form of Redux",
   "main": "dist/zedux.js",
   "module": "dist/zedux.es.js",
@@ -83,6 +83,7 @@
     "rimraf": "^2.6.2",
     "rollup": "^0.50.0",
     "rollup-plugin-babel": "^3.0.2",
+    "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-uglify": "^2.0.1",
     "rollup-watch": "^4.3.1",
