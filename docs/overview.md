@@ -1,14 +1,16 @@
 # Overview
 
+![Store Composition](/docs/img/zedux-composition.png)
+
 ## What is it?
 
 Zedux is a complete tool for state management featuring:
 
+- [Store composition](/docs/guides/storeComposition.md).
+
 - (Optional) [Zero configuration](/docs/guides/zeroConfiguration.md).
 
 - [Dispatchable reducers](/docs/guides/dispatchableReducers.md).
-
-- Store composition.
 
 - Built-in support for running generators and observables.
 

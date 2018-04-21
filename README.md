@@ -9,7 +9,7 @@ The complete state management solution. Zedux is a futuristic Redux.
 
 ![Store Composition](https://bowheart.github.io/zedux/docs/img/zedux-composition.png)
 
-### Feature list of awesomeness
+## Feature list of awesomeness
 
 - [composable stores](https://bowheart.github.io/zedux/docs/guides/storeComposition) &ndash; Yep, for real. Enter the Higher-Order Store revolution!
 - [built-in side effects model](https://bowheart.github.io/zedux/docs/guides/theProcessorLayer) &ndash; Thunks, generators, and observables out-of-the-box.
