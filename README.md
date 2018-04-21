@@ -5,11 +5,19 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/0459ebf8444c36752eac/maintainability)](https://codeclimate.com/github/bowheart/zedux/maintainability)
 [![npm](https://img.shields.io/npm/v/zedux.svg)](https://www.npmjs.com/package/zedux)
 
-The complete state management solution.
+The complete state management solution. Zedux is a futuristic Redux.
 
-Zedux is a futuristic Redux. It conforms to *almost* every philosophy of Redux, while opinionatedly straying when it thinks there may be a better way.
+![Store Composition](https://bowheart.github.io/zedux/docs/img/zedux-composition.png)
 
-The goal of Zedux is to innovate Redux. In the Zedux world, ideas like [state machines](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines), [code splitting](https://bowheart.github.io/zedux/docs/api/Store#storeuse), [zero-configuration](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration), and [composable stores](https://bowheart.github.io/zedux/docs/guides/storeComposition) are the norms.
+### Feature list of awesomeness
+
+- [composable stores](https://bowheart.github.io/zedux/docs/guides/storeComposition) &ndash; Yep, for real. Enter the Higher-Order Store revolution!
+- [built-in side effects model](https://bowheart.github.io/zedux/docs/guides/theProcessorLayer) &ndash; Thunks, generators, and observables out-of-the-box.
+- [reducer-driven state updates](https://bowheart.github.io/zedux/docs/guides/theReducerLayer) &ndash; Redux-style power. Optional, of course.
+- [state machines](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines)
+- [code splitting](https://bowheart.github.io/zedux/docs/api/Store#storeuse)
+- [zero-configuration](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration) &ndash; Opinionated but configurable.
+- [memoized selectors](https://bowheart.github.io/zedux/docs/api/select)
 
 ## Installation
 
@@ -53,11 +61,19 @@ Or keep reading for a brief run-down:
 
 ## Intro
 
-Redux has landed itself in an awkward spot, being too much for small applications, yet nowhere near extensive enough for large apps. The low-level api and the sheer number of plugins required to make Redux work make it an impractical choice for many situations. While the simplicity of Redux is a huge asset, it is nevertheless a sad fact that many people reject Redux due to the side effects of simplicity.
+- composition > middleware
 
-Zedux believes in simplicity too. But Zedux approaches it from the user's perspective first, and a code perspective second. This means Zedux has an incredibly straight-forward, declarative api and almost none of the verbosity of Redux.
+This is the core philosophy of Zedux. Zedux takes Redux and dips it in React's composable architecture to achieve stateful zen.
 
-Zedux does not, however, conform to the philosophy that simple equals bare. Zedux aims to offer a complete api for all common state management needs. This includes asynchronicity, state hydration, code splitting, state machines, and memoization/state derivation. Apps of all sizes, from tiny to gigantic, should be able to use Zedux comfortably.
+- Opinionated but configurable.
+
+Simplicity rules. Zedux stores require zero configuration to start. But they're flexible and powerful enough to move with you as your app's state demands increase. Apps of all sizes, from tiny to gigantic, should be able to use Zedux comfortably.
+
+- Building blocks of state
+
+The store is the basic building block of application state. Stateful components that expose a Zedux store can be easily consumed and composed in any application. Zedux stores can also be easily synced across realms (workers, browser extensions, iframes, SSR).
+
+Composition is king.
 
 ## Quick start
 
@@ -137,7 +153,7 @@ store.dispatch(decrement())
 // counter went from 2 to 1
 ```
 
-If you know Redux, almost every bit of this will seem instantly familiar (and not just because it's similar to the one in the Redux docs). At this point, you should know enough to get started using Zedux. But don't worry, there's [a](https://bowheart.github.io/zedux/docs/guides/reactUsage) [ton](https://bowheart.github.io/zedux/docs/api/Store#storehydrate) [of](https://bowheart.github.io/zedux/docs/guides/mergingHierarchies) [cool](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration) [stuff](https://bowheart.github.io/zedux/docs/guides/theProcessorLayer) [we](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy) [haven't](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines) [covered](https://bowheart.github.io/zedux/docs/guides/storeComposition).
+If you know Redux, almost all of this will seem familiar (and not just because the Redux docs have a similar example). At this point, you should know enough to get started using Zedux. But don't worry, there's [a](https://bowheart.github.io/zedux/docs/guides/reactUsage) [ton](https://bowheart.github.io/zedux/docs/api/Store#storehydrate) [of](https://bowheart.github.io/zedux/docs/guides/mergingHierarchies) [cool](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration) [stuff](https://bowheart.github.io/zedux/docs/guides/theProcessorLayer) [we](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy) [haven't](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines) [covered](https://bowheart.github.io/zedux/docs/guides/storeComposition).
 
 Here's a small taste of what's in store (yes, that pun was an accident):
 
@@ -224,6 +240,68 @@ See:
 - [the `Inducer` type](https://bowheart.github.io/zedux/docs/types/Inducer)
 - [`store.setState()`](https://bowheart.github.io/zedux/docs/api/Store#storesetstate)
 - [the zero configuration guide](https://bowheart.github.io/zedux/docs/guides/zeroConfiguration)
+
+### Store composition
+
+Too good to be true? Think again. The store composition model of Zedux is unprecedented and extremely powerful. The Zedux store's disposable and highly performant nature combined with its uncanny time traveling ability will make you weep. With joy, of course.
+
+```javascript
+import { act, createStore, react } from 'zedux'
+
+/*
+  While a Zedux app can have many stores, we'll typically always
+  create a single "root" store. This gives us the best of both
+  worlds - The time traveling ability of the singleton model
+  and the encapsulation of component-bound stores.
+*/
+const rootStore = createStore()
+
+// A basic inducer
+const increment = state => state + 1
+
+let storeIdCounter = 1
+
+/*
+  A simple factory for creating a "counter" store and attaching
+  it to the root store's reactor hierarchy.
+*/
+const createCounterStore = () => {
+  const storeId = storeIdCounter++
+
+  const counterStore = createStore()
+    .hydrate(0)
+
+  // Where the magic happens; tell rootStore to "use" counterStore
+  rootStore.use({ [`counter${storeId}`]: counterStore })
+
+  return counterStore
+}
+
+// And enjoy
+const counter1 = createCounterStore()
+const counter2 = createCounterStore()
+
+// We can increment each counter individually...
+counter1.dispatch(increment)
+counter1.dispatch(increment)
+
+counter2.dispatch(increment)
+
+// ...or the whole lot of 'em:
+rootStore.dispatch(increment)
+
+rootStore.getState() // { counter1: 3, counter2: 2 }
+```
+
+Treating the store as the basic application building block opens the door for embedded applications. The Zedux store is an autonomous unit that can simultaneously handle a sub-module's internal workings and present a standardized api to consumers.
+
+Additionally, the ability to create stores whose lifecycle parallels the lifecycle of a component while still maintaining time-traversable state and replayable actions is an exciting new possibility that Zedux has blown wide open.
+
+See:
+
+- [`createStore()`](https://bowheart.github.io/zedux/docs/api/createStore)
+- [the `Store` api](https://bowheart.github.io/zedux/docs/api/Store)
+- [the store composition guide](https://bowheart.github.io/zedux/docs/guides/storeComposition)
 
 ### Selectors
 
@@ -315,72 +393,6 @@ See:
 - [`transition()`](https://bowheart.github.io/zedux/docs/api/transition)
 - [the state machine guide](https://bowheart.github.io/zedux/docs/guides/harnessingStateMachines)
 - [the `ZeduxMachine` api](https://bowheart.github.io/zedux/docs/api/ZeduxMachine)
-
-### Store composition
-
-Too good to be true? Think again. The store composition model of Zedux is unprecedented and extremely powerful. The Zedux store's disposable and highly performant nature combined with its uncanny time traveling ability will make you weep. With joy, of course.
-
-```javascript
-import { act, createStore, react } from 'zedux'
-
-/*
-  While a Zedux app can have many stores, we'll typically always
-  create a single "root" store. This gives us the best of both
-  worlds - The time traveling ability of the singleton model
-  and the encapsulation of component-bound stores.
-*/
-const rootStore = createStore()
-
-// Some basic setup for this example:
-const increment = act('increment')
-
-const counterReactor = react(0)
-  .to(increment)
-  .withReducers(state => state + 1)
-
-let storeIdCounter = 1
-
-/*
-  A simple factory for creating a "counter" store and attaching
-  it to the root store's reactor hierarchy.
-*/
-const createCounterStore = () => {
-  const storeId = storeIdCounter++
-
-  const counterStore = createStore()
-    .use(counterReactor)
-
-  // Where the magic happens; tell rootStore to "use" counterStore
-  rootStore.use({ [`counter${storeId}`]: counterStore })
-
-  return counterStore
-}
-
-// And enjoy
-const counter1 = createCounterStore()
-const counter2 = createCounterStore()
-
-// We can increment each counter individually...
-counter1.dispatch(increment())
-counter1.dispatch(increment())
-
-counter2.dispatch(increment())
-
-// ...or the whole lot of 'em:
-rootStore.dispatch(increment())
-
-rootStore.getState() // { counter1: 3, counter2: 2 }
-```
-
-Treating the store as the basic application building block opens the door for embedded applications. The Zedux store is an autonomous unit that can simultaneously handle a sub-module's internal workings and present a standardized api to consumers.
-
-Additionally, the ability to create stores whose lifecycle parallels the lifecycle of a component while still maintaining time-traversable state and replayable actions is an exciting new possibility that Zedux has blown wide open.
-
-See:
-
-- [`createStore()`](https://bowheart.github.io/zedux/docs/api/createStore)
-- [the `Store` api](https://bowheart.github.io/zedux/docs/api/Store)
-- [the store composition guide](https://bowheart.github.io/zedux/docs/guides/storeComposition)
 
 ### To be continued...
 

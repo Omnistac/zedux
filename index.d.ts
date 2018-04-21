@@ -97,6 +97,8 @@ export interface Store<S = any> extends Observable<S> {
   setNodeOptions(options: NodeOptions): Store<S>
   setState(partialUpdate: any): S
   use(newHierarchy: HierarchyDescriptor): Store<S>
+  $$observable: () => Store<S>,
+  $$typeof: symbol
 }
 
 
