@@ -5,10 +5,9 @@ describe('Zedux.createStore()', () => {
 
   test('returns a store', () => {
 
-    let store = createStore()
-    let keys = Object.keys(store)
+    const store = createStore()
 
-    expect(keys).toHaveLength(9)
+    expect(Object.keys(store)).toHaveLength(9) // $$observable not enumerable
     expect(store).toEqual(expect.objectContaining({
       dispatch: expect.any(Function),
       getState: expect.any(Function),
@@ -21,6 +20,25 @@ describe('Zedux.createStore()', () => {
       [Symbol.observable]: expect.any(Function),
       $$typeof: Symbol.for('zedux.store')
     }))
+
+  })
+
+
+  test('accepts an optional initial hierarchy descriptor', () => {
+
+    const store = createStore({
+      a: () => 1,
+      b: {
+        c: () => 2
+      }
+    })
+
+    expect(store.getState()).toEqual({
+      a: 1,
+      b: {
+        c: 2
+      }
+    })
 
   })
 

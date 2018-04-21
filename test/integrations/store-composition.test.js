@@ -1,4 +1,5 @@
 import { actionTypes, createStore, metaTypes } from '../../src/index'
+import { getStoreBase } from '../utils'
 
 
 describe('store composition', () => {
@@ -68,13 +69,11 @@ describe('store composition', () => {
 
   test('parent store inspectors are notified of actions dispatched to or simulated in the child store', () => {
 
-    const storeBase = {
-      dispatch: expect.any(Function),
-      getState: expect.any(Function)
-    }
     const parent = createStore()
     const child = createStore()
     const grandchild = createStore()
+
+    const storeBase = getStoreBase(parent)
 
     parent.use({
       a: child
@@ -260,10 +259,7 @@ describe('store composition', () => {
     expect(newParentState.a.b.d).toBe(initialParentState.a.b.d)
     expect(newChildState.d).toBe(initialChildState.d)
 
-    expect(childInspector).toHaveBeenCalledWith({
-      dispatch: child.dispatch,
-      getState: child.getState
-    }, {
+    expect(childInspector).toHaveBeenCalledWith(getStoreBase(child), {
       type: actionTypes.HYDRATE,
       payload: {
         c: 3,

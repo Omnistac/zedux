@@ -1,4 +1,5 @@
 import { createStore } from '../../src/index'
+import { getStoreBase } from '../utils'
 
 
 describe('registrations', () => {
@@ -40,18 +41,18 @@ describe('registrations', () => {
 
       const store = createStore()
 
-      let subscriber1 = jest.fn()
+      const subscriber1 = jest.fn()
       let subscription1 = store.subscribe(subscriber1)
 
-      let subscriber2 = jest.fn()
-      let subscription2 = store.subscribe(subscriber2)
+      const subscriber2 = jest.fn()
+      const subscription2 = store.subscribe(subscriber2)
 
       subscription1.unsubscribe()
       subscription1.unsubscribe() // does nothing
       subscription1.unsubscribe() // does nothing
 
-      let subscriber3 = jest.fn()
-      let subscription3 = store.subscribe(subscriber3)
+      const subscriber3 = jest.fn()
+      const subscription3 = store.subscribe(subscriber3)
 
       store.dispatch(() => 'a')
 
@@ -71,10 +72,10 @@ describe('registrations', () => {
 
       subscription3.unsubscribe()
 
-      let subscriber4 = jest.fn()
+      const subscriber4 = jest.fn()
 
       // subscribe inside a subscriber
-      let subscriber5 = jest.fn(
+      const subscriber5 = jest.fn(
         () => store.subscribe(subscriber4)
       )
       store.subscribe(subscriber5)
@@ -130,15 +131,10 @@ describe('registrations', () => {
 
   describe('inspections', () => {
 
-    const storeBase = {
-      dispatch: expect.any(Function),
-      getState: expect.any(Function)
-    }
-
-
     test('all inspectors are notified of an action', () => {
 
       const store = createStore()
+      const storeBase = getStoreBase(store)
       const inspections = Array(20).join` `.split` `.map(() => jest.fn())
       const action = {
         type: 'a'
@@ -148,8 +144,8 @@ describe('registrations', () => {
 
       store.dispatch(action)
 
-      inspections.forEach(subscriber =>
-        expect(subscriber).toHaveBeenCalledWith(storeBase, action)
+      inspections.forEach(inspector =>
+        expect(inspector).toHaveBeenCalledWith(storeBase, action)
       )
 
     })
@@ -158,19 +154,20 @@ describe('registrations', () => {
     test('inspectors can be added or removed whenever', () => {
 
       const store = createStore()
+      const storeBase = getStoreBase(store)
 
-      let inspector1 = jest.fn()
+      const inspector1 = jest.fn()
       let inspection1 = store.inspect(inspector1)
 
-      let inspector2 = jest.fn()
-      let inspection2 = store.inspect(inspector2)
+      const inspector2 = jest.fn()
+      const inspection2 = store.inspect(inspector2)
 
       inspection1.uninspect()
       inspection1.uninspect() // does nothing
       inspection1.uninspect() // does nothing
 
-      let inspector3 = jest.fn()
-      let inspection3 = store.inspect(inspector3)
+      const inspector3 = jest.fn()
+      const inspection3 = store.inspect(inspector3)
 
       store.dispatch({ type: 'a' })
 
@@ -190,10 +187,10 @@ describe('registrations', () => {
 
       inspection3.uninspect()
 
-      let inspector4 = jest.fn()
+      const inspector4 = jest.fn()
 
       // inspect inside an inspector
-      let inspector5 = jest.fn(
+      const inspector5 = jest.fn(
         () => store.inspect(inspector4)
       )
       store.inspect(inspector5)

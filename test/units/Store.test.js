@@ -2,7 +2,12 @@ import { Observable } from 'rxjs'
 
 import { createStore } from '../../src/index'
 import { actionTypes, metaTypes } from '../../src/index'
-import { dispatchables, nonDispatchables, nonPlainObjects } from '../utils'
+import {
+  dispatchables,
+  getStoreBase,
+  nonDispatchables,
+  nonPlainObjects
+} from '../utils'
 
 
 describe('Store.dispatch()', () => {
@@ -126,10 +131,7 @@ describe('Store.dispatch()', () => {
     store.inspect(inspector)
     store.dispatch(action)
 
-    expect(inspector).toHaveBeenLastCalledWith({
-      dispatch: expect.any(Function),
-      getState: expect.any(Function)
-    }, action)
+    expect(inspector).toHaveBeenLastCalledWith(getStoreBase(store), action)
 
   })
 
@@ -378,10 +380,7 @@ describe('Store.hydrate()', () => {
     store.inspect(inspector)
     store.hydrate(hydratedState)
 
-    expect(inspector).toHaveBeenCalledWith({
-      dispatch: expect.any(Function),
-      getState: expect.any(Function)
-    }, {
+    expect(inspector).toHaveBeenCalledWith(getStoreBase(store), {
       type: actionTypes.HYDRATE,
       payload: hydratedState
     })
@@ -545,10 +544,7 @@ describe('Store.setState()', () => {
     store.inspect(inspector)
     store.setState(hydratedState)
 
-    expect(inspector).toHaveBeenCalledWith({
-      dispatch: expect.any(Function),
-      getState: expect.any(Function)
-    }, {
+    expect(inspector).toHaveBeenCalledWith(getStoreBase(store), {
       type: actionTypes.PARTIAL_HYDRATE,
       payload: hydratedState
     })
@@ -705,7 +701,8 @@ describe('store[$$observable]', () => {
 
     const store = createStore()
     const subscriber = jest.fn()
-    const state$ = Observable.from(store)
+
+    Observable.from(store)
       .filter(state => state !== 'a')
       .subscribe(subscriber)
 

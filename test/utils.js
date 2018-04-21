@@ -17,6 +17,14 @@ export const dispatchables = [
 ]
 
 
+export const getStoreBase = store => ({
+  dispatch: store.dispatch,
+  getState: store.getState,
+  hydrate: store.hydrate,
+  setState: store.setState
+})
+
+
 export const nonDispatchables = [
   undefined,
   null,

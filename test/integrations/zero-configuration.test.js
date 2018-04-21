@@ -1,4 +1,5 @@
 import { actionTypes, createStore } from '../../src/index'
+import { getStoreBase } from '../utils'
 
 
 describe('zero-configuration', () => {
@@ -28,10 +29,7 @@ describe('zero-configuration', () => {
     store.inspect(inspector)
     store.hydrate(1)
 
-    expect(inspector).toHaveBeenCalledWith({
-      dispatch: store.dispatch,
-      getState: store.getState
-    }, {
+    expect(inspector).toHaveBeenCalledWith(getStoreBase(store), {
       type: actionTypes.HYDRATE,
       payload: 1
     })
@@ -48,10 +46,7 @@ describe('zero-configuration', () => {
     store.inspect(inspector)
     store.setState(2)
 
-    expect(inspector).toHaveBeenCalledWith({
-      dispatch: store.dispatch,
-      getState: store.getState
-    }, {
+    expect(inspector).toHaveBeenCalledWith(getStoreBase(store), {
       type: actionTypes.PARTIAL_HYDRATE,
       payload: 2
     })
@@ -68,10 +63,7 @@ describe('zero-configuration', () => {
     store.inspect(inspector)
     store.dispatch(() => 2)
 
-    expect(inspector).toHaveBeenCalledWith({
-      dispatch: store.dispatch,
-      getState: store.getState
-    }, {
+    expect(inspector).toHaveBeenCalledWith(getStoreBase(store), {
       type: actionTypes.PARTIAL_HYDRATE,
       payload: 2
     })

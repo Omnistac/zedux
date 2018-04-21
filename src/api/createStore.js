@@ -26,7 +26,7 @@ import {
 
   Zedux stores are fast, composable, and pretty much just awesome.
 */
-export function createStore() {
+export const createStore = initialHierarchy => {
   let nodeOptions = {
     clone, create, get, isNode, iterate, set, size
   }
@@ -380,8 +380,13 @@ export function createStore() {
 
   const storeBase = {
     dispatch,
-    getState
+    getState,
+    hydrate,
+    setState
   }
+
+
+  if (initialHierarchy) store.use(initialHierarchy)
 
 
   return store

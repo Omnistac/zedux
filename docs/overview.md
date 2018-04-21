@@ -1,6 +1,6 @@
 # Overview
 
-![Store Composition](/docs/img/zedux-composition.png)
+![Store Composition and Higher-Order Stores](/docs/img/intro.png)
 
 ## What is it?
 

@@ -105,6 +105,8 @@ export interface Store<S = any> extends Observable<S> {
 export interface StoreBase<S = any> {
   dispatch: Dispatcher<S>
   getState(): S
+  hydrate(newState: S): Store<S>
+  setState(partialUpdate: any): S
 }
 
 
@@ -197,7 +199,9 @@ export function compose<C = (...args: any[]) => any>(...funcs: Function[]): C
 
   @returns {Store} An empty, not-yet-configured store
 */
-export function createStore<S = any>(): Store<S>
+export function createStore<S = any>(
+  initialHierarchy: HierarchyDescriptor
+): Store<S>
 
 
 /**
