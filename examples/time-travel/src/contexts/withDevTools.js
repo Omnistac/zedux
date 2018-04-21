@@ -2,49 +2,49 @@ const DISPATCH = 'DISPATCH'
 const START = 'START'
 
 
-export default store => {
+export default wrappedStore => {
   const devTools = window.__REDUX_DEVTOOLS_EXTENSION__
     && window.__REDUX_DEVTOOLS_EXTENSION__.connect()
 
 
-  const initialState = store.getState()
+  const initialState = wrappedStore.getState()
 
 
   // Set up the devTools
   devTools.subscribe(({ payload, state, type }) => {
     if (type === START) {
-      devTools.init(store.getState())
+      devTools.init(wrappedStore.getState())
     }
 
     if (type !== DISPATCH) return
 
     switch (payload.type) {
       case 'COMMIT':
-        return devTools.init(store.getState())
+        return devTools.init(wrappedStore.getState())
 
       case 'IMPORT_STATE':
         const { nextLiftedState } = payload
         const { computedStates } = nextLiftedState
         const newState = computedStates[computedStates.length - 1].state
 
-        store.hydrate(newState)
+        wrappedStore.hydrate(newState)
 
         return devTools.send(null, nextLiftedState)
 
       case 'JUMP_TO_ACTION':
       case 'JUMP_TO_STATE':
-        return store.hydrate(JSON.parse(state))
+        return wrappedStore.hydrate(JSON.parse(state))
 
       case 'RESET':
-        return devTools.init(store.hydrate(initialState))
+        return devTools.init(wrappedStore.hydrate(initialState))
 
       case 'ROLLBACK':
-        return devTools.init(store.hydrate(JSON.parse(state)))
+        return devTools.init(wrappedStore.hydrate(JSON.parse(state)))
 
       case 'TOGGLE_ACTION':
         return devTools.send(
           null,
-          toggleAction(store, payload.id, JSON.parse(state))
+          toggleAction(wrappedStore, payload.id, JSON.parse(state))
         )
     }
   })
@@ -54,7 +54,7 @@ export default store => {
 
 
   // Add an inspector to the store
-  const inspection = store.inspect((storeBase, action) => {
+  const inspection = wrappedStore.inspect((storeBase, action) => {
     if (pendingAction) return
 
     pendingAction = action
@@ -62,14 +62,14 @@ export default store => {
 
 
   // Add a subscriber to the store
-  const subscription = store.subscribe(newState => {
+  const subscription = wrappedStore.subscribe(newState => {
     devTools.send(pendingAction, newState)
 
     pendingAction = null
   })
 
 
-  return store
+  return wrappedStore
 }
 
 
