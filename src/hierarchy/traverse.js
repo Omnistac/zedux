@@ -1,7 +1,7 @@
 import { metaTypes } from '../api/constants'
 import { STORE } from './general'
 import { invalidDelegation } from '../utils/errors'
-import { getMetaPayload, removeMeta } from '../utils/meta'
+import { getMetaData, removeMeta } from '../utils/meta'
 
 
 /**
@@ -17,7 +17,7 @@ import { getMetaPayload, removeMeta } from '../utils/meta'
   Delegated actions will not be handled by the parent store at all.
 */
 export function delegate(diffTree, action) {
-  const subStorePath = getMetaPayload(action, metaTypes.DELEGATE)
+  const subStorePath = getMetaData(action, metaTypes.DELEGATE)
 
   if (!subStorePath) return false
 

@@ -8,9 +8,14 @@ export const actionTypes = {
 }
 
 
+export const effectTypes = {
+  DISPATCH: `${PREFIX}dispatch`
+}
+
+
 export const metaTypes = {
   DELEGATE: `${PREFIX}delegate`,
   INHERIT: `${PREFIX}inherit`,
-  SKIP_PROCESSORS: `${PREFIX}skipProcessors`,
+  SKIP_EFFECTS: `${PREFIX}skipEffects`,
   SKIP_REDUCERS: `${PREFIX}skipReducers`
 }

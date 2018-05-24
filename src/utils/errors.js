@@ -4,7 +4,7 @@ import { isPlainObject, detailedTypeof } from './general'
 const isProd = process.env.NODE_ENV === 'production'
 const PREFIX = 'Zedux Error -'
 const prodErr = () => 'Zedux is currently running in production mode. '
-  + 'To see this error message, try running Zedux in development mode.'
+  + 'To see this error message, run Zedux in development mode.'
 
 
 export function assertAreFunctions(args, method) {
@@ -15,6 +15,13 @@ export function assertAreFunctions(args, method) {
       throw new TypeError(invalidNonFunction(arg, method))
     }
   }
+}
+
+
+export function assertAreValidEffects(effects) {
+  if (Array.isArray(effects)) return
+
+  throw new TypeError(invalidEffects(effects))
 }
 
 
@@ -88,6 +95,11 @@ export const invalidDelegation = isProd ? prodErr : subStorePath =>
   `${PREFIX} store.dispatch() - Invalid Delegation - `
     + 'Current store hierarchy does not contain a sub-store at path: '
     + `${subStorePath.join` -> `}`
+
+
+export const invalidEffects = isProd ? prodErr : effects =>
+  `${PREFIX} reactor.effects() must return an array. `
+    + `Received ${detailedTypeof(effects)}`
 
 
 export const invalidHierarchyDescriptorNode = isProd ? prodErr : node =>

@@ -75,8 +75,6 @@ Simplicity rules. Zedux stores require zero configuration to start. But they're 
 
 The store is the basic building block of application state. Stateful components that expose a Zedux store can be easily consumed and composed in any application. Zedux stores can also be easily synced across realms (workers, browser extensions, iframes, SSR).
 
-Composition is king.
-
 ## Quick start
 
 At the most basic level, Zedux is still Redux. A reducer hierarchy drives state creation and updates. Let's get some code:
@@ -139,7 +137,7 @@ store.use(counterReactor)
   Here we're subscribing to the store.
   Zedux calls this function every time the store's state changes.
 */
-store.subscribe((oldState, newState) => {
+store.subscribe((newState, oldState) => {
   console.log(`counter went from ${oldState} to ${newState}`)
 })
 

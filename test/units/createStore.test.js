@@ -7,12 +7,11 @@ describe('Zedux.createStore()', () => {
 
     const store = createStore()
 
-    expect(Object.keys(store)).toHaveLength(9) // $$observable not enumerable
+    expect(Object.keys(store)).toHaveLength(8) // $$observable not enumerable
     expect(store).toEqual(expect.objectContaining({
       dispatch: expect.any(Function),
       getState: expect.any(Function),
       hydrate: expect.any(Function),
-      inspect: expect.any(Function),
       setNodeOptions: expect.any(Function),
       setState: expect.any(Function),
       subscribe: expect.any(Function),

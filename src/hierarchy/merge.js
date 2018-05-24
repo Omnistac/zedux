@@ -1,20 +1,31 @@
 import { BRANCH, NULL } from './general'
+import { assertAreValidEffects } from '../utils/errors'
 
 
 /**
-  Creates just the processor of a branch reactor.
+  Creates just the effects layer of a branch reactor.
 */
-export function createBranchProcessor(children, { get }) {
-  return (dispatch, action, state) => {
-    for (let key in children) {
-      const { reactor: { process } } = children[key]
+export function createBranchEffectLayer(children, { get }) {
+  return (state, action) => {
+    const mergedEffects = []
 
-      if (typeof process !== 'function') return
+    for (let key in children) {
+      const { reactor: { effects } } = children[key]
+
+      if (typeof effects !== 'function') return
 
       const statePiece = get(state, key)
+      const childEffects = effects(statePiece, action)
 
-      process(dispatch, action, statePiece)
+      assertAreValidEffects(childEffects)
+
+      mergedEffects = [
+        ...mergedEffects,
+        ...childEffects
+      ]
     }
+
+    return mergedEffects
   }
 }
 
@@ -31,7 +42,7 @@ export function createBranchProcessor(children, { get }) {
 export function createBranchReactor(children, nodeOptions) {
   const reactor = createBranchReducer(children, nodeOptions)
 
-  reactor.process = createBranchProcessor(children, nodeOptions)
+  reactor.effects = createBranchEffectLayer(children, nodeOptions)
 
   return reactor
 }

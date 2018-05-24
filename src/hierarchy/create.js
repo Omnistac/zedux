@@ -106,7 +106,7 @@ export function nonBranchToDiffNode(
   Creates a reactor that wraps the entry points of the given store.
 
   This reactor will propagate actions down the child store's reducer
-  and processor layers.
+  and effects layers.
 
   Wraps all actions in the special INHERIT meta node to inform the
   child store's inspectors that this action was received from its
@@ -115,8 +115,8 @@ export function nonBranchToDiffNode(
 export function wrapStoreInReactor(store) {
   const reactor = (state, action) => {
 
-    // If this is the special hydrate action, re-create the action's
-    // payload using the current state slice
+    // If this is the special hydrate or partial hydrate action,
+    // re-create the action's payload using the current state slice
     if (
       action.type === actionTypes.HYDRATE
       || action.type === actionTypes.PARTIAL_HYDRATE
@@ -127,8 +127,8 @@ export function wrapStoreInReactor(store) {
       }
     }
 
-    // Tell the child store not to dispatch this action to its processor layer
-    action = addMeta(action, metaTypes.SKIP_PROCESSORS)
+    // Tell the child store not to dispatch this action to its effects layer
+    action = addMeta(action, metaTypes.SKIP_EFFECTS)
 
     // Tell the child store's inspectors that this action is inherited
     action = addMeta(action, metaTypes.INHERIT)
@@ -137,7 +137,7 @@ export function wrapStoreInReactor(store) {
   }
 
 
-  reactor.process = (dispatch, action) => {
+  reactor.effects = (state, action) => {
 
     // Tell the child store not to dispatch this action to its reducer layer
     action = addMeta(action, metaTypes.SKIP_REDUCERS)

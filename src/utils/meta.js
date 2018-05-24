@@ -1,29 +1,29 @@
-export function addMeta(action, metaType, metaPayload) {
+export function addMeta(action, metaType, metaData) {
   let wrappedAction = {
     metaType,
-    action
+    payload: action
   }
 
-  if (metaPayload) wrappedAction.metaPayload = metaPayload
+  if (metaData) wrappedAction.metaData = metaData
 
   return wrappedAction
 }
 
 
-export function getMetaPayload(action, metaType) {
-  while (action.action) {
-    if (action.metaType === metaType) return action.metaPayload
+export function getMetaData(action, metaType) {
+  while (!action.type) {
+    if (action.metaType === metaType) return action.metaData
 
-    action = action.action
+    action = action.payload
   }
 }
 
 
 export function hasMeta(action, metaType) {
-  while (action.action) {
+  while (!action.type) {
     if (action.metaType === metaType) return true
 
-    action = action.action
+    action = action.payload
   }
 
   return false
@@ -31,8 +31,8 @@ export function hasMeta(action, metaType) {
 
 
 export function removeAllMeta(action) {
-  while (action.action) {
-    action = action.action
+  while (!action.type) {
+    action = action.payload
   }
 
   return action
@@ -51,7 +51,7 @@ export function removeMeta(action, metaType) {
   let prevNode = null
   let rootNode = null
 
-  while (currentNode.action) {
+  while (!currentNode.type) {
 
     if (currentNode.metaType === metaType) {
       return getNewRoot(currentNode, prevNode, rootNode)
@@ -60,10 +60,10 @@ export function removeMeta(action, metaType) {
     // Move down the chain
     let clonedNode = { ...currentNode }
 
-    prevNode && (prevNode.action = clonedNode)
+    prevNode && (prevNode.payload = clonedNode)
 
     prevNode = clonedNode
-    currentNode = currentNode.action
+    currentNode = currentNode.payload
 
     // If this will be the new root, remember it
     rootNode || (rootNode = prevNode)
@@ -80,11 +80,11 @@ export function removeMeta(action, metaType) {
 function getNewRoot(currentNode, prevNode, rootNode) {
 
   // If the match is at the top layer, just return the next layer
-  if (!prevNode) return currentNode.action
+  if (!prevNode) return currentNode.payload
 
   // If the match is at least one layer deep, swap out the target layer
   // and return the new root of the meta chain
-  prevNode.action = currentNode.action
+  prevNode.payload = currentNode.payload
 
   return rootNode
 }

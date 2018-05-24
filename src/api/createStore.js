@@ -1,13 +1,17 @@
 import $$observable from 'symbol-observable'
 
-import { actionTypes, metaTypes } from './constants'
+import { actionTypes, effectTypes, metaTypes } from './constants'
 import { hierarchyDescriptorToDiffTree } from '../hierarchy/create'
 import { mergeDiffTrees, mergeStateTrees } from '../hierarchy/merge'
 import { delegate, propagateChange } from '../hierarchy/traverse'
 
 import {
-  assertAreFunctions, assertIsValidAction, assertIsValidNodeOption,
-  assertIsPlainObject, invalidAccess
+  assertAreFunctions,
+  assertAreValidEffects,
+  assertIsValidAction,
+  assertIsValidNodeOption,
+  assertIsPlainObject,
+  invalidAccess
 } from '../utils/errors'
 
 import { STORE_IDENTIFIER } from '../utils/general'
@@ -32,10 +36,7 @@ export const createStore = initialHierarchy => {
   }
   let currentDiffTree
   let currentState
-  let inspectors = []
-  let isDispatchingToReducers = false
-  let nextInspectors = []
-  let nextSubscribers = []
+  let isDispatching = false
   let rootReactor
   let subscribers = []
 
@@ -66,17 +67,13 @@ export const createStore = initialHierarchy => {
       return currentState
     }
 
-    dispatchToInspectors(action)
+    if (unwrappedAction.type === actionTypes.PARTIAL_HYDRATE) {
+      setState(unwrappedAction.payload)
 
-    if (!hasMeta(action, metaTypes.SKIP_REDUCERS)) {
-      dispatchToReducers(unwrappedAction)
+      return currentState
     }
 
-    if (!hasMeta(action, metaTypes.SKIP_PROCESSORS)) {
-      dispatchToProcessors(unwrappedAction)
-    }
-
-    return currentState
+    return dispatchAction(action, unwrappedAction)
   }
 
 
@@ -86,7 +83,7 @@ export const createStore = initialHierarchy => {
     Do not mutate this value.
   */
   const getState = () => {
-    if (isDispatchingToReducers) {
+    if (isDispatching) {
       throw new Error(invalidAccess('store.getState()'))
     }
 
@@ -105,7 +102,7 @@ export const createStore = initialHierarchy => {
     Throws an Error if called from the reducer layer.
   */
   const hydrate = newState => {
-    if (isDispatchingToReducers) {
+    if (isDispatching) {
       throw new Error(invalidAccess('store.hydrate()'))
     }
 
@@ -116,23 +113,10 @@ export const createStore = initialHierarchy => {
 
 
   /**
-    Registers an inspector with the store.
-
-    The inspector will be notified of all actions dispatched to the store,
-    as well as pseudo-actions dispatched internally.
-  */
-  const inspect = inspector => {
-    const uninspect = register(nextInspectors, inspector, 'store.inspect()')
-
-    return { uninspect }
-  }
-
-
-  /**
     Sets one or more node options that will be used by the store's
     intermediate reactors in the generated reactor hierarchy to
     interact with the hierarchical data type returned by the store's
-    reducers.
+    reducers. There is sense in that sentence, believe me.
 
     This "hierarchical data type" is a plain object by default. But
     these node options can teach Zedux how to use an Immutable "Map"
@@ -168,7 +152,7 @@ export const createStore = initialHierarchy => {
     Throws an error if called from the reducer layer.
   */
   const setState = partialStateTree => {
-    if (isDispatchingToReducers) {
+    if (isDispatching) {
       throw new Error(invalidAccess('store.setState()'))
     }
 
@@ -194,23 +178,34 @@ export const createStore = initialHierarchy => {
     unregisters the subscriber.
   */
   const subscribe = subscriber => {
-    const unsubscribe = register(
-      nextSubscribers,
-      subscriber,
-      'store.subscribe()'
-    )
+    assertAreFunctions([ subscriber.next || subscriber ], 'store.subscribe()')
 
-    return { unsubscribe }
+    subscribers.push(subscriber)
+
+    return {
+      unsubscribe() {
+        const index = subscribers.indexOf(subscriber)
+
+        if (index === -1) return
+
+        subscribers.splice(index, 1)
+      }
+    }
   }
 
 
   /**
     Merges a hierarchy descriptor into the existing hierarchy descriptor.
+
+    Intelligently diffs the two hierarchies and only creates/recreates the
+    necessary reactors.
+
+    Dispatches the special RECALCULATE action to the store.
   */
   const use = newHierarchy => {
     const newDiffTree = hierarchyDescriptorToDiffTree(
       newHierarchy,
-      registerSubStore
+      registerChildStore
     )
 
     currentDiffTree = mergeDiffTrees(currentDiffTree, newDiffTree, nodeOptions)
@@ -222,6 +217,33 @@ export const createStore = initialHierarchy => {
   }
 
 
+  function dispatchAction(action, unwrappedAction) {
+    isDispatching = true
+
+    let effects = [ getDispatchEffect(action) ]
+    let error = null
+    let newState = currentState
+
+    try {
+      if (!hasMeta(action, metaTypes.SKIP_REDUCERS)) {
+        newState = dispatchToReducers(unwrappedAction)
+      }
+
+      if (!hasMeta(action, metaTypes.SKIP_EFFECTS)) {
+        effects = [ ...effects, ...dispatchToEffects(unwrappedAction) ]
+      }
+    } catch (err) {
+      error = err
+    } finally {
+      isDispatching = false
+    }
+
+    informSubscribers(action, error, newState, effects)
+
+    return currentState
+  }
+
+
   function dispatchHydration(newState, actionType = actionTypes.HYDRATE) {
     if (newState === currentState) return // nothing to do
 
@@ -230,10 +252,12 @@ export const createStore = initialHierarchy => {
       payload: newState
     }
 
-    dispatchToInspectors(action)
+    // Maybe we can provide a utility for setting a description for the
+    // hydration. Then wrap the action in a meta node with that description
+    // as the metaData.
 
-    // Propagate the change to child stores
-    dispatchToReducers(action, newState)
+    // Propagate the change to child stores and allow for effects.
+    dispatchAction(action, action)
   }
 
 
@@ -246,121 +270,95 @@ export const createStore = initialHierarchy => {
   }
 
 
-  function dispatchToInspectors(action) {
-    inspectors = nextInspectors
-
-    inspectors.forEach(
-      inspector => inspector(storeBase, action)
-    )
+  function getDispatchEffect(action) {
+    return {
+      type: effectTypes.DISPATCH,
+      payload: action
+    }
   }
 
 
-  function dispatchToProcessors(action) {
-    if (!rootReactor) return
+  function dispatchToEffects(action) {
+    if (!rootReactor) return []
 
-    const { process } = rootReactor
+    const { effects } = rootReactor
 
-    if (typeof process === 'function') process(dispatch, action, currentState)
+    if (typeof effects !== 'function') return []
+
+    const deliveredEffects = effects(currentState, action)
+
+    assertAreValidEffects(deliveredEffects)
+
+    return deliveredEffects
   }
 
 
   function dispatchToReducers(action, rootState = currentState) {
-    isDispatchingToReducers = true
-
-    let newState
-
-    try {
-      newState = rootReactor
-        ? rootReactor(rootState, action)
-        : rootState
-    } finally {
-      isDispatchingToReducers = false
-    }
-
-    informSubscribers(newState)
+    return rootReactor
+      ? rootReactor(rootState, action)
+      : rootState
   }
 
 
-  function informSubscribers(newState, oldState = currentState) {
+  function informSubscribers(
+    action,
+    error,
+    newState,
+    effects
+  ) {
+    const oldState = currentState
 
     // There is a case here where a reducer in this store could
     // dispatch an action to a parent or child store. Investigate
     // ways to handle this.
 
-    if (newState === currentState) return // nothing to do
-
-    // The state has changed; update it
+    // Update the stored state
     currentState = newState
 
-    subscribers = [ ...nextSubscribers ]
+    // Clone the subscribers in case of mutation mid-iteration
+    ;[ ...subscribers ].forEach(subscriber => {
+      if (error && subscriber.error) subscriber.error(error)
 
-    subscribers.forEach(subscriber => {
-      if (subscriber.next) return subscriber.next(newState, oldState)
+      if (newState !== oldState && subscriber.next) {
+        subscriber.next(newState, oldState)
+      }
 
-      subscriber(newState, oldState)
+      if (!subscriber.effects) return
+
+      subscriber.effects({ action, effects, error, newState, oldState, store })
     })
   }
 
 
-  /**
-    Registers a listener (e.g. subscriber, inspector) with the store.
-
-    @returns {Function} An unregister function. Call to remove the listener.
-  */
-  function register(list, listener, method) {
-    assertAreFunctions([ listener.next || listener ], method)
-
-    list.push(listener)
-
-    return () => {
-      const index = list.indexOf(listener)
-
-      if (index === -1) return
-
-      list.splice(index, 1)
-    }
-  }
-
-
-  function registerSubStore(subStorePath, subStore) {
-    const inspector = (storeBase, action) => {
-
-      // If this store delegated this action in the first place, ignore it
-      if (hasMeta(action, metaTypes.INHERIT)) return
-
-      const wrappedAction = addMeta(action, metaTypes.DELEGATE, subStorePath)
-
-      dispatchToInspectors(wrappedAction)
-    }
-
-
-    const subscriber = newSubStoreState => {
+  function registerChildStore(childStorePath, childStore) {
+    const effectsHandler = ({ action, effects, error, newState, oldState }) => {
 
       // If this store's reducer layer dispatched this action to this
       // substore in the first place, ignore the propagation; this store
       // will receive it anyway.
-      if (isDispatchingToReducers) return
+      if (isDispatching) return
 
-      const newState = propagateChange(
-        currentState,
-        subStorePath,
-        newSubStoreState,
-        nodeOptions
-      )
+      const newOwnState = newState === oldState
+        ? currentState
+        : propagateChange(
+          currentState,
+          childStorePath,
+          newState,
+          nodeOptions
+        )
 
-      informSubscribers(newState)
+      const wrappedEffects = effects
+
+        // If this store delegated this action in the first place, ignore it
+        .filter(effect => !hasMeta(effect, metaTypes.INHERIT))
+
+        // Tell the subscribers how to recreate this state update
+        .map(effect => addMeta(effect, metaTypes.DELEGATE, childStorePath))
+
+      informSubscribers(action, error, newOwnState, wrappedEffects)
     }
 
-
-    const inspection = subStore.inspect(inspector)
-    const subscription = subStore.subscribe(subscriber)
-
-
-    // Return a function that destroys these registrations
-    return () => {
-      inspection.uninspect()
-      subscription.unsubscribe()
-    }
+    return childStore.subscribe({ effects: effectsHandler }).unsubscribe
   }
 
 
@@ -368,21 +366,12 @@ export const createStore = initialHierarchy => {
     dispatch,
     getState,
     hydrate,
-    inspect,
     setNodeOptions,
     setState,
     subscribe,
     use,
     [$$observable]: () => store,
     $$typeof: STORE_IDENTIFIER
-  }
-
-
-  const storeBase = {
-    dispatch,
-    getState,
-    hydrate,
-    setState
   }
 
 

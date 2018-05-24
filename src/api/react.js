@@ -9,11 +9,11 @@ const GLOBAL_ACTION_TYPE = '*'
   Creates a new Zedux reactor.
 
   A Zedux reactor is just a reactor with a few special methods for
-  easily mapping action types to sub-reducers and sub-processors
+  easily mapping action types to sub-reducers and sub-effectors
   that handle them.
 */
 export function react(initialState) {
-  const actionToProcessorsMap = {}
+  const actionToEffectorsMap = {}
   const actionToReducersMap = {}
   let currentActionTypes = []
 
@@ -22,9 +22,8 @@ export function react(initialState) {
     handleReactorLayer(actionToReducersMap, runReducers, state, action)
 
 
-  reactor.process = (...args) => {
-    handleReactorLayer(actionToProcessorsMap, runProcessors, ...args)
-  }
+  reactor.effects = (...args) =>
+    handleReactorLayer(actionToEffectorsMap, runEffectors, ...args)
 
 
   reactor.to = (...actors) => {
@@ -43,7 +42,7 @@ export function react(initialState) {
 
   reactor.withProcessors = function() {
     mapActionTypesToConsumers(
-      actionToProcessorsMap,
+      actionToEffectorsMap,
       currentActionTypes,
       arguments
     )
@@ -73,12 +72,12 @@ export function react(initialState) {
 function handleReactorLayer(map, callback, ...args) {
   const actionType = args[1].type
 
-  const reducers = [
+  const runners = [
     ...map[actionType] || [],
     ...map[GLOBAL_ACTION_TYPE] || []
   ]
 
-  return callback(reducers, ...args)
+  return callback(runners, ...args)
 }
 
 
@@ -96,12 +95,13 @@ function mapActionTypesToConsumers(map, actionTypes, consumers) {
 }
 
 
-function runProcessors(processors, dispatch, action, state) {
-  processors.forEach(processor => {
-    const processable = processor(dispatch, action, state)
+function runEffectors(effectors, state, action) {
+  return effectors.reduce((effects, effector) => {
+    const processable = effector(state, action)
 
+    // TODO: What all can a ZeduxReactor sub-effector return?
     processableToPromise(processable)
-  })
+  }, [])
 }
 
 
