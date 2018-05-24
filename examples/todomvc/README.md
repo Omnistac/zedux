@@ -9,17 +9,20 @@ This example uses the excellent [parcel bundler](https://parceljs.org). To run t
 ```bash
 cd examples
 npm install
+```
+
+Then to start the server, you can either run:
+
+```bash
 npm start -- todomvc
 ```
 
-or simply:
+from the `examples` directory or switch to this directory and just run `npm start`:
 
 ```bash
-cd examples/todomvc
+cd todomvc
 npm start
 ```
-
-which will run the first set of commands for you.
 
 Then open `localhost:1234` in a browser. Enjoy!
 

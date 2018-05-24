@@ -9,7 +9,19 @@ This example uses the excellent [parcel bundler](https://parceljs.org). To run t
 ```bash
 cd examples
 npm install
+```
+
+Then to start the server, you can either run:
+
+```bash
 npm start -- rpg
+```
+
+from the `examples` directory or switch to this directory and just run `npm start`:
+
+```bash
+cd rpg
+npm start
 ```
 
 Then open `localhost:1234` in a browser. Enjoy!
