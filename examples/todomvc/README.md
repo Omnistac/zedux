@@ -9,8 +9,17 @@ This example uses the excellent [parcel bundler](https://parceljs.org). To run t
 ```bash
 cd examples
 npm install
-npm start -- todos
+npm start -- todomvc
 ```
+
+or simply:
+
+```bash
+cd examples/todomvc
+npm start
+```
+
+which will run the first set of commands for you.
 
 Then open `localhost:1234` in a browser. Enjoy!
 

@@ -18,15 +18,15 @@ import visibilityFilter, {
   showIncomplete
 } from './root/visibilityFilter'
 
-
 class RootApi extends StoreApi {
-  store = createStore()
-    .use({
-      todos,
-      todoText,
-      visibilityFilter
-    })
-  
+  // A fractal store. This store will be created every
+  // time a <RootContext.Provider> is mounted.
+  store = createStore().use({
+    todos,
+    todoText,
+    visibilityFilter
+  })
+
   static actors = {
     clearComplete,
     editTodo,
@@ -53,7 +53,6 @@ class RootApi extends StoreApi {
     this.wrappedActors.addTodo(todoText)
   }
 
-
   selectFilteredTodos = () => {
     const visibilityFilter = this.selectVisibilityFilter()
 
@@ -66,18 +65,15 @@ class RootApi extends StoreApi {
     return selectTodoIds()
   }
 
-
   selectTodoById = id => {
     const todos = this.selectTodos()
 
     return todos[id]
   }
 
-
   setTodoText = ({ currentTarget: { value } }) => {
     this.setState({ todoText: value })
   }
-
 
   toggleAllComplete = () => {
     const areAllComplete = this.selectAreAllComplete()
@@ -86,11 +82,8 @@ class RootApi extends StoreApi {
   }
 }
 
-
 const RootContext = createContext(RootApi)
 
-
 export default RootContext
-
 
 export const withRoot = RootContext.consume('rootStore')

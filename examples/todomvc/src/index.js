@@ -5,7 +5,6 @@ import { AppContainer } from 'react-hot-loader'
 
 import App from './App'
 
-
 render(
   <AppContainer>
     <App />

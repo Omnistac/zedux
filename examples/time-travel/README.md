@@ -14,6 +14,15 @@ npm install
 npm start -- time-travel
 ```
 
+or simply:
+
+```bash
+cd examples/time-travel
+npm start
+```
+
+which will run the first set of commands for you.
+
 Then open `localhost:1234` in a browser. Enjoy!
 
 Note that parcel supports Hot Module Replacement, so feel free to play around with that too!
