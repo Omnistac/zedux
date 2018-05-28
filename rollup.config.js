@@ -15,9 +15,6 @@ const plugins = [
       'es2015-rollup',
       'react',
       'stage-0'
-    ],
-    plugins: [
-      'transform-decorators-legacy'
     ]
   }),
 
