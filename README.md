@@ -139,7 +139,7 @@ store.use(counterReactor)
   Here we're subscribing to the store.
   Zedux calls this function every time the store's state changes.
 */
-store.subscribe((oldState, newState) => {
+store.subscribe((newState, oldState) => {
   console.log(`counter went from ${oldState} to ${newState}`)
 })
 

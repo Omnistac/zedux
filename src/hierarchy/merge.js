@@ -9,7 +9,7 @@ export function createBranchProcessor(children, { get }) {
     for (let key in children) {
       const { reactor: { process } } = children[key]
 
-      if (typeof process !== 'function') return
+      if (typeof process !== 'function') continue
 
       const statePiece = get(state, key)
 
