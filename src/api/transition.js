@@ -1,4 +1,4 @@
-import { extractActionType, extractActionTypes } from '../utils/general'
+import { extractActionType, extractActionTypes } from '../utils/actor'
 import { processableToPromise } from '../utils/processable'
 
 

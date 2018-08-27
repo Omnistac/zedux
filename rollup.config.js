@@ -7,9 +7,7 @@ const env = process.env.NODE_ENV
 
 const plugins = [
   babel({
-    babelrc: false,
-    exclude: 'node_modules/**',
-    presets: ['@babel/env', '@babel/stage-2']
+    exclude: 'node_modules/**'
   }),
 
   replace({

@@ -1,6 +1,3 @@
-import { assertIsValidActor } from './errors'
-
-
 export const ARRAY = 'array'
 export const COMPLEX_OBJECT = 'complex object'
 export const NO_PROTOTYPE = 'prototype-less object'
@@ -29,30 +26,6 @@ export function detailedTypeof(thing) {
   if (Array.isArray(thing)) return ARRAY
 
   return getDetailedObjectType(thing)
-}
-
-
-/**
-  Pulls the string action type out of an actor or returns
-  a given string action type as-is.
-*/
-export function extractActionType(actor, method) {
-
-  // The "actor" may be a literal action type string
-  if (typeof actor === 'string') return actor
-
-  assertIsValidActor(actor, method)
-
-  return actor.type
-}
-
-
-/**
-  Pulls the string action types out of a list of (possibly) mixed
-  actors and string action types.
-*/
-export function extractActionTypes(actors, method) {
-  return actors.map(extractActionType, method)
 }
 
 

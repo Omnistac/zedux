@@ -17,9 +17,7 @@ import {
 import { STORE_IDENTIFIER } from '../utils/general'
 import { addMeta, hasMeta, removeAllMeta } from '../utils/meta'
 
-import {
-  clone, create, get, isNode, iterate, set, size
-} from '../utils/nodeOptions'
+import * as defaultNodeOptions from '../utils/nodeOptions'
 
 
 /**
@@ -31,9 +29,7 @@ import {
   Zedux stores are fast, composable, and pretty much just awesome.
 */
 export const createStore = initialHierarchy => {
-  let nodeOptions = {
-    clone, create, get, isNode, iterate, set, size
-  }
+  let nodeOptions = { ...defaultNodeOptions }
   let currentDiffTree
   let currentState
   let isDispatching = false

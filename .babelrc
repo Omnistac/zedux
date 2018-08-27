@@ -1,6 +1,6 @@
 {
   "presets": [
-    "@babel/env",
-    "@babel/stage-2"
+    ["@babel/env", { "modules": false }],
+    ["@babel/stage-2", { "decoratorsLegacy": true }]
   ]
 }
