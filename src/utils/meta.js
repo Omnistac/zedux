@@ -1,3 +1,25 @@
+import { assert } from './errors'
+
+const assertActionExists = action => {
+  assert(
+    action,
+    'Invalid meta chain. The last node in the chain must be '
+    + 'a valid action object with a non-empty "type" property'
+  )
+}
+
+const getNewRoot = (currentNode, prevNode, rootNode) => {
+
+  // If the match is at the top layer, just return the next layer
+  if (!prevNode) return currentNode.payload
+
+  // If the match is at least one layer deep, swap out the target layer
+  // and return the new root of the meta chain
+  prevNode.payload = currentNode.payload
+
+  return rootNode
+}
+
 export function addMeta(action, metaType, metaData) {
   let wrappedAction = {
     metaType,
@@ -9,35 +31,37 @@ export function addMeta(action, metaType, metaData) {
   return wrappedAction
 }
 
-
 export function getMetaData(action, metaType) {
   while (!action.type) {
     if (action.metaType === metaType) return action.metaData
 
     action = action.payload
+
+    assertActionExists(action)
   }
 }
-
 
 export function hasMeta(action, metaType) {
   while (!action.type) {
     if (action.metaType === metaType) return true
 
     action = action.payload
+
+    assertActionExists(action)
   }
 
   return false
 }
 
-
 export function removeAllMeta(action) {
   while (!action.type) {
     action = action.payload
+
+    assertActionExists(action)
   }
 
   return action
 }
-
 
 /**
   Removes the first found meta node with the given metaType in
@@ -71,20 +95,4 @@ export function removeMeta(action, metaType) {
 
   // No match found; return the original meta chain
   return action
-}
-
-
-
-
-
-function getNewRoot(currentNode, prevNode, rootNode) {
-
-  // If the match is at the top layer, just return the next layer
-  if (!prevNode) return currentNode.payload
-
-  // If the match is at least one layer deep, swap out the target layer
-  // and return the new root of the meta chain
-  prevNode.payload = currentNode.payload
-
-  return rootNode
 }

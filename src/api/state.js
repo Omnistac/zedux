@@ -6,10 +6,10 @@ import { assertAreFunctions } from '../utils/errors'
   Creates a Zedux state.
 
   A State is just a fancy actor that contains details about
-  how it should be processed - enter and leave hooks.
+  how it creates side effects.
 
   A Zedux state is just a state with a few special methods for
-  creating the processing hooks.
+  creating the enter and leave hooks.
 */
 export const state = createActorCreator(createState)
 
@@ -17,7 +17,7 @@ export const state = createActorCreator(createState)
 /**
   Partially applies state() with one or more namespace nodes.
 
-  This will prefix all actors created with the bound state() function
+  This will prefix all states created with the bound state() function
   with the given namespace (joined by slashes - "/").
 */
 state.namespace = function(...namespaceNodes) {
@@ -37,10 +37,10 @@ function createState(stateName) {
 
 
   /**
-    Sets the `enter` processing hook for this state.
+    Sets the `enter` side effect hook for this state.
 
     This hook should be called the very next time the store's
-    processor layer is hit after the reducer layer makes the
+    side effects layer is hit after the reducer layer makes the
     machine enter this state.
   */
   zeduxState.onEnter = func => {
@@ -53,10 +53,10 @@ function createState(stateName) {
 
 
   /**
-    Sets the `leave` processing hook for this state.
+    Sets the `leave` side effect hook for this state.
 
     This hook should be called the very next time the store's
-    processor layer is hit after the reducer layer makes the
+    side effects layer is hit after the reducer layer makes the
     machine leave this state.
   */
   zeduxState.onLeave = func => {

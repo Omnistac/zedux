@@ -42,8 +42,8 @@ export interface Inspector {
 
 export interface MetaNode {
   metaType: string,
-  metaPayload?: any,
-  action: MetaChainNode
+  metaData?: any,
+  payload: MetaChainNode
 }
 
 

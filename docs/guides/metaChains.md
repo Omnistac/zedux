@@ -17,9 +17,9 @@ Meta chains are a standard format for meta data. Let's metafy this action:
 
 ```javascript
 const metafiedAddTodoAction = {
-  metaType: 'instructionToAllInspectors',
-  metaPayload: [ 'be', 'the', 'best' ],
-  action: {
+  metaType: 'instructionToEffectsSubscribers',
+  metaData: [ 'be', 'the', 'best' ],
+  payload: {
     type: 'addTodo',
     payload: 'make a bigger meta chain'
   }
@@ -28,17 +28,17 @@ const metafiedAddTodoAction = {
 
 A meta chain is a singly linked list composed of [meta chain nodes](/docs/types/MetaChainNode.md). The last node in the chain must be a normal [action object](/docs/types/Action.md). All other nodes in the chain (if any) must be [meta nodes](/docs/types/MetaNode.md).
 
-A meta node is very similar to a normal action object. It's an object with required `metaType` and `action` properties and an optional `metaPayload` property:
+A meta node is very similar to a normal action object. It's an object with required `metaType` and `action` properties and an optional `metaData` property:
 
 ```typescript
 interface MetaNode {
   metaType: string,
-  metaPayload?: any,
-  action: MetaChainNode
+  metaData?: any,
+  payload: MetaChainNode
 }
 ```
 
-A meta node's `action` property holds the next link in the chain.
+A meta node's `payload` property holds the next link in the chain.
 
 ## Why meta chains?
 

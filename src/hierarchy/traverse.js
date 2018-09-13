@@ -10,7 +10,7 @@ import { getMetaData, removeMeta } from '../utils/meta'
   Does nothing if the special DELEGATE meta node is not present
   in the action meta chain.
 
-  This expects the `metaPayload` of the DELEGATE meta node to be
+  This expects the `metaData` of the DELEGATE meta node to be
   an array containing a path of nodes describing the child store's
   location in the parent store's current hierarchy descriptor.
 

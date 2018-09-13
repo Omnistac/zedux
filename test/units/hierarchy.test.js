@@ -20,27 +20,27 @@ describe('delegate()', () => {
 
   const action1 = {
     metaType: metaTypes.DELEGATE,
-    metaPayload: [ 'a' ],
-    action: {
+    metaData: [ 'a' ],
+    payload: {
       type: 'b'
     }
   }
 
   const action2 = {
     metaType: metaTypes.DELEGATE,
-    metaPayload: [ 'a', 'b' ],
-    action: {
+    metaData: [ 'a', 'b' ],
+    payload: {
       type: 'c'
     }
   }
 
   const action3 = {
     metaType: metaTypes.DELEGATE,
-    metaPayload: [ 'a', 'b', 'c' ],
-    action: {
+    metaData: [ 'a', 'b', 'c' ],
+    payload: {
       metaType: metaTypes.DELEGATE,
-      metaPayload: [ 'd', 'e' ],
-      action: {
+      metaDAta: [ 'd', 'e' ],
+      payload: {
         type: 'd'
       }
     }
@@ -100,43 +100,39 @@ describe('delegate()', () => {
   })
 
 
-  test('delegates the one-delegate-layer-unwrapped action to the store at the given node and returns true', () => {
+  test('delegates the one-delegate-layer-unwrapped action to the store at the given node', () => {
 
     const mockStore = createMockStore()
 
-    expect(
-      delegate({
-        children: {
-          a: {
-            type: STORE,
-            store: mockStore
-          }
+    delegate({
+      children: {
+        a: {
+          type: STORE,
+          store: mockStore
         }
-      }, action1)
-    ).toBe(true)
+      }
+    }, action1)
 
-    expect(mockStore.dispatch).toHaveBeenLastCalledWith(action1.action)
+    expect(mockStore.dispatch).toHaveBeenLastCalledWith(action1.payload)
 
-    expect(
-      delegate({
-        children: {
-          a: {
-            children: {
-              b: {
-                children: {
-                  c: {
-                    type: STORE,
-                    store: mockStore
-                  }
+    delegate({
+      children: {
+        a: {
+          children: {
+            b: {
+              children: {
+                c: {
+                  type: STORE,
+                  store: mockStore
                 }
               }
             }
           }
         }
-      }, action3)
-    ).toBe(true)
+      }
+    }, action3)
 
-    expect(mockStore.dispatch).toHaveBeenLastCalledWith(action3.action)
+    expect(mockStore.dispatch).toHaveBeenLastCalledWith(action3.payload)
 
   })
 
@@ -274,7 +270,7 @@ describe('wrapStoreInReactor()', () => {
     const reactor = wrapStoreInReactor()
 
     expect(typeof reactor).toBe('function')
-    expect(typeof reactor.process).toBe('function')
+    expect(typeof reactor.effects).toBe('function')
 
   })
 

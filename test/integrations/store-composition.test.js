@@ -1,4 +1,10 @@
-import { actionTypes, createStore, metaTypes } from '../../src/index'
+import {
+  actionTypes,
+  createStore,
+  effectTypes,
+  metaTypes
+} from '../../src/index'
+
 import { getStoreBase } from '../utils'
 
 
@@ -67,7 +73,7 @@ describe('store composition', () => {
   })
 
 
-  test('parent store inspectors are notified of actions dispatched to or simulated in the child store', () => {
+  test('parent store effect subscribers are notified of actions dispatched to or simulated in the child store', () => {
 
     const parent = createStore()
     const child = createStore()
@@ -79,31 +85,41 @@ describe('store composition', () => {
       a: child
     })
 
-    const parentInspector = jest.fn()
-    parent.inspect(parentInspector)
+    const parentEffectSubscriber = jest.fn()
+    parent.subscribe({ effects: parentEffectSubscriber })
 
     child.hydrate(1)
 
-    expect(parentInspector).toHaveBeenLastCalledWith(storeBase, {
-      metaType: metaTypes.DELEGATE,
-      metaPayload: [ 'a' ],
-      action: {
-        type: actionTypes.HYDRATE,
-        payload: 1
-      }
-    })
+    expect(parentEffectSubscriber).toHaveBeenLastCalledWith(expect.objectContaining({
+      effects: [{
+        metaType: metaTypes.DELEGATE,
+        metaData: [ 'a' ],
+        payload: {
+          effectType: effectTypes.DISPATCH,
+          payload: {
+            type: actionTypes.HYDRATE,
+            payload: 1
+          }
+        }
+      }]
+    }))
 
     child.use({
       b: grandchild
     })
 
-    expect(parentInspector).toHaveBeenLastCalledWith(storeBase, {
-      metaType: metaTypes.DELEGATE,
-      metaPayload: [ 'a' ],
-      action: {
-        type: actionTypes.RECALCULATE
-      }
-    })
+    expect(parentEffectSubscriber).toHaveBeenLastCalledWith(expect.objectContaining({
+      effects: [{
+        metaType: metaTypes.DELEGATE,
+        metaData: [ 'a' ],
+        payload: {
+          effectType: effectTypes.DISPATCH,
+          payload: {
+            type: actionTypes.RECALCULATE
+          }
+        }
+      }]
+    }))
 
   })
 
@@ -126,11 +142,11 @@ describe('store composition', () => {
 
     const action = {
       metaType: metaTypes.DELEGATE,
-      metaPayload: [ 'a' ],
-      action: {
+      metaData: [ 'a' ],
+      payload: {
         metaType: metaTypes.DELEGATE,
-        metaPayload: [ 'b' ],
-        action: {
+        metaData: [ 'b' ],
+        payload: {
           type: 'f',
           payload: 2
         }
@@ -138,16 +154,16 @@ describe('store composition', () => {
     }
 
     const prevState = parent.getState()
-    const newState = parent.dispatch(action)
+    const { state } = parent.dispatch(action)
 
-    expect(prevState).not.toBe(newState)
-    expect(prevState.a).not.toBe(newState.a)
-    expect(prevState.a.b).not.toBe(newState.a.b)
+    expect(prevState).not.toBe(state)
+    expect(prevState.a).not.toBe(state.a)
+    expect(prevState.a.b).not.toBe(state.a.b)
 
-    expect(prevState.e).toBe(newState.e)
-    expect(prevState.a.d).toBe(newState.a.d)
+    expect(prevState.e).toBe(state.e)
+    expect(prevState.a.d).toBe(state.a.d)
 
-    expect(newState).toEqual({
+    expect(state).toEqual({
       a: {
         b: {
           c: 2
@@ -201,6 +217,12 @@ describe('store composition', () => {
     })
 
     expect(newState.a.b.d).toBe(initialState.a.b.d)
+    expect(child.getState()).toEqual({
+      c: 3,
+      d: {
+        e: 2
+      }
+    })
 
   })
 
@@ -221,8 +243,8 @@ describe('store composition', () => {
       }
     })
 
-    const childInspector = jest.fn()
-    child.inspect(childInspector)
+    const childEffectsSubscriber = jest.fn()
+    child.subscribe({ effects: childEffectsSubscriber })
 
     const initialParentState = parent.getState()
     const initialChildState = child.getState()
@@ -259,15 +281,20 @@ describe('store composition', () => {
     expect(newParentState.a.b.d).toBe(initialParentState.a.b.d)
     expect(newChildState.d).toBe(initialChildState.d)
 
-    expect(childInspector).toHaveBeenCalledWith(getStoreBase(child), {
-      type: actionTypes.HYDRATE,
-      payload: {
-        c: 3,
-        d: {
-          e: 2
+    expect(childEffectsSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+      effects: [{
+        effectType: effectTypes.DISPATCH,
+        payload: {
+          type: actionTypes.HYDRATE,
+          payload: {
+            c: 3,
+            d: {
+              e: 2
+            }
+          }
         }
-      }
-    })
+      }]
+    }))
 
   })
 

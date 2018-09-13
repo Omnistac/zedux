@@ -44,12 +44,12 @@ export function transition(initialState) {
 
 
   /**
-    The processor.
+    The effects creator.
 
     Runs any `enter` or `leave` hooks triggered by the reducer's
     state updates.
   */
-  reactor.process = (dispatch, action, state) => {
+  reactor.effects = (state, action) => {
     if (state === currentState) return
 
     const oldStateDefinition = stateMap[currentState]
@@ -58,13 +58,13 @@ export function transition(initialState) {
     currentState = state
 
     if (oldStateDefinition && oldStateDefinition.leave) {
-      const processable = oldStateDefinition.leave(dispatch, action, state)
+      const processable = oldStateDefinition.leave(state, action)
 
       processableToPromise(processable)
     }
 
     if (newStateDefinition.enter) {
-      const processable = newStateDefinition.enter(dispatch, action, state)
+      const processable = newStateDefinition.enter(state, action)
 
       processableToPromise(processable)
     }

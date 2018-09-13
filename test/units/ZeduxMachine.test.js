@@ -62,19 +62,19 @@ describe('ZeduxMachine()', () => {
 })
 
 
-describe('ZeduxMachine.process()', () => {
+describe('ZeduxMachine.effects()', () => {
 
   test('does nothing if the state has not changed', () => {
 
     const machine = transition('a')
 
-    expect(machine.process(null, null, 'a')).toBeUndefined()
-    expect(machine.process(null, null, 'a')).toBeUndefined()
+    expect(machine.effects('a', { type: 'b' })).toBeUndefined()
+    expect(machine.effects('a', { type: 'b' })).toBeUndefined()
 
   })
 
 
-  test('calls a "leave" hook on the old state', () => {
+  test('calls a "leave" hook on the previous State', () => {
 
     const state1 = () => ({ type: 'a' })
     state1.type = 'a'
@@ -88,21 +88,21 @@ describe('ZeduxMachine.process()', () => {
       .to(state2)
       .to('c')
 
-    machine.process(null, null, 'a') // enter the start state first
-    machine.process(null, null, 'b') // then leave it
+    machine.effects('a', state1()) // enter the start state first
+    machine.effects('b', state2()) // then leave it
 
-    expect(state1.leave).toHaveBeenCalledWith(null, null, 'b')
+    expect(state1.leave).toHaveBeenCalledWith('b', { type: 'b' })
 
-    machine.process(null, null, 'c')
+    machine.effects('c', state1())
 
-    expect(state2.leave).toHaveBeenCalledWith(null, null, 'c')
+    expect(state2.leave).toHaveBeenCalledWith('c', { type: 'a' })
     expect(state1.leave).toHaveBeenCalledTimes(1)
     expect(state2.leave).toHaveBeenCalledTimes(1)
 
   })
 
 
-  test('calls an "enter" hook on the new state', () => {
+  test('calls an "enter" hook on the next State', () => {
 
     const state1 = () => ({ type: 'a' })
     state1.type = 'a'
@@ -116,14 +116,14 @@ describe('ZeduxMachine.process()', () => {
       .to(state2)
       .to(state1)
 
-    machine.process(null, null, 'a')
+    machine.effects('a', state1())
 
-    expect(state1.enter).toHaveBeenCalledWith(null, null, 'a')
+    expect(state1.enter).toHaveBeenCalledWith('a', { type: 'a' })
     expect(state2.enter).not.toHaveBeenCalled()
 
-    machine.process(null, null, 'b')
+    machine.effects('b', state2())
 
-    expect(state2.enter).toHaveBeenCalledWith(null, null, 'b')
+    expect(state2.enter).toHaveBeenCalledWith('b', { type: 'b' })
     expect(state1.enter).toHaveBeenCalledTimes(1)
     expect(state2.enter).toHaveBeenCalledTimes(1)
 

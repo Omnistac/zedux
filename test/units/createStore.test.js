@@ -7,7 +7,7 @@ describe('Zedux.createStore()', () => {
 
     const store = createStore()
 
-    expect(Object.keys(store)).toHaveLength(8) // $$observable not enumerable
+    expect(Object.keys(store)).toHaveLength(9)
     expect(store).toEqual(expect.objectContaining({
       dispatch: expect.any(Function),
       getState: expect.any(Function),
@@ -16,7 +16,7 @@ describe('Zedux.createStore()', () => {
       setState: expect.any(Function),
       subscribe: expect.any(Function),
       use: expect.any(Function),
-      [Symbol.observable]: expect.any(Function),
+      '@@observable': expect.any(Function),
       $$typeof: Symbol.for('zedux.store')
     }))
 

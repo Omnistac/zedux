@@ -1,5 +1,4 @@
-import { createStore } from '../../src/index'
-import { getStoreBase } from '../utils'
+import { createStore, effectTypes } from '../../src/index'
 
 
 describe('registrations', () => {
@@ -129,94 +128,62 @@ describe('registrations', () => {
   })
 
 
-  describe('inspections', () => {
+  describe('error subscribers', () => {
 
-    test('all inspectors are notified of an action', () => {
+    test('all error subscribers are notified of an error', () => {
+
+      const theError = new Error('a')
+      const store = createStore(() => {
+        throw theError
+      })
+      const errorSubscribers = Array(20).fill().map(() => jest.fn())
+      const action = {
+        type: 'b'
+      }
+
+      errorSubscribers.forEach(error => store.subscribe({ error }))
+
+      store.dispatch(action)
+
+      errorSubscribers.forEach(errorSubscriber =>
+        expect(errorSubscriber).toHaveBeenCalledWith(theError)
+      )
+
+    })
+
+  })
+
+
+  describe('effects subscribers', () => {
+
+    test('all effects subscribers are notified of an action', () => {
 
       const store = createStore()
-      const storeBase = getStoreBase(store)
-      const inspections = Array(20).join` `.split` `.map(() => jest.fn())
+      const effectsSubscribers = Array(20).fill().map(() => jest.fn())
       const action = {
         type: 'a'
       }
 
-      inspections.forEach(store.inspect)
+      effectsSubscribers.forEach(effects => store.subscribe({ effects }))
 
       store.dispatch(action)
 
-      inspections.forEach(inspector =>
-        expect(inspector).toHaveBeenCalledWith(storeBase, action)
+      effectsSubscribers.forEach(effectsSubscriber =>
+        expect(effectsSubscriber)
+          .toHaveBeenCalledWith(expect.objectContaining({
+            effects: [{
+              effectType: effectTypes.DISPATCH,
+              payload: {
+                type: 'a'
+              }
+            }]
+          }))
       )
 
     })
 
 
-    test('inspectors can be added or removed whenever', () => {
-
-      const store = createStore()
-      const storeBase = getStoreBase(store)
-
-      const inspector1 = jest.fn()
-      let inspection1 = store.inspect(inspector1)
-
-      const inspector2 = jest.fn()
-      const inspection2 = store.inspect(inspector2)
-
-      inspection1.uninspect()
-      inspection1.uninspect() // does nothing
-      inspection1.uninspect() // does nothing
-
-      const inspector3 = jest.fn()
-      const inspection3 = store.inspect(inspector3)
-
-      store.dispatch({ type: 'a' })
-
-      expect(inspector1).not.toHaveBeenCalled()
-      expect(inspector2).toHaveBeenCalledWith(storeBase, { type: 'a' })
-      expect(inspector3).toHaveBeenCalledWith(storeBase, { type: 'a' })
-
-      inspection2.uninspect()
-
-      inspection1 = store.inspect(inspector1)
-
-      store.dispatch({ type: 'b' })
-
-      expect(inspector1).toHaveBeenCalledWith(storeBase, { type: 'b' })
-      expect(inspector2).toHaveBeenLastCalledWith(storeBase, { type: 'a' })
-      expect(inspector3).toHaveBeenLastCalledWith(storeBase, { type: 'b' })
-
-      inspection3.uninspect()
-
-      const inspector4 = jest.fn()
-
-      // inspect inside an inspector
-      const inspector5 = jest.fn(
-        () => store.inspect(inspector4)
-      )
-      store.inspect(inspector5)
-
-      store.dispatch({ type: 'c' })
-
-      expect(inspector1).toHaveBeenLastCalledWith(storeBase, { type: 'c' })
-      expect(inspector2).toHaveBeenLastCalledWith(storeBase, { type: 'a' })
-      expect(inspector3).toHaveBeenLastCalledWith(storeBase, { type: 'b' })
-      expect(inspector4).not.toHaveBeenCalled()
-      expect(inspector5).toHaveBeenCalledWith(storeBase, { type: 'c' })
-
-      inspection1.uninspect()
-
-      store.dispatch({ type: 'd' })
-
-      expect(inspector1).toHaveBeenLastCalledWith(storeBase, { type: 'c' })
-      expect(inspector2).toHaveBeenLastCalledWith(storeBase, { type: 'a' })
-      expect(inspector3).toHaveBeenLastCalledWith(storeBase, { type: 'b' })
-      expect(inspector4).toHaveBeenCalledWith(storeBase, { type: 'd' })
-      expect(inspector5).toHaveBeenLastCalledWith(storeBase, { type: 'd' })
-
-    })
-
-
-    test('a parent store unregisters its child store inspector', () => {
+    test('a parent store unregisters its child store effects subscribers', () => {
 
       const parent = createStore()
       const child = createStore()
@@ -232,12 +199,12 @@ describe('registrations', () => {
       })
       parent.use(null)
 
-      const inspector = jest.fn()
-      parent.inspect(inspector)
+      const effectsSubscriber = jest.fn()
+      parent.subscribe({ effects: effectsSubscriber })
 
       child.dispatch(() => 'a')
 
-      expect(inspector).not.toHaveBeenCalled()
+      expect(effectsSubscriber).not.toHaveBeenCalled()
 
     })
 

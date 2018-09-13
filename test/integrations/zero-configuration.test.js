@@ -1,5 +1,4 @@
-import { actionTypes, createStore } from '../../src/index'
-import { getStoreBase } from '../utils'
+import { actionTypes, createStore, effectTypes } from '../../src/index'
 
 
 describe('zero-configuration', () => {
@@ -13,60 +12,75 @@ describe('zero-configuration', () => {
       }
     }
 
-    const newState = store.setState(initialState)
+    const { state } = store.setState(initialState)
 
-    expect(newState).toBe(store.getState())
-    expect(newState).toBe(initialState)
+    expect(state).toBe(store.getState())
+    expect(state).toBe(initialState)
 
   })
 
 
   test('hydrate() dispatches the special HYDRATE action to the store', () => {
 
-    const inspector = jest.fn()
+    const effectSubscriber = jest.fn()
     const store = createStore()
 
-    store.inspect(inspector)
+    store.subscribe({ effects: effectSubscriber })
     store.hydrate(1)
 
-    expect(inspector).toHaveBeenCalledWith(getStoreBase(store), {
-      type: actionTypes.HYDRATE,
-      payload: 1
-    })
+    expect(effectSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+      effects: [{
+        effectType: effectTypes.DISPATCH,
+        payload: {
+          type: actionTypes.HYDRATE,
+          payload: 1
+        }
+      }]
+    }))
 
   })
 
 
   test('setState() dispatches the special PARTIAL_HYDRATE action to the store', () => {
 
-    const inspector = jest.fn()
+    const effectSubscriber = jest.fn()
     const store = createStore()
       .hydrate(1)
 
-    store.inspect(inspector)
+    store.subscribe({ effects: effectSubscriber })
     store.setState(2)
 
-    expect(inspector).toHaveBeenCalledWith(getStoreBase(store), {
-      type: actionTypes.PARTIAL_HYDRATE,
-      payload: 2
-    })
+    expect(effectSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+      effects: [{
+        effectType: effectTypes.DISPATCH,
+        payload: {
+          type: actionTypes.PARTIAL_HYDRATE,
+          payload: 2
+        }
+      }]
+    }))
 
   })
 
 
   test('inducers dispatch the special PARTIAL_HYDRATE action to the store', () => {
 
-    const inspector = jest.fn()
+    const effectSubscriber = jest.fn()
     const store = createStore()
       .hydrate(1)
 
-    store.inspect(inspector)
+    store.subscribe({ effects: effectSubscriber })
     store.dispatch(() => 2)
 
-    expect(inspector).toHaveBeenCalledWith(getStoreBase(store), {
-      type: actionTypes.PARTIAL_HYDRATE,
-      payload: 2
-    })
+    expect(effectSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+      effects: [{
+        effectType: effectTypes.DISPATCH,
+        payload: {
+          type: actionTypes.PARTIAL_HYDRATE,
+          payload: 2
+        }
+      }]
+    }))
 
   })
 
@@ -86,13 +100,13 @@ describe('zero-configuration', () => {
     const store = createStore()
       .hydrate(initialState)
 
-    const newState = store.dispatch(() => ({
+    const { state } = store.dispatch(() => ({
       b: {
         c: 4
       }
     }))
 
-    expect(newState).toEqual({
+    expect(state).toEqual({
       a: 1,
       b: {
         c: 4,
@@ -102,7 +116,7 @@ describe('zero-configuration', () => {
       }
     })
 
-    expect(newState.b.d).toBe(initialState.b.d)
+    expect(state.b.d).toBe(initialState.b.d)
 
   })
 

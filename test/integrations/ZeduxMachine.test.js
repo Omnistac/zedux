@@ -6,7 +6,7 @@ describe('ZeduxMachine configuration', () => {
   test('an enter or leave hook can return a promise', done => {
 
     const a = state('a')
-      .onEnter((storeBase, action) => new Promise(resolve => {
+      .onEnter((state, action) => new Promise(resolve => {
         setTimeout(() => {
           expect(action).toEqual({ type: 'a' })
 
@@ -15,7 +15,7 @@ describe('ZeduxMachine configuration', () => {
       }))
 
     const b = state('b')
-      .onEnter((storeBase, action) => new Promise(resolve => {
+      .onEnter((state, action) => new Promise(resolve => {
         setTimeout(() => {
           expect(action).toEqual({ type: 'b' })
 
@@ -27,15 +27,15 @@ describe('ZeduxMachine configuration', () => {
     const machine = transition(a)
       .to(b)
 
-    machine.process(null, a(), 'a') // enter the start state first
-    machine.process(null, b(), 'b')
+    machine.effects('a', a()) // enter the start state first
+    machine.effects('b', b())
 
   })
 
 
   test('an enter or leave hook can return an iterator', done => {
 
-    const processor = function*() {
+    const effectCreator = function*() {
       const val1 = yield new Promise(resolve => {
         setTimeout(() => {
           resolve(1)
@@ -58,20 +58,20 @@ describe('ZeduxMachine configuration', () => {
 
     const a = state('a')
     const b = state('b')
-      .onEnter(processor)
+      .onEnter(effectCreator)
 
     const machine = transition(a)
       .to(b)
 
-    machine.process(null, a(), 'a') // enter the start state first
-    machine.process(null, b(), 'b')
+    machine.effects('a', a()) // enter the start state first
+    machine.effects('b', b())
 
   })
 
 
   test('an enter or leave hook can return an observable', done => {
 
-    const processor = () => ({
+    const effectCreator = () => ({
       subscribe(next, err, complete) {
         setTimeout(() => {
 
@@ -88,15 +88,15 @@ describe('ZeduxMachine configuration', () => {
     })
 
     const a = state('a')
-      .onLeave(processor)
+      .onLeave(effectCreator)
 
     const b = state('b')
 
     const machine = transition(a)
       .to(b)
 
-    machine.process(null, a(), 'a') // enter the start state first
-    machine.process(null, b(), 'b')
+    machine.effects('a', a()) // enter the start state first
+    machine.effects('b', b())
 
   })
 

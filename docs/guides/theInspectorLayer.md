@@ -43,8 +43,8 @@ childStore.dispatch(() => 'c')
 /*
   {
     metaType: '@@zedux/delegate',
-    metaPayload: [],
-    action: { type: '@@zedux/hydrate', payload: 'c' }
+    metaData: [],
+    payload: { type: '@@zedux/hydrate', payload: 'c' }
   }
 */
 
@@ -55,8 +55,8 @@ childStore.dispatch({
 /*
   {
     metaType: '@@zedux/delegate',
-    metaPayload: [],
-    action: { type: 'cool-action', payload: 'd' }
+    metaData: [],
+    payload: { type: 'cool-action', payload: 'd' }
   }
 */
 ```

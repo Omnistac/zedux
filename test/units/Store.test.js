@@ -1,10 +1,15 @@
-import { Observable } from 'rxjs'
+import { from } from 'rxjs'
+import { filter } from 'rxjs/operators'
 
-import { createStore } from '../../src/index'
-import { actionTypes, metaTypes } from '../../src/index'
+import {
+  actionTypes,
+  createStore,
+  effectTypes,
+  metaTypes
+} from '../../src/index'
+
 import {
   dispatchables,
-  getStoreBase,
   nonDispatchables,
   nonPlainObjects
 } from '../utils'
@@ -18,9 +23,9 @@ describe('Store.dispatch()', () => {
     const inducer = state => state
 
     const prevState = store.getState()
-    const newState = store.dispatch(inducer)
+    const { state } = store.dispatch(inducer)
 
-    expect(prevState).toBe(newState)
+    expect(prevState).toBe(state)
 
   })
 
@@ -31,10 +36,10 @@ describe('Store.dispatch()', () => {
     const inducer = () => 'a'
 
     const prevState = store.getState()
-    const newState = store.dispatch(inducer)
+    const { state } = store.dispatch(inducer)
 
-    expect(prevState).not.toBe(newState)
-    expect(newState).toBe('a')
+    expect(prevState).not.toBe(state)
+    expect(state).toBe('a')
 
   })
 
@@ -69,10 +74,28 @@ describe('Store.dispatch()', () => {
     }
 
     const prevState = store.getState()
-    const newState = store.dispatch(action)
+    const { state } = store.dispatch(action)
 
-    expect(newState).not.toBe(prevState)
-    expect(newState).toBe(action.payload)
+    expect(state).not.toBe(prevState)
+    expect(state).toBe(action.payload)
+
+  })
+
+
+  test('short-circuits, hydrates, and returns the new state if the action has the special PARTIAL_HYDRATE type', () => {
+
+    const store = createStore()
+
+    const action = {
+      type: actionTypes.PARTIAL_HYDRATE,
+      payload: { a: 1 }
+    }
+
+    const prevState = store.getState()
+    const { state } = store.dispatch(action)
+
+    expect(state).not.toBe(prevState)
+    expect(state).toBe(action.payload)
 
   })
 
@@ -88,50 +111,55 @@ describe('Store.dispatch()', () => {
 
     const action = {
       metaType: metaTypes.DELEGATE,
-      metaPayload: [ 'a' ],
-      action: {
+      metaData: [ 'a' ],
+      payload: {
         type: 'b'
       }
     }
 
     const prevState = store2.getState()
 
-    expect(store2.dispatch(action)).toBe(prevState)
+    expect(store2.dispatch(action).state).toBe(prevState)
 
   })
 
 
-  test('throws a TypeError if the dispatched action object does not have a string "type" property', () => {
+  test('throws an Error if the dispatched action object does not have a string "type" property', () => {
 
     const store = createStore()
       .use(() => 'a')
 
-    expect(store.dispatch.bind(null, {})).toThrow(TypeError)
+    expect(store.dispatch.bind(null, {})).toThrowError(/invalid meta chain/i)
 
     expect(store.dispatch.bind(null, { type: 1 })).toThrow(TypeError)
 
-    expect(store.dispatch.bind(null, { type: '' })).not.toThrow()
+    expect(store.dispatch.bind(null, { type: '' })).toThrowError(/invalid meta chain/i)
 
   })
 
 
-  test('dispatches a wrapped action to inspectors', () => {
+  test('notifies effects subscribers of a wrapped action', () => {
 
-    const inspector = jest.fn()
+    const effectsSubscriber = jest.fn()
     const store = createStore()
       .use(() => 'a')
 
     const action = {
       metaType: 'b',
-      action: {
+      payload: {
         type: 'c'
       }
     }
 
-    store.inspect(inspector)
+    store.subscribe({ effects: effectsSubscriber })
     store.dispatch(action)
 
-    expect(inspector).toHaveBeenLastCalledWith(getStoreBase(store), action)
+    expect(effectsSubscriber).toHaveBeenLastCalledWith(expect.objectContaining({
+      effects: [{
+        effectType: effectTypes.DISPATCH,
+        payload: action
+      }]
+    }))
 
   })
 
@@ -139,14 +167,14 @@ describe('Store.dispatch()', () => {
   test('skips the reducer layer if the SKIP_REDUCERS meta node is present', () => {
 
     const reactor = jest.fn()
-    reactor.process = jest.fn()
+    reactor.effects = jest.fn()
 
     const store = createStore()
       .use(reactor)
 
     const action = {
       metaType: metaTypes.SKIP_REDUCERS,
-      action: {
+      payload: {
         type: 'a'
       }
     }
@@ -154,22 +182,22 @@ describe('Store.dispatch()', () => {
     store.dispatch(action)
 
     expect(reactor).toHaveBeenCalledTimes(1)
-    expect(reactor.process).toHaveBeenCalledTimes(2)
+    expect(reactor.effects).toHaveBeenCalledTimes(2)
 
   })
 
 
-  test('skips the processor layer if the SKIP_PROCESSORS meta node is present', () => {
+  test('skips the effects layer if the SKIP_EFFECTS meta node is present', () => {
 
     const reactor = jest.fn()
-    reactor.process = jest.fn()
+    reactor.effects = jest.fn()
 
     const store = createStore()
       .use(reactor)
 
     const action = {
-      metaType: metaTypes.SKIP_PROCESSORS,
-      action: {
+      metaType: metaTypes.SKIP_EFFECTS,
+      payload: {
         type: 'a'
       }
     }
@@ -177,7 +205,7 @@ describe('Store.dispatch()', () => {
     store.dispatch(action)
 
     expect(reactor).toHaveBeenCalledTimes(2)
-    expect(reactor.process).toHaveBeenCalledTimes(1)
+    expect(reactor.effects).toHaveBeenCalledTimes(1)
 
   })
 
@@ -243,9 +271,9 @@ describe('Store.dispatch()', () => {
     }
 
     const prevState = store.getState()
-    const newState = store.dispatch(action)
+    const { state } = store.dispatch(action)
 
-    expect(prevState).toBe(newState)
+    expect(prevState).toBe(state)
 
   })
 
@@ -264,17 +292,17 @@ describe('Store.dispatch()', () => {
     }
 
     const prevState = store.getState()
-    const newState = store.dispatch(action)
+    const { state } = store.dispatch(action)
 
-    expect(prevState).not.toBe(newState)
-    expect(newState).toEqual({
+    expect(prevState).not.toBe(state)
+    expect(state).toEqual({
       a: 2
     })
 
   })
 
 
-  test('root reactor "process" property is optional', () => {
+  test('root reactor "effects" property is optional', () => {
 
     const reducer = jest.fn()
     const store = createStore()
@@ -311,7 +339,10 @@ describe('Store.getState()', () => {
       type: 'b'
     }
 
-    expect(store.dispatch.bind(null, action)).toThrow(Error)
+    const { error } = store.dispatch(action)
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error.message).toMatch(/cannot be called within a reducer/i)
 
   })
 
@@ -344,7 +375,7 @@ describe('Store.hydrate()', () => {
     const reducer = state => {
       if (state) store.hydrate()
 
-      return state || 'a'
+      return 'a'
     }
 
     store.use(reducer)
@@ -353,7 +384,10 @@ describe('Store.hydrate()', () => {
       type: 'b'
     }
 
-    expect(store.dispatch.bind(null, action)).toThrow(Error)
+    const { error } = store.dispatch(action)
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error.message).toMatch(/cannot be called within a reducer/i)
 
   })
 
@@ -371,19 +405,24 @@ describe('Store.hydrate()', () => {
   })
 
 
-  test('informs inspectors of the special HYDRATE action', () => {
+  test('informs effect subscribers of the special HYDRATE action', () => {
 
-    const inspector = jest.fn()
+    const effectsSubscriber = jest.fn()
     const store = createStore()
     const hydratedState = { a: 1 }
 
-    store.inspect(inspector)
+    store.subscribe({ effects: effectsSubscriber })
     store.hydrate(hydratedState)
 
-    expect(inspector).toHaveBeenCalledWith(getStoreBase(store), {
-      type: actionTypes.HYDRATE,
-      payload: hydratedState
-    })
+    expect(effectsSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+      effects: [{
+        effectType: effectTypes.DISPATCH,
+        payload: {
+          type: actionTypes.HYDRATE,
+          payload: hydratedState
+        }
+      }]
+    }))
 
   })
 
@@ -409,36 +448,6 @@ describe('Store.hydrate()', () => {
       .hydrate('b')
 
     expect(store.getState()).toBe('b')
-
-  })
-
-})
-
-
-describe('store.inspect()', () => {
-
-  test('throws a TypeError if the inspector is not a function', () => {
-
-    const store = createStore()
-
-    nonDispatchables.forEach(
-      nonDispatchable => expect(
-        store.inspect.bind(null, nonDispatchable)
-      ).toThrow(TypeError)
-    )
-
-  })
-
-
-  test('returns an inspection object', () => {
-
-    const store = createStore()
-
-    const inspection = store.inspect(() => {})
-
-    expect(inspection).toEqual({
-      uninspect: expect.any(Function)
-    })
 
   })
 
@@ -506,18 +515,21 @@ describe('Store.setState()', () => {
     const store = createStore()
 
     const reducer = state => {
-      if (state) store.setState()
+      if (state) store.setState('a')
 
-      return state || 'a'
+      return 'b'
     }
 
     store.use(reducer)
 
     const action = {
-      type: 'b'
+      type: 'c'
     }
 
-    expect(store.dispatch.bind(null, action)).toThrow(Error)
+    const { error } = store.dispatch(action)
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error.message).toMatch(/cannot be called within a reducer/i)
 
   })
 
@@ -535,19 +547,24 @@ describe('Store.setState()', () => {
   })
 
 
-  test('informs inspectors of the special PARTIAL_HYDRATE action', () => {
+  test('creates a PARTIAL_HYDRATE dispatch effect', () => {
 
-    const inspector = jest.fn()
+    const effectsSubscriber = jest.fn()
     const store = createStore()
     const hydratedState = { a: 1 }
 
-    store.inspect(inspector)
+    store.subscribe({ effects: effectsSubscriber })
     store.setState(hydratedState)
 
-    expect(inspector).toHaveBeenCalledWith(getStoreBase(store), {
-      type: actionTypes.PARTIAL_HYDRATE,
-      payload: hydratedState
-    })
+    expect(effectsSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+      effects: [{
+        effectType: effectTypes.DISPATCH,
+        payload: {
+          type: actionTypes.PARTIAL_HYDRATE,
+          payload: hydratedState
+        }
+      }]
+    }))
 
   })
 
@@ -576,10 +593,10 @@ describe('Store.setState()', () => {
     const subscriber = jest.fn()
     store.subscribe(subscriber)
 
-    const newState = store.setState(1)
+    const { state } = store.setState(1)
 
     expect(subscriber).not.toHaveBeenCalled()
-    expect(newState).toBe(initialState)
+    expect(state).toBe(initialState)
 
   })
 
@@ -599,14 +616,14 @@ describe('Store.setState()', () => {
     const store = createStore()
       .hydrate(initialState)
 
-    const newState = store.setState({
+    const { state } = store.setState({
       b: {
         c: 4,
         f: 5
       }
     })
 
-    expect(newState).toEqual({
+    expect(state).toEqual({
       a: 1,
       b: {
         c: 4,
@@ -617,7 +634,7 @@ describe('Store.setState()', () => {
       }
     })
 
-    expect(newState.b.d).toBe(initialState.b.d)
+    expect(state.b.d).toBe(initialState.b.d)
 
   })
 
@@ -626,14 +643,38 @@ describe('Store.setState()', () => {
 
 describe('store.subscribe()', () => {
 
-  test('throws a TypeError if the subscriber is not a function or observer object', () => {
+  test('throws an Error if the subscriber.next', () => {
 
     const store = createStore()
 
-    nonDispatchables.forEach(
+    nonDispatchables.filter(Boolean).forEach(
       nonDispatchable => expect(
-        store.setNodeOptions.bind(null, nonDispatchable)
-      ).toThrow(TypeError)
+        store.subscribe.bind(null, { next: nonDispatchable })
+      ).toThrow(Error)
+    )
+
+  })
+
+  test('throws an Error if subscriber.error is not a function', () => {
+
+    const store = createStore()
+
+    nonDispatchables.filter(Boolean).forEach(
+      nonDispatchable => expect(
+        store.subscribe.bind(null, { error: nonDispatchable })
+      ).toThrow(Error)
+    )
+
+  })
+
+  test('throws an Error if subscriber.effects is not a function', () => {
+
+    const store = createStore()
+
+    nonDispatchables.filter(Boolean).forEach(
+      nonDispatchable => expect(
+        store.subscribe.bind(null, { effects: nonDispatchable })
+      ).toThrow(Error)
     )
 
   })
@@ -670,13 +711,13 @@ describe('store.use()', () => {
 })
 
 
-describe('store[$$observable]', () => {
+describe('store[@@observable]', () => {
 
   test('returns the store (which is an observable)', () => {
 
     const store = createStore()
 
-    expect(store[Symbol.observable]()).toBe(store)
+    expect(store['@@observable']()).toBe(store)
 
   })
 
@@ -684,7 +725,7 @@ describe('store[$$observable]', () => {
   test('can be converted to an RxJS observable', () => {
 
     const store = createStore()
-    const state$ = Observable.from(store)
+    const state$ = from(store)
     const subscriber = jest.fn()
 
     state$.subscribe(subscriber)
@@ -702,8 +743,10 @@ describe('store[$$observable]', () => {
     const store = createStore()
     const subscriber = jest.fn()
 
-    Observable.from(store)
-      .filter(state => state !== 'a')
+    from(store)
+      .pipe(
+        filter(state => state !== 'a')
+      )
       .subscribe(subscriber)
 
     store.setState('a')

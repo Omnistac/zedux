@@ -2,16 +2,15 @@ import { isPlainObject, detailedTypeof } from './general'
 
 const isProd = process.env.NODE_ENV === 'production'
 const PREFIX = 'Zedux Error -'
-const UNSET = 'UNSET'
 const prodErr = () => 'Zedux is currently running in production mode. '
   + 'To see this error message, run Zedux in development mode.'
 
-export const assert = (predicate, message, subject = UNSET) => {
+export const assert = (predicate, message, subject) => {
   if (predicate) return
 
   let error = `Zedux Error - ${message}`
 
-  if (subject !== UNSET) error += `. Received ${detailedTypeof(subject)}`
+  if (subject) error += `. Received ${detailedTypeof(subject)}`
 
   throw new Error(error)
 }
@@ -49,7 +48,7 @@ export function assertAreFunctions(args, method) {
 
 
 export const assertAreValidEffects = effects => {
-  assert(Array.isArray(effects), getError('invalidEffects'), effects)
+  assert(!effects || Array.isArray(effects), getError('invalidEffects'), effects)
 }
 
 

@@ -7,7 +7,11 @@ const env = process.env.NODE_ENV
 
 const plugins = [
   babel({
-    exclude: 'node_modules/**'
+    exclude: 'node_modules/**',
+    plugins: ['@babel/transform-typescript'],
+    presets: [
+      ['@babel/env', { modules: false }]
+    ]
   }),
 
   replace({

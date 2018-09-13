@@ -50,28 +50,16 @@ export const createStore = initialHierarchy => {
 
     assertIsPlainObject(action, 'Action')
 
-    const delegateReceipt = delegate(currentDiffTree, action)
+    const delegateReply = delegate(currentDiffTree, action)
 
-    if (delegateReceipt) {
+    if (delegateReply) {
       return {
-        ...delegateReceipt,
+        ...delegateReply,
         state: currentState
       }
     }
 
-    const unwrappedAction = removeAllMeta(action)
-
-    assertIsValidAction(unwrappedAction)
-
-    if (unwrappedAction.type === actionTypes.HYDRATE) {
-      return dispatchHydration(unwrappedAction.payload)
-    }
-
-    if (unwrappedAction.type === actionTypes.PARTIAL_HYDRATE) {
-      return setState(unwrappedAction.payload)
-    }
-
-    return dispatchAction(action, unwrappedAction)
+    return routeAction(action)
   }
 
 
@@ -146,10 +134,6 @@ export const createStore = initialHierarchy => {
     Throws an error if called from the reducer layer.
   */
   const setState = partialStateTree => {
-    if (isDispatching) {
-      throw new Error(invalidAccess('store.setState()'))
-    }
-
     const newState = mergeStateTrees(
       currentState,
       partialStateTree,
@@ -176,7 +160,7 @@ export const createStore = initialHierarchy => {
 
     if (subscriberObj.next) {
       assert(
-        typeof subscriber.next === 'function',
+        typeof subscriberObj.next === 'function',
         getError('subscriberNext'),
         subscriberObj.next
       )
@@ -184,7 +168,7 @@ export const createStore = initialHierarchy => {
 
     if (subscriberObj.error) {
       assert(
-        typeof subscriber.error === 'function',
+        typeof subscriberObj.error === 'function',
         getError('subscriberError'),
         subscriberObj.error
       )
@@ -192,7 +176,7 @@ export const createStore = initialHierarchy => {
 
     if (subscriberObj.effects) {
       assert(
-        typeof subscriber.effects === 'function',
+        typeof subscriberObj.effects === 'function',
         getError('subscriberEffects'),
         subscriberObj.effects
       )
@@ -235,7 +219,7 @@ export const createStore = initialHierarchy => {
   }
 
 
-  function dispatchAction(action, unwrappedAction) {
+  function dispatchAction(action, unwrappedAction, rootState = currentState) {
     if (isDispatching) {
       throw new Error(invalidAccess('dispatch(), hydrate(), setState()'))
     }
@@ -244,7 +228,7 @@ export const createStore = initialHierarchy => {
 
     const effects = []
     let error = null
-    let newState = currentState
+    let newState = rootState
 
     if (!hasMeta(action, metaTypes.INHERIT)) {
       effects.push(getDispatchEffect(action))
@@ -252,7 +236,7 @@ export const createStore = initialHierarchy => {
 
     try {
       if (!hasMeta(action, metaTypes.SKIP_REDUCERS)) {
-        newState = dispatchToReducers(unwrappedAction)
+        newState = dispatchToReducers(unwrappedAction, rootState)
       }
 
       if (!hasMeta(action, metaTypes.SKIP_EFFECTS)) {
@@ -269,7 +253,7 @@ export const createStore = initialHierarchy => {
     return {
       effects,
       error,
-      state: currentState
+      state: newState
     }
   }
 
@@ -295,7 +279,7 @@ export const createStore = initialHierarchy => {
     // as the metaData.
 
     // Propagate the change to child stores and allow for effects.
-    return dispatchAction(action, action)
+    return dispatchAction(action, action, newState)
   }
 
 
@@ -308,7 +292,7 @@ export const createStore = initialHierarchy => {
 
   function getDispatchEffect(action) {
     return {
-      type: effectTypes.DISPATCH,
+      effectType: effectTypes.DISPATCH,
       payload: action
     }
   }
@@ -325,11 +309,11 @@ export const createStore = initialHierarchy => {
 
     assertAreValidEffects(receivedEffects)
 
-    return receivedEffects
+    return receivedEffects || []
   }
 
 
-  function dispatchToReducers(action, rootState = currentState) {
+  function dispatchToReducers(action, rootState) {
     return rootReactor
       ? rootReactor(rootState, action)
       : rootState
@@ -398,6 +382,24 @@ export const createStore = initialHierarchy => {
   }
 
 
+  function routeAction(action) {
+    const unwrappedAction = removeAllMeta(action)
+
+    assertIsValidAction(unwrappedAction)
+    const canHydrate = !hasMeta(action, metaTypes.SKIP_REDUCERS)
+
+    if (unwrappedAction.type === actionTypes.HYDRATE && canHydrate) {
+      return dispatchHydration(unwrappedAction.payload)
+    }
+
+    if (unwrappedAction.type === actionTypes.PARTIAL_HYDRATE && canHydrate) {
+      return setState(unwrappedAction.payload)
+    }
+
+    return dispatchAction(action, unwrappedAction)
+  }
+
+
   const store = {
     dispatch,
     getState,
@@ -406,7 +408,7 @@ export const createStore = initialHierarchy => {
     setState,
     subscribe,
     use,
-    [$$observable]: () => store,
+    ['@@observable']: () => store,
     $$typeof: STORE_IDENTIFIER
   }
 

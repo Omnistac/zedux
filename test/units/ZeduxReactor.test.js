@@ -45,11 +45,11 @@ describe('ZeduxReactor()', () => {
 })
 
 
-describe('ZeduxReactor.process()', () => {
+describe('ZeduxReactor.effects()', () => {
 
-  test('returns void', () => {
+  test('returns an empty array', () => {
 
-    expect(react().process(null, {})).toBeUndefined()
+    expect(react().effects('a', { type: 'a' })).toEqual([])
 
   })
 
@@ -110,13 +110,13 @@ describe('ZeduxReactor.toEverything()', () => {
 })
 
 
-describe('ZeduxReactor.withProcessors()', () => {
+describe('ZeduxReactor.withEffects()', () => {
 
   test('returns the ZeduxReactor for chaining', () => {
 
     const reactor = react()
 
-    expect(reactor.withProcessors()).toBe(reactor)
+    expect(reactor.withEffects()).toBe(reactor)
 
   })
 

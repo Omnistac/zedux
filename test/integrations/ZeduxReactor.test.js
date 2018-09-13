@@ -3,16 +3,16 @@ import { react } from '../../src/index'
 
 describe('ZeduxReactor configuration', () => {
 
-  test('.toEverything().withProcessors() registers a processor that will be called for all action types', () => {
+  test('.toEverything().withEffects() registers an effect creator that will be called for all action types', () => {
 
-    const processor = jest.fn()
+    const effectCreator = jest.fn()
     const reactor = react()
       .toEverything()
-      .withProcessors(processor)
+      .withEffects(effectCreator)
 
-    reactor.process(null, 'a', null)
+    reactor.effects('a', { type: 'b' })
 
-    expect(processor).toHaveBeenCalledWith(null, 'a', null)
+    expect(effectCreator).toHaveBeenCalledWith('a', { type: 'b' })
 
   })
 
@@ -31,18 +31,18 @@ describe('ZeduxReactor configuration', () => {
   })
 
 
-  test('.to().withProcessors() registers a processor that will be called only for the given action type', () => {
+  test('.to().withEffects() registers an effect creator that will be called only for the given action type', () => {
 
-    const processor = jest.fn()
+    const effectCreator = jest.fn()
     const reactor = react()
       .to('a')
-      .withProcessors(processor)
+      .withEffects(effectCreator)
 
-    reactor.process(null, { type: 'a' }, null)
-    reactor.process(null, { type: 'b' }, null)
+    reactor.effects(null, { type: 'a' })
+    reactor.effects(null, { type: 'b' })
 
-    expect(processor).toHaveBeenLastCalledWith(null, { type: 'a' }, null)
-    expect(processor).toHaveBeenCalledTimes(1)
+    expect(effectCreator).toHaveBeenLastCalledWith(null, { type: 'a' })
+    expect(effectCreator).toHaveBeenCalledTimes(1)
 
   })
 
@@ -63,24 +63,24 @@ describe('ZeduxReactor configuration', () => {
   })
 
 
-  test('.withProcessors() and .withReducers() can be used and re-used together', () => {
+  test('.withEffects() and .withReducers() can be used and re-used together', () => {
 
-    const processor = jest.fn()
+    const effectCreator = jest.fn()
     const reducer = jest.fn(state => state)
     const reactor = react()
       .to('a')
-      .withProcessors(processor)
+      .withEffects(effectCreator)
       .withReducers(reducer)
-      .withProcessors(processor)
+      .withEffects(effectCreator)
       .withReducers(reducer)
 
     reactor(null, { type: 'a' })
     reactor(null, { type: 'b' })
-    reactor.process(null, { type: 'a' }, null)
-    reactor.process(null, { type: 'b' }, null)
+    reactor.effects(null, { type: 'a' })
+    reactor.effects(null, { type: 'b' })
 
-    expect(processor).toHaveBeenLastCalledWith(null, { type: 'a' }, null)
-    expect(processor).toHaveBeenCalledTimes(2)
+    expect(effectCreator).toHaveBeenLastCalledWith(null, { type: 'a' })
+    expect(effectCreator).toHaveBeenCalledTimes(2)
 
     expect(reducer).toHaveBeenLastCalledWith(null, { type: 'a' })
     expect(reducer).toHaveBeenCalledTimes(2)
@@ -90,48 +90,48 @@ describe('ZeduxReactor configuration', () => {
 
   test('calling another .to*() method replaces the previous set of action types', () => {
 
-    const processor1 = jest.fn()
-    const processor2 = jest.fn()
+    const effectCreator1 = jest.fn()
+    const effectCreator2 = jest.fn()
     const reactor = react()
       .to('a')
       .to('b')
-      .withProcessors(processor1)
+      .withEffects(effectCreator1)
 
       .to('c')
       .toEverything()
-      .withProcessors(processor2)
+      .withEffects(effectCreator2)
 
-    reactor.process(null, { type: 'a' }, null)
-    reactor.process(null, { type: 'b' }, null)
-    reactor.process(null, { type: 'c' }, null)
+    reactor.effects(null, { type: 'a' })
+    reactor.effects(null, { type: 'b' })
+    reactor.effects(null, { type: 'c' })
 
-    expect(processor1).toHaveBeenLastCalledWith(null, { type: 'b' }, null)
-    expect(processor1).toHaveBeenCalledTimes(1)
+    expect(effectCreator1).toHaveBeenLastCalledWith(null, { type: 'b' })
+    expect(effectCreator1).toHaveBeenCalledTimes(1)
 
-    expect(processor2).toHaveBeenLastCalledWith(null, { type: 'c' }, null)
-    expect(processor2).toHaveBeenCalledTimes(3)
+    expect(effectCreator2).toHaveBeenLastCalledWith(null, { type: 'c' })
+    expect(effectCreator2).toHaveBeenCalledTimes(3)
 
   })
 
 
-  test('multiple actions can be mapped to multiple processors and reducers', () => {
+  test('multiple actions can be mapped to multiple effect creators and reducers', () => {
 
-    const processor1 = jest.fn()
-    const processor2 = jest.fn()
+    const effectCreator1 = jest.fn()
+    const effectCreator2 = jest.fn()
     const reducer1 = jest.fn()
     const reducer2 = jest.fn()
     const reactor = react()
       .to('a', 'b')
-      .withProcessors(processor1, processor2)
+      .withEffects(effectCreator1, effectCreator2)
       .withReducers(reducer1, reducer2)
 
     reactor(null, { type: 'a' })
     reactor(null, { type: 'b' })
-    reactor.process(null, { type: 'a' })
-    reactor.process(null, { type: 'b' })
+    reactor.effects(null, { type: 'a' })
+    reactor.effects(null, { type: 'b' })
 
-    expect(processor1).toHaveBeenCalledTimes(2)
-    expect(processor2).toHaveBeenCalledTimes(2)
+    expect(effectCreator1).toHaveBeenCalledTimes(2)
+    expect(effectCreator2).toHaveBeenCalledTimes(2)
 
     expect(reducer1).toHaveBeenCalledTimes(2)
     expect(reducer2).toHaveBeenCalledTimes(2)
@@ -146,28 +146,28 @@ describe('ZeduxReactor configuration', () => {
 
     actionType2.type = 'c'
 
-    const processor = jest.fn()
+    const effectCreator = jest.fn()
     const reactor = react()
       .to(actionType1, actionType2)
-      .withProcessors(processor)
+      .withEffects(effectCreator)
 
-    reactor.process(null, { type: 'a' }, null)
-    reactor.process(null, { type: 'b' }, null)
+    reactor.effects(null, { type: 'a' })
+    reactor.effects(null, { type: 'b' })
 
-    expect(processor).toHaveBeenLastCalledWith(null, { type: 'a' }, null)
+    expect(effectCreator).toHaveBeenLastCalledWith(null, { type: 'a' })
 
-    reactor.process(null, { type: 'c' }, null)
-    reactor.process(null, { type: 'd' }, null)
+    reactor.effects(null, { type: 'c' })
+    reactor.effects(null, { type: 'd' })
 
-    expect(processor).toHaveBeenLastCalledWith(null, { type: 'c' }, null)
-    expect(processor).toHaveBeenCalledTimes(2)
+    expect(effectCreator).toHaveBeenLastCalledWith(null, { type: 'c' })
+    expect(effectCreator).toHaveBeenCalledTimes(2)
 
   })
 
 
-  test('a registered sub-processor can return a promise', done => {
+  test('a registered sub-effectCreator can return a promise', done => {
 
-    const processor = (storeBase, action) => new Promise(resolve => {
+    const effectCreator = (state, action) => new Promise(resolve => {
       setTimeout(() => {
         expect(action).toEqual({ type: 'a' })
 
@@ -178,16 +178,16 @@ describe('ZeduxReactor configuration', () => {
 
     const reactor = react()
       .to('a')
-      .withProcessors(processor)
+      .withEffects(effectCreator)
 
-    reactor.process(null, { type: 'a' })
+    reactor.effects(null, { type: 'a' })
 
   })
 
 
-  test('a registered sub-processor can return an iterator', done => {
+  test('a registered sub-effectCreator can return an iterator', done => {
 
-    const processor = function*() {
+    const effectCreator = function*() {
       const val1 = yield new Promise(resolve => {
         setTimeout(() => {
           resolve(1)
@@ -210,16 +210,16 @@ describe('ZeduxReactor configuration', () => {
 
     const reactor = react()
       .to('a')
-      .withProcessors(processor)
+      .withEffects(effectCreator)
 
-    reactor.process(null, { type: 'a' })
+    reactor.effects(null, { type: 'a' })
 
   })
 
 
-  test('a registered sub-processor can return an observable', done => {
+  test('a registered sub-effectCreator can return an observable', done => {
 
-    const processor = () => ({
+    const effectCreator = () => ({
       subscribe(next, err, complete) {
         setTimeout(() => {
 
@@ -237,9 +237,9 @@ describe('ZeduxReactor configuration', () => {
 
     const reactor = react()
       .to('a')
-      .withProcessors(processor)
+      .withEffects(effectCreator)
 
-    reactor.process(null, { type: 'a' })
+    reactor.effects(null, { type: 'a' })
 
   })
 

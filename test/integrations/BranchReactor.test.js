@@ -21,10 +21,10 @@ describe('BranchReactor', () => {
 
   })
 
-  test('delegates the appropriate state slice to child processors', () => {
+  test('delegates the appropriate state slice to child effect creators', () => {
 
     const reactor = () => 1
-    reactor.process = jest.fn()
+    reactor.effects = jest.fn()
 
     const store = createStore()
       .use({
@@ -37,10 +37,9 @@ describe('BranchReactor', () => {
 
     store.dispatch({ type: 'd' })
 
-    expect(reactor.process).toHaveBeenLastCalledWith(
-      expect.any(Function),
-      { type: 'd' },
-      1
+    expect(reactor.effects).toHaveBeenLastCalledWith(
+      1,
+      { type: 'd' }
     )
 
   })

@@ -1,6 +1,6 @@
 import {
   addMeta,
-  getMetaPayload,
+  getMetaData,
   hasMeta,
   removeMeta,
   removeAllMeta
@@ -14,7 +14,7 @@ const plainAction = {
 
 const oneLayer = {
   metaType: 'a',
-  action: {
+  payload: {
     type: 'b',
     payload: null
   }
@@ -22,12 +22,12 @@ const oneLayer = {
 
 const threeLayers = {
   metaType: 'a',
-  action: {
+  payload: {
     metaType: 'b',
-    action: {
+    payload: {
       metaType: 'c',
-      metaPayload: 1,
-      action: {
+      metaData: 1,
+      payload: {
         type: 'd',
         payload: null
       }
@@ -37,17 +37,17 @@ const threeLayers = {
 
 const repeated = {
   metaType: 'a',
-  metaPayload: 1,
-  action: {
+  metaData: 1,
+  payload: {
     metaType: 'b',
-    metaPayload: 2,
-    action: {
+    metaData: 2,
+    payload: {
       metaType: 'a',
-      metaPayload: 3,
-      action: {
+      metaData: 3,
+      payload: {
         metaType: 'b',
-        metaPayload: 4,
-        action: {
+        metaData: 4,
+        payload: {
           type: 'c',
           payload: null
         }
@@ -65,7 +65,7 @@ describe('addMeta()', () => {
 
     expect(oneLayer.metaType).toBe('a')
     expect(twoLayers.metaType).toBe('c')
-    expect(twoLayers.action).toBe(oneLayer)
+    expect(twoLayers.payload).toBe(oneLayer)
 
   })
 
@@ -75,42 +75,42 @@ describe('addMeta()', () => {
     let wrappedAction = addMeta(plainAction, 'a')
 
     expect(wrappedAction.metaType).toBe('a')
-    expect(wrappedAction.action).toBe(plainAction)
+    expect(wrappedAction.payload).toBe(plainAction)
 
   })
 
 
-  test('adds a metaPayload property to the new meta node if a payload is passed', () => {
+  test('adds a metaData property to the new meta node if a payload is passed', () => {
 
     let twoLayers = addMeta(oneLayer, 'c', 1)
     let fourLayers = addMeta(threeLayers, 'e')
 
-    expect(oneLayer.metaPayload).not.toBeDefined()
-    expect(twoLayers.metaPayload).toBe(1)
-    expect(threeLayers.metaPayload).not.toBeDefined()
-    expect(fourLayers.metaPayload).not.toBeDefined()
+    expect(oneLayer.metaData).not.toBeDefined()
+    expect(twoLayers.metaData).toBe(1)
+    expect(threeLayers.metaData).not.toBeDefined()
+    expect(fourLayers.metaData).not.toBeDefined()
 
   })
 
 })
 
 
-describe('getMetaPayload()', () => {
+describe('getMetaData()', () => {
 
-  test('retrieves the metaPayload property from the first meta node with the given metaType in the meta chain', () => {
+  test('retrieves the metaData property from the first meta node with the given metaType in the meta chain', () => {
 
-    expect(getMetaPayload(threeLayers, 'c')).toBe(1)
-    expect(getMetaPayload(repeated, 'a')).toBe(1)
-    expect(getMetaPayload(repeated, 'b')).toBe(2)
+    expect(getMetaData(threeLayers, 'c')).toBe(1)
+    expect(getMetaData(repeated, 'a')).toBe(1)
+    expect(getMetaData(repeated, 'b')).toBe(2)
 
   })
 
 
   test('returns undefined if the given metaType is not found in the meta chain', () => {
 
-    expect(getMetaPayload(plainAction, 'a')).not.toBeDefined()
-    expect(getMetaPayload(oneLayer, 'b')).not.toBeDefined()
-    expect(getMetaPayload(threeLayers, 'e')).not.toBeDefined()
+    expect(getMetaData(plainAction, 'a')).not.toBeDefined()
+    expect(getMetaData(oneLayer, 'b')).not.toBeDefined()
+    expect(getMetaData(threeLayers, 'e')).not.toBeDefined()
 
   })
 
@@ -128,7 +128,7 @@ describe('hasMeta()', () => {
   })
 
 
-  test('finds the action wrapper at the top of the meta chain', () => {
+  test('finds a node at the top of the meta chain', () => {
 
     expect(hasMeta(oneLayer, 'a')).toBe(true)
     expect(hasMeta(threeLayers, 'a')).toBe(true)
@@ -136,14 +136,14 @@ describe('hasMeta()', () => {
   })
 
 
-  test('finds the action wrapper in the middle of the meta chain', () => {
+  test('finds a node in the middle of the meta chain', () => {
 
     expect(hasMeta(threeLayers, 'b')).toBe(true)
 
   })
 
 
-  test('finds the action wrapper at the end of the meta chain', () => {
+  test('finds a node at the end of the meta chain', () => {
 
     expect(hasMeta(threeLayers, 'c')).toBe(true)
 
@@ -156,8 +156,8 @@ describe('removeAllMeta()', () => {
 
   test('removes all meta nodes from the meta chain, returning the wrapped action', () => {
 
-    expect(removeAllMeta(oneLayer)).toBe(oneLayer.action)
-    expect(removeAllMeta(threeLayers)).toBe(threeLayers.action.action.action)
+    expect(removeAllMeta(oneLayer)).toBe(oneLayer.payload)
+    expect(removeAllMeta(threeLayers)).toBe(threeLayers.payload.payload.payload)
 
   })
 
@@ -190,8 +190,8 @@ describe('removeMeta()', () => {
 
   test('non-mutatively removes a node at the start of the chain', () => {
 
-    expect(removeMeta(oneLayer, 'a')).toBe(oneLayer.action)
-    expect(removeMeta(threeLayers, 'a')).toBe(threeLayers.action)
+    expect(removeMeta(oneLayer, 'a')).toBe(oneLayer.payload)
+    expect(removeMeta(threeLayers, 'a')).toBe(threeLayers.payload)
 
   })
 
@@ -205,10 +205,10 @@ describe('removeMeta()', () => {
     expect(threeLayers.metaType).toBe('a')
     expect(newChain.metaType).toBe('a')
 
-    expect(threeLayers.action.metaType).toBe('b')
-    expect(newChain.action.metaType).toBe('c')
+    expect(threeLayers.payload.metaType).toBe('b')
+    expect(newChain.payload.metaType).toBe('c')
 
-    expect(newChain.action).toBe(threeLayers.action.action)
+    expect(newChain.payload).toBe(threeLayers.payload.payload)
 
   })
 
@@ -222,13 +222,13 @@ describe('removeMeta()', () => {
     expect(threeLayers.metaType).toBe('a')
     expect(newChain.metaType).toBe('a')
 
-    expect(threeLayers.action.metaType).toBe('b')
-    expect(newChain.action.metaType).toBe('b')
+    expect(threeLayers.payload.metaType).toBe('b')
+    expect(newChain.payload.metaType).toBe('b')
 
-    expect(threeLayers.action.action.metaType).toBe('c')
-    expect(newChain.action.action.metaType).not.toBeDefined()
+    expect(threeLayers.payload.payload.metaType).toBe('c')
+    expect(newChain.payload.payload.metaType).not.toBeDefined()
 
-    expect(newChain.action.action).toBe(threeLayers.action.action.action)
+    expect(newChain.payload.payload).toBe(threeLayers.payload.payload.payload)
 
   })
 
@@ -238,12 +238,12 @@ describe('removeMeta()', () => {
     let newChain = removeMeta(repeated, 'a')
     let newChain2 = removeMeta(newChain, 'a')
 
-    expect(newChain).toBe(repeated.action)
+    expect(newChain).toBe(repeated.payload)
     expect(newChain2).toMatchObject({
       metaType: 'b',
-      action: {
+      payload: {
         metaType: 'b',
-        action: {
+        payload: {
           type: 'c'
         }
       }

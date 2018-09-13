@@ -1,6 +1,6 @@
 # Action
 
-An action is a plain object containing a `type` property and optional `payload` property. While this interface can be extended, actions should never contain `metaType`, `metaPayload`, or `action` properties, as these are reserved for [meta nodes](/docs/types/MetaNode.md).
+An action is a plain object containing a `type` property and optional `payload` property. While `type` is required, `payload` is optional and can be replaced with whatever standard you wish.
 
 ## Definition
 
@@ -12,6 +12,7 @@ interface Action<T extends string> {
 ```
 
 **type** - Some string that identifies this action. Avoid using names starting with `'@@zedux/'` as these are reserved for internal Zedux action types.
+**payload** - optional - Literally anything. Just a standard.
 
 ## Notes
 

@@ -9,10 +9,10 @@ describe('Zedux.react()', () => {
 
     expect(typeof reactor).toBe('function')
     expect(reactor).toEqual(expect.objectContaining({
-      process: expect.any(Function),
+      effects: expect.any(Function),
       to: expect.any(Function),
       toEverything: expect.any(Function),
-      withProcessors: expect.any(Function),
+      withEffects: expect.any(Function),
       withReducers: expect.any(Function)
     }))
 

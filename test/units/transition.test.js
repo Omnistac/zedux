@@ -9,7 +9,7 @@ describe('Zedux.transition()', () => {
 
     expect(typeof machine).toBe('function')
     expect(machine).toEqual(expect.objectContaining({
-      process: expect.any(Function),
+      effects: expect.any(Function),
       from: expect.any(Function),
       to: expect.any(Function),
       undirected: expect.any(Function)

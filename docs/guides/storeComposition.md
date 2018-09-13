@@ -320,19 +320,19 @@ storeC.dispatch(increment())
 
   Store B inspector received action {
     metaType: '@@zedux/delegate',
-    metaPayload: [ 'nested', 'store' ],
-    action: {
+    metaData: [ 'nested', 'store' ],
+    payload: {
       type: 'increment'
     }
   }
 
   Root Store inspector received action {
     metaType: '@@zedux/delegate',
-    metaPayload: [ 'b' ],
-    action: {
+    metaData: [ 'b' ],
+    payload: {
       metaType: '@@zedux/delegate',
-      metaPayload: [ 'nested', 'store' ],
-      action: {
+      metaData: [ 'nested', 'store' ],
+      payload: {
         type: 'increment'
       }
     }

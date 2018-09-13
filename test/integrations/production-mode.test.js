@@ -11,9 +11,7 @@ describe('production environment', () => {
 
   test('informs the user that zedux is running in production mode', () => {
 
-    expect(
-      invalidAccess()
-    ).toMatch(/production mode.*try running zedux in development/i)
+    expect(invalidAccess()).toMatch(/production mode/i)
 
   })
 
