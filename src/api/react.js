@@ -9,11 +9,11 @@ const GLOBAL_ACTION_TYPE = '*'
   Creates a new Zedux reactor.
 
   A Zedux reactor is just a reactor with a few special methods for
-  easily mapping action types to sub-reducers and sub-effectors
+  easily mapping action types to sub-reducers and sub-effectCreators
   that handle them.
 */
 export function react(initialState) {
-  const actionToEffectorsMap = {}
+  const actionToEffectCreatorsMap = {}
   const actionToReducersMap = {}
   let currentActionTypes = []
 
@@ -23,7 +23,7 @@ export function react(initialState) {
 
 
   reactor.effects = (...args) =>
-    handleReactorLayer(actionToEffectorsMap, runEffectors, ...args)
+    handleReactorLayer(actionToEffectCreatorsMap, runEffectCreators, ...args)
 
 
   reactor.to = (...actors) => {
@@ -40,9 +40,9 @@ export function react(initialState) {
   }
 
 
-  reactor.withProcessors = function() {
+  reactor.withEffects = function() {
     mapActionTypesToConsumers(
-      actionToEffectorsMap,
+      actionToEffectCreatorsMap,
       currentActionTypes,
       arguments
     )
@@ -95,12 +95,14 @@ function mapActionTypesToConsumers(map, actionTypes, consumers) {
 }
 
 
-function runEffectors(effectors, state, action) {
-  return effectors.reduce((effects, effector) => {
-    const processable = effector(state, action)
+function runEffectCreators(effectCreators, state, action) {
+  return effectCreators.reduce((effects, effectCreator) => {
+    const processable = effectCreator(state, action)
 
-    // TODO: What all can a ZeduxReactor sub-effector return?
+    // TODO: What all can a ZeduxReactor sub-effectCreator return?
     processableToPromise(processable)
+
+    return effects
   }, [])
 }
 

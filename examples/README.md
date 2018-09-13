@@ -2,15 +2,15 @@
 
 Thanks to the excellent [parcel bundler](https://parceljs.org), the examples in this directory are structured a little better than you may be used to. All examples are run from this directory.
 
-For example, to try out the `todos` example, simply clone this repo, open it in a terminal, and run the following commands:
+For example, to try out the `todomvc` example, simply clone this repo, open it in a terminal, and run the following commands:
 
 ```bash
 cd examples # this directory
 npm install
-npm start -- todos
+npm start -- todomvc
 ```
 
-Then open `localhost:1234` in a browser. And that's it! To switch to another example, simply kill that server and run:
+Then open `localhost:1234` in a browser. That's it! To switch to another example, simply kill that server and run:
 
 ```bash
 npm start -- <name of example>

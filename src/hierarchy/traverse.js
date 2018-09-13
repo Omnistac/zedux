@@ -27,9 +27,7 @@ export function delegate(diffTree, action) {
     throw new TypeError(invalidDelegation(subStorePath))
   }
 
-  child.store.dispatch(removeMeta(action, metaTypes.DELEGATE))
-
-  return true
+  return child.store.dispatch(removeMeta(action, metaTypes.DELEGATE))
 }
 
 
@@ -70,15 +68,13 @@ export function propagateChange(
 ) {
   if (!subStorePath.length) return newSubStoreState
 
-  let newNode = nodeOptions.clone(currentState)
+  const newNode = nodeOptions.clone(currentState)
   const nextNodeKey = subStorePath[0]
 
-  newNode = nodeOptions.set(newNode, nextNodeKey, propagateChange(
+  return nodeOptions.set(newNode, nextNodeKey, propagateChange(
     currentState[nextNodeKey],
     subStorePath.slice(1),
     newSubStoreState,
     nodeOptions
   ))
-
-  return newNode
 }

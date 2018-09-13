@@ -19,10 +19,7 @@ export function createBranchEffectLayer(children, { get }) {
 
       assertAreValidEffects(childEffects)
 
-      mergedEffects = [
-        ...mergedEffects,
-        ...childEffects
-      ]
+      mergedEffects.push(...childEffects)
     }
 
     return mergedEffects

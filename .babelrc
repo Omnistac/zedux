@@ -1,6 +1,6 @@
 {
+  "plugins": ["@babel/transform-typescript"],
   "presets": [
-    ["@babel/env", { "modules": false }],
-    ["@babel/stage-2", { "decoratorsLegacy": true }]
+    ["@babel/env", { "modules": false }]
   ]
 }

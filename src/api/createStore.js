@@ -6,12 +6,13 @@ import { mergeDiffTrees, mergeStateTrees } from '../hierarchy/merge'
 import { delegate, propagateChange } from '../hierarchy/traverse'
 
 import {
-  assertAreFunctions,
+  assert,
   assertAreValidEffects,
   assertIsValidAction,
   assertIsValidNodeOption,
   assertIsPlainObject,
-  invalidAccess
+  getError,
+  invalidAccess,
 } from '../utils/errors'
 
 import { STORE_IDENTIFIER } from '../utils/general'
@@ -49,8 +50,13 @@ export const createStore = initialHierarchy => {
 
     assertIsPlainObject(action, 'Action')
 
-    if (delegate(currentDiffTree, action)) {
-      return currentState
+    const delegateReceipt = delegate(currentDiffTree, action)
+
+    if (delegateReceipt) {
+      return {
+        ...delegateReceipt,
+        state: currentState
+      }
     }
 
     const unwrappedAction = removeAllMeta(action)
@@ -58,15 +64,11 @@ export const createStore = initialHierarchy => {
     assertIsValidAction(unwrappedAction)
 
     if (unwrappedAction.type === actionTypes.HYDRATE) {
-      hydrate(unwrappedAction.payload)
-
-      return currentState
+      return dispatchHydration(unwrappedAction.payload)
     }
 
     if (unwrappedAction.type === actionTypes.PARTIAL_HYDRATE) {
-      setState(unwrappedAction.payload)
-
-      return currentState
+      return setState(unwrappedAction.payload)
     }
 
     return dispatchAction(action, unwrappedAction)
@@ -98,10 +100,6 @@ export const createStore = initialHierarchy => {
     Throws an Error if called from the reducer layer.
   */
   const hydrate = newState => {
-    if (isDispatching) {
-      throw new Error(invalidAccess('store.hydrate()'))
-    }
-
     dispatchHydration(newState)
 
     return store // for chaining
@@ -158,9 +156,7 @@ export const createStore = initialHierarchy => {
       nodeOptions
     )
 
-    dispatchHydration(newState, actionTypes.PARTIAL_HYDRATE)
-
-    return currentState
+    return dispatchHydration(newState, actionTypes.PARTIAL_HYDRATE)
   }
 
 
@@ -174,13 +170,39 @@ export const createStore = initialHierarchy => {
     unregisters the subscriber.
   */
   const subscribe = subscriber => {
-    assertAreFunctions([ subscriber.next || subscriber ], 'store.subscribe()')
+    const subscriberObj = typeof subscriber === 'function'
+      ? { next: subscriber }
+      : subscriber
 
-    subscribers.push(subscriber)
+    if (subscriberObj.next) {
+      assert(
+        typeof subscriber.next === 'function',
+        getError('subscriberNext'),
+        subscriberObj.next
+      )
+    }
+
+    if (subscriberObj.error) {
+      assert(
+        typeof subscriber.error === 'function',
+        getError('subscriberError'),
+        subscriberObj.error
+      )
+    }
+
+    if (subscriberObj.effects) {
+      assert(
+        typeof subscriber.effects === 'function',
+        getError('subscriberEffects'),
+        subscriberObj.effects
+      )
+    }
+
+    subscribers.push(subscriberObj)
 
     return {
       unsubscribe() {
-        const index = subscribers.indexOf(subscriber)
+        const index = subscribers.indexOf(subscriberObj)
 
         if (index === -1) return
 
@@ -214,11 +236,19 @@ export const createStore = initialHierarchy => {
 
 
   function dispatchAction(action, unwrappedAction) {
+    if (isDispatching) {
+      throw new Error(invalidAccess('dispatch(), hydrate(), setState()'))
+    }
+
     isDispatching = true
 
-    let effects = [ getDispatchEffect(action) ]
+    const effects = []
     let error = null
     let newState = currentState
+
+    if (!hasMeta(action, metaTypes.INHERIT)) {
+      effects.push(getDispatchEffect(action))
+    }
 
     try {
       if (!hasMeta(action, metaTypes.SKIP_REDUCERS)) {
@@ -226,7 +256,7 @@ export const createStore = initialHierarchy => {
       }
 
       if (!hasMeta(action, metaTypes.SKIP_EFFECTS)) {
-        effects = [ ...effects, ...dispatchToEffects(unwrappedAction) ]
+        effects.push(...dispatchToEffects(unwrappedAction))
       }
     } catch (err) {
       error = err
@@ -236,12 +266,24 @@ export const createStore = initialHierarchy => {
 
     informSubscribers(action, error, newState, effects)
 
-    return currentState
+    return {
+      effects,
+      error,
+      state: currentState
+    }
   }
 
 
   function dispatchHydration(newState, actionType = actionTypes.HYDRATE) {
-    if (newState === currentState) return // nothing to do
+    if (newState === currentState) {
+
+      // nothing to do
+      return {
+        effects: [],
+        error: null,
+        state: currentState
+      }
+    }
 
     const action = {
       type: actionType,
@@ -253,16 +295,14 @@ export const createStore = initialHierarchy => {
     // as the metaData.
 
     // Propagate the change to child stores and allow for effects.
-    dispatchAction(action, action)
+    return dispatchAction(action, action)
   }
 
 
   function dispatchInducer(inducer) {
     const partialStateTree = inducer(currentState)
 
-    setState(partialStateTree)
-
-    return currentState
+    return setState(partialStateTree)
   }
 
 
@@ -281,11 +321,11 @@ export const createStore = initialHierarchy => {
 
     if (typeof effects !== 'function') return []
 
-    const deliveredEffects = effects(currentState, action)
+    const receivedEffects = effects(currentState, action)
 
-    assertAreValidEffects(deliveredEffects)
+    assertAreValidEffects(receivedEffects)
 
-    return deliveredEffects
+    return receivedEffects
   }
 
 

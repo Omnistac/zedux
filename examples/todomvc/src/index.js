@@ -1,14 +1,12 @@
-import 'react-hot-loader/patch'
 import React from 'react'
-import { render } from 'react-dom'
-import { AppContainer } from 'react-hot-loader'
+import ReactDOM from 'react-dom'
 
 import App from './App'
 
+export default App
 
-render(
-  <AppContainer>
-    <App />
-  </AppContainer>,
-  document.getElementById('root')
-)
+if (typeof document !== 'undefined') {
+  const render = module.hot ? ReactDOM.render : ReactDOM.hydrate || ReactDOM.render
+
+  render(<App />, document.getElementById('root'))
+}

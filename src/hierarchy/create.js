@@ -133,7 +133,7 @@ export function wrapStoreInReactor(store) {
     // Tell the child store's inspectors that this action is inherited
     action = addMeta(action, metaTypes.INHERIT)
 
-    return store.dispatch(action)
+    return store.dispatch(action).state
   }
 
 
@@ -145,7 +145,7 @@ export function wrapStoreInReactor(store) {
     // Tell the child store's inspectors that this action is inherited
     action = addMeta(action, metaTypes.INHERIT)
 
-    return store.dispatch(action)
+    return store.dispatch(action).effects
   }
 
 

@@ -1,10 +1,40 @@
 import { isPlainObject, detailedTypeof } from './general'
 
-
 const isProd = process.env.NODE_ENV === 'production'
 const PREFIX = 'Zedux Error -'
+const UNSET = 'UNSET'
 const prodErr = () => 'Zedux is currently running in production mode. '
   + 'To see this error message, run Zedux in development mode.'
+
+export const assert = (predicate, message, subject = UNSET) => {
+  if (predicate) return
+
+  let error = `Zedux Error - ${message}`
+
+  if (subject !== UNSET) error += `. Received ${detailedTypeof(subject)}`
+
+  throw new Error(error)
+}
+
+const invalidEffects = 'reactor.effects() must return an array'
+
+const subscriberEffects = 'store.subscribe() - subscriber.effects must '
+  + 'be a function'
+
+const subscriberError = 'store.subscribe() - subscriber.error must be a '
+  + 'function'
+
+const subscriberNext = 'store.subscribe() expects either a function or an '
+  + 'object with a "next" property whose value is a function'
+
+const errors = {
+  invalidEffects,
+  subscriberEffects,
+  subscriberError,
+  subscriberNext
+}
+
+export const getError = isProd ? prodErr : name => errors[name]
 
 
 export function assertAreFunctions(args, method) {
@@ -18,10 +48,8 @@ export function assertAreFunctions(args, method) {
 }
 
 
-export function assertAreValidEffects(effects) {
-  if (Array.isArray(effects)) return
-
-  throw new TypeError(invalidEffects(effects))
+export const assertAreValidEffects = effects => {
+  assert(Array.isArray(effects), getError('invalidEffects'), effects)
 }
 
 
@@ -95,11 +123,6 @@ export const invalidDelegation = isProd ? prodErr : subStorePath =>
   `${PREFIX} store.dispatch() - Invalid Delegation - `
     + 'Current store hierarchy does not contain a sub-store at path: '
     + `${subStorePath.join` -> `}`
-
-
-export const invalidEffects = isProd ? prodErr : effects =>
-  `${PREFIX} reactor.effects() must return an array. `
-    + `Received ${detailedTypeof(effects)}`
 
 
 export const invalidHierarchyDescriptorNode = isProd ? prodErr : node =>
