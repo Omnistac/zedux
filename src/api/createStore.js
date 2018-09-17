@@ -230,6 +230,7 @@ export const createStore = initialHierarchy => {
     let error = null
     let newState = rootState
 
+    // Don't want to create effects in this store for inherited actions
     if (!hasMeta(action, metaTypes.INHERIT)) {
       effects.push(getDispatchEffect(action))
     }

@@ -132,22 +132,112 @@ describe('registrations', () => {
 
     test('all error subscribers are notified of an error', () => {
 
-      const theError = new Error('a')
+      const error = new Error('a')
       const store = createStore(() => {
-        throw theError
+        throw error
       })
       const errorSubscribers = Array(20).fill().map(() => jest.fn())
-      const action = {
-        type: 'b'
-      }
 
       errorSubscribers.forEach(error => store.subscribe({ error }))
 
-      store.dispatch(action)
+      store.dispatch({ type: 'b' })
 
       errorSubscribers.forEach(errorSubscriber =>
-        expect(errorSubscriber).toHaveBeenCalledWith(theError)
+        expect(errorSubscriber).toHaveBeenCalledWith(error)
       )
+
+    })
+
+
+    test('an error thrown in the side effects layer does not prevent the state update', () => {
+
+      const error1 = new Error('a')
+      const reactor = (state = 0) => state + 1
+
+      reactor.effects = () => {
+        throw error1
+      }
+
+      const store = createStore(reactor)
+      const errorSubscriber = jest.fn()
+
+      store.subscribe({ error: errorSubscriber })
+
+      const { state } = store.dispatch({ type: 'b' })
+
+      expect(state).toBe(2)
+      expect(errorSubscriber).toHaveBeenCalledWith(error1)
+
+    })
+
+
+    test('the same error that is sent to error subscribers is returned from the dispatch', () => {
+
+      const error1 = new Error('a')
+      const reactor = () => {
+        throw error1
+      }
+
+      const store = createStore(reactor)
+      const errorSubscriber = jest.fn()
+
+      store.subscribe({ error: errorSubscriber })
+
+      const { error } = store.dispatch({ type: 'b' })
+
+      expect(errorSubscriber).toHaveBeenCalledWith(error)
+
+    })
+
+
+    test('an error in a child store reducer notifies both child and parent error subscriber', () => {
+
+      const error1 = new Error('a')
+      const reactor = () => {
+        throw error1
+      }
+
+      const child = createStore(reactor)
+      const parent = createStore({
+        b: child
+      })
+      const childErrorSubscriber = jest.fn()
+      const parentErrorSubscriber = jest.fn()
+      
+      child.subscribe({ error: childErrorSubscriber })
+      parent.subscribe({ error: parentErrorSubscriber })
+
+      const { error } = parent.dispatch({ type: 'c' })
+
+      expect(childErrorSubscriber).toHaveBeenCalledWith(error)
+      expect(parentErrorSubscriber).toHaveBeenCalledWith(error)
+
+    })
+
+
+    test('an error in a child store effect creator notifies both child and parent error subscriber', () => {
+
+      const error1 = new Error('a')
+      const reactor = () => 'b'
+
+      reactor.effects = () => {
+        throw error1
+      }
+
+      const child = createStore(reactor)
+      const parent = createStore({
+        c: child
+      })
+      const childErrorSubscriber = jest.fn()
+      const parentErrorSubscriber = jest.fn()
+      
+      child.subscribe({ error: childErrorSubscriber })
+      parent.subscribe({ error: parentErrorSubscriber })
+
+      const { error } = parent.dispatch({ type: 'd' })
+
+      expect(childErrorSubscriber).toHaveBeenCalledWith(error)
+      expect(parentErrorSubscriber).toHaveBeenCalledWith(error)
 
     })
 
@@ -156,19 +246,17 @@ describe('registrations', () => {
 
   describe('effects subscribers', () => {
 
-    test('all effects subscribers are notified of an action', () => {
-
+    test('all effects subscribers are notified of a DISPATCH effect', () => {
       const store = createStore()
       const effectsSubscribers = Array(20).fill().map(() => jest.fn())
-      const action = {
-        type: 'a'
-      }
 
       effectsSubscribers.forEach(effects => store.subscribe({ effects }))
 
-      store.dispatch(action)
+      store.dispatch({ type: 'a' })
 
-      effectsSubscribers.forEach(effectsSubscriber =>
+      effectsSubscribers.forEach(effectsSubscriber => {
+        expect(effectsSubscriber).toHaveBeenCalledTimes(1)
+
         expect(effectsSubscriber)
           .toHaveBeenCalledWith(expect.objectContaining({
             effects: [{
@@ -178,7 +266,97 @@ describe('registrations', () => {
               }
             }]
           }))
-      )
+      })
+    })
+
+    test('all upstream effects subscribers are notified of an error', () => {
+
+      const error1 = new Error('a')
+      const reducer = state => {
+        if (state) throw error1
+
+        return 'b'
+      }
+      const parent = createStore()
+      const child = createStore()
+      const grandchild = createStore()
+
+      parent.use(child.use({
+        grandchild,
+        reducer
+      }))
+
+      const parentEffectsSubscriber = jest.fn()
+      const childEffectsSubscriber = jest.fn()
+      const grandchildEffectsSubscriber = jest.fn()
+
+      parent.subscribe({ effects: parentEffectsSubscriber })
+      child.subscribe({ effects: childEffectsSubscriber })
+      grandchild.subscribe({ effects: grandchildEffectsSubscriber })
+
+      parent.dispatch({ type: 'c' })
+      
+      expect(parentEffectsSubscriber).toHaveBeenCalledTimes(1)
+      expect(childEffectsSubscriber).toHaveBeenCalledTimes(1)
+      expect(grandchildEffectsSubscriber).toHaveBeenCalledTimes(1)
+
+      expect(parentEffectsSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+        error: error1
+      }))
+      expect(childEffectsSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+        error: error1
+      }))
+      expect(grandchildEffectsSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+        error: null
+      }))
+
+    })
+
+    test('all upstream effects subscribers are notified of all downstream effects', () => {
+
+      const effect = {
+        effectType: 'a'
+      }
+      const reactor = () => 'b'
+      reactor.effects = () => [effect]
+
+      const parent = createStore()
+      const child = createStore()
+      const grandchild = createStore()
+
+      parent.use(child.use({ grandchild, reactor }))
+
+      const parentEffectsSubscriber = jest.fn()
+      const childEffectsSubscriber = jest.fn()
+      const grandchildEffectsSubscriber = jest.fn()
+
+      parent.subscribe({ effects: parentEffectsSubscriber })
+      child.subscribe({ effects: childEffectsSubscriber })
+      grandchild.subscribe({ effects: grandchildEffectsSubscriber })
+
+      parent.dispatch({ type: 'c' })
+      
+      expect(parentEffectsSubscriber).toHaveBeenCalledTimes(1)
+      expect(childEffectsSubscriber).toHaveBeenCalledTimes(2)
+      expect(grandchildEffectsSubscriber).toHaveBeenCalledTimes(2)
+
+      const expectedEffects = [
+        {
+          effectType: effectTypes.DISPATCH,
+          payload: { type: 'c' }
+        },
+        effect
+      ]
+
+      expect(parentEffectsSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+        effects: expectedEffects
+      }))
+      expect(childEffectsSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+        effects: [effect]
+      }))
+      expect(grandchildEffectsSubscriber).toHaveBeenCalledWith(expect.objectContaining({
+        effects: []
+      }))
 
     })
 
