@@ -64,17 +64,17 @@ export function propagateChange(
   currentState,
   subStorePath,
   newSubStoreState,
-  nodeOptions
+  hierarchyConfig
 ) {
   if (!subStorePath.length) return newSubStoreState
 
-  const newNode = nodeOptions.clone(currentState)
+  const newNode = hierarchyConfig.clone(currentState)
   const nextNodeKey = subStorePath[0]
 
-  return nodeOptions.set(newNode, nextNodeKey, propagateChange(
+  return hierarchyConfig.set(newNode, nextNodeKey, propagateChange(
     currentState[nextNodeKey],
     subStorePath.slice(1),
     newSubStoreState,
-    nodeOptions
+    hierarchyConfig
   ))
 }

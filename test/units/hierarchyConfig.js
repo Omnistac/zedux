@@ -1,6 +1,6 @@
 import {
   clone, create, get, set
-} from '../../src/utils/nodeOptions'
+} from '../../src/utils/hierarchyConfig'
 
 
 describe('clone()', () => {

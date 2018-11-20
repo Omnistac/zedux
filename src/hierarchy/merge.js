@@ -36,10 +36,10 @@ export function createBranchEffectLayer(children, { get }) {
   to get and set properties on that data type, to determine if the old
   state is a node, and to find the size of the node.
 */
-export function createBranchReactor(children, nodeOptions) {
-  const reactor = createBranchReducer(children, nodeOptions)
+export function createBranchReactor(children, hierarchyConfig) {
+  const reactor = createBranchReducer(children, hierarchyConfig)
 
-  reactor.effects = createBranchEffectLayer(children, nodeOptions)
+  reactor.effects = createBranchEffectLayer(children, hierarchyConfig)
 
   return reactor
 }
@@ -117,7 +117,7 @@ export function destroyTree(tree) {
 
   Really should only be used from `mergeDiffTrees()`
 */
-export function mergeBranches(oldTree, newTree, nodeOptions) {
+export function mergeBranches(oldTree, newTree, hierarchyConfig) {
   const mergedChildren = { ...oldTree.children }
 
   // Iterate over the new tree's children
@@ -127,7 +127,7 @@ export function mergeBranches(oldTree, newTree, nodeOptions) {
 
     // Attempt to recursively merge the two children
     // Let `mergeDiffTrees()` handle any destroying
-    const mergedChild = mergeDiffTrees(oldChild, newChild, nodeOptions)
+    const mergedChild = mergeDiffTrees(oldChild, newChild, hierarchyConfig)
 
     // If the new node is NULL, kill it.
     if (mergedChild.type === NULL) {
@@ -141,7 +141,7 @@ export function mergeBranches(oldTree, newTree, nodeOptions) {
 
   return {
     type: BRANCH,
-    reactor: createBranchReactor(mergedChildren, nodeOptions),
+    reactor: createBranchReactor(mergedChildren, hierarchyConfig),
     children: mergedChildren
   }
 }
@@ -171,7 +171,7 @@ export function mergeBranches(oldTree, newTree, nodeOptions) {
 
   All other nodes will be overwritten.
 */
-export function mergeDiffTrees(oldTree, newTree, nodeOptions) {
+export function mergeDiffTrees(oldTree, newTree, hierarchyConfig) {
   if (newTree.type !== BRANCH) {
     destroyTree(oldTree)
 
@@ -181,11 +181,11 @@ export function mergeDiffTrees(oldTree, newTree, nodeOptions) {
   if (!oldTree || oldTree.type !== BRANCH) {
     destroyTree(oldTree)
 
-    return mergeBranches({}, newTree, nodeOptions)
+    return mergeBranches({}, newTree, hierarchyConfig)
   }
 
   // They're both BRANCH nodes; recursively merge them
-  return mergeBranches(oldTree, newTree, nodeOptions)
+  return mergeBranches(oldTree, newTree, hierarchyConfig)
 }
 
 
@@ -195,22 +195,22 @@ export function mergeDiffTrees(oldTree, newTree, nodeOptions) {
 export function mergeStateTrees(
   oldStateTree,
   newStateTree,
-  nodeOptions
+  hierarchyConfig
 ) {
-  if (!nodeOptions.isNode(oldStateTree)) return newStateTree
+  if (!hierarchyConfig.isNode(oldStateTree)) return newStateTree
 
-  const mergedTree = nodeOptions.clone(oldStateTree)
+  const mergedTree = hierarchyConfig.clone(oldStateTree)
 
-  nodeOptions.iterate(newStateTree, (key, val) => {
-    const clonedVal = nodeOptions.isNode(val)
+  hierarchyConfig.iterate(newStateTree, (key, val) => {
+    const clonedVal = hierarchyConfig.isNode(val)
 
       // Recursively merge the nested nodes.
-      ? mergeStateTrees(nodeOptions.get(mergedTree, key), val, nodeOptions)
+      ? mergeStateTrees(hierarchyConfig.get(mergedTree, key), val, hierarchyConfig)
 
       // Not a nested node (anymore, at least)
       : val
 
-    nodeOptions.set(
+    hierarchyConfig.set(
       mergedTree,
       key,
       clonedVal

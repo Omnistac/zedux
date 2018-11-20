@@ -18,7 +18,7 @@ import {
 import { STORE_IDENTIFIER } from '../utils/general'
 import { addMeta, hasMeta, removeAllMeta } from '../utils/meta'
 
-import * as defaultNodeOptions from '../utils/nodeOptions'
+import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
 
 
 /**
@@ -30,12 +30,38 @@ import * as defaultNodeOptions from '../utils/nodeOptions'
   Zedux stores are fast, composable, and pretty much just awesome.
 */
 export const createStore = initialHierarchy => {
-  let nodeOptions = { ...defaultNodeOptions }
+  let hierarchyConfig = defaultHierarchyConfig
   let currentDiffTree
   let currentState
   let isDispatching = false
   let rootReactor
   let subscribers = []
+
+
+  /**
+    Sets one or more hierarchy config options that will be used by the
+    store's intermediate reactors in the generated reactor hierarchy to
+    interact with the hierarchical data type returned by the store's
+    reducers. There is sense in that sentence, believe me.
+
+    This "hierarchical data type" is a plain object by default. But these
+    hierarchy config options can teach Zedux how to use an Immutable `Map`
+    or any recursive data structure.
+  */
+  const configureHierarchy = options => {
+    assertIsPlainObject(options, 'Node options hash')
+
+    // Clone the existing config
+    hierarchyConfig = { ...hierarchyConfig }
+
+    Object.entries(options).forEach(([ key, val ]) => {
+      assertIsValidNodeOption(hierarchyConfig, key, val)
+
+      hierarchyConfig[key] = val
+    })
+
+    return store // for chaining
+  }
 
 
   /**
@@ -95,29 +121,6 @@ export const createStore = initialHierarchy => {
 
 
   /**
-    Sets one or more node options that will be used by the store's
-    intermediate reactors in the generated reactor hierarchy to
-    interact with the hierarchical data type returned by the store's
-    reducers. There is sense in that sentence, believe me.
-
-    This "hierarchical data type" is a plain object by default. But
-    these node options can teach Zedux how to use an Immutable "Map"
-    or any recursive data structure.
-  */
-  const setNodeOptions = options => {
-    assertIsPlainObject(options, 'Node options hash')
-
-    Object.entries(options).forEach(([ key, val ]) => {
-      assertIsValidNodeOption(nodeOptions, key, val)
-
-      nodeOptions[key] = val
-    })
-
-    return store // for chaining
-  }
-
-
-  /**
     Applies a partial state update to the store.
 
     Dispatches the special PARTIAL_HYDRATE action to the store's inspectors
@@ -137,7 +140,7 @@ export const createStore = initialHierarchy => {
     const newState = mergeStateTrees(
       currentState,
       partialStateTree,
-      nodeOptions
+      hierarchyConfig
     )
 
     return dispatchHydration(newState, actionTypes.PARTIAL_HYDRATE)
@@ -210,7 +213,7 @@ export const createStore = initialHierarchy => {
       registerChildStore
     )
 
-    currentDiffTree = mergeDiffTrees(currentDiffTree, newDiffTree, nodeOptions)
+    currentDiffTree = mergeDiffTrees(currentDiffTree, newDiffTree, hierarchyConfig)
     rootReactor = currentDiffTree.reactor
 
     if (rootReactor) dispatch({ type: actionTypes.RECALCULATE })
@@ -365,7 +368,7 @@ export const createStore = initialHierarchy => {
           currentState,
           childStorePath,
           newState,
-          nodeOptions
+          hierarchyConfig
         )
 
       const wrappedEffects = effects
@@ -405,7 +408,7 @@ export const createStore = initialHierarchy => {
     dispatch,
     getState,
     hydrate,
-    setNodeOptions,
+    configureHierarchy,
     setState,
     subscribe,
     use,

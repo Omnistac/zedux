@@ -9,10 +9,10 @@ describe('Zedux.createStore()', () => {
 
     expect(Object.keys(store)).toHaveLength(9)
     expect(store).toEqual(expect.objectContaining({
+      configureHierarchy: expect.any(Function),
       dispatch: expect.any(Function),
       getState: expect.any(Function),
       hydrate: expect.any(Function),
-      setNodeOptions: expect.any(Function),
       setState: expect.any(Function),
       subscribe: expect.any(Function),
       use: expect.any(Function),

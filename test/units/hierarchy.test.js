@@ -9,7 +9,7 @@ import {
 } from '../../src/hierarchy/general'
 
 import { delegate, propagateChange } from '../../src/hierarchy/traverse'
-import * as nodeOptions from '../../src/utils/nodeOptions'
+import * as hierarchyConfig from '../../src/utils/hierarchyConfig'
 
 import {
   createMockStore, nonPlainObjects, nullNodes, plainObjects
@@ -220,7 +220,7 @@ describe('propagateChange()', () => {
       currentState,
       subStorePath,
       newSubStoreState,
-      nodeOptions
+      hierarchyConfig
     )
 
     expect(newState).not.toBe(currentState)
@@ -248,7 +248,7 @@ describe('propagateChange()', () => {
       currentState,
       subStorePath,
       newSubStoreState,
-      nodeOptions
+      hierarchyConfig
     )
 
     expect(newState).not.toBe(currentState)

@@ -454,7 +454,7 @@ describe('Store.hydrate()', () => {
 })
 
 
-describe('store.setNodeOptions()', () => {
+describe('store.configureHierarchy()', () => {
 
   test('throws a TypeError if the options hash is not a plain object', () => {
 
@@ -462,7 +462,7 @@ describe('store.setNodeOptions()', () => {
 
     nonPlainObjects.forEach(
       nonPlainObject => expect(
-        store.setNodeOptions.bind(null, nonPlainObject)
+        store.configureHierarchy.bind(null, nonPlainObject)
       ).toThrow(TypeError)
     )
 
@@ -473,8 +473,8 @@ describe('store.setNodeOptions()', () => {
 
     const store = createStore()
 
-    expect(store.setNodeOptions.bind(null, { a: 1 })).toThrow(Error)
-    expect(store.setNodeOptions.bind(null, {
+    expect(store.configureHierarchy.bind(null, { a: 1 })).toThrow(Error)
+    expect(store.configureHierarchy.bind(null, {
       clone: () => {},
       create: () => {},
       a: () => {}
@@ -489,7 +489,7 @@ describe('store.setNodeOptions()', () => {
 
     nonDispatchables.forEach(
       nonDispatchable => expect(
-        store.setNodeOptions.bind(null, { clone: nonDispatchable })
+        store.configureHierarchy.bind(null, { clone: nonDispatchable })
       ).toThrow(TypeError)
     )
 
@@ -499,7 +499,7 @@ describe('store.setNodeOptions()', () => {
   test('returns the store for chaining', () => {
 
     const store = createStore()
-      .setNodeOptions({ clone: () => {} })
+      .configureHierarchy({ clone: () => {} })
 
     expect(store.$$typeof).toBe(Symbol.for('zedux.store'))
 

@@ -92,7 +92,7 @@ export function assertIsValidNodeOption(validOptions, optionKey, optionValue) {
     throw new Error(invalidNodeOptionKey(optionKey))
   }
 
-  assertAreFunctions([ optionValue ], 'store.setNodeOptions()')
+  assertAreFunctions([ optionValue ], 'store.configureHierarchy()')
 }
 
 
@@ -131,7 +131,7 @@ export const invalidHierarchyDescriptorNode = isProd ? prodErr : node =>
 
 
 export const invalidNodeOptionKey = isProd ? prodErr : key =>
-  `${PREFIX} store.setNodeOptions() - `
+  `${PREFIX} store.configureHierarchy() - `
     + `Received invalid node option, "${key}". Valid options are: `
     + '[ "clone", "create", "get", "isNode", "iterate", "set", "size" ]'
 
