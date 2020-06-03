@@ -3,26 +3,27 @@
   "version": "0.0.20",
   "description": "A high-level, declarative, composable form of Redux",
   "main": "dist/zedux.js",
-  "module": "dist/zedux.es.js",
-  "typings": "./index.d.ts",
+  "module": "dist/es/index.js",
+  "typings": "./dist/es/index.d.ts",
   "sideEffects": false,
   "files": [
-    "dist",
-    "index.d.ts"
+    "dist"
   ],
   "scripts": {
-    "build": "npm run build:umd && npm run build:umd:min && npm run build:es",
-    "build:umd": "cross-env NODE_ENV=development rollup -c",
-    "build:umd:min": "cross-env NODE_ENV=production rollup -c -o dist/zedux.min.js",
-    "build:es": "rollup -c -f es -o dist/zedux.es.js",
-    "dev": "npm run build:umd -- -w & npm run build:umd:min -- -w & npm run build:es -- -w",
-    "docs:build": "npm run docs:prepare && gitbook build -g bowheart/zedux",
+    "build": "yarn build:umd && yarn build:umd:min && yarn build:es",
+    "build:es": "tsc --outDir dist/es -p tsconfig.es.json",
+    "build:umd": "cross-env NODE_ENV=development webpack -o dist/zedux.js",
+    "build:umd:min": "cross-env NODE_ENV=production webpack -o dist/zedux.min.js",
+    "dev": "yarn build:umd -- --watch & yarn build:es -- --watch",
+    "docs:build": "yarn docs:prepare && gitbook build -g bowheart/zedux",
     "docs:clean": "rimraf _book",
+    "docs:dev": "cd docs && yarn start",
     "docs:prepare": "gitbook install",
-    "docs:publish": "npm run docs:clean && npm run docs:build && cd _book && git init && git commit --allow-empty -m 'update docs' && git checkout -b gh-pages && git add --all && git commit -m 'update docs' && git push git@github.com:bowheart/zedux gh-pages --force",
-    "docs:watch": "npm run docs:prepare && gitbook serve",
-    "lint": "eslint src test",
-    "prepublishOnly": "npm run build",
+    "docs:publish": "yarn docs:clean && yarn docs:build && cd _book && git init && git commit --allow-empty -m 'update docs' && git checkout -b gh-pages && git add --all && git commit -m 'update docs' && git push git@github.com:bowheart/zedux gh-pages --force",
+    "docs:watch": "yarn docs:prepare && gitbook serve",
+    "lint": "eslint 'src/**/*.ts'",
+    "prepublishOnly": "yarn build",
+    "pretest": "yarn lint",
     "test": "jest"
   },
   "keywords": [
@@ -61,32 +62,52 @@
     "globals": {
       "process.env.NODE_ENV": "development"
     },
+    "moduleNameMapper": {
+      "@src/(.*)$": "<rootDir>/src/$1",
+      "@test/(.*)$": "<rootDir>/test/$1"
+    },
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "/test/.*\\.test\\.ts$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
     "roots": [
+      "<rootDir>/src",
       "<rootDir>/test"
     ]
   },
   "devDependencies": {
-    "@babel/core": "^7.0.1",
-    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
-    "@babel/plugin-transform-typescript": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
-    "babel-core": "^7.0.0-bridge.0",
-    "babel-jest": "^23.6.0",
+    "@types/jest": "^23.3.9",
+    "@types/node": "^13.9.8",
+    "@types/webpack": "^4.41.10",
+    "@typescript-eslint/eslint-plugin": "^2.6.1",
+    "@typescript-eslint/parser": "^2.6.1",
     "cross-env": "^5.2.0",
-    "eslint": "^5.5.0",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.5.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "eslint-plugin-react": "^7.16.0",
     "gitbook-cli": "^2.3.2",
     "jest": "^23.6.0",
+    "prettier": "^1.18.2",
     "redux": "^4.0.0",
     "regenerator-runtime": "^0.12.1",
     "rimraf": "^2.6.2",
-    "rollup": "^0.65.2",
-    "rollup-plugin-babel": "^4.0.3",
-    "rollup-plugin-node-resolve": "^3.4.0",
-    "rollup-plugin-replace": "^2.0.0",
-    "rollup-plugin-uglify": "^5.0.2",
-    "rxjs": "^6.3.2"
+    "rxjs": "^6.3.2",
+    "ts-jest": "^23.10.4",
+    "ts-loader": "^6.2.2",
+    "ts-node": "^8.8.1",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^3.8.3",
+    "utility-types": "^2.1.0",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   },
-  "dependencies": {
-    "symbol-observable": "^1.2.0"
-  }
+  "dependencies": {}
 }

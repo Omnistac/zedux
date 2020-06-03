@@ -1,0 +1,43 @@
+---
+id: features
+title: Features
+goal: Give a brief outline of what Zedux is - have a bullet list of things it does, give some examples of store composition and zero config stores, plug that it works outside React, but also plug the React extensions (react-zedux), compare zedux patterns to useReducer, useContext, and useState, give links to other docs like redux-comparison, 
+---
+
+## What is it?
+
+Zedux is a Flux/Redux-inspired complete tool for state management featuring:
+
+- [Store composition](/docs/guides/storeComposition.md).
+
+- (Optional) [Zero configuration](/docs/guides/zeroConfiguration.md).
+
+- An architecture that lends itself well to code splitting.
+
+- [State machines](/docs/guides/harnessingStateMachines.md).
+
+- Composable, memoized [selectors](/docs/types/Selector.md).
+
+- [performance optimizations](/docs/guides/optimizingPerformance.md).
+
+- High-level APIs for all common aspects of Redux-style state management.
+
+- Stores are observables of state **and** observables of actions.
+
+## Multiple stores
+
+In Redux you have a single store. In Zedux, you can have as many stores as you wish. In fact, self-contained pieces of state _should_ be housed in their own stores. This allows for better encapsulation/modularization and some performance optimizations.
+
+Not everyone needs the time-traveling awesomeness offered by the global singleton model of Redux. It's often not worth the extra overhead. But in Zedux, it is still possible to have time traveling while using multiple stores across your app. This is possible because Zedux stores are composable &ndash; one store can control a portion (or all) of the state of another store. You can therefore create a tree of stores eventually arriving at a single "root" store.
+
+Having a root store is not necessary unless you want time travel debugging or the ability to fully hydrate the state of your app from a saved state.
+
+## A Complete State Management Solution
+
+Zedux offers high-level apis for reducer creation, action creation, state derivation, state machines, and store creation. It also offers many performance optimizations. It does this so that apps of all sizes, from very small to gigantic, can use it comfortably.
+
+While Zedux doesn't aim to eliminate plugins, it does aim to reduce their quantity. In their place, it offers a uniform, often orthogonal api across all common aspects of state management. This drastically reduces boilerplate, overall code size, and the steepness of the learning curve.
+
+## Fully Observable
+
+...streams of state and streams of actions

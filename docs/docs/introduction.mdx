@@ -1,0 +1,227 @@
+---
+id: introduction
+title: Introduction
+---
+
+Zedux is a hyper-flexible, multi-paradigm state management tool for JavaScript. It contains utilities for all common aspects of state management.
+
+## Philosophies
+
+- **Flexibility === Win**
+
+The core philosophy of Zedux. **Zedux apps can have many stores**, each one adapting to its use case. Need more power? Build a reducer hierarchy. Need some simple, local state? Use zero config stores.
+
+Apps of all sizes should be able to use Zedux comfortably.
+
+- **Composition Is King**
+
+Zedux takes Redux and dips it in React's composable architecture. Stores are composable, which means a store can control some or all of the state of another store.
+
+- **Opinionated but Configurable**
+
+Simplicity rules. Zedux stores require zero configuration to start. But they're flexible and powerful enough to move with you as your app's state demands increase. Zedux offers high-level apis for speed and simplicity, but also offers low-level escape hatches for everything.
+
+- **Building Blocks of State**
+
+The store is the basic building block of application state. Stateful components that expose a Zedux store can be easily consumed and composed in any application.
+
+---
+
+In this page we'll look at how Zedux accomplishes each of these
+
+## Zedux Is Flexible
+
+Storing and updating state in Zedux can be done in many ways. Some approaches are geared toward speed and simplicity, while others make for a more scalable and debuggable code architecture.
+
+There are 2 Core Patterns - the Zero Config Pattern and the Reducer Pattern - with varying levels of abstraction around each.
+
+The approach you pick depends on the situation. The crowning glory of Zedux is that all approaches can be mixed and matched at will. A Zedux app can use different approaches for different stores, adapting to each need individually.
+
+:::important
+Each store should only use one core pattern - either the Zero Config or Reducer pattern. A store can contain other stores that use different patterns, but it shouldn't use both patterns itself.
+:::
+
+To demonstrate this, all 4 of the following snippets are equivalent. They create a store, initialize the value to `0`, update it to `1`, then back to `0`.
+
+- [Zero Config pattern](FIXME):
+
+```ts
+import { createStore } from 'zedux'
+
+const counterStore = createStore().hydrate(0)
+
+counterStore.setState(1)
+counterStore.setState(state => state - 1)
+```
+
+- Zero Config with [Inducer pattern](FIXME):
+
+```ts
+import { createStore } from 'zedux'
+
+const increment = state => state + 1
+const decrement = amount => state => state - amount
+
+const counterStore = createStore().hydrate(0)
+
+counterStore.setState(increment)
+counterStore.setState(decrement(1))
+```
+
+- [Reducer pattern](FIXME) - high-level:
+
+```ts
+import { createActor, createReducer, createStore } from 'zedux'
+
+const increment = createActor('increment')
+const decrement = createActor('decrement')
+
+const rootReducer = createReducer(0)
+  .reduce(increment, state => state + 1)
+  .reduce(decrement, state => state - 1)
+
+const counterStore = createStore(rootReducer)
+
+counterStore.dispatch(increment())
+counterstore.dispatch(decrement())
+```
+
+- Reducer pattern - low-level (Redux-style):
+
+```ts
+import { createStore } from 'zedux'
+
+const INCREMENT = 'INCREMENT'
+const DECREMENT = 'DECREMENT'
+
+const increment = () => ({ type: INCREMENT })
+const decrement = () => ({ type: DECREMENT })
+
+const rootReducer = (state, action) => {
+  switch (action.type) {
+    case INCREMENT:
+      return state + 1
+    case DECREMENT:
+      return state - 1
+    default:
+      return state
+  }
+}
+
+const counterStore = createStore(rootReducer)
+
+counterStore.dispatch(increment())
+counterStore.dispatch(decrement())
+```
+
+## Zedux Is Composable
+
+In many aspects. Zedux selectors, inducers, reducers, and even action meta chains are composable. But typically when we say Zedux is composable, we're talking about the stores themselves. No joke! This is an extremely unique and powerful feature that sets Zedux apart from other state management tools.
+
+What does store composition look like? Well quite simply:
+
+```ts
+import { createStore } from 'zedux'
+
+const childStore = createStore()
+const parentStore = createStore(childStore)
+```
+
+That's it! The `parentStore`'s state is now controlled by `childStore`.
+
+```ts
+childStore.setState('some value')
+parentStore.getState() // 'some value'
+
+parentStore.setState('a new value')
+childStore.getState() // 'a new value'
+```
+
+When we set the child store's state, that change propagated to the parent store. When we set the parent store's state, the parent store recognized that the relevant state was controlled by a child store and [delegated](FIXME) that action to the child store. The child store then updated its state and propagated that change back up to the parent.
+
+Now what can you do with that? We won't get into too much here, but here's something a little more meaty:
+
+```ts
+import { createStore } from 'zedux'
+
+// A simple inducer factory
+const addTodo = todo => todos => [...todos, todo]
+
+// Create some stores for this example
+const rootStore = createStore()
+const todosStore = createStore().hydrate([])
+const toNotDosStore = createStore().hydrate([])
+
+// The composable magic!
+rootStore.use({
+  todos: todosStore,
+  toNotDos: toNotDosStore
+})
+
+toNotDos.setState(addTodo('be layzee'))
+toNotDos.getState() // ['be layzee']
+rootStore.getState()
+/*
+  {
+    todos: [],
+    toNotDos: ['be layzee']
+  }
+*/
+```
+
+Imagine the possibilities! Higher-Order Stores, code splitting, feature-based code architectures, fractal stores that attach to a root store on mount to maintain time-traversable state and replayable actions.
+
+Treating the store as the basic building block of application state simplifies state management and increases modularity. The Zedux store is an autonomous unit that can simultaneously handle a sub-module's internal workings and present a standardized api to consumers.
+
+## Zedux is Opinionated but Configurable
+
+Zedux offers high-level APIs for action creation, action creator creation, selector creation, reducer creation, state machine creation, store creation, and store composition. These make it easy to get started with Zedux and easy to maintain Zedux apps 'cause standards do that.
+
+All Zedux APIs except `createStore` itself are optional. They can be swapped out for any other abstraction in the Redux ecosystem or can be done manually if you need more low-level, granular control.
+
+For example, the standard way to combine reducers in Zedux is using Zedux's internal hierarchy descriptors:
+
+```ts
+import { createStore } from 'zedux'
+import { fooReducer, barReducer } from 'somewhere'
+
+const store = createStore({
+  foo: fooReducer,
+  bar: barReducer
+})
+```
+
+But you can pass a single, root reducer to `createStore` and control this hierarchy yourself:
+
+```ts
+const rootReducer = (state = someInitialState, action) => {
+  const newFoo = fooReducer(state.foo, action)
+  const newBar = barReducer(state.bar, action)
+
+  if (newFoo !== state.foo || newBar !== state.bar) {
+    return { foo: newFoo, bar: newBar }
+  }
+
+  return state
+}
+
+createStore(rootReducer)
+```
+
+And of course, `combineReducers` from Redux or any similar tool will also work just fine.
+
+## Zedux Stores Are Building Blocks of State
+
+As your app grows, many different types of state will be needed in many different places. Let's take for example an html form in a FormComponent of a UI library. A Zedux store can handle the local state needs of this component - updating state when the user types in a field.
+
+_That store can also be exposed to FormComponent's parent component._ The parent component can now dispatch actions or otherwise modify the state of the store, updating FormComponent's UI reactively. When the form is submitted, the parent component can also tie in to that action and handle the submission, allowing FormComponent to be easily decoupled from any data persistence logic.
+
+If an app uses Zedux stores to handle the internal state of all its modals, forms, widgets, routing, etc, it becomes trivial to integrate those modules into the main app - e.g. to dispatch actions to all or several of them or to implement undo/redo or logging for the entire application.
+
+Zedux stores are also great for code splitting. Each store is self-complete. There's no need to wire a reducer to a root store and wire a root store to a lazy-loaded component.
+
+Zedux stores can also be used to persist state across realms. [Zedux Sync](https://github.com/bowheart/zedux-sync) is an experimental step in that direction.
+
+## Conclusion
+
+Zedux is useful for small apps, large apps, simple state, complex state, code splitting, and general performant, reactive, functional, debuggable, and predictable state management in front end and back end JavaScript.

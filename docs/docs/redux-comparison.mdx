@@ -1,0 +1,108 @@
+---
+id: redux-comparison
+title: Redux Comparison
+---
+
+## Redux comparison
+
+Zedux is, as its name suggests, based on Redux. In fact it started out as Redux middleware, but is now a complete replacement. Here are some ideologies they both share:
+
+- A reducer hierarchy drives state creation and updates.
+
+- Immutability, immutability, immutability.
+
+- Unidirectional data flow.
+
+- Reducers are pure functions.
+
+- Actions and reducers have a many-to-many relationship.
+
+- Actions are serializable objects with a string `type` property and optional `payload` and `meta` properties.
+
+- Dispatched actions can be observed, saved, and replayed for a time travel debugging experience.
+
+- Stores are observables (streams) of state
+
+And here are some differences in Zedux:
+
+- Store dispatches are completely synchronous.
+
+- Reducer hierarchies are optional. You don't have to use them, but can choose to for larger stores.
+
+- Zero config and reducer stores can and should be mixed and matched throughout most apps to deliver the appropriate amount of power each piece of state demands.
+
+- A single store _can_ contain the state of the entire application, but that is not required.
+
+- Stores are composable.
+
+- Boilerplate is an option, not a requirement.
+
+- [Code splitting](FIXME) takes a front seat.
+
+- Middleware is gone, replaced by [effects subscribers](FIXME).
+
+- Action namespacing [is facilitated](/docs/api/act.namespace.md) (e.g. Zedux favors `todos/add` over `ADD_TODO`).
+
+- Stores are also [observables of actions](FIXME) - a necessary escape hatch for some uncommon performance problems inherent in reactive architectures.
+
+## No more middleware?
+
+Yep. It isn't necessary. Side effects like logging or running sagas or observables can all be effectively handled by Zedux' effects subscribers. Batching and canceling actions may not be possible, but those never were necessary at the store level - they can be handled just fine outside the store.
+
+Some operations are easier without middleware and some are harder. Those should more or less balance out.
+
+Read more about [effects subscribers here](FIXME).
+
+## A Todos Example
+
+Here we'll look at a Redux store setup with some reducer splitting and helpers. Then we'll convert it to an equivalent Zedux example.
+
+Redux:
+
+```ts
+import { actionCreatorFactory } from 'typescript-fsa'
+import { reducerWithInitialState } from 'typescript-fsa-reducers'
+import { combineReducers, createStore, Dispatch } from 'redux'
+
+const actionCreator = actionCreatorFactory('todos')
+const addTodo = actionCreator<string>('add')
+
+const todosReducer = reducerWithInitialState<string[]>([])
+  .case(addTodo, (state, todo) => [...state, todo])
+
+const rootReducer = combineReducers({
+  todos: todosReducer // just doing one for simplicity
+})
+
+const store = createStore(rootReducer)
+```
+
+Zedux:
+
+```ts
+import { createActorFactory, createReducer, createStore } from 'zedux'
+
+const createActor = createActorFactory('todos')
+const addTodo = createActor<string>('add')
+
+const todosReducer = createReducer<string[]>([])
+  .reduce(addTodo, (state, todo) => [...state, todo])
+
+const store = createStore({
+  todos: todosReducer
+})
+```
+
+## Conclusion
+
+Redux is amazing. Zedux was born out of a desire to make Redux nimbler to get started with and nimbler at scale. Zedux tries to change as little as possible while accomplishing this.
+
+Given the huge community, Redux is probably a better choice for mid-sized applications. Use Zedux instead for these situations:
+
+- Your app is very small but you want more sophisticated state management without too much overhead.
+
+- Your app is very big and Redux is starting to creak - either from performance slowdowns due to sheer volume or code bloat becoming difficult to maintain.
+
+- You're implementing feature-based, micro frontend, or otherwise code split architectures.
+
+- You need the escape hatches offered by Zedux - specifically the ability to consume stores as streams of actions.

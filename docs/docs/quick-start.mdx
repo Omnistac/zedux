@@ -1,0 +1,115 @@
+---
+id: quick-start
+title: Quick Start
+---
+
+## Installation
+
+```bash
+npm i zedux
+```
+
+Or include the appropriate unpkg build on your page (module exposed as `window.Zedux`):
+
+**Development:**
+
+```html
+<script src="https://unpkg.com/zedux/dist/zedux.js"></script>
+```
+
+**Production:**
+
+```html
+<script src="https://unpkg.com/zedux/dist/zedux.min.js"></script>
+```
+
+Now you need a store.
+
+## The Store
+
+Zedux stores are just state containers. They hold a single value and help you enforce certain patterns to update that value. Creating one is simple:
+
+```ts
+import { createStore } from 'zedux'
+
+const theSimplestStore = createStore()
+```
+
+Simple, yes, but filled with destiny.
+
+## The Patterns
+
+In Zedux there are two Core Patterns: The Zero Config Pattern and the Reducer Pattern. Each store should pick one or the other, but may be composed of any number of stores that use either pattern.
+
+### The Zero Config Pattern
+
+```ts
+import { createStore } from 'zedux'
+
+const store = createStore().hydrate('some value')
+
+store.subscribe((newState, oldState) => {
+  console.log('state changed', { newState, oldState })
+})
+
+store.setState('a new value')
+```
+
+With Zero Config stores, we typically:
+
+- Hydrate the store with its initial state.
+- use `store.setState` to update the store's state
+
+### The Reducer Pattern
+
+```ts
+import { createActor, createReducer, createStore } from 'zedux'
+
+const setValue = createActor<string>('setValue')
+const reducer = createReducer('some value')
+  .reduce(setValue, (_, value) => value)
+
+const store = createStore(reducer)
+
+store.subscribe((newState, oldState) => {
+  console.log('state changed', { newState, oldState })
+})
+
+store.dispatch(setValue('a new value'))
+```
+
+With Reducer stores, we typically:
+
+- Create any number of reducers (functions that take the current state and an action)
+
+### FIXME
+
+- brief explanation of actions and reducers
+- example of Hierarchy Descriptors for reducer splitting
+- maybe example of selectors
+- example of store composition
+- link to more in-depth tutorial
+
+## Machines Are Reducers
+
+Zedux stores aren't required for every piece of state. But Zedux utilities can still come in handy when a store isn't needed. For example, in React a Zedux machine can be passed directly to `useReducer`:
+
+```ts
+import React, { useReducer } from 'react'
+import { createMachine } from 'zedux'
+
+const requestReducer = createMachine()
+  .addTransition('idle', 'requesting')
+  .addTransition('requesting', 'success')
+  .addTransition('requesting', 'failure')
+
+const MyComponent = () => {
+  const [state, dispatch] = useReducer(requestReducer, 'idle')
+
+  ...
+
+  // in some effect or callback or whatever:
+  dispatch({ type: 'requesting' })
+}
+```
+

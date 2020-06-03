@@ -1,54 +1,33 @@
-# Summary
+# Website
 
-* [Introduction](README.md)
-* [Overview](/docs/overview.md)
-* [Examples](/docs/examples.md)
-* [Guides](/docs/guides/README.md)
-  * [React Usage](/docs/guides/reactUsage.md)
-  * [The Reducer Layer](/docs/guides/theReducerLayer.md)
-  * [The Processor Layer](/docs/guides/theProcessorLayer.md)
-  * [The Inspector Layer](/docs/guides/theInspectorLayer.md)
-  * [Zero Configuration](/docs/guides/zeroConfiguration.md)
-  * [Dispatchable Reducers](/docs/guides/dispatchableReducers.md)
-  * [Harnessing State Machines](/docs/guides/harnessingStateMachines.md)
-  * [Store Composition](/docs/guides/storeComposition.md)
-  * [Configuring the Hierarchy](/docs/guides/configuringTheHierarchy.md)
-  * [Merging Hierarchies](/docs/guides/mergingHierarchies.md)
-  * [Meta Chains](/docs/guides/metaChains.md)
-  * [Optimizing Performance](/docs/guides/optimizingPerformance.md)
-* [API](/docs/api/README.md)
-  * [act](/docs/api/act.md)
-  * [act.namespace](/docs/api/act.namespace.md)
-  * [actionTypes](/docs/api/actionTypes.md)
-  * [createStore](/docs/api/createStore.md)
-  * [metaTypes](/docs/api/metaTypes.md)
-  * [react](/docs/api/react.md)
-  * [select](/docs/api/select.md)
-  * [state](/docs/api/state.md)
-  * [transition](/docs/api/transition.md)
-  * [Store](/docs/api/Store.md)
-  * [ZeduxActor](/docs/api/ZeduxActor.md)
-  * [ZeduxMachine](/docs/api/ZeduxMachine.md)
-  * [ZeduxReactor](/docs/api/ZeduxReactor.md)
-  * [ZeduxState](/docs/api/ZeduxState.md)
-* [Types](/docs/types/README.md)
-  * [Action](/docs/types/Action.md)
-  * [ActionCreator](/docs/types/ActionCreator.md)
-  * [Actor](/docs/types/Actor.md)
-  * [Branch](/docs/types/Branch.md)
-  * [Dispatchable](/docs/types/Dispatchable.md)
-  * [HierarchyDescriptor](/docs/types/HierarchyDescriptor.md)
-  * [Inducer](/docs/types/Inducer.md)
-  * [Inspector](/docs/types/Inspector.md)
-  * [MetaChainNode](/docs/types/MetaChainNode.md)
-  * [MetaNode](/docs/types/MetaNode.md)
-  * [NodeOptions](/docs/types/NodeOptions.md)
-  * [Processor](/docs/types/Processor.md)
-  * [Reactor](/docs/types/Reactor.md)
-  * [Reducer](/docs/types/Reducer.md)
-  * [Selector](/docs/types/Selector.md)
-  * [State](/docs/types/State.md)
-  * [StoreBase](/docs/types/StoreBase.md)
-  * [Subscription](/docs/types/Subscription.md)
-* [Glossary](/docs/glossary.md)
-* [Shape Relation Problems](/docs/shapeRelationProblems.md)
+This website is built using [Docusaurus 2](https://v2.docusaurus.io/), a modern static website generator.
+
+### Installation
+
+```
+$ yarn
+```
+
+### Local Development
+
+```
+$ yarn start
+```
+
+This command starts a local development server and open up a browser window. Most changes are reflected live without having to restart the server.
+
+### Build
+
+```
+$ yarn build
+```
+
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
+
+### Deployment
+
+```
+$ GIT_USER=<Your GitHub username> USE_SSH=true yarn deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.

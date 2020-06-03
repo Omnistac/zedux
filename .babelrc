@@ -1,6 +1,0 @@
-{
-  "plugins": ["@babel/transform-typescript"],
-  "presets": [
-    ["@babel/env"]
-  ]
-}
