@@ -18,4 +18,17 @@ npm start -- <name of example>
 
 The new example will now be served from `localhost:1234`. Cool, eh?
 
+Everything after the `--` is passed directly to the `parcel` command. So to  change the port, for example, you'd run:
+
+```bash
+npm start -- todomvc -p 2345
+```
+
+To start the server, you may also `cd` into one of the child directories and simply run `npm start` there:
+
+```bash
+cd todomvc
+npm start
+```
+
 All examples should also be fairly compatible with parcel's Hot Module Replacement. So have fun playing with that too!
