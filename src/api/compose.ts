@@ -1,5 +1,5 @@
-import { Composable } from '@src/types'
-import { assertAreFunctions } from '@src/utils/errors'
+import { Composable } from '../types'
+import { assertAreFunctions } from '../utils/errors'
 
 /**
   Composes multiple functions together from right-to-left.
@@ -17,7 +17,9 @@ import { assertAreFunctions } from '@src/utils/errors'
 */
 export function compose<T>(): (arg: T) => T
 export function compose<F>(func: F): F
-export function compose<C = (...args: any[]) => any>(...funcs: Function[]): C
+export function compose<C = (...args: any[]) => any>(
+  ...funcs: ((...args: any[]) => any)[]
+): C
 export function compose<T = any>(...funcs: Array<Composable<T>>) {
   // If nothing is passed, return the identity function
   if (funcs.length === 0) return (arg: T) => arg

@@ -20,6 +20,37 @@ const nonFunctions = nonDispatchables.filter(
   thing => typeof thing !== 'function'
 )
 
+describe('store.action$', () => {
+  test('can be converted to an RxJS observable', () => {
+    const store = createStore()
+    const action$ = from(store.action$)
+    const subscriber = jest.fn()
+
+    action$.subscribe(subscriber)
+
+    store.dispatch({ type: 'a' })
+
+    expect(subscriber).toHaveBeenCalledWith({ type: 'a' })
+    expect(subscriber).toHaveBeenCalledTimes(1)
+  })
+
+  test('we can go RxJS crazy with the observable action$', () => {
+    const store = createStore()
+    const subscriber = jest.fn()
+
+    from(store.action$)
+      .pipe(filter(action => action.type !== 'a'))
+      .subscribe(subscriber)
+
+    store.dispatch({ type: 'a' })
+    store.dispatch({ type: 'b' })
+    store.dispatch({ type: 'a' })
+
+    expect(subscriber).toHaveBeenCalledWith({ type: 'b' })
+    expect(subscriber).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('Store.dispatch()', () => {
   test('throws a TypeError if the thing dispatched is not a plain object', () => {
     const store = createStore()
@@ -191,6 +222,17 @@ describe('Store.dispatch()', () => {
     expect(nextState).toEqual({
       a: 2,
     })
+  })
+})
+
+describe('Store.getRefCount()', () => {
+  test('returns the number of subscribers', () => {
+    const store = createStore()
+
+    store.subscribe(() => {})
+    store.subscribe(() => {})
+
+    expect(store.getRefCount()).toBe(2)
   })
 })
 
@@ -379,7 +421,7 @@ describe('Store.setState()', () => {
 
   test('accepts a non-modifying inducer', () => {
     const store = createStore().hydrate({})
-    const inducer = (state: {}) => state
+    const inducer = (state: any) => state
 
     const prevState = store.getState()
     const { state: nextState } = store.setState(inducer)

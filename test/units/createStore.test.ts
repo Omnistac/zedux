@@ -4,11 +4,15 @@ describe('Zedux.createStore()', () => {
   test('returns a store', () => {
     const store = createStore()
 
-    expect(Object.keys(store)).toHaveLength(9)
+    expect(Object.keys(store)).toHaveLength(11)
     expect(store).toEqual(
       expect.objectContaining({
+        action$: {
+          '@@observable': expect.any(Function),
+        },
         configureHierarchy: expect.any(Function),
         dispatch: expect.any(Function),
+        getRefCount: expect.any(Function),
         getState: expect.any(Function),
         hydrate: expect.any(Function),
         setState: expect.any(Function),

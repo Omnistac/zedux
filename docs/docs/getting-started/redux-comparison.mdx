@@ -29,7 +29,7 @@ And here are some differences in Zedux:
 
 - Reducer hierarchies are optional. You don't have to use them, but can choose to for larger stores.
 
-- Zero config and reducer stores can and should be mixed and matched throughout most apps to deliver the appropriate amount of power each piece of state demands.
+- Zero config and reducer stores can and should be mixed and matched throughout most apps to deliver the appropriate amount of power each piece of state requires.
 
 - A single store _can_ contain the state of the entire application, but that is not required.
 
@@ -53,9 +53,9 @@ Some operations are easier without middleware and some are harder. Those should 
 
 Read more about [effects subscribers here](FIXME).
 
-## A Todos Example
+## An Example
 
-Here we'll look at a Redux store setup with some reducer splitting and helpers. Then we'll convert it to an equivalent Zedux example.
+Let's take a simple Redux store with reducer splitting and helpers and convert it to an equivalent Zedux store.
 
 Redux:
 
@@ -93,7 +93,7 @@ const store = createStore({
 })
 ```
 
-## Conclusion
+## Do I Need Zedux?
 
 Redux is amazing. Zedux was born out of a desire to make Redux nimbler to get started with and nimbler at scale. Zedux tries to change as little as possible while accomplishing this.
 

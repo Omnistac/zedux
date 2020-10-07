@@ -1,4 +1,4 @@
-import { Reactable } from '@src/types'
+import { Reactable } from '../types'
 import { assertIsValidActor } from './errors'
 
 /**

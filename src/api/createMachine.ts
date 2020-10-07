@@ -1,5 +1,5 @@
-import { Action, Reactable, ZeduxMachine } from '@src/types'
-import { extractActionType } from '@src/utils/actor'
+import { Action, Reactable, ZeduxMachine } from '../types'
+import { extractActionType } from '../utils/actor'
 
 interface StateTransitionMap<State> {
   [key: string]: {

@@ -1,6 +1,6 @@
-import { hierarchyDescriptorToDiffTree } from '@src/hierarchy/create'
-import { mergeDiffTrees, mergeStateTrees } from '@src/hierarchy/merge'
-import { delegate, propagateChange } from '@src/hierarchy/traverse'
+import { hierarchyDescriptorToDiffTree } from '../hierarchy/create'
+import { mergeDiffTrees, mergeStateTrees } from '../hierarchy/merge'
+import { delegate, propagateChange } from '../hierarchy/traverse'
 import {
   Action,
   ActionChain,
@@ -16,7 +16,7 @@ import {
   Store,
   Subscriber,
   SubscriberObject,
-} from '@src/types'
+} from '../types'
 import {
   assert,
   assertIsPlainObject,
@@ -24,10 +24,10 @@ import {
   assertIsValidNodeOption,
   getError,
   invalidAccess,
-} from '@src/utils/errors'
-import { STORE_IDENTIFIER, observableSymbol } from '@src/utils/general'
-import * as defaultHierarchyConfig from '@src/utils/hierarchyConfig'
-import { DiffNode } from '@src/utils/types'
+} from '../utils/errors'
+import { STORE_IDENTIFIER, observableSymbol } from '../utils/general'
+import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
+import { DiffNode } from '../utils/types'
 import { actionTypes, effectTypes, metaTypes } from './constants'
 import { addMeta, hasMeta, removeAllMeta } from './meta'
 
@@ -40,14 +40,14 @@ import { addMeta, hasMeta, removeAllMeta } from './meta'
   Zedux stores are fast, composable, and pretty much just awesome.
 */
 export const createStore = <State = any>(
-  initialHierarchy?: HierarchyDescriptor<State>
+  initialHierarchy?: RecursivePartial<HierarchyDescriptor<State>>
 ): Store<State> => {
   let hierarchyConfig = defaultHierarchyConfig as HierarchyConfig
   let currentDiffTree: DiffNode
   let currentState: State
   let isDispatching = false
   let rootReducer: Reducer<State>
-  const subscribers: SubscriberObject<State>[] = []
+  const subscribers = new Map<SubscriberObject<State>, true>()
 
   /**
     Sets one or more hierarchy config options that will be used by the
@@ -107,6 +107,8 @@ export const createStore = <State = any>(
 
     return routeAction(action)
   }
+
+  const getRefCount = () => subscribers.size
 
   /**
     Returns the current state of the store.
@@ -201,15 +203,11 @@ export const createStore = <State = any>(
       )
     }
 
-    subscribers.push(subscriberObj)
+    subscribers.set(subscriberObj, true)
 
     return {
       unsubscribe() {
-        const index = subscribers.indexOf(subscriberObj)
-
-        if (index === -1) return
-
-        subscribers.splice(index, 1)
+        subscribers.delete(subscriberObj)
       },
     }
   }
@@ -222,7 +220,7 @@ export const createStore = <State = any>(
 
     Dispatches the special RECALCULATE action to the store.
   */
-  const use = (newHierarchy?: HierarchyDescriptor) => {
+  const use = (newHierarchy?: HierarchyDescriptor<RecursivePartial<State>>) => {
     const newDiffTree = hierarchyDescriptorToDiffTree(
       newHierarchy,
       registerChildStore
@@ -353,7 +351,7 @@ export const createStore = <State = any>(
     currentState = newState
 
     // Clone the subscribers in case of mutation mid-iteration
-    ;[...subscribers].forEach(subscriber => {
+    ;[...subscribers.keys()].forEach(subscriber => {
       if (error && subscriber.error) subscriber.error(error)
 
       if (newState !== oldState && subscriber.next) {
@@ -427,8 +425,21 @@ export const createStore = <State = any>(
     return dispatchAction(action, unwrappedAction)
   }
 
+  const action$ = {
+    subscribe: (subscriber: SubscriberObject<ActionChain>) =>
+      subscribe({
+        effects: ({ action }) => {
+          subscriber.next(action)
+        },
+      }),
+  }
+
   const store = ({
+    action$: {
+      [observableSymbol]: () => action$,
+    },
     dispatch,
+    getRefCount,
     getState,
     hydrate,
     configureHierarchy,

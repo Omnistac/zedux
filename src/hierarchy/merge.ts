@@ -1,6 +1,6 @@
-import { Action, HierarchyConfig, Reducer } from '@src/types'
-import { HierarchyType } from '@src/utils/general'
-import { DiffNode, DiffTree } from '@src/utils/types'
+import { Action, HierarchyConfig, Reducer } from '../types'
+import { HierarchyType } from '../utils/general'
+import { DiffNode, DiffTree } from '../utils/types'
 
 /**
   Turns a diff tree into a single reducer.

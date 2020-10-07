@@ -1,4 +1,4 @@
-import { Action, Actor, HierarchyConfig } from '@src/types'
+import { Action, Actor, HierarchyConfig } from '../types'
 import { detailedTypeof, isPlainObject } from './general'
 
 const isProd = process.env.NODE_ENV === 'production'

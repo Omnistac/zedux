@@ -27,7 +27,7 @@ export const H1 = styled.h1`
 export const Header = styled.header`
   align-items: center;
   background-color: var(--ifm-color-primary);
-  color: var(--ifm-font-base-color-inverse);
+  color: #fff;
   display: flex;
   padding: 4rem 0;
   text-align: center;
@@ -40,7 +40,29 @@ export const Header = styled.header`
 `
 
 export const Link = styled(RawLink)`
+  @keyframes move {
+    0% {
+      opacity: 1;
+      width: 100%;
+    }
+    25% {
+      left: 100%;
+      width: 0%;
+    }
+    25.0001% {
+      left: 0;
+    }
+    50% {
+      width: 100%;
+      opacity: 0.3;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
   --border-height: 3px;
+
   color: var(--ifm-font-base-color-inverse);
   font-size: 1.5rem;
   margin: 0 2rem;
@@ -52,16 +74,11 @@ export const Link = styled(RawLink)`
     text-decoration: none;
 
     &::before {
-      width: 0;
-    }
-
-    &::after {
-      width: 100%;
+      animation: move 2s infinite ease;
     }
   }
 
-  &::before,
-  &::after {
+  &::before {
     border-radius: 10px;
     bottom: 0;
     content: '';
@@ -72,13 +89,8 @@ export const Link = styled(RawLink)`
   }
 
   &::before {
-    background: var(--ifm-font-base-color-inverse);
+    background: #fff;
     width: 100%;
-  }
-
-  &::after {
-    background: var(--ifm-font-base-color);
-    width: 0;
   }
 `
 

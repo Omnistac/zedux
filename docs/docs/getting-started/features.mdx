@@ -6,7 +6,7 @@ goal: Give a brief outline of what Zedux is - have a bullet list of things it do
 
 ## What is it?
 
-Zedux is a Flux/Redux-inspired complete tool for state management featuring:
+Zedux is a Flux/Redux-inspired tool for state management featuring:
 
 - [Store composition](/docs/guides/storeComposition.md).
 
@@ -26,11 +26,11 @@ Zedux is a Flux/Redux-inspired complete tool for state management featuring:
 
 ## Multiple stores
 
-In Redux you have a single store. In Zedux, you can have as many stores as you wish. In fact, self-contained pieces of state _should_ be housed in their own stores. This allows for better encapsulation/modularization and some performance optimizations.
+In Zedux you can have multiple stores. In fact, self-contained pieces of state _should_ be housed in their own stores. This allows for better encapsulation/modularization and some performance optimizations.
 
 Not everyone needs the time-traveling awesomeness offered by the global singleton model of Redux. It's often not worth the extra overhead. But in Zedux, it is still possible to have time traveling while using multiple stores across your app. This is possible because Zedux stores are composable &ndash; one store can control a portion (or all) of the state of another store. You can therefore create a tree of stores eventually arriving at a single "root" store.
 
-Having a root store is not necessary unless you want time travel debugging or the ability to fully hydrate the state of your app from a saved state.
+Having a root store is not necessary unless you want time travel debugging or the ability to fully hydrate the state of your app from a saved state. Composing stores together in general may be necessary to lift state used in multiple stores up to a common parent store.
 
 ## A Complete State Management Solution
 
@@ -40,4 +40,14 @@ While Zedux doesn't aim to eliminate plugins, it does aim to reduce their quanti
 
 ## Fully Observable
 
-...streams of state and streams of actions
+Zedux stores are streams of state and streams of actions. In a perfect reactive world, the state stream is all you need to consume. This ensures your UI is a function of state.
+
+However, the performance of the reactive model can break down in certain, uncommon, high-volume situations. For these cases, Zedux stores can also be consumed as streams of actions - much like [Rxjs Subjects](https://rxjs-dev.firebaseapp.com/guide/subject). Read more about safely using this escape hatch [in this guide](FIXME)
+
+## Framework Agnostic
+
+Zedux was designed with React in mind, but can be used anywhere &ndash; even in backend JavaScript. If you are using it with React, there's an official plugin:
+
+- [React Zedux](https://github.com/bowheart/react-zedux)
+
+Other official framework adaptations are certainly possible, but none are planned right now.

@@ -1,5 +1,5 @@
-import { Action, ReactableList, SubReducer, ZeduxReducer } from '@src/types'
-import { extractActionType, extractActionTypes } from '@src/utils/actor'
+import { Action, ReactableList, SubReducer, ZeduxReducer } from '../types'
+import { extractActionType, extractActionTypes } from '../utils/actor'
 
 interface ReducersMap<State> {
   [key: string]: SubReducer<State>[]
@@ -20,7 +20,10 @@ export const createReducer = <State = any>(initialState?: State) => {
     return runReducers(reducers, state, action)
   }) as ZeduxReducer<State>
 
-  reducer.reduce = (actor: ReactableList, subReducer: SubReducer<State>) => {
+  reducer.reduce = <Payload = any>(
+    actor: ReactableList<Payload>,
+    subReducer: SubReducer<State>
+  ) => {
     const method = 'ZeduxReducer.reduce()'
     const actionTypes = Array.isArray(actor)
       ? extractActionTypes(actor, method)

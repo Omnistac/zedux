@@ -12,23 +12,23 @@ export default {
           {
             loader: 'ts-loader',
             options: {
-              configFile: resolve('tsconfig.webpack.json')
-            }
-          }
+              configFile: resolve('tsconfig.webpack.json'),
+            },
+          },
         ],
-        exclude: /node_modules/
-      }
-    ]
+        exclude: /node_modules/,
+      },
+    ],
   },
   resolve: {
     alias: {
-      '@src': resolve('src')
+      '@src': resolve('src'),
     },
-    extensions: ['.ts']
+    extensions: ['.ts'],
   },
   output: {
     filename: 'zedux.js',
-    path: resolve('dist')
+    path: resolve('dist'),
   },
-  plugins: []
+  plugins: [],
 }

@@ -18,7 +18,7 @@ module.exports = {
       },
       links: [
         {
-          to: 'docs/introduction',
+          to: 'docs/getting-started/introduction',
           activeBasePath: 'docs',
           label: 'Docs',
           position: 'left',
@@ -38,20 +38,24 @@ module.exports = {
           title: 'Docs',
           items: [
             {
-              label: 'Overview',
-              to: 'docs/overview',
+              label: 'Introduction',
+              to: 'docs/getting-started/introduction',
             },
-          ],
-        },
-        {
-          title: 'Community',
-          items: [
             {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/zedux',
+              label: 'API',
+              to: 'docs/api',
             },
           ],
         },
+        // {
+        //   title: 'Community',
+        //   items: [
+        //     {
+        //       label: 'Stack Overflow',
+        //       href: 'https://stackoverflow.com/questions/tagged/zedux',
+        //     },
+        //   ],
+        // },
         {
           title: 'Social',
           items: [
@@ -79,7 +83,7 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/bowheart/zedux/tree/master/docs/',
+          editUrl: 'https://github.com/bowheart/zedux/tree/master/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),

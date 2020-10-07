@@ -1,6 +1,6 @@
-import { Selector } from '@src/types'
-import { assertAreFunctions } from '@src/utils/errors'
-import { createMemoizedSelector } from '@src/utils/memoize'
+import { Selector } from '../types'
+import { assertAreFunctions } from '../utils/errors'
+import { createMemoizedSelector } from '../utils/memoize'
 
 /**
   A factory for creating ZeduxSelector objects

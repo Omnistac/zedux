@@ -11,7 +11,7 @@ import { createActor } from './createActor'
     const addTodo = createActor<Todo>('add') // addTodo.type === '@todos/add'
 */
 export const createActorFactory = (...namespaceNodes: string[]) => <
-  Payload = any
+  Payload = undefined
 >(
   actionType: string
 ) => {

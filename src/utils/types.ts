@@ -1,4 +1,4 @@
-import { Reducer, Store } from '@src/types'
+import { Reducer, Store } from '../types'
 import { HierarchyType } from './general'
 
 export interface DiffNode {

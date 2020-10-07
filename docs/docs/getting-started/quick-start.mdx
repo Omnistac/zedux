@@ -1,0 +1,318 @@
+---
+id: quick-start
+title: Quick Start
+---
+
+## Installation
+
+```bash
+npm i zedux
+```
+
+Or include the appropriate unpkg build on your page (module exposed as `window.Zedux`):
+
+**Development:**
+
+```html
+<script src="https://unpkg.com/zedux/dist/zedux.js"></script>
+```
+
+**Production:**
+
+```html
+<script src="https://unpkg.com/zedux/dist/zedux.min.js"></script>
+```
+
+Now you need a store.
+
+## The Store
+
+Zedux stores are just state containers. They hold a single value and help you enforce certain patterns to update that value. Creating one is simple:
+
+```ts
+import { createStore } from 'zedux'
+
+const theSimplestStore = createStore()
+```
+
+Simple, yes, but filled with destiny.
+
+## The Patterns
+
+In Zedux there are two Core Patterns: The Zero Config Pattern and the Reducer Pattern. Each store should pick one or the other, but may be composed of any number of stores that use either pattern.
+
+### The Zero Config Pattern
+
+```ts
+import { createStore } from 'zedux'
+
+const store = createStore().hydrate('some value')
+
+store.subscribe((newState, oldState) => {
+  console.log('state changed', { newState, oldState })
+})
+
+store.setState('a new value')
+```
+
+With Zero Config stores, we typically:
+
+- [Hydrate](FIXME) the store with its initial state.
+- Use [`store.setState()`](FIXME) to update the store's state.
+
+### The Reducer Pattern
+
+```ts
+import { createActor, createReducer, createStore } from 'zedux'
+
+const setValue = createActor<string>('setValue')
+const reducer = createReducer('some value')
+  .reduce(setValue, (state, value) => value)
+
+const store = createStore(reducer)
+
+store.subscribe((newState, oldState) => {
+  console.log('state changed', { newState, oldState })
+})
+
+store.dispatch(setValue('a new value'))
+```
+
+With Reducer stores, we typically:
+
+- Create [actions](FIXME).
+- Create [reducers](FIXME).
+- Configure the store with its reducers.
+- Use [`store.dispatch()`](FIXME) to update the store's state.
+
+:::note
+With both patterns the usage of [`store.subscribe()`](FIXME) is the same. Which pattern a store uses is an internal implementation detail of the store. Consumers don't need to know about it.
+:::
+
+## Actions
+
+Zedux actions follow the [Flux Standard Action](https://www.google.com/search?q=flux+standard+action) convention:
+
+```ts
+interface Action<Payload = any, Meta = any> {
+  meta?: Meta
+  payload?: Payload
+  type: string
+}
+```
+
+While any object that implements this interface will do, Zedux ships with helpers to make "action creators" - pure functions that make an action object for you:
+
+```ts
+import { createActor } from 'zedux'
+
+const makePizza = createActor<string>('make-pizza')
+makePizza('cheese') // { type: 'make-pizza', payload: 'cheese' }
+```
+
+We call these Zedux action creators ["actors"](FIXME), and they differ from plain action creators in that they have a `type` property that can be easily used to check if an action matches an actor.
+
+Zedux also ships with a utility for namespacing actors:
+
+```ts
+import { createActorFactory } from 'zedux'
+
+const createActor = createActorFactory('pizza')
+const makePizza = createActor<string>('make')
+makePizza('pepperoni') // { type: 'pizza/make', payload: 'pepperoni' }
+```
+
+## Reducers
+
+Reducers are pure functions:
+
+```ts
+type Reducer<State = any> = (
+  state: State | undefined,
+  action: Action
+) => State
+```
+
+In Zedux, we can chalk up these functions manually:
+
+```ts
+const pizzaReducer = (state: string = 'no toppings', action: Action) => {
+  if (action.type === 'set-toppings') {
+    return action.payload
+  }
+
+  return state
+}
+```
+
+or we can use Zedux' built-in helper:
+
+```ts
+import { createReducer } from 'zedux'
+
+const pizzaReducer = createReducer<string>('no toppings')
+  .reduce('set-toppings', (state, topping) => topping)
+```
+
+This `reduce()` method can also be passed actors themselves, thus eliminating the need for string constants. See [`createReducer()`](FIXME) for more info.
+
+Zedux also ships with a utility for creating special reducers that behave like state machines.
+
+```ts
+import { createMachine } from 'zedux'
+
+const themeCycleMachine = createMachine('light')
+  .addTransition('light', 'TOGGLE', 'dark')
+  .addTransition('dark', 'TOGGLE', 'high-contrast')
+  .addTransition('high-contrast', 'TOGGLE', 'light')
+
+// This machine is just a reducer
+themeCycleMachine('light', { type: 'TOGGLE' }) // 'dark'
+```
+
+## Reducer Splitting
+
+Zedux has an intelligent tree diffing algorithm to handle dynamic reducer splitting. Reducer splitting means taking one reducer and splitting it up into multiple child reducers that handle different slices of state. Zedux handles this splitting for you:
+
+```ts
+import { createStore } from 'zedux'
+import { ordersReducer, pizzasReducer } from './reducers'
+
+const store = createStore({
+  orders: ordersReducer,
+  pizzas: pizzasReducer
+})
+
+store.getState()
+// {
+//   orders: ..the state from ordersReducer..,
+//   pizzas: ..the state from pizzasReducer..
+// }
+```
+
+The object passed to `createStore()` is called an [Hierarchy Descriptor](FIXME). It tells Zedux how to delegate state slices. There are 2 awesome benefits from this setup:
+
+1. The hierarchy can be dynamically updated via [`store.use()`](FIXME) (code splitters rejoice!)
+
+```ts
+// say we dynamically loaded a new page that tracks available pizza toppings
+import { toppingsReducer } from './reducers'
+
+store.use({ toppingsReducer })
+store.getState()
+
+// {
+//   orders: ..the state from ordersReducer..,
+//   pizzas: ..the state from pizzasReducer..,
+//   toppings: ..the state from toppingsReducer..
+// }
+```
+
+Notice that the new state slice was merged into the existing state.
+
+2. The hierarchy can contain other stores.
+
+They can be mixed in with reducers, and both can be deeply nested.
+
+```ts
+import { createStore } from 'zedux'
+import { toppingsReducer } from './reducers'
+
+const inventoryStore = createStore().hydrate([])
+const ordersStore = createStore().hydrate([])
+const recipesStore = createStore().hydrate({})
+
+const rootStore = createStore({
+  db: {
+    recipes: recipesStore,
+    toppings: toppingsReducer
+  },
+  inventory: inventoryStore,
+  orders: ordersStore,
+})
+
+inventoryStore.setState(inventory => [...inventory, 'cheese'])
+
+rootStore.getState()
+/*
+{
+  db: {
+    recipes: {},
+    toppings: ..the state from toppingsReducer..
+  },
+  inventory: ['cheese'],
+  orders: []
+}
+*/
+```
+
+A store can ... contain other stores??
+
+## Store Composition
+
+Zedux stores are composable.
+
+```ts
+import { createStore } from 'zedux'
+
+const loginFormStore = createStore().hydrate({
+  email: '',
+  password: ''
+})
+
+const rootStore = createStore({
+  forms: {
+    login: loginFormStore
+  }
+})
+```
+
+This makes Zedux perfect for code-split architectures. Modules can be perfectly isolated - even created and tested in perfect isolation - yet integrated easily into the rest of the app by exposing their store(s).
+
+Check out [this guide](FIXME) for a closer look at the benefits and caveats of store composition. Or check out [this guide](FIXME) for a deep dive into the inner workings of the store composition model.
+
+## A Note about Time Travel
+
+Undo/redo relies on recording every action in order. You may have noticed that the zero config pattern and `store.use()` are modifying the store's state without us dispatching any actions. Doesn't that interfere with time travel?
+
+In short, no. Zedux translates every pseudo-action into a serializable action that a store's [effect subscribers](FIXME) can plug in to. `store.hydrate()`, `store.setState()`, `store.use()`, and actions/pseudo-actions dispatched to child stores will all find a way to notify a store's effect subscribers of a serializable action that can be used to reproduce the state update. You never have to worry about whether a state update is reproducible.
+
+See:
+
+- [The time travel guide](guides/time-travel.mdx)
+- [Zedux' internal action types](api/exports/actionTypes.mdx)
+
+## Zedux Utilities - Other Uses
+
+You don't have to use Zedux for every piece of state. But Zedux utilities can still come in handy when a store isn't needed. For example, in React a [Zedux machine](FIXME) can be passed directly to `useReducer`:
+
+```ts
+import React, { useReducer } from 'react'
+import { createMachine } from 'zedux'
+
+// no need to specify initial state - we do that in useReducer
+const requestReducer = createMachine()
+  .addTransition('idle', 'requesting')
+  .addTransition('requesting', 'success')
+  .addTransition('requesting', 'failure')
+
+const MyComponent = () => {
+  const [state, dispatch] = useReducer(requestReducer, 'idle')
+
+  ...
+
+  // in some effect or callback or whatever:
+  dispatch({ type: 'requesting' })
+}
+```
+
+The same is possible, of course, for [`createReducer`](FIXME).
+
+Just like Redux, Zedux also ships with a `compose` utility. This is primarily for composing [Higher-Order Stores](FIXME) together but can be used anywhere.
+
+## To Be Continued...
+
+That's enough for the quick start. You should now know enough to start using Zedux effectively. Next steps:
+
+- [A Real Tutorial](/docs/guides/a-real-tutorial)
+- [More Learning Resources](/docs/getting-started/learning-resources)

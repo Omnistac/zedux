@@ -8,35 +8,35 @@ export default {
     contentBase: resolve('public'),
     compress: true,
     historyApiFallback: true,
-    port: 9000
+    port: 9000,
   },
   module: {
     rules: [
       {
         test: /\.css$/i,
-        use: ['style-loader', 'css-loader']
+        use: ['style-loader', 'css-loader'],
       },
       {
         test: /\.tsx?$/,
         use: 'ts-loader',
-        exclude: /node_modules/
-      }
-    ]
+        exclude: /node_modules/,
+      },
+    ],
   },
   resolve: {
     alias: {
       '@src': resolve('../src'),
-      '@zedux': resolve('../src')
+      '@zedux': resolve('../src'),
     },
-    extensions: ['.tsx', '.ts', '.js']
+    extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
     filename: 'bundle.js',
-    path: resolve('dist')
+    path: resolve('dist'),
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: resolve('public/index.html')
-    })
-  ]
+      template: resolve('public/index.html'),
+    }),
+  ],
 }

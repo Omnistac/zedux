@@ -73,7 +73,9 @@ function Home() {
           <H1>{siteConfig.title}</H1>
           <Tagline>{siteConfig.tagline}</Tagline>
           <Buttons>
-            <Link to={useBaseUrl('docs/quick-start')}>Quick Start!</Link>
+            <Link to={useBaseUrl('docs/getting-started/quick-start')}>
+              Quick Start!
+            </Link>
             <Link to={useBaseUrl('docs/api')}>API Docs</Link>
           </Buttons>
         </div>

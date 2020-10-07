@@ -59,7 +59,7 @@ export function isPlainObject(thing: any) {
   All Zedux stores have a special symbol as their `$$typeof` property.
 */
 export function isZeduxStore(thing: any) {
-  return thing.$$typeof === STORE_IDENTIFIER
+  return thing && thing.$$typeof === STORE_IDENTIFIER
 }
 
 /**

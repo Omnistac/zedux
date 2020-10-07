@@ -5,6 +5,7 @@
     "baseUrl": ".",
     "declaration": true,
     "declarationMap": true,
+    "downlevelIteration": true,
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,

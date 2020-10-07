@@ -1,4 +1,4 @@
-import { assert } from '@src/utils/errors'
+import { assert } from '../utils/errors'
 import {
   Action,
   ActionChain,
@@ -6,7 +6,7 @@ import {
   Effect,
   EffectChain,
   EffectMeta,
-} from '@src/types'
+} from '../types'
 
 const assertActionExists = (actionOrEffect: ActionChain | EffectChain) => {
   assert(

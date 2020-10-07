@@ -1,6 +1,7 @@
-export interface Action<Payload = any> {
-  type: string
+export interface Action<Payload = any, Meta = any> {
+  meta?: Meta
   payload?: Payload
+  type: string
 }
 
 export type ActionChain<Payload = any> = ActionMeta<Payload> | Action<Payload>
@@ -21,16 +22,16 @@ export interface Actor<Payload = any> extends ActionCreator<Payload> {
   type: string
 }
 
-export interface Branch {
-  [key: string]: HierarchyDescriptor
+export type Branch<T = any> = {
+  [P in keyof T]: HierarchyDescriptor<T[P]>
 }
 
 export type Composable<T = any> = (arg: T) => T
 
-export type Dispatchable<State = any> = ActionChain // Just an ActionChain for now. May include Thunks in a future release!
+export type Dispatchable = ActionChain // Just an ActionChain for now. May include Thunks in a future release!
 
 export type Dispatcher<State = any> = (
-  dispatchable: Dispatchable<State>
+  dispatchable: Dispatchable
 ) => DispatchResult<State>
 
 export interface DispatchResult<State = any> {
@@ -63,11 +64,11 @@ export type EffectsSubscriber<State = any> = (meta: {
   newState: State
   oldState: State
   store: Store<State>
-}) => void
+}) => any
 
-export type ErrorSubscriber = (error: Error) => void
+export type ErrorSubscriber = (error: Error) => any
 
-export interface HierarchyConfig<T = object> {
+export interface HierarchyConfig<T = any> {
   clone?: (node: T) => T
   create?: () => T
   get?: (node: T, key: string) => any
@@ -78,7 +79,7 @@ export interface HierarchyConfig<T = object> {
 }
 
 export type HierarchyDescriptor<State = any> =
-  | Branch
+  | Branch<State>
   | Store<State>
   | Reducer<State>
   | null
@@ -87,10 +88,22 @@ export type Inducer<State = any, PartialState extends Partial<State> = any> = (
   state: State
 ) => PartialState
 
+export interface MachineHooksBuilder<State = any> {
+  getSubscription(): Subscription
+  onEnter(
+    action: Reactable,
+    subscriber: EffectsSubscriber<State>
+  ): MachineHooksBuilder<State>
+  onLeave(
+    action: Reactable,
+    subscriber: EffectsSubscriber<State>
+  ): MachineHooksBuilder<State>
+}
+
 export type NextSubscriber<State = any> = (
   newState: State,
   prevState?: State
-) => void
+) => any
 
 export interface Observable<State = any> {
   subscribe(subscriber: Subscriber<State>): Subscription
@@ -100,9 +113,11 @@ export type Processable<T> = Promise<T> | Iterator<T> | Observable<T>
 
 export type Reactable<Payload = any> = Actor<Payload> | ActionType
 
-export type ReactableList = Reactable | Reactable[]
+export type ReactableList<Payload = any> =
+  | Reactable<Payload>
+  | Reactable<Payload>[]
 
-export type RecursivePartial<T> = T extends object
+export type RecursivePartial<T> = T extends Record<string, unknown>
   ? { [P in keyof T]?: RecursivePartial<T[P]> }
   : T
 
@@ -119,12 +134,14 @@ export type Selector<State = any, Derivation = any> = (
 export type Settable<State = any> = RecursivePartial<State> | Inducer<State>
 
 export interface Store<State = any> extends Observable<State> {
+  action$: Observable<Action>
   configureHierarchy(options: HierarchyConfig): Store<State>
   dispatch: Dispatcher<State>
+  getRefCount(): number
   getState(): State
   hydrate(newState?: State): Store<State>
   setState(settable: Settable<State>): DispatchResult<State>
-  use(newHierarchy?: HierarchyDescriptor): Store<State>
+  use(newHierarchy?: RecursivePartial<HierarchyDescriptor<State>>): Store<State>
   $$typeof: symbol
   // [Symbol.observable]: () => Store<State>
 }

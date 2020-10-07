@@ -1,9 +1,9 @@
-import { actionTypes, metaTypes } from '@src/api/constants'
-import { addMeta } from '@src/api/meta'
-import { Action, Branch, HierarchyDescriptor, Reducer, Store } from '@src/types'
-import { assertIsNullHierarchyDescriptorNode } from '@src/utils/errors'
-import { HierarchyType, isPlainObject, isZeduxStore } from '@src/utils/general'
-import { DiffNode, DiffTree } from '@src/utils/types'
+import { actionTypes, metaTypes } from '../api/constants'
+import { addMeta } from '../api/meta'
+import { Action, Branch, HierarchyDescriptor, Reducer, Store } from '../types'
+import { assertIsNullHierarchyDescriptorNode } from '../utils/errors'
+import { HierarchyType, isPlainObject, isZeduxStore } from '../utils/general'
+import { DiffNode, DiffTree } from '../utils/types'
 
 type RegisterSubStore = (path: string[], store: Store) => () => void
 

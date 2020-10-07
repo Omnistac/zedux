@@ -1,9 +1,9 @@
-import { metaTypes } from '@src/api/constants'
-import { ActionChain, HierarchyConfig } from '@src/types'
-import { invalidDelegation } from '@src/utils/errors'
-import { HierarchyType } from '@src/utils/general'
-import { getMetaData, removeMeta } from '@src/api/meta'
-import { DiffNode } from '@src/utils/types'
+import { metaTypes } from '../api/constants'
+import { ActionChain, HierarchyConfig } from '../types'
+import { invalidDelegation } from '../utils/errors'
+import { HierarchyType } from '../utils/general'
+import { getMetaData, removeMeta } from '../api/meta'
+import { DiffNode } from '../utils/types'
 
 /**
   Delegates an action to a child store.
