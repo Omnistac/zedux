@@ -10,7 +10,7 @@ npm install
 npm start -- todomvc
 ```
 
-Then open `localhost:1234` in a browser. And that's it! To switch to another example, simply kill that server and run:
+Then open `localhost:1234` in a browser. That's it! To switch to another example, simply kill that server and run:
 
 ```bash
 npm start -- <name of example>
