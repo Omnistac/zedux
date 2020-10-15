@@ -81,13 +81,40 @@ const effectsSubscriber = createEffectSubscriber<RootState>()
   .handle([addTodo, state => state.todos], () => {})
 
 todosStore.subscribe(effectsSubscriber)
+
+// effects round 6
+
+import { when } from 'zedux'
+
+const whenRootStore = when(rootStore)
+
+whenRootStore.machine(state => state.status.readyState)
+  .enters(ReadyState.ready, ({ action }) => {})
+  .leaves(ReadyState.initializing, () => {})
+
+whenRootStore.stateMatches(
+  state => state.todos.length > 5, ({ store }) => store.dispatch(something())
+)
+
+whenRootStore.receivesAction(timeout, () => alert('timed out!'))
+
+whenRootStore.receivesAction(({ action, newState, oldState }) => {
+  console.log('action dispatched', { action, newState, oldState })
+})
+
+// special signature (`effect` param here) for some of these?
+whenRootStore.receivesEffect(subscriberRemoved, ({ effect }) => {})
+
+whenRootStore.stateChanges(optionalSelector, effectCallback)
+
+whenRootStore.isDestroyed(effectCallback)
 ```
 
 ## State Machines
 
 ```ts
 // xstate:
-import { Machine } from 'xstate';
+import { Machine } from 'xstate'
 
 const promiseMachine = Machine({
   id: 'promise',
@@ -96,17 +123,17 @@ const promiseMachine = Machine({
     pending: {
       on: {
         RESOLVE: 'resolved',
-        REJECT: 'rejected'
-      }
+        REJECT: 'rejected',
+      },
     },
     resolved: {
-      type: 'final'
+      type: 'final',
     },
     rejected: {
-      type: 'final'
-    }
-  }
-});
+      type: 'final',
+    },
+  },
+})
 
 // zedux:
 import { createState, createReducerMachine } from 'zedux'
@@ -115,18 +142,15 @@ const pending = createState('pending')
 const resolved = createState('resolved').isFinal()
 const rejected = createState('rejected').isFinal()
 
-pending
-  .on('RESOLVE', resolved)
-  .on('REJECT', rejected)
+pending.on('RESOLVE', resolved).on('REJECT', rejected)
 
 pending('RESOLVE') // 'resolved'
 
-const promiseMachine = createReducerMachine(
+const promiseMachine = createReducerMachine(pending, [
   pending,
-  [pending, resolved, rejected]
-)
-
-
+  resolved,
+  rejected,
+])
 
 // traffic light
 import { createState } from 'zedux'
@@ -142,5 +166,10 @@ const stop = createState('stop')
 red.addChildren([walk, wait, stop])
 
 const machine = createReducerMachine(red)
-  .
+
+// or
+const promiseMachine = createMachine(pending).transition(pending, {
+  [resolve]: resolved,
+  [reject]: rejected,
+})
 ```
