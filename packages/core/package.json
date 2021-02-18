@@ -1,0 +1,51 @@
+{
+  "name": "@zedux/core",
+  "version": "0.1.0",
+  "description": "A high-level, declarative, composable form of Redux",
+  "main": "./dist/es/index.js",
+  "module": "./dist/es/index.js",
+  "es2015": "./dist/es/index.js",
+  "typings": "./dist/es/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "yarn build:es && yarn build:umd && yarn build:umd:min",
+    "build:es": "tsc --outDir dist/es -p tsconfig.es.json",
+    "build:umd": "cross-env NODE_ENV=development webpack -o dist/zedux.js",
+    "build:umd:min": "cross-env NODE_ENV=production webpack -o dist/zedux.min.js",
+    "dev": "yarn build:es -- --watch & yarn build:umd -- --watch",
+    "prepublishOnly": "yarn build"
+  },
+  "keywords": [
+    "abstraction",
+    "beautiful",
+    "boilerplate",
+    "easy",
+    "flux",
+    "functional",
+    "immutable",
+    "machine",
+    "management",
+    "memoized",
+    "performant",
+    "reducer",
+    "redux",
+    "simple",
+    "state",
+    "zedux"
+  ],
+  "author": "Joshua Claunch",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bowheart/zedux.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bowheart/zedux/issues"
+  },
+  "homepage": "https://github.com/bowheart/zedux#readme",
+  "devDependencies": {},
+  "dependencies": {}
+}

@@ -8,7 +8,9 @@ import {
   FeatureImage,
   H1,
   Header,
+  HeaderContent,
   Link,
+  SlidingBg,
   Tagline,
 } from './index.styles'
 
@@ -62,23 +64,25 @@ function Feature({ imageUrl, title, description }) {
 
 function Home() {
   const { siteConfig } = useDocusaurusContext()
+  const textureUrl = useBaseUrl('img/bg-texture.png')
 
   return (
     <Layout
       title={`${siteConfig.title} - ${siteConfig.tagline}`}
-      description="Zedux is a simple but powerful state management tool for JavaScript"
+      description="Zedux is an elite state management tool for React"
     >
       <Header>
-        <div className="container">
+        <SlidingBg url={textureUrl} />
+        <HeaderContent className="container">
           <H1>{siteConfig.title}</H1>
           <Tagline>{siteConfig.tagline}</Tagline>
           <Buttons>
-            <Link to={useBaseUrl('docs/getting-started/quick-start')}>
+            <Link to={useBaseUrl('docs/react/tutorial/quick-start')}>
               Quick Start!
             </Link>
             <Link to={useBaseUrl('docs/api')}>API Docs</Link>
           </Buttons>
-        </div>
+        </HeaderContent>
       </Header>
       <main>
         {features && features.length && (

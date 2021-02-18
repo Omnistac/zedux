@@ -1,0 +1,241 @@
+---
+id: quick-start
+title: Quick Start
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+Zedux is a state management tool for React.
+
+Its React architecture is atomic - similar to [Recoil](https://recoiljs.org/) and [Jotai](https://github.com/pmndrs/jotai).
+
+State is held in stores - similar to [Redux](https://redux.js.org/).
+
+## Installation
+
+```bash
+yarn add @zedux/react
+```
+
+## Meet the Atoms
+
+Atoms store state.
+
+```ts
+import { atom } from '@zedux/react'
+
+const pizzaAtom = atom('pizza', 'pepperoni')
+```
+
+This is an atom. We gave it a key, `pizza`, and an initial value, `pepperoni`.
+
+We access it with a hook:
+
+```tsx
+function Pizza() {
+  const [pizza, setPizza] = pizzaAtom.useState()
+  ...
+}
+```
+
+### Setting State
+
+`atom.useState()` is very similar to React's `useState()` hook. But instead of passing the initial state, we defined it when we created the atom.
+
+In our example, we can use `setPizza` to update the state of the atom:
+
+<LiveEditor resultVar="PizzaPapa">{`
+const pizzaAtom = atom('pizza', 'pepperoni')\n
+function Pizza() {
+  const [pizza] = pizzaAtom.useState()
+  
+  return <div>The pizza: {pizza}</div>
+}\n
+function EditPizza() {
+  const [pizza, setPizza] = pizzaAtom.useState()
+  
+  return (
+    <input
+      onChange={({ target }) => setPizza(target.value)}
+      value={pizza}
+    />
+  )
+}\n
+const PizzaPapa = () => (
+  <>
+    <Pizza />
+    <EditPizza />
+  </>
+)
+`}</LiveEditor>
+
+:::tip
+
+These live playgrounds have every React and Zedux export in scope. Go crazy.
+
+:::
+
+Notice that the `pizzaAtom`'s state is shared between both components.
+
+### Atom Factories
+
+An atom's value can be a factory function. The factory's job is to create and return the atom's value:
+
+```ts
+const helloAtom = atom('hello', () => 'world')
+```
+
+Factories have many use cases (and this simple example is not one of them). We'll look at a few right now.
+
+### Dependency Injection
+
+Atoms can use other atoms. To use another atom, we "inject" it in the factory function:
+
+```ts
+const textAtom = atom('text', 'World')
+
+const loudGreetingAtom = atom('loudGreeting', () => {
+  const [text] = textAtom.injectState()
+
+  return `HELLO, ${text.toUpperCase()}`
+})
+```
+
+Here we used an "injector" - `injectState()` - to create a dependency on `textAtom`.
+
+`atom.injectState()` functions similarly to `atom.useState()`. This is a common theme with injectors:
+
+### Injectors Are Like Hooks
+
+Writing an atom factory should feel like writing a React component. Zedux exports injectors like `injectEffect` and `injectMemo` that behave like React's `useEffect` and `useMemo`.
+
+There are many advantages to this approach:
+
+- Atoms are reactive by default. Just like React components, they reevaluate when their state updates.
+
+- Atoms have a small learning curve if you know hooks.
+
+- Injectors are composable, just like hooks. Abstracting common logic is easy 'cause it's just JavaScript.
+
+```tsx
+import { atom, injectMemo } from '@zedux/react'
+
+const initialPriceAtom = atom('initialPrice', () => {
+  // Let's say this atom's state changes frequently:
+  const [stockPrice] = stockPriceAtom.injectState()
+  const initialPrice = injectMemo(() => stockPrice, [])
+
+  return initialPrice
+})
+```
+
+In this example, `initialPriceAtom` will be reevaluated every time `stockPriceAtom`'s state changes, but the return value won't change. Therefore components and atoms that use `initialPriceAtom` won't reevaluate.
+
+:::important
+
+Injectors have the same caveats as hooks too! E.g. don't put injectors in if statements or use them outside atom factories.
+
+:::
+
+### Atom Instances
+
+Let's take a step back.
+
+When we pass a factory to `atom()`, that factory is not evaluated right away. Zedux waits until the atom is used by a component or another atom. When the atom is used for the first time, Zedux creates an "atom instance" and calls the factory to produce the instance's initial value.
+
+```tsx
+function Pizza() {
+  const [pizza] = pizzaAtom.useState()
+  ...
+}
+
+const SomePizzas = () => (
+  <>
+    <Pizza />
+    <Pizza />
+  </>
+)
+```
+
+Here, the first `<Pizza />` renders and Zedux creates an instance of `pizzaAtom`. The next `<Pizza />` then reuses that same instance.
+
+Usually this just works and you don't have to worry about it. But sometimes you'll need to create multiple instances of an atom. To make Zedux create more instances, we use params.
+
+### Params
+
+We can pass parameters to atom hooks/injectors:
+
+```ts
+const userDataAtom = atom('userData', (id: string) => {
+  // a hypothetical injector for simplicity (sends the request and tracks state):
+  return injectFetch(`/users/${id}`)
+})
+
+function UserOverview() {
+  const [data] = userDataAtom.useState('joe')
+  ...
+}
+```
+
+Here `userDataAtom` takes one parameter, `id`. The `UserOverview` component creates an instance of `userDataAtom` with `joe` as the id.
+
+If we use `userDataAtom` multiple times with different `id`s, Zedux will create new atom instances:
+
+```tsx
+function UserOverview() {
+  const [data] = userDataAtom.useState('joe')
+  const [data] = userDataAtom.useState('bob')
+  ...
+}
+```
+
+This example creates two instances of `userDataAtom` - one that fetches the `joe` user and one that fetches `bob`. Caching server data like this is one strength of Zedux atoms.
+
+## Recap
+
+- Atoms are state containers. They can be used in React with their built-in hooks.
+
+- Atoms can be injected into other atoms using built-in "injectors".
+
+- Injectors are like hooks. Atom factories are like components that return state instead of UI.
+
+- Atom instances are created by passing different params and reused by passing the same params.
+
+Let's finish off the quick start with a good old todos playground:
+
+<LiveEditor resultVar="Todos">{`
+const todosAtom = atom('todos', () => [
+  { text: 'Go', isDone: true },
+  { text: 'Fight', isDone: true },
+  { text: 'Win', isDone: false }
+])\n
+const filteredTodosAtom = atom('filteredTodos', (isDone: boolean) => {
+  const [todos] = todosAtom.injectState()\n
+  return todos
+    .filter(todo => todo.isDone === isDone)
+    .map(({ text }) => text)
+})\n
+// These 2 components pass different params to filteredTodosAtom
+function FinishedTodos() {
+  const [todos] = filteredTodosAtom.useState(true)\n
+  return <div>Finished Todos: {todos.join\`, \`}</div>
+}\n
+function UnfinishedTodos() {
+  const [todos] = filteredTodosAtom.useState(false)\n
+  return <div>Unfinished Todos: {todos}</div>
+}\n
+const Todos = () => (
+  <>
+    <FinishedTodos />
+    <UnfinishedTodos />
+  </>
+)
+`}</LiveEditor>
+
+## Next Steps
+
+At this point you should know more than enough to use Zedux effectively. But there is a lot more to discover.
+
+The rest of this tutorial will cover every major feature, starting with the most generally useful ones. Feel free to jump around. You can also play with the [examples](TODO:link), skip ahead to the [API Docs](TODO:link), or read some [boring stuff I wrote](TODO:link).
+
+If this quick start has only stoked the fire of your desire to learn Zedux, then by all means (and by clicking [this link) proceed with the tutorial](TODO:link).

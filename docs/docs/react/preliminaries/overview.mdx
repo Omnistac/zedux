@@ -1,0 +1,686 @@
+---
+id: overview
+title: Overview
+---
+
+Buckle in for a quick description and contrived example of every key feature of Zedux. The [tutorial](../tutorial/quick-start) will walk through this list in much more detail.
+
+## Atoms
+
+Atoms are state containers.
+
+```tsx
+import { atom } from '@zedux/react'
+
+const myFirstAtom = atom('myFirst', 'Hello, world!')
+```
+
+See [the quick start](../tutorial/quick-start#meet-the-atoms) and [`atom()`](TODO:link).
+
+### Hooks
+
+Atoms have several built-in hooks.
+
+```tsx
+function MyComponent() {
+  const [state, setState] = myFirstAtom.useState()
+
+  return <div>A message from the universe: {state}</div>
+}
+```
+
+See [the `Atom` type](../api/types/Atom).
+
+### Injectors
+
+Injectors are like hooks for atoms.
+
+```tsx
+import { atom, injectEffect, injectState } from '@zedux/react'
+
+const statelyAtom = atom('stately', () => {
+  const [state, setState, store] = injectState('proud')
+
+  injectEffect(() => {
+    const timeoutId = setTimeout(() => setState('majestic'), 2000)
+
+    return () => clearTimeout(timeoutId)
+  }, [])
+
+  return store
+})
+
+function Component() {
+  const state = statelyAtom.useValue()
+  // or
+  const [state, setState] = statelyAtom.useState()
+
+  setState()
+}
+```
+
+See [the injectors tutorial](TODO:link)
+
+### Atom Scopes
+
+Atoms can be global-scoped, app-scoped, or local-scoped.
+
+```tsx
+import { Scope } from '@zedux/react'
+
+const globalAtom = atom({
+  key: 'global',
+  scope: Scope.Global,
+  value: 'I live outside any React apps'
+})
+
+// All atoms are app-scoped by default
+const appAtom = atom('app', 'I am shared across components in my <AppProvider />')
+
+const localAtom = atom({
+  key: 'local',
+  scope: Scope.Local,
+  value: 'I am a high-level replacement for React context'
+})
+```
+
+See [the atom scopes tutorial](TODO:link)
+
+### AppProvider
+
+An optional `<AppProvider />` can be rendered at the top level of your app.
+
+```tsx
+import { AppProvider } from '@zedux/react'
+
+function App() {
+  return (
+    <AppProvider>
+      <Routes />
+    </AppProvider>
+  )
+}
+```
+
+See [the atom scopes tutorial](TODO:link), [the Dependency Injection tutorial](TODO:link), and [`<AppProvider />`](TODO:link)
+
+### Selectors
+
+Readonly atoms can be created with `selector()`.
+
+```tsx
+import { atom, selector } from '@zedux/react'
+
+const bigListAtom = atom('bigList', Array(1000).fill('bigness'))
+
+// highlight-next-line
+const smallListAtom = selector('smallList', () => {
+  const bigList = bigListAtom.injectValue()
+  
+  return bigList.slice(0, 10)
+})
+```
+
+See [the selectors tutorial](TODO:link) and [the `selector` API](TODO:link).
+
+### Flags
+
+Atoms can be given flags to raise warnings if they're run in invalid environments.
+
+```tsx
+const axiosAtom = atom({
+  flags: ['async'],
+  key: 'axios',
+  readonly: true,
+  value: axios
+})
+
+function SomeComponent() {
+  const axios = axiosAtom.useValue()
+  ...
+}
+
+function TestApp() {
+  return (
+    <AppProvider>
+      <SomeComponent />
+    </AppProvider>
+  )
+}
+// logs warning: Unsafe atom encountered with flag "async": "axios"
+
+function DevApp() {
+  return (
+    <AppProvider flags={['async']}>
+      <SomeComponent />
+    </AppProvider>
+  )
+}
+// no warnings
+```
+
+See [the testing tutorial](TODO:link) and [the atom API](TODO:link)
+
+### Methods
+
+Atoms can expose methods.
+
+```tsx
+const counterAtom = selector('counter', () => {
+  const [state, setState] = injectState(0)
+
+  injectMethods(() => ({
+    decrement: () => setState(currentState => currentState - 1),
+    increment: () => setState(currentState => currentState + 1)
+  }), [])
+
+  return state
+})
+
+function Counter() {
+  const counterInstance = counterAtom.useInstance()
+  const counter = counterInstance.useValue()
+  const { decrement, increment } = counterInstance.useMethods()
+  
+  return (
+    <>
+      <div>Counter State: {counter}</div>
+      <button onClick={increment}>Increment</button>
+      <button onClick={decrement}>Decrement</button>
+    </>
+  )
+}
+```
+
+See [the advanced usage tutorial](TODO:link)
+
+## Dependency Injection
+
+Zedux atoms create a perfect system for Inversion of Control.
+
+### Composition
+
+Atoms can be composed of other atoms by "injecting" them.
+
+```tsx
+const bigListAtom = atom('bigList', Array(1000).fill('fluff'))
+
+const smallListAtom = atom('smallList', () => {
+  const [bigList] = bigListAtom.injectState()
+
+  return bigListAtom.slice(0, 10)
+})
+```
+
+See [the quick start](../tutorial/quick-start#dependency-injection) and [the Dependency Injection tutorial](TODO:link).
+
+### Overrides
+
+Injected atoms can be overridden.
+
+```tsx
+const fetchTodosAtom = atom('fetchTodos', () => {
+  return injectFetch('/todos', [])
+})
+
+function MyComponent() {
+  const [todos] = fetchTodosAtom.useState()
+
+  return <div>The todos: {todos.join(', ')}</div>
+}
+
+// In some test:
+// highlight-next-line
+const fetchTodosTestAtom = fetchTodosAtom.override(['Mock Todo 1', 'Mock Todo 2'])
+
+function TestApp() {
+  return (
+    // highlight-next-line
+    <AppProvider atoms={[fetchTodosTestAtom]}>
+      <MyComponent />
+    </AppProvider>
+  )
+}
+```
+
+See [the Dependency Injection tutorial](TODO:link)
+
+## Stores
+
+An atom's value can be a store.
+
+```tsx
+import { atom, injectEffect, injectStore, when } from '@zedux/react'
+
+const bigAtom = atom('big', () => {
+  // highlight-next-line
+  const store = injectStore()
+
+  injectEffect(() => {
+    return when(store).receivesAction(goBig, () => alert('go home'))
+  }, [])
+
+  // highlight-next-line
+  return store
+})
+
+function BigComponent() {
+  const store = bigAtom.useStore()
+
+  return <button onClick={() => store.dispatch(goBig())}>Go Big</button>
+}
+```
+
+See [the stores tutorial](TODO:link) and [the `store` API](TODO:link)
+
+### Redux-Style State
+
+Stores can be configured with Redux-style reducers.
+
+```tsx
+import { actor, reducer, store } from '@zedux/react'
+
+const addTodo = actor<string>('addTodo')
+
+const todosReducer = reducer<string[]>([])
+  .on(addTodo, (state, todo) => [...state, todo])
+
+const todosStore = store({ todos: todosReducer })
+```
+
+See [the stores tutorial](TODO:link), [`actor()`](TODO:link), [`reducer()`](TODO:link), and [`store()`](TODO:link).
+
+### State Machines
+
+Stores can be configured with simple state machines.
+
+```tsx
+import { actor, machine, states, store } from '@zedux/react'
+
+const timer = actor('timer')
+const [green, yellow, red] = states('green', 'yellow', 'red')
+
+const stopLightMachine = machine(
+  green.on(timer, yellow),
+  yellow.on(timer, red),
+  red.on(timer, green)
+)
+
+// machines are just pure reducers
+const stopLightStore = store(stopLightMachine)
+```
+
+See [the state machines tutorial](TODO:link).
+
+### Action Streams
+
+One of the superpowers of Zedux stores is that they can be consumed as streams of actions.
+
+```tsx
+import { actor, atom, filterByActor } from '@zedux/react'
+import { from } from 'rxjs'
+
+const updateRow = actor<RowUpdateEvent>('updateRow')
+const messageBusAtom = atom('messageBus')
+
+function BigTable() {
+  // highlight-next-line
+  const message$ = messageBusAtom.useAction$()
+  const tableRef = useRef()
+
+  useEffect(() => {
+    // highlight-next-line
+    const subscription = from(message$)
+      .pipe(filterByActor(updateRow))
+      .subscribe(event => tableRef.current.updateRow(event.rowId, event))
+
+    return () => subscription.unsubscribe()
+  }, [])
+  ...
+}
+```
+
+See [the side effects tutorial](TODO:link).
+
+## Caching
+
+When atoms are used, atom instances are created. These instances are like data caches. The cache can be controlled in many ways.
+
+### Params
+
+Atoms can take parameters. Different params cause new atom instances to be created.
+
+```tsx
+const totallyUsefulAtom = atom(
+  'totallyUseful',
+  (usefulness: number) => usefulness * 10)
+)
+
+function SomeComponent() {
+  const [totallyUsefulNumber] = totallyUsefulAtom.useState(4.2)
+  const [moreUsefulNumber] = totallyUsefulAtom.useState(0.314159)
+  ...
+}
+```
+
+See [the quick start](../tutorial/quick-start#params) and [the atom instances tutorial](TODO:link).
+
+### TTL
+
+Atom instances can be destroyed with `ttl`.
+
+```tsx
+const deathStarAtom = atom({
+  key: 'deathStar',
+  ttl: 0, // destroy deathStarAtom instances when they're no longer being used
+  value: 'Lots of Credits'
+})
+```
+
+See [the lifecycles tutorial](TODO:link)
+
+### Atom Instances
+
+Atom instances can be accessed directly.
+
+```tsx
+const randomNumAtom = atom(
+  'randomNum',
+  (max: number) => Math.floor(Math.random() * max)
+)
+
+function RandomNumber() {
+  const randomNumInstance = randomNumAtom.useInstance(100)
+  const state = randomNumInstance.useValue() // don't have to re-pass params here
+  const dispatch = randomNumInstance.useDispatch() // or here
+
+  return (
+    <randomNumInstance.Provider>
+      {/* The instance's cached value can be invalidated directly */}
+      <button onClick={() => randomNumInstance.invalidate()}>Reevaluate atom</button>
+      <SomeChild />
+    </randomNumInstance.Provider>
+  )
+}
+```
+
+See [the atom instances tutorial](TODO:link)
+
+### Cache Injectors
+
+Zedux exports two injectors to help with cache management inside atoms.
+
+```tsx
+import { injectInvalidate, injectUsageHandler } from '@zedux/react'
+
+const asyncAtom = atom('async', () => {
+  // can be called directly in a callback or effect to trigger a reevaluation
+  const invalidate = injectInvalidate()
+
+  // called every time this atom instance is reused (e.g. from a component)
+  injectUsageHandler(() => {
+    invalidate() // for illustration only ... probably don't do this.
+  })
+})
+```
+
+See [`injectInvalidate()`](TODO:link), [`injectUsageHandler()`](TODO:LINK), and [the cache management tutorial](TODO:link)
+
+## Side Effects
+
+Atoms are designed for executing and sharing promises and observables
+
+### Promises
+
+Zedux exposes injectors, machines, enums, and types for typical async flows.
+
+```tsx
+import { injectAsync } from '@zedux/react'
+
+const fetchUserAtom = atom('fetchUser', (id: string) => {
+  return injectAsync(async machine => {
+    machine.start()
+
+    try {
+      const result = await fetch(`/api/users/${id}`)
+      machine.success(await result.json())
+    } catch (err) {
+      machine.error(err)
+    }
+  }, [id])
+})
+```
+
+See [`injectAsync()`](TODO:link), [`asyncMachine`](TODO:link), and [the side effects tutorial](TODO:link)
+
+### Streams
+
+Atoms work well with streams, e.g. websockets and RxJS observables.
+
+```tsx
+const socketAtom = selector('socket', () => io('ws://localhost:8080'))
+
+const usersStreamAtom = selector('usersStream', () => {
+  const socket = socketAtom.injectValue()
+
+  const users$ = injectMemo(() => {
+    return defer(
+      () => of(socket.emit('start-users-stream'))
+    ).pipe(
+      mergeMap(() => fromEvent(socket, 'user')),
+      finalize(() => socket.emit('end-users-stream'))
+    )
+  }, [socket])
+
+  return users$
+})
+```
+
+See [the side effects tutorial](TODO:link)
+
+### `when()`
+
+`when` is a powerful API for hooking into stores.
+
+```tsx
+import { when } from '@zedux/react'
+
+when(someStore)
+  .stateMatches(state => state.someKey === 'someVal', doSomething)
+  .receivesAction(someAction, logSomething)
+```
+
+See [the side effects tutorial](TODO:link)
+
+### Suspense
+
+Atoms can be used as suspending resources in React concurrent mode.
+
+```tsx
+import { atom, injectSuspender } from '@zedux/react'
+
+const suspendingAtom = atom('suspending', () => {
+  injectSuspender(somePromise)
+})
+```
+
+See [the suspense tutorial](TODO:link)
+
+## Advanced
+
+### Molecules
+
+Molecules are inverted collections of atoms.
+
+```tsx
+import { atom, molecule } from '@zedux/react'
+
+const formsMolecule = molecule('forms')
+
+const registrationFormAtom = atom({
+  key: 'registrationForm',
+  molecules: [formsMolecule],
+  value: ({ email: '', password: '' })
+})
+```
+
+See [the persistence tutorial](TODO:link) and [`molecule()`](TODO:link)
+
+### App Context
+
+Data can be provided from an app's components layer to the atoms layer with app context.
+
+```tsx
+import { AppProvider, atom, injectAppContext } from '@zedux/react'
+
+const someAtom = atom('some', () => {
+  const context = injectAppContext()
+})
+
+function App() {
+  return (
+    <AppProvider context={{ anyValues: 'here' }}>
+      <Routes />
+    </AppProvider>
+  )
+}
+```
+
+TODO: Put this not here:
+An atom can also receive data from the component or atom using it.
+
+```tsx
+import { atom, injectState, injectUsageHandler } from '@zedux/react'
+
+const curiousAtom = atom('curious', () => {
+  const [state, setState] = injectState()
+
+  injectUsageHandler(context => {
+    if (context) setState(context)
+  })
+})
+
+function CuriousComponent() {
+  // obviously don't do this like ... ever. It's an extreme escape hatch.
+  curiousAtom.useContextualInstance(someContext)
+}
+```
+
+### Hydration
+
+Hydrating initial atom state can be done with molecules or app context.
+
+```tsx
+const persistenceMolecule = molecule('persistence', store => {
+  const storedValues = injectLocalStorage()
+  const action$ = store.action$
+
+  injectEffect(() => {
+    const subscription = from(action$).pipe(
+      filter(action => action.type === 'TODO: what is this actually' && storedValues[action.payload.key]),
+    ).subscribe(({ payload }) => {
+      payload.hydrate(storedValues[action.payload.key])
+    })
+
+    return () => subscription.unsubscribe()
+  }, [action$, storedValues])
+})
+```
+
+### Preloading
+
+Atoms can be preloaded to kickstart hydration or alleviate render waterfalls.
+
+```tsx
+import { AppProvider } from '@zedux/react'
+
+function App() {
+  return (
+    <AppProvider preload={[persistenceMolecule.preload()]}>
+      <Routes />
+    </AppProvider>
+  )
+}
+```
+
+## Dev Tools
+
+Zedux ships with several Dev X features out of the box. And more can be installed.
+
+### `injectWhy()`
+
+Why Did This UpDaTe??!!
+
+```tsx
+import { atom, injectState, injectStore, injectWhy } from '@zedux/react'
+
+const crazyAtom = atom('crazy', () => {
+  // say we have an atom that injects several state sources
+  const [state, setState] = injectState()
+  const store = injectStore()
+  const other = addTenAtom.injectValue()
+
+  // with such atoms it can be difficult to tell why state keeps updating
+  // injectWhy FTW!
+  // highlight-next-line
+  injectWhy(lameExcuse => console.log('why???', lameExcuse.getRecursive()))
+  /*
+    logs "why???"
+    {
+      reason: 'addTenAtom - injectValue()',
+      oldState: 11,
+      newState: 12,
+      parent: {
+        reason: 'store - action dispatched',
+        action: { type: 'increment' },
+        oldState: 1,
+        newState: 2
+      }
+    }
+  */
+})
+```
+
+See [`injectWhy()`](TODO:link) and [the dev tools tutorial](TODO:link)
+
+### Performance
+
+Use `getPerformanceSnapshot()` to discover which atoms have high reevaluations, usages, stale instances, and memory.
+
+Use the profiler to root out the cause of slowdowns.
+
+```tsx
+import { getPerformanceSnapshot, profiler } from '@zedux/react'
+
+const snapshot = getPerformanceSnapshot()
+
+profiler.startRecording()
+setTimeout(() => {
+  const diff = profiler.stopRecording()
+}, 15000)
+```
+
+See [the performance tools tutorial](TODO:link)
+
+### State Hub
+
+Coming Soon! Will be available in the `@zedux/react-state-hub` package. Provides UIs to easily make use of the dev, debugging, performance, and profiling tools. Plus it's pretty and has cool graphs.
+
+```tsx
+import { StateHub } from '@zedux/react-state-hub'
+
+function App() {
+  return (
+    <AppProvider>
+      <StateHub />
+      <Routes />
+    </AppProvider>
+  )
+}
+```
+
+See [the state hub tutorial](TODO:link)
+
+### Chrome Extension
+
+Coming Soon!

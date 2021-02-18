@@ -7,24 +7,54 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #fea359;
+  --ifm-color-primary: #fe7608; /* #fea359; */
   --ifm-color-primary-dark: #fe8d30;
   --ifm-color-primary-darker: #fe7608;
   --ifm-color-primary-darkest: #db6301;
   --ifm-color-primary-light: #feb982;
   --ifm-color-primary-lighter: #fed0aa;
-  --ifm-color-primary-lightest: #ffe6d3;
-  --ifm-code-font-size: 95%;
+  --ifm-color-primary-lightest: #fff5df; /* #ffe6d3; */
+  --ifm-code-font-size: 90%;
   --ifm-font-family-base: 'Quicksand', sans-serif;
   --ifm-font-size-base: 16px;
+  --color-dark: #282729;
 }
 
 html[data-theme='dark'] {
-  --ifm-background-color: #282729;
+  --ifm-background-color: var(--color-dark);
+}
+
+.alert--info, .alert--success {
+  --ifm-alert-background-color: var(--ifm-color-primary-lightest);
+  --ifm-alert-border-color: var(--ifm-color-primary-lightest);
+  color: var(--color-dark);
+}
+
+.alert--info .admonition-icon svg, .alert--success .admonition-icon svg {
+  fill: var(--color-dark);
+  stroke: var(--color-dark);
 }
 
 .codeBlock_node_modules-\@docusaurus-theme-classic-src-theme-CodeBlock- {
   border-radius: var(--ifm-global-radius);
+}
+
+.playgroundHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground-.playgroundEditorHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground- {
+  background: #fff;
+  border-radius: 10px 10px 0 0;
+  letter-spacing: 0.6px;
+  padding: 0.3rem 0.75rem;
+}
+
+.playgroundHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground-.playgroundEditorHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground-::before {
+  content: '';
+  background: url('/zedux/img/logo.png') 0 0 no-repeat;
+  background-size: contain;
+  display: inline-block;
+  height: 24px;
+  margin-right: 14px;
+  vertical-align: middle;
+  width: 24px;
 }
 
 button.copyButton_node_modules-\@docusaurus-theme-classic-src-theme-CodeBlock- {
@@ -42,3 +72,8 @@ button.copyButton_node_modules-\@docusaurus-theme-classic-src-theme-CodeBlock- {
   color: #e08a57;
 }
 
+input {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  padding: 0.3rem 0.5rem;
+}

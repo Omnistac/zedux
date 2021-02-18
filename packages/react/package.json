@@ -1,0 +1,109 @@
+{
+  "name": "@zedux/react",
+  "version": "0.1.0",
+  "description": "An atomic, Zedux-powered state ecosystem for React",
+  "main": "./dist/es/index.js",
+  "module": "./dist/es/index.js",
+  "es2015": "./dist/es/index.js",
+  "typings": "./dist/es/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "yarn build:es && yarn build:umd && yarn build:umd:min",
+    "build:es": "tsc --outDir dist/es -p tsconfig.es.json",
+    "build:umd": "cross-env NODE_ENV=development webpack -o dist/react-zedux.js",
+    "build:umd:min": "cross-env NODE_ENV=production webpack -o dist/react-zedux.min.js",
+    "dev": "yarn build:es -- --watch & yarn build:umd -- --watch",
+    "prepublishOnly": "yarn build",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook"
+  },
+  "keywords": [
+    "abstraction",
+    "atom",
+    "atoms",
+    "atomic",
+    "beautiful",
+    "boilerplate",
+    "DI",
+    "dependency",
+    "easy",
+    "flux",
+    "functional",
+    "immutable",
+    "injection",
+    "machine",
+    "management",
+    "memoized",
+    "performant",
+    "react",
+    "reducer",
+    "redux",
+    "simple",
+    "state",
+    "test",
+    "tests",
+    "testing",
+    "zedux"
+  ],
+  "author": "Joshua Claunch",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bowheart/zedux.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bowheart/zedux/issues"
+  },
+  "homepage": "https://github.com/bowheart/zedux#readme",
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "**/src/**"
+    ],
+    "globals": {
+      "process.env.NODE_ENV": "development"
+    },
+    "moduleNameMapper": {
+      "@src/(.*)$": "<rootDir>/src/$1",
+      "@test/(.*)$": "<rootDir>/test/$1",
+      "@zedux/(.*)$": "<rootDir>/../zedux/src/$1"
+    },
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "/test/.*\\.test\\.ts$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
+    "roots": [
+      "<rootDir>/src",
+      "<rootDir>/test"
+    ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@storybook/addon-actions": "^6.1.14",
+    "@storybook/addon-essentials": "^6.1.14",
+    "@storybook/addon-links": "^6.1.14",
+    "@storybook/react": "^6.1.14",
+    "@types/styled-components": "^5.1.7",
+    "babel-loader": "^8.2.2",
+    "core-js": "3",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-icons": "^4.1.0",
+    "styled-components": "^5.2.1"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  }
+}

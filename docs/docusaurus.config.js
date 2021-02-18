@@ -1,6 +1,8 @@
+const { resolve } = require('path')
+
 module.exports = {
   title: 'Zedux',
-  tagline: 'Overpowered State Management for JavaScript',
+  tagline: 'Elite State Management for React',
   url: 'https://bowheart.github.io',
   baseUrl: '/zedux/',
   favicon: 'img/favicon.ico',
@@ -9,6 +11,7 @@ module.exports = {
   stylesheets: [
     'https://fonts.googleapis.com/css2?family=Quicksand&display=swap',
   ],
+  scripts: ['https://unpkg.com/typescript@latest/lib/typescriptServices.js'],
   themeConfig: {
     navbar: {
       title: 'Zedux',
@@ -16,11 +19,17 @@ module.exports = {
         alt: 'Zedux Logo',
         src: 'img/logo.png',
       },
-      links: [
+      items: [
         {
-          to: 'docs/getting-started/introduction',
-          activeBasePath: 'docs',
-          label: 'Docs',
+          to: 'docs/react/tutorial/quick-start',
+          activeBasePath: 'docs/react',
+          label: 'React Docs',
+          position: 'left',
+        },
+        {
+          to: 'docs/core/getting-started/introduction',
+          activeBasePath: 'docs/core',
+          label: 'Core Docs',
           position: 'left',
         },
         { to: 'blog', label: 'Blog', position: 'left' },
@@ -38,12 +47,12 @@ module.exports = {
           title: 'Docs',
           items: [
             {
-              label: 'Introduction',
-              to: 'docs/getting-started/introduction',
+              label: 'React',
+              to: 'react-docs/getting-started/quick-start',
             },
             {
-              label: 'API',
-              to: 'docs/api',
+              label: 'Core',
+              to: 'core-docs/getting-started/quick-start',
             },
           ],
         },
@@ -77,6 +86,7 @@ module.exports = {
       copyright: `Copyright © 2017-${new Date().getFullYear()} Joshua Claunch. Built with Docusaurus.`,
     },
   },
+  plugins: [resolve('./docusaurus.plugin')],
   presets: [
     [
       '@docusaurus/preset-classic',
@@ -91,4 +101,5 @@ module.exports = {
       },
     ],
   ],
+  themes: ['@docusaurus/theme-live-codeblock'],
 }

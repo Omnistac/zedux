@@ -1,0 +1,98 @@
+---
+id: atom
+title: atom
+---
+
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
+import { LiveEditor } from '../../../LiveEditor'
+
+```ts
+import { atom } from '@zedux/react'
+```
+
+Where it all starts. `atom()` is a factory for creating normal, everyday atoms.
+
+## Example
+
+<LiveEditor resultVar="App">{`
+const simpleAtom = atom('simple', 'super simple state stuffs')
+const complexAtom = atom({
+  flags: ['side-effect'],
+  key: 'complex',
+  scope: Scope.Local,
+  value: () => {
+    const [state, setState, store] = injectState({ date: new Date() })\n
+    injectEffect(() => {
+      const intervalId = setInterval(
+        () => setState({ date: new Date() }),
+        1000
+      )\n
+      return () => clearInterval(intervalId)
+    }, [])\n
+    return store
+  }
+})\n
+function App() {
+  const simple = simpleAtom.useValue()
+  const { date } = complexAtom.useValue()\n
+  return (
+    <>
+      <div>simple state: {simple}</div>
+      <div>complex state: {date.toLocaleTimeString()}</div>
+    </>
+  )
+}
+`}</LiveEditor>
+
+## Overloads
+
+### Basic
+
+The simplest overload. Since no config object is passed, all [`AtomConfig`](../types/AtomConfig) fields will be their default values. In particular, `scope` will be set to [`Scope.App`](Scope#App).
+
+<Tabs
+  defaultValue="js"
+  values={[
+    { label: 'Simplified', value: 'js', },
+    { label: 'TypeScript', value: 'tsx', },
+  ]
+}>
+<TabItem value="js">
+
+```js
+(key, value) => AppAtom
+```
+
+</TabItem>
+<TabItem value="tsx">
+
+```tsx
+<State = any, Params extends any[] = []>(
+  key: string,
+  value: State | ((...params: Params) => State)
+) => AppAtom<State, Params>
+```
+
+</TabItem>
+</Tabs>
+
+**Example**
+
+```ts
+const simpleAtom = atom('simple', 'a value!')
+```
+
+**Type Generics**
+
+- `State` - The type of value this atom holds. Can be literally anything. Does not have to be serializable.
+- `Params` - A tuple of the arguments the atom's factory accepts, in order. Only useful when a factory function is passed as the atom's value.
+
+**Parameters**
+
+- `key` - The identifier of this atom. See [`AtomConfig#key`](../types/AtomConfig#key).
+- `value` - The initial state of the atom OR a function returning the state.
+
+**Returns**
+
+[`AppAtom`](../types/AppAtom)

@@ -1,5 +1,5 @@
 import RawLink from '@docusaurus/Link'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 
 export const Buttons = styled.div`
   align-items: center;
@@ -26,17 +26,44 @@ export const H1 = styled.h1`
 
 export const Header = styled.header`
   align-items: center;
-  background-color: var(--ifm-color-primary);
   color: #fff;
   display: flex;
-  padding: 4rem 0;
+  padding: 6rem 0;
   text-align: center;
   position: relative;
   overflow: hidden;
 
-  @media screen and (max-width: 966px) {
-    padding: 2rem;
+  &::after,
+  &::before {
+    content: '';
+    height: 6rem;
+    position: absolute;
+    right: 0;
+    left: 0;
   }
+
+  &::before {
+    background: linear-gradient(180deg, var(--color-dark), transparent);
+    top: 0;
+  }
+
+  &::after {
+    background: linear-gradient(0, var(--color-dark), transparent);
+    bottom: 0;
+  }
+
+  @media screen and (max-width: 966px) {
+    padding: 4rem 2rem;
+
+    &::before,
+    &::after {
+      height: 4rem;
+    }
+  }
+`
+
+export const HeaderContent = styled.div`
+  z-index: 1;
 `
 
 export const Link = styled(RawLink)`
@@ -63,14 +90,14 @@ export const Link = styled(RawLink)`
 
   --border-height: 3px;
 
-  color: var(--ifm-font-base-color-inverse);
+  color: var(--ifm-color-primary-dark);
   font-size: 1.5rem;
   margin: 0 2rem;
   padding: 0 1rem var(--border-height);
   position: relative;
 
   &:hover {
-    color: var(--ifm-font-base-color-inverse);
+    color: var(--ifm-color-primary-dark);
     text-decoration: none;
 
     &::before {
@@ -89,9 +116,29 @@ export const Link = styled(RawLink)`
   }
 
   &::before {
-    background: #fff;
+    background: var(--ifm-color-primary-dark);
     width: 100%;
   }
+`
+
+const slide = keyframes`
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(128px, 128px);
+  }
+`
+
+export const SlidingBg = styled.div<{ url: string }>`
+  animation: ${slide} 60s infinite linear;
+  background: ${({ url }) => `url(${url})`} var(--color-dark);
+  height: calc(100% + 128px);
+  position: absolute;
+  top: -128px;
+  left: -128px;
+  width: calc(100% + 128px);
+  z-index: 0;
 `
 
 export const Tagline = styled.p`

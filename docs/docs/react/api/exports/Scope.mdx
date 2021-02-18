@@ -1,0 +1,126 @@
+---
+id: Scope
+title: Scope
+---
+
+import { LiveEditor } from '../../../LiveEditor'
+
+```ts
+import { Scope } from '@zedux/react'
+```
+
+An enum of the possible atom scopes. Scope determines many characteristics of an atom, primarily:
+
+- How instances are created
+- How long instances live
+- What hooks/injectors are available
+- Where it can be used (e.g. app atoms can't be injected into global atoms)
+
+## Definition
+
+```ts
+enum Scope {
+  App = 'App',
+  Global = 'Global',
+  Local = 'Local',
+}
+```
+
+### `App`
+
+Used to create/identify [`AppAtom`](../types/AppAtom)s.
+
+<LiveEditor resultVar="App">{`
+const appAtom = atom({
+  key: 'app',
+  scope: Scope.App,
+  value: 'app val!'
+})\n
+function Child() {
+  const [app, setGlobal] = appAtom.useState()\n
+  return (
+    <input
+      onChange={({ target }) => setGlobal(target.value)}
+      value={app}
+    />
+  )
+}\n
+function App() {
+  return (
+    <>
+      <Child />
+      <AppProvider>
+        <Child />
+        <Child />
+      </AppProvider>
+    </>
+  )
+}
+`}</LiveEditor>
+
+### `Global`
+
+Used to create/identify [`GlobalAtom`](../types/GlobalAtom)s.
+
+<LiveEditor resultVar="App">{`
+const globalAtom = atom({
+  key: 'global',
+  scope: Scope.Global,
+  value: 'global val!'
+})\n
+function Child() {
+  const [global, setGlobal] = globalAtom.useState()\n
+  return (
+    <input
+      onChange={({ target }) => setGlobal(target.value)}
+      value={global}
+    />
+  )
+}\n
+function App() {
+  return (
+    <>
+      <Child />
+      <AppProvider>
+        <Child />
+      </AppProvider>
+    </>
+  )
+}
+`}</LiveEditor>
+
+### `Local`
+
+Used to create/identify [`LocalAtom`](../types/LocalAtom)s.
+
+<LiveEditor resultVar="App">{`
+const localAtom = atom({
+  key: 'local',
+  scope: Scope.Local,
+  value: 'local val!'
+})\n
+function Child() {
+  const [local, setLocal] = localAtom.useState()\n
+  return (
+    <input
+      onChange={({ target }) => setLocal(target.value)}
+      value={local}
+    />
+  )
+}\n
+function App() {
+  return (
+    <>
+      <Child />
+      <AppProvider>
+        <Child />
+      </AppProvider>
+    </>
+  )
+}
+`}</LiveEditor>
+
+## Links
+
+- [`AtomConfig`](../types/AtomConfig)
+- [the scopes tutorial](../../tutorial/scopes)

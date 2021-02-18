@@ -15,11 +15,18 @@
     "noImplicitAny": true,
     "outDir": "./dist",
     "paths": {
-      "@src/*": ["src/*"],
+      "@zedux/core": ["./packages/core/src"],
+      "@zedux/core/*": ["./packages/core/src/*"],
+      "@zedux/core-test": ["./packages/core/test"],
+      "@zedux/core-test/*": ["./packages/core/test/*"],
+      "@zedux/react": ["./packages/react/src"],
+      "@zedux/react/*": ["./packages/react/src/*"],
+      "@zedux/react-test": ["./packages/react/test"],
+      "@zedux/react-test/*": ["./packages/react/test/*"],
       "@test/*": ["test/*"]
     },
     "sourceMap": true,
     "target": "es5"
   },
-  "include": ["./src", "./test"]
+  "include": ["./packages"]
 }

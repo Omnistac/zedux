@@ -1,19 +1,33 @@
 module.exports = {
-  sidebar: {
+  core: {
     'Getting Started': [
-      'getting-started/introduction',
-      'getting-started/quick-start',
-      'getting-started/features',
-      'getting-started/redux-comparison',
-      'getting-started/learning-resources',
+      'core/getting-started/introduction',
+      'core/getting-started/quick-start',
+      'core/getting-started/features',
+      'core/getting-started/redux-comparison',
+      'core/getting-started/learning-resources',
     ],
-    Guides: ['guides/a-fun-tutorial'],
+    Guides: ['core/guides/a-fun-tutorial'],
     API: [
-      'api',
+      'core/api',
       {
         type: 'category',
         label: 'Exports',
-        items: ['api/exports/createMachine'],
+        items: ['core/api/exports/createMachine'],
+      },
+    ],
+  },
+  react: {
+    Preliminaries: [
+      'react/preliminaries/introduction',
+      'react/preliminaries/overview',
+    ],
+    Tutorial: ['react/tutorial/quick-start', 'react/tutorial/atom-basics'],
+    API: [
+      {
+        type: 'category',
+        label: 'Exports',
+        items: ['react/api/exports/atom'],
       },
     ],
   },
