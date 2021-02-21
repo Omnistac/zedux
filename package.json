@@ -1,7 +1,7 @@
 {
   "name": "zedux",
   "version": "1.0.0",
-  "description": "A high-level, declarative, composable form of Redux",
+  "description": "Elite state management for React",
   "scripts": {
     "docs:dev": "cd docs && yarn start",
     "examples": "cd examples && yarn start",
@@ -11,6 +11,8 @@
   },
   "keywords": [
     "abstraction",
+    "atom",
+    "atomic",
     "beautiful",
     "boilerplate",
     "easy",
@@ -61,5 +63,7 @@
     "webpack": "^5.21.2",
     "webpack-cli": "^4.5.0"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "private": true,
+  "workspaces": ["packages/*"]
 }

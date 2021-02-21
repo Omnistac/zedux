@@ -30,7 +30,8 @@ export default {
     ],
   },
   output: {
-    filename: 'zedux.js',
+    filename:
+      process.env.NODE_ENV === 'development' ? 'zedux.js' : 'zedux.min.js',
     path: resolve('dist'),
   },
   plugins: [],

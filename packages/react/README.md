@@ -533,8 +533,8 @@ x- Expand `testMode` to a `flags` param and `isTestSafe` to a `flags` prop.
 
 Round 2 (Feb 17, 2021)
 
-- context (`<AppProvider context={...}>` and `injectContext()`)
-  - now ~`contextStore()` (?)~ `atomContext()`
+x- context (`<AppProvider context={...}>` and `injectContext()`)
+  x- now ~`contextStore()` (?)~ `atomContext()`
 - `molecule()` and add molecule instantiation to atom instantiation
 - remove duplicated code in `selector()` and `atom()`
 - clean up types (does each atom, atom instance, and atom config really need its own interface)

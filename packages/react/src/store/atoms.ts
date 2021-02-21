@@ -1,12 +1,6 @@
 import { createReducer } from '@zedux/core'
 import { Atom, AtomInstanceBase } from '../types'
-import {
-  addAtomImplementation,
-  addAtomInstance,
-  removeApp,
-  removeAtomInstance,
-  wipe,
-} from './actions'
+import { addAtomInstance, removeApp, removeAtomInstance, wipe } from './actions'
 
 export const atomsReducer = createReducer<{
   [key: string]: {
@@ -18,16 +12,6 @@ export const atomsReducer = createReducer<{
     }
   }
 }>({})
-  .reduce(addAtomImplementation, (state, atom) => ({
-    ...state,
-    [atom.key]: {
-      ...state[atom.key],
-      implementations: {
-        ...state[atom.key]?.implementations,
-        [atom.internalId]: atom,
-      },
-    },
-  }))
   .reduce(addAtomInstance, (state, { atomInstance }) => ({
     ...state,
     [atomInstance.key]: {

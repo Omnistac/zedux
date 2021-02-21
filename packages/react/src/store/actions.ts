@@ -14,7 +14,6 @@ export const addApp = createActor<{
   atomContexts?: Map<AtomContext, AtomContextInstance>
   flags?: string[]
 }>('addApp')
-export const addAtomImplementation = createActor<Atom>('addAtomImplementation')
 export const addAtomInstance = createActor<{
   appId: string
   atomInstance: AtomInstanceBase

@@ -1,11 +1,11 @@
 {
   "name": "@zedux/react",
   "version": "0.1.0",
-  "description": "An atomic, Zedux-powered state ecosystem for React",
-  "main": "./dist/es/index.js",
-  "module": "./dist/es/index.js",
-  "es2015": "./dist/es/index.js",
-  "typings": "./dist/es/index.d.ts",
+  "description": "Elite state management for React",
+  "main": "./dist/es/react/src/index.js",
+  "module": "./dist/es/react/src/index.js",
+  "es2015": "./dist/es/react/src/index.js",
+  "typings": "./dist/es/react/src/index.d.ts",
   "sideEffects": false,
   "files": [
     "dist"
@@ -13,8 +13,8 @@
   "scripts": {
     "build": "yarn build:es && yarn build:umd && yarn build:umd:min",
     "build:es": "tsc --outDir dist/es -p tsconfig.es.json",
-    "build:umd": "cross-env NODE_ENV=development webpack -o dist/react-zedux.js",
-    "build:umd:min": "cross-env NODE_ENV=production webpack -o dist/react-zedux.min.js",
+    "build:umd": "cross-env NODE_ENV=development webpack",
+    "build:umd:min": "cross-env NODE_ENV=production webpack",
     "dev": "yarn build:es -- --watch & yarn build:umd -- --watch",
     "prepublishOnly": "yarn build",
     "storybook": "start-storybook -p 6006",
@@ -101,7 +101,9 @@
     "react-icons": "^4.1.0",
     "styled-components": "^5.2.1"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@zedux/core": "0.1.0"
+  },
   "peerDependencies": {
     "react": "^17.0.1",
     "react-dom": "^17.0.1"

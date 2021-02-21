@@ -2,13 +2,16 @@ import { resolve } from 'path'
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
 
 export default {
-  entry: './src/index.ts',
   devtool: 'source-map',
+  entry: './src/index.ts',
+  externals: {
+    react: 'React',
+  },
   mode: process.env.NODE_ENV,
   module: {
     rules: [
       {
-        test: /\.ts?$/,
+        test: /\.tsx?$/,
         use: [
           {
             loader: 'ts-loader',
@@ -21,17 +24,20 @@ export default {
       },
     ],
   },
+  output: {
+    filename:
+      process.env.NODE_ENV === 'development'
+        ? 'react-zedux.js'
+        : 'react-zedux.min.js',
+    path: resolve('dist'),
+  },
+  plugins: [],
   resolve: {
-    extensions: ['.ts'],
+    extensions: ['.ts', '.tsx'],
     plugins: [
       new TsconfigPathsPlugin({
         configFile: 'tsconfig.webpack.json',
       }),
     ],
   },
-  output: {
-    filename: 'react-zedux.js',
-    path: resolve('dist'),
-  },
-  plugins: [],
 }

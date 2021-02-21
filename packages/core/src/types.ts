@@ -1,3 +1,11 @@
+// Same workaround rxjs uses for Symbol.observable:
+declare global {
+  interface SymbolConstructor {
+    readonly observable: symbol
+  }
+}
+export declare const observable: string | symbol
+
 export interface Action<
   Payload = any,
   Type extends string = string,
