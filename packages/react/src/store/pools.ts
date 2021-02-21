@@ -1,9 +1,11 @@
 import { createReducer } from '@zedux/core'
+import { AtomContext, AtomContextInstance } from '../types'
 import {
   addApp,
   addAtomInstance,
   removeApp,
   removeAtomInstance,
+  updateApp,
   wipe,
 } from './actions'
 
@@ -16,6 +18,7 @@ const initialState = {
 
 export const poolsReducer = createReducer<{
   [appId: string]: {
+    atomContexts?: Map<AtomContext, AtomContextInstance>
     flags?: string[]
     instances: {
       [keyHash: string]: string
@@ -25,11 +28,12 @@ export const poolsReducer = createReducer<{
     }
   }
 }>(initialState)
-  .reduce(addApp, (state, { appId, atoms, flags }) => ({
+  .reduce(addApp, (state, { appId, atoms, atomContexts, flags }) => ({
     ...state,
     [appId]: {
-      instances: {},
+      atomContexts,
       flags,
+      instances: {},
       overrides: atoms
         ? atoms.reduce(
             (map, atom) => ({
@@ -69,4 +73,21 @@ export const poolsReducer = createReducer<{
       },
     }
   })
+  .reduce(updateApp, (state, { appId, atoms, atomContexts, flags }) => ({
+    ...state,
+    [appId]: {
+      atomContexts,
+      flags,
+      instances: {},
+      overrides: atoms
+        ? atoms.reduce(
+            (map, atom) => ({
+              ...map,
+              [atom.key]: atom.internalId,
+            }),
+            {}
+          )
+        : {},
+    },
+  }))
   .reduce(wipe, () => initialState)

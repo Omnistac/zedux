@@ -288,11 +288,13 @@ const filteredTodosStreamAtom = atom({
     const filters$ = filtersAtom.injectValue$()
 
     // injectConstant isn't needed in this particular atom 'cause nothing could cause it to recompute
+    // TODO: That's actually a feature we could add - some `static: true` atom config option to turn off reactivity
+    // (actually probably log an error if a reactive injector is used in such an atom)
     return injectConstant(
       () => todos$.pipe(
         withLatestFrom(filters$),
         filter(([todo, filters]) => todo.isDone !== filters.isDone),
-        map([todo] => todo)
+        map(([todo]) => todo)
       )
     )
   }
@@ -305,30 +307,36 @@ const todos$ = filteredTodosStreamAtom.useValue()
 
 ## Current API
 
-- `atom.useValue()`
-- `atom.useState()`
-- `atom.useDispatch()`
-- `atom.useStore()`
-- `atom.useValue$()` - probably replace with a `useValue$(atom)` helper from @zedux/streams
 - `atom.useAction$()` - probably replace with a `useAction$(atom)` helper from @zedux/streams
-- `atom.useMetadata()`
-- `atom.useInstance()`
 - `atom.useApi()` - I do not know what this was supposed to be. Everything? Isn't that what `useInstance()` is for?
 - `atom.useCallback()` - now `useMethods()`
+- `atom.useDispatch()`
+- `atom.useInstance()`
+- `atom.useInvalidate()`
+- `atom.useMetadata()` - ? Maybe. Not doing for now
+- `atom.useSelector()`
+- `atom.useSetState()`
+- `atom.useState()`
+- `atom.useStore()`
+- `atom.useValue()`
+- `atom.useValue$()` - probably replace with a `useValue$(atom)` helper from @zedux/streams
 
-- `atom.useLocal()` .... no. This is just `localAtom.useValue()` or `*State()` or `*Dispatch()` or `*Store()` or `*Methods()` or `*Instance()`
+- `atom.useLocal()` .... no. This is just `localAtom.useValue()` or `*State()` or `*Dispatch()` or `*Store()` or `*Methods()` or `*Instance()`. No, correction, only `atom.useInstance()` and `atom.injectInstance()` do this. The other hooks are now an alias for `atom.useConsumer(...args).use*()` and same for injectors (obv..).
 - `atom.useConsumer()`
 
-- `atom.injectValue()`
-- `atom.injectState()`
-- `atom.injectDispatch()`
-- `atom.injectStore()`
-- `atom.injectValue$()` - probably replace with a `injectValue$(atom)` helper from @zedux/streams
 - `atom.injectAction$()` - probably replace with a `injectAction$(atom)` helper from @zedux/streams
-- `atom.injectMetadata()`
-- `atom.injectInstance()`
 - `atom.injectApi()`
 - `atom.injectCallback()`
+- `atom.injectDispatch()`
+- `atom.injectInstance()`
+- `atom.injectInvalidate()`
+- `atom.injectMetadata()` - ? Maybe. Not doing for now
+- `atom.injectSelector()`
+- `atom.injectSetState()`
+- `atom.injectState()`
+- `atom.injectStore()`
+- `atom.injectValue()`
+- `atom.injectValue$()` - probably replace with a `injectValue$(atom)` helper from @zedux/streams
 
 - `atom.injectLocal()` ??? No. This is just `localAtom.injectValue()` or `*State()` or `*Dispatch()` or `*Store()` or `*Methods()` or `*Instance()`
 - `atom.injectConsumer()` ?? Nope. Wellll it is possible. `atom.use*` would have to `useContext(universalInstancesContext)` and pass that tree of provided instances to the atom diContext layer.
@@ -387,7 +395,7 @@ const RegistrationForm = ({ children }) => {
 }
 
 const Input = ({ name }) => {
-  const formAtomInstance = formAtom.useConsumer() // oooooh we could make some way to notify formAtom of this consumer, passing params to initialize this form field
+  const formAtomInstance = formAtom.useConsumer() // TODO: we could make some way to notify formAtom of this consumer, passing params to initialize this form field
   const [form, setForm] = formAtomInstance.useState()
 
   return (
@@ -480,6 +488,33 @@ function Todos() {
 }
 ```
 
+## AtomContext example
+
+```tsx
+const reduxAtomContext = atomContext(INITIAL_REDUX_STATE)
+
+function App() {
+  const reduxState = useSelector(state => state)
+  const reduxContext = reduxAtomContext.useInstance(reduxState)
+
+  return (
+    <AppProvider contexts={[reduxContext]}>
+      <Routes />
+    </AppProvider>
+  )
+}
+
+const someAtom = atom('some', () => {
+  const reduxInstance = reduxAtomContext.injectConsumer() // there is no injectInstance()
+  const reduxState = reduxAtomContext.injectValue()
+})
+
+function SomeComponent() {
+  const reduxInstance = reduxAtomContext.useConsumer() // there is a useInstance() - need to clearly document the distinction
+  const reduxState = reduxAtomContext.useValue()
+}
+```
+
 ## Work List
 
 Round 1 (end of December, 2020)
@@ -499,13 +534,14 @@ x- Expand `testMode` to a `flags` param and `isTestSafe` to a `flags` prop.
 Round 2 (Feb 17, 2021)
 
 - context (`<AppProvider context={...}>` and `injectContext()`)
+  - now ~`contextStore()` (?)~ `atomContext()`
 - `molecule()` and add molecule instantiation to atom instantiation
 - remove duplicated code in `selector()` and `atom()`
 - clean up types (does each atom, atom instance, and atom config really need its own interface)
 - `atom.useDispatch()` and `atom.injectDispatch()`
 - `instance.Provider` and `atom.useConsumer()`
 - `injectInvalidate()`, `atom.injectInvalidate()`, `atom.useInvalidate()`
-- `useStore()`
+- `useStore()`, `atom.useStore()`, `atom.injectStore()`
 - `injectCallback()`
 - all the standard atom factories - `globalAtom()`, `globalSelector()`, `localAtom()`, `localSelector()`
 - all the specialized atom factories - `molecule()`, `query()`, `stream()`, `mutation()`
@@ -513,3 +549,7 @@ Round 2 (Feb 17, 2021)
 - React Query stuff
   - add `atom.invalidateAll()`? No, it would have to use a hook. Maybe `const invalidate = atom.useInvalidate(); invalidate.all()`
   - `query()`, `mutation()`, `stream()` OR `promise()`, `stream()` OR `unary()`, `clientStream()`, `serverStream()`, `multiplexStream()` OR injectors - `injectQuery()` &c. or `injectPromise()` &c. or `injectUnary()` &c.
+- should `useInstance()` everywhere be changed to `useProvider()`?
+- `atom.useSelector()` and `atom.injectSelector()`
+- a way to dynamically instantiate and access atoms and atomContexts - not using hooks (directly). Like React Query's `useQueries()` hook - https://react-query.tanstack.com/guides/parallel-queries#dynamic-parallel-queries-with-usequeries. I'm thinking at least `useAtomContexts()` and `useAtoms()`.
+- make AppProviders composable. Overrides and contexts from multiple parent AppProviders are merged together. Global atoms get added to the lowest pool that overrides them.

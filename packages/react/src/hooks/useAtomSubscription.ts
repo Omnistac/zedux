@@ -24,6 +24,7 @@ export const useAtomSubscription: <
   params?: Params
 ) => {
   const appId = useContext(appContext)
+
   const keyHash = useMemo(
     () => getKeyHash(atom, params),
     atom.scope === Scope.Local ? [atom] : [atom, params]
@@ -35,9 +36,9 @@ export const useAtomSubscription: <
     () => getAtomInstance<State, Params, Methods>(appId, atom, keyHash, params),
     [appId, atom, keyHash] // TODO: Changing the atom is _probably_ not supported. Maybe. Mmmm maybe.
   )
+
   const [, setReactState] = useState<State>()
 
-  // TODO: make sure there's no setState leak here
   useLayoutEffect(() => {
     const subscriber = (state: State) => setReactState(state)
     const subscription = atomInstance.stateStore.subscribe(subscriber)

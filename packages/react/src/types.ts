@@ -1,5 +1,5 @@
 import { Context } from 'react'
-import { Store } from '@zedux/core'
+import { Dispatcher, Store } from '@zedux/core'
 import { InjectorDescriptor } from './utils/types'
 
 // Base Atom Types
@@ -328,15 +328,297 @@ export enum ActiveState {
   Destroying = 'Destroying',
 }
 
+/**
+ * AtomContext
+ *
+ * An interface for creating `AtomContextInstance`s.
+ *
+ * Atom context is an escape hatch. The primary purpose is to help with
+ * integrating Zedux into existing codebases - codebases where Zedux is not the
+ * main state management tool. The flow for using atom context is:
+ *
+ * create atom context -> instantiate -> provide instance -> consume instance
+ *
+ * To create an atom context, use the exported `atomContext()` factory.
+ *
+ * To instantiate an atom context, use `myAtomContext.useInstance()`.
+ *
+ * To provide an atom context instance, pass it to an AppProvider via the
+ * `contexts` prop.
+ *
+ * To consume a provided atom context instance, use
+ * `myAtomContext.useConsumer()` in a component or
+ * `myAtomContext.injectConsumer()` in an app or local atom.
+ *
+ * Example usage:
+ *
+ * ```ts
+ * import { atomContext, createStore } from '@zedux/react'
+ *
+ * // create
+ * const reduxAtomContext = atomContext<RootReduxState>()
+ *
+ * function App() {
+ *   const initialState = useSelector(s => s, () => true)
+ *   const instance = reduxAtomContext.useInstance(initialState) // instantiate
+ *
+ *   // provide
+ *   return <AppProvider contexts={[instance]}><Child /></AppProvider>
+ * }
+ *
+ * function Child() {
+ *   const instance = reduxAtomContext.useConsumer() // consume (hook)
+ *   ...
+ * }
+ *
+ * const childAtom = atom('child', () => {
+ *   const instance = reduxAtomContext.injectConsumer() // consume (injector)
+ *   ...
+ * })
+ * ```
+ */
+export interface AtomContext<T = any> {
+  /**
+   * AtomContext#injectConsumer()
+   *
+   * The injector version of `AtomContext#useConsumer()`. For use in atoms.
+   */
+  injectConsumer: () => AtomContextInstanceInjectorApi<T>
+
+  /**
+   * AtomContext#injectDispatch()
+   *
+   * The injector version of `AtomContext#useDispatch()`. For use in atoms.
+   */
+  injectDispatch: () => Dispatcher<T>
+
+  /**
+   * AtomContext#injectSelector()
+   *
+   * The injector version of `AtomContext#useSelector()`. For use in atoms.
+   */
+  injectSelector: <D = any>(selector: (state: T) => D) => D
+
+  /**
+   * AtomContext#injectSetState()
+   *
+   * The injector version of `AtomContext#useSetState()`. For use in atoms.
+   */
+  injectSetState: () => Store<T>['setState']
+
+  /**
+   * AtomContext#injectState()
+   *
+   * The injector version of `AtomContext#useState()`. For use in atoms.
+   */
+  injectState: () => readonly [T, Store<T>['setState']]
+
+  /**
+   * AtomContext#injectStore()
+   *
+   * The injector version of `AtomContext#useStore()`. For use in atoms.
+   */
+  injectStore: () => Store<T>
+
+  /**
+   * AtomContext#injectValue()
+   *
+   * The injector version of `AtomContext#useValue()`. For use in atoms.
+   */
+  injectValue: () => T
+
+  /**
+   * AtomContext#storeFactory
+   *
+   * A reference to the store factory passed to `atomContext(storeFactory)`. If
+   * no factory was passed, defaults to
+   *
+   * ```ts
+   * (initialState: T) => createStore<T>(null, initialState)
+   * ```
+   */
+  storeFactory: (initialState?: T) => Store<T>
+
+  /**
+   * AtomContext#useConsumer()
+   *
+   * Finds the nearest instance of this AtomContext that has been provided by a
+   * parent AppProvider. If no such AppProvider is found, a default instance is
+   * created and added to the global atom ecosystem. If a default instance has
+   * already been added to the global ecosystem, that instance will be reused.
+   *
+   * Does **not** subscribe to the instance's store, unless a subscribing hook
+   * on the instance is used.
+   *
+   * ```ts
+   * const instance = myAtomContext.useConsumer() // <- does not subscribe
+   * const value = instance.useValue() // <- subscribes
+   * ```
+   *
+   * All other AtomContext hooks (except `useInstance()`) are shorthands for
+   * `myAtomContext.useConsumer().use*()`
+   */
+  useConsumer: () => AtomContextInstanceReactApi<T>
+
+  /**
+   * AtomContext#useDispatch()
+   *
+   * Returns the `dispatch` function of the store of a provided instance of this
+   * AtomContext.
+   *
+   * Does **not** subscribe to the instance's store.
+   *
+   * Essentially a shorthand for:
+   *
+   * ```ts
+   * const instance = myAtomContext.useConsumer()
+   * const dispatch = instance.useDispatch()
+   * ```
+   */
+  useDispatch: () => Dispatcher<T>
+
+  /**
+   * AtomContext#useInstance()
+   *
+   * Creates an instance of this context. This is the only way to instantiate
+   * the context. Every time this hook is used, another instance is created.
+   *
+   * To provide this AtomContext to the app, the returned instance must be
+   * passed to an AppProvider via the `contexts` prop.
+   *
+   * Does **not** subscribe to the instance's store.
+   *
+   * Example:
+   *
+   * ```tsx
+   * const instance = myAtomContext.useInstance('initial data here')
+   *
+   * return <AppProvider contexts={[instance]}>...</AppProvider>
+   * ```
+   */
+  useInstance: (initialState: T) => AtomContextInstance<T>
+
+  /**
+   * AtomContext#useSelector()
+   *
+   * Returns the result of calling `selector(state)` where `state` is the
+   * current state of a provided instance of this AtomContext.
+   *
+   * Also ensures that this component is only rerendered when the selected state
+   * changes.
+   *
+   * Subscribes to the instance's store.
+   *
+   * Essentially a shorthand for:
+   *
+   * ```ts
+   * const instance = myAtomContext.useConsumer()
+   * const derivedState = instance.useSelector(mySelector)
+   * ```
+   */
+  useSelector: <D = any>(selector: (state: T) => D) => D
+
+  /**
+   * AtomContext#useSetState()
+   *
+   * Returns the `setState` function of the store of a provided instance of this
+   * AtomContext.
+   *
+   * Does **not** subscribe to the instance's store.
+   *
+   * Essentially a shorthand for:
+   *
+   * ```ts
+   * const instance = myAtomContext.useConsumer()
+   * const setState = instance.useSetState()
+   * ```
+   */
+  useSetState: () => Store<T>['setState']
+
+  /**
+   * AtomContext#useState()
+   *
+   * Returns a tuple of [currentState, setState] for a provided instance of this
+   * AtomContext.
+   *
+   * Subscribes to the instance's store.
+   *
+   * Essentially a shorthand for:
+   *
+   * ```ts
+   * const instance = myAtomContext.useConsumer()
+   * const [state, setState] = instance.useState()
+   * ```
+   */
+  useState: () => readonly [T, Store<T>['setState']]
+
+  /**
+   * AtomContext#useStore()
+   *
+   * Returns the store of a provided instance of this AtomContext.
+   *
+   * Does **not** subscribe to the instance's store.
+   *
+   * Essentially a shorthand for:
+   *
+   * ```ts
+   * const instance = myAtomContext.useConsumer()
+   * const store = instance.useStore()
+   * ```
+   */
+  useStore: () => Store<T>
+
+  /**
+   * AtomContext#useValue()
+   *
+   * Returns the current state of the store of a provided instance of this
+   * AtomContext.
+   *
+   * Subscribes to the instance's store.
+   *
+   * Essentially a shorthand for:
+   *
+   * ```ts
+   * const instance = myAtomContext.useConsumer()
+   * const state = instance.useValue()
+   * ```
+   */
+  useValue: () => T
+}
+
+export interface AtomContextInstance<T = any>
+  extends AtomContextInstanceInjectorApi<T>,
+    AtomContextInstanceReactApi<T> {
+  atomContext: AtomContext<T>
+}
+
+export interface AtomContextInstanceInjectorApi<T = any> {
+  injectDispatch: () => Dispatcher<T>
+  injectSelector: <D = any>(selector: (state: T) => D) => D
+  injectSetState: () => Store<T>['setState']
+  injectState: () => readonly [T, Store<T>['setState']]
+  injectStore: () => Store<T>
+  injectValue: () => T
+}
+
+export interface AtomContextInstanceReactApi<T = any> {
+  useDispatch: () => Dispatcher<T>
+  useSelector: <D = any>(selector: (state: T) => D) => D
+  useSetState: () => Store<T>['setState']
+  useState: () => readonly [T, Store<T>['setState']]
+  useStore: () => Store<T>
+  useValue: () => T
+}
+
 export type AtomValue<State = any> = State | Store<State>
 
 export type StateHook<State = any, Params extends any[] = []> = (
   ...params: Params
-) => [State, Store<State>['setState']]
+) => readonly [State, Store<State>['setState']]
 
 export type StateInjector<State = any, Params extends any[] = []> = (
   ...params: Params
-) => [State, Store<State>['setState'], Store<State>]
+) => readonly [State, Store<State>['setState'], Store<State>]
 
 export enum StateType {
   Store,
