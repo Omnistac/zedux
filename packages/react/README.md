@@ -549,7 +549,7 @@ x- context (`<AppProvider context={...}>` and `injectContext()`)
 - `instance.Provider` and `atom.useConsumer()`
 - `injectInvalidate()`, `atom.injectInvalidate()`, `atom.useInvalidate()`
 - `useStore()`, `atom.useStore()`, `atom.injectStore()`
-- `injectCallback()`
+x- `injectCallback()`
 - all the standard atom factories - `globalAtom()`, `globalSelector()`, `localAtom()`, `localSelector()`
 - all the specialized atom factories - `molecule()`, `query()`, `stream()`, `mutation()`
 - all the inline hook factories? - `useGlobalAtom()`, `useGlobalSelector()`, `useLocalAtom()`, `useLocalSelector()`
