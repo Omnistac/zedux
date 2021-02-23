@@ -44,9 +44,10 @@ export const getKeyHash = (atom: AtomBaseProperties, params?: any[]) => {
 
 export const getInstanceMethods = <
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
 >(
-  atomInstance: AtomInstance<State, Methods>
+  atomInstance: AtomInstance<State, Params, Methods>
 ) => {
   const methodsInjector = atomInstance.injectors.find(
     injector => injector.type === InjectorType.Methods

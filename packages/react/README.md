@@ -547,7 +547,7 @@ x- context (`<AppProvider context={...}>` and `injectContext()`)
 - clean up types (does each atom, atom instance, and atom config really need its own interface)
 - `atom.useDispatch()` and `atom.injectDispatch()`
 - `instance.Provider` and `atom.useConsumer()`
-- `injectInvalidate()`, `atom.injectInvalidate()`, `atom.useInvalidate()`
+x- `injectInvalidate()`, `atom.injectInvalidate()`, `atom.useInvalidate()`
 - `useStore()`, `atom.useStore()`, `atom.injectStore()`
 x- `injectCallback()`
 - all the standard atom factories - `globalAtom()`, `globalSelector()`, `localAtom()`, `localSelector()`

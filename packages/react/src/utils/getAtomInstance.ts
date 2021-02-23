@@ -5,13 +5,13 @@ import { globalStore } from '../store'
 export const getAtomInstance = <
   State,
   Params extends any[],
-  Methods extends Record<string, () => any> = Record<string, () => any>
+  Methods extends Record<string, () => any>
 >(
   appId: string,
   atom: AtomBaseProperties<State, Params>,
   keyHash: string,
   params: Params
-): AtomInstance<State, Methods> => {
+): AtomInstance<State, Params, Methods> => {
   const globalState = globalStore.getState()
   let appPool = globalState.pools[appId]
   const overrideId = appPool.overrides?.[atom.key]
@@ -27,7 +27,7 @@ export const getAtomInstance = <
 
     if (badFlag) {
       console.error(
-        `Zedux - encountered unsafe atom "${atom.key}" with flag "${badFlag}. This atom should be overridden in the current environment`
+        `Zedux - encountered unsafe atom "${atom.key}" with flag "${badFlag}. This atom should be overridden in the current environment.`
       )
     }
   }
@@ -42,7 +42,7 @@ export const getAtomInstance = <
   if (atomInstanceId) {
     return globalState.atoms[maybeOverriddenAtom.key].instances[
       atomInstanceId
-    ] as AtomInstance<State, Methods>
+    ] as AtomInstance<State, Params, Methods>
   }
 
   // Sooooo for some reason ...... React can't catch errors thrown from the `instantiateAtom.ts` file.

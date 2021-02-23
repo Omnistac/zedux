@@ -40,6 +40,7 @@ export interface EvaluationReason<State = any> {
 export enum EvaluationTargetType {
   Atom = 'Atom',
   AtomContext = 'AtomContext',
+  External = 'External',
   Injector = 'Injector',
   Store = 'Store',
 }

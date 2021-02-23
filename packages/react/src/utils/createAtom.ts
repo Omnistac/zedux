@@ -9,14 +9,14 @@ import {
   ReadonlyLocalAtomConfig,
   Scope,
 } from '../types'
-import { useAtomSubscription } from '../hooks/useAtomSubscription'
-import { injectAtomSubscription } from '../injectors/injectAtomSubscription'
+import { useAtomWithSubscription } from '../hooks/useAtomWithSubscription'
+import { injectAtomWithSubscription } from '../injectors/injectAtomWithSubscription'
 
 const attachStateHooks = <State = any, Params extends any[] = []>(
   newAtom: any
 ) => {
   newAtom.injectState = (...params: Params) => {
-    const atomInstance = injectAtomSubscription<State, Params>(
+    const atomInstance = injectAtomWithSubscription<State, Params>(
       'injectState()',
       newAtom,
       params
@@ -29,7 +29,7 @@ const attachStateHooks = <State = any, Params extends any[] = []>(
   }
 
   newAtom.useState = (...params: Params) => {
-    const atomInstance = useAtomSubscription(newAtom, params)
+    const atomInstance = useAtomWithSubscription(newAtom, params)
 
     return [
       atomInstance.stateStore.getState(),
@@ -49,7 +49,6 @@ const createAppAtom = <State = any, Params extends any[] = []>(
   newAtom: AtomBaseProperties<State, Params>,
   options: AppAtomConfig<State, Params>
 ) => {
-  console.log('here?', { newAtom, options })
   newAtom.ttl = options.ttl
   attachStateHooks<State, Params>(newAtom)
 }

@@ -1,6 +1,6 @@
 import { Context } from 'react'
 import { Dispatcher, Store } from '@zedux/core'
-import { InjectorDescriptor } from './utils/types'
+import { EvaluationReason, InjectorDescriptor } from './utils/types'
 
 // Base Atom Types
 export type AtomConfig<State = any, Params extends any[] = []> =
@@ -37,24 +37,29 @@ export type ReadWriteAtom<
 
 export type AtomInstance<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> = ReadWriteAtomInstance<State, Methods> | ReadonlyAtomInstance<State, Methods>
+> =
+  | ReadWriteAtomInstance<State, Params, Methods>
+  | ReadonlyAtomInstance<State, Params, Methods>
 
 export type ReadWriteAtomInstance<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
 > =
-  | AppAtomInstance<State, Methods>
-  | GlobalAtomInstance<State, Methods>
-  | LocalAtomInstance<State, Methods>
+  | AppAtomInstance<State, Params, Methods>
+  | GlobalAtomInstance<State, Params, Methods>
+  | LocalAtomInstance<State, Params, Methods>
 
 export type ReadonlyAtomInstance<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
 > =
-  | ReadonlyAppAtomInstance<State, Methods>
-  | ReadonlyGlobalAtomInstance<State, Methods>
-  | ReadonlyLocalAtomInstance<State, Methods>
+  | ReadonlyAppAtomInstance<State, Params, Methods>
+  | ReadonlyGlobalAtomInstance<State, Params, Methods>
+  | ReadonlyLocalAtomInstance<State, Params, Methods>
 
 export type SharedAtomConfigOptions = 'flags' | 'key' | 'value'
 export type SharedTtlAtomConfigOptions = SharedAtomConfigOptions | 'ttl'
@@ -65,16 +70,21 @@ export interface AtomBase<
   Methods extends Record<string, () => any> = Record<string, () => any>,
   ScopeType extends Scope = Scope,
   Readonly extends boolean = boolean,
-  AtomType extends Atom<State, Params> = Atom<State, Params>,
-  InstanceType extends AtomInstance<State> = AtomInstance<State>
+  AtomType extends Atom<State, Params, Methods> = Atom<State, Params, Methods>,
+  InstanceType extends AtomInstance<State, Params, Methods> = AtomInstance<
+    State,
+    Params,
+    Methods
+  >
 > extends AtomBaseProperties<State, Params, ScopeType, Readonly> {
   getReactContext: () => Context<InstanceType>
   injectInstance: (
     ...params: Params
   ) => Readonly extends true
-    ? ReadonlyAtomInstanceInjectorApi<State, Methods>
-    : ReadWriteAtomInstanceInjectorApi<State, Methods>
+    ? ReadonlyAtomInstanceInjectorApi<State, Params, Methods>
+    : ReadWriteAtomInstanceInjectorApi<State, Params, Methods>
   injectMethods: (...params: Params) => Methods
+  injectInvalidate: (...params: Params) => () => void
   injectValue: (...params: Params) => State
   override: (
     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
@@ -82,8 +92,9 @@ export interface AtomBase<
   useInstance: (
     ...params: Params
   ) => Readonly extends true
-    ? ReadonlyAtomInstanceReactApi<State, Methods>
-    : ReadWriteAtomInstanceReactApi<State, Methods>
+    ? ReadonlyAtomInstanceReactApi<State, Params, Methods>
+    : ReadWriteAtomInstanceReactApi<State, Params, Methods>
+  useInvalidate: (...params: Params) => () => void
   useMethods: (...params: Params) => Methods
   useValue: (...params: Params) => State
 }
@@ -106,6 +117,7 @@ export interface AtomBaseProperties<
 
 export interface AtomInstanceBase<
   State = any,
+  Params extends any[] = any[],
   Methods extends Record<string, () => any> = Record<string, () => any>
 > {
   activeState: ActiveState
@@ -116,8 +128,10 @@ export interface AtomInstanceBase<
   injectValue: () => State
   injectors: InjectorDescriptor[]
   internalId: string
+  invalidate: (reason: EvaluationReason) => void
   key: string
   keyHash: string
+  params: Params
   stateStore: Store<State>
   stateType: StateType
   useMethods: () => Methods
@@ -126,16 +140,21 @@ export interface AtomInstanceBase<
 
 export interface ReadWriteAtomInstanceReactApi<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> extends Pick<AtomInstanceBase<State, Methods>, 'useMethods' | 'useValue'> {
+> extends Pick<
+    AtomInstanceBase<State, Params, Methods>,
+    'useMethods' | 'useValue'
+  > {
   useState: () => ReturnType<StateHook<State>>
 }
 
 export interface ReadWriteAtomInstanceInjectorApi<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
 > extends Pick<
-    AtomInstanceBase<State, Methods>,
+    AtomInstanceBase<State, Params, Methods>,
     'injectMethods' | 'injectValue'
   > {
   injectState: () => ReturnType<StateInjector<State>>
@@ -143,13 +162,18 @@ export interface ReadWriteAtomInstanceInjectorApi<
 
 export type ReadonlyAtomInstanceReactApi<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> = Pick<AtomInstanceBase<State, Methods>, 'useMethods' | 'useValue'>
+> = Pick<AtomInstanceBase<State, Params, Methods>, 'useMethods' | 'useValue'>
 
 export type ReadonlyAtomInstanceInjectorApi<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> = Pick<AtomInstanceBase<State, Methods>, 'injectMethods' | 'injectValue'>
+> = Pick<
+  AtomInstanceBase<State, Params, Methods>,
+  'injectMethods' | 'injectValue'
+>
 
 // App Atoms
 export interface AppAtomConfig<State = any, Params extends any[] = []>
@@ -174,8 +198,8 @@ export interface AppAtom<
     Methods,
     Scope.App,
     false,
-    AppAtom<State, Params>,
-    AppAtomInstance<State>
+    AppAtom<State, Params, Methods>,
+    AppAtomInstance<State, Params, Methods>
   > {
   injectState: StateInjector<State, Params>
   useState: StateHook<State, Params>
@@ -191,19 +215,21 @@ export type ReadonlyAppAtom<
   Methods,
   Scope.App,
   true,
-  ReadonlyAppAtom<State, Params>,
-  ReadonlyAppAtomInstance<State>
+  ReadonlyAppAtom<State, Params, Methods>,
+  ReadonlyAppAtomInstance<State, Params, Methods>
 >
 
 export type AppAtomInstance<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> = AtomInstanceBase<State, Methods>
+> = AtomInstanceBase<State, Params, Methods>
 
 export type ReadonlyAppAtomInstance<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> = AtomInstanceBase<State, Methods>
+> = AtomInstanceBase<State, Params, Methods>
 
 // Global Atoms
 export interface GlobalAtomConfig<State = any, Params extends any[] = []>
@@ -230,8 +256,8 @@ export interface GlobalAtom<
     Methods,
     Scope.Global,
     false,
-    GlobalAtom<State, Params>,
-    GlobalAtomInstance<State>
+    GlobalAtom<State, Params, Methods>,
+    GlobalAtomInstance<State, Params, Methods>
   > {
   injectState: StateInjector<State, Params>
   useState: StateHook<State, Params>
@@ -247,19 +273,21 @@ export type ReadonlyGlobalAtom<
   Methods,
   Scope.Global,
   true,
-  ReadonlyGlobalAtom<State, Params>,
-  ReadonlyGlobalAtomInstance<State>
+  ReadonlyGlobalAtom<State, Params, Methods>,
+  ReadonlyGlobalAtomInstance<State, Params, Methods>
 >
 
 export type GlobalAtomInstance<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> = AtomInstanceBase<State, Methods>
+> = AtomInstanceBase<State, Params, Methods>
 
 export type ReadonlyGlobalAtomInstance<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> = AtomInstanceBase<State, Methods>
+> = AtomInstanceBase<State, Params, Methods>
 
 // Local Atoms
 export interface LocalAtomConfig<State = any, Params extends any[] = []>
@@ -286,8 +314,8 @@ export interface LocalAtom<
     Methods,
     Scope.Local,
     false,
-    LocalAtom<State, Params>,
-    LocalAtomInstance<State>
+    LocalAtom<State, Params, Methods>,
+    LocalAtomInstance<State, Params, Methods>
   > {
   injectState: StateInjector<State, Params>
   ttl?: 0
@@ -304,21 +332,23 @@ export interface ReadonlyLocalAtom<
     Methods,
     Scope.Local,
     true,
-    ReadonlyLocalAtom<State, Params>,
-    ReadonlyLocalAtomInstance<State>
+    ReadonlyLocalAtom<State, Params, Methods>,
+    ReadonlyLocalAtomInstance<State, Params, Methods>
   > {
   ttl?: 0
 }
 
 export type LocalAtomInstance<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> = AtomInstanceBase<State, Methods>
+> = AtomInstanceBase<State, Params, Methods>
 
 export type ReadonlyLocalAtomInstance<
   State = any,
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> = AtomInstanceBase<State, Methods>
+> = AtomInstanceBase<State, Params, Methods>
 
 // Other
 

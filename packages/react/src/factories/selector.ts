@@ -13,8 +13,8 @@ import {
   ReadonlyLocalAtomConfig,
   Scope,
 } from '../types'
-import { useAtomSubscription } from '../hooks/useAtomSubscription'
-import { injectAtomSubscription } from '../injectors/injectAtomSubscription'
+import { useAtomWithSubscription } from '../hooks/useAtomWithSubscription'
+import { injectAtomWithSubscription } from '../injectors/injectAtomWithSubscription'
 import {
   EMPTY_CONTEXT,
   generateImplementationId,
@@ -82,7 +82,7 @@ export const selector: {
   }
 
   const injectInstance = (...params: Params) => {
-    const atomInstance = injectAtomSubscription<State, Params, Methods>(
+    const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
       'injectInstance()',
       newAtom,
       params
@@ -93,7 +93,7 @@ export const selector: {
   }
 
   const injectMethods = (...params: Params) => {
-    const atomInstance = injectAtomSubscription<State, Params, Methods>(
+    const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
       'injectMethods()',
       newAtom,
       params
@@ -103,7 +103,7 @@ export const selector: {
   }
 
   const injectValue = (...params: Params) => {
-    const atomInstance = injectAtomSubscription<State, Params, Methods>(
+    const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
       'injectValue()',
       newAtom,
       params
@@ -116,7 +116,7 @@ export const selector: {
     selector({ ...(options as any), value: newValue })
 
   const useInstance = (...params: Params) => {
-    const atomInstance = useAtomSubscription<State, Params, Methods>(
+    const atomInstance = useAtomWithSubscription<State, Params, Methods>(
       newAtom,
       params
     )
@@ -126,7 +126,7 @@ export const selector: {
   }
 
   const useMethods = (...params: Params) => {
-    const atomInstance = useAtomSubscription<State, Params, Methods>(
+    const atomInstance = useAtomWithSubscription<State, Params, Methods>(
       newAtom,
       params
     )
@@ -135,7 +135,7 @@ export const selector: {
   }
 
   const useValue = (...params: Params) => {
-    const atomInstance = useAtomSubscription<State, Params, Methods>(
+    const atomInstance = useAtomWithSubscription<State, Params, Methods>(
       newAtom,
       params
     )

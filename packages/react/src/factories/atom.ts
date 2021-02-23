@@ -19,14 +19,18 @@ import {
   ReadonlyLocalAtomConfig,
   Scope,
 } from '../types'
-import { useAtomSubscription } from '../hooks/useAtomSubscription'
-import { injectAtomSubscription } from '../injectors/injectAtomSubscription'
+import { useAtomWithSubscription } from '../hooks/useAtomWithSubscription'
+import { injectAtomWithSubscription } from '../injectors/injectAtomWithSubscription'
 import {
   EMPTY_CONTEXT,
+  EvaluationTargetType,
+  EvaluationType,
   generateImplementationId,
   getInstanceMethods,
 } from '../utils'
 import { createAtom } from '../utils/createAtom'
+import { injectAtomWithoutSubscription } from '../injectors/injectAtomWithoutSubscription'
+import { useAtomWithoutSubscription } from '../hooks'
 
 export const atom: {
   // Basic atom(key, val) overload:
@@ -104,7 +108,7 @@ export const atom: {
 
   const { flags, key, readonly, scope = Scope.App, value } = options
 
-  let reactContext: Context<AtomInstance<State>>
+  let reactContext: Context<AtomInstance<State, Params, Methods>>
   const getReactContext = () => {
     if (reactContext) return reactContext
 
@@ -112,7 +116,7 @@ export const atom: {
   }
 
   const injectInstance = (...params: Params) => {
-    const atomInstance = injectAtomSubscription<State, Params, Methods>(
+    const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
       'injectInstance()',
       newAtom,
       params
@@ -122,9 +126,23 @@ export const atom: {
     return { injectMethods, injectValue }
   }
 
+  const injectInvalidate = (...params: Params) => {
+    const atomInstance = injectAtomWithoutSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
+
+    return () => {
+      atomInstance.invalidate({
+        operation: 'injectInvalidate()',
+        targetType: EvaluationTargetType.External,
+        type: EvaluationType.CacheInvalidated,
+      })
+    }
+  }
+
   const injectMethods = (...params: Params) => {
-    const atomInstance = injectAtomSubscription<State, Params, Methods>(
-      'injectMethods()',
+    const atomInstance = injectAtomWithoutSubscription<State, Params, Methods>(
       newAtom,
       params
     )
@@ -133,7 +151,7 @@ export const atom: {
   }
 
   const injectValue = (...params: Params) => {
-    const atomInstance = injectAtomSubscription<State, Params, Methods>(
+    const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
       'injectValue()',
       newAtom,
       params
@@ -142,11 +160,11 @@ export const atom: {
     return atomInstance.stateStore.getState()
   }
 
-  const override: Atom<State, Params>['override'] = newValue =>
+  const override: Atom<State, Params, Methods>['override'] = newValue =>
     atom({ ...(options as any), value: newValue })
 
   const useInstance = (...params: Params) => {
-    const atomInstance = useAtomSubscription<State, Params, Methods>(
+    const atomInstance = useAtomWithSubscription<State, Params, Methods>(
       newAtom,
       params
     )
@@ -155,8 +173,23 @@ export const atom: {
     return { useMethods, useValue }
   }
 
+  const useInvalidate = (...params: Params) => {
+    const atomInstance = injectAtomWithoutSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
+
+    return () => {
+      atomInstance.invalidate({
+        operation: 'useInvalidate()',
+        targetType: EvaluationTargetType.External,
+        type: EvaluationType.CacheInvalidated,
+      })
+    }
+  }
+
   const useMethods = (...params: Params) => {
-    const atomInstance = useAtomSubscription<State, Params, Methods>(
+    const atomInstance = useAtomWithoutSubscription<State, Params, Methods>(
       newAtom,
       params
     )
@@ -165,7 +198,7 @@ export const atom: {
   }
 
   const useValue = (...params: Params) => {
-    const atomInstance = useAtomSubscription<State, Params, Methods>(
+    const atomInstance = useAtomWithSubscription<State, Params, Methods>(
       newAtom,
       params
     )
@@ -176,6 +209,7 @@ export const atom: {
   const newAtom: AtomBase<State, Params, Methods> = {
     getReactContext,
     injectInstance,
+    injectInvalidate,
     injectMethods,
     injectValue,
     internalId: generateImplementationId(),
@@ -185,6 +219,7 @@ export const atom: {
     readonly,
     scope,
     useInstance,
+    useInvalidate,
     useMethods,
     useValue,
     value,

@@ -20,7 +20,7 @@ import {
 } from '../types'
 import { generateImplementationId } from '../utils'
 import { createAtom } from '../utils/createAtom'
-import { useAtomSubscription } from './useAtomSubscription'
+import { useAtomWithSubscription } from './useAtomWithSubscription'
 
 type Key<Params extends any[] = []> = string | [string, ...Params]
 
@@ -127,5 +127,5 @@ export const useAtom: {
     return newAtom
   }, [])
 
-  return useAtomSubscription(newAtom, params)
+  return useAtomWithSubscription(newAtom, params)
 }

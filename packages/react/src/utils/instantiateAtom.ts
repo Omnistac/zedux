@@ -23,19 +23,19 @@ import { getInstanceMethods } from './general'
 
 const createAppAtomInstance = <State = any, Params extends any[] = []>(
   atom: AtomBaseProperties<State, Params>,
-  newAtomInstance: AppAtomInstance<State>,
+  newAtomInstance: AppAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
 const createReadonlyAppAtomInstance = <State = any, Params extends any[] = []>(
   atom: AtomBaseProperties<State, Params>,
-  newAtomInstance: ReadonlyAppAtomInstance<State>,
+  newAtomInstance: ReadonlyAppAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
 const createGlobalAtomInstance = <State = any, Params extends any[] = []>(
   atom: AtomBaseProperties<State, Params>,
-  newAtomInstance: GlobalAtomInstance<State>,
+  newAtomInstance: GlobalAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
@@ -44,13 +44,13 @@ const createReadonlyGlobalAtomInstance = <
   Params extends any[] = []
 >(
   atom: AtomBaseProperties<State, Params>,
-  newAtomInstance: ReadonlyGlobalAtomInstance<State>,
+  newAtomInstance: ReadonlyGlobalAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
 const createLocalAtomInstance = <State = any, Params extends any[] = []>(
   atom: AtomBaseProperties<State, Params>,
-  newAtomInstance: LocalAtomInstance<State>,
+  newAtomInstance: LocalAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
@@ -59,13 +59,13 @@ const createReadonlyLocalAtomInstance = <
   Params extends any[] = []
 >(
   atom: AtomBaseProperties<State, Params>,
-  newAtomInstance: ReadonlyLocalAtomInstance<State>,
+  newAtomInstance: ReadonlyLocalAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
-const createAtomInstance = <State = any, Params extends any[] = []>(
+const createAtomInstance = <State, Params extends any[]>(
   atom: AtomBaseProperties<State, Params>,
-  newAtomInstance: AtomInstanceBase<State>,
+  newAtomInstance: AtomInstanceBase<State, Params>,
   factoryResult: AtomValue<State>
 ) => {
   switch (atom.scope) {
@@ -73,7 +73,7 @@ const createAtomInstance = <State = any, Params extends any[] = []>(
       return atom.readonly
         ? createReadonlyAppAtomInstance(
             atom,
-            newAtomInstance as ReadonlyAppAtomInstance<State>,
+            newAtomInstance as ReadonlyAppAtomInstance<State, Params>,
             factoryResult
           )
         : createAppAtomInstance(atom, newAtomInstance, factoryResult)
@@ -113,13 +113,13 @@ const getStateStore = <State = any>(factoryResult: AtomValue<State>) => {
 export const instantiateAtom = <
   State,
   Params extends any[],
-  Methods extends Record<string, () => any> = Record<string, () => any>
+  Methods extends Record<string, () => any>
 >(
   appId: string,
   atom: AtomBaseProperties<State, Params>,
   keyHash: string,
   params: Params = ([] as unknown) as Params
-): AtomInstanceBase<State, Methods> => {
+): AtomInstanceBase<State, Params, Methods> => {
   const destroy = () => {
     // TODO: dispatch an action over stateStore for this mutation
     newAtomInstance.activeState = ActiveState.Destroyed
@@ -239,7 +239,7 @@ export const instantiateAtom = <
   const useMethods = injectMethods
   const useValue = injectValue
 
-  const newAtomInstance: AtomInstanceBase<State, Methods> = {
+  const newAtomInstance: AtomInstanceBase<State, Params, Methods> = {
     activeState: ActiveState.Active,
     dependencies,
     keyHash,
@@ -248,7 +248,9 @@ export const instantiateAtom = <
     injectValue,
     injectors,
     internalId: generateInstanceId(),
+    invalidate: scheduleEvaluation,
     key: atom.key,
+    params,
     stateStore,
     stateType,
     useMethods,
@@ -293,5 +295,5 @@ export const instantiateAtom = <
   // map.set({ control: true }, true);
   // console.log({ key: atom.key, map });
 
-  return newAtomInstance as AtomInstance<State, Methods>
+  return newAtomInstance as AtomInstance<State, Params, Methods>
 }

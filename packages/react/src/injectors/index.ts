@@ -1,5 +1,6 @@
 export * from './injectAtomContext'
-export * from './injectAtomSubscription'
+export * from './injectAtomWithoutSubscription'
+export * from './injectAtomWithSubscription'
 export * from './injectCallback'
 export * from './injectEffect'
 export * from './injectInvalidate'
