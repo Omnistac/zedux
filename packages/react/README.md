@@ -486,6 +486,13 @@ import { injectQuery, useAtom } from '@zedux/react'
 function Todos() {
   const { data, error, isFetching, status } = useAtom('todos', () => injectQuery(fetchTodos))
 }
+
+// dependent queries
+const { isIdle, data: projects } = useQuery('projects', async () => {
+  const userId = await currentUserIdAtom.injectValueAsync()
+
+  return getProjectsByUser(userId)
+})
 ```
 
 ## AtomContext example
@@ -519,7 +526,7 @@ function SomeComponent() {
 
 Round 1 (end of December, 2020)
 
-x- Make use* and inject* apis orthogonal
+x- Make use* and inject* apis similar
 x- Determine if factories are ok the way they are or if they should mimic hooks - rerendering on dep change
   x- (After Way Too MUCH debate, it's been decided to switch to a hooks/react-like approach)
 x- Add `readonly` atoms. Good for top-level wrapper atoms (e.g. an `axios` atom) and selector atoms

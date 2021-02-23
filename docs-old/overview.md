@@ -84,7 +84,7 @@ Because. Apps. Scale. This is a point that Redux doesn't address at all.
 
 How many small applications decided against Redux at first, then grew to the point of sorely regretting that decision? How many mid-sized applications chose Redux, then grew to the point that the verbosity became unmaintainable and the number of plugins spiked the learning curve beyond reason?
 
-While Zedux doesn't aim to eliminate plugins, it does aim to reduce their quantity. In their place, it offers a uniform, often orthogonal api across all common aspects of state management. This drastically reduces boilerplate, overall code size, and the steepness of the learning curve.
+While Zedux doesn't aim to eliminate plugins, it does aim to reduce their quantity. In their place, it offers a uniform api across all common aspects of state management. This drastically reduces boilerplate, overall code size, and the steepness of the learning curve.
 
 ## No more middleware?
 

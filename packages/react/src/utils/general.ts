@@ -58,7 +58,7 @@ export const getInstanceMethods = <
 }
 
 export const haveDepsChanged = (prevDeps?: any[], nextDeps?: any[]) => {
-  if ((!prevDeps && nextDeps) || (prevDeps && !nextDeps)) {
+  if (!prevDeps || !nextDeps) {
     return true
   }
 
