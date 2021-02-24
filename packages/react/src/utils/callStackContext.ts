@@ -11,18 +11,19 @@ interface CallStackContextInstance<T = any> {
 const stack: CallStackContextInstance[] = []
 
 export const createCallStackContext = <T = any>(defaults: T) => {
-  const consume = () => {
+  const consume = (useDefaults = true) => {
     const instance: CallStackContextInstance<T> = stack.find(
       item => item.context === context
     )
 
-    return instance?.value ?? defaults
+    return instance?.value ?? (useDefaults ? defaults : null)
   }
 
   const provide = <R = any>(value: T, callback: () => R) => {
     stack.unshift({ context, value })
     const ret = callback()
     stack.shift()
+
     return ret
   }
 

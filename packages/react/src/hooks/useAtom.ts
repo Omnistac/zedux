@@ -34,7 +34,7 @@ export const useAtom: {
     key: Key<Params>,
     // raw value overload can't be supported - we wouldn't know if an object was an *AtomConfig object or the desired initial state
     value: (...params: Params) => AtomValue<State>
-  ): AppAtomInstance<State, Methods>
+  ): AppAtomInstance<State, Params, Methods>
   // ReadonlyGlobalAtom:
   <
     State = any,
@@ -43,7 +43,7 @@ export const useAtom: {
   >(
     key: Key<Params>,
     options: ReadonlyGlobalAtomConfig<State, Params>
-  ): ReadonlyGlobalAtomInstance<State, Methods>
+  ): ReadonlyGlobalAtomInstance<State, Params, Methods>
   // GlobalAtom:
   <
     State = any,
@@ -52,7 +52,7 @@ export const useAtom: {
   >(
     key: Key<Params>,
     options: GlobalAtomConfig<State, Params>
-  ): GlobalAtomInstance<State, Methods>
+  ): GlobalAtomInstance<State, Params, Methods>
   // ReadonlyAppAtom:
   <
     State = any,
@@ -61,7 +61,7 @@ export const useAtom: {
   >(
     key: Key<Params>,
     options: ReadonlyAppAtomConfig<State, Params>
-  ): ReadonlyAppAtomInstance<State, Methods>
+  ): ReadonlyAppAtomInstance<State, Params, Methods>
   // AppAtom:
   <
     State = any,
@@ -70,7 +70,7 @@ export const useAtom: {
   >(
     key: Key<Params>,
     options: AppAtomConfig<State, Params>
-  ): AppAtomInstance<State, Methods>
+  ): AppAtomInstance<State, Params, Methods>
   // ReadonlyLocalAtom:
   <
     State = any,
@@ -79,7 +79,7 @@ export const useAtom: {
   >(
     key: Key<Params>,
     options: ReadonlyLocalAtomConfig<State, Params>
-  ): ReadonlyLocalAtomInstance<State, Methods>
+  ): ReadonlyLocalAtomInstance<State, Params, Methods>
   // LocalAtom:
   <
     State = any,
@@ -88,7 +88,7 @@ export const useAtom: {
   >(
     key: Key<Params>,
     options: LocalAtomConfig<State, Params>
-  ): LocalAtomInstance<State, Methods>
+  ): LocalAtomInstance<State, Params, Methods>
 } = <State, Params extends any[], Methods extends Record<string, () => any>>(
   paramA: Key<Params> | AtomConfig<State, Params>,
   maybeFactory?: Atom<State, Params, Methods>['value']

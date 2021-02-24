@@ -4,9 +4,9 @@ import {
   RefInjectorDescriptor,
   validateInjector,
 } from '@zedux/react/utils'
-import { diContext } from '@zedux/react/utils/diContext'
+import { diContext } from '@zedux/react/utils/csContexts'
 
-export const injectRef = <T = any>(initialVal?: T) => {
+export const injectRef = <T>(initialVal?: T): RefObject<T> => {
   const context = diContext.consume()
 
   let descriptor = validateInjector<RefInjectorDescriptor<T>>(

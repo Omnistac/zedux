@@ -83,8 +83,9 @@ export interface AtomBase<
   ) => Readonly extends true
     ? ReadonlyAtomInstanceInjectorApi<State, Params, Methods>
     : ReadWriteAtomInstanceInjectorApi<State, Params, Methods>
-  injectMethods: (...params: Params) => Methods
   injectInvalidate: (...params: Params) => () => void
+  injectLazy: () => (...params: Params) => Store<State>
+  injectMethods: (...params: Params) => Methods
   injectValue: (...params: Params) => State
   override: (
     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
@@ -95,6 +96,7 @@ export interface AtomBase<
     ? ReadonlyAtomInstanceReactApi<State, Params, Methods>
     : ReadWriteAtomInstanceReactApi<State, Params, Methods>
   useInvalidate: (...params: Params) => () => void
+  useLazy: () => (...params: Params) => Store<State>
   useMethods: (...params: Params) => Methods
   useValue: (...params: Params) => State
 }

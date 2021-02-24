@@ -1,5 +1,5 @@
 import { EvaluationTargetType, EvaluationType } from '../utils'
-import { diContext } from '../utils/diContext'
+import { diContext } from '../utils/csContexts'
 
 export const injectInvalidate = () => {
   const { scheduleEvaluation } = diContext.consume()

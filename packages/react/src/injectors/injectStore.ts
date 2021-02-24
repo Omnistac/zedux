@@ -1,6 +1,6 @@
 import { createStore, Store } from '@zedux/core'
 import { EvaluationType, EvaluationTargetType } from '../utils'
-import { diContext } from '../utils/diContext'
+import { diContext } from '../utils/csContexts'
 import { injectEffect } from './injectEffect'
 import { injectMemo } from './injectMemo'
 

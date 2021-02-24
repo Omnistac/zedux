@@ -1,7 +1,7 @@
 import { Subscriber } from '@zedux/core'
 import { AtomBaseProperties } from '../types'
 import { EvaluationType, EvaluationTargetType } from '../utils'
-import { diContext } from '../utils/diContext'
+import { diContext } from '../utils/csContexts'
 import { injectAtomWithoutSubscription } from './injectAtomWithoutSubscription'
 import { injectEffect } from './injectEffect'
 

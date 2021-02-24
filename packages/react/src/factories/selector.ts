@@ -1,4 +1,4 @@
-import { Context, createContext } from 'react'
+import { Context, createContext, useContext } from 'react'
 import {
   Atom,
   AtomBase,
@@ -17,10 +17,18 @@ import { useAtomWithSubscription } from '../hooks/useAtomWithSubscription'
 import { injectAtomWithSubscription } from '../injectors/injectAtomWithSubscription'
 import {
   EMPTY_CONTEXT,
+  EvaluationTargetType,
+  EvaluationType,
   generateImplementationId,
   getInstanceMethods,
+  getKeyHash,
 } from '../utils'
 import { createAtom } from '../utils/createAtom'
+import { injectAtomWithoutSubscription } from '../injectors'
+import { useAtomWithoutSubscription } from '../hooks'
+import { appContext } from '../components'
+import { appCsContext, diContext } from '../utils/csContexts'
+import { getAtomInstance } from '../utils/getAtomInstance'
 
 export const selector: {
   // Basic atom(key, val) overload:
@@ -74,7 +82,7 @@ export const selector: {
 
   const { flags, key, readonly, scope = Scope.App, value } = options
 
-  let reactContext: Context<AtomInstance<State>>
+  let reactContext: Context<AtomInstance<State, Params, Methods>>
   const getReactContext = () => {
     if (reactContext) return reactContext
 
@@ -82,6 +90,7 @@ export const selector: {
   }
 
   const injectInstance = (...params: Params) => {
+    // TODO: Don't subscribe here
     const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
       'injectInstance()',
       newAtom,
@@ -92,9 +101,42 @@ export const selector: {
     return { injectMethods, injectValue }
   }
 
+  const injectInvalidate = (...params: Params) => {
+    const atomInstance = injectAtomWithoutSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
+
+    return () => {
+      atomInstance.invalidate({
+        operation: 'injectInvalidate()',
+        targetType: EvaluationTargetType.External,
+        type: EvaluationType.CacheInvalidated,
+      })
+    }
+  }
+
+  const injectLazy = () => {
+    const initialContext = diContext.consume()
+
+    return (...params: Params) => {
+      const newContext = appCsContext.consume()
+      const { appId } = newContext || initialContext
+      const keyHash = getKeyHash(newAtom, params)
+
+      const atomInstance = getAtomInstance<State, Params, Methods>(
+        appId,
+        newAtom,
+        keyHash,
+        params
+      )
+
+      return atomInstance.stateStore
+    }
+  }
+
   const injectMethods = (...params: Params) => {
-    const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
-      'injectMethods()',
+    const atomInstance = injectAtomWithoutSubscription<State, Params, Methods>(
       newAtom,
       params
     )
@@ -112,10 +154,11 @@ export const selector: {
     return atomInstance.stateStore.getState()
   }
 
-  const override: Atom<State, Params>['override'] = newValue =>
+  const override: Atom<State, Params, Methods>['override'] = newValue =>
     selector({ ...(options as any), value: newValue })
 
   const useInstance = (...params: Params) => {
+    // TODO: Don't subscribe here
     const atomInstance = useAtomWithSubscription<State, Params, Methods>(
       newAtom,
       params
@@ -125,8 +168,42 @@ export const selector: {
     return { useMethods, useValue }
   }
 
+  const useInvalidate = (...params: Params) => {
+    const atomInstance = injectAtomWithoutSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
+
+    return () => {
+      atomInstance.invalidate({
+        operation: 'useInvalidate()',
+        targetType: EvaluationTargetType.External,
+        type: EvaluationType.CacheInvalidated,
+      })
+    }
+  }
+
+  const useLazy = () => {
+    const initialAppId = useContext(appContext)
+
+    return (...params: Params) => {
+      const newAppId = appCsContext.consume()?.appId
+      const appId = newAppId || initialAppId
+      const keyHash = getKeyHash(newAtom, params)
+
+      const atomInstance = getAtomInstance<State, Params, Methods>(
+        appId,
+        newAtom,
+        keyHash,
+        params
+      )
+
+      return atomInstance.stateStore
+    }
+  }
+
   const useMethods = (...params: Params) => {
-    const atomInstance = useAtomWithSubscription<State, Params, Methods>(
+    const atomInstance = useAtomWithoutSubscription<State, Params, Methods>(
       newAtom,
       params
     )
@@ -146,6 +223,8 @@ export const selector: {
   const newAtom: AtomBase<State, Params, Methods> = {
     getReactContext,
     injectInstance,
+    injectInvalidate,
+    injectLazy,
     injectMethods,
     injectValue,
     internalId: generateImplementationId(),
@@ -155,6 +234,8 @@ export const selector: {
     readonly,
     scope,
     useInstance,
+    useInvalidate,
+    useLazy,
     useMethods,
     useValue,
     value,

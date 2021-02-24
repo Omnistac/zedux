@@ -156,7 +156,7 @@ export type Selector<State = any, Derivation = any> = (
 ) => Derivation
 
 export type Settable<State = any> =
-  | ((state: State) => RecursivePartial<State>)
+  | ((state: State) => RecursivePartial<State> | Partial<State>)
   | RecursivePartial<State>
   | Partial<State> // this shouldn't be necessary, but for some reason TS has problems sometimes without it
 

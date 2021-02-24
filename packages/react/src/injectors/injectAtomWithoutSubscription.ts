@@ -1,6 +1,6 @@
 import { AtomBaseProperties, Scope } from '../types'
 import { getKeyHash } from '../utils'
-import { diContext } from '../utils/diContext'
+import { diContext } from '../utils/csContexts'
 import { getAtomInstance } from '../utils/getAtomInstance'
 import { injectMemo } from './injectMemo'
 

@@ -1,5 +1,5 @@
 import { haveDepsChanged, validateInjector } from '../utils'
-import { diContext } from '../utils/diContext'
+import { diContext } from '../utils/csContexts'
 import { InjectorType, MemoInjectorDescriptor } from '../utils/types'
 
 export const injectMemo = <State = any>(factory: () => State, deps?: any[]) => {

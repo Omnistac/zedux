@@ -526,22 +526,28 @@ const registrationFormAtom = atom({
 
 See [the persistence tutorial](TODO:link) and [`molecule()`](TODO:link)
 
-### App Context
+### Atom Context
 
-Data can be provided from an app's components layer to the atoms layer with app context.
+Data can be provided from an app's components layer to the atoms layer with atom context.
 
 ```tsx
-import { AppProvider, atom, injectAppContext } from '@zedux/react'
+import { AppProvider, atom, atomContext } from '@zedux/react'
+
+const reduxContext = atomContext('redux')
 
 const someAtom = atom('some', () => {
-  const context = injectAppContext()
+  const reduxStore = reduxContext.injectValue()
 })
 
 function App() {
+  const instance = reduxContext.useInstance(reduxStore)
+
   return (
-    <AppProvider context={{ anyValues: 'here' }}>
-      <Routes />
-    </AppProvider>
+    <Provider store={store}>
+      <AppProvider context={instance}>
+        <Routes />
+      </AppProvider>
+    </Provider>
   )
 }
 ```

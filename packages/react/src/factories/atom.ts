@@ -1,4 +1,4 @@
-import { Context, createContext } from 'react'
+import { Context, createContext, useContext } from 'react'
 import {
   AppAtom,
   AppAtomConfig,
@@ -27,10 +27,14 @@ import {
   EvaluationType,
   generateImplementationId,
   getInstanceMethods,
+  getKeyHash,
 } from '../utils'
 import { createAtom } from '../utils/createAtom'
 import { injectAtomWithoutSubscription } from '../injectors/injectAtomWithoutSubscription'
 import { useAtomWithoutSubscription } from '../hooks'
+import { appCsContext, diContext } from '../utils/csContexts'
+import { getAtomInstance } from '../utils/getAtomInstance'
+import { appContext } from '../components'
 
 export const atom: {
   // Basic atom(key, val) overload:
@@ -116,6 +120,7 @@ export const atom: {
   }
 
   const injectInstance = (...params: Params) => {
+    // TODO: This should be withoutSubscription. Update instance injectors(/hooks) to subscribe themselves
     const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
       'injectInstance()',
       newAtom,
@@ -138,6 +143,25 @@ export const atom: {
         targetType: EvaluationTargetType.External,
         type: EvaluationType.CacheInvalidated,
       })
+    }
+  }
+
+  const injectLazy = () => {
+    const initialContext = diContext.consume()
+
+    return (...params: Params) => {
+      const newContext = appCsContext.consume()
+      const { appId } = newContext || initialContext
+      const keyHash = getKeyHash(newAtom, params)
+
+      const atomInstance = getAtomInstance<State, Params, Methods>(
+        appId,
+        newAtom,
+        keyHash,
+        params
+      )
+
+      return atomInstance.stateStore
     }
   }
 
@@ -164,6 +188,7 @@ export const atom: {
     atom({ ...(options as any), value: newValue })
 
   const useInstance = (...params: Params) => {
+    // TODO: Don't subscribe here
     const atomInstance = useAtomWithSubscription<State, Params, Methods>(
       newAtom,
       params
@@ -185,6 +210,25 @@ export const atom: {
         targetType: EvaluationTargetType.External,
         type: EvaluationType.CacheInvalidated,
       })
+    }
+  }
+
+  const useLazy = () => {
+    const initialAppId = useContext(appContext)
+
+    return (...params: Params) => {
+      const newAppId = appCsContext.consume()?.appId
+      const appId = newAppId || initialAppId
+      const keyHash = getKeyHash(newAtom, params)
+
+      const atomInstance = getAtomInstance<State, Params, Methods>(
+        appId,
+        newAtom,
+        keyHash,
+        params
+      )
+
+      return atomInstance.stateStore
     }
   }
 
@@ -210,6 +254,7 @@ export const atom: {
     getReactContext,
     injectInstance,
     injectInvalidate,
+    injectLazy,
     injectMethods,
     injectValue,
     internalId: generateImplementationId(),
@@ -220,6 +265,7 @@ export const atom: {
     scope,
     useInstance,
     useInvalidate,
+    useLazy,
     useMethods,
     useValue,
     value,

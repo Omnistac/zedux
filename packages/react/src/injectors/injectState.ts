@@ -1,6 +1,6 @@
 import { createStore, Settable } from '@zedux/core'
 import { validateInjector } from '../utils'
-import { diContext } from '../utils/diContext'
+import { diContext } from '../utils/csContexts'
 import {
   EvaluationType,
   EvaluationTargetType,

@@ -423,11 +423,11 @@ NOTE: could add a suspense preload hook thing
 
 ```tsx
 function SomeComponent() {
-  const loadSomeAtom = someAtom.useLazy(params) // doesn't actually create an instance
+  const loadSomeAtom = someAtom.useLazy() // doesn't actually create an instance
 
   return (
     <button onClick={() => {
-      loadSomeAtom() // creates the instance
+      loadSomeAtom(params) // creates the instance
     }}>
       Click to load!
     </button>
@@ -443,8 +443,6 @@ const someAtom = atom('some', () => {
     const val = await someAsyncOperation()
     return val
   })
-
-  return injectStore()
 })
 
 // or
@@ -530,8 +528,8 @@ x- Make use* and inject* apis similar
 x- Determine if factories are ok the way they are or if they should mimic hooks - rerendering on dep change
   x- (After Way Too MUCH debate, it's been decided to switch to a hooks/react-like approach)
 x- Add `readonly` atoms. Good for top-level wrapper atoms (e.g. an `axios` atom) and selector atoms
-- Add `preload: init => init(params)` and `<AppProvider preload={() => { someAtom.useState(params) }}>`
-  - also make `preload` return `{children}` so they can be wrapped in `<AtomInstanceProvider instances={[...instances]}>`
+x- Add `preload: init => init(params)` and `<AppProvider preload={() => { someAtom.useState(params) }}>`
+  x- also make `preload` return `{children}` so they can be wrapped in `<AtomInstanceProvider instances={[...instances]}>`
 x- Add a param to `store.getRefCount()` to filter out internal Zedux subscriptions
 x- Expand `testMode` to a `flags` param and `isTestSafe` to a `flags` prop.
 - Finish examples

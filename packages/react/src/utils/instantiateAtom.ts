@@ -16,7 +16,7 @@ import {
 } from '../types'
 import { generateInstanceId } from '../utils'
 import { addAtomInstance, globalStore, removeAtomInstance } from '../store'
-import { diContext } from './diContext'
+import { diContext } from './csContexts'
 import { EvaluationReason, InjectorDescriptor } from './types'
 import { scheduleJob } from './scheduler'
 import { getInstanceMethods } from './general'

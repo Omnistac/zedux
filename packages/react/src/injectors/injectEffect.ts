@@ -1,6 +1,6 @@
 import { EffectCallback } from 'react'
 import { haveDepsChanged, scheduleJob, validateInjector } from '../utils'
-import { diContext } from '../utils/diContext'
+import { diContext } from '../utils/csContexts'
 import { EffectInjectorDescriptor, InjectorType } from '../utils/types'
 
 export const injectEffect = (effect: EffectCallback, deps?: any[]) => {

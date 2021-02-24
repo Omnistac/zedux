@@ -2,7 +2,7 @@ import { EffectsSubscriber, Subscriber } from '@zedux/core'
 import { useEffect, useState as useStateReact } from 'react'
 import { injectEffect } from '../injectors'
 import { AtomContext, AtomContextInstance } from '../types'
-import { diContext } from './diContext'
+import { diContext } from './csContexts'
 import { EvaluationTargetType, EvaluationType } from './types'
 
 export const instantiateAtomContext = <T = any>(

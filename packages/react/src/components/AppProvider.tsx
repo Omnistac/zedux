@@ -2,6 +2,7 @@ import React, { createContext, FC, useEffect, useMemo, useRef } from 'react'
 import { addApp, globalStore, removeApp, updateApp } from '../store'
 import { Atom, AtomContext, AtomContextInstance } from '../types'
 import { generateAppId } from '../utils'
+import { appCsContext } from '../utils/csContexts'
 
 // by default, if <AppProvider /> isn't rendered above an atom-using component, `app` atoms will actually be `global`
 export const appContext = createContext('global')
@@ -33,15 +34,16 @@ const usePreservedReference = (arr: any[]) => {
 /**
  * AppProvider
  *
- * Creates an atom ecosystem.
- * The behavior of atoms inside this AppProvider can be altered with props passed here.
+ * Creates an atom ecosystem. The behavior of atoms inside this AppProvider can
+ * be altered with props passed here.
  */
 export const AppProvider: FC<{
   atoms?: Atom[]
   contexts?: AtomContextInstance[]
   flags?: string[]
   id?: string
-}> = ({ atoms, children, contexts, flags, id }) => {
+  preload?: () => unknown
+}> = ({ atoms, children, contexts, flags, id, preload }) => {
   const isFirstRenderRef = useRef(true)
 
   if (atoms && !Array.isArray(atoms)) {
@@ -118,6 +120,12 @@ export const AppProvider: FC<{
     // I think it's fine to assume this effect runs after the others in this file. Easy to change approaches if not.
     isFirstRenderRef.current = false
   }, [])
+
+  useEffect(() => {
+    if (!preload) return
+
+    appCsContext.provide({ appId }, preload)
+  }, [appId]) // only capture the preload variable when appId changes; don't rerun on preload ref change.
 
   return <appContext.Provider value={appId}>{children}</appContext.Provider>
 }

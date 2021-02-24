@@ -469,13 +469,19 @@ const routeAction = (action: ActionChain, storeInternals: StoreInternals) => {
 /**
   Creates a new Zedux store.
 
-  A store is just a few functions and a special $$typeof
-  symbol that identifies it internally.
+  A store is just a few functions and a special $$typeof symbol that identifies
+  it internally.
 */
-export const createStore = <State = any>(
+export const createStore: {
+  <State = any>(
+    initialHierarchy?: RecursivePartial<HierarchyDescriptor<State>>,
+    initialState?: State
+  ): Store<State>
+  <State = any>(initialHierarchy: null, initialState: State): Store<State>
+} = <State = any>(
   initialHierarchy?: RecursivePartial<HierarchyDescriptor<State>> | null,
   initialState?: State
-): Store<State> => {
+) => {
   const configureHierarchy = (newConfig: HierarchyConfig) => {
     doConfigureHierarchy(newConfig, internals)
 
@@ -515,7 +521,8 @@ export const createStore = <State = any>(
     return internals.store // for chaining
   }
 
-  const setState = (settable: Settable) => doSetState(settable, internals)
+  const setState = (settable: Settable<State>) =>
+    doSetState(settable, internals)
 
   const subscribe = (subscriber: Subscriber<State>) =>
     doSubscribe(subscriber, internals)
