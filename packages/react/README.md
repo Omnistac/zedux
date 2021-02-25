@@ -544,7 +544,7 @@ x- context (`<AppProvider context={...}>` and `injectContext()`)
 - remove duplicated code in `selector()` and `atom()`
 - clean up types (does each atom, atom instance, and atom config really need its own interface)
 - `atom.useDispatch()` and `atom.injectDispatch()`
-- `instance.Provider` and `atom.useConsumer()`
+x- `instance.Provider` and `atom.useConsumer()`
 x- `injectInvalidate()`, `atom.injectInvalidate()`, `atom.useInvalidate()`
 - `useStore()`, `atom.useStore()`, `atom.injectStore()`
 x- `injectCallback()`
@@ -556,5 +556,7 @@ x- `injectCallback()`
   - `query()`, `mutation()`, `stream()` OR `promise()`, `stream()` OR `unary()`, `clientStream()`, `serverStream()`, `multiplexStream()` OR injectors - `injectQuery()` &c. or `injectPromise()` &c. or `injectUnary()` &c.
 - should `useInstance()` everywhere be changed to `useProvider()`?
 - `atom.useSelector()` and `atom.injectSelector()`
-- a way to dynamically instantiate and access atoms and atomContexts - not using hooks (directly). Like React Query's `useQueries()` hook - https://react-query.tanstack.com/guides/parallel-queries#dynamic-parallel-queries-with-usequeries. I'm thinking at least `useAtomContexts()` and `useAtoms()`.
+- a way to dynamically instantiate and access atoms and atomContexts - not using hooks (directly). Like React Query's `useQueries()` hook - https://react-query.tanstack.com/guides/parallel-queries#dynamic-parallel-queries-with-usequeries. I'm thinking at least `useAtomContexts()` and `useAtoms()` (and equivalent injectors).
 - make AppProviders composable. Overrides and contexts from multiple parent AppProviders are merged together. Global atoms get added to the lowest pool that overrides them.
+- `injectWhy()`
+- `methods` -> `exports`

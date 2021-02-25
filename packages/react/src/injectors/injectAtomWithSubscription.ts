@@ -27,7 +27,7 @@ export const injectAtomWithSubscription = <
   Methods extends Record<string, () => any> = Record<string, () => any>
 >(
   operation: string,
-  atom: AtomBaseProperties<State, Params>,
+  atom: AtomBaseProperties<State, Params, Methods>,
   params?: Params
 ) => {
   const { scheduleEvaluation } = diContext.consume()

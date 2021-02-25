@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { Context, createContext, useMemo } from 'react'
 import {
   AppAtomInstance,
   AppAtomConfig,
@@ -17,8 +17,9 @@ import {
   Atom,
   AtomBaseProperties,
   Scope,
+  AtomInstance,
 } from '../types'
-import { generateImplementationId } from '../utils'
+import { EMPTY_CONTEXT, generateImplementationId } from '../utils'
 import { createAtom } from '../utils/createAtom'
 import { useAtomWithSubscription } from './useAtomWithSubscription'
 
@@ -113,7 +114,15 @@ export const useAtom: {
 
     const { flags, key, readonly, scope = Scope.App, value } = options
 
-    const newAtom: AtomBaseProperties<State, Params> = {
+    let reactContext: Context<AtomInstance<State, Params, Methods>>
+    const getReactContext = () => {
+      if (reactContext) return reactContext
+
+      return (reactContext = createContext(EMPTY_CONTEXT as any))
+    }
+
+    const newAtom: AtomBaseProperties<State, Params, Methods> = {
+      getReactContext,
       internalId: generateImplementationId(),
       flags,
       key,
@@ -122,7 +131,7 @@ export const useAtom: {
       value,
     }
 
-    createAtom<State, Params>(newAtom, options)
+    createAtom<State, Params, Methods>(newAtom, options)
 
     return newAtom
   }, [])

@@ -7,7 +7,7 @@ export interface DepsInjectorDescriptor extends InjectorDescriptor {
 
 export interface DiContext {
   appId: string
-  atom: AtomBaseProperties
+  atom: AtomBaseProperties<any, any[], any, any, any, any>
   dependencies: Record<string, string>
   injectors: InjectorDescriptor[]
   isInitializing: boolean

@@ -1,4 +1,5 @@
 import { createStore, effectTypes, isZeduxStore, Store } from '@zedux/core'
+import React, { FC } from 'react'
 import {
   ActiveState,
   AppAtomInstance,
@@ -21,51 +22,73 @@ import { EvaluationReason, InjectorDescriptor } from './types'
 import { scheduleJob } from './scheduler'
 import { getInstanceMethods } from './general'
 
-const createAppAtomInstance = <State = any, Params extends any[] = []>(
-  atom: AtomBaseProperties<State, Params>,
+const createAppAtomInstance = <
+  State extends any = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  atom: AtomBaseProperties<State, Params, Methods>,
   newAtomInstance: AppAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
-const createReadonlyAppAtomInstance = <State = any, Params extends any[] = []>(
-  atom: AtomBaseProperties<State, Params>,
+const createReadonlyAppAtomInstance = <
+  State extends any = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  atom: AtomBaseProperties<State, Params, Methods>,
   newAtomInstance: ReadonlyAppAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
-const createGlobalAtomInstance = <State = any, Params extends any[] = []>(
-  atom: AtomBaseProperties<State, Params>,
+const createGlobalAtomInstance = <
+  State extends any = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  atom: AtomBaseProperties<State, Params, Methods>,
   newAtomInstance: GlobalAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
 const createReadonlyGlobalAtomInstance = <
-  State = any,
-  Params extends any[] = []
+  State extends any = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
 >(
-  atom: AtomBaseProperties<State, Params>,
+  atom: AtomBaseProperties<State, Params, Methods>,
   newAtomInstance: ReadonlyGlobalAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
-const createLocalAtomInstance = <State = any, Params extends any[] = []>(
-  atom: AtomBaseProperties<State, Params>,
+const createLocalAtomInstance = <
+  State extends any = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  atom: AtomBaseProperties<State, Params, Methods>,
   newAtomInstance: LocalAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
 const createReadonlyLocalAtomInstance = <
-  State = any,
-  Params extends any[] = []
+  State extends any = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
 >(
-  atom: AtomBaseProperties<State, Params>,
+  atom: AtomBaseProperties<State, Params, Methods>,
   newAtomInstance: ReadonlyLocalAtomInstance<State, Params>,
   factoryResult: AtomValue<State>
 ) => {}
 
-const createAtomInstance = <State, Params extends any[]>(
-  atom: AtomBaseProperties<State, Params>,
-  newAtomInstance: AtomInstanceBase<State, Params>,
+const createAtomInstance = <
+  State,
+  Params extends any[],
+  Methods extends Record<string, () => any>
+>(
+  atom: AtomBaseProperties<State, Params, Methods>,
+  newAtomInstance: AtomInstanceBase<State, Params, Methods>,
   factoryResult: AtomValue<State>
 ) => {
   switch (atom.scope) {
@@ -94,7 +117,9 @@ const getStateType = (val: any) => {
   return StateType.Value
 }
 
-const getStateStore = <State = any>(factoryResult: AtomValue<State>) => {
+const getStateStore = <State extends any = any>(
+  factoryResult: AtomValue<State>
+) => {
   const stateType = getStateType(factoryResult)
 
   const stateStore =
@@ -116,7 +141,7 @@ export const instantiateAtom = <
   Methods extends Record<string, () => any>
 >(
   appId: string,
-  atom: AtomBaseProperties<State, Params>,
+  atom: AtomBaseProperties<State, Params, Methods>,
   keyHash: string,
   params: Params = ([] as unknown) as Params
 ): AtomInstanceBase<State, Params, Methods> => {
@@ -172,7 +197,7 @@ export const instantiateAtom = <
       if (typeof atom.value !== 'function') return
 
       const newInjectors: InjectorDescriptor[] = []
-      const newFactoryResult = diContext.provide(
+      const newFactoryResult: AtomValue<State> = diContext.provide(
         {
           appId,
           atom,
@@ -201,7 +226,7 @@ export const instantiateAtom = <
       }
 
       if (newStateType === StateType.Value) {
-        stateStore.setState(newFactoryResult)
+        stateStore.setState(newFactoryResult as State)
       }
 
       hasScheduledEvaluation = false
@@ -236,6 +261,18 @@ export const instantiateAtom = <
 
   const injectMethods = () => getInstanceMethods(newAtomInstance)
   const injectValue = () => newAtomInstance.stateStore.getState()
+
+  const Provider: FC = ({ children }) => {
+    const atomContext = atom.getReactContext()
+    console.log('got atom context!', atomContext)
+
+    return (
+      <atomContext.Provider value={newAtomInstance}>
+        {children}
+      </atomContext.Provider>
+    )
+  }
+
   const useMethods = injectMethods
   const useValue = injectValue
 
@@ -250,6 +287,7 @@ export const instantiateAtom = <
     internalId: generateInstanceId(),
     invalidate: scheduleEvaluation,
     key: atom.key,
+    Provider,
     params,
     stateStore,
     stateType,

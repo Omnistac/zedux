@@ -28,14 +28,14 @@ export const useAtomWithoutSubscription: <
   Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
 >(
-  atom: AtomBaseProperties<State, Params>,
+  atom: AtomBaseProperties<State, Params, Methods>,
   params?: Params
 ) => AtomInstance<State, Params, Methods> | undefined = <
   State = any,
   Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
 >(
-  atom: AtomBaseProperties<State, Params>,
+  atom: AtomBaseProperties<State, Params, Methods>,
   params?: Params
 ) => {
   const appId = useContext(appContext)

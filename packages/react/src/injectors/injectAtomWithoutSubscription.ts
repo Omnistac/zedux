@@ -25,7 +25,7 @@ export const injectAtomWithoutSubscription = <
   Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
 >(
-  atom: AtomBaseProperties<State, Params>,
+  atom: AtomBaseProperties<State, Params, Methods>,
   params?: Params
 ) => {
   const { appId, dependencies } = diContext.consume()

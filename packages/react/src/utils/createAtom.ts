@@ -12,11 +12,15 @@ import {
 import { useAtomWithSubscription } from '../hooks/useAtomWithSubscription'
 import { injectAtomWithSubscription } from '../injectors/injectAtomWithSubscription'
 
-const attachStateHooks = <State = any, Params extends any[] = []>(
+const attachStateHooks = <
+  State = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
   newAtom: any
 ) => {
   newAtom.injectState = (...params: Params) => {
-    const atomInstance = injectAtomWithSubscription<State, Params>(
+    const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
       'injectState()',
       newAtom,
       params
@@ -29,7 +33,10 @@ const attachStateHooks = <State = any, Params extends any[] = []>(
   }
 
   newAtom.useState = (...params: Params) => {
-    const atomInstance = useAtomWithSubscription(newAtom, params)
+    const atomInstance = useAtomWithSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
 
     return [
       atomInstance.stateStore.getState(),
@@ -38,50 +45,78 @@ const attachStateHooks = <State = any, Params extends any[] = []>(
   }
 }
 
-const createReadonlyAppAtom = <State = any, Params extends any[] = []>(
-  newAtom: AtomBaseProperties<State, Params>,
+const createReadonlyAppAtom = <
+  State = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  newAtom: AtomBaseProperties<State, Params, Methods>,
   options: ReadonlyAppAtomConfig<State, Params>
 ) => {
   newAtom.ttl = options.ttl
 }
 
-const createAppAtom = <State = any, Params extends any[] = []>(
-  newAtom: AtomBaseProperties<State, Params>,
+const createAppAtom = <
+  State = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  newAtom: AtomBaseProperties<State, Params, Methods>,
   options: AppAtomConfig<State, Params>
 ) => {
   newAtom.ttl = options.ttl
   attachStateHooks<State, Params>(newAtom)
 }
 
-const createReadonlyGlobalAtom = <State = any, Params extends any[] = []>(
-  newAtom: AtomBaseProperties<State, Params>,
+const createReadonlyGlobalAtom = <
+  State = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  newAtom: AtomBaseProperties<State, Params, Methods>,
   options: ReadonlyGlobalAtomConfig<State, Params>
 ) => {
   newAtom.ttl = options.ttl
 }
 
-const createGlobalAtom = <State = any, Params extends any[] = []>(
-  newAtom: AtomBaseProperties<State, Params>,
+const createGlobalAtom = <
+  State = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  newAtom: AtomBaseProperties<State, Params, Methods>,
   options: GlobalAtomConfig<State, Params>
 ) => {
   newAtom.ttl = options.ttl
   attachStateHooks<State, Params>(newAtom)
 }
 
-const createReadonlyLocalAtom = <State = any, Params extends any[] = []>(
-  newAtom: AtomBaseProperties<State, Params>,
+const createReadonlyLocalAtom = <
+  State = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  newAtom: AtomBaseProperties<State, Params, Methods>,
   options: ReadonlyLocalAtomConfig<State, Params>
 ) => {}
 
-const createLocalAtom = <State = any, Params extends any[] = []>(
-  newAtom: AtomBaseProperties<State, Params>,
+const createLocalAtom = <
+  State = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  newAtom: AtomBaseProperties<State, Params, Methods>,
   options: LocalAtomConfig<State, Params>
 ) => {
   attachStateHooks<State, Params>(newAtom)
 }
 
-export const createAtom = <State = any, Params extends any[] = []>(
-  atomBase: AtomBaseProperties<State>,
+export const createAtom = <
+  State = any,
+  Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>
+>(
+  atomBase: AtomBaseProperties<State, Params, Methods>,
   options: AtomConfig<State, Params>
 ) => {
   switch (atomBase.scope) {

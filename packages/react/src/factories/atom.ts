@@ -187,6 +187,11 @@ export const atom: {
   const override: Atom<State, Params, Methods>['override'] = newValue =>
     atom({ ...(options as any), value: newValue })
 
+  const useConsumer = () => {
+    const context = getReactContext()
+    return useContext(context)
+  }
+
   const useInstance = (...params: Params) => {
     // TODO: Don't subscribe here
     const atomInstance = useAtomWithSubscription<State, Params, Methods>(
@@ -194,8 +199,8 @@ export const atom: {
       params
     )
 
-    const { useMethods, useValue } = atomInstance
-    return { useMethods, useValue }
+    const { Provider, useMethods, useValue } = atomInstance
+    return { Provider, useMethods, useValue }
   }
 
   const useInvalidate = (...params: Params) => {
@@ -263,6 +268,7 @@ export const atom: {
     override,
     readonly,
     scope,
+    useConsumer,
     useInstance,
     useInvalidate,
     useLazy,
@@ -271,7 +277,7 @@ export const atom: {
     value,
   }
 
-  createAtom<State, Params>(newAtom, options)
+  createAtom<State, Params, Methods>(newAtom, options)
 
   return newAtom as any // the overloads of this function give consumers all the type info they need
 }

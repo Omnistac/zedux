@@ -33,7 +33,10 @@ export const generateImplementationId = () => `im-${generateId()}`
 export const generateInstanceId = () => `in-${generateId()}`
 export const generateLocalId = () => `lo-${generateId()}`
 
-export const getKeyHash = (atom: AtomBaseProperties, params?: any[]) => {
+export const getKeyHash = (
+  atom: AtomBaseProperties<any, any, any>,
+  params?: any[]
+) => {
   // every time a local atom is got, a new instance is created
   if (atom.scope === Scope.Local) return generateLocalId()
 

@@ -76,8 +76,14 @@ export interface AtomBase<
     Params,
     Methods
   >
-> extends AtomBaseProperties<State, Params, ScopeType, Readonly> {
-  getReactContext: () => Context<InstanceType>
+> extends AtomBaseProperties<
+    State,
+    Params,
+    Methods,
+    ScopeType,
+    Readonly,
+    InstanceType
+  > {
   injectInstance: (
     ...params: Params
   ) => Readonly extends true
@@ -90,6 +96,7 @@ export interface AtomBase<
   override: (
     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
   ) => AtomType
+  useConsumer: () => InstanceType
   useInstance: (
     ...params: Params
   ) => Readonly extends true
@@ -104,10 +111,17 @@ export interface AtomBase<
 export interface AtomBaseProperties<
   State = any,
   Params extends any[] = [],
+  Methods extends Record<string, () => any> = Record<string, () => any>,
   ScopeType extends Scope = Scope,
-  Readonly extends boolean = boolean
+  Readonly extends boolean = boolean,
+  InstanceType extends AtomInstance<State, Params, Methods> = AtomInstance<
+    State,
+    Params,
+    Methods
+  >
 > {
   flags?: string[]
+  getReactContext: () => Context<InstanceType>
   internalId: string
   key: string
   // molecules?: Molecule[]
@@ -133,6 +147,7 @@ export interface AtomInstanceBase<
   invalidate: (reason: EvaluationReason) => void
   key: string
   keyHash: string
+  Provider: React.ComponentType
   params: Params
   stateStore: Store<State>
   stateType: StateType
@@ -166,7 +181,10 @@ export type ReadonlyAtomInstanceReactApi<
   State = any,
   Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
-> = Pick<AtomInstanceBase<State, Params, Methods>, 'useMethods' | 'useValue'>
+> = Pick<
+  AtomInstanceBase<State, Params, Methods>,
+  'Provider' | 'useMethods' | 'useValue'
+>
 
 export type ReadonlyAtomInstanceInjectorApi<
   State = any,

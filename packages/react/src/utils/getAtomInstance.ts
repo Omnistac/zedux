@@ -8,7 +8,7 @@ export const getAtomInstance = <
   Methods extends Record<string, () => any>
 >(
   appId: string,
-  atom: AtomBaseProperties<State, Params>,
+  atom: AtomBaseProperties<State, Params, Methods>,
   keyHash: string,
   params: Params
 ): AtomInstance<State, Params, Methods> => {
@@ -17,7 +17,7 @@ export const getAtomInstance = <
   const overrideId = appPool.overrides?.[atom.key]
   const maybeOverriddenAtom = (overrideId
     ? globalState.atoms[atom.key].implementations[overrideId]
-    : atom) as AtomBaseProperties<State, Params>
+    : atom) as AtomBaseProperties<State, Params, Methods>
 
   // to turn off flag checking, just don't pass the `flags` prop to `<AppProvider />`
   if (appPool.flags) {
