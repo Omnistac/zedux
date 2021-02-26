@@ -74,7 +74,7 @@ export const haveDepsChanged = (prevDeps?: any[], nextDeps?: any[]) => {
 
 export const validateInjector = <T extends DepsInjectorDescriptor>(
   name: string,
-  type: string,
+  type: InjectorType,
   context: DiContext
 ): T | undefined => {
   if (context.isInitializing) {

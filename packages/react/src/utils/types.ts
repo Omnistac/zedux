@@ -56,6 +56,7 @@ export enum InjectorType {
   Methods = 'Methods',
   Ref = 'Ref',
   State = 'State',
+  Why = 'Why',
 }
 
 export interface Job {
@@ -84,4 +85,8 @@ export interface StateInjectorDescriptor<State = any>
   extends InjectorDescriptor {
   store: Store<State>
   type: InjectorType.State
+}
+
+export interface WhyInjectorDescriptor extends InjectorDescriptor {
+  callback: (reasons: EvaluationReason[]) => unknown
 }

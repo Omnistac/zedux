@@ -45,9 +45,6 @@ export const getAtomInstance = <
     ] as AtomInstance<State, Params, Methods>
   }
 
-  // Sooooo for some reason ...... React can't catch errors thrown from the `instantiateAtom.ts` file.
-  // So catch them here and throw a different error (must be a different error) so ErrorBoundaries work.
-  // Yeah. Wut.
   try {
     const newAtomInstance = instantiateAtom<State, Params, Methods>(
       appId,

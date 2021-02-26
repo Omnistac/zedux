@@ -18,7 +18,12 @@ import {
 import { generateInstanceId } from '../utils'
 import { addAtomInstance, globalStore, removeAtomInstance } from '../store'
 import { diContext } from './csContexts'
-import { EvaluationReason, InjectorDescriptor } from './types'
+import {
+  EvaluationReason,
+  InjectorDescriptor,
+  InjectorType,
+  WhyInjectorDescriptor,
+} from './types'
 import { scheduleJob } from './scheduler'
 import { getInstanceMethods } from './general'
 
@@ -135,6 +140,17 @@ const getStateStore = <State extends any = any>(
   return [stateType, stateStore] as const
 }
 
+const runWhyInjectors = (
+  newInjectors: InjectorDescriptor[],
+  evaluationReasons: EvaluationReason[]
+) => {
+  newInjectors
+    .filter(injector => injector.type === InjectorType.Why)
+    .forEach(({ callback }: WhyInjectorDescriptor) => {
+      callback(evaluationReasons)
+    })
+}
+
 export const instantiateAtom = <
   State,
   Params extends any[],
@@ -187,28 +203,41 @@ export const instantiateAtom = <
     }
   }
 
-  let hasScheduledEvaluation = false
+  let evaluationReasons: EvaluationReason[] = []
   const scheduleEvaluation = (reason: EvaluationReason) => {
-    if (hasScheduledEvaluation) return
-    hasScheduledEvaluation = true // TODO: there may be a race condition here - with the evaluationTask not running before new scheduleEvaluations come in
+    if (evaluationReasons.length) {
+      evaluationReasons.push(reason)
+      return
+    }
+
+    evaluationReasons = [reason] // TODO: there may be a race condition here - with the evaluationTask not running before new scheduleEvaluations come in
 
     const evaluationTask = () => {
       // can't schedule job if value isn't a function, but whatever
       if (typeof atom.value !== 'function') return
 
       const newInjectors: InjectorDescriptor[] = []
-      const newFactoryResult: AtomValue<State> = diContext.provide(
-        {
-          appId,
-          atom,
-          dependencies,
-          injectors: newInjectors,
-          isInitializing: false,
-          prevInjectors: newAtomInstance.injectors,
-          scheduleEvaluation,
-        },
-        () => (atom as any).value(...params)
-      )
+      let newFactoryResult: AtomValue<State>
+
+      try {
+        newFactoryResult = diContext.provide(
+          {
+            appId,
+            atom,
+            dependencies,
+            injectors: newInjectors,
+            isInitializing: false,
+            prevInjectors: newAtomInstance.injectors,
+            scheduleEvaluation,
+          },
+          () => (atom as any).value(...params)
+        )
+      } catch (err) {
+        newInjectors.forEach(injector => {
+          injector.cleanup?.()
+        })
+        throw err
+      }
 
       newAtomInstance.injectors = newInjectors // TODO: dispatch an action over stateStore for this mutation
       const newStateType = getStateType(newFactoryResult)
@@ -225,11 +254,14 @@ export const instantiateAtom = <
         )
       }
 
+      // I believe there is no way to cause a scheduleEvaluation loop when the StateType is Value
       if (newStateType === StateType.Value) {
         stateStore.setState(newFactoryResult as State)
       }
 
-      hasScheduledEvaluation = false
+      runWhyInjectors(newInjectors, evaluationReasons)
+
+      evaluationReasons = []
     }
 
     scheduleJob('evaluate atom', evaluationTask)
@@ -244,17 +276,24 @@ export const instantiateAtom = <
     factoryResult = atom.value
   } else {
     // TODO: error handling
-    factoryResult = diContext.provide(
-      {
-        appId,
-        atom,
-        dependencies,
-        injectors,
-        isInitializing: true,
-        scheduleEvaluation,
-      },
-      () => (atom as any).value(...params)
-    )
+    try {
+      factoryResult = diContext.provide(
+        {
+          appId,
+          atom,
+          dependencies,
+          injectors,
+          isInitializing: true,
+          scheduleEvaluation,
+        },
+        () => (atom as any).value(...params)
+      )
+    } catch (err) {
+      injectors.forEach(injector => {
+        injector.cleanup?.()
+      })
+      throw err
+    }
   }
 
   const [stateType, stateStore] = getStateStore(factoryResult)
@@ -264,7 +303,6 @@ export const instantiateAtom = <
 
   const Provider: FC = ({ children }) => {
     const atomContext = atom.getReactContext()
-    console.log('got atom context!', atomContext)
 
     return (
       <atomContext.Provider value={newAtomInstance}>
@@ -280,6 +318,7 @@ export const instantiateAtom = <
     activeState: ActiveState.Active,
     dependencies,
     keyHash,
+    getEvaluationReasons: () => evaluationReasons,
     implementationId: atom.internalId,
     injectMethods,
     injectValue,

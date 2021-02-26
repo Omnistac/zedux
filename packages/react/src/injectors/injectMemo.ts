@@ -15,7 +15,7 @@ export const injectMemo = <State = any>(factory: () => State, deps?: any[]) => {
 
   const memoizedVal = depsHaveChanged ? factory() : prevDescriptor.memoizedVal
 
-  const descriptor: MemoInjectorDescriptor = {
+  const descriptor: MemoInjectorDescriptor<State> = {
     deps,
     memoizedVal,
     type: InjectorType.Memo,

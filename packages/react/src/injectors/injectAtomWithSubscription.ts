@@ -1,6 +1,10 @@
 import { Subscriber } from '@zedux/core'
 import { AtomBaseProperties } from '../types'
-import { EvaluationType, EvaluationTargetType } from '../utils'
+import {
+  EvaluationType,
+  EvaluationTargetType,
+  EvaluationReason,
+} from '../utils'
 import { diContext } from '../utils/csContexts'
 import { injectAtomWithoutSubscription } from './injectAtomWithoutSubscription'
 import { injectEffect } from './injectEffect'
@@ -38,8 +42,9 @@ export const injectAtomWithSubscription = <
   )
 
   injectEffect(() => {
-    const subscriber: Subscriber<State> = (newState, oldState) =>
-      scheduleEvaluation({
+    const subscriber: Subscriber<State> = (newState, oldState) => {
+      const reasons = atomInstance.getEvaluationReasons()
+      const reason: EvaluationReason = {
         newState,
         oldState,
         operation,
@@ -47,7 +52,13 @@ export const injectAtomWithSubscription = <
         targetKey: atom.key,
         targetParams: params,
         type: EvaluationType.StateChanged,
-      })
+      }
+
+      if (reasons.length) reason.reasons = reasons
+
+      scheduleEvaluation(reason)
+    }
+
     const subscription = atomInstance.stateStore.subscribe(subscriber)
 
     return () => {

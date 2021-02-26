@@ -139,6 +139,7 @@ export interface AtomInstanceBase<
   activeState: ActiveState
   dependencies: Record<string, string>
   destructionTimeout?: ReturnType<typeof setTimeout>
+  getEvaluationReasons: () => EvaluationReason[]
   implementationId: string
   injectMethods: () => Methods
   injectValue: () => State
