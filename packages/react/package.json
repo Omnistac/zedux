@@ -11,14 +11,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "yarn build:es && yarn build:umd && yarn build:umd:min",
+    "build-storybook": "build-storybook",
     "build:es": "tsc --outDir dist/es -p tsconfig.es.json",
-    "build:umd": "cross-env NODE_ENV=development webpack",
     "build:umd:min": "cross-env NODE_ENV=production webpack",
+    "build:umd": "cross-env NODE_ENV=development webpack",
+    "build": "yarn build:es && yarn build:umd && yarn build:umd:min",
     "dev": "yarn build:es -- --watch & yarn build:umd -- --watch",
     "prepublishOnly": "yarn build",
     "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "test": "jest"
   },
   "keywords": [
     "abstraction",
@@ -58,35 +59,6 @@
     "url": "https://github.com/bowheart/zedux/issues"
   },
   "homepage": "https://github.com/bowheart/zedux#readme",
-  "jest": {
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "**/src/**"
-    ],
-    "globals": {
-      "process.env.NODE_ENV": "development"
-    },
-    "moduleNameMapper": {
-      "@src/(.*)$": "<rootDir>/src/$1",
-      "@test/(.*)$": "<rootDir>/test/$1",
-      "@zedux/(.*)$": "<rootDir>/../zedux/src/$1"
-    },
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "/test/.*\\.test\\.ts$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json"
-    ],
-    "roots": [
-      "<rootDir>/src",
-      "<rootDir>/test"
-    ]
-  },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.5",

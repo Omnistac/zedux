@@ -18,7 +18,7 @@ export const globalStore = createStore({
   molecules: moleculesReducer,
   pools: poolsReducer,
 })
-;(window as any).globalStore = globalStore
+// ;(window as any).globalStore = globalStore
 
 // globalStore.subscribe({
 //   effects: ({ action }) => console.log('global store got action:', action),
