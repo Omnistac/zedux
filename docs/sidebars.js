@@ -22,7 +22,11 @@ module.exports = {
       'react/preliminaries/introduction',
       'react/preliminaries/overview',
     ],
-    Tutorial: ['react/tutorial/quick-start', 'react/tutorial/atom-basics'],
+    Tutorial: [
+      'react/tutorial/quick-start',
+      'react/tutorial/atom-ecosystems',
+      'react/tutorial/atom-basics',
+    ],
     API: [
       {
         type: 'category',

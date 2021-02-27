@@ -1,0 +1,141 @@
+---
+id: atom-ecosystems
+title: Atom Ecosystems
+---
+
+## Ecosystems
+
+All atoms live in atom ecosystems. An ecosystem is like an isolated group of atoms. Atoms in an ecosystem can interact with each other, but are usually unaware of atoms in other ecosystems.
+
+There are 2 types of ecosystems:
+
+- Global
+- App
+
+### Global
+
+There is exactly one global atom ecosystem. You don't need to create it; it already exists. All atoms in the global ecosystem live outside of React.
+
+Zedux is designed to allow an app to use nothing but the global ecosystem. And for small apps and simple examples, that's fine. However, this approach can only get you so far. The global ecosystem is not very configurable or conducive to some advanced features like [dependency injection](TODO:link) and [atom context](TODO:link). Global atoms can also be unruly in tests, since they require specific cleanup.
+
+### App
+
+App ecosystems are created by rendering an [AppProvider](TODO:link):
+
+```tsx
+import { AppProvider } from '@zedux/react'
+
+function App() {
+  return (
+    <AppProvider>
+      <Routes />
+    </AppProvider>
+  )
+}
+```
+
+This is similar to Recoil's [`RecoilRoot`](https://recoiljs.org/docs/api-reference/core/RecoilRoot) or Redux' [`Provider`](https://react-redux.js.org/api/provider) or React Query's [`QueryClientProvider`](https://react-query.tanstack.com/reference/QueryClientProvider). In fact, it's basically a combination of all of those. And more.
+
+Every AppProvider creates a new app ecosystem. Most apps will only need one, though more can be created to purposefully create isolated groups of atoms. Tests will typically each create their own AppProvider to take advantage of DI and the automatic cleanup on unmount.
+
+:::note
+Nesting AppProviders is not supported currently, but it will be soon. This will allow for some cool DI composability.
+:::
+
+`<AppProvider />` takes several props to configure DI, atom context, preloading data, and more. **Most apps will want to use app ecosystems for pretty much everything.**
+
+### Ecosystems Comparison
+
+If no AppProvider is rendered, all atoms will be added to the global ecosystem. The global ecosystem can therefore be nice for simplicity. Some apps will be able to get away with never rendering an AppProvider.
+
+**As a general rule:** Use global atoms to purposefully share data between app ecosystems. Use app atoms for everything else.
+
+**But How Do I Add Atoms to These Ecosystems??**
+
+Let's talk about scopes.
+
+## Scopes
+
+Atoms can be given scopes. An atom's scope determines a lot about its behavior:
+
+- Which atom ecosystem it lives in
+- When and how instances are created
+- When and whether instances die
+- How it interacts with other atoms
+
+The available scopes are:
+
+- Global
+- App
+- Local
+
+### Global
+
+As you can guess, global atoms usually live in the global ecosystem.
+
+```tsx
+import { atom, Scope } from '@zedux/react'
+
+const myGlobalAtom = atom({
+  key: 'myGlobal',
+  scope: Scope.Global,
+  value: 'I will never die. I live as long as the stars. I am inevitable. Incredible. Invincible. In...decisive? (y r u reading this...)'
+})
+```
+
+We say they "*usually* live in the global ecosystem" because there is an exception - when an AppProvider overrides a global atom (see the [DI tutorial](TODO:link)). In that case, an essentially "app-scoped" version of the global atom is created and used only within that app.
+
+### App
+
+All atoms are app-scoped by default. App atoms usually live in an app ecosystem.
+
+```tsx
+import { atom } from '@zedux/react'
+
+// no need to specify scope here. App is the default.
+const myAppAtom = atom('myApp', 'I die when my app dies by default.')
+```
+
+Again, there is an exception. When no AppProvider is rendered, app atoms will actually be added to the global ecosystem.
+
+### Local
+
+Local atoms are a very unique concept.
+
+```tsx
+import { atom, Scope } from '@zedux/react'
+
+const myLocalAtom = atom({
+  key: 'myLocal',
+  scope: Scope.Local,
+  value: 'I am like React context but with Zedux superpowers'
+})
+```
+
+Ecosystem-wise, local atoms behave just like app atoms - usually living in an app ecosystem but deferring to global when no AppProvider exists. But they work very differently from app and global atoms, as we will now discover:
+
+### Scopes Comparison
+
+Ecosystems aside, global and app atoms behave very similarly, while local atoms have completely different use-cases and a slightly different API.
+
+#### Instantiation
+
+Global and app atoms are instantiated the first time they're used - regardless of whether the hook or injector used subscribes to the atom's store.
+
+```tsx
+function App() {
+  const myGlobal = myGlobalAtom.useValue()
+  const myApp = myAppAtom.useValue()
+  ...
+}
+```
+
+Local atoms are instantiated every time their `useInstance()` hook or `injectInstance()` injector is called.
+
+```tsx
+function App() {
+  const myLocalInstance1 = myLocalAtom.useInstance()
+  const myLocalInstance2 = myLocalAtom.useInstance()
+  ...
+}
+```

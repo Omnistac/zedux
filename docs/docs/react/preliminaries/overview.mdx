@@ -24,6 +24,7 @@ Atoms have several built-in hooks.
 ```tsx
 function MyComponent() {
   const [state, setState] = myFirstAtom.useState()
+  const dispatch = myFirstAtom.useDispatch()
 
   return <div>A message from the universe: {state}</div>
 }
@@ -629,21 +630,7 @@ const crazyAtom = atom('crazy', () => {
   // with such atoms it can be difficult to tell why state keeps updating
   // injectWhy FTW!
   // highlight-next-line
-  injectWhy(lameExcuse => console.log('why???', lameExcuse.getRecursive()))
-  /*
-    logs "why???"
-    {
-      reason: 'addTenAtom - injectValue()',
-      oldState: 11,
-      newState: 12,
-      parent: {
-        reason: 'store - action dispatched',
-        action: { type: 'increment' },
-        oldState: 1,
-        newState: 2
-      }
-    }
-  */
+  injectWhy(lameExcuse => console.log('why???', lameExcuse))
 })
 ```
 
