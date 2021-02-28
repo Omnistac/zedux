@@ -1,9 +1,30 @@
 import '@testing-library/jest-dom/extend-expect'
-import { atom, createStore, injectMemo, injectStore } from '@zedux/react'
-import React from 'react'
+import {
+  atom,
+  createStore,
+  injectEffect,
+  injectMemo,
+  injectStore,
+} from '@zedux/react'
+import React, { FC } from 'react'
+import { renderInApp } from '@zedux/react-test/utils/renderInApp'
 
 const parentAtom = atom('parent', () => {
   const store = injectMemo(() => createStore(null, 0), [])
+
+  return store
+})
+
+const updatingAtom = atom('updating', () => {
+  const store = injectMemo(() => createStore(null, 0), [])
+
+  injectEffect(() => {
+    const timeoutId = setTimeout(() => {
+      store.setState(1)
+    })
+
+    return () => clearTimeout(timeoutId)
+  }, [])
 
   return store
 })
@@ -13,13 +34,31 @@ const Child = () => {}
 describe('DI: atom -> component', () => {
   describe('atom.useValue()', () => {
     test('returns current state of the atom', () => {
-      const Test = () => {
+      const Test: FC = () => {
         const val = parentAtom.useValue()
 
-        return <div>{val}</div>
+        expect(val).toBe(0)
+
+        return null
       }
 
-      expect(2).toBe(2)
+      renderInApp(<Test />)
+    })
+
+    test("subscribes to the atom instance's store", async () => {
+      const Test: FC = () => {
+        const val = updatingAtom.useValue()
+
+        if (!val) return null
+
+        return <div data-testid="a">{val}</div>
+      }
+
+      const { findByTestId } = renderInApp(<Test />)
+
+      const div = await findByTestId('a')
+
+      expect(div).toHaveTextContent('1')
     })
   })
 })

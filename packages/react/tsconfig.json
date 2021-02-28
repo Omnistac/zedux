@@ -1,15 +1,8 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "lib": ["DOM", "ES2020"],
     "outDir": "./dist",
-    "paths": {
-      "@zedux/core": ["../core/src"],
-      "@zedux/core/*": ["../core/src/*"],
-      "@zedux/react": ["src"],
-      "@zedux/react/*": ["src/*"]
-    }
   },
   "include": ["./examples", "./src", "./test", "../core/src"]
 }

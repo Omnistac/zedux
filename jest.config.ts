@@ -27,7 +27,6 @@ const config: Config.InitialOptions = {
     '<rootDir>/packages/react/src',
     '<rootDir>/packages/react/test',
   ],
-  testEnvironment: 'node',
   testRegex: '/test/.*\\.test\\.tsx?$',
 }
 
