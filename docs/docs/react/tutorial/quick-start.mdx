@@ -103,7 +103,7 @@ const loudGreetingAtom = atom('loudGreeting', () => {
 
 Here we used an "injector" - `injectState()` - to create a dependency on `textAtom`.
 
-`atom.injectState()` functions similarly to `atom.useState()`. This is a common theme with injectors:
+`atom.injectState()` is just like `atom.useState()`, but is used in atoms instead of components. This is a common theme with injectors:
 
 ### Injectors Are Like Hooks
 
@@ -129,7 +129,7 @@ const initialPriceAtom = atom('initialPrice', () => {
 })
 ```
 
-In this example, `initialPriceAtom` will be reevaluated every time `stockPriceAtom`'s state changes, but the return value won't change. Therefore components and atoms that use `initialPriceAtom` won't reevaluate.
+In this example, `initialPriceAtom` will be reevaluated every time `stockPriceAtom`'s state changes, but the `initialPrice` it returns won't change, thanks to `injectMemo()`. Therefore components and atoms that use `initialPriceAtom` won't reevaluate.
 
 :::important
 
@@ -183,8 +183,8 @@ If we use `userDataAtom` multiple times with different `id`s, Zedux will create 
 
 ```tsx
 function UserOverview() {
-  const [data] = userDataAtom.useState('joe')
-  const [data] = userDataAtom.useState('bob')
+  const [joeData] = userDataAtom.useState('joe')
+  const [bobData] = userDataAtom.useState('bob')
   ...
 }
 ```

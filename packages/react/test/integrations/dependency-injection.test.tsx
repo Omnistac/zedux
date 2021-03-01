@@ -9,7 +9,7 @@ import {
 import React, { FC } from 'react'
 import { renderInApp } from '@zedux/react-test/utils/renderInApp'
 
-const parentAtom = atom('parent', () => {
+const normalAtom = atom('normal', () => {
   const store = injectMemo(() => createStore(null, 0), [])
 
   return store
@@ -29,13 +29,11 @@ const updatingAtom = atom('updating', () => {
   return store
 })
 
-const Child = () => {}
-
 describe('DI: atom -> component', () => {
   describe('atom.useValue()', () => {
     test('returns current state of the atom', () => {
       const Test: FC = () => {
-        const val = parentAtom.useValue()
+        const val = normalAtom.useValue()
 
         expect(val).toBe(0)
 

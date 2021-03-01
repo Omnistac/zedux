@@ -44,13 +44,29 @@ Nesting AppProviders is not supported currently, but it will be soon. This will 
 
 `<AppProvider />` takes several props to configure DI, atom context, preloading data, and more. **Most apps will want to use app ecosystems for pretty much everything.**
 
-### Ecosystems Comparison
+## Ecosystem Design Patterns
 
-If no AppProvider is rendered, all atoms will be added to the global ecosystem. The global ecosystem can therefore be nice for simplicity. Some apps will be able to get away with never rendering an AppProvider.
+There are 2 main design patterns around atom ecosystems. Choose the most appropriate for your app.
 
-**As a general rule:** Use global atoms to purposefully share data between app ecosystems. Use app atoms for everything else.
+### Global Only Approach
 
-**But How Do I Add Atoms to These Ecosystems??**
+![](/img/diagrams/atom-ecosystems-global-only.png)
+
+In the global only approach, all atoms, regardless of scope, live in the global ecosystem. This is done by never rendering an AppProvider. If no AppProvider is rendered, all atoms are added to the global ecosystem by default.
+
+The global ecosystem can therefore be nice for simplicity. Some apps don't need any of the features AppProviders offer. And that's fine!
+
+### App-Based Approach
+
+![](/img/diagrams/atom-ecosystems-app-based.png)
+
+In the app-based approach, you create one or more app ecosystems (by rendering AppProviders). These app ecosystems contain all app-scoped and local-scoped atoms, while the global ecosystem holds all global-scoped atoms.
+
+Atoms in the app ecosystems are able to inject global atoms, but not the other way around. Atoms in one app ecosystem are also unaware of other app ecosystems. Global atoms therefore become a means to share data across apps.
+
+Most apps will want to make use of the powerful features of AppProviders. The app-based approach is recommended in most situations.
+
+**So How Do I Add Atoms to These Ecosystems??**
 
 Let's talk about scopes.
 
@@ -96,7 +112,7 @@ import { atom } from '@zedux/react'
 const myAppAtom = atom('myApp', 'I die when my app dies by default.')
 ```
 
-Again, there is an exception. When no AppProvider is rendered, app atoms will actually be added to the global ecosystem.
+Again, there is an exception. When no AppProvider is rendered, app atoms will actually be added to the global ecosystem (see the [Global Only approach](#global-only-approach) above).
 
 ### Local
 
@@ -112,7 +128,7 @@ const myLocalAtom = atom({
 })
 ```
 
-Ecosystem-wise, local atoms behave just like app atoms - usually living in an app ecosystem but deferring to global when no AppProvider exists. But they work very differently from app and global atoms, as we will now discover:
+Ecosystem-wise, local atoms behave just like app atoms - usually living in an app ecosystem but deferring to global when no AppProvider exists. But their use cases are very different from app and global atoms, as we will now discover:
 
 ### Scopes Comparison
 

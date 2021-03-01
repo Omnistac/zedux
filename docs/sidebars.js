@@ -24,8 +24,8 @@ module.exports = {
     ],
     Tutorial: [
       'react/tutorial/quick-start',
-      'react/tutorial/atom-ecosystems',
       'react/tutorial/atom-basics',
+      'react/tutorial/atom-ecosystems',
     ],
     API: [
       {

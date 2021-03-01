@@ -338,8 +338,8 @@ const todos$ = filteredTodosStreamAtom.useValue()
 - `atom.injectValue()`
 - `atom.injectValue$()` - probably replace with a `injectValue$(atom)` helper from @zedux/streams
 
-- `atom.injectLocal()` ??? No. This is just `localAtom.injectValue()` or `*State()` or `*Dispatch()` or `*Store()` or `*Methods()` or `*Instance()`
-- `atom.injectConsumer()` ?? Nope. Wellll it is possible. `atom.use*` would have to `useContext(universalInstancesContext)` and pass that tree of provided instances to the atom diContext layer.
+- `atom.injectLocal()` ??? No. This is just `localAtom.injectValue()` or `*State()` or `*Dispatch()` or `*Store()` or `*Methods()` or `*Instance()`. Actually nope, see above correction for `atom.useLocal()`.
+- `atom.injectConsumer()` ?? Nope. Wellll it is possible. `atom.use*` would have to `useContext(universalInstancesContext)` and pass that tree of provided instances to the atom diContext layer. Um except no, 'cause a given atom instance could be created outside this React component tree but still inside the AppProvider. So this has to come back to the AppProvider layer. Which isn't useful for differentiating instances in the same AppProvider. So no.
 
 
 - `selector.useValue()`
@@ -544,6 +544,8 @@ x- context (`<AppProvider context={...}>` and `injectContext()`)
 - remove duplicated code in `selector()` and `atom()`
 - clean up types (does each atom, atom instance, and atom config really need its own interface)
 - `atom.useDispatch()` and `atom.injectDispatch()`
+- `atom.useState()` and `atom.injectState()`
+- `atom.useSetState()` and `atom.injectSetState()`
 x- `instance.Provider` and `atom.useConsumer()`
 x- `injectInvalidate()`, `atom.injectInvalidate()`, `atom.useInvalidate()`
 - `useStore()`, `atom.useStore()`, `atom.injectStore()`
@@ -558,5 +560,5 @@ x- `injectCallback()`
 - `atom.useSelector()` and `atom.injectSelector()`
 - a way to dynamically instantiate and access atoms and atomContexts - not using hooks (directly). Like React Query's `useQueries()` hook - https://react-query.tanstack.com/guides/parallel-queries#dynamic-parallel-queries-with-usequeries. I'm thinking at least `useAtomContexts()` and `useAtoms()` (and equivalent injectors).
 - make AppProviders composable. Overrides and contexts from multiple parent AppProviders are merged together. Global atoms get added to the lowest pool that overrides them.
-- `injectWhy()`
+x- `injectWhy()`
 - `methods` -> `exports`
