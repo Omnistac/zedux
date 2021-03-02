@@ -1,9 +1,4 @@
-import {
-  actionTypes,
-  createStore,
-  effectTypes,
-  metaTypes,
-} from '@zedux/core/index'
+import { actionTypes, createStore, metaTypes } from '@zedux/core/index'
 
 import { createMockReducer } from '@zedux/core-test/utils'
 

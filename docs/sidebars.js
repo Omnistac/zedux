@@ -24,8 +24,11 @@ module.exports = {
     ],
     Tutorial: [
       'react/tutorial/quick-start',
-      'react/tutorial/atom-basics',
+      'react/tutorial/atom-config',
+      'react/tutorial/using-atoms',
       'react/tutorial/atom-ecosystems',
+      'react/tutorial/atom-scopes',
+      'react/tutorial/stores',
     ],
     API: [
       {

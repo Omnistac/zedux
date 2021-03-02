@@ -50,7 +50,7 @@ export type ActorEmpty<Type extends string = string> = {
 } & ActionCreatorEmpty<Type>
 
 export type Branch<T = any> = {
-  [P in keyof T]: HierarchyDescriptor<T[P]>
+  [K in keyof T]: HierarchyDescriptor<T[K]>
 }
 
 export type Composable<T = any> = (arg: T) => T
@@ -181,7 +181,7 @@ export interface Store<State = any> extends Observable<State> {
   getState(): State
   hydrate(newState?: State): Store<State>
   setState(settable: Settable<State>): State
-  use(newHierarchy?: RecursivePartial<HierarchyDescriptor<State>>): Store<State>
+  use(newHierarchy?: HierarchyDescriptor<State>): Store<State>
   $$typeof: symbol
   [Symbol.observable]: () => Store<State>
 }

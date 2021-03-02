@@ -1,0 +1,92 @@
+---
+id: atom-scopes
+title: Atom Scopes
+---
+
+Let's talk about scopes.
+
+## Scopes
+
+Atoms can be given scopes. An atom's scope determines a lot about its behavior:
+
+- Which atom ecosystem it lives in
+- When and how instances are created
+- When and whether instances die
+- How it interacts with other atoms
+
+The available scopes are:
+
+- Global
+- App
+- Local
+
+### Global
+
+As you can guess, global atoms usually live in the global ecosystem.
+
+```tsx
+import { atom, Scope } from '@zedux/react'
+
+const myGlobalAtom = atom({
+  key: 'myGlobal',
+  scope: Scope.Global,
+  value: 'I will never die. I live as long as the stars. I am inevitable. Incredible. Invincible. In...decisive? (y r u reading this...)'
+})
+```
+
+We say they "*usually* live in the global ecosystem" because there is an exception - when an AppProvider overrides a global atom (see the [DI tutorial](TODO:link)). In that case, an essentially "app-scoped" version of the global atom is created and used only within that app.
+
+### App
+
+All atoms are app-scoped by default. App atoms usually live in an app ecosystem.
+
+```tsx
+import { atom } from '@zedux/react'
+
+// no need to specify scope here. App is the default.
+const myAppAtom = atom('myApp', 'I die when my app dies by default.')
+```
+
+Again, there is an exception. When no AppProvider is rendered, app atoms will actually be added to the global ecosystem (see the [Global Only approach](#global-only-approach) above).
+
+### Local
+
+Local atoms are a very unique concept.
+
+```tsx
+import { atom, Scope } from '@zedux/react'
+
+const myLocalAtom = atom({
+  key: 'myLocal',
+  scope: Scope.Local,
+  value: 'I am like React context but with Zedux superpowers'
+})
+```
+
+Ecosystem-wise, local atoms behave just like app atoms - usually living in an app ecosystem but deferring to global when no AppProvider exists. But their use cases are very different from app and global atoms, as we will now discover:
+
+### Scopes Comparison
+
+Ecosystems aside, global and app atoms behave very similarly, while local atoms have completely different use-cases and a slightly different API.
+
+#### Instantiation
+
+Global and app atoms are instantiated the first time they're used - regardless of whether the hook or injector used subscribes to the atom's store.
+
+```tsx
+function App() {
+  const myGlobal = myGlobalAtom.useValue()
+  const myApp = myAppAtom.useValue()
+  ...
+}
+```
+
+Local atoms are instantiated every time their `useInstance()` hook or `injectInstance()` injector is called.
+
+```tsx
+function App() {
+  const myLocalInstance1 = myLocalAtom.useInstance()
+  const myLocalInstance2 = myLocalAtom.useInstance()
+  ...
+}
+```

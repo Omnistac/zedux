@@ -373,7 +373,7 @@ const doSubscribe = <State = any>(
   Dispatches the special RECALCULATE action to the store.
 */
 const doUse = <State = any>(
-  newHierarchy: RecursivePartial<HierarchyDescriptor<State>>,
+  newHierarchy: HierarchyDescriptor<State>,
   storeInternals: StoreInternals<State>
 ) => {
   const newDiffTree = hierarchyDescriptorToDiffTree(
@@ -474,12 +474,12 @@ const routeAction = (action: ActionChain, storeInternals: StoreInternals) => {
 */
 export const createStore: {
   <State = any>(
-    initialHierarchy?: RecursivePartial<HierarchyDescriptor<State>>,
+    initialHierarchy?: HierarchyDescriptor<State>,
     initialState?: State
   ): Store<State>
   <State = any>(initialHierarchy: null, initialState: State): Store<State>
 } = <State = any>(
-  initialHierarchy?: RecursivePartial<HierarchyDescriptor<State>> | null,
+  initialHierarchy?: HierarchyDescriptor<State>,
   initialState?: State
 ) => {
   const configureHierarchy = (newConfig: HierarchyConfig) => {
@@ -527,7 +527,7 @@ export const createStore: {
   const subscribe = (subscriber: Subscriber<State>) =>
     doSubscribe(subscriber, internals)
 
-  const use = (newHierarchy?: RecursivePartial<HierarchyDescriptor<State>>) => {
+  const use = (newHierarchy?: HierarchyDescriptor<State>) => {
     doUse(newHierarchy, internals)
 
     return internals.store // for chaining
