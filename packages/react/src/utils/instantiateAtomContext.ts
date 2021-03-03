@@ -1,6 +1,6 @@
 import { EffectsSubscriber, Subscriber } from '@zedux/core'
-import { useEffect, useState as useStateReact } from 'react'
-import { injectEffect } from '../injectors'
+import { useEffect, useRef, useState as useStateReact } from 'react'
+import { injectEffect, injectRef } from '../injectors'
 import { AtomContext, AtomContextInstance } from '../types'
 import { diContext } from './csContexts'
 import { EvaluationTargetType, EvaluationType } from './types'
@@ -15,6 +15,8 @@ export const instantiateAtomContext = <T = any>(
 
   const injectSelector = <D = any>(selector: (state: T) => D) => {
     const { scheduleEvaluation } = diContext.consume()
+    const selectorRef = injectRef(selector)
+    selectorRef.current = selector
 
     injectEffect(() => {
       let prevResult: D
@@ -25,7 +27,7 @@ export const instantiateAtomContext = <T = any>(
       }) => {
         if (newState === oldState) return
 
-        const newResult = selector(newState)
+        const newResult = selectorRef.current(newState)
 
         if (newResult === prevResult) return
 
@@ -118,11 +120,13 @@ export const instantiateAtomContext = <T = any>(
 
   const useSelector = <D = any>(selector: (state: T) => D) => {
     const [state, setState] = useStateReact(selector(store.getState()))
+    const selectorRef = useRef(selector)
+    selectorRef.current = selector
 
     useEffect(() => {
       let prevResult: D
       const subscriber: Subscriber<T> = newState => {
-        const newResult = selector(newState)
+        const newResult = selectorRef.current(newState)
 
         if (newResult === prevResult) return
 

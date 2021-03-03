@@ -390,7 +390,7 @@ export enum ActiveState {
  *
  * create atom context -> instantiate -> provide instance -> consume instance
  *
- * To create an atom context, use the exported `atomContext()` factory.
+ * To create an atom context, use the `atomContext()` factory.
  *
  * To instantiate an atom context, use `myAtomContext.useInstance()`.
  *
@@ -404,7 +404,7 @@ export enum ActiveState {
  * Example usage:
  *
  * ```ts
- * import { atomContext, createStore } from '@zedux/react'
+ * import { AppProvider, atomContext } from '@zedux/react'
  *
  * // create
  * const reduxAtomContext = atomContext<RootReduxState>()
@@ -686,7 +686,7 @@ export interface ReadonlyStore<State = any> {
 }
 
 export interface RefObject<T = any> {
-  readonly current: T | null
+  current: T | null
 }
 
 export enum Scope {

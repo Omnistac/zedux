@@ -1,6 +1,6 @@
 ---
-id: atom-config
-title: Atom Config
+id: creating-atoms
+title: Creating Atoms
 ---
 <!-- 
 import { ApisPlayground } from '@zedux/react/../ApisPlayground'
@@ -62,36 +62,7 @@ function App() {
 }
 ```
 
-Since readonly atoms are so common, Zedux exports a special factory for creating them:
-
-```ts
-import { selector } from '@zedux/react'
-
-const readonlyAtom = selector('readonly', 0)
-```
-
-The state of all instances of this atom will be `0` forever.
-
-In Zedux, "selector" is just another term for "readonly atom". Zedux selectors are probably different from the selectors you're used to. They are often impure. One of their primary uses is to hold references to class instances or expensive resources such as socket connections or fetched data that the UI shouldn't modify:
-
-```ts
-import { io } from 'socket.io-client'
-
-// We use a factory so we don't create the connection until this atom is used
-const socketAtom = selector('socket', () => io('ws://example.com/my-namespace'))
-```
-
-As you'd expect, another primary use of selectors is to derive data from other atoms:
-
-```ts
-const todosAtom = atom<Todo[]>('todos', [])
-
-const filteredTodosSelector = selector('filteredTodos', (isDone: boolean) => {
-  const todos = todsAtom.injectValue()
-
-  return todos.filter(todo => todo.isDone === isDone)
-})
-```
+See [`selector()`](TODO:link) for full details of readonly atoms.
 
 ### Scope
 
@@ -120,10 +91,57 @@ const zombieAtom = atom({
 
 `ttl` can be set to `0` to clean up instances immediately.
 
+## Selector Atoms
+
+One atom configuration is particularly common in Zedux:
+
+```ts
+const aVeryCommonAtom = atom({
+  key: 'aVeryCommon',
+  readonly: true,
+  ttl: 0,
+  value: 'whatever'
+})
+```
+
+Zedux exports a special factory for creating these:
+
+```ts
+import { selector } from '@zedux/react'
+
+const mySelectorAtom = selector('mySelector', 'initial state')
+```
+
+The state of all instances of this atom will be `initial state` forever.
+
+These "selector atoms" automatically set `readonly: true` and `ttl: 0` for instant cleanup. These selectors are probably different from the selectors you're used to. They are often impure. One of their primary uses is to hold references to class instances or expensive resources such as socket connections or fetched data that the UI shouldn't modify:
+
+```ts
+import { io } from 'socket.io-client'
+
+// We use a factory so we don't create the connection until this atom is used
+const socketAtom = selector('socket', () => io('ws://example.com/my-namespace'))
+```
+
+As you'd expect, another primary use of selector atoms is to derive data from other atoms:
+
+```ts
+const todosAtom = atom<Todo[]>('todos', [])
+
+const filteredTodosAtom = selector('filteredTodos', (isDone: boolean) => {
+  const todos = todsAtom.injectValue()
+
+  return todos.filter(todo => todo.isDone === isDone)
+})
+```
+
+
 ## Recap
 
-- Readonly atoms can be created using `selector()`
-- Atoms can be global-scoped, app-scoped, or local-scoped. All atoms are app-scoped by default.
+- `atom()` can take a config object.
+- Readonly atoms can be created using `readonly: true`
+- Atoms can be given a global or local scope with the `scope` property. All atoms are app-scoped by default.
 - Atoms can be destroyed using `ttl`.
+- Selector atoms are atoms with `readonly: true, ttl: 0`. They can be created with the `selector()` shorthand.
 
 Next up we'll cover more ways to [consume atoms](using-atoms).

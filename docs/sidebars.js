@@ -24,7 +24,7 @@ module.exports = {
     ],
     Tutorial: [
       'react/tutorial/quick-start',
-      'react/tutorial/atom-config',
+      'react/tutorial/creating-atoms',
       'react/tutorial/using-atoms',
       'react/tutorial/atom-ecosystems',
       'react/tutorial/atom-scopes',

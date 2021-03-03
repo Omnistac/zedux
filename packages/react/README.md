@@ -564,3 +564,4 @@ x- `injectWhy()`
 - `methods` -> `exports`
 - `maxInstances` - complements ttl. Use a FIFO queue. No instances will ever be cleaned up while in use. And none will be cleaned up while queueSize <= maxInstances. Stale instances will be scheduled for clean up when queueSize > maxInstances. Newly stale instances will be immediately scheduled for clean up if queueSize > maxInstances.
 - should `useSelector()`/`injectSelector()` be changed to `useDerivation()`/`injectDerivation()`? The term "selector" is too overloaded.
+- should `selector()` set ttl to 0 by default?

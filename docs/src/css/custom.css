@@ -24,13 +24,13 @@ html[data-theme='dark'] {
   --ifm-background-color: var(--color-dark);
 }
 
-.alert--info, .alert--success {
+.alert--info, .alert--secondary, .alert--success {
   --ifm-alert-background-color: var(--ifm-color-primary-lightest);
   --ifm-alert-border-color: var(--ifm-color-primary-lightest);
   color: var(--color-dark);
 }
 
-.alert--info .admonition-icon svg, .alert--success .admonition-icon svg {
+.alert--info .admonition-icon svg, .alert--secondary .admonition-icon svg, .alert--success .admonition-icon svg {
   fill: var(--color-dark);
   stroke: var(--color-dark);
 }
