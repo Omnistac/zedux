@@ -204,9 +204,120 @@ function App() {
 
 Calling the loader function instantiates the atom, if no instance has been created for the given params yet, and returns the instance's store.
 
-- `.useMethods()`/`.injectMethods()`
+### `.useMethods()`/`.injectMethods()`
 
+Atoms can expose functions to consumers using the top-level `injectMethods()` injector. These functions can then be consumed using `.useMethods()` and `.injectMethods()`.
 
+```ts
+import { atom, createStore, injectMemo, injectMethods } from '@zedux/react'
 
-- `.useSetState()`/`.injectSetState()` TODO: these
-- `.useStore()`/`.injectStore()` TODO: these
+const counterAtom = atom('counter', () => {
+  const store = injectMemo(() => createStore(), [])
+
+  // Expose methods
+  injectMethods(() => ({
+    decrement: () => store.setState(state => state - 1),
+    increment: () => store.setState(state => state + 1)
+  }), [store])
+
+  return store
+})
+
+function App() {
+  const { decrement, increment } = counterAtom.useMethods()
+  ...
+}
+```
+
+Live playground for fun:
+
+<LiveEditor resultVar="App">{`
+const counterAtom = atom('counter', () => {
+  const store = injectMemo(() => createStore(null, 0), [])\n
+  // Expose methods
+  injectMethods(() => ({
+    decrement: () => store.setState(state => state - 1),
+    increment: () => store.setState(state => state + 1)
+  }), [store])\n
+  return store
+})\n
+function App() {
+  const { decrement, increment } = counterAtom.useMethods()
+  const value = counterAtom.useValue()\n
+  return (
+    <>
+      <div>Counter: {value}</div>
+      <button onClick={increment}>Increment</button>
+      <button onClick={decrement}>Decremenet</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+For TypeScript users, an atom's methods type is the 3rd generic that the `atom()` factory accepts:
+
+```ts
+const counterAtom = atom<
+  number, // the state type
+  [], // the params tuple - this atom doesn't have any
+  { increment(): void; decrement(): void } // the methods
+>('counter', ...)
+```
+
+### `.useSetState()`/`.injectSetState()` TODO: these
+
+Returns a reference to the atom instance's store's `setState` function. Useful when you don't need to read from state, so don't want to register a subscription using `.useState()`/`.injectState()`, but do need to update state of a zero-config store.
+
+```ts
+function App() {
+  const [state, setState] = myAtom.useState()
+
+  // the above is a shorthand for:
+  const state = myAtom.useValue()
+  // highlight-next-line
+  const setState = myAtom.useSetState()
+}
+```
+
+### `.useStore()`/`.injectStore()` TODO: these
+
+Returns a reference to the atom instance's store. Regard this as an escape hatch. Avoid using it if possible.
+
+One of the main reasons you may need this hook/injector is to perform side effects:
+
+```ts
+import { when } from '@zedux/react'
+
+function App() {
+  const store = myAtom.useStore()
+
+  injectEffect(() => {
+    const { subscription } = when(store).stateChanges((newState, oldState) => {
+      console.log({ newState, oldState })
+    })
+
+    return () => subscription.unsubscribe()
+  }, [store])
+  ...
+}
+```
+
+## Recap
+
+- Every atom instance has an underlying Zedux store.
+
+- `.useSelector()`, `.useState()`, `.useValue()`, and their corresponding injectors all subscribe to the store. All other hooks/injectors do not.
+
+- `.useInstance()` and `.useConsumer()` can be used together to provide and consume atom instances over React context.
+
+- `.useDispatch()`, `.useSetState()`, `.useStore()`, and their corresponding injectors expose parts or all of the instance's store.
+
+- `.useInvalidate()` and `.injectInvalidate()` can be used to manually trigger atom reevaluation.
+
+- `.useLazy()` and `.injectLazy()` can be used to preload atoms.
+
+- `useMethods()` can be used to expose methods from an atom and `.useMethods()` and `.injectMethods()` can be used to consume an atom's methods.
+
+## Next Steps
+
+Now we know how to consume atoms in general. Next we'll learn about the different types of atoms and their lifecycles by covering [atom ecosystems](atom-ecosystems) and then [atom scopes](atom-scopes).

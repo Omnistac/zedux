@@ -172,7 +172,7 @@ const userDataAtom = atom('userData', (id: string) => {
 })
 
 function UserOverview() {
-  const [data] = userDataAtom.useState('joe')
+  const { data } = userDataAtom.useState('joe')
   ...
 }
 ```
@@ -189,7 +189,11 @@ function UserOverview() {
 }
 ```
 
-This example creates two instances of `userDataAtom` - one that fetches the `joe` user and one that fetches `bob`. Caching server data like this is one strength of Zedux atoms.
+This example creates two instances of `userDataAtom` - one that fetches the `joe` user and one that fetches `bob`.
+
+:::important
+Atom parameters must be serializable. Zedux converts them to a single string that uniquely identifies each atom instance. You shouldn't need params much, but when you do need them, make them as small as possible.
+:::
 
 ## Recap
 

@@ -3,6 +3,8 @@ id: atom-ecosystems
 title: Atom Ecosystems
 ---
 
+import { LiveEditor } from '../../LiveEditor'
+
 ## Ecosystems
 
 All atoms live in atom ecosystems. An ecosystem is like an isolated group of atoms. Atoms in an ecosystem can interact with each other, but are usually unaware of atoms in other ecosystems.
@@ -80,11 +82,47 @@ Atoms in the app ecosystems are able to inject global atoms, but not the other w
 
 Most apps will want to make use of the powerful features of AppProviders. The mixed approach is recommended in most situations.
 
+## Params
+
+In the quick start, we learned that atom instances can be reused by passing the same params to certain hooks/injectors. Since atom instances live in an ecosystem, reuse can only happen inside that ecosystem.
+
+In the following example, the `counterAtom` doesn't take any params. But since it's used in two different app ecosystems, two different instances are created.
+
+<LiveEditor resultVar="Apps">{`
+const counterAtom = atom('counter', 0)\n
+function Counter() {
+  const [state, setState] = counterAtom.useState()\n
+  return (
+    <>
+      <div>Value: {state}</div>
+      <button onClick={() => setState(state => state + 1)}>Increment</button>
+    </>
+  )
+}\n
+function Apps() {
+  return (
+    <>
+      <AppProvider>
+        <h3>Counter 1:</h3>
+        <Counter />
+      </AppProvider>
+      <AppProvider>
+        <h3>Counter 2:</h3>
+        <Counter />
+      </AppProvider>
+    </>
+  )
+}
+`}</LiveEditor>
+
 ## Recap
 
 - All atoms live in atom ecosystems.
 - There are global and app ecosystems.
 - Most apps will use the "App Only Approach" - rendering a single `<AppProvider>` and only using app-scoped and local-scoped atoms.
+- Atom instances can only be reused in the ecosystem they were created in.
+
+## Next Steps
 
 **So How Do I Add Atoms to These Ecosystems??**
 

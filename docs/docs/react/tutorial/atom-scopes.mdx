@@ -3,8 +3,6 @@ id: atom-scopes
 title: Atom Scopes
 ---
 
-Let's talk about scopes.
-
 ## Scopes
 
 Atoms can be given scopes. An atom's scope determines a lot about its behavior:
@@ -44,14 +42,14 @@ All atoms are app-scoped by default. App atoms usually live in an app ecosystem.
 import { atom } from '@zedux/react'
 
 // no need to specify scope here. App is the default.
-const myAppAtom = atom('myApp', 'I die when my app dies by default.')
+const myAppAtom = atom('myApp', 'I die when my app dies (by default)')
 ```
 
-Again, there is an exception. When no AppProvider is rendered, app atoms will actually be added to the global ecosystem (see the [Global Only approach](#global-only-approach) above).
+Again, there is an exception. When no AppProvider is rendered, app atoms will actually be added to the global ecosystem (see the [Global Only approach](atom-ecosystems#global-only-approach)).
 
 ### Local
 
-Local atoms are a very unique concept.
+Local atoms are a very unique concept. Their primary use is very similar to React context's.
 
 ```tsx
 import { atom, Scope } from '@zedux/react'
@@ -63,30 +61,83 @@ const myLocalAtom = atom({
 })
 ```
 
-Ecosystem-wise, local atoms behave just like app atoms - usually living in an app ecosystem but deferring to global when no AppProvider exists. But their use cases are very different from app and global atoms, as we will now discover:
+Ecosystem-wise, local atoms behave just like app atoms - usually living in an app ecosystem but deferring to global when no AppProvider exists. But their use cases are very different from app and global atoms. They also have a slightly different API. We'll cover some of the API differences in the next section.
 
-### Scopes Comparison
+## Scopes Comparison
 
-Ecosystems aside, global and app atoms behave very similarly, while local atoms have completely different use-cases and a slightly different API.
+### Ecosystem
 
-#### Instantiation
+It can be difficult to remember which atom types get added to which ecosystems. This chart breaks down all possible scenarios:
 
-Global and app atoms are instantiated the first time they're used - regardless of whether the hook or injector used subscribes to the atom's store.
+| Atom Scope | Outside `<AppProvider>` | Inside `<AppProvider>` | Overridden in `<AppProvider>` |
+| --- | --- | --- | --- |
+| Global | Global ecosystem | Global ecosystem | Overriding app ecosystem |
+| App | Global ecosystem | Nearest app ecosystem | Nearest app ecosystem |
+| Local | Global ecosystem | Nearest app ecosystem | Nearest app ecosystem |
+
+Note that app and local atoms are exactly the same.
+
+### Instantiation
+
+#### Global and App Atoms
+
+Global and app atoms are instantiated the first time they're used in their ecosystem. All hooks/injectors except `.useConsumer()` accept atom params. They will attempt to reuse an existing instance, or create one if none exists in their ecosystem.
 
 ```tsx
 function App() {
   const myGlobal = myGlobalAtom.useValue()
-  const myApp = myAppAtom.useValue()
+  const myApp = myAppAtom.useValue('some', 'params') // create new instance
+  const myAppAgain = myAppAtom.useValue('some', 'params') // reuse instance
   ...
 }
 ```
 
-Local atoms are instantiated every time their `useInstance()` hook or `injectInstance()` injector is called.
+#### Local Atoms
+
+Local atoms are different. They're instantiated every time their `useInstance()` hook or `injectInstance()` injector is called.
 
 ```tsx
 function App() {
-  const myLocalInstance1 = myLocalAtom.useInstance()
-  const myLocalInstance2 = myLocalAtom.useInstance()
+  const instanceOne = myLocalAtom.useInstance()
+  const instanceTwo = myLocalAtom.useInstance() // a different instance!
   ...
 }
 ```
+
+All other hooks are aliases for `.useConsumer().use<hook name here>()`. They expect an instance to be provided over React. They do not accept atom params.
+
+```tsx
+const loginFormAtom = atom({
+  key: 'loginForm',
+  scope: Scope.Local,
+  value: () => ({
+    email: '',
+    password: ''
+  })
+})
+
+function LoginForm() {
+  const loginForm = loginFormAtom.useInstance()
+
+  return (
+    <loginForm.Provider>
+      <Email />
+      <Password />
+    </loginForm.Provider>
+  )
+}
+
+function Email() {
+  // A shorthand for `loginForm.useConsumer().useState()`:
+  const [{ email }, setState] = loginFormAtom.useState()
+  ...
+}
+
+function Password() {
+  // (see above comment)
+  const [{ password }, setPassword] = loginFormAtom.useState()
+  ...
+}
+```
+
+Local atoms only have one injector - `.injectInstance()`. The instance returned has all the normal instance injectors.

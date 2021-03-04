@@ -520,6 +520,43 @@ function SomeComponent() {
 }
 ```
 
+## Returning a class
+
+```tsx
+const counterAtom = atom('counter', () => {
+  class Counter extends AtomClass {
+    store = createStore()
+
+    decrement = () => this.store.setState(state => state - 1)
+    increment = () => this.store.setState(state => state + 1)
+  }
+
+  return Counter
+})
+
+function App() {
+  const { decrement, increment } = counterAtom.useInstance()
+}
+
+// Could even
+class Counter extends AtomClass {
+  static key = 'counter'
+  static ttl = 0
+  static scope = Scope.Global
+
+  store = createStore()
+
+  increment = () => this.store.setState(state => state + 1)
+  decrement = () => this.store.setState(state => state - 1)
+
+  evaluate() {
+    const dep = depAtom.injectValue()
+
+    return this.store
+  }
+}
+```
+
 ## Work List
 
 Round 1 (end of December, 2020)
