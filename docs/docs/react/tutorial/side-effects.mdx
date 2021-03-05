@@ -1,0 +1,23 @@
+---
+id: side-effects
+title: Side Effects
+---
+
+Zedux stores do not have middleware. Read more on that in the [Redux comparison](TODO:link). TL;DR effects subscribers are all you'll need. But you shouldn't need to rig them up manually. Zedux exposes a high-level API that can easily tap into a store's side effects layer:
+
+```ts
+import { when } from '@zedux/react'
+
+const { subscription } = when(myStore)
+  .stateChanges(logStateChange)
+  .receivesAction(addTodo, sendPostRequest)
+```
+
+`when()` is a declarative and simple way to hook into stores. One of its primary use cases is registering `enter` and `leave` hooks for state machines:
+
+```ts
+when(myStore)
+  .machine(({ activeState }) => activeState) // locate state machine
+  .enters(ActiveState.Inactive, scheduleCleanup) // register onEnter hook
+  .leaves(ActiveState.Inactive, destroy) // register onLeave hook
+```

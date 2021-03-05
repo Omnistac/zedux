@@ -29,6 +29,7 @@ module.exports = {
       'react/tutorial/atom-ecosystems',
       'react/tutorial/atom-scopes',
       'react/tutorial/stores',
+      'react/tutorial/side-effects',
     ],
     API: [
       {
