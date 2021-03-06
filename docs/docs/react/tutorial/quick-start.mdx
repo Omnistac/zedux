@@ -19,21 +19,19 @@ yarn add @zedux/react
 
 ## Meet the Atoms
 
-Atoms store state.
-
 ```ts
 import { atom } from '@zedux/react'
 
-const pizzaAtom = atom('pizza', 'pepperoni')
+const greetingAtom = atom('greeting', 'Hello, world!')
 ```
 
-This is an atom. We gave it a key, `pizza`, and an initial value, `pepperoni`.
+This is an atom. We gave it a key, `greeting`, and an initial value, `Hello, world!`.
 
-We access it with a hook:
+When the atom is used, it creates a store to hold its state. The atom exposes several hooks to access and update the state of the store:
 
 ```tsx
-function Pizza() {
-  const [pizza, setPizza] = pizzaAtom.useState()
+function Greet() {
+  const [greeting, setGreeting] = greetingAtom.useState()
   ...
 }
 ```
@@ -42,40 +40,38 @@ function Pizza() {
 
 `atom.useState()` is very similar to React's `useState()` hook. But instead of passing the initial state, we defined it when we created the atom.
 
-In our example, we can use `setPizza` to update the state of the atom:
+In our example, we can use `setGreeting` to update the state of the atom:
 
-<LiveEditor resultVar="PizzaPapa">{`
-const pizzaAtom = atom('pizza', 'pepperoni')\n
-function Pizza() {
-  const [pizza] = pizzaAtom.useState()
+<LiveEditor resultVar="Greeting">{`
+const greetingAtom = atom('greeting', 'Hello, world!')\n
+function GreetingPreview() {
+  const [greeting] = greetingAtom.useState()
   
-  return <div>The pizza: {pizza}</div>
+  return <div>The greeting: {greeting}</div>
 }\n
-function EditPizza() {
-  const [pizza, setPizza] = pizzaAtom.useState()
+function EditGreeting() {
+  const [greeting, setGreeting] = greetingAtom.useState()
   
   return (
     <input
-      onChange={({ target }) => setPizza(target.value)}
-      value={pizza}
+      onChange={({ target }) => setGreeting(target.value)}
+      value={greeting}
     />
   )
 }\n
-const PizzaPapa = () => (
+const Greeting = () => (
   <>
-    <Pizza />
-    <EditPizza />
+    <GreetingPreview />
+    <EditGreeting />
   </>
 )
 `}</LiveEditor>
 
 :::tip
-
 These live playgrounds have every React and Zedux export in scope. Go crazy.
-
 :::
 
-Notice that the `pizzaAtom`'s state is shared between both components.
+Notice that the `greetingAtom`'s state is shared between both components.
 
 ### Atom Factories
 
@@ -132,9 +128,7 @@ const initialPriceAtom = atom('initialPrice', () => {
 In this example, `initialPriceAtom` will be reevaluated every time `stockPriceAtom`'s state changes, but the `initialPrice` it returns won't change, thanks to `injectMemo()`. Therefore components and atoms that use `initialPriceAtom` won't reevaluate.
 
 :::important
-
 Injectors have the same caveats as hooks too! E.g. don't put injectors in if statements or use them outside atom factories.
-
 :::
 
 ### Atom Instances
@@ -144,20 +138,20 @@ Let's take a step back.
 When we pass a factory to `atom()`, that factory is not evaluated right away. Zedux waits until the atom is used by a component or another atom. When the atom is used for the first time, Zedux creates an "atom instance" and calls the factory to produce the instance's initial value.
 
 ```tsx
-function Pizza() {
-  const [pizza] = pizzaAtom.useState()
+function Greeting() {
+  const [greeting] = greetingAtom.useState()
   ...
 }
 
-const SomePizzas = () => (
+const SomeGreetings = () => (
   <>
-    <Pizza />
-    <Pizza />
+    <Greeting />
+    <Greeting />
   </>
 )
 ```
 
-Here, the first `<Pizza />` renders and Zedux creates an instance of `pizzaAtom`. The next `<Pizza />` then reuses that same instance.
+Here, the first `<Greeting />` renders and Zedux creates an instance of `greetingAtom`. The next `<Greeting />` then renders and reuses that same instance.
 
 Usually this just works and you don't have to worry about it. But sometimes you'll need to create multiple instances of an atom. To make Zedux create more instances, we use params.
 
@@ -166,6 +160,7 @@ Usually this just works and you don't have to worry about it. But sometimes you'
 We can pass parameters to atom hooks/injectors:
 
 ```ts
+// This atom accepts a single `id` param
 const userDataAtom = atom('userData', (id: string) => {
   // a hypothetical injector for simplicity (sends the request and tracks state):
   return injectFetch(`/users/${id}`)

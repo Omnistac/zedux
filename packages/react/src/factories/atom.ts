@@ -1,4 +1,11 @@
-import { Context, createContext, useContext } from 'react'
+import {
+  Context,
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import {
   AppAtom,
   AppAtomConfig,
@@ -35,6 +42,8 @@ import { useAtomWithoutSubscription } from '../hooks'
 import { appCsContext, diContext } from '../utils/csContexts'
 import { getAtomInstance } from '../utils/getAtomInstance'
 import { appContext } from '../components'
+import { injectEffect, injectRef } from '../injectors'
+import { EffectsSubscriber, Subscriber } from '@zedux/core'
 
 export const atom: {
   // Basic atom(key, val) overload:
@@ -174,6 +183,57 @@ export const atom: {
     return getInstanceMethods(atomInstance)
   }
 
+  const injectSelector = <D = any>(
+    paramsArg: Params | ((state: State) => D),
+    selectorArg?: (state: State) => D
+  ) => {
+    const selector = selectorArg || (paramsArg as (state: State) => D)
+    const params = selectorArg ? (paramsArg as Params) : ([] as Params)
+
+    const atomInstance = injectAtomWithoutSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
+    const { scheduleEvaluation } = diContext.consume()
+    const selectorRef = injectRef(selector)
+    selectorRef.current = selector
+
+    injectEffect(() => {
+      let prevResult: D
+      const subscriber: EffectsSubscriber<State> = ({
+        action,
+        newState,
+        oldState,
+      }) => {
+        if (newState === oldState) return
+
+        const newResult = selectorRef.current(newState)
+
+        if (newResult === prevResult) return
+
+        prevResult = newResult
+
+        scheduleEvaluation({
+          action,
+          newState,
+          oldState,
+          operation: 'injectSelector()',
+          targetType: EvaluationTargetType.Atom,
+          type: EvaluationType.StateChanged,
+        })
+      }
+
+      const subscription = atomInstance.stateStore.subscribe({
+        effects: subscriber,
+      })
+
+      return () => subscription.unsubscribe()
+    }, [])
+
+    // I think this is fine:
+    return selector(atomInstance.stateStore.getState())
+  }
+
   const injectValue = (...params: Params) => {
     const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
       'injectValue()',
@@ -246,6 +306,44 @@ export const atom: {
     return getInstanceMethods(atomInstance)
   }
 
+  const useSelector = <D = any>(
+    paramsArg: Params | ((state: State) => D),
+    selectorArg: (state: State) => D
+  ) => {
+    const selector = selectorArg || (paramsArg as (state: State) => D)
+    const params = selectorArg ? (paramsArg as Params) : ([] as Params)
+
+    const atomInstance = useAtomWithoutSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
+
+    const [state, setState] = useState(
+      selector(atomInstance.stateStore.getState())
+    )
+    const selectorRef = useRef(selector)
+    selectorRef.current = selector
+
+    useEffect(() => {
+      let prevResult: D
+      const subscriber: Subscriber<State> = newState => {
+        const newResult = selectorRef.current(newState)
+
+        if (newResult === prevResult) return
+
+        prevResult = newResult
+
+        setState(newResult)
+      }
+
+      const subscription = atomInstance.stateStore.subscribe(subscriber)
+
+      return () => subscription.unsubscribe()
+    }, [])
+
+    return state
+  }
+
   const useValue = (...params: Params) => {
     const atomInstance = useAtomWithSubscription<State, Params, Methods>(
       newAtom,
@@ -261,6 +359,7 @@ export const atom: {
     injectInvalidate,
     injectLazy,
     injectMethods,
+    injectSelector: injectSelector as any,
     injectValue,
     internalId: generateImplementationId(),
     flags,
@@ -273,6 +372,7 @@ export const atom: {
     useInvalidate,
     useLazy,
     useMethods,
+    useSelector: useSelector as any,
     useValue,
     value,
   }

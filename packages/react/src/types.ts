@@ -92,6 +92,9 @@ export interface AtomBase<
   injectInvalidate: (...params: Params) => () => void
   injectLazy: () => (...params: Params) => Store<State>
   injectMethods: (...params: Params) => Methods
+  injectSelector: Params extends []
+    ? <D = any>(selector: (state: State) => D) => D
+    : <D = any>(params: Params, selector: (state: State) => D) => D
   injectValue: (...params: Params) => State
   override: (
     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
@@ -105,6 +108,9 @@ export interface AtomBase<
   useInvalidate: (...params: Params) => () => void
   useLazy: () => (...params: Params) => Store<State>
   useMethods: (...params: Params) => Methods
+  useSelector: Params extends []
+    ? <D = any>(selector: (state: State) => D) => D
+    : <D = any>(params: Params, selector: (state: State) => D) => D
   useValue: (...params: Params) => State
 }
 
