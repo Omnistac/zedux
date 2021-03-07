@@ -139,7 +139,7 @@ export interface AtomBaseProperties<
 
 export interface AtomInstanceBase<
   State = any,
-  Params extends any[] = any[],
+  Params extends any[] = [],
   Methods extends Record<string, () => any> = Record<string, () => any>
 > {
   activeState: ActiveState
