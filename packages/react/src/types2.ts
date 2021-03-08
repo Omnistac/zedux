@@ -1,41 +1,11 @@
 import { Context } from 'react'
-import { Dispatcher, Store } from '@zedux/core'
+import { Dispatcher, StateSetter, Store } from '@zedux/core'
 import { EvaluationReason, InjectorDescriptor } from './utils/types'
 
 export enum ActiveState {
   Active = 'Active',
   Destroyed = 'Destroyed',
   Destroying = 'Destroying',
-}
-
-export type AtomValue<State = any> = State | Store<State>
-
-// ReadonlyApp and ReadonlyGlobal atoms are "ReadonlyStandard" atoms
-export interface ReadonlyStandardAtom<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>
-> {
-  injectInstance: (...params: Params) => AtomInstanceApi<State, Params, Exports>
-  injectInvalidate: (...params: Params) => () => void
-  injectLazy: () => (...params: Params) => Store<State>
-  injectExports: (...params: Params) => Exports
-  injectSelector: Params extends []
-    ? <D = any>(selector: (state: State) => D) => D
-    : <D = any>(params: Params, selector: (state: State) => D) => D
-  injectValue: (...params: Params) => State
-  override: (
-    newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
-  ) => ReadonlyStandardAtom<State, Params, Exports>
-  useConsumer: () => AtomInstanceApi<State, Params, Exports>
-  useInstance: (...params: Params) => AtomInstanceApi<State, Params, Exports>
-  useInvalidate: (...params: Params) => () => void
-  useLazy: () => (...params: Params) => Store<State>
-  useExports: (...params: Params) => Exports
-  useSelector: Params extends []
-    ? <D = any>(selector: (state: State) => D) => D
-    : <D = any>(params: Params, selector: (state: State) => D) => D
-  useValue: (...params: Params) => State
 }
 
 export interface AtomInstance<
@@ -67,17 +37,67 @@ export interface AtomInstanceApi<
   State,
   Params extends any[],
   Exports extends Record<string, any>
-> extends AtomInstance<State, Params, Exports> {
+> extends ReadonlyAtomInstanceApi<State, Params, Exports> {
+  injectDispatch: () => Dispatcher<State>
+  injectSetState: () => StateSetter<State>
+  injectState: () => readonly [State, Store<State>['setState'], Store<State>]
+  injectStore: () => Store<State>
+  useDispatch: () => Dispatcher<State>
+  useSetState: () => StateSetter<State>
+  useState: () => readonly [State, Store<State>['setState']]
+  useStore: () => Store<State>
+}
+
+export type AtomValue<State = any> = State | Store<State>
+
+// ReadonlyApp and ReadonlyGlobal atoms are "ReadonlyStandard" atoms
+export interface ReadonlyStandardAtom<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>,
+  AtomInstanceApiType extends ReadonlyAtomInstanceApi<
+    State,
+    Params,
+    Exports
+  > = ReadonlyAtomInstanceApi<State, Params, Exports>
+> {
+  injectExports: (...params: Params) => Exports
+  injectInstance: (...params: Params) => AtomInstanceApiType
+  injectInvalidate: (...params: Params) => () => void
+  injectLazy: () => (...params: Params) => Store<State>
+  injectSelector: Params extends []
+    ? <D = any>(selector: (state: State) => D) => D
+    : <D = any>(params: Params, selector: (state: State) => D) => D
+  injectValue: (...params: Params) => State
+  override: (
+    newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
+  ) => ReadonlyStandardAtom<State, Params, Exports>
+  useConsumer: () => AtomInstanceApiType
+  useExports: (...params: Params) => Exports
+  useInstance: (...params: Params) => AtomInstanceApiType
+  useInvalidate: (...params: Params) => () => void
+  useLazy: () => (...params: Params) => Store<State>
+  useSelector: Params extends []
+    ? <D = any>(selector: (state: State) => D) => D
+    : <D = any>(params: Params, selector: (state: State) => D) => D
+  useValue: (...params: Params) => State
+}
+
+export interface ReadonlyAtomInstanceApi<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>
+> {
+  injectExports: () => Exports
   injectInvalidate: () => () => void
   injectLazy: () => () => Store<State>
-  injectExports: () => Exports
+  injectSelector: <D = any>(selector: (state: State) => D) => D
   injectValue: () => State
-  override: (
-    newValue: AtomValue<State> | (() => AtomValue<State>)
-  ) => ReadonlyStandardAtom<State, Params, Exports>
+  params: Params
+  useExports: () => Exports
   useInvalidate: () => () => void
   useLazy: () => () => Store<State>
-  useExports: () => Exports
+  useSelector: <D = any>(selector: (state: State) => D) => D
   useValue: () => State
 }
 
@@ -86,18 +106,23 @@ export interface StandardAtom<
   State,
   Params extends any[],
   Exports extends Record<string, any>
-> extends ReadonlyStandardAtom<State, Params, Exports> {
-  injectState: StateInjector<State, Params>
-  useState: StateHook<State, Params>
+> extends ReadonlyStandardAtom<
+    State,
+    Params,
+    Exports,
+    AtomInstanceApi<State, Params, Exports>
+  > {
+  injectDispatch: (...params: Params) => Dispatcher<State>
+  injectSetState: (...params: Params) => StateSetter<State>
+  injectState: (
+    ...params: Params
+  ) => readonly [State, Store<State>['setState'], Store<State>]
+  injectStore: (...params: Params) => Store<State>
+  useDispatch: (...params: Params) => Dispatcher<State>
+  useSetState: (...params: Params) => StateSetter<State>
+  useState: (...params: Params) => readonly [State, Store<State>['setState']]
+  useStore: (...params: Params) => Store<State>
 }
-
-export type StateHook<State = any, Params extends any[] = []> = (
-  ...params: Params
-) => readonly [State, Store<State>['setState']]
-
-export type StateInjector<State = any, Params extends any[] = []> = (
-  ...params: Params
-) => readonly [State, Store<State>['setState'], Store<State>]
 
 export enum StateType {
   Store,

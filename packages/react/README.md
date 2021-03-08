@@ -581,7 +581,7 @@ x- context (`<AppProvider context={...}>` and `injectContext()`)
 - remove duplicated code in `selector()` and `atom()`
 - clean up types (does each atom, atom instance, and atom config really need its own interface)
 - `atom.useDispatch()` and `atom.injectDispatch()`
-- `atom.useState()` and `atom.injectState()`
+x- `atom.useState()` and `atom.injectState()`
 - `atom.useSetState()` and `atom.injectSetState()`
 x- `instance.Provider` and `atom.useConsumer()`
 x- `injectInvalidate()`, `atom.injectInvalidate()`, `atom.useInvalidate()`
@@ -601,4 +601,4 @@ x- `injectWhy()`
 - `methods` -> `exports`
 - `maxInstances` - complements ttl. Use a FIFO queue. No instances will ever be cleaned up while in use. And none will be cleaned up while queueSize <= maxInstances. Stale instances will be scheduled for clean up when queueSize > maxInstances. Newly stale instances will be immediately scheduled for clean up if queueSize > maxInstances.
 - should `useSelector()`/`injectSelector()` be changed to `useDerivation()`/`injectDerivation()`? The term "selector" is too overloaded.
-- should `selector()` set ttl to 0 by default?
+- should `selector()` set ttl to 0 by default? No, but it should probably set `maxInstances` to 10 or smth.

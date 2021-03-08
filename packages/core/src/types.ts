@@ -173,6 +173,8 @@ export type SideEffectHandler<State = any> = (
   effectData: EffectData<State>
 ) => any
 
+export type StateSetter<State = any> = (settable: Settable<State>) => State
+
 export interface Store<State = any> extends Observable<State> {
   action$: { [Symbol.observable]: () => Observable<Action> }
   configureHierarchy(options: HierarchyConfig): Store<State>
@@ -180,7 +182,7 @@ export interface Store<State = any> extends Observable<State> {
   getRefCount(includeInternalSubscribers?: boolean): number
   getState(): State
   hydrate(newState?: State): Store<State>
-  setState(settable: Settable<State>): State
+  setState: StateSetter<State>
   use(newHierarchy?: HierarchyDescriptor<State>): Store<State>
   $$typeof: symbol
   [Symbol.observable]: () => Store<State>
