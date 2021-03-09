@@ -50,6 +50,40 @@ export interface AtomInstanceApi<
 
 export type AtomValue<State = any> = State | Store<State>
 
+export interface LocalAtom<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>
+> extends ReadonlyLocalAtom<State, Params, Exports> {
+  useDispatch: () => Dispatcher<State>
+  useSetState: () => StateSetter<State>
+  useState: () => readonly [State, Store<State>['setState']]
+  useStore: () => Store<State>
+}
+
+export interface ReadonlyLocalAtom<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>,
+  AtomInstanceApiType extends ReadonlyAtomInstanceApi<
+    State,
+    Params,
+    Exports
+  > = ReadonlyAtomInstanceApi<State, Params, Exports>
+> {
+  injectInstance: (...params: Params) => AtomInstanceApiType
+  override: (
+    newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
+  ) => ReadonlyLocalAtom<State, Params, Exports>
+  useConsumer: () => AtomInstanceApiType
+  useExports: () => Exports
+  useInstance: (...params: Params) => AtomInstanceApiType
+  useInvalidate: () => () => void
+  useLazy: () => () => Store<State>
+  useSelector: <D = any>(selector: (state: State) => D) => D
+  useValue: () => State
+}
+
 // ReadonlyApp and ReadonlyGlobal atoms are "ReadonlyStandard" atoms
 export interface ReadonlyStandardAtom<
   State,
