@@ -228,7 +228,9 @@ export interface AppAtom<
     AppAtom<State, Params, Methods>,
     AppAtomInstance<State, Params, Methods>
   > {
+  injectDispatch: (...params: Params) => Dispatcher<State>
   injectState: StateInjector<State, Params>
+  useDispatch: (...params: Params) => Dispatcher<State>
   useState: StateHook<State, Params>
 }
 
@@ -286,7 +288,9 @@ export interface GlobalAtom<
     GlobalAtom<State, Params, Methods>,
     GlobalAtomInstance<State, Params, Methods>
   > {
+  injectDispatch: (...params: Params) => Dispatcher<State>
   injectState: StateInjector<State, Params>
+  useDispatch: (...params: Params) => Dispatcher<State>
   useState: StateHook<State, Params>
 }
 
@@ -344,8 +348,10 @@ export interface LocalAtom<
     LocalAtom<State, Params, Methods>,
     LocalAtomInstance<State, Params, Methods>
   > {
+  injectDispatch: (...params: Params) => Dispatcher<State>
   injectState: StateInjector<State, Params>
   ttl?: 0
+  useDispatch: (...params: Params) => Dispatcher<State>
   useState: StateHook<State, Params>
 }
 

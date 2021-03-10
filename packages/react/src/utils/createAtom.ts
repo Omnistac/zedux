@@ -11,6 +11,8 @@ import {
 } from '../types'
 import { useAtomWithSubscription } from '../hooks/useAtomWithSubscription'
 import { injectAtomWithSubscription } from '../injectors/injectAtomWithSubscription'
+import { injectAtomWithoutSubscription } from '../injectors'
+import { useAtomWithoutSubscription } from '../hooks'
 
 const attachStateHooks = <
   State = any,
@@ -19,6 +21,15 @@ const attachStateHooks = <
 >(
   newAtom: any
 ) => {
+  newAtom.injectDispatch = (...params: Params) => {
+    const atomInstance = injectAtomWithoutSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
+
+    return atomInstance.stateStore.dispatch
+  }
+
   newAtom.injectState = (...params: Params) => {
     const atomInstance = injectAtomWithSubscription<State, Params, Methods>(
       'injectState()',
@@ -30,6 +41,15 @@ const attachStateHooks = <
       atomInstance.stateStore.getState(),
       atomInstance.stateStore.setState,
     ]
+  }
+
+  newAtom.useDispatch = (...params: Params) => {
+    const atomInstance = useAtomWithoutSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
+
+    return atomInstance.stateStore.dispatch
   }
 
   newAtom.useState = (...params: Params) => {
