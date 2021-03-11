@@ -230,8 +230,10 @@ export interface AppAtom<
   > {
   injectDispatch: (...params: Params) => Dispatcher<State>
   injectState: StateInjector<State, Params>
+  injectStore: (...params: Params) => Store<State>
   useDispatch: (...params: Params) => Dispatcher<State>
   useState: StateHook<State, Params>
+  useStore: (...params: Params) => Store<State>
 }
 
 export type ReadonlyAppAtom<
@@ -290,8 +292,10 @@ export interface GlobalAtom<
   > {
   injectDispatch: (...params: Params) => Dispatcher<State>
   injectState: StateInjector<State, Params>
+  injectStore: (...params: Params) => Store<State>
   useDispatch: (...params: Params) => Dispatcher<State>
   useState: StateHook<State, Params>
+  useStore: (...params: Params) => Store<State>
 }
 
 export type ReadonlyGlobalAtom<
@@ -350,9 +354,11 @@ export interface LocalAtom<
   > {
   injectDispatch: (...params: Params) => Dispatcher<State>
   injectState: StateInjector<State, Params>
+  injectStore: (...params: Params) => Store<State>
   ttl?: 0
   useDispatch: (...params: Params) => Dispatcher<State>
   useState: StateHook<State, Params>
+  useStore: (...params: Params) => Store<State>
 }
 
 export interface ReadonlyLocalAtom<

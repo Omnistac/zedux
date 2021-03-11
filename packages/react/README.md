@@ -580,7 +580,7 @@ x- context (`<AppProvider context={...}>` and `injectContext()`)
 - `molecule()` and add molecule instantiation to atom instantiation
 - remove duplicated code in `selector()` and `atom()`
 - clean up types (does each atom, atom instance, and atom config really need its own interface)
-- `atom.useDispatch()` and `atom.injectDispatch()`
+x- `atom.useDispatch()` and `atom.injectDispatch()`
 x- `atom.useState()` and `atom.injectState()`
 - `atom.useSetState()` and `atom.injectSetState()`
 x- `instance.Provider` and `atom.useConsumer()`

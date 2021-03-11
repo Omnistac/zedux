@@ -43,6 +43,15 @@ const attachStateHooks = <
     ]
   }
 
+  newAtom.injectStore = (...params: Params) => {
+    const atomInstance = injectAtomWithoutSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
+
+    return atomInstance.stateStore
+  }
+
   newAtom.useDispatch = (...params: Params) => {
     const atomInstance = useAtomWithoutSubscription<State, Params, Methods>(
       newAtom,
@@ -62,6 +71,15 @@ const attachStateHooks = <
       atomInstance.stateStore.getState(),
       atomInstance.stateStore.setState,
     ]
+  }
+
+  newAtom.useStore = (...params: Params) => {
+    const atomInstance = useAtomWithoutSubscription<State, Params, Methods>(
+      newAtom,
+      params
+    )
+
+    return atomInstance.stateStore
   }
 }
 

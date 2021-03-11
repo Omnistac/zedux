@@ -101,11 +101,11 @@ counterStore.setState(0)
 counterStore.setState(4) // triggered! { newState: 4, oldState: 0 }
 ```
 
-To perform a side effect on every action or every state change while the predicate is matched, use `.receivesAction()` or `.stateChanges()` with a normal if statement:
+To perform a side effect on every action or every state change while the predicate is matched, regardless of previous state, use `.receivesAction()` or `.stateChanges()` with a normal if statement:
 
 ```ts
 when(counterStore).receivesAction(({ newState, oldState }) => {
-  if (num > 1) {
+  if (newState > 1) {
     console.log('triggered!', { newState, oldState })
   }
 })
