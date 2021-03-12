@@ -8,6 +8,28 @@ export enum ActiveState {
   Destroying = 'Destroying',
 }
 
+export interface AtomBaseProperties<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>,
+  ScopeType extends Scope = Scope,
+  Readonly extends boolean = boolean,
+  InstanceType extends AtomInstance<State, Params, Exports> = AtomInstance<
+    State,
+    Params,
+    Exports
+  >
+> {
+  flags?: string[]
+  getReactContext: () => Context<InstanceType>
+  internalId: string
+  key: string
+  // molecules?: Molecule[]
+  readonly?: Readonly
+  scope: ScopeType
+  value: AtomValue<State> | ((...params: Params) => AtomValue<State>)
+}
+
 export interface AtomInstance<
   State,
   Params extends any[],
@@ -61,6 +83,24 @@ export interface LocalAtom<
   useStore: () => Store<State>
 }
 
+export interface ReadonlyAtomInstanceApi<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>
+> {
+  injectExports: () => Exports
+  injectInvalidate: () => () => void
+  injectLazy: () => () => Store<State>
+  injectSelector: <D = any>(selector: (state: State) => D) => D
+  injectValue: () => State
+  params: Params
+  useExports: () => Exports
+  useInvalidate: () => () => void
+  useLazy: () => () => Store<State>
+  useSelector: <D = any>(selector: (state: State) => D) => D
+  useValue: () => State
+}
+
 export interface ReadonlyLocalAtom<
   State,
   Params extends any[],
@@ -94,7 +134,7 @@ export interface ReadonlyStandardAtom<
     Params,
     Exports
   > = ReadonlyAtomInstanceApi<State, Params, Exports>
-> {
+> extends AtomBaseProperties<State, Params, Exports> {
   injectExports: (...params: Params) => Exports
   injectInstance: (...params: Params) => AtomInstanceApiType
   injectInvalidate: (...params: Params) => () => void
@@ -106,6 +146,7 @@ export interface ReadonlyStandardAtom<
   override: (
     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
   ) => ReadonlyStandardAtom<State, Params, Exports>
+  ttl?: Ttl
   useConsumer: () => AtomInstanceApiType
   useExports: (...params: Params) => Exports
   useInstance: (...params: Params) => AtomInstanceApiType
@@ -117,22 +158,10 @@ export interface ReadonlyStandardAtom<
   useValue: (...params: Params) => State
 }
 
-export interface ReadonlyAtomInstanceApi<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>
-> {
-  injectExports: () => Exports
-  injectInvalidate: () => () => void
-  injectLazy: () => () => Store<State>
-  injectSelector: <D = any>(selector: (state: State) => D) => D
-  injectValue: () => State
-  params: Params
-  useExports: () => Exports
-  useInvalidate: () => () => void
-  useLazy: () => () => Store<State>
-  useSelector: <D = any>(selector: (state: State) => D) => D
-  useValue: () => State
+export enum Scope {
+  App = 'App',
+  Global = 'Global',
+  Local = 'Local',
 }
 
 // App and Global atoms are "Standard" atoms
@@ -162,3 +191,5 @@ export enum StateType {
   Store,
   Value,
 }
+
+export type Ttl = number // | Observable<any> - not implementing observable ttl for now // Not for local atoms

@@ -404,7 +404,8 @@ export enum ActiveState {
  *
  * Atom context is an escape hatch. The primary purpose is to help with
  * integrating Zedux into existing codebases - codebases where Zedux is not the
- * main state management tool. The flow for using atom context is:
+ * main state management tool. The flow for using atom context is similar to
+ * React context:
  *
  * create atom context -> instantiate -> provide instance -> consume instance
  *
@@ -524,7 +525,7 @@ export interface AtomContext<T = any> {
    * const value = instance.useValue() // <- subscribes
    * ```
    *
-   * All other AtomContext hooks (except `useInstance()`) are shorthands for
+   * All other AtomContext hooks (except `.useInstance()`) are shorthands for
    * `myAtomContext.useConsumer().use*()`
    */
   useConsumer: () => AtomContextInstanceReactApi<T>
@@ -697,10 +698,6 @@ export enum StateType {
 // TODO: Molecules are just atoms now (:exploding_head:)
 export interface Molecule {
   key: string
-}
-
-export interface ReadonlyStore<State = any> {
-  getState: Store<State>['getState']
 }
 
 export interface RefObject<T = any> {
