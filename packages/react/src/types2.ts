@@ -83,6 +83,51 @@ export interface LocalAtom<
   useStore: () => Store<State>
 }
 
+/**
+ * Molecule
+ *
+ * A bidirectional accumulator of atoms. "Bidirectional" meaning it can attach
+ * atoms to itself and atoms can attach themselves to it. This is useful for
+ * code-split codebases where some atoms are lazy-loaded and need to attach
+ * themselves lazily.
+ *
+ * Molecules typically combine the stores of multiple atoms into a single store.
+ * This can be used to persist and hydrate app state or implement undo/redo and
+ * time travel debugging.
+ *
+ * Molecules are actually a type of atom. This means creating and using a
+ * molecule is very similar to creating and using an atom. The API is only
+ * slightly different.
+ *
+ * Example:
+ *
+ * ```ts
+ * import { molecule } from '@zedux/react'
+ *
+ * const formsMolecule = molecule('forms', () => {
+ *   const store = injectStore(null, false)
+ *
+ *   injectAll(loginFormAtom, instance => {
+ *     store.use({ [loginFormAtom.key]: instance.stateStore })
+ *   })
+ *
+ *   return store
+ * })
+ * ```
+ */
+export interface Molecule<State, Exports extends Record<string, any>> {
+  injectExports: () => Exports
+  injectInvalidate: () => () => void
+  injectSelector: <D = any>(selector: (state: State) => D) => D
+  injectState: () => readonly [State, Store<State>['setState'], Store<State>]
+  injectStore: () => Store<State>
+  useExports: () => Exports
+  useInvalidate: () => () => void
+  useSelector: <D = any>(selector: (state: State) => D) => D
+  useState: () => readonly [State, Store<State>['setState']]
+  useStore: () => Store<State>
+}
+
 export interface ReadonlyAtomInstanceApi<
   State,
   Params extends any[],
