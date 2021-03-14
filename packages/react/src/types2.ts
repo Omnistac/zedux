@@ -8,25 +8,9 @@ export enum ActiveState {
   Destroying = 'Destroying',
 }
 
-export interface AtomBaseProperties<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>,
-  ScopeType extends Scope = Scope,
-  Readonly extends boolean = boolean,
-  InstanceType extends AtomInstance<State, Params, Exports> = AtomInstance<
-    State,
-    Params,
-    Exports
-  >
-> {
-  flags?: string[]
-  getReactContext: () => Context<InstanceType>
+export interface AtomBaseProperties<State, Params extends any[]> {
   internalId: string
   key: string
-  // molecules?: Molecule[]
-  readonly?: Readonly
-  scope: ScopeType
   value: AtomValue<State> | ((...params: Params) => AtomValue<State>)
 }
 
@@ -86,10 +70,10 @@ export interface LocalAtom<
 /**
  * Molecule
  *
- * A bidirectional accumulator of atoms. "Bidirectional" meaning it can attach
- * atoms to itself and atoms can attach themselves to it. This is useful for
- * code-split codebases where some atoms are lazy-loaded and need to attach
- * themselves lazily.
+ * A bidirectional accumulator of atoms. "Bidirectional" meaning it can inject
+ * atoms and atoms can inject themselves. This is useful for code-split
+ * codebases where some atoms are lazy-loaded and need to attach themselves
+ * lazily.
  *
  * Molecules typically combine the stores of multiple atoms into a single store.
  * This can be used to persist and hydrate app state or implement undo/redo and
@@ -102,20 +86,24 @@ export interface LocalAtom<
  * Example:
  *
  * ```ts
- * import { molecule } from '@zedux/react'
+ * import { injectAllInstances, molecule } from '@zedux/react'
  *
  * const formsMolecule = molecule('forms', () => {
  *   const store = injectStore(null, false)
  *
- *   injectAll(loginFormAtom, instance => {
+ *   injectAllInstances(loginFormAtom, instance => {
  *     store.use({ [loginFormAtom.key]: instance.stateStore })
+ *
+ *     // remember to clean up on instance destroy
+ *     return () => store.use({ [loginFormAtom.key]: null })
  *   })
  *
  *   return store
  * })
  * ```
  */
-export interface Molecule<State, Exports extends Record<string, any>> {
+export interface Molecule<State, Exports extends Record<string, any>>
+  extends AtomBaseProperties<State, []> {
   injectExports: () => Exports
   injectInvalidate: () => () => void
   injectSelector: <D = any>(selector: (state: State) => D) => D
@@ -179,7 +167,7 @@ export interface ReadonlyStandardAtom<
     Params,
     Exports
   > = ReadonlyAtomInstanceApi<State, Params, Exports>
-> extends AtomBaseProperties<State, Params, Exports> {
+> extends StandardAtomBaseProperties<State, Params, Exports> {
   injectExports: (...params: Params) => Exports
   injectInstance: (...params: Params) => AtomInstanceApiType
   injectInvalidate: (...params: Params) => () => void
@@ -230,6 +218,25 @@ export interface StandardAtom<
   useSetState: (...params: Params) => StateSetter<State>
   useState: (...params: Params) => readonly [State, Store<State>['setState']]
   useStore: (...params: Params) => Store<State>
+}
+
+export interface StandardAtomBaseProperties<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>,
+  ScopeType extends Scope = Scope,
+  Readonly extends boolean = boolean,
+  InstanceType extends AtomInstance<State, Params, Exports> = AtomInstance<
+    State,
+    Params,
+    Exports
+  >
+> extends AtomBaseProperties<State, Params> {
+  flags?: string[]
+  getReactContext: () => Context<InstanceType>
+  // molecules?: Molecule[]
+  readonly?: Readonly
+  scope: ScopeType
 }
 
 export enum StateType {
