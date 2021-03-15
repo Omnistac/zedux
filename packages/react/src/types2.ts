@@ -8,10 +8,13 @@ export enum ActiveState {
   Destroying = 'Destroying',
 }
 
+export interface AsyncAtom<State, Params extends any[]> {
+  value: (...params: Params) => () => Promise<State>
+}
+
 export interface AtomBaseProperties<State, Params extends any[]> {
   internalId: string
   key: string
-  value: AtomValue<State> | ((...params: Params) => AtomValue<State>)
 }
 
 export interface AtomInstance<
@@ -86,16 +89,27 @@ export interface LocalAtom<
  * Example:
  *
  * ```ts
- * import { injectAllInstances, molecule } from '@zedux/react'
+ * import { injectAllInstances, injectStore, molecule } from '@zedux/react'
  *
  * const formsMolecule = molecule('forms', () => {
  *   const store = injectStore(null, false)
  *
- *   injectAllInstances(loginFormAtom, instance => {
- *     store.use({ [loginFormAtom.key]: instance.stateStore })
+ *   // inject all instances of these 2 atoms into this molecule:
+ *   injectAllInstances([loginFormAtom, registerFormAtom], (atom, instance) => {
+ *     // Here we're assuming that both these atoms take no params.
+ *     // So there will only be one instance. In general, don't assume this:
+ *     store.use({ [atom.key]: instance.stateStore })
  *
  *     // remember to clean up on instance destroy
- *     return () => store.use({ [loginFormAtom.key]: null })
+ *     return () => store.use({ [atom.key]: null })
+ *   })
+ *
+ *   // allow any atom to inject itself into this molecule:
+ *   injectAllInstances((atom, instance) => {
+ *     // can't assume that the injected atom doesn't take params:
+ *     store.use({ [atom.key]: { [instance.keyHash]: instance.stateStore } })
+ *
+ *     return () => store.use({ [atom.key]: null })
  *   })
  *
  *   return store
@@ -114,6 +128,7 @@ export interface Molecule<State, Exports extends Record<string, any>>
   useSelector: <D = any>(selector: (state: State) => D) => D
   useState: () => readonly [State, Store<State>['setState']]
   useStore: () => Store<State>
+  value: () => Store<State>
 }
 
 export interface ReadonlyAtomInstanceApi<
@@ -234,9 +249,10 @@ export interface StandardAtomBaseProperties<
 > extends AtomBaseProperties<State, Params> {
   flags?: string[]
   getReactContext: () => Context<InstanceType>
-  // molecules?: Molecule[]
+  molecules?: Molecule<any, any> // TODO: type this first `any` (the second `any` is correct as-is)
   readonly?: Readonly
   scope: ScopeType
+  value: AtomValue<State> | ((...params: Params) => AtomValue<State>)
 }
 
 export enum StateType {
