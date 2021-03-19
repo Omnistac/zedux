@@ -45,6 +45,13 @@ export enum EvaluationTargetType {
   Store = 'Store',
 }
 
+export interface ExportsInjectorDescriptor<
+  Exports extends Record<string, () => any> = Record<string, () => any>
+> extends InjectorDescriptor {
+  exports: Exports
+  type: InjectorType.Exports
+}
+
 export interface InjectorDescriptor {
   cleanup?: () => void
   type: string
@@ -52,8 +59,8 @@ export interface InjectorDescriptor {
 
 export enum InjectorType {
   Effect = 'Effect',
+  Exports = 'Exports',
   Memo = 'Memo',
-  Methods = 'Methods',
   Ref = 'Ref',
   State = 'State',
   Why = 'Why',
@@ -68,13 +75,6 @@ export interface MemoInjectorDescriptor<State = any>
   extends DepsInjectorDescriptor {
   memoizedVal: State
   type: InjectorType.Memo
-}
-
-export interface MethodsInjectorDescriptor<
-  Methods extends Record<string, () => any> = Record<string, () => any>
-> extends DepsInjectorDescriptor {
-  methods: Methods
-  type: InjectorType.Methods
 }
 
 export interface RefInjectorDescriptor<T = any> extends InjectorDescriptor {

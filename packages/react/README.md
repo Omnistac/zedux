@@ -524,11 +524,14 @@ function SomeComponent() {
 
 ```tsx
 const counterAtom = atom('counter', () => {
+  const step = stepAtom.useValue()
+
   class Counter extends AtomClass {
     store = createStore()
 
-    decrement = () => this.store.setState(state => state - 1)
-    increment = () => this.store.setState(state => state + 1)
+    // how would these `step` references get updated? Have to use a ref?
+    decrement = () => this.store.setState(state => state - step)
+    increment = () => this.store.setState(state => state + step)
   }
 
   return Counter
