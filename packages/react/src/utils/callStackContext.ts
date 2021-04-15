@@ -1,22 +1,20 @@
-interface CallStackContext<T = any> {
-  consume: () => T
-  provide: <R = any>(value: T, callback: () => R) => R
-}
-
-interface CallStackContextInstance<T = any> {
-  context: CallStackContext<T>
-  value: T
-}
+import { CallStackContext, CallStackContextInstance } from './types'
 
 const stack: CallStackContextInstance[] = []
 
-export const createCallStackContext = <T = any>(defaults: T) => {
-  const consume = (useDefaults = true) => {
-    const instance: CallStackContextInstance<T> = stack.find(
+export const createCallStackContext = <T = any>() => {
+  const consume = (throwError = true) => {
+    const instance: CallStackContextInstance<T> | undefined = stack.find(
       item => item.context === context
     )
 
-    return instance?.value ?? (useDefaults ? defaults : null)
+    if (!instance && throwError) {
+      throw new Error(
+        'Zedux - Injectors can only be used in instance factories'
+      )
+    }
+
+    return instance?.value || null
   }
 
   const provide = <R = any>(value: T, callback: () => R) => {
@@ -27,7 +25,7 @@ export const createCallStackContext = <T = any>(defaults: T) => {
     return ret
   }
 
-  const context = { consume, provide }
+  const context: CallStackContext<T> = { consume: consume as any, provide }
 
   return context
 }

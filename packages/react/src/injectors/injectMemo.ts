@@ -1,27 +1,27 @@
-import { haveDepsChanged, validateInjector } from '../utils'
-import { diContext } from '../utils/csContexts'
+import { haveDepsChanged, split } from '../utils'
 import { InjectorType, MemoInjectorDescriptor } from '../utils/types'
 
 export const injectMemo = <State = any>(factory: () => State, deps?: any[]) => {
-  const context = diContext.consume()
-
-  const prevDescriptor = validateInjector<MemoInjectorDescriptor<State>>(
+  const { memoizedVal } = split<MemoInjectorDescriptor<State>>(
     'injectMemo',
     InjectorType.Memo,
-    context
+    () => ({
+      type: InjectorType.Memo,
+      deps: deps,
+      memoizedVal: factory(),
+    }),
+    prevDescriptor => {
+      const depsHaveChanged = haveDepsChanged(prevDescriptor.deps, deps)
+
+      const memoizedVal = depsHaveChanged
+        ? factory()
+        : prevDescriptor.memoizedVal
+
+      prevDescriptor.memoizedVal = memoizedVal
+
+      return prevDescriptor
+    }
   )
-
-  const depsHaveChanged = haveDepsChanged(prevDescriptor?.deps, deps)
-
-  const memoizedVal = depsHaveChanged ? factory() : prevDescriptor.memoizedVal
-
-  const descriptor: MemoInjectorDescriptor<State> = {
-    deps,
-    memoizedVal,
-    type: InjectorType.Memo,
-  }
-
-  context.injectors.push(descriptor)
 
   return memoizedVal
 }

@@ -1,12 +1,14 @@
 import { createStore } from '@zedux/core'
 import { atomsReducer } from './atoms'
-import { poolsReducer } from './pools'
+import { ecosystemsReducer } from './ecosystems'
+import { instancesReducer } from './instances'
 
 export * from './actions'
 
 export const globalStore = createStore({
   atoms: atomsReducer,
-  pools: poolsReducer,
+  ecosystems: ecosystemsReducer,
+  instances: instancesReducer,
 })
 // ;(window as any).globalStore = globalStore
 

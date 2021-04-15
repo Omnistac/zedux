@@ -1,5 +1,5 @@
 import { Subscriber } from '@zedux/core'
-import { AtomBaseProperties } from '../types'
+import { AtomBaseProperties, AtomInstanceBase } from '../types'
 import {
   EvaluationType,
   EvaluationTargetType,
@@ -28,22 +28,22 @@ import { injectEffect } from './injectEffect'
 export const injectAtomWithSubscription = <
   State = any,
   Params extends any[] = [],
-  Methods extends Record<string, () => any> = Record<string, () => any>
+  InstanceType extends AtomInstanceBase<State, Params> = AtomInstanceBase<
+    State,
+    Params
+  >
 >(
   operation: string,
-  atom: AtomBaseProperties<State, Params, Methods>,
-  params?: Params
+  atom: AtomBaseProperties<State, Params, InstanceType>,
+  params: Params
 ) => {
   const { scheduleEvaluation } = diContext.consume()
 
-  const atomInstance = injectAtomWithoutSubscription<State, Params, Methods>(
-    atom,
-    params
-  )
+  const atomInstance = injectAtomWithoutSubscription(atom, params)
 
   injectEffect(() => {
     const subscriber: Subscriber<State> = (newState, oldState) => {
-      const reasons = atomInstance.getEvaluationReasons()
+      const reasons = atomInstance.internals.getEvaluationReasons()
       const reason: EvaluationReason = {
         newState,
         oldState,
@@ -59,7 +59,7 @@ export const injectAtomWithSubscription = <
       scheduleEvaluation(reason)
     }
 
-    const subscription = atomInstance.stateStore.subscribe(subscriber)
+    const subscription = atomInstance.internals.stateStore.subscribe(subscriber)
 
     return () => {
       subscription.unsubscribe()

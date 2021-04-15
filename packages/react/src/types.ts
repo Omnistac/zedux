@@ -27,11 +27,9 @@ export interface Atom<
   State,
   Params extends any[],
   Exports extends Record<string, any>
-> extends ReadonlyAtom<
-    State,
-    Params,
-    Exports,
-    AtomInstanceApi<State, Params, Exports>
+> extends Omit<
+    ReadonlyAtom<State, Params, Exports, AtomInstance<State, Params, Exports>>,
+    'override' | 'readonly'
   > {
   injectDispatch: (...params: Params) => Dispatcher<State>
   injectSetState: (...params: Params) => StateSetter<State>
@@ -39,6 +37,10 @@ export interface Atom<
     ...params: Params
   ) => readonly [State, Store<State>['setState'], Store<State>]
   injectStore: (...params: Params) => Store<State>
+  override: (
+    newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
+  ) => Atom<State, Params, Exports>
+  readonly?: false
   useDispatch: (...params: Params) => Dispatcher<State>
   useSetState: (...params: Params) => StateSetter<State>
   useState: (...params: Params) => readonly [State, Store<State>['setState']]
@@ -48,16 +50,24 @@ export interface Atom<
 export interface AtomBaseProperties<
   State,
   Params extends any[],
-  Exports extends Record<string, any>,
-  InstanceType extends AtomInstance<State, Params, Exports> = AtomInstance<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  InstanceType extends AtomInstanceBase<State, Params> = AtomInstanceBase<
     State,
-    Params,
-    Exports
+    Params
   >
-> extends BaseProperties {
-  getReactContext: () => Context<InstanceType>
-  molecules?: Molecule<any, any> // TODO: type this first `any` (the second `any` is correct as-is)
-  value: AtomValue<State> | ((...params: Params) => AtomValue<State>)
+> {
+  flags?: string[]
+  internalId: string
+  key: string
+  type: AtomType
+}
+
+export interface AtomConfig {
+  flags?: string[]
+  maxInstances?: number
+  molecules?: Molecule<any, any>[] // TODO: type this first `any` (the second `any` is correct as-is)
+  readonly?: boolean
+  ttl?: number
 }
 
 /**
@@ -347,51 +357,42 @@ export interface AtomInstance<
   State,
   Params extends any[],
   Exports extends Record<string, any>
-> extends AtomInstanceBaseProperties<Params> {
+> extends ReadonlyAtomInstance<State, Params, Exports> {
+  dispatch: Dispatcher<State>
+  injectState: () => readonly [State, Store<State>['setState'], Store<State>]
+  setState: StateSetter<State>
+  useState: () => readonly [State, Store<State>['setState']]
+  store: Store<State>
+}
+
+export interface AtomInstanceBase<State, Params extends any[]> {
+  internals: AtomInstanceInternals<State, Params>
+}
+
+export interface AtomInstanceInternals<State, Params extends any[]> {
   activeState: ActiveState
-  dependencies: Record<string, string>
+  atomInternalId: string
   destructionTimeout?: ReturnType<typeof setTimeout>
   getEvaluationReasons: () => EvaluationReason[]
-  injectExports: () => Exports
-  injectValue: () => State
   injectors: InjectorDescriptor[]
-  invalidate: (reason: EvaluationReason) => void
-  Provider: React.ComponentType
-  stateStore: Store<State>
-  stateType: StateType
-  useExports: () => Exports
-  useValue: () => State // Not for local atoms
-}
-
-export interface AtomInstanceApi<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>
-> extends ReadonlyAtomInstanceApi<State, Params, Exports> {
-  injectDispatch: () => Dispatcher<State>
-  injectSetState: () => StateSetter<State>
-  injectState: () => readonly [State, Store<State>['setState'], Store<State>]
-  injectStore: () => Store<State>
-  useDispatch: () => Dispatcher<State>
-  useSetState: () => StateSetter<State>
-  useState: () => readonly [State, Store<State>['setState']]
-  useStore: () => Store<State>
-}
-
-export interface AtomInstanceBaseProperties<Params extends any[]>
-  extends BaseProperties {
-  atomInternalId: string
   keyHash: string
   params: Params
+  scheduleDestruction: () => void
+  scheduleEvaluation: (reason: EvaluationReason) => void
+  stateStore: Store<State>
+  stateType: StateType
+}
+
+export enum AtomType {
+  External = 'External',
+  Local = 'Local',
+  Molecule = 'Molecule',
+  Mutation = 'Mutation',
+  Query = 'Query',
+  Standard = 'Standard',
 }
 
 export type AtomValue<State = any> = State | Store<State>
-
-export interface BaseProperties {
-  flags?: string[]
-  internalId: string
-  key: string
-}
 
 export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   ? <D = any>(selector: (state: State) => D) => D
@@ -401,13 +402,26 @@ export interface LocalAtom<
   State,
   Params extends any[],
   Exports extends Record<string, any>
-> extends Omit<ReadonlyLocalAtom<State, Params, Exports>, 'readonly'> {
+> extends Omit<
+    ReadonlyLocalAtom<
+      State,
+      Params,
+      Exports,
+      AtomInstance<State, Params, Exports>
+    >,
+    'override' | 'readonly'
+  > {
+  override: (
+    newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
+  ) => LocalAtom<State, Params, Exports>
   readonly?: false
   useDispatch: () => Dispatcher<State>
   useSetState: () => StateSetter<State>
   useState: () => readonly [State, Store<State>['setState']]
   useStore: () => Store<State>
 }
+
+export type LocalAtomConfig = Omit<AtomConfig, 'maxInstances' | 'ttl'>
 
 /**
  * Molecule
@@ -456,28 +470,30 @@ export interface LocalAtom<
  * ```
  */
 export interface Molecule<State, Exports extends Record<string, any>>
-  extends BaseProperties {
+  extends AtomBaseProperties<State, []> {
   injectExports: () => Exports
-  injectInvalidate: () => () => void
   injectSelector: <D = any>(selector: (state: State) => D) => D
   injectState: () => readonly [State, Store<State>['setState'], Store<State>]
   injectStore: () => Store<State>
-  override: (
-    newValue: AtomValue<State> | (() => AtomValue<State>)
-  ) => Molecule<State, Exports>
+  override: (newValue: () => AtomValue<State>) => Molecule<State, Exports>
+  type: AtomType.Molecule
   useExports: () => Exports
-  useInvalidate: () => () => void
   useSelector: <D = any>(selector: (state: State) => D) => D
   useState: () => readonly [State, Store<State>['setState']]
   useStore: () => Store<State>
-  value: AtomValue<State> | (() => AtomValue<State>)
+  value: () => AtomValue<State>
 }
 
-export interface Mutation<State, MutationParams extends any[]>
-  extends Query<State> {
-  mutate: (...mutationParams: MutationParams) => State | Promise<State>
-  reset: () => void
+export interface MoleculeInstance<State, Exports extends Record<string, any>>
+  extends AtomInstanceBase<State, []> {
+  exports: Exports
 }
+
+export type Mutation<State, MutationParams extends any[]> = Query<
+  State,
+  [],
+  MutationAtomInstance<State, MutationParams>
+>
 
 /**
  * MutationAtom
@@ -489,7 +505,8 @@ export interface Mutation<State, MutationParams extends any[]>
  * TODO: Provide useInvalidateAll() and useCancelAll() hooks/injectors.
  */
 export interface MutationAtom<State, MutationParams extends any[]>
-  extends BaseProperties {
+  extends AtomBaseProperties<State, []> {
+  getReactContext: () => Context<MutationAtomInstance<State, MutationParams>>
   injectMutation: () => Mutation<State, MutationParams>
   molecules?: Molecule<any, any> // TODO: type this first `any` (the second `any` is correct as-is)
   override: (
@@ -499,15 +516,46 @@ export interface MutationAtom<State, MutationParams extends any[]>
   ) => MutationAtom<State, MutationParams>
   tts?: Scheduler
   ttl?: Scheduler
+  type: AtomType.Mutation
   useMutation: () => Mutation<State, MutationParams>
   value: () => (...mutationParams: MutationParams) => State | Promise<State>
 }
 
-export interface QueryAtom<State, Params extends any[]> extends BaseProperties {
+export interface MutationAtomInstance<State, MutationParams extends any[]>
+  extends Omit<QueryAtomInstance<State, []>, 'run'> {
+  mutate: (...mutationParams: MutationParams) => State | Promise<State>
+  reset: () => void
+}
+
+export interface Query<
+  State,
+  Params extends any[],
+  InstanceType extends Omit<
+    QueryAtomInstance<State, Params>,
+    'run'
+  > = QueryAtomInstance<State, Params>
+> {
+  data?: State
+  error?: Error
+  instance: InstanceType
+  isError: boolean
+  isIdle: boolean
+  isLoading: boolean
+  isSuccess: boolean
+  status: AsyncStatus
+}
+
+export interface QueryAtom<State, Params extends any[]>
+  extends AtomBaseProperties<
+    AsyncState<State>,
+    Params,
+    QueryAtomInstance<State, Params>
+  > {
+  getReactContext: () => Context<QueryAtomInstance<State, Params>>
   injectInstance: (...params: Params) => QueryAtomInstance<State, Params>
   injectInvalidate: (...params: Params) => () => void
-  injectLazy: () => (...params: Params) => Store<State>
-  injectQuery: (...params: Params) => Query<State>
+  injectLazy: () => (...params: Params) => Query<State, Params>
+  injectQuery: (...params: Params) => Query<State, Params>
   injectSelector: InjectOrUseSelector<State, Params>
   molecules?: Molecule<any, any> // TODO: type this first `any` (the second `any` is correct as-is)
   override: (
@@ -516,46 +564,35 @@ export interface QueryAtom<State, Params extends any[]> extends BaseProperties {
   runOnWindowFocus?: boolean
   tts?: Scheduler
   ttl?: Scheduler
+  type: AtomType.Query
+  useConsumer: () => QueryAtomInstance<State, Params>
   useInstance: (...params: Params) => QueryAtomInstance<State, Params>
   useInvalidate: (...params: Params) => () => void
-  useLazy: () => (...params: Params) => Store<State>
-  useQuery: (...params: Params) => Query<State>
+  useLazy: () => (...params: Params) => Query<State, Params>
+  useQuery: (...params: Params) => Query<State, Params>
   useSelector: InjectOrUseSelector<State, Params>
   value: (...params: Params) => () => State | Promise<State>
 }
 
 export interface QueryAtomInstance<State, Params extends any[]>
-  extends AtomInstanceBaseProperties<Params> {
+  extends AtomInstanceBase<AsyncState<State>, Params> {
   cancel: () => void
-  injectSelector: InjectOrUseSelector<State, Params>
   invalidate: () => void
+  Provider: React.ComponentType
+  run: () => State | Promise<State>
   store: AsyncStore<State>
-  useSelector: InjectOrUseSelector<State, Params>
 }
 
-export interface Query<State> {
-  cancel: () => void
-  data?: State
-  error?: Error
-  invalidate: () => void
-  isError: boolean
-  isIdle: boolean
-  isLoading: boolean
-  isSuccess: boolean
-  status: AsyncStatus
-}
-
-export interface ReadonlyAtomInstanceApi<
+export interface ReadonlyAtomInstance<
   State,
   Params extends any[],
   Exports extends Record<string, any>
-> extends AtomInstanceBaseProperties<Params> {
-  injectExports: () => Exports
-  injectInvalidate: () => () => void
+> extends AtomInstanceBase<State, Params> {
+  exports: Exports
   injectSelector: <D = any>(selector: (state: State) => D) => D
   injectValue: () => State
-  useExports: () => Exports
-  useInvalidate: () => () => void
+  invalidate: () => void
+  Provider: React.ComponentType
   useSelector: <D = any>(selector: (state: State) => D) => D
   useValue: () => State
 }
@@ -564,52 +601,62 @@ export interface ReadonlyLocalAtom<
   State,
   Params extends any[],
   Exports extends Record<string, any>,
-  AtomInstanceApiType extends ReadonlyAtomInstanceApi<
+  InstanceType extends ReadonlyAtomInstance<
     State,
     Params,
     Exports
-  > = ReadonlyAtomInstanceApi<State, Params, Exports>
-> extends AtomBaseProperties<State, Params, Exports> {
-  injectInstance: (...params: Params) => AtomInstanceApiType
+  > = ReadonlyAtomInstance<State, Params, Exports>
+> extends AtomBaseProperties<State, Params, InstanceType> {
+  getReactContext: () => Context<InstanceType>
+  injectInstance: (...params: Params) => InstanceType
+  molecules?: Molecule<any, any>[] // TODO: type this first `any` (the second `any` is correct as-is)
   override: (
     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
-  ) => ReadonlyLocalAtom<State, Params, Exports>
+  ) => ReadonlyLocalAtom<State, Params, Exports, InstanceType>
   readonly: true
-  useConsumer: () => AtomInstanceApiType
+  type: AtomType.Local
+  useConsumer: () => InstanceType
   useExports: () => Exports
-  useInstance: (...params: Params) => AtomInstanceApiType
+  useInstance: (...params: Params) => InstanceType
   useInvalidate: () => () => void
   useSelector: <D = any>(selector: (state: State) => D) => D
   useValue: () => State
+  value: AtomValue<State> | ((...params: Params) => AtomValue<State>)
 }
 
 export interface ReadonlyAtom<
   State,
   Params extends any[],
   Exports extends Record<string, any>,
-  AtomInstanceApiType extends ReadonlyAtomInstanceApi<
+  InstanceType extends ReadonlyAtomInstance<
     State,
     Params,
     Exports
-  > = ReadonlyAtomInstanceApi<State, Params, Exports>
-> extends AtomBaseProperties<State, Params, Exports> {
+  > = ReadonlyAtomInstance<State, Params, Exports>
+> extends AtomBaseProperties<State, Params, InstanceType> {
+  getReactContext: () => Context<InstanceType>
   injectExports: (...params: Params) => Exports
-  injectInstance: (...params: Params) => AtomInstanceApiType
+  injectInstance: (...params: Params) => InstanceType
   injectInvalidate: (...params: Params) => () => void
-  injectLazy: () => (...params: Params) => Store<State>
+  injectLazy: () => (...params: Params) => InstanceType
   injectSelector: InjectOrUseSelector<State, Params>
   injectValue: (...params: Params) => State
+  maxInstances?: number
+  molecules?: Molecule<any, any>[] // TODO: type this first `any`
   override: (
     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
-  ) => ReadonlyAtom<State, Params, Exports>
+  ) => ReadonlyAtom<State, Params, Exports, InstanceType>
+  readonly: true
   ttl?: Scheduler
-  useConsumer: () => AtomInstanceApiType
+  type: AtomType.Standard
+  useConsumer: () => InstanceType
   useExports: (...params: Params) => Exports
-  useInstance: (...params: Params) => AtomInstanceApiType
+  useInstance: (...params: Params) => InstanceType
   useInvalidate: (...params: Params) => () => void
-  useLazy: () => (...params: Params) => Store<State>
+  useLazy: () => (...params: Params) => InstanceType
   useSelector: InjectOrUseSelector<State, Params>
   useValue: (...params: Params) => State
+  value: AtomValue<State> | ((...params: Params) => AtomValue<State>)
 }
 
 export interface RefObject<T = any> {

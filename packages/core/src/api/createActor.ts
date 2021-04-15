@@ -1,7 +1,7 @@
-import { Action, ZeduxActor, ZeduxActorEmpty } from '../types'
+import { Action, Actor, ZeduxActor, ZeduxActorEmpty } from '../types'
 import { detailedTypeof } from '../utils/general'
 
-function sharedToStringMethod() {
+function sharedToStringMethod(this: Actor) {
   return this.type as string
 }
 

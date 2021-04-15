@@ -39,7 +39,7 @@ import { injectMemo } from './injectMemo'
  * @returns Store
  */
 export const injectStore = <State = any>(
-  storeFactory?: (() => Store<State>) | State,
+  storeFactory?: State | (() => Store<State>),
   shouldSubscribe = true
 ) => {
   const { scheduleEvaluation } = diContext.consume()

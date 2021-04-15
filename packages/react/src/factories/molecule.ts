@@ -11,6 +11,21 @@ export const molecule = <
 ) => {
   // TODO: Make instantiateAtom only create the bare minimum atom properties and
   // let various instantiators add the extra properties
+  const molecule: Molecule<T, Exports> = {
+    injectExports,
+    injectInvalidate,
+    injectSelector
+    injectState,
+    injectStore,
+    internalId,
+    key,
+    useExports,
+    useInvalidate,
+    useSelector,
+    useState,
+    useStore,
+    value
+  }
 
   return molecule
 }

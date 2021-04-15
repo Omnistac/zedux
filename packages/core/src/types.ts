@@ -25,8 +25,8 @@ export type ActionCreator<Payload = any, Type extends string = string> = (
 ) => Action<Payload, Type>
 
 export type ActionCreatorEmpty<Type extends string = string> = () => Action<
-  Type,
-  undefined
+  undefined,
+  Type
 >
 
 export interface ActionMeta<
@@ -139,6 +139,7 @@ export type Processable<T> = Promise<T> | Iterator<T> | Observable<T>
 
 export type Reactable<Payload = any, Type extends string = string> =
   | Actor<Payload, Type>
+  | ActorEmpty<Type>
   | Type
 
 export type RecursivePartial<T> = T extends Record<string, unknown>

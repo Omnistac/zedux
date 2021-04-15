@@ -1,8 +1,13 @@
-import { AtomBaseProperties, Scope } from '../types'
-import { getKeyHash } from '../utils'
-import { diContext } from '../utils/csContexts'
-import { getAtomInstance } from '../utils/getAtomInstance'
 import { injectMemo } from './injectMemo'
+import { getAtomInstance } from '../instance-helpers/getAtomInstance'
+import {
+  AtomInjectorDescriptor,
+  getKeyHash,
+  InjectorType,
+  split,
+} from '../utils'
+import { diContext } from '../utils/csContexts'
+import { AtomBaseProperties, AtomInstanceBase, AtomType } from '../types'
 
 /**
  * injectAtomWithoutSubscription
@@ -23,25 +28,35 @@ import { injectMemo } from './injectMemo'
 export const injectAtomWithoutSubscription = <
   State = any,
   Params extends any[] = [],
-  Methods extends Record<string, () => any> = Record<string, () => any>
+  InstanceType extends AtomInstanceBase<State, Params> = AtomInstanceBase<
+    State,
+    Params
+  >
 >(
-  atom: AtomBaseProperties<State, Params, Methods>,
-  params?: Params
+  atom: AtomBaseProperties<State, Params, InstanceType>,
+  params: Params
 ) => {
-  const { appId, dependencies } = diContext.consume()
+  const { appId } = diContext.consume()
   const keyHash = injectMemo(
-    () => getKeyHash(atom, params),
-    atom.scope === Scope.Local ? [atom] : [atom, params]
+    () => getKeyHash(appId, atom, params),
+    atom.type === AtomType.Local ? [appId, atom] : [appId, atom, params]
   )
 
   // NOTE: We don't want to re-run when params change - the array could change every time
   // Calculate the full key from the params and use that to determine when items in the params list change.
   const atomInstance = injectMemo(
-    () => getAtomInstance<State, Params, Methods>(appId, atom, keyHash, params),
+    () => getAtomInstance(appId, atom, keyHash, params),
     [appId, atom, keyHash] // TODO: Changing the atom is _probably_ not supported. Maybe. Mmmm maybe.
   )
 
-  dependencies[atomInstance.keyHash] = atomInstance.internalId
+  split<AtomInjectorDescriptor>(
+    'injectAtomWithoutSubscription',
+    InjectorType.Atom,
+    () => ({
+      type: InjectorType.Atom,
+      instanceId: atomInstance.internals.keyHash,
+    })
+  )
 
   return atomInstance
 }

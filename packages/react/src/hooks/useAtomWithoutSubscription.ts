@@ -1,8 +1,8 @@
 import { useContext, useMemo } from 'react'
 import { appContext } from '../components/AppProvider'
-import { AtomBaseProperties, AtomInstance, Scope } from '../types'
+import { getAtomInstance } from '../instance-helpers/getAtomInstance'
+import { AtomBaseProperties, AtomInstanceBase, AtomType } from '../types'
 import { getKeyHash } from '../utils'
-import { getAtomInstance } from '../utils/getAtomInstance'
 
 /**
  * useAtomWithoutSubscription
@@ -23,32 +23,25 @@ import { getAtomInstance } from '../utils/getAtomInstance'
  * @param atom The atom to instantiate (or reuse an instantiation of)
  * @param params The params to pass the atom and calculate its keyHash
  */
-export const useAtomWithoutSubscription: <
-  State = any,
-  Params extends any[] = [],
-  Methods extends Record<string, () => any> = Record<string, () => any>
+export const useAtomWithoutSubscription = <
+  State,
+  Params extends any[],
+  InstanceType extends AtomInstanceBase<State, Params>
 >(
-  atom: AtomBaseProperties<State, Params, Methods>,
-  params?: Params
-) => AtomInstance<State, Params, Methods> | undefined = <
-  State = any,
-  Params extends any[] = [],
-  Methods extends Record<string, () => any> = Record<string, () => any>
->(
-  atom: AtomBaseProperties<State, Params, Methods>,
-  params?: Params
+  atom: AtomBaseProperties<State, Params, InstanceType>,
+  params: Params
 ) => {
   const appId = useContext(appContext)
 
   const keyHash = useMemo(
-    () => getKeyHash(atom, params),
-    atom.scope === Scope.Local ? [atom] : [atom, params]
+    () => getKeyHash(appId, atom, params),
+    atom.type === AtomType.Local ? [appId, atom] : [appId, atom, params]
   )
 
   // NOTE: We don't want to re-run when params change - the array could change every time
   // Calculate the full key from the params and use that to determine when items in the params list change.
   const atomInstance = useMemo(
-    () => getAtomInstance<State, Params, Methods>(appId, atom, keyHash, params),
+    () => getAtomInstance(appId, atom, keyHash, params),
     [appId, atom, keyHash] // TODO: Changing the atom is _probably_ not supported. Maybe. Mmmm maybe.
   )
 

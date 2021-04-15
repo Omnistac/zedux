@@ -22,7 +22,7 @@ import { instantiateAtomContext } from '../utils/instantiateAtomContext'
  * ```
  */
 export const atomContext = <T = any>(
-  storeFactory: (initialState?: T) => Store<T> = (initialState: T) =>
+  storeFactory: (initialState?: T) => Store<T> = (initialState?: T) =>
     createStore<T>(null, initialState)
 ) => {
   const injectConsumer = () => injectAtomContext(newAtomContext)

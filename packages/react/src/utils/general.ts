@@ -1,11 +1,12 @@
 import { isPlainObject } from '@zedux/core/utils/general'
-import { AtomBaseProperties, AtomInstance, Scope } from '../types'
+import { AtomBaseProperties, AtomInstanceInternals, AtomType } from '../types'
 import {
-  DepsInjectorDescriptor,
   DiContext,
+  ExportsInjectorDescriptor,
+  InjectorDescriptor,
   InjectorType,
-  MethodsInjectorDescriptor,
 } from './types'
+import { diContext } from './csContexts'
 
 let idCounter = 0
 
@@ -30,35 +31,37 @@ export const EMPTY_CONTEXT = {}
 
 export const generateAppId = () => `app-${generateId()}`
 export const generateImplementationId = () => `im-${generateId()}`
-export const generateInstanceId = () => `in-${generateId()}`
 export const generateLocalId = () => `lo-${generateId()}`
 
 export const getKeyHash = (
-  atom: AtomBaseProperties<any, any, any>,
+  appId: string,
+  atom: AtomBaseProperties<any, any[]>,
   params?: any[]
 ) => {
   // every time a local atom is got, a new instance is created
-  if (atom.scope === Scope.Local) return generateLocalId()
+  if (atom.type === AtomType.Local) return generateLocalId()
 
-  if (!params?.length) return atom.key
+  const base = `${appId}-${atom.key}`
 
-  return `${atom.key}---${hashParams(params)}`
+  if (!params?.length) return base
+
+  return `${base}-${hashParams(params)}`
 }
 
-export const getInstanceMethods = <
-  State = any,
-  Params extends any[] = [],
-  Methods extends Record<string, () => any> = Record<string, () => any>
+export const getInstanceExports = <
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>
 >(
-  atomInstance: AtomInstance<State, Params, Methods>
+  internals: AtomInstanceInternals<State, Params>
 ) => {
-  const methodsInjector = atomInstance.injectors.find(
-    injector => injector.type === InjectorType.Methods
+  const methodsInjector = internals.injectors.find(
+    injector => injector.type === InjectorType.Exports
   )
 
-  if (!methodsInjector) return {} as Methods
+  if (!methodsInjector) return {} as Exports
 
-  return (methodsInjector as MethodsInjectorDescriptor<Methods>).methods
+  return (methodsInjector as ExportsInjectorDescriptor<Exports>).exports
 }
 
 export const haveDepsChanged = (prevDeps?: any[], nextDeps?: any[]) => {
@@ -72,7 +75,36 @@ export const haveDepsChanged = (prevDeps?: any[], nextDeps?: any[]) => {
   )
 }
 
-export const validateInjector = <T extends DepsInjectorDescriptor>(
+export const split = <T extends InjectorDescriptor>(
+  name: string,
+  type: InjectorType,
+  first: (context: DiContext) => T,
+  next?: (prevDescriptor: T) => T
+) => {
+  const context = diContext.consume()
+
+  if (context.isInitializing) {
+    const descriptor = first(context)
+    context.injectors.push(descriptor)
+
+    return descriptor
+  }
+
+  const prevDescriptor = context.prevInjectors?.[context.injectors.length] as T
+
+  if (!prevDescriptor || prevDescriptor.type !== type) {
+    throw new Error(
+      `Zedux Error - ${name} in atom "${context.atom.key}" - injectors cannot be added, removed, or reordered`
+    )
+  }
+
+  const descriptor = next ? next(prevDescriptor) : prevDescriptor
+  context.injectors.push(descriptor)
+
+  return descriptor
+}
+
+export const validateInjector = <T extends InjectorDescriptor>(
   name: string,
   type: InjectorType,
   context: DiContext
@@ -81,7 +113,7 @@ export const validateInjector = <T extends DepsInjectorDescriptor>(
     return
   }
 
-  const prevDescriptor = context.prevInjectors[context.injectors.length] as T
+  const prevDescriptor = context.prevInjectors?.[context.injectors.length] as T
 
   if (!prevDescriptor || prevDescriptor.type !== type) {
     throw new Error(

@@ -1,5 +1,5 @@
 import { createReducer } from '@zedux/core'
-import { AtomContext, AtomContextInstance } from '../types'
+import { AtomBaseProperties, AtomContext, AtomContextInstance } from '../types'
 import {
   addApp,
   addAtomInstance,
@@ -11,20 +11,19 @@ import {
 
 const initialState = {
   global: {
-    // the global pool can't have overrides - they're only specified in app scopes (but can apply to global atoms)
-    instances: {},
+    // the global pool can't have atomContexts, overrides, or flags - those are
+    // only specified in app scopes
+    instances: [],
   },
 }
 
-export const poolsReducer = createReducer<{
+export const ecosystemsReducer = createReducer<{
   [appId: string]: {
     atomContexts?: Map<AtomContext, AtomContextInstance>
     flags?: string[]
-    instances: {
-      [keyHash: string]: string
-    }
+    instances: string[]
     overrides?: {
-      [key: string]: string
+      [atomKey: string]: AtomBaseProperties<any, any[]>
     }
   }
 }>(initialState)
@@ -33,12 +32,12 @@ export const poolsReducer = createReducer<{
     [appId]: {
       atomContexts,
       flags,
-      instances: {},
+      instances: [],
       overrides: atoms
         ? atoms.reduce(
             (map, atom) => ({
               ...map,
-              [atom.key]: atom.internalId,
+              [atom.key]: atom,
             }),
             {}
           )
@@ -55,21 +54,17 @@ export const poolsReducer = createReducer<{
     ...state,
     [appId]: {
       ...state[appId],
-      instances: {
-        ...state[appId].instances,
-        [atomInstance.keyHash]: atomInstance.internalId,
-      },
+      instances: [...state[appId].instances, atomInstance.internals.keyHash],
     },
   }))
   .reduce(removeAtomInstance, (state, { appId, keyHash }) => {
-    const newInstances = { ...state[appId].instances }
-    delete newInstances[keyHash]
-
     return {
       ...state,
       [appId]: {
         ...state[appId],
-        instances: newInstances,
+        instances: state[appId].instances.filter(
+          instance => instance !== keyHash
+        ),
       },
     }
   })
@@ -78,12 +73,12 @@ export const poolsReducer = createReducer<{
     [appId]: {
       atomContexts,
       flags,
-      instances: {},
+      instances: [], // ... yeah ... no. Need to intelligently update all deps everywhere on any updated atomContexts and overrides
       overrides: atoms
         ? atoms.reduce(
             (map, atom) => ({
               ...map,
-              [atom.key]: atom.internalId,
+              [atom.key]: atom,
             }),
             {}
           )

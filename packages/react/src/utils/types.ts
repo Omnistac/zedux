@@ -1,14 +1,28 @@
 import { AtomBaseProperties, RefObject } from '@zedux/react/types'
 import { ActionChain, Store } from '@zedux/core'
 
+export interface AtomInjectorDescriptor extends InjectorDescriptor {
+  instanceId: string
+}
+
+export interface CallStackContext<T = any> {
+  consume(): T
+  consume(throwError: false): T | null
+  provide: <R = any>(value: T, callback: () => R) => R
+}
+
+export interface CallStackContextInstance<T = any> {
+  context: CallStackContext<T>
+  value: T
+}
+
 export interface DepsInjectorDescriptor extends InjectorDescriptor {
   deps?: any[]
 }
 
 export interface DiContext {
   appId: string
-  atom: AtomBaseProperties<any, any[], any, any, any, any>
-  dependencies: Record<string, string>
+  atom: AtomBaseProperties<any, any[]>
   injectors: InjectorDescriptor[]
   isInitializing: boolean
   prevInjectors?: InjectorDescriptor[]
@@ -58,6 +72,7 @@ export interface InjectorDescriptor {
 }
 
 export enum InjectorType {
+  Atom = 'Atom',
   Effect = 'Effect',
   Exports = 'Exports',
   Memo = 'Memo',

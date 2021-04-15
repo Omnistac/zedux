@@ -27,8 +27,8 @@ export const injectEffect = (effect: EffectCallback, deps?: any[]) => {
         prevDescriptor.isCleanedUp = true
       }
 
-      // There is an edge case where an effect could be cleaned up before it even runs.
-      // I _think_ it's fine to just not even run the effect in this case.
+      // There is an edge case where an effect could be cleaned up before it
+      // even runs. I _think_ it's fine to not even run the effect in this case.
       if (descriptor.isCleanedUp) return
 
       const cleanup = effect()

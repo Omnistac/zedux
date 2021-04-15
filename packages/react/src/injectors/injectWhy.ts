@@ -1,10 +1,9 @@
 import {
   EvaluationReason,
   InjectorType,
-  validateInjector,
+  split,
   WhyInjectorDescriptor,
 } from '../utils'
-import { diContext } from '../utils/csContexts'
 
 export const injectWhy = (
   callback: (reasons: EvaluationReason[]) => unknown
@@ -13,18 +12,16 @@ export const injectWhy = (
     throw new TypeError('Zedux Error - injectWhy callback must be a function')
   }
 
-  const context = diContext.consume()
-
-  validateInjector<WhyInjectorDescriptor>(
+  split<WhyInjectorDescriptor>(
     'injectWhy',
     InjectorType.Why,
-    context
+    () => ({
+      callback,
+      type: InjectorType.Why,
+    }),
+    prevDescriptor => {
+      prevDescriptor.callback = callback
+      return prevDescriptor
+    }
   )
-
-  const descriptor: WhyInjectorDescriptor = {
-    callback,
-    type: InjectorType.Why,
-  }
-
-  context.injectors.push(descriptor)
 }

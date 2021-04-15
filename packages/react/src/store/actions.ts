@@ -1,6 +1,6 @@
 import { createActorFactory } from '@zedux/core'
 import {
-  Atom,
+  AtomBaseProperties,
   AtomContext,
   AtomContextInstance,
   AtomInstanceBase,
@@ -10,28 +10,26 @@ import {
 const createActor = createActorFactory('@@react-zedux', 'global')
 export const addApp = createActor<{
   appId: string
-  atoms?: Atom[]
+  atoms?: AtomBaseProperties<any, any[]>[]
   atomContexts?: Map<AtomContext, AtomContextInstance>
   flags?: string[]
 }>('addApp')
 export const addAtomInstance = createActor<{
   appId: string
-  atomInstance: AtomInstanceBase<any, any, any>
+  atomInstance: AtomInstanceBase<any, any[]>
 }>('addAtomInstance')
-export const addMolecule = createActor<Molecule>('addMolecule')
+export const addMolecule = createActor<Molecule<any, any>>('addMolecule')
 export const removeApp = createActor<{
   appId: string
-  instances: Record<string, string>
+  instances: string[]
 }>('removeApp')
 export const removeAtomInstance = createActor<{
   appId: string
   keyHash: string
-  internalId: string
-  key: string
 }>('removeAtomInstance')
 export const updateApp = createActor<{
   appId: string
-  atoms?: Atom[]
+  atoms?: AtomBaseProperties<any, any[]>[]
   atomContexts?: Map<AtomContext, AtomContextInstance>
   flags?: string[]
 }>('updateApp')

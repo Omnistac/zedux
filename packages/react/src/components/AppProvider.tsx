@@ -1,6 +1,6 @@
 import React, { createContext, FC, useEffect, useMemo, useRef } from 'react'
 import { addApp, globalStore, removeApp, updateApp } from '../store'
-import { Atom, AtomContext, AtomContextInstance } from '../types'
+import { AtomBaseProperties, AtomContext, AtomContextInstance } from '../types'
 import { generateAppId } from '../utils'
 import { appCsContext } from '../utils/csContexts'
 
@@ -13,15 +13,17 @@ const mapAtomContexts = (atomContexts?: AtomContextInstance[]) =>
     return map
   }, new Map<AtomContext, AtomContextInstance>())
 
-const usePreservedReference = (arr: any[]) => {
+const usePreservedReference = (arr?: any[]) => {
   const prevArr = useRef(arr)
 
   return useMemo(() => {
     if (arr === prevArr.current) return prevArr.current
 
+    if (!arr || !prevArr.current) return arr
+
     if (
       arr.length !== prevArr.current.length ||
-      arr.some((el, i) => prevArr.current[i] !== el)
+      arr.some((el, i) => prevArr.current?.[i] !== el)
     ) {
       prevArr.current = arr
       return arr
@@ -38,7 +40,7 @@ const usePreservedReference = (arr: any[]) => {
  * be altered with props passed here.
  */
 export const AppProvider: FC<{
-  atoms?: Atom[]
+  atoms?: AtomBaseProperties<any, any[]>[]
   contexts?: AtomContextInstance[]
   flags?: string[]
   id?: string
@@ -108,11 +110,11 @@ export const AppProvider: FC<{
     }
 
     return () => {
-      const pool = globalStore.getState().pools[appId]
-      if (!pool) return
+      const ecosystem = globalStore.getState().ecosystems[appId]
+      if (!ecosystem) return
 
       // TODO: iterate over the instances in an effect and destroy them all
-      globalStore.dispatch(removeApp({ appId, instances: pool.instances }))
+      globalStore.dispatch(removeApp({ appId, instances: ecosystem.instances }))
     }
   }, [appId])
 

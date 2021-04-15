@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState } from 'react'
-import { AtomBaseProperties, AtomInstance } from '../types'
+import { AtomBaseProperties, AtomInstanceBase } from '../types'
 import { useAtomWithoutSubscription } from './useAtomWithoutSubscription'
 
 /**
@@ -21,31 +21,24 @@ import { useAtomWithoutSubscription } from './useAtomWithoutSubscription'
  * @param atom The atom to instantiate (or reuse an instantiation of)
  * @param params The params to pass the atom and calculate its keyHash
  */
-export const useAtomWithSubscription: <
+export const useAtomWithSubscription = <
   State = any,
   Params extends any[] = [],
-  Methods extends Record<string, () => any> = Record<string, () => any>
+  InstanceType extends AtomInstanceBase<State, Params> = AtomInstanceBase<
+    State,
+    Params
+  >
 >(
-  atom: AtomBaseProperties<State, Params, Methods>,
-  params?: Params
-) => AtomInstance<State, Params, Methods> | undefined = <
-  State = any,
-  Params extends any[] = [],
-  Methods extends Record<string, () => any> = Record<string, () => any>
->(
-  atom: AtomBaseProperties<State, Params, Methods>,
-  params?: Params
+  atom: AtomBaseProperties<State, Params, InstanceType>,
+  params: Params
 ) => {
-  const atomInstance = useAtomWithoutSubscription<State, Params, Methods>(
-    atom,
-    params
-  )
+  const atomInstance = useAtomWithoutSubscription(atom, params)
 
   const [, setReactState] = useState<State>()
 
   useLayoutEffect(() => {
     const subscriber = (state: State) => setReactState(state)
-    const subscription = atomInstance.stateStore.subscribe(subscriber)
+    const subscription = atomInstance.internals.stateStore.subscribe(subscriber)
 
     return () => subscription.unsubscribe()
   }, [atomInstance])
