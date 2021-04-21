@@ -12,9 +12,9 @@ export const globalStore = createStore({
 })
 // ;(window as any).globalStore = globalStore
 
-globalStore.subscribe({
-  effects: ({ action }) => console.log('global store got action:', action),
-})
-globalStore.subscribe(newState =>
-  console.log('global store state change', newState, globalStore)
-)
+// globalStore.subscribe({
+//   effects: ({ action }) => console.log('global store got action:', action),
+// })
+// globalStore.subscribe(newState =>
+//   console.log('global store state change', newState, globalStore)
+// )
