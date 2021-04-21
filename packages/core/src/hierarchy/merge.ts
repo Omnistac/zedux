@@ -1,6 +1,6 @@
 import { Action, HierarchyConfig, Reducer } from '../types'
 import { HierarchyType } from '../utils/general'
-import { DiffNode, DiffTree } from '../utils/types'
+import { BranchNode, DiffNode, DiffTree } from '../utils/types'
 
 /**
   Turns a diff tree into a single reducer.
@@ -11,7 +11,7 @@ import { DiffNode, DiffTree } from '../utils/types'
   to get and set properties on that data type, to determine if the old
   state is a node, and to find the size of the node.
 */
-export const createBranchReducer = (
+const createBranchReducer = (
   children: DiffTree,
   { create, get, isNode, set, size }: HierarchyConfig
 ): Reducer => (oldState = create(), action: Action) => {
@@ -23,7 +23,7 @@ export const createBranchReducer = (
   // Iterate over the child reducers, passing them their state slice
   // and the action and recording their results.
   Object.keys(children).forEach(key => {
-    const { reducer } = children[key]
+    const { reducer } = children[key] as { reducer: Reducer } // we've ensured reducer exists at this point
 
     // Grab the old state slice
     const oldStatePiece = isNode(oldState) ? get(oldState, key) : undefined // yes, explicitly set it to undefined
@@ -59,7 +59,7 @@ export const createBranchReducer = (
 export function destroyTree(tree?: DiffNode) {
   if (!tree) return
 
-  const { children, destroy } = tree
+  const { children, destroy } = tree as BranchNode
 
   if (destroy) destroy()
 
@@ -75,15 +75,15 @@ export function destroyTree(tree?: DiffNode) {
 */
 export function mergeBranches(
   oldTree: DiffNode,
-  newTree: DiffNode,
+  newTree: BranchNode,
   hierarchyConfig: HierarchyConfig
-): DiffNode {
-  const mergedChildren = { ...oldTree.children }
+): BranchNode {
+  const mergedChildren = { ...(oldTree as BranchNode).children }
 
   // Iterate over the new tree's children
   Object.keys(newTree.children).forEach(key => {
     const newChild = newTree.children[key]
-    const oldChild = oldTree.children && oldTree.children[key]
+    const oldChild = (oldTree as BranchNode).children?.[key]
 
     // Attempt to recursively merge the two children
     // Let `mergeDiffTrees()` handle any destroying
@@ -100,9 +100,9 @@ export function mergeBranches(
   })
 
   return {
-    type: HierarchyType.Branch,
-    reducer: createBranchReducer(mergedChildren, hierarchyConfig),
     children: mergedChildren,
+    reducer: createBranchReducer(mergedChildren, hierarchyConfig),
+    type: HierarchyType.Branch,
   }
 }
 
@@ -122,7 +122,7 @@ export function mergeBranches(
 
   There are 4 types of nodes in this hierarchy:
     - BRANCH - indicates a branch (non-leaf) node
-    - REACTOR - indicates a leaf node handled by this store
+    - REDUCER - indicates a leaf node handled by this store
     - STORE - indicates a leaf node handled by another store
     - NULL - indicates a non-existent node, or node to be deleted
 

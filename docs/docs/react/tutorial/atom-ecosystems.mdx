@@ -14,10 +14,6 @@ There are 2 types of ecosystems:
 - Global
 - App
 
-![](/img/diagrams/atom-ecosystems.png)
-
-(Diagram interpretation: App ecosystems can use the global ecosystem, but not other app ecosystems. The global ecosystem is unaware of all app ecosystems)
-
 ### Global
 
 There is exactly one global atom ecosystem. You don't need to create it; it already exists. All atoms in the global ecosystem live outside of React.
@@ -44,8 +40,10 @@ This is similar to Recoil's [`RecoilRoot`](https://recoiljs.org/docs/api-referen
 
 Every AppProvider creates a new app ecosystem. Most apps will only need one, though more can be created to purposefully create isolated groups of atoms. Tests will typically each create their own AppProvider to take advantage of DI and the automatic cleanup on unmount.
 
+When an AppProvider is unmounted, all atom instances in that app ecosystem are destroyed.
+
 :::note
-Nesting AppProviders is not supported currently, but it will be soon. This will allow for some cool DI composability.
+Nesting AppProviders currently has no special functionality. Rendering an AppProvider inside another AppProvider will create a new, completely isolated app ecosystem.
 :::
 
 `<AppProvider />` takes several props to configure DI, atom context, preloading data, and more. **Most apps will want to use app ecosystems for pretty much everything.**
@@ -54,15 +52,15 @@ Nesting AppProviders is not supported currently, but it will be soon. This will 
 
 There are 3 main design patterns around atom ecosystems. Choose the most appropriate for your app.
 
-### App Only Approach
+### Single App
 
 ![](/img/diagrams/atom-ecosystems-app-only.png)
 
-The most common. In the app only approach, you render one AppProvider - creating a single app ecosystem. You only use app-scoped and local-scoped atoms. Global atoms and the global ecosystem are not used.
+The most common. In the single app approach, you render one AppProvider - creating a single app ecosystem. The global ecosystem is not used.
 
-Since most apps will only need one AppProvider, there is (usually) no real need for global atoms. Feel free to not use them!
+Most apps will want to make use of the powerful features of AppProviders. This approach is recommended in most situations.
 
-### Global Only Approach
+### Global Only
 
 ![](/img/diagrams/atom-ecosystems-global-only.png)
 
@@ -72,17 +70,15 @@ Note that again there is probably no real need for global atoms in this approach
 
 The global ecosystem can be nice for simplicity. Some apps don't need any of the features AppProviders offer. And that's fine!
 
-### Mixed Approach
+### Mixed
 
 ![](/img/diagrams/atom-ecosystems-mixed.png)
 
-In the mixed approach, you create one or more app ecosystems (by rendering AppProviders). These app ecosystems contain all app-scoped and local-scoped atoms, while the global ecosystem holds all global-scoped atoms.
+In this approach, you create one or more app ecosystems (by rendering AppProviders). You might also use some atoms outside any AppProvider - utilizing the global ecosystem.
 
-Atoms in the app ecosystems are able to inject global atoms, but not the other way around. Atoms in one app ecosystem are also unaware of other app ecosystems. Global atoms therefore become a means to share data across apps.
+Use cases for this approach are very niche. Outside of testing, you probably won't find yourself using multiple AppProviders.
 
-Most apps will want to make use of the powerful features of AppProviders. The mixed approach is recommended in most situations.
-
-## Params
+## A Note On Params
 
 In the quick start, we learned that atom instances can be reused by passing the same params to certain hooks/injectors. Since atom instances live in an ecosystem, reuse can only happen inside that ecosystem.
 
@@ -118,12 +114,10 @@ function Apps() {
 ## Recap
 
 - All atoms live in atom ecosystems.
-- There are global and app ecosystems.
-- Most apps will use the "App Only Approach" - rendering a single `<AppProvider>` and only using app-scoped and local-scoped atoms.
 - Atom instances can only be reused in the ecosystem they were created in.
+- There are global and app ecosystems.
+- Most apps will use the "Single App Approach" - rendering a single `<AppProvider>`.
 
 ## Next Steps
 
-**So How Do I Add Atoms to These Ecosystems??**
-
-Next up, we'll talk about [scopes](atom-scopes).
+The AppProvider is capable of some pretty cool stuff. With that equipped, it's time to look at one of the coolest features of Zedux: [Dependency Injection](dependency-injection).

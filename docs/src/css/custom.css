@@ -39,6 +39,10 @@ html[data-theme='dark'] {
   border-radius: var(--ifm-global-radius);
 }
 
+.prism-code > .codeBlockLines_node_modules-\@docusaurus-theme-classic-lib-next-theme-CodeBlock- {
+  font-size: 13.5px;
+}
+
 .playgroundHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground-.playgroundEditorHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground- {
   background: #fff;
   border-radius: 10px 10px 0 0;
@@ -70,6 +74,7 @@ button.copyButton_node_modules-\@docusaurus-theme-classic-src-theme-CodeBlock- {
 
 .token.keyword {
   color: #e08a57;
+  font-style: normal !important;
 }
 
 input {

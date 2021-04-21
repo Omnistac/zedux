@@ -14,7 +14,7 @@ interface ReducersMap<State> {
 export const createReducer = <State = any>(initialState?: State) => {
   const actionToReducersMap: ReducersMap<State> = {}
 
-  const reducer = ((state: State = initialState, action: Action) => {
+  const reducer = ((state: State = initialState as State, action: Action) => {
     const reducers = actionToReducersMap[action.type] || []
 
     return runReducers(reducers, state, action)

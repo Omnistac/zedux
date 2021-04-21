@@ -2,5 +2,6 @@ _book
 coverage
 dist
 node_modules
+.npmrc
 .cache
 .rpt2_cache

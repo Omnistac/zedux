@@ -7,16 +7,15 @@ export const getAtomContextInstance = <T = any>(
   atomContext: AtomContext<T>
 ) => {
   const globalState = globalStore.getState()
-  const appPool = globalState.pools[appId]
-  const atomContexts = appPool.atomContexts
+  const appPool = globalState.ecosystems[appId]
 
   // Try to find a provided instance on the nearest AppProvider
-  const appContextInstance = atomContexts?.get(atomContext)
+  const appContextInstance = appPool.atomContexts?.get(atomContext)
 
   if (appContextInstance) return appContextInstance
 
   // Try to reuse an existing global instance
-  const globalContextInstance = globalState.pools.global.atomContexts?.get(
+  const globalContextInstance = globalState.ecosystems.global.atomContexts?.get(
     atomContext
   )
 

@@ -20,7 +20,7 @@ describe('merging hierarchies', () => {
     expect(store.getState()).toEqual({})
   })
 
-  test('branch -> reactor', () => {
+  test('branch -> reducer', () => {
     const store = createStore().use(createMockReducer(1)).use({})
 
     expect(store.getState()).toEqual({})
@@ -52,7 +52,7 @@ describe('merging hierarchies', () => {
     expect(store.getState()).toBeUndefined()
   })
 
-  test('null -> reactor', () => {
+  test('null -> reducer', () => {
     const store = createStore()
       .use({
         a: {
@@ -84,7 +84,7 @@ describe('merging hierarchies', () => {
     expect(store.getState()).toEqual({ a: {} })
   })
 
-  test('reactor -> branch', () => {
+  test('reducer -> branch', () => {
     const store = createStore()
       .use({
         a: createMockReducer(1),
@@ -94,13 +94,13 @@ describe('merging hierarchies', () => {
     expect(store.getState()).toBe(2)
   })
 
-  test('reactor -> null', () => {
+  test('reducer -> null', () => {
     const store = createStore().use(createMockReducer(1))
 
     expect(store.getState()).toBe(1)
   })
 
-  test('reactor -> reactor', () => {
+  test('reducer -> reducer', () => {
     const store = createStore()
       .use(createMockReducer(1))
       .use(createMockReducer(2))
@@ -108,7 +108,7 @@ describe('merging hierarchies', () => {
     expect(store.getState()).toBe(2)
   })
 
-  test('reactor -> store', () => {
+  test('reducer -> store', () => {
     const store = createStore()
       .use(createStore().hydrate(1))
       .use(createMockReducer(2))
@@ -128,7 +128,7 @@ describe('merging hierarchies', () => {
     expect(store.getState()).toBe(1)
   })
 
-  test('store -> reactor', () => {
+  test('store -> reducer', () => {
     const store = createStore()
       .use(createMockReducer(1))
       .use(createStore().hydrate(2))

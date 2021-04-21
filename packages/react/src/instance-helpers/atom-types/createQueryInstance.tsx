@@ -7,7 +7,7 @@ import {
 } from '@zedux/react/types'
 import { EvaluationTargetType, EvaluationType } from '@zedux/react/utils'
 import { asyncMachine, cancel } from '@zedux/react/utils/asyncMachine'
-import { FC } from 'react'
+import React, { FC } from 'react'
 import { createAtomInstanceInternals } from '../createAtomInstanceInternals'
 
 export const createQueryInstance = <State, Params extends any[]>(

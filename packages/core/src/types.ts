@@ -95,13 +95,13 @@ export type EffectsSubscriber<State = any> = (
 export type ErrorSubscriber = (error: Error) => any
 
 export interface HierarchyConfig<T = any> {
-  clone?: (node: T) => T
-  create?: () => T
-  get?: (node: T, key: string) => any
-  isNode?: (node: any) => boolean
-  iterate?: (node: T, callback: (key: string, val: any) => void) => void
-  set?: (node: T, key: string, val: any) => T
-  size?: (node: T) => number
+  clone: (node: T) => T
+  create: () => T
+  get: (node: T, key: string) => any
+  isNode: (node: any) => boolean
+  iterate: (node: T, callback: (key: string, val: any) => void) => void
+  set: (node: T, key: string, val: any) => T
+  size: (node: T) => number
 }
 
 export type HierarchyDescriptor<State = any> =
@@ -182,7 +182,7 @@ export interface Store<State = any> extends Observable<State> {
   dispatch: Dispatcher<State>
   getRefCount(includeInternalSubscribers?: boolean): number
   getState(): State
-  hydrate(newState?: State): Store<State>
+  hydrate(newState: State): Store<State>
   setState: StateSetter<State>
   use(newHierarchy?: HierarchyDescriptor<State>): Store<State>
   $$typeof: symbol
@@ -223,7 +223,7 @@ export interface WhenBuilder<State = any> {
   }
   stateChanges: (sideEffect: SideEffectHandler<State>) => WhenBuilder<State>
   stateMatches: (
-    predicate: (state: State) => boolean,
+    predicate: (state?: State) => boolean,
     sideEffect: SideEffectHandler<State>
   ) => WhenBuilder<State>
   subscription: Subscription

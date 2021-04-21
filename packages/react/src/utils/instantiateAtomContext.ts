@@ -25,7 +25,7 @@ export const instantiateAtomContext = <T = any>(
         newState,
         oldState,
       }) => {
-        if (newState === oldState) return
+        if (newState === oldState || !selectorRef.current) return
 
         const newResult = selectorRef.current(newState)
 

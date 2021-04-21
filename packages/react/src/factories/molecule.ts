@@ -1,31 +1,85 @@
-import { Store } from '@zedux/core'
-import { injectState } from '../injectors'
-import { Molecule } from '../types'
+import { useAtomWithoutSubscription, useAtomWithSubscription } from '../hooks'
+import {
+  injectAtomWithoutSubscription,
+  injectAtomWithSubscription,
+} from '../injectors'
+import { AtomType, Molecule, MoleculeInstance } from '../types'
+import { generateImplementationId } from '../utils'
 
 export const molecule = <
-  T = any,
+  State = any,
   Exports extends Record<string, any> = Record<string, any>
 >(
   key: string,
-  value: Molecule<T, Exports>['value']
+  value: Molecule<State, Exports>['value']
 ) => {
-  // TODO: Make instantiateAtom only create the bare minimum atom properties and
-  // let various instantiators add the extra properties
-  const molecule: Molecule<T, Exports> = {
-    injectExports,
-    injectInvalidate,
-    injectSelector
-    injectState,
-    injectStore,
-    internalId,
-    key,
-    useExports,
-    useInvalidate,
-    useSelector,
-    useState,
-    useStore,
-    value
+  const injectExports = () =>
+    injectAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
+      newMolecule,
+      []
+    ).exports
+
+  const injectState = () => {
+    const instance = injectAtomWithSubscription<
+      State,
+      [],
+      MoleculeInstance<State, Exports>
+    >('injectState()', newMolecule, [])
+
+    return [
+      instance.internals.stateStore.getState(),
+      instance.internals.stateStore.setState,
+      instance.internals.stateStore,
+    ] as const
   }
 
-  return molecule
+  const injectStore = () =>
+    injectAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
+      newMolecule,
+      []
+    ).internals.stateStore
+
+  const override = (newValue: Molecule<State, Exports>['value']) =>
+    molecule<State, Exports>(key, newValue)
+
+  const useExports = () =>
+    useAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
+      newMolecule,
+      []
+    ).exports
+
+  const useState = () => {
+    const instance = useAtomWithSubscription<
+      State,
+      [],
+      MoleculeInstance<State, Exports>
+    >(newMolecule, [])
+
+    return [
+      instance.internals.stateStore.getState(),
+      instance.internals.stateStore.setState,
+    ] as const
+  }
+
+  const useStore = () =>
+    injectAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
+      newMolecule,
+      []
+    ).internals.stateStore
+
+  const newMolecule: Molecule<State, Exports> = {
+    injectExports,
+    injectState,
+    injectStore,
+    internalId: generateImplementationId(),
+    key,
+    override,
+    type: AtomType.Molecule,
+    useExports,
+    useState,
+    useStore,
+    value,
+  }
+
+  return newMolecule
 }

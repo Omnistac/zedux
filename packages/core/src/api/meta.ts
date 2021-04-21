@@ -19,11 +19,11 @@ const assertActionExists = (actionOrEffect: ActionChain | EffectChain) => {
 
 const getNewRoot = <T extends ActionChain | EffectChain>(
   currentNode: T,
-  prevNode: T,
-  rootNode: T
+  prevNode: T | null,
+  rootNode: T | null
 ): T => {
   // If the match is at the top layer, just return the next layer
-  if (!prevNode) return currentNode.payload
+  if (!prevNode || !rootNode) return currentNode.payload
 
   // If the match is at least one layer deep, swap out the target layer
   // and return the new root of the meta chain

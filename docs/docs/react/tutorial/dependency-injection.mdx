@@ -1,0 +1,121 @@
+---
+id: dependency-injection
+title: Dependency Injection
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+A React app is a perfect environment for Inversion of Control. Yet this amazing principle is often massively underused. Zedux aims to help bring Dependency Injection (DI) to the forefront of React workflows.
+
+There are 2 parts to DI:
+
+- Injection
+- Overrides
+
+## Injection
+
+Any atom can be injected into any other atom.
+
+```ts
+const configAtom = selector('config', { apiUrl: 'example.com/api' })
+
+const localStorageAtom = atom('localStorage', { ...localStorage })
+
+const authAtom = selector('auth', () => {
+  const { apiUrl } = configAtom.injectValue()
+  const storage = localStorageAtom.useValue()
+
+  return injectFetch(`${apiUrl}/auth`, storage.jwt)
+})
+
+const axiosAtom = selector('axios', () => {
+  const apiUrl = configAtom.injectSelector(config => config.apiUrl)
+  const { data } = authAtom.injectValue()
+
+  if (!data?.token) return null
+
+  return axios.create({
+    baseURL: apiUrl,
+    headers: {
+      Authorization: `Bearer ${data.token}`
+    }
+  })
+})
+
+const userAtom = selector('user', () => {
+  const axios = axiosAtom.injectValue()
+  const store = injectStore()
+
+  injectEffect(() => {
+    if (!axios) return
+
+    axios.get(`/user`).then(({ data }) => store.setState(data))
+  }, [axios])
+
+  return store
+})
+```
+
+This creates a graph of atom dependencies, which can be seen in all its glory in the [StateHub](TODO:link).
+
+## Overrides
+
+Now that we've got dependencies injected, we need a way to swap them out. Atoms have a `.override()` function which will create an exact clone of the atom, but with a different value.
+
+```ts
+const axiosAtom = atom('axios', axios)
+
+const testAxiosAtom = axiosAtom.override({ post: jest.fn() })
+```
+
+These overridden atoms can then be supplied to an `<AppProvider>` via the `atoms` prop:
+
+```tsx
+function TestApp() {
+  return (
+    <AppProvider atoms={[testAxiosAtom]}>
+      <Routes />
+    </AppProvider>
+  )
+}
+```
+
+Now this app ecosystem will use `testAxiosAtom` everywhere `axiosAtom` is used:
+
+```tsx
+function Routes {
+  const axios = axiosAtom.useValue() // testAxiosAtom is used instead
+  ...
+}
+
+const userAtom = selector('user', () => {
+  const axios = axiosAtom.injectValue() // testAxiosAtom is injected instead
+})
+```
+
+## Simple Example
+
+<LiveEditor resultVar="App">{`
+const textAtom = atom('text', 'the text!')
+const betterTextAtom = textAtom.override('better text!')\n
+function Child() {
+  const text = textAtom.useValue()\n
+  return <div>{text}</div>
+}\n
+function App() {
+  return (
+    <>
+      <AppProvider>
+        <Child />
+      </AppProvider>
+      <AppProvider atoms={[betterTextAtom]}>
+        <Child />
+      </AppProvider>
+    </>
+  )
+}
+`}</LiveEditor>
+
+## Next Steps
+
+Now that we've mastered the art of the atom, it's time to step into the low-levels and learn about [stores](stores).

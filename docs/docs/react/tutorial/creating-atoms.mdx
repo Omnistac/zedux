@@ -18,30 +18,15 @@ Many aspects of an atom's behavior can be configured. The `atom()` factory can t
 ```ts
 import { atom } from '@zedux/react'
 
-// these 2 signatures are equivalent:
-atom('foo', 'initial value')
-atom({
-  key: 'foo',
-  value: 'initial value'
-})
-```
-
-This config object has many useful properties:
-
-```ts
-import { atom, Scope } from '@zedux/react'
-
-const fooAtom = atom({
+atom('foo', 'initial value', {
   flags: ['async', 'electron'],
-  key: 'foo',
+  maxInstances: 10,
   readonly: true,
-  scope: Scope.Global,
   ttl: 1000 * 60 * 60,
-  value: 'initial value'
 })
 ```
 
-We'll look at some of these now. See [`atom()`](TODO:link) for the full rundown.
+This config object has many useful properties. We'll look at some of these now. See [`atom()`](TODO:link) for the full rundown.
 
 ### Readonly
 
@@ -64,21 +49,11 @@ function App() {
 
 See [`selector()`](TODO:link) for full details of readonly atoms.
 
-### Scope
-
-Atoms can be given a scope. Scope determines a lot about an atom's behavior, such as how instances are created and destroyed. There are 3 scopes:
-
-- Global
-- App
-- Local
-
-All atoms are app-scoped by default.
-
-Atom scopes are important enough to get [their own tutorial](atom-scopes).
-
 ### TTL
 
-When an atom instance is no longer used, we sometimes want to destroy it - allowing its data to be garbage collected. By default, all global-scoped and app-scoped atoms live forever. Global and app atoms can be given a `ttl` to configure how long atom instances should stick around when they're no longer in use.
+When an atom instance is no longer used, we sometimes want to destroy it - allowing its data to be garbage collected.
+
+By default, standard atoms live forever. But they can be given a `ttl` to configure how long instances should stick around when they're no longer in use.
 
 ```ts
 const zombieAtom = atom({
@@ -91,35 +66,67 @@ const zombieAtom = atom({
 
 `ttl` can be set to `0` to clean up instances immediately.
 
+### Max Instances
+
+:::note
+🚧 `maxInstances` is under construction
+:::
+
+Complementary to `ttl`, `maxInstances` specifies the largest ideal cache size. If more than this max number of instances are created, Zedux will start cleaning them up automatically when they go stale, regardless of `ttl`.
+
+No instances will ever be cleaned up while still in use. For example, say `maxInstances` is 2 and `ttl` is 1 minute:
+
+```ts
+const fooAtom = atom('foo', (id: string) => id, {
+  maxInstances: 2,
+  ttl: 60000
+})
+```
+
+Now say I end up using 3 instances simultaneously:
+
+```ts
+fooAtom.useValue('a')
+fooAtom.useValue('b')
+fooAtom.useValue('c')
+```
+
+All 3 of those instances can live forever, as long as they're still in use. But as soon as one instance becomes stale, it will be cleaned up immediately - `ttl` will be ignored.
+
+Now there are only 2 instances, which is within the `maxInstances`. The next instance to be cleaned up will respect `ttl`, sticking around for a minute before being destroyed.
+
+Remember that atoms live forever, if no `ttl` is specified. In this case, `maxInstances` can be used to only clean up excess instances, allowing all others to live forever.
+
 ## Selector Atoms
 
 One atom configuration is particularly common in Zedux:
 
 ```ts
-const aVeryCommonAtom = atom({
-  key: 'aVeryCommon',
+const mySelectorAtom = atom('mySelector', 'a constant value', {
   readonly: true,
   ttl: 0,
-  value: 'whatever'
 })
 ```
 
-Zedux exports a special factory for creating these:
+Zedux exports a shorthand for creating these:
 
 ```ts
 import { selector } from '@zedux/react'
 
-const mySelectorAtom = selector('mySelector', 'initial state')
+const mySelectorAtom = selector('mySelector', 'a constant value')
 ```
 
-The state of all instances of this atom will be `initial state` forever.
+The state of all instances of this atom will be `"a constant value"` forever.
 
-These "selector atoms" automatically set `readonly: true` and `ttl: 0` for instant cleanup. These selectors are probably different from the selectors you're used to. They are often impure. One of their primary uses is to hold references to class instances or expensive resources such as socket connections or fetched data that the UI shouldn't modify:
+These "selector atoms" automatically set `readonly: true` and `ttl: 0` for instant cleanup. These selectors are probably different from the selectors you're used to. They are often impure.
+
+A primary use of selectors is to hold references to class instances or expensive resources such as socket connections or fetched data that the UI shouldn't modify:
 
 ```ts
 import { io } from 'socket.io-client'
 
 // We use a factory so we don't create the connection until this atom is used
+// Lazy initialization FTW
 const socketAtom = selector('socket', () => io('ws://example.com/my-namespace'))
 ```
 
@@ -134,7 +141,6 @@ const filteredTodosAtom = selector('filteredTodos', (isDone: boolean) => {
   return todos.filter(todo => todo.isDone === isDone)
 })
 ```
-
 
 ## Recap
 

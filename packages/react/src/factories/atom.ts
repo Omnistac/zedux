@@ -9,8 +9,8 @@ import { createReadonlyAtom } from '../utils/createReadonlyAtom'
 export const atom: {
   <State, Params extends any[], Exports extends Record<string, any>>(
     key: string,
-    value?: Atom<State, Params, Exports>['value'],
-    config?: AtomConfig & { readonly: true }
+    value: Atom<State, Params, Exports>['value'] | undefined,
+    config: AtomConfig & { readonly: true }
   ): ReadonlyAtom<State, Params, Exports>
   <State, Params extends any[], Exports extends Record<string, any>>(
     key: string,
@@ -70,7 +70,7 @@ export const atom: {
     >(newAtom, params).store
 
   newAtom.override = (newValue: Atom<State, Params, Exports>['value']) =>
-    atom(key, newValue, options)
+    atom<State, Params, Exports>(key, newValue, config)
 
   newAtom.useDispatch = (...params: Params) =>
     useAtomWithoutSubscription<

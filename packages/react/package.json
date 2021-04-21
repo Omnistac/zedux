@@ -5,6 +5,9 @@
   "main": "./dist/es/react/src/index.js",
   "module": "./dist/es/react/src/index.js",
   "es2015": "./dist/es/react/src/index.js",
+  "publishConfig": {
+    "registry": "https://omnistac.jfrog.io/omnistac/api/npm/npm-local/"
+  },
   "typings": "./dist/es/react/src/index.d.ts",
   "sideEffects": false,
   "files": [
@@ -53,12 +56,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bowheart/zedux.git"
+    "url": "git+https://github.com/Omnistac/zedux.git"
   },
   "bugs": {
-    "url": "https://github.com/bowheart/zedux/issues"
+    "url": "https://github.com/Omnistac/zedux/issues"
   },
-  "homepage": "https://github.com/bowheart/zedux#readme",
+  "homepage": "https://github.com/Omnistac/zedux#readme",
   "devDependencies": {
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.5",

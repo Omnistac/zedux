@@ -1,5 +1,8 @@
 import { metaTypes } from '@zedux/core/api/constants'
-import { getHierarchyType, wrapStoreInReducer } from '@zedux/core/hierarchy/create'
+import {
+  getHierarchyType,
+  wrapStoreInReducer,
+} from '@zedux/core/hierarchy/create'
 import { delegate, propagateChange } from '@zedux/core/hierarchy/traverse'
 import { HierarchyType } from '@zedux/core/utils/general'
 import * as hierarchyConfig from '@zedux/core/utils/hierarchyConfig'
@@ -230,10 +233,10 @@ describe('propagateChange()', () => {
 })
 
 describe('wrapStoreInReducer()', () => {
-  test('returns a valid reactor', () => {
+  test('returns a valid reducer', () => {
     const mockStore = createMockStore()
-    const reactor = wrapStoreInReducer(mockStore)
+    const reducer = wrapStoreInReducer(mockStore)
 
-    expect(typeof reactor).toBe('function')
+    expect(typeof reducer).toBe('function')
   })
 })

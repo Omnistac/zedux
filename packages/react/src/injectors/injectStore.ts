@@ -35,12 +35,12 @@ import { injectMemo } from './injectMemo'
  *
  * @param storeFactory - Either a function that returns a store or the initial
  * state of the store
- * @param shouldSubscribe - Whether to subscribe to the store (default `true`)
+ * @param shouldSubscribe - Whether to subscribe to the store (default `false`)
  * @returns Store
  */
 export const injectStore = <State = any>(
   storeFactory?: State | (() => Store<State>),
-  shouldSubscribe = true
+  shouldSubscribe = false
 ) => {
   const { scheduleEvaluation } = diContext.consume()
 

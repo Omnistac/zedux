@@ -7,6 +7,31 @@ import { LiveEditor } from '../../LiveEditor'
 
 Zedux stores do not have middleware. Read more on that in the [Redux comparison](TODO:link). Basic side effects like logging and state persistence can be done by hooking into a store's side effects layer.
 
+## `injectEffect()`
+
+Your primary weapon for running side effects in atoms. This works just like React's [`useEffect()`](https://reactjs.org/docs/hooks-reference.html#useeffect).
+
+<LiveEditor resultVar="App">{`
+const alertAtom = atom('alert', () => {
+  const initialRef = injectRef(true)\n
+  // Passing true as the second param subscribes this atom to the store.
+  // This means this atom will reevaluate when this store's state changes:
+  const store = injectStore(0, true)\n
+  injectEffect(() => {
+    if (initialRef.current) {
+      initialRef.current = false
+      return
+    }\n
+    alert('Hey! You changed the state to ' + store.getState())
+  }, [store.getState()])\n
+  return store // remember to return the store
+})\n
+function App() {
+  const [, setState] = alertAtom.useState()\n
+  return <button onClick={() => setState(state => state + 1)}>Click Me</button>
+}
+`}</LiveEditor>
+
 ## Effects Subscribers
 
 Stores can be given an effects subscriber:
@@ -72,7 +97,7 @@ In this way, stores can easily be consumed as streams of actions.
 
 ### `.stateChanges()`
 
-Calls an effect handler every time the store's state changes in response to an action.
+Calls an effect handler every time the store's state changes in response to an action (which includes every time `.setState()` and `.hydrate()` are called).
 
 ```ts
 when(myStore).stateChanges(({ action, newState, oldState }) => {
@@ -153,9 +178,7 @@ As with all subscriptions, it's important to clean up effects subscribers when t
 <LiveEditor resultVar="Button">{`
 const triggerAlert = createActor('triggerAlert')\n
 const buttonPressAtom = atom('buttonPress', () => {
-  // We use injectMemo() instead of injectStore() since we don't need this
-  // component to reevaluate when the store's state changes.
-  const store = injectMemo(() => createStore(), [])\n
+  const store = injectStore()\n
   injectEffect(() => {
     const { subscription } = when(store).receivesAction(
       triggerAlert,

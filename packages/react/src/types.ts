@@ -472,13 +472,11 @@ export type LocalAtomConfig = Omit<AtomConfig, 'maxInstances' | 'ttl'>
 export interface Molecule<State, Exports extends Record<string, any>>
   extends AtomBaseProperties<State, []> {
   injectExports: () => Exports
-  injectSelector: <D = any>(selector: (state: State) => D) => D
   injectState: () => readonly [State, Store<State>['setState'], Store<State>]
   injectStore: () => Store<State>
   override: (newValue: () => AtomValue<State>) => Molecule<State, Exports>
   type: AtomType.Molecule
   useExports: () => Exports
-  useSelector: <D = any>(selector: (state: State) => D) => D
   useState: () => readonly [State, Store<State>['setState']]
   useStore: () => Store<State>
   value: () => AtomValue<State>
@@ -489,11 +487,10 @@ export interface MoleculeInstance<State, Exports extends Record<string, any>>
   exports: Exports
 }
 
-export type Mutation<State, MutationParams extends any[]> = Query<
-  State,
-  [],
-  MutationAtomInstance<State, MutationParams>
->
+export interface Mutation<State, MutationParams extends any[]>
+  extends Query<State, [], MutationAtomInstance<State, MutationParams>> {
+  mutate: MutationAtomInstance<State, MutationParams>['mutate']
+}
 
 /**
  * MutationAtom
@@ -553,8 +550,7 @@ export interface QueryAtom<State, Params extends any[]>
   > {
   getReactContext: () => Context<QueryAtomInstance<State, Params>>
   injectInstance: (...params: Params) => QueryAtomInstance<State, Params>
-  injectInvalidate: (...params: Params) => () => void
-  injectLazy: () => (...params: Params) => Query<State, Params>
+  injectLazy: () => (...params: Params) => QueryAtomInstance<State, Params>
   injectQuery: (...params: Params) => Query<State, Params>
   injectSelector: InjectOrUseSelector<State, Params>
   molecules?: Molecule<any, any> // TODO: type this first `any` (the second `any` is correct as-is)
@@ -567,8 +563,7 @@ export interface QueryAtom<State, Params extends any[]>
   type: AtomType.Query
   useConsumer: () => QueryAtomInstance<State, Params>
   useInstance: (...params: Params) => QueryAtomInstance<State, Params>
-  useInvalidate: (...params: Params) => () => void
-  useLazy: () => (...params: Params) => Query<State, Params>
+  useLazy: () => (...params: Params) => QueryAtomInstance<State, Params>
   useQuery: (...params: Params) => Query<State, Params>
   useSelector: InjectOrUseSelector<State, Params>
   value: (...params: Params) => () => State | Promise<State>
@@ -618,7 +613,6 @@ export interface ReadonlyLocalAtom<
   useConsumer: () => InstanceType
   useExports: () => Exports
   useInstance: (...params: Params) => InstanceType
-  useInvalidate: () => () => void
   useSelector: <D = any>(selector: (state: State) => D) => D
   useValue: () => State
   value: AtomValue<State> | ((...params: Params) => AtomValue<State>)

@@ -38,8 +38,8 @@ const addTodo = createActor<Todo>('addTodo')
 const removeTodo = createActor<number>('removeTodo')
 
 const reducer = createReducer([])
-  .on(addTodo, (state, todo) => [...state, todo])
-  .on(removeTodo, (state, id) => state.filter(todo => todo.id !== id))
+  .reduce(addTodo, (state, todo) => [...state, todo])
+  .reduce(removeTodo, (state, id) => state.filter(todo => todo.id !== id))
 
 const store = createStore(reducer)
 ```
@@ -52,7 +52,7 @@ These high-level APIs are optional. You can of course use old-school switch stat
 Zedux actions must have a string `type` property and can have optional `payload` and `metadata` properties.
 :::
 
-Updating state is usually done with `.dispatch()`. Just like Redux:
+Updating the state of reducer-driven stores is usually done with `.dispatch()`. Just like Redux:
 
 ```ts
 store.dispatch(
@@ -103,7 +103,7 @@ const complexStore = createStore({
     posts: postsReducer,
     users: usersReducer
   },
-  forms: formsReducer
+  forms: formsStore
 })
 
 complexStore.getState()
@@ -155,7 +155,8 @@ const rootStore = createStore()
 const todosStore = createStore(null, [])
 const toNotDosStore = createStore(null, [])
 
-// The composition magic!
+// The composition magic! Since we already created the store, we can use
+// `.use()` to update its hierarchy
 rootStore.use({
   todos: todosStore,
   toNotDos: toNotDosStore
@@ -172,7 +173,7 @@ rootStore.getState()
 */
 ```
 
-Imagine the possibilities! Higher-Order Stores, code splitting, feature-based code architectures, fractal stores that attach to a root store on mount to maintain time-traversable state and replayable actions.
+This composable store model makes many complex concepts trivial: Higher-Order Stores, code splitting, component-bound stores that attach to a root store on mount. All while maintaining time-traversable state and replayable actions.
 
 Treating the store as the basic building block of application state simplifies state management and increases modularity. The Zedux store is an autonomous unit that can simultaneously handle a sub-module's internal workings and present a standardized api to consumers.
 
@@ -263,6 +264,10 @@ const dateAtom = atom('date', () => {
   return store
 })
 ```
+
+Notice that we returned the store. This is important! Zedux creates a store for every atom instance **unless** you return a store from the instance factory. This is essentially telling Zedux, "Don't create a store for me; I created my own. Use this one."
+
+Consumers of this atom will now use the returned store - subscribing to it to receive updates and setting state on or dispatching actions to the store directly.
 
 ## Recap
 

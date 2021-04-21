@@ -124,7 +124,7 @@ export const createAtomInstance = <
 
   // handle attaching this atom instance to the global store
   globalStore.dispatch(
-    addAtomInstance({ appId, atomInstance: newAtomInstance })
+    addAtomInstance({ appId, atom, atomInstance: newAtomInstance })
   )
 
   // const map = new WeakMap();

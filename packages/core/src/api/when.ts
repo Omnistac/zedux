@@ -19,7 +19,7 @@ interface MachineHandler<State = any> {
 }
 
 interface StateMatchHandler<State = any> {
-  predicate: (state: State) => boolean
+  predicate: (state?: State) => boolean
   sideEffect: SideEffectHandler<State>
 }
 
@@ -47,6 +47,8 @@ export const when = <State = any>(store: Store<State>) => {
   }
 
   const runActionHandlers = (effectData: EffectData<State>) => {
+    if (!effectData.action) return
+
     anyActionHandlers.forEach(handler => handler(effectData))
 
     const unwrappedAction = removeAllMeta(effectData.action)
@@ -56,6 +58,8 @@ export const when = <State = any>(store: Store<State>) => {
   }
 
   const runEffectHandlers = (effectData: EffectData<State>) => {
+    if (!effectData.effect) return
+
     anyEffectHandlers.forEach(handler => handler(effectData))
 
     const unwrappedEffect = removeAllMeta(effectData.effect)
@@ -160,7 +164,8 @@ export const when = <State = any>(store: Store<State>) => {
       anyActionHandlers.push(
         reactableOrEffectHandler as SideEffectHandler<State>
       )
-      return
+
+      return whenBuilder
     }
 
     assertAreFunctions([sideEffect], 'whenBuilder.receivesEffect()')
@@ -190,7 +195,8 @@ export const when = <State = any>(store: Store<State>) => {
       )
 
       anyEffectHandlers.push(effectOrEffectHandler as SideEffectHandler<State>)
-      return
+
+      return whenBuilder
     }
 
     assertAreFunctions([sideEffect], 'whenBuilder.receivesEffect()')
@@ -213,7 +219,7 @@ export const when = <State = any>(store: Store<State>) => {
   }
 
   const stateMatches = (
-    predicate: (state: State) => boolean,
+    predicate: (state?: State) => boolean,
     sideEffect: SideEffectHandler<State>
   ) => {
     assertAreFunctions([predicate, sideEffect], 'whenBuilder.stateMatches()')

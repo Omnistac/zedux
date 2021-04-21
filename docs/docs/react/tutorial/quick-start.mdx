@@ -50,8 +50,7 @@ function GreetingPreview() {
   return <div>The greeting: {greeting}</div>
 }\n
 function EditGreeting() {
-  const [greeting, setGreeting] = greetingAtom.useState()
-  
+  const [greeting, setGreeting] = greetingAtom.useState()\n
   return (
     <input
       onChange={({ target }) => setGreeting(target.value)}
@@ -75,7 +74,7 @@ Notice that the `greetingAtom`'s state is shared between both components.
 
 ### Atom Factories
 
-An atom's value can be a factory function. The factory's job is to create and return the atom's value:
+The second parameter can be a factory function. The factory's job is to create and return the atom's value:
 
 ```ts
 const helloAtom = atom('hello', () => 'world')
@@ -97,13 +96,13 @@ const loudGreetingAtom = atom('loudGreeting', () => {
 })
 ```
 
-Here we used an "injector" - `injectState()` - to create a dependency on `textAtom`.
+Here we used an "injector" to create a dependency on `textAtom` - `textAtom.injectState()`.
 
-`atom.injectState()` is just like `atom.useState()`, but is used in atoms instead of components. This is a common theme with injectors:
+`myAtom.injectState()` is just like `myAtom.useState()`, but is used in atoms instead of components. This is a common theme with injectors:
 
 ### Injectors Are Like Hooks
 
-Writing an atom factory should feel like writing a React component. Zedux exports injectors like `injectEffect` and `injectMemo` that behave like React's `useEffect` and `useMemo`.
+Writing an instance factory should feel like writing a React component. Zedux exports injectors like `injectEffect` and `injectMemo` that behave like React's `useEffect` and `useMemo`.
 
 There are many advantages to this approach:
 
@@ -131,11 +130,17 @@ In this example, `initialPriceAtom` will be reevaluated every time `stockPriceAt
 Injectors have the same caveats as hooks too! E.g. don't put injectors in if statements or use them outside atom factories.
 :::
 
+:::tip
+In general, the simple rule is: Replace the word "use" with "inject" inside atoms. Custom injectors you make should also start with "inject".
+:::
+
 ### Atom Instances
 
 Let's take a step back.
 
 When we pass a factory to `atom()`, that factory is not evaluated right away. Zedux waits until the atom is used by a component or another atom. When the atom is used for the first time, Zedux creates an "atom instance" and calls the factory to produce the instance's initial value.
+
+You can think of atoms like classes, but you never instantiate the class yourself - Zedux does it for you.
 
 ```tsx
 function Greeting() {
@@ -184,7 +189,7 @@ function UserOverview() {
 }
 ```
 
-This example creates two instances of `userDataAtom` - one that fetches the `joe` user and one that fetches `bob`.
+This example creates two instances of `userDataAtom` - one that fetches the `joe` user and one that fetches `bob`. Each of these instances controls its own, distinct state.
 
 :::important
 Atom parameters must be serializable. Zedux converts them to a single string that uniquely identifies each atom instance. You shouldn't need params much, but when you do need them, make them as small as possible.
@@ -235,6 +240,6 @@ const Todos = () => (
 
 At this point you should know more than enough to use Zedux effectively. But there is a lot more to discover.
 
-The rest of this tutorial will cover every major feature, starting with the most generally useful ones. Feel free to jump around. You can also play with the [examples](TODO:link), skip ahead to the [API Docs](TODO:link), or read some [boring stuff I wrote](TODO:link).
+The rest of this tutorial will cover every major feature, starting with the most generally useful ones. Feel free to jump around. You can also play with the [examples](TODO:link), skip ahead to the [API Docs](TODO:link), or read some [boring stuff I wrote](../preliminaries/introduction).
 
-[Ready to proceed?](atom-config).
+Next, we'll cover more ways to [create atoms](creating-atoms).

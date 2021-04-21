@@ -27,7 +27,7 @@ module.exports = {
       'react/tutorial/creating-atoms',
       'react/tutorial/using-atoms',
       'react/tutorial/atom-ecosystems',
-      'react/tutorial/atom-scopes',
+      'react/tutorial/dependency-injection',
       'react/tutorial/stores',
       'react/tutorial/side-effects',
     ],

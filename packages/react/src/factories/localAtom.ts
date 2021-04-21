@@ -1,5 +1,11 @@
-import { Context, createContext, useContext } from 'react'
-import { useAtomWithoutSubscription, useAtomWithSubscription } from '../hooks'
+import {
+  Context,
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useState,
+} from 'react'
+import { useAtomWithoutSubscription } from '../hooks'
 import { injectAtomWithoutSubscription } from '../injectors'
 import {
   AtomInstance,
@@ -25,7 +31,9 @@ const createReadonlyLocalAtom = <
   const getReactContext = () => {
     if (reactContext) return reactContext
 
-    return (reactContext = createContext(EMPTY_CONTEXT as any))
+    return (reactContext = createContext<
+      ReadonlyAtomInstance<State, Params, Exports>
+    >(EMPTY_CONTEXT as any))
   }
 
   const injectInstance = (...params: Params) =>
@@ -37,16 +45,28 @@ const createReadonlyLocalAtom = <
 
   const override = (
     newValue: ReadonlyLocalAtom<State, Params, Exports>['value']
-  ) => createReadonlyLocalAtom({ ...atomConfig, value: newValue })
+  ) =>
+    createReadonlyLocalAtom<State, Params, Exports>({
+      ...atomConfig,
+      value: newValue,
+    })[1]
 
   const useConsumer = () => useContext(getReactContext())
 
-  const useExports = (...params: Params) =>
-    useAtomWithoutSubscription<
-      State,
-      Params,
-      ReadonlyAtomInstance<State, Params, Exports>
-    >(newAtom, params).exports
+  const useConsumerWithSubscription = () => {
+    const instance = useConsumer()
+    const [, setState] = useState(instance.internals.stateStore.getState())
+
+    useLayoutEffect(() => {
+      const subscription = instance.internals.stateStore.subscribe(setState)
+
+      return () => subscription.unsubscribe()
+    }, [instance])
+
+    return instance
+  }
+
+  const useExports = () => useConsumer().exports
 
   const useInstance = (...params: Params) =>
     useAtomWithoutSubscription<
@@ -55,36 +75,12 @@ const createReadonlyLocalAtom = <
       ReadonlyAtomInstance<State, Params, Exports>
     >(newAtom, params)
 
-  const useInvalidate = (...params: Params) =>
-    useAtomWithoutSubscription<
-      State,
-      Params,
-      ReadonlyAtomInstance<State, Params, Exports>
-    >(newAtom, params).invalidate
-
-  const useSelector = <D = any>(
-    paramsArg: Params | ((state: State) => D),
-    selectorArg?: (state: State) => D
-  ) => {
-    const params = selectorArg
-      ? (paramsArg as Params)
-      : (([] as unknown) as Params)
-
-    return useAtomWithoutSubscription<
-      State,
-      Params,
-      ReadonlyAtomInstance<State, Params, Exports>
-    >(newAtom, params).useSelector(
-      selectorArg || (paramsArg as (state: State) => D)
-    )
+  const useSelector = <D = any>(selector: (state: State) => D) => {
+    return useConsumerWithSubscription().useSelector(selector)
   }
 
-  const useValue = (...params: Params) =>
-    useAtomWithSubscription<
-      State,
-      Params,
-      ReadonlyAtomInstance<State, Params, Exports>
-    >(newAtom, params).internals.stateStore.getState()
+  const useValue = () =>
+    useConsumerWithSubscription().internals.stateStore.getState()
 
   const newAtom: ReadonlyLocalAtom<State, Params, Exports> = {
     flags: atomConfig.flags,
@@ -93,19 +89,18 @@ const createReadonlyLocalAtom = <
     internalId: generateImplementationId(),
     key: atomConfig.key,
     molecules: atomConfig.molecules,
-    override: override as any, // handles both readonly and normal atoms
+    override,
     readonly: true as const,
     type: AtomType.Local,
     useConsumer,
     useExports,
     useInstance,
-    useInvalidate,
-    useSelector: useSelector as any,
+    useSelector,
     useValue,
     value: atomConfig.value,
   }
 
-  return newAtom
+  return [useConsumerWithSubscription, newAtom] as const
 }
 
 export const localAtom: {
@@ -129,9 +124,10 @@ export const localAtom: {
   }
 
   const options = { key, value: value as any, ...config }
-  const readonlyLocalAtom = createReadonlyLocalAtom<State, Params, Exports>(
-    options
-  )
+  const [
+    useConsumerWithSubscription,
+    readonlyLocalAtom,
+  ] = createReadonlyLocalAtom<State, Params, Exports>(options)
 
   if (options.readonly) return readonlyLocalAtom
 
@@ -141,31 +137,18 @@ export const localAtom: {
     Exports
   >
 
-  newLocalAtom.override = newValue => localAtom(key, newValue, options)
+  newLocalAtom.override = newValue => localAtom(key, newValue, config)
   newLocalAtom.readonly = false
 
-  newLocalAtom.useDispatch = (...params: Params) =>
-    useAtomWithoutSubscription<
-      State,
-      Params,
-      AtomInstance<State, Params, Exports>
-    >(newLocalAtom, params).dispatch
+  newLocalAtom.useDispatch = () => newLocalAtom.useConsumer().dispatch
+  newLocalAtom.useSetState = () => newLocalAtom.useConsumer().setState
+  newLocalAtom.useState = () => {
+    const instance = useConsumerWithSubscription()
 
-  newLocalAtom.useSetState = (...params: Params) =>
-    useAtomWithoutSubscription<
-      State,
-      Params,
-      AtomInstance<State, Params, Exports>
-    >(newLocalAtom, params).setState
-
-  newLocalAtom.useState = (...params: Params) => {
-    const instance = useAtomWithSubscription<
-      State,
-      Params,
-      AtomInstance<State, Params, Exports>
-    >(newLocalAtom, params)
-
-    return [instance.store.getState(), instance.store.setState] as const
+    return [
+      instance.internals.stateStore.getState(),
+      instance.internals.stateStore.setState,
+    ] as const
   }
 
   newLocalAtom.useStore = (...params: Params) =>

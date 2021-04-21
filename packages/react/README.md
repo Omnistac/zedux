@@ -605,3 +605,24 @@ x- `injectWhy()`
 - `maxInstances` - complements ttl. Use a FIFO queue. No instances will ever be cleaned up while in use. And none will be cleaned up while queueSize <= maxInstances. Stale instances will be scheduled for clean up when queueSize > maxInstances. Newly stale instances will be immediately scheduled for clean up if queueSize > maxInstances.
 - should `useSelector()`/`injectSelector()` be changed to `useDerivation()`/`injectDerivation()`? The term "selector" is too overloaded.
 - should `selector()` set ttl to 0 by default? No, but it should probably set `maxInstances` to 10 or smth.
+
+## Usage Context
+
+An atom could receive data from the component or atom using it.
+
+```tsx
+import { atom, injectState, injectUsageHandler } from '@zedux/react'
+
+const curiousAtom = atom('curious', () => {
+  const [state, setState] = injectState()
+
+  injectUsageHandler(context => {
+    if (context) setState(context)
+  })
+})
+
+function CuriousComponent() {
+  // obviously don't do this like ... ever. It's an extreme escape hatch.
+  curiousAtom.useContextualInstance(someContext)
+}
+```

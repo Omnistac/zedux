@@ -38,7 +38,7 @@ import { addMeta, removeAllMeta } from './meta'
 
 interface StoreInternals<State = any> {
   currentDiffTree?: DiffNode
-  currentState?: State
+  currentState: State
   hierarchyConfig: HierarchyConfig
   isDispatching?: boolean
   registerChildStore: RegisterSubStore
@@ -64,7 +64,7 @@ const dispatchAction = (
 
   storeInternals.isDispatching = true
 
-  let error: Error
+  let error: Error | undefined
   let newState = rootState
 
   try {
@@ -168,7 +168,7 @@ const dispatchPartialHydration = <State = any>(
   or any recursive, map-like data structure.
 */
 const doConfigureHierarchy = (
-  next: HierarchyConfig,
+  next: Partial<HierarchyConfig>,
   storeInternals: StoreInternals
 ) => {
   assertIsPlainObject(next, 'Hierarchy config object')
@@ -177,10 +177,9 @@ const doConfigureHierarchy = (
   const prev = storeInternals.hierarchyConfig
   const clonedPrev = { ...prev }
 
-  Object.entries(next).forEach(([key, val]: [keyof HierarchyConfig, any]) => {
+  Object.entries(next).forEach(([key, val]) => {
     assertIsValidNodeOption(prev, key, val)
-
-    clonedPrev[key] = val
+    ;(clonedPrev as any)[key] = val
   })
 
   return clonedPrev
@@ -394,7 +393,7 @@ const doUse = <State = any>(
 }
 
 const getAction$ = <State = any>(storeInternals: StoreInternals<State>) => ({
-  subscribe: (subscriber: SubscriberObject<ActionChain>) =>
+  subscribe: (subscriber: { next: (action: ActionChain) => any }) =>
     doSubscribe(
       {
         effects: ({ action }) => {
@@ -421,7 +420,7 @@ const informSubscribers = <State = any>(
   // Update the stored state
   storeInternals.currentState = newState
 
-  let infoObj: EffectData<State>
+  let infoObj: EffectData<State> | undefined
 
   // Clone the subscribers in case of mutation mid-iteration
   const subscribers = [...storeInternals.subscribers.keys()]
@@ -515,7 +514,7 @@ export const createStore: {
     return internals.currentState
   }
 
-  const hydrate = (newState?: State) => {
+  const hydrate = (newState: State) => {
     dispatchHydration(newState, internals)
 
     return internals.store // for chaining
@@ -527,7 +526,7 @@ export const createStore: {
   const subscribe = (subscriber: Subscriber<State>) =>
     doSubscribe(subscriber, internals)
 
-  const use = (newHierarchy?: HierarchyDescriptor<State>) => {
+  const use = (newHierarchy: HierarchyDescriptor<State>) => {
     doUse(newHierarchy, internals)
 
     return internals.store // for chaining
@@ -537,6 +536,7 @@ export const createStore: {
     doRegisterChildStore(childStorePath, childStore, internals)
 
   const internals: StoreInternals<State> = {
+    currentState: undefined as any,
     hierarchyConfig: defaultHierarchyConfig as HierarchyConfig,
     registerChildStore,
     subscribers: new Map(),

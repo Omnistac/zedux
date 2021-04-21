@@ -9,7 +9,7 @@
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "jsx": "react-jsx",
+    "jsx": "react",
     "lib": ["ES2020"],
     "module": "commonjs",
     "moduleResolution": "node",

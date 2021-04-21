@@ -25,20 +25,43 @@ Stores have lots of cool features that we'll look at in [the stores tutorial](st
 
 Some hooks/injectors automatically subscribe to the atom instance's underlying store. That means that when the atom instance's store's state changes, components that use these hooks will rerender and atoms that use these injectors will reevaluate.
 
-### `.useSelector()`/`.injectSelector()` TODO: these
+### `.useSelector()`
 
-Returns a portion or derivation of the state of the store. Also ensures that the component or atom only reevaluates when the selector's result changes. Similar to Redux' [`useSelector()`](https://react-redux.js.org/api/hooks#useselector).
+Returns a portion or derivation of the state of the store. Also ensures that the component only reevaluates when the selector's result changes. Similar to Redux' [`useSelector()`](https://react-redux.js.org/api/hooks#useselector).
 
-```tsx
+<LiveEditor resultVar="App">{`
+const userAtom = atom('user', () => ({ name: 'Joe', lastUpdated: new Date() }))\n
+function Child() {
+  const [state, setState] = userAtom.useState()\n
+  return (
+    <>
+      <input
+        onChange={({ target }) => setState({ name: target.value })}
+        value={state.name}
+      />
+      <div>Last Updated: {state.lastUpdated.toLocaleString()}</div>
+      <button onClick={() => setState({ lastUpdated: new Date() })}>
+        Update Date
+      </button>
+    </>
+  )
+}\n
 function App() {
   // whenever userAtom's state changes, this selector will run.
   // If the selector returns a new value, this component will rerender.
-  const userId = userAtom.useSelector(({ id }) => id)
-  ...
+  const renders = useRef(0)
+  const userName = userAtom.useSelector(({ name }) => name)
+  renders.current += 1\n
+  return (
+    <>
+      <div>renders: {renders.current}, name: {userName}</div>
+      <Child />
+    </>
+  )
 }
-```
+`}</LiveEditor>
 
-If the atom takes params, pass those as the last param to `.useSelector()`/`.injectSelector()`:
+If the atom takes params, pass those as the first param to `.useSelector()`:
 
 ```ts
 const usersByRoleAtom = selector('usersByRole', (role: string) => {
@@ -49,9 +72,9 @@ const usersByRoleAtom = selector('usersByRole', (role: string) => {
 
 function App() {
   const userIds = usersByRoleAtom.useSelector(
-    users => users.map(({ id }) => id),
     // highlight-next-line
-    ['admin']
+    ['admin'],
+    users => users.map(({ id }) => id)
   )
   ...
 }
@@ -61,7 +84,18 @@ Note that while you can use a selector memoizing library like [reselect](https:/
 
 Atom selectors are composable, memoized by default (since they live in an atom ecosystem), and the cache size and ttl are configurable too - all because they're atoms. The memoization details can even be handled more granularly using [`injectMemo()`](TODO:link). That's a lot of power for such a simple API.
 
-### `.useState()`/`.injectState()` TODO: these
+#### `.injectSelector()`
+
+The injector equivalent of `.useSelector()` - for use in atoms:
+
+```ts
+const userAtom = atom('user', () => {
+  const token = authAtom.injectSelector(authData => authData.token)
+  ...
+})
+```
+
+### `.useState()`
 
 `.useState()` works kind of like React's `useState()` hook.
 
@@ -75,14 +109,24 @@ function App() {
 
 `setState` is a reference to the `setState` function on the instance's store - the only difference to React's state setters being that it will recursively merge nested objects.
 
-`.useState()`/`.injectState()` differ from React's `useState()` in that you don't pass the initial state - we defined that when we created the atom. Instead, you pass the params of the atom (if any):
+`.useState()` differs from React's `useState()` in that you don't pass the initial state - we defined that when we created the atom. Instead, you pass the params of the atom (if any):
 
 ```ts
-const [darkTheme, setDarkTheme] = themeAtom.injectState('dark')
-const [lightTheme, setLightTheme] = themeAtom.injectState('light')
+const [darkTheme, setDarkTheme] = themeAtom.useState('dark')
+const [lightTheme, setLightTheme] = themeAtom.useState('light')
 ```
 
-### `.useValue()`/`.injectValue()`
+#### `.injectState()`
+
+The injector equivalent of `.useState()` - for use in atoms.
+
+```ts
+const userAtom = atom('user', () => {
+  const [state, setState] = authAtom.injectState()
+})
+```
+
+### `.useValue()`
 
 The simplest way to consume an atom's state.
 
@@ -92,7 +136,13 @@ function App() {
   const currentState = myAtom.useValue()
   ...
 }
+```
 
+#### `.injectValue()`
+
+The injector equvalent of `.useValue()`:
+
+```ts
 const dependentAtom = atom('dependent', () => {
   // whenever myAtom's state changes, this atom will reevaluate
   const currentState = myAtom.injectValue()
@@ -108,9 +158,9 @@ The following hooks/injectors do not subscribe to the atom instance's underlying
 
 Used in conjuction with `.useInstance()` to consume atom instances provided over React context. Note that there is no such thing as `.injectConsumer()`.
 
-See [`.useInstance()`](#useinstanceinjectinstance) below for an example.
+See [`.useInstance()`](#useinstance) below for an example.
 
-### `.useDispatch()`/`.injectDispatch()` TODO: these
+### `.useDispatch()`
 
 Returns a reference to the instance's store's `dispatch` function.
 
@@ -126,7 +176,17 @@ function App() {
 }
 ```
 
-### `.useInstance()`/`.injectInstance()`
+As you should be able to guess by this point, there's an injector equivalent - `.injectDispatch()`:
+
+```ts
+const userAtom = atom('user', () => {
+  const dispatch = entitiesAtom.useDispatch()
+  // ... in an injectEffect() or callback:
+  dispatch(userLoaded(userData))
+})
+```
+
+### `.useInstance()`
 
 Returns a reference to an instance of the atom. This can be used to avoid needing to re-specify params on parameterized atoms when using multiple hooks/injectors:
 
@@ -170,22 +230,13 @@ function Child() {
 }
 ```
 
-### `.useInvalidate()`/`.injectInvalidate()`
+Instances also expose lots of extra, low-level functionality. We'll cover more of that in the [instances tutorial](TODO:link).
 
-Returns a function that can be used to force a reevaluation of an atom.
+There is also an injector equivalent - `.injectInstance()`.
 
-<LiveEditor resultVar="Coin">{`
-const coinTossAtom = atom('coinToss', () => Math.random() < 0.5)\n
-function Coin() {
-  const isHeads = coinTossAtom.useValue()
-  const invalidate = coinTossAtom.useInvalidate()\n
-  return <button onClick={invalidate}>{isHeads ? 'Heads' : 'Tails'}</button>
-}
-`}</LiveEditor>
+### `.useLazy()`
 
-### `.useLazy()`/`.injectLazy()`
-
-Returns a function that can be used to dynamically create atom instances. Often used in conjunction with AppProvider's `preload` prop.
+Returns a function that can be used to dynamically create atom instances. Often used in conjunction with AppProvider's [`preload`](TODO:link) prop:
 
 ```tsx
 function App() {
@@ -193,8 +244,8 @@ function App() {
 
   return (
     <AppProvider preload={() => {
-      const configSocketStore = loadSocketConnection('/config')
-      const userSocketStore = loadSocketConnection('/user')
+      const configSocketInstance = loadSocketConnection('/config')
+      const userSocketInstance = loadSocketConnection('/user')
     }}>
       <Routes />
     </AppProvider>
@@ -202,29 +253,35 @@ function App() {
 }
 ```
 
-Calling the loader function instantiates the atom, if no instance has been created for the given params yet, and returns the instance's store.
+Calling the loader function instantiates the atom, if no instance has been created for the given params yet, and returns the instance.
 
-### `.useMethods()`/`.injectMethods()`
+There is an injector equivalent - `.injectLazy()`.
 
-Atoms can expose functions to consumers using the top-level `injectMethods()` injector. These functions can then be consumed using `.useMethods()` and `.injectMethods()`.
+### `.useExports()`
+
+Atoms can expose functions to consumers using the top-level `injectExports()` injector. These functions can then be consumed using `.useExports()` and `.injectExports()`.
+
+The exports can only be exposed once - any other usages of `injectExports()` will be ignored. The object passed to `injectExports()` should contain only stable references - the exports will not be updated on subsequent evaluations.
+
+In the following example, `store` is a stable reference thanks to the `injectStore()` injector. We therefore don't need to memoize the `decrement` and `increment` functions - they don't reference any variables that could become stale:
 
 ```ts
-import { atom, createStore, injectMemo, injectMethods } from '@zedux/react'
+import { atom, createStore, injectMemo, injectExports } from '@zedux/react'
 
 const counterAtom = atom('counter', () => {
-  const store = injectMemo(() => createStore(), [])
+  const store = injectStore(0)
 
   // Expose methods
-  injectMethods(() => ({
+  injectExports({
     decrement: () => store.setState(state => state - 1),
     increment: () => store.setState(state => state + 1)
-  }), [store])
+  })
 
   return store
 })
 
 function App() {
-  const { decrement, increment } = counterAtom.useMethods()
+  const { decrement, increment } = counterAtom.useExports()
   ...
 }
 ```
@@ -233,16 +290,16 @@ Live playground for fun:
 
 <LiveEditor resultVar="App">{`
 const counterAtom = atom('counter', () => {
-  const store = injectMemo(() => createStore(null, 0), [])\n
+  const store = injectStore(0)\n
   // Expose methods
-  injectMethods(() => ({
+  injectExports({
     decrement: () => store.setState(state => state - 1),
     increment: () => store.setState(state => state + 1)
-  }), [store])\n
+  })\n
   return store
 })\n
 function App() {
-  const { decrement, increment } = counterAtom.useMethods()
+  const { decrement, increment } = counterAtom.useExports()
   const value = counterAtom.useValue()\n
   return (
     <>
@@ -254,19 +311,21 @@ function App() {
 }
 `}</LiveEditor>
 
-For TypeScript users, an atom's methods type is the 3rd generic that the `atom()` factory accepts:
+For TypeScript users, an atom's exports type is the 3rd generic that the `atom()` factory accepts:
 
 ```ts
 const counterAtom = atom<
   number, // the state type
   [], // the params tuple - this atom doesn't have any
-  { increment(): void; decrement(): void } // the methods
+  { increment(): void; decrement(): void } // the exports
 >('counter', ...)
 ```
 
-### `.useSetState()`/`.injectSetState()` TODO: these
+And yes, there is an injector equivalent - `.injectExports()`.
 
-Returns a reference to the atom instance's store's `setState` function. Useful when you don't need to read from state, so don't want to register a subscription using `.useState()`/`.injectState()`, but do need to update state of a zero-config store.
+### `.useSetState()`
+
+Returns a reference to the atom instance's store's `setState` function. Useful when you don't need to read from state, so you don't want to register a subscription using `.useState()`, but you do need to update state of a zero-config store.
 
 ```ts
 function App() {
@@ -279,7 +338,9 @@ function App() {
 }
 ```
 
-### `.useStore()`/`.injectStore()` TODO: these
+There is an injector equivalent - `.injectSetState()`.
+
+### `.useStore()`
 
 Returns a reference to the atom instance's store. Regard this as an escape hatch. Avoid using it if possible.
 
@@ -291,7 +352,7 @@ import { when } from '@zedux/react'
 function App() {
   const store = myAtom.useStore()
 
-  injectEffect(() => {
+  useEffect(() => {
     const { subscription } = when(store).stateChanges((newState, oldState) => {
       console.log({ newState, oldState })
     })
@@ -312,12 +373,10 @@ function App() {
 
 - `.useDispatch()`, `.useSetState()`, `.useStore()`, and their corresponding injectors expose parts or all of the instance's store.
 
-- `.useInvalidate()` and `.injectInvalidate()` can be used to manually trigger atom reevaluation.
+- `.useLazy()` and `.injectLazy()` can be used to preload or lazy-load atoms.
 
-- `.useLazy()` and `.injectLazy()` can be used to preload atoms.
-
-- `useMethods()` can be used to expose methods from an atom and `.useMethods()` and `.injectMethods()` can be used to consume an atom's methods.
+- `injectExports()` can be used to expose variables from an atom and `.useExports()` and `.injectExports()` can be used to consume an atom's exports.
 
 ## Next Steps
 
-Now we know how to consume atoms in general. Next we'll learn about the different types of atoms and their lifecycles by covering [atom ecosystems](atom-ecosystems) and then [atom scopes](atom-scopes).
+Now we know how to create and consume atoms. Let's zoom out a bit and look at the architecture of [atom ecosystems](atom-ecosystems).

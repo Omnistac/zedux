@@ -7,7 +7,7 @@ import {
 } from '@zedux/react/types'
 import { EvaluationTargetType, EvaluationType } from '@zedux/react/utils'
 import { asyncMachine, cancel, reset } from '@zedux/react/utils/asyncMachine'
-import { FC } from 'react'
+import React, { FC } from 'react'
 import { createAtomInstanceInternals } from '../createAtomInstanceInternals'
 
 export const createMutationInstance = <
@@ -21,6 +21,9 @@ export const createMutationInstance = <
   params: Params,
   destroy: () => void
 ) => {
+  let mutateRef: MutationAtomInstance<State, MutationParams>['mutate'] = () =>
+    undefined as any
+
   const evaluate = () => {
     const mutate = atom.value()
 
@@ -28,8 +31,7 @@ export const createMutationInstance = <
       throw new TypeError('Zedux - Mutation factory must return a function')
     }
 
-    // TODO: Not this. Make query's `run` and mutation's `mutate` part of their stores.
-    mutationInstance.mutate = mutate
+    mutateRef = mutate
 
     return mutationInstance.store
   }
@@ -60,7 +62,7 @@ export const createMutationInstance = <
         type: EvaluationType.CacheInvalidated,
       }),
     internals,
-    mutate: () => ({} as any), // temp no-op
+    mutate: (...params: MutationParams) => mutateRef(...params),
     Provider,
     reset: () => mutationInstance.store.dispatch(reset()),
     store: createStore<AsyncState<State>>(

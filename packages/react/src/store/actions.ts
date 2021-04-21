@@ -16,6 +16,7 @@ export const addApp = createActor<{
 }>('addApp')
 export const addAtomInstance = createActor<{
   appId: string
+  atom: AtomBaseProperties<any, any[]>
   atomInstance: AtomInstanceBase<any, any[]>
 }>('addAtomInstance')
 export const addMolecule = createActor<Molecule<any, any>>('addMolecule')

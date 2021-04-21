@@ -69,10 +69,10 @@ export const assertIsValidActor = (actor: Actor, method: string) => {
 
 export const assertIsValidNodeOption = (
   validOptions: HierarchyConfig,
-  optionKey: keyof HierarchyConfig,
+  optionKey: string,
   optionValue: any
 ) => {
-  if (!validOptions[optionKey]) {
+  if (!(optionKey in validOptions)) {
     throw new Error(invalidNodeOptionKey(optionKey))
   }
 

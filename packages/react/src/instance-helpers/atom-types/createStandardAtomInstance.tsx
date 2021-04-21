@@ -16,7 +16,7 @@ import {
   InjectorType,
 } from '@zedux/react/utils'
 import { diContext } from '@zedux/react/utils/csContexts'
-import { FC, useEffect, useRef, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import { createAtomInstanceInternals } from '../createAtomInstanceInternals'
 
 const getExports = <Exports extends Record<string, any>>(
