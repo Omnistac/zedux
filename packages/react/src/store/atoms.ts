@@ -8,6 +8,6 @@ export const atomsReducer = createReducer<{
 }>({})
   .reduce(addAtomInstance, (state, { atom }) => ({
     ...state,
-    [atom.key]: atom,
+    [atom.internalId]: atom,
   }))
   .reduce(wipe, () => ({}))

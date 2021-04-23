@@ -1,23 +1,48 @@
-import { Job } from './types'
+import { Job, JobType } from './types'
 
 let scheduledJobs: Job[] = []
+let intermediaryJobs: Job[] = []
+let isIterating = false
 
-export const scheduleJob = (type: string, task: Job['task']) => {
+const runJobs = (jobs: Job[]) => {
+  for (const job of jobs) {
+    job.task()
+  }
+}
+
+export const scheduleJob = (type: JobType, task: Job['task']) => {
   const newJob = { type, task }
-  scheduledJobs.push(newJob)
+  const isIntermediaryJob = type === JobType.EvaluateAtom && isIterating
+
+  if (isIntermediaryJob) {
+    // with the intermediary jobs, we want mutation mid-iteration
+    intermediaryJobs.push(newJob)
+  } else {
+    scheduledJobs.push(newJob)
+  }
 
   // we just pushed the first job onto the queue
   if (scheduledJobs.length === 1) {
     setTimeout(() => {
-      // clone the array in case of mutation mid-iteration
+      isIterating = true
+      console.log('running..', scheduledJobs)
+
       const clonedJobs = [...scheduledJobs]
       scheduledJobs = []
+      runJobs(clonedJobs)
 
-      clonedJobs.forEach(job => job.task())
+      runJobs(intermediaryJobs)
+      intermediaryJobs = []
+
+      isIterating = false
     })
   }
 
   return () => {
-    scheduledJobs = scheduledJobs.filter(job => job !== newJob)
+    if (isIntermediaryJob) {
+      intermediaryJobs = intermediaryJobs.filter(job => job !== newJob)
+    } else {
+      scheduledJobs = scheduledJobs.filter(job => job !== newJob)
+    }
   }
 }

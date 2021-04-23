@@ -1,7 +1,7 @@
 import { EffectCallback } from 'react'
 import { haveDepsChanged, scheduleJob, validateInjector } from '../utils'
 import { diContext } from '../utils/csContexts'
-import { EffectInjectorDescriptor, InjectorType } from '../utils/types'
+import { EffectInjectorDescriptor, InjectorType, JobType } from '../utils/types'
 
 export const injectEffect = (effect: EffectCallback, deps?: any[]) => {
   const context = diContext.consume()
@@ -21,7 +21,7 @@ export const injectEffect = (effect: EffectCallback, deps?: any[]) => {
   }
 
   if (depsHaveChanged) {
-    descriptor.cleanup = scheduleJob('run effect', () => {
+    descriptor.cleanup = scheduleJob(JobType.RunEffect, () => {
       if (prevDescriptor) {
         prevDescriptor.cleanup?.()
         prevDescriptor.isCleanedUp = true

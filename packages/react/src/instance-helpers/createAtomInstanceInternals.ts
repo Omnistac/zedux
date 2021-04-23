@@ -12,6 +12,7 @@ import {
   EvaluationReason,
   InjectorDescriptor,
   InjectorType,
+  JobType,
   WhyInjectorDescriptor,
 } from '../utils/types'
 
@@ -117,7 +118,7 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
       evaluationReasons = []
     }
 
-    scheduleJob('evaluate atom', evaluationTask)
+    scheduleJob(JobType.EvaluateAtom, evaluationTask)
   }
 
   // Boot up the atom!

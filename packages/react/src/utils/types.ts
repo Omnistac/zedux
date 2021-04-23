@@ -82,8 +82,13 @@ export enum InjectorType {
 }
 
 export interface Job {
-  type: string
+  type: JobType
   task: () => void
+}
+
+export enum JobType {
+  EvaluateAtom = 'EvaluateAtom',
+  RunEffect = 'RunEffect',
 }
 
 export interface MemoInjectorDescriptor<State = any>
