@@ -4,10 +4,12 @@ import {
   EvaluationType,
   EvaluationTargetType,
   EvaluationReason,
+  split,
+  AtomWithSubscriptionInjectorDescriptor,
+  InjectorType,
 } from '../utils'
 import { diContext } from '../utils/csContexts'
 import { injectAtomWithoutSubscription } from './injectAtomWithoutSubscription'
-import { injectEffect } from './injectEffect'
 
 /**
  * injectAtomWithSubscription
@@ -41,30 +43,53 @@ export const injectAtomWithSubscription = <
 
   const atomInstance = injectAtomWithoutSubscription(atom, params)
 
-  injectEffect(() => {
-    const subscriber: Subscriber<State> = (newState, oldState) => {
-      const reasons = atomInstance.internals.getEvaluationReasons()
-      const reason: EvaluationReason = {
-        newState,
-        oldState,
-        operation,
-        targetType: EvaluationTargetType.Atom,
-        targetKey: atom.key,
-        targetParams: params,
-        type: EvaluationType.StateChanged,
+  const subscriber: Subscriber<State> = (newState, oldState) => {
+    const reasons = atomInstance.internals.getEvaluationReasons()
+    const reason: EvaluationReason = {
+      newState,
+      oldState,
+      operation,
+      targetType: EvaluationTargetType.Atom,
+      targetKey: atom.key,
+      targetParams: params,
+      type: EvaluationType.StateChanged,
+    }
+
+    if (reasons.length) reason.reasons = reasons
+
+    scheduleEvaluation(reason)
+  }
+
+  split<AtomWithSubscriptionInjectorDescriptor>(
+    'injectAtomWithSubscription',
+    InjectorType.AtomWithSubscription,
+    () => {
+      const subscription = atomInstance.internals.stateStore.subscribe(
+        subscriber
+      )
+
+      return {
+        cleanup: () => subscription.unsubscribe(),
+        instanceId: atomInstance.internals.keyHash,
+        type: InjectorType.AtomWithSubscription,
+      }
+    },
+    prevDescriptor => {
+      if (prevDescriptor.instanceId === atomInstance.internals.keyHash) {
+        return prevDescriptor
       }
 
-      if (reasons.length) reason.reasons = reasons
+      prevDescriptor.cleanup?.()
 
-      scheduleEvaluation(reason)
+      const subscription = atomInstance.internals.stateStore.subscribe(
+        subscriber
+      )
+
+      prevDescriptor.cleanup = () => subscription.unsubscribe()
+
+      return prevDescriptor
     }
-
-    const subscription = atomInstance.internals.stateStore.subscribe(subscriber)
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [atomInstance])
+  )
 
   return atomInstance
 }

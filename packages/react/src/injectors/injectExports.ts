@@ -1,5 +1,4 @@
-import { validateInjector } from '../utils'
-import { diContext } from '../utils/csContexts'
+import { split } from '../utils'
 import { InjectorType, ExportsInjectorDescriptor } from '../utils/types'
 
 /**
@@ -54,20 +53,14 @@ import { InjectorType, ExportsInjectorDescriptor } from '../utils/types'
 export const injectExports = <Exports extends Record<string, any>>(
   exports: Exports
 ) => {
-  const context = diContext.consume()
-
-  const prevDescriptor = validateInjector<ExportsInjectorDescriptor<Exports>>(
+  const descriptor = split<ExportsInjectorDescriptor<Exports>>(
     'injectExports',
     InjectorType.Exports,
-    context
+    () => ({
+      exports,
+      type: InjectorType.Exports,
+    })
   )
 
-  const descriptor: ExportsInjectorDescriptor<Exports> = prevDescriptor || {
-    exports,
-    type: InjectorType.Exports,
-  }
-
-  context.injectors.push(descriptor)
-
-  return exports
+  return descriptor.exports
 }

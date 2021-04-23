@@ -3,6 +3,13 @@ import { ActionChain, Store } from '@zedux/core'
 
 export interface AtomInjectorDescriptor extends InjectorDescriptor {
   instanceId: string
+  type: InjectorType.Atom
+}
+
+export interface AtomWithSubscriptionInjectorDescriptor
+  extends InjectorDescriptor {
+  instanceId: string
+  type: InjectorType.AtomWithSubscription
 }
 
 export interface CallStackContext<T = any> {
@@ -66,13 +73,20 @@ export interface ExportsInjectorDescriptor<
   type: InjectorType.Exports
 }
 
+export interface EvaluateAtomJob extends JobBase {
+  dependencies: Record<string, true> // map of atom key to true
+  key: string
+  type: JobType.EvaluateAtom
+}
+
 export interface InjectorDescriptor {
   cleanup?: () => void
-  type: string
+  type: InjectorType
 }
 
 export enum InjectorType {
   Atom = 'Atom',
+  AtomWithSubscription = 'AtomWithSubscription',
   Effect = 'Effect',
   Exports = 'Exports',
   Memo = 'Memo',
@@ -81,10 +95,12 @@ export enum InjectorType {
   Why = 'Why',
 }
 
-export interface Job {
-  type: JobType
+export interface JobBase {
   task: () => void
+  type: JobType
 }
+
+export type Job = EvaluateAtomJob | RunEffectJob
 
 export enum JobType {
   EvaluateAtom = 'EvaluateAtom',
@@ -99,6 +115,10 @@ export interface MemoInjectorDescriptor<State = any>
 
 export interface RefInjectorDescriptor<T = any> extends InjectorDescriptor {
   ref: RefObject<T>
+}
+
+export interface RunEffectJob extends JobBase {
+  type: JobType.RunEffect
 }
 
 export interface StateInjectorDescriptor<State = any>

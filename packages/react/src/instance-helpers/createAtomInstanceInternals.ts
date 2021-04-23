@@ -1,4 +1,5 @@
 import { createStore, effectTypes, isZeduxStore, Store } from '@zedux/core'
+import { globalStore } from '../store'
 import {
   ActiveState,
   AtomBaseProperties,
@@ -9,12 +10,27 @@ import {
 import { diContext } from '../utils/csContexts'
 import { scheduleJob } from '../utils/scheduler'
 import {
+  AtomInjectorDescriptor,
   EvaluationReason,
   InjectorDescriptor,
   InjectorType,
   JobType,
   WhyInjectorDescriptor,
 } from '../utils/types'
+
+const getDependencies = (injectors: InjectorDescriptor[]) => {
+  const depInjectors = injectors.filter(
+    injector => injector.type === InjectorType.Atom
+  ) as AtomInjectorDescriptor[]
+  const { atoms, instances } = globalStore.getState()
+  const hash: Record<string, true> = {}
+
+  depInjectors.forEach(dep => {
+    hash[atoms[instances[dep.instanceId].internals.atomInternalId].key] = true
+  })
+
+  return hash
+}
 
 const getStateType = (val: any) => {
   if (isZeduxStore(val)) return StateType.Store
@@ -118,7 +134,12 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
       evaluationReasons = []
     }
 
-    scheduleJob(JobType.EvaluateAtom, evaluationTask)
+    scheduleJob({
+      dependencies: getDependencies(newInternals.injectors),
+      key: atom.key,
+      task: evaluationTask,
+      type: JobType.EvaluateAtom,
+    })
   }
 
   // Boot up the atom!

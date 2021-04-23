@@ -21,21 +21,24 @@ export const injectEffect = (effect: EffectCallback, deps?: any[]) => {
   }
 
   if (depsHaveChanged) {
-    descriptor.cleanup = scheduleJob(JobType.RunEffect, () => {
-      if (prevDescriptor) {
-        prevDescriptor.cleanup?.()
-        prevDescriptor.isCleanedUp = true
-      }
+    descriptor.cleanup = scheduleJob({
+      task: () => {
+        if (prevDescriptor) {
+          prevDescriptor.cleanup?.()
+          prevDescriptor.isCleanedUp = true
+        }
 
-      // There is an edge case where an effect could be cleaned up before it
-      // even runs. I _think_ it's fine to not even run the effect in this case.
-      if (descriptor.isCleanedUp) return
+        // There is an edge case where an effect could be cleaned up before it
+        // even runs. I _think_ it's fine to not even run the effect in this case.
+        if (descriptor.isCleanedUp) return
 
-      const cleanup = effect()
+        const cleanup = effect()
 
-      if (typeof cleanup === 'function') {
-        descriptor.cleanup = cleanup
-      }
+        if (typeof cleanup === 'function') {
+          descriptor.cleanup = cleanup
+        }
+      },
+      type: JobType.RunEffect,
     })
   }
 

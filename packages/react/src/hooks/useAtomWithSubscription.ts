@@ -37,10 +37,23 @@ export const useAtomWithSubscription = <
   const [, setReactState] = useState<State>()
 
   useLayoutEffect(() => {
-    const subscriber = (state: State) => setReactState(state)
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    const subscriber = () => {
+      if (timeoutId) return
+
+      timeoutId = setTimeout(() => {
+        setReactState(atomInstance.internals.stateStore.getState())
+        timeoutId = undefined
+      })
+    }
+
     const subscription = atomInstance.internals.stateStore.subscribe(subscriber)
 
-    return () => subscription.unsubscribe()
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      subscription.unsubscribe()
+    }
   }, [atomInstance])
 
   return atomInstance

@@ -55,7 +55,11 @@ export const injectAtomWithoutSubscription = <
     () => ({
       type: InjectorType.Atom,
       instanceId: atomInstance.internals.keyHash,
-    })
+    }),
+    prevDescriptor => {
+      prevDescriptor.instanceId = atomInstance.internals.keyHash
+      return prevDescriptor
+    }
   )
 
   return atomInstance
