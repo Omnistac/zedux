@@ -6,8 +6,11 @@ import Editor from 'react-simple-code-editor'
 import styled, { keyframes } from 'styled-components'
 import * as ReactZedux from '../../packages/react/src'
 import * as Redux from 'redux'
-;(window as any).ReactZedux = ReactZedux
-;(window as any).Redux = Redux
+
+if (typeof window !== 'undefined') {
+  ;(window as any).ReactZedux = ReactZedux
+  ;(window as any).Redux = Redux
+}
 
 let theme
 
@@ -166,9 +169,13 @@ export const LiveEditor: FC<{ extraScope?: string; resultVar?: string }> = ({
   useEffect(() => {
     try {
       ReactZedux.wipe()
-      const jsCode = (window as any).ts.transpile(`${extraScope}; ${tsCode}`, {
+
+      const jsCode = (window as any)?.ts.transpile(`${extraScope}; ${tsCode}`, {
         jsx: 'react',
       })
+
+      if (!jsCode) return
+
       const evalResult = evalCode(jsCode, resultVar)
       setResult(evalResult)
     } catch (err) {

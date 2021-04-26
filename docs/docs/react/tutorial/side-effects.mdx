@@ -28,7 +28,9 @@ const alertAtom = atom('alert', () => {
 })\n
 function App() {
   const [, setState] = alertAtom.useState()\n
-  return <button onClick={() => setState(state => state + 1)}>Click Me</button>
+  return (
+    <button onClick={() => setState(state => state + 1)}>Click Me</button>
+  )
 }
 `}</LiveEditor>
 
@@ -43,7 +45,7 @@ function App() {
   useEffect(() => {
     const subscription = store.subscribe({
       effects: ({ action, newState, oldState }) => {
-        console.log('store received action', { action, newState, oldState })
+        console.log('running effect', { action, newState, oldState })
       }
     })
 

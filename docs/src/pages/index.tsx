@@ -12,7 +12,7 @@ import {
   Link,
   SlidingBg,
   Tagline,
-} from './index.styles'
+} from '../css/index.styles'
 
 const features = [
   {
@@ -45,7 +45,7 @@ const features = [
       </>
     ),
   },
-]
+].filter(() => false)
 
 function Feature({ imageUrl, title, description }) {
   const imgUrl = useBaseUrl(imageUrl)

@@ -17,21 +17,19 @@ Where it all starts. `atom()` is a factory for creating normal, everyday atoms.
 
 <LiveEditor resultVar="App">{`
 const simpleAtom = atom('simple', 'super simple state stuffs')
-const complexAtom = atom({
+const complexAtom = atom('complex', () => {
+  const [state, setState, store] = injectState({ date: new Date() })\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => setState({ date: new Date() }),
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return store
+}, {
   flags: ['side-effect'],
   key: 'complex',
-  scope: Scope.Local,
-  value: () => {
-    const [state, setState, store] = injectState({ date: new Date() })\n
-    injectEffect(() => {
-      const intervalId = setInterval(
-        () => setState({ date: new Date() }),
-        1000
-      )\n
-      return () => clearInterval(intervalId)
-    }, [])\n
-    return store
-  }
 })\n
 function App() {
   const simple = simpleAtom.useValue()
