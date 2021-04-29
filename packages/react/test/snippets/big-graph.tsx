@@ -1,4 +1,4 @@
-import { atom, injectEffect, injectState, injectStore } from '@zedux/react'
+import { atom, injectStore } from '@zedux/react'
 import React from 'react'
 
 const atom1 = atom('atom1', () => {

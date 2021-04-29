@@ -6,7 +6,7 @@ export const createExternalInstance = <
   Params extends any[],
   InstanceType extends AtomInstanceBase<State, Params>
 >(
-  appId: string,
+  ecosystemId: string,
   atom: AtomBaseProperties<State, Params, InstanceType>,
   keyHash: string,
   params: Params,
@@ -14,7 +14,7 @@ export const createExternalInstance = <
 ) => {
   // TODO: allow plugins to provide instantiation logic
   const internals = createAtomInstanceInternals(
-    appId,
+    ecosystemId,
     atom,
     keyHash,
     params,

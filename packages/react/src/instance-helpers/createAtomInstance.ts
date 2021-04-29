@@ -10,20 +10,20 @@ import {
   ReadonlyAtomInstance,
   ReadonlyLocalAtom,
 } from '../types'
-import { addAtomInstance, globalStore, removeAtomInstance } from '../store'
 import { createLocalAtomInstance } from './atom-types/createLocalAtomInstance'
 import { createStandardAtomInstance } from './atom-types/createStandardAtomInstance'
 import { createExternalInstance } from './atom-types/createExternalInstance'
 import { createMoleculeInstance } from './atom-types/createMoleculeInstance'
 import { createMutationInstance } from './atom-types/createMutationInstance'
 import { createQueryInstance } from './atom-types/createQueryInstance'
+import { Ecosystem } from '../classes/Ecosystem'
 
 const createTypedInstance = <
   State,
   Params extends any[],
   InstanceType extends AtomInstanceBase<State, Params>
 >(
-  appId: string,
+  ecosystemId: string,
   atom: AtomBaseProperties<State, Params, InstanceType>,
   keyHash: string,
   params: Params,
@@ -31,10 +31,10 @@ const createTypedInstance = <
 ) => {
   switch (atom.type) {
     case AtomType.External:
-      return createExternalInstance(appId, atom, keyHash, params, destroy)
+      return createExternalInstance(ecosystemId, atom, keyHash, params, destroy)
     case AtomType.Local:
       return createLocalAtomInstance(
-        appId,
+        ecosystemId,
         atom as ReadonlyLocalAtom<
           State,
           Params,
@@ -47,7 +47,7 @@ const createTypedInstance = <
       )
     case AtomType.Molecule:
       return createMoleculeInstance(
-        appId,
+        ecosystemId,
         atom as Molecule<State, any>,
         keyHash,
         params,
@@ -55,7 +55,7 @@ const createTypedInstance = <
       )
     case AtomType.Mutation:
       return createMutationInstance(
-        appId,
+        ecosystemId,
         atom as MutationAtom<State, any>,
         keyHash,
         [],
@@ -63,7 +63,7 @@ const createTypedInstance = <
       )
     case AtomType.Query:
       return createQueryInstance(
-        appId,
+        ecosystemId,
         atom as QueryAtom<State, Params>,
         keyHash,
         params,
@@ -72,7 +72,7 @@ const createTypedInstance = <
     case AtomType.Standard:
     default:
       return createStandardAtomInstance(
-        appId,
+        ecosystemId,
         atom as ReadonlyAtom<
           State,
           Params,
@@ -91,7 +91,7 @@ export const createAtomInstance = <
   Params extends any[],
   InstanceType extends AtomInstanceBase<State, Params>
 >(
-  appId: string,
+  ecosystem: Ecosystem,
   atom: AtomBaseProperties<State, Params, InstanceType>,
   keyHash: string,
   params: Params = ([] as unknown) as Params
@@ -100,12 +100,7 @@ export const createAtomInstance = <
     // TODO: dispatch an action over stateStore for this mutation
     newAtomInstance.internals.activeState = ActiveState.Destroyed
 
-    globalStore.dispatch(
-      removeAtomInstance({
-        appId,
-        keyHash,
-      })
-    )
+    ecosystem.destroyAtomInstance(keyHash)
 
     newAtomInstance.internals.injectors.forEach(injector => {
       injector.cleanup?.()
@@ -115,17 +110,12 @@ export const createAtomInstance = <
   }
 
   const newAtomInstance = createTypedInstance(
-    appId,
+    ecosystem.ecosystemId,
     atom,
     keyHash,
     params,
     destroy
-  )
-
-  // handle attaching this atom instance to the global store
-  globalStore.dispatch(
-    addAtomInstance({ appId, atom, atomInstance: newAtomInstance })
-  )
+  ) as InstanceType
 
   // const map = new WeakMap();
   // map.set(newAtomInstance, true);

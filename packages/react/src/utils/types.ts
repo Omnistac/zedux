@@ -28,12 +28,18 @@ export interface DepsInjectorDescriptor extends InjectorDescriptor {
 }
 
 export interface DiContext {
-  appId: string
+  ecosystemId: string
   atom: AtomBaseProperties<any, any[]>
   injectors: InjectorDescriptor[]
   isInitializing: boolean
   prevInjectors?: InjectorDescriptor[]
   scheduleEvaluation: (reason: EvaluationReason) => void
+}
+
+export interface EcosystemGraphNode {
+  dependencies: Record<string, true>
+  dependents: Record<string, true>
+  weight: number
 }
 
 export interface EffectInjectorDescriptor extends DepsInjectorDescriptor {

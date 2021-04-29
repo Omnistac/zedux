@@ -15,7 +15,7 @@ export const createMutationInstance = <
   Params extends [],
   MutationParams extends any[]
 >(
-  appId: string,
+  ecosystemId: string,
   atom: MutationAtom<State, MutationParams>,
   keyHash: string,
   params: Params,
@@ -37,7 +37,7 @@ export const createMutationInstance = <
   }
 
   const internals = createAtomInstanceInternals(
-    appId,
+    ecosystemId,
     atom,
     keyHash,
     params,

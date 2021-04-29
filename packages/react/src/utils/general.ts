@@ -29,19 +29,19 @@ const hashParams = (params: any): string =>
 
 export const EMPTY_CONTEXT = {}
 
-export const generateAppId = () => `app-${generateId()}`
+export const generateAppId = () => `ecosystem-${generateId()}`
 export const generateImplementationId = () => `im-${generateId()}`
 export const generateLocalId = () => `lo-${generateId()}`
 
 export const getKeyHash = (
-  appId: string,
+  ecosystemId: string,
   atom: AtomBaseProperties<any, any[]>,
   params?: any[]
 ) => {
   // every time a local atom is got, a new instance is created
   if (atom.type === AtomType.Local) return generateLocalId()
 
-  const base = `${appId}-${atom.key}`
+  const base = `${ecosystemId}-${atom.key}`
 
   if (!params?.length) return base
 

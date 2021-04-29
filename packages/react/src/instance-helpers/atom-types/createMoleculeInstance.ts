@@ -6,7 +6,7 @@ export const createMoleculeInstance = <
   Params extends any[],
   Exports extends Record<string, any>
 >(
-  appId: string,
+  ecosystemId: string,
   atom: Molecule<State, Exports>,
   keyHash: string,
   params: Params,
@@ -17,7 +17,7 @@ export const createMoleculeInstance = <
   }
 
   const internals = createAtomInstanceInternals(
-    appId,
+    ecosystemId,
     atom,
     keyHash,
     params,

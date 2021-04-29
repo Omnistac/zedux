@@ -1,3 +1,4 @@
+import { ecosystem } from '../factories/ecosystem'
 import { AtomBaseProperties, AtomInstanceBase } from '../types'
 import { globalStore, wipe as wipeAction } from './'
 
@@ -5,19 +6,19 @@ import { globalStore, wipe as wipeAction } from './'
  * getAllInstances()
  *
  * Returns an object containing all current instances of the atom, optionally
- * filtered by an app id
+ * filtered by an ecosystem id
  *
  * @param atom - Either a reference the atom object itself or the string key of
  * the atom
  *
- * @param appId - Optionally filter results by the string id of an app - use
+ * @param ecosystemId - Optionally filter results by the string id of an ecosystem - use
  * "global" for the global ecosystem
  *
  * @returns {Object} - A map of instance ids to instances
  */
 export const getAllInstances = <State, Params extends any[]>(
   atom: AtomBaseProperties<State, Params> | string,
-  appId = 'global'
+  ecosystemId = 'global'
 ) => {
   const atomKey = typeof atom === 'string' ? atom : atom.key
   const globalState = globalStore.getState()
@@ -28,7 +29,7 @@ export const getAllInstances = <State, Params extends any[]>(
 
     if (
       instanceAtom.key !== atomKey ||
-      (appId && !instanceAtom.key.startsWith(appId))
+      (ecosystemId && !instanceAtom.key.startsWith(ecosystemId))
     ) {
       return
     }
@@ -39,4 +40,12 @@ export const getAllInstances = <State, Params extends any[]>(
   return hash
 }
 
+export const getEcosystem = (id: string) => {
+  const existingEcosystem = globalStore.getState().ecosystems[id]
+
+  return existingEcosystem || ecosystem({ id })
+}
+
 export const wipe = () => globalStore.dispatch(wipeAction())
+
+export const zeduxStore = globalStore

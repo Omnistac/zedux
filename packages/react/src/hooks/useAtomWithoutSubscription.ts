@@ -1,8 +1,7 @@
 import { useContext, useMemo } from 'react'
-import { appContext } from '../components/AppProvider'
-import { getAtomInstance } from '../instance-helpers/getAtomInstance'
-import { AtomBaseProperties, AtomInstanceBase, AtomType } from '../types'
-import { getKeyHash } from '../utils'
+import { ecosystemContext } from '../classes/Ecosystem'
+import { getEcosystem } from '../store/public-api'
+import { AtomBaseProperties, AtomInstanceBase } from '../types'
 
 /**
  * useAtomWithoutSubscription
@@ -31,18 +30,17 @@ export const useAtomWithoutSubscription = <
   atom: AtomBaseProperties<State, Params, InstanceType>,
   params: Params
 ) => {
-  const appId = useContext(appContext)
-
-  const keyHash = useMemo(
-    () => getKeyHash(appId, atom, params),
-    atom.type === AtomType.Local ? [appId, atom] : [appId, atom, params]
-  )
+  const ecosystemId = useContext(ecosystemContext)
 
   // NOTE: We don't want to re-run when params change - the array could change every time
   // Calculate the full key from the params and use that to determine when items in the params list change.
   const atomInstance = useMemo(
-    () => getAtomInstance(appId, atom, keyHash, params),
-    [appId, atom, keyHash] // TODO: Changing the atom is _probably_ not supported. Maybe. Mmmm maybe.
+    () => getEcosystem(ecosystemId).load(atom, params),
+    // TODO: Changing the atom is _probably_ not supported. Maybe. Mmmm maybe.
+    // TODO: params will probably change every time, making this pretty
+    // inefficient if lots of params are passed (since the keyHash is
+    // recalculated). Use a more stable reference for this dep.
+    [ecosystemId, atom, params]
   )
 
   return atomInstance

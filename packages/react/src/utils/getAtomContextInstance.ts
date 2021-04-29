@@ -3,16 +3,16 @@ import { AtomContext } from '../types'
 import { instantiateAtomContext } from './instantiateAtomContext'
 
 export const getAtomContextInstance = <T = any>(
-  appId: string,
+  ecosystemId: string,
   atomContext: AtomContext<T>
 ) => {
   const globalState = globalStore.getState()
-  const appPool = globalState.ecosystems[appId]
+  const ecosystem = globalState.ecosystems[ecosystemId]
 
-  // Try to find a provided instance on the nearest AppProvider
-  const appContextInstance = appPool.atomContexts?.get(atomContext)
+  // Try to find a provided instance on the nearest EcosystemProvider
+  const ecosystemContextInstance = ecosystem.atomContexts?.get(atomContext)
 
-  if (appContextInstance) return appContextInstance
+  if (ecosystemContextInstance) return ecosystemContextInstance
 
   // Try to reuse an existing global instance
   const globalContextInstance = globalState.ecosystems.global.atomContexts?.get(

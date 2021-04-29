@@ -1,4 +1,5 @@
 export * from '@zedux/core'
+export * from './classes'
 export * from './components'
 export * from './factories'
 export * from './hooks'

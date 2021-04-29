@@ -31,7 +31,7 @@ export const createStandardAtomInstance = <
   Params extends any[],
   Exports extends Record<string, any>
 >(
-  appId: string,
+  ecosystemId: string,
   atom: ReadonlyAtom<State, Params, Exports>,
   keyHash: string,
   params: Params,
@@ -57,7 +57,7 @@ export const createStandardAtomInstance = <
   }
 
   const newAtomInstance = createStandardAtomInstanceWithDestruction(
-    appId,
+    ecosystemId,
     atom,
     keyHash,
     params,
@@ -72,7 +72,7 @@ export const createStandardAtomInstanceWithDestruction = <
   Params extends any[],
   Exports extends Record<string, any>
 >(
-  appId: string,
+  ecosystemId: string,
   atom:
     | ReadonlyLocalAtom<State, Params, Exports>
     | ReadonlyAtom<State, Params, Exports>,
@@ -101,7 +101,7 @@ export const createStandardAtomInstanceWithDestruction = <
   }
 
   const internals = createAtomInstanceInternals(
-    appId,
+    ecosystemId,
     atom,
     keyHash,
     params,

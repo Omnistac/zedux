@@ -7,12 +7,12 @@ import {
 } from '../types'
 import { useAtomWithSubscription } from '../hooks/useAtomWithSubscription'
 import { injectAtomWithSubscription } from '../injectors/injectAtomWithSubscription'
-import { EMPTY_CONTEXT, generateImplementationId, getKeyHash } from '../utils'
+import { EMPTY_CONTEXT, generateImplementationId } from '../utils'
 import { injectAtomWithoutSubscription } from '../injectors/injectAtomWithoutSubscription'
 import { useAtomWithoutSubscription } from '../hooks'
-import { appCsContext, diContext } from '../utils/csContexts'
-import { getAtomInstance } from '../instance-helpers/getAtomInstance'
-import { appContext } from '../components'
+import { ecosystemCsContext, diContext } from '../utils/csContexts'
+import { ecosystemContext } from '../classes/Ecosystem'
+import { getEcosystem } from '../store/public-api'
 
 export const createReadonlyAtom = <
   State,
@@ -56,15 +56,15 @@ export const createReadonlyAtom = <
     const initialContext = diContext.consume()
 
     return (...params: Params) => {
-      const newContext = appCsContext.consume(false)
-      const { appId } = newContext || initialContext
-      const keyHash = getKeyHash(appId, newAtom, params)
+      const newContext = ecosystemCsContext.consume(false)
+      const { ecosystemId } = newContext || initialContext
+      const ecosystem = getEcosystem(ecosystemId)
 
-      return getAtomInstance<
+      return ecosystem.load<
         State,
         Params,
         ReadonlyAtomInstance<State, Params, Exports>
-      >(appId, newAtom, keyHash, params)
+      >(newAtom, params)
     }
   }
 
@@ -119,18 +119,18 @@ export const createReadonlyAtom = <
     >(newAtom, params).invalidate
 
   const useLazy = () => {
-    const initialAppId = useContext(appContext)
+    const initialAppId = useContext(ecosystemContext)
 
     return (...params: Params) => {
-      const newAppId = appCsContext.consume(false)?.appId
-      const appId = newAppId || initialAppId
-      const keyHash = getKeyHash(appId, newAtom, params)
+      const newAppId = ecosystemCsContext.consume(false)?.ecosystemId
+      const ecosystemId = newAppId || initialAppId
+      const ecosystem = getEcosystem(ecosystemId)
 
-      return getAtomInstance<
+      return ecosystem.load<
         State,
         Params,
         ReadonlyAtomInstance<State, Params, Exports>
-      >(appId, newAtom, keyHash, params)
+      >(newAtom, params)
     }
   }
 

@@ -1,6 +1,11 @@
 import { createReducer } from '@zedux/core'
 import { AtomInstanceBase } from '../types'
-import { addAtomInstance, removeApp, removeAtomInstance, wipe } from './actions'
+import {
+  addAtomInstance,
+  removeAtomInstance,
+  removeEcosystem,
+  wipe,
+} from './actions'
 
 export const instancesReducer = createReducer<
   Record<string, AtomInstanceBase<any, any>>
@@ -9,7 +14,7 @@ export const instancesReducer = createReducer<
     ...state,
     [atomInstance.internals.keyHash]: atomInstance,
   }))
-  .reduce(removeApp, (state, { instances }) => {
+  .reduce(removeEcosystem, (state, { instances }) => {
     const newState = { ...state }
 
     instances.forEach(keyHash => {

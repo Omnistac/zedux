@@ -70,7 +70,7 @@ const runWhyInjectors = (
 }
 
 export const createAtomInstanceInternals = <State, Params extends any[]>(
-  appId: string,
+  ecosystemId: string,
   atom: AtomBaseProperties<State, Params>,
   keyHash: string,
   params: Params = ([] as unknown) as Params,
@@ -93,7 +93,7 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
       try {
         newFactoryResult = diContext.provide(
           {
-            appId,
+            ecosystemId,
             atom,
             injectors: newInjectors,
             isInitializing: false,
@@ -150,7 +150,7 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
   try {
     factoryResult = diContext.provide(
       {
-        appId,
+        ecosystemId,
         atom,
         injectors,
         isInitializing: true,

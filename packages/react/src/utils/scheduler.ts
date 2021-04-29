@@ -1,8 +1,6 @@
 import { Job, JobType } from './types'
 
 let scheduledJobs: Job[] = []
-let intermediaryJobs: Job[] = []
-let isIterating = false
 
 const insertJob = (jobs: Job[], newJob: Job) => {
   if (newJob.type !== JobType.EvaluateAtom) return jobs.push(newJob)
@@ -40,46 +38,21 @@ const insertJob = (jobs: Job[], newJob: Job) => {
   jobs.splice(targetIndex, 0, newJob)
 }
 
-const runJobs = (jobs: Job[]) => {
-  for (const job of jobs) {
-    job.task()
-  }
-}
-
 export const scheduleJob = (newJob: Job) => {
-  const isIntermediaryJob = newJob.type === JobType.EvaluateAtom && isIterating
-
-  if (isIntermediaryJob) {
-    // with the intermediary jobs, we want mutation mid-iteration
-    insertJob(intermediaryJobs, newJob)
-  } else {
-    insertJob(scheduledJobs, newJob)
-  }
+  const shouldSetTimeout = scheduledJobs.length === 0
+  insertJob(scheduledJobs, newJob)
 
   // we just pushed the first job onto the queue
-  if (scheduledJobs.length === 1) {
+  if (shouldSetTimeout) {
     setTimeout(() => {
-      isIterating = true
-
-      const clonedJobs = [...scheduledJobs]
-      scheduledJobs = []
-      runJobs(clonedJobs)
-
-      while (intermediaryJobs.length) {
-        const clonedIntermediaryJobs = [...intermediaryJobs]
-        intermediaryJobs = []
-        runJobs(clonedIntermediaryJobs)
+      while (scheduledJobs.length) {
+        const job = scheduledJobs.shift() as Job
+        job.task()
       }
-
-      isIterating = false
     })
   }
 
   return () => {
-    if (isIntermediaryJob) {
-      intermediaryJobs = intermediaryJobs.filter(job => job !== newJob)
-    } else {
-      scheduledJobs = scheduledJobs.filter(job => job !== newJob)
-    }
+    scheduledJobs = scheduledJobs.filter(job => job !== newJob)
   }
 }

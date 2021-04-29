@@ -86,17 +86,17 @@ export interface AtomConfig {
  *
  * To instantiate an atom context, use `myAtomContext.useInstance()`.
  *
- * To provide an atom context instance, pass it to an AppProvider via the
+ * To provide an atom context instance, pass it to an EcosystemProvider via the
  * `contexts` prop.
  *
  * To consume a provided atom context instance, use
  * `myAtomContext.useConsumer()` in a component or
- * `myAtomContext.injectConsumer()` in an app or local atom.
+ * `myAtomContext.injectConsumer()` in an atom.
  *
  * Example usage:
  *
  * ```ts
- * import { AppProvider, atomContext } from '@zedux/react'
+ * import { EcosystemProvider, atomContext } from '@zedux/react'
  *
  * // create
  * const reduxAtomContext = atomContext<RootReduxState>()
@@ -106,7 +106,9 @@ export interface AtomConfig {
  *   const instance = reduxAtomContext.useInstance(initialState) // instantiate
  *
  *   // provide
- *   return <AppProvider contexts={[instance]}><Child /></AppProvider>
+ *   return (
+ *     <EcosystemProvider contexts={[instance]}><Child /></EcosystemProvider>
+ *   )
  * }
  *
  * function Child() {
@@ -186,9 +188,10 @@ export interface AtomContext<T = any> {
    * AtomContext#useConsumer()
    *
    * Finds the nearest instance of this AtomContext that has been provided by a
-   * parent AppProvider. If no such AppProvider is found, a default instance is
-   * created and added to the global atom ecosystem. If a default instance has
-   * already been added to the global ecosystem, that instance will be reused.
+   * parent EcosystemProvider. If no such EcosystemProvider is found, a default
+   * instance is created and added to the global atom ecosystem. If a default
+   * instance has already been added to the global ecosystem, that instance will
+   * be reused.
    *
    * Does **not** subscribe to the instance's store, unless a subscribing hook
    * on the instance is used.
@@ -226,8 +229,8 @@ export interface AtomContext<T = any> {
    * Creates an instance of this context. This is the only way to instantiate
    * the context. Every time this hook is used, another instance is created.
    *
-   * To provide this AtomContext to the app, the returned instance must be
-   * passed to an AppProvider via the `contexts` prop.
+   * To provide this AtomContext to the ecosystem, the returned instance must be
+   * passed to an EcosystemProvider via the `contexts` prop.
    *
    * Does **not** subscribe to the instance's store.
    *
@@ -236,7 +239,7 @@ export interface AtomContext<T = any> {
    * ```tsx
    * const instance = myAtomContext.useInstance('initial data here')
    *
-   * return <AppProvider contexts={[instance]}>...</AppProvider>
+   * return <EcosystemProvider contexts={[instance]}>...</EcosystemProvider>
    * ```
    */
   useInstance: (initialState: T) => AtomContextInstance<T>
@@ -394,6 +397,19 @@ export enum AtomType {
 
 export type AtomValue<State = any> = State | Store<State>
 
+export interface EcosystemProviderProps {
+  atoms?: AtomBaseProperties<any, any[]>[]
+  contexts?: AtomContextInstance[]
+  flags?: string[]
+  preload?: () => unknown
+}
+
+export interface EcosystemConfig
+  extends Omit<EcosystemProviderProps, 'preload'> {
+  destroyOnUnmount?: boolean
+  id?: string
+}
+
 export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   ? <D = any>(selector: (state: State) => D) => D
   : <D = any>(params: Params, selector: (state: State) => D) => D
@@ -432,8 +448,8 @@ export type LocalAtomConfig = Omit<AtomConfig, 'maxInstances' | 'ttl'>
  * lazily.
  *
  * Molecules typically combine the stores of multiple atoms into a single store.
- * This can be used to persist and hydrate app state or implement undo/redo and
- * time travel debugging.
+ * This can be used to persist and hydrate ecosystem state or implement
+ * undo/redo and time travel debugging.
  *
  * Molecules are actually a type of atom. This means creating and using a
  * molecule is very similar to creating and using an atom. The API is only

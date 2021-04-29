@@ -1,13 +1,8 @@
 import { injectMemo } from './injectMemo'
-import { getAtomInstance } from '../instance-helpers/getAtomInstance'
-import {
-  AtomInjectorDescriptor,
-  getKeyHash,
-  InjectorType,
-  split,
-} from '../utils'
+import { AtomInjectorDescriptor, InjectorType, split } from '../utils'
 import { diContext } from '../utils/csContexts'
-import { AtomBaseProperties, AtomInstanceBase, AtomType } from '../types'
+import { AtomBaseProperties, AtomInstanceBase } from '../types'
+import { getEcosystem } from '../store/public-api'
 
 /**
  * injectAtomWithoutSubscription
@@ -36,17 +31,17 @@ export const injectAtomWithoutSubscription = <
   atom: AtomBaseProperties<State, Params, InstanceType>,
   params: Params
 ) => {
-  const { appId } = diContext.consume()
-  const keyHash = injectMemo(
-    () => getKeyHash(appId, atom, params),
-    atom.type === AtomType.Local ? [appId, atom] : [appId, atom, params]
-  )
+  const { ecosystemId } = diContext.consume()
 
   // NOTE: We don't want to re-run when params change - the array could change every time
   // Calculate the full key from the params and use that to determine when items in the params list change.
   const atomInstance = injectMemo(
-    () => getAtomInstance(appId, atom, keyHash, params),
-    [appId, atom, keyHash] // TODO: Changing the atom is _probably_ not supported. Maybe. Mmmm maybe.
+    () => getEcosystem(ecosystemId).load(atom, params),
+    // TODO: Changing the atom is _probably_ not supported. Maybe. Mmmm maybe.
+    // TODO: params will probably change every time, making this pretty
+    // inefficient if lots of params are passed (since the keyHash is
+    // recalculated). Use a more stable reference for this dep.
+    [ecosystemId, atom, params]
   )
 
   split<AtomInjectorDescriptor>(

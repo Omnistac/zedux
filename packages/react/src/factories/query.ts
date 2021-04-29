@@ -3,7 +3,7 @@ import {
   injectAtomWithoutSubscription,
   injectAtomWithSubscription,
 } from '../injectors'
-import { getAtomInstance } from '../instance-helpers/getAtomInstance'
+import { getEcosystem } from '../store/public-api'
 import {
   AsyncState,
   AsyncStatus,
@@ -12,8 +12,8 @@ import {
   QueryAtom,
   QueryAtomInstance,
 } from '../types'
-import { EMPTY_CONTEXT, generateImplementationId, getKeyHash } from '../utils'
-import { appCsContext, diContext } from '../utils/csContexts'
+import { EMPTY_CONTEXT, generateImplementationId } from '../utils'
+import { ecosystemCsContext, diContext } from '../utils/csContexts'
 
 export const query = <State, Params extends any[]>(
   key: string,
@@ -37,15 +37,15 @@ export const query = <State, Params extends any[]>(
     const initialContext = diContext.consume()
 
     return (...params: Params) => {
-      const newContext = appCsContext.consume(false)
-      const { appId } = newContext || initialContext
-      const keyHash = getKeyHash(appId, newAtom, params)
+      const newContext = ecosystemCsContext.consume(false)
+      const { ecosystemId } = newContext || initialContext
+      const ecosystem = getEcosystem(ecosystemId)
 
-      return getAtomInstance<
+      return ecosystem.load<
         AsyncState<State>,
         Params,
         QueryAtomInstance<State, Params>
-      >(appId, newAtom, keyHash, params)
+      >(newAtom, params)
     }
   }
 

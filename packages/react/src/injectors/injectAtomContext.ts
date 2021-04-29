@@ -4,11 +4,12 @@ import { getAtomContextInstance } from '../utils/getAtomContextInstance'
 import { injectMemo } from './injectMemo'
 
 export const injectAtomContext = <T = any>(context: AtomContext<T>) => {
-  const { appId } = diContext.consume()
+  const { ecosystemId } = diContext.consume()
 
-  const atomContext = injectMemo(() => getAtomContextInstance(appId, context), [
-    context,
-  ])
+  const atomContext = injectMemo(
+    () => getAtomContextInstance(ecosystemId, context),
+    [context]
+  )
 
   return atomContext
 }

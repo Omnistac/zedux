@@ -11,7 +11,7 @@ import React, { FC } from 'react'
 import { createAtomInstanceInternals } from '../createAtomInstanceInternals'
 
 export const createQueryInstance = <State, Params extends any[]>(
-  appId: string,
+  ecosystemId: string,
   atom: QueryAtom<State, Params>,
   keyHash: string,
   params: Params,
@@ -31,7 +31,7 @@ export const createQueryInstance = <State, Params extends any[]>(
   }
 
   const internals = createAtomInstanceInternals(
-    appId,
+    ecosystemId,
     atom,
     keyHash,
     params,

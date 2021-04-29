@@ -1,14 +1,15 @@
 import { useContext, useMemo } from 'react'
-import { appContext } from '../components'
+import { ecosystemContext } from '../classes/Ecosystem'
 import { AtomContext } from '../types'
 import { getAtomContextInstance } from '../utils/getAtomContextInstance'
 
 export const useAtomContext = <T = any>(context: AtomContext<T>) => {
-  const appId = useContext(appContext)
+  const ecosystemId = useContext(ecosystemContext)
 
-  const atomContext = useMemo(() => getAtomContextInstance(appId, context), [
-    context,
-  ])
+  const atomContext = useMemo(
+    () => getAtomContextInstance(ecosystemId, context),
+    [context]
+  )
 
   return atomContext
 }

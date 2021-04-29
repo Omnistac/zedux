@@ -6,14 +6,14 @@ export const createLocalAtomInstance = <
   Params extends any[],
   Exports extends Record<string, any>
 >(
-  appId: string,
+  ecosystemId: string,
   atom: ReadonlyLocalAtom<State, Params, Exports>,
   keyHash: string,
   params: Params,
   destroy: () => void
 ) =>
   createStandardAtomInstanceWithDestruction<State, Params, Exports>(
-    appId,
+    ecosystemId,
     atom,
     keyHash,
     params,

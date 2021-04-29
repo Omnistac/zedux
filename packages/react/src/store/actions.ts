@@ -1,4 +1,5 @@
 import { createActorFactory } from '@zedux/core'
+import { Ecosystem } from '../classes/Ecosystem'
 import {
   AtomBaseProperties,
   AtomContext,
@@ -8,30 +9,33 @@ import {
 } from '../types'
 
 const createActor = createActorFactory('@@react-zedux', 'global')
-export const addApp = createActor<{
-  appId: string
-  atoms?: AtomBaseProperties<any, any[]>[]
-  atomContexts?: Map<AtomContext, AtomContextInstance>
-  flags?: string[]
-}>('addApp')
+export const addEcosystem = createActor<Ecosystem>('addEcosystem')
+
+// should only be dispatched from an Ecosystem
 export const addAtomInstance = createActor<{
-  appId: string
+  ecosystemId: string
   atom: AtomBaseProperties<any, any[]>
   atomInstance: AtomInstanceBase<any, any[]>
 }>('addAtomInstance')
+
 export const addMolecule = createActor<Molecule<any, any>>('addMolecule')
-export const removeApp = createActor<{
-  appId: string
+
+export const removeEcosystem = createActor<{
+  ecosystemId: string
   instances: string[]
-}>('removeApp')
+}>('removeEcosystem')
+
+// should only be dispatched from an Ecosystem
 export const removeAtomInstance = createActor<{
-  appId: string
+  ecosystemId: string
   keyHash: string
 }>('removeAtomInstance')
-export const updateApp = createActor<{
-  appId: string
+
+export const updateEcosystem = createActor<{
+  ecosystemId: string
   atoms?: AtomBaseProperties<any, any[]>[]
   atomContexts?: Map<AtomContext, AtomContextInstance>
   flags?: string[]
-}>('updateApp')
+}>('updateEcosystem')
+
 export const wipe = createActor('wipe')
