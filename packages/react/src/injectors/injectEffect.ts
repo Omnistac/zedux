@@ -1,11 +1,13 @@
 import { EffectCallback } from 'react'
-import { haveDepsChanged, scheduleJob, validateInjector } from '../utils'
+import { getEcosystem } from '../store/public-api'
+import { haveDepsChanged, validateInjector } from '../utils'
 import { diContext } from '../utils/csContexts'
 import { EffectInjectorDescriptor, InjectorType, JobType } from '../utils/types'
 
 export const injectEffect = (effect: EffectCallback, deps?: any[]) => {
   const context = diContext.consume()
-  const { injectors } = context
+  const { ecosystemId, injectors } = context
+  const ecosystem = getEcosystem(ecosystemId)
 
   const prevDescriptor = validateInjector<EffectInjectorDescriptor>(
     'injectEffect',
@@ -21,7 +23,7 @@ export const injectEffect = (effect: EffectCallback, deps?: any[]) => {
   }
 
   if (depsHaveChanged) {
-    descriptor.cleanup = scheduleJob({
+    descriptor.cleanup = ecosystem.scheduler.scheduleJob({
       task: () => {
         if (prevDescriptor) {
           prevDescriptor.cleanup?.()

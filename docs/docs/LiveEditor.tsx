@@ -4,7 +4,7 @@ import Highlight, { Prism } from 'prism-react-renderer'
 import React, { FC, useEffect, useState } from 'react'
 import Editor from 'react-simple-code-editor'
 import styled, { keyframes } from 'styled-components'
-import * as ReactZedux from '../../packages/react/src'
+import * as ReactZedux from '../../packages/react/dist/es/react/src'
 import * as Redux from 'redux'
 
 if (typeof window !== 'undefined') {

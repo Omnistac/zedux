@@ -7,82 +7,106 @@ import { LiveEditor } from '../../LiveEditor'
 
 ## Ecosystems
 
-All atoms live in atom ecosystems. An ecosystem is like an isolated group of atoms. Atoms in an ecosystem can interact with each other, but are usually unaware of atoms in other ecosystems.
+All atoms live in atom ecosystems. An ecosystem is like an isolated group of atoms. Atoms in an ecosystem can interact with each other, but are unaware of atoms in other ecosystems.
 
 There are 2 types of ecosystems:
 
 - Global
-- App
+- Custom
 
 ### Global
 
-There is exactly one global atom ecosystem. You don't need to create it; it already exists. All atoms in the global ecosystem live outside of React.
+There is exactly one global atom ecosystem. You don't need to create it; it is created automatically if you don't create an ecosystem.
 
-Zedux is designed to allow an app to use nothing but the global ecosystem. And for small apps and simple examples, that's fine. However, this approach can only get you so far. The global ecosystem is not very configurable or conducive to some advanced features like [dependency injection](TODO:link) and [atom context](TODO:link). Global atoms can also be unruly in tests, since they require specific cleanup.
+Zedux is designed to allow an app to use nothing but the global ecosystem. And for small apps and simple examples, that's fine. However, this approach can only get you so far. The global ecosystem is not configurable. Thus it lacks some advanced features like [dependency injection](TODO:link) and [atom context](TODO:link). The global ecosystem can also be unruly in tests, since it requires manual cleanup.
 
-### App
+### Custom
 
-App ecosystems are created by rendering an [AppProvider](TODO:link):
+There are 2 ways to create custom ecosystems
+
+#### `EcosystemProvider`
+
+The simplest way to create an ecosystem is by rendering an [EcosystemProvider](TODO:link):
 
 ```tsx
-import { AppProvider } from '@zedux/react'
+import { EcosystemProvider } from '@zedux/react'
 
 function App() {
   return (
-    <AppProvider>
+    <EcosystemProvider>
       <Routes />
-    </AppProvider>
+    </EcosystemProvider>
   )
 }
 ```
 
 This is similar to Recoil's [`RecoilRoot`](https://recoiljs.org/docs/api-reference/core/RecoilRoot) or Redux' [`Provider`](https://react-redux.js.org/api/provider) or React Query's [`QueryClientProvider`](https://react-query.tanstack.com/reference/QueryClientProvider). In fact, it's basically a combination of all of those. And more.
 
-Every AppProvider creates a new app ecosystem. Most apps will only need one, though more can be created to purposefully create isolated groups of atoms. Tests will typically each create their own AppProvider to take advantage of DI and the automatic cleanup on unmount.
+Every EcosystemProvider creates a new ecosystem. Most apps will only need one, though more can be created to purposefully create isolated groups of atoms. Tests will typically each create their own EcosystemProvider to take advantage of DI and the automatic cleanup on unmount.
 
-When an AppProvider is unmounted, all atom instances in that app ecosystem are destroyed.
+When an EcosystemProvider is unmounted, all atom instances in that ecosystem are destroyed.
 
 :::note
-Nesting AppProviders currently has no special functionality. Rendering an AppProvider inside another AppProvider will create a new, completely isolated app ecosystem.
+Nesting EcosystemProviders currently has no special functionality. Rendering an EcosystemProvider inside another EcosystemProvider will create a new, completely isolated ecosystem.
 :::
 
-`<AppProvider />` takes several props to configure DI, atom context, preloading data, and more. **Most apps will want to use app ecosystems for pretty much everything.**
+`<EcosystemProvider />` takes several props to configure DI, atom context, preloading data, and more. **Most apps will want to use custom ecosystems.**
+
+#### `ecosystem()`
+
+For even more control, you can can create an ecosystem using the exported `ecosystem()` factory.
+
+```tsx
+import { ecosystem } from '@zedux/react'
+
+const rootEcosystem = ecosystem({ id: 'root' })
+
+function App() {
+  return (
+    <rootEcosystem.Provider>
+      <Routes />
+    </rootEcosystem.Provider>
+  )
+}
+```
+
+Ecosystems created this way can be controlled outside React. This means you can preload atoms, manipulate atoms, analyze the graph, and destroy the ecosystem without ever rendering a component. This is extremely useful for testing.
+
+See [the `ecosystem()` API](TODO:link) for more info.
 
 ## Ecosystem Design Patterns
 
 There are 3 main design patterns around atom ecosystems. Choose the most appropriate for your app.
 
-### Single App
+### Single Ecosystem
 
-![](/img/diagrams/atom-ecosystems-app-only.png)
+![](/img/diagrams/atom-ecosystems-single-ecosystem.png)
 
-The most common. In the single app approach, you render one AppProvider - creating a single app ecosystem. The global ecosystem is not used.
+The most common. In the single ecosystem approach, you render one EcosystemProvider - creating a single custom ecosystem. The global ecosystem is not used.
 
-Most apps will want to make use of the powerful features of AppProviders. This approach is recommended in most situations.
+Most apps will want to make use of the powerful features of EcosystemProviders. This approach is recommended in most situations.
 
 ### Global Only
 
 ![](/img/diagrams/atom-ecosystems-global-only.png)
 
-In the global only approach, all atoms, regardless of scope, live in the global ecosystem. This is done by never rendering an AppProvider. If no AppProvider is rendered, all atoms are added to the global ecosystem by default.
+In the global only approach, all atoms live in the global ecosystem. This is done by never rendering an EcosystemProvider. If no EcosystemProvider is rendered, all atoms are added to the global ecosystem by default.
 
-Note that again there is probably no real need for global atoms in this approach, since app atoms are essentially "global".
-
-The global ecosystem can be nice for simplicity. Some apps don't need any of the features AppProviders offer. And that's fine!
+The global ecosystem can be nice for simplicity. Some apps don't need any of the features custom ecosystems offer. And that's fine!
 
 ### Mixed
 
 ![](/img/diagrams/atom-ecosystems-mixed.png)
 
-In this approach, you create one or more app ecosystems (by rendering AppProviders). You might also use some atoms outside any AppProvider - utilizing the global ecosystem.
+In this approach, you create one or more custom ecosystems. You might also use some atoms outside any EcosystemProvider - utilizing the global ecosystem.
 
-Use cases for this approach are very niche. Outside of testing, you probably won't find yourself using multiple AppProviders.
+Use cases for this approach are very niche. Outside of testing, you probably won't find yourself using multiple ecosystems.
 
 ## A Note On Params
 
 In the quick start, we learned that atom instances can be reused by passing the same params to certain hooks/injectors. Since atom instances live in an ecosystem, reuse can only happen inside that ecosystem.
 
-In the following example, the `counterAtom` doesn't take any params. But since it's used in two different app ecosystems, two different instances are created.
+In the following example, the `counterAtom` doesn't take any params. But since it's used in two different ecosystems, two different instances are created.
 
 <LiveEditor resultVar="Apps">{`
 const counterAtom = atom('counter', 0)\n
@@ -98,14 +122,14 @@ function Counter() {
 function Apps() {
   return (
     <>
-      <AppProvider>
+      <EcosystemProvider>
         <h3>Counter 1:</h3>
         <Counter />
-      </AppProvider>
-      <AppProvider>
+      </EcosystemProvider>
+      <EcosystemProvider>
         <h3>Counter 2:</h3>
         <Counter />
-      </AppProvider>
+      </EcosystemProvider>
     </>
   )
 }
@@ -115,9 +139,9 @@ function Apps() {
 
 - All atoms live in atom ecosystems.
 - Atom instances can only be reused in the ecosystem they were created in.
-- There are global and app ecosystems.
-- Most apps will use the "Single App Approach" - rendering a single `<AppProvider>`.
+- There are global and custom ecosystems.
+- Most apps will use the "Single Ecosystem Approach" - rendering a single `<EcosystemProvider>`.
 
 ## Next Steps
 
-The AppProvider is capable of some pretty cool stuff. With that equipped, it's time to look at one of the coolest features of Zedux: [Dependency Injection](dependency-injection).
+The EcosystemProvider is capable of some pretty cool stuff. With it equipped, it's time to look at one of the coolest features of Zedux: [Dependency Injection](dependency-injection).

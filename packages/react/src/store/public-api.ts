@@ -1,5 +1,5 @@
 import { ecosystem } from '../factories/ecosystem'
-import { AtomBaseProperties, AtomInstanceBase } from '../types'
+// import { AtomBaseProperties, AtomInstanceBase } from '../types'
 import { globalStore, wipe as wipeAction } from './'
 
 /**
@@ -16,29 +16,29 @@ import { globalStore, wipe as wipeAction } from './'
  *
  * @returns {Object} - A map of instance ids to instances
  */
-export const getAllInstances = <State, Params extends any[]>(
-  atom: AtomBaseProperties<State, Params> | string,
-  ecosystemId = 'global'
-) => {
-  const atomKey = typeof atom === 'string' ? atom : atom.key
-  const globalState = globalStore.getState()
-  const hash: Record<string, AtomInstanceBase<State, Params>> = {}
+// export const getAllInstances = <State, Params extends any[]>(
+//   atom: AtomBaseProperties<State, Params> | string,
+//   ecosystemId = 'global'
+// ) => {
+//   const atomKey = typeof atom === 'string' ? atom : atom.key
+//   const globalState = globalStore.getState()
+//   const hash: Record<string, AtomInstanceBase<State, Params>> = {}
 
-  Object.entries(globalState.instances).forEach(([key, instance]) => {
-    const instanceAtom = globalState.atoms[instance.internals.atomInternalId]
+//   Object.entries(globalState.instances).forEach(([key, instance]) => {
+//     const instanceAtom = globalState.atoms[instance.internals.atomInternalId]
 
-    if (
-      instanceAtom.key !== atomKey ||
-      (ecosystemId && !instanceAtom.key.startsWith(ecosystemId))
-    ) {
-      return
-    }
+//     if (
+//       instanceAtom.key !== atomKey ||
+//       (ecosystemId && !instanceAtom.key.startsWith(ecosystemId))
+//     ) {
+//       return
+//     }
 
-    hash[key] = instance
-  })
+//     hash[key] = instance
+//   })
 
-  return hash
-}
+//   return hash
+// }
 
 export const getEcosystem = (id: string) => {
   const existingEcosystem = globalStore.getState().ecosystems[id]

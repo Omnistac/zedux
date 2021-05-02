@@ -1,7 +1,8 @@
-import { useContext, useMemo } from 'react'
+import { useContext, useLayoutEffect, useMemo } from 'react'
 import { ecosystemContext } from '../classes/Ecosystem'
 import { getEcosystem } from '../store/public-api'
 import { AtomBaseProperties, AtomInstanceBase } from '../types'
+import { useStableReference } from './useStableReference'
 
 /**
  * useAtomWithoutSubscription
@@ -31,17 +32,20 @@ export const useAtomWithoutSubscription = <
   params: Params
 ) => {
   const ecosystemId = useContext(ecosystemContext)
+  const ecosystem = getEcosystem(ecosystemId)
+  const stableParams = useStableReference(params)
 
-  // NOTE: We don't want to re-run when params change - the array could change every time
-  // Calculate the full key from the params and use that to determine when items in the params list change.
-  const atomInstance = useMemo(
-    () => getEcosystem(ecosystemId).load(atom, params),
-    // TODO: Changing the atom is _probably_ not supported. Maybe. Mmmm maybe.
-    // TODO: params will probably change every time, making this pretty
-    // inefficient if lots of params are passed (since the keyHash is
-    // recalculated). Use a more stable reference for this dep.
-    [ecosystemId, atom, params]
-  )
+  const [atomInstance, unregister] = useMemo(() => {
+    const instance = ecosystem.load(atom, stableParams)
+
+    const unregister = ecosystem.graph.registerExternalStaticDependency(
+      instance
+    )
+
+    return [instance, unregister] as const
+  }, [ecosystem, atom, stableParams])
+
+  useLayoutEffect(() => unregister, [unregister])
 
   return atomInstance
 }

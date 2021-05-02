@@ -1,11 +1,7 @@
-import React, { createContext, FC, useEffect, useMemo, useRef } from 'react'
+import React, { createContext, FC, useEffect, useRef } from 'react'
+import { useStableReference } from '../hooks/useStableReference'
 import { createAtomInstance } from '../instance-helpers/createAtomInstance'
-import {
-  addEcosystem,
-  globalStore,
-  removeAtomInstance,
-  removeEcosystem,
-} from '../store'
+import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
   AtomBaseProperties,
   AtomContext,
@@ -14,29 +10,10 @@ import {
   EcosystemConfig,
   EcosystemProviderProps,
 } from '../types'
-import { EcosystemGraphNode, generateAppId, getKeyHash } from '../utils'
+import { generateAppId, getKeyHash } from '../utils'
 import { ecosystemCsContext } from '../utils/csContexts'
+import { Graph } from './Graph'
 import { Scheduler } from './Scheduler'
-
-const usePreservedReference = (arr?: any[]) => {
-  const prevArr = useRef(arr)
-
-  return useMemo(() => {
-    if (arr === prevArr.current) return prevArr.current
-
-    if (!arr || !prevArr.current) return arr
-
-    if (
-      arr.length !== prevArr.current.length ||
-      arr.some((el, i) => prevArr.current?.[i] !== el)
-    ) {
-      prevArr.current = arr
-      return arr
-    }
-
-    return prevArr.current
-  }, [arr])
-}
 
 const mapAtomContexts = (atomContexts?: AtomContextInstance[]) =>
   atomContexts?.reduce((map, atomContext) => {
@@ -51,11 +28,11 @@ export class Ecosystem {
   public destroyOnUnmount = false
   public ecosystemId: string
   public flags?: string[] = []
-  public graph: Record<string, EcosystemGraphNode> = {}
-  public instances: string[] = []
+  public graph = new Graph(this)
+  public instances: Record<string, AtomInstanceBase<any, any>> = {}
   public overrides: Record<string, AtomBaseProperties<any, any[]>> = {}
   public refCount = 0
-  public scheduler = new Scheduler()
+  public scheduler = new Scheduler(this)
 
   constructor({
     atoms,
@@ -107,13 +84,10 @@ export class Ecosystem {
   }
 
   public destroyAtomInstance(keyHash: string) {
-    // TODO: Remove instance from the graph, recalculate weights, try to destroy instance (if not destroyed - this fn is called as part of that destruction process too)
-    globalStore.dispatch(
-      removeAtomInstance({
-        ecosystemId: this.ecosystemId,
-        keyHash,
-      })
-    )
+    // try to destroy instance (if not destroyed - this fn is called as part of that destruction process too)
+    this.graph.removeNode(keyHash)
+
+    delete this.instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
   }
 
   public load<
@@ -124,13 +98,17 @@ export class Ecosystem {
     const keyHash = getKeyHash(this.ecosystemId, atom, params)
 
     // try to find an existing instance
-    const existingInstance = globalStore.getState().instances[keyHash]
+    const existingInstance = this.instances[keyHash]
     if (existingInstance) return existingInstance as InstanceType
 
     // create a new instance
     const resolvedAtom = this.resolveAtom(atom)
+    this.graph.addNode(keyHash)
 
-    return createAtomInstance(this, resolvedAtom, keyHash, params)
+    const newInstance = createAtomInstance(this, resolvedAtom, keyHash, params)
+    this.instances[keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
+
+    return newInstance
   }
 
   public Provider: FC<EcosystemProviderProps> = ({
@@ -158,9 +136,9 @@ export class Ecosystem {
       )
     }
 
-    const preservedAtoms = usePreservedReference(atoms)
-    const preservedContexts = usePreservedReference(contexts)
-    const preservedFlags = usePreservedReference(flags)
+    const preservedAtoms = useStableReference(atoms)
+    const preservedContexts = useStableReference(contexts)
+    const preservedFlags = useStableReference(flags)
 
     useEffect(() => {
       if (isFirstRenderRef.current) return
@@ -186,7 +164,6 @@ export class Ecosystem {
         globalStore.dispatch(
           removeEcosystem({
             ecosystemId: this.ecosystemId,
-            instances: ecosystem.instances,
           })
         )
       }

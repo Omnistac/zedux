@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "docusaurus start",
+    "start": "yarn watch:react & docusaurus start",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy"
+    "deploy": "docusaurus deploy",
+    "watch:react": "cd ../packages/react && yarn dev"
   },
   "dependencies": {
     "@docusaurus/core": "^2.0.0-alpha.74",

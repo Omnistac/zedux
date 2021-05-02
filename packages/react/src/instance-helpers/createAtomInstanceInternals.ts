@@ -1,5 +1,5 @@
 import { createStore, effectTypes, isZeduxStore, Store } from '@zedux/core'
-import { globalStore } from '../store'
+import { getEcosystem } from '../store/public-api'
 import {
   ActiveState,
   AtomBaseProperties,
@@ -8,29 +8,13 @@ import {
   StateType,
 } from '../types'
 import { diContext } from '../utils/csContexts'
-import { scheduleJob } from '../utils/scheduler'
 import {
-  AtomInjectorDescriptor,
   EvaluationReason,
   InjectorDescriptor,
   InjectorType,
   JobType,
   WhyInjectorDescriptor,
 } from '../utils/types'
-
-const getDependencies = (injectors: InjectorDescriptor[]) => {
-  const depInjectors = injectors.filter(
-    injector => injector.type === InjectorType.Atom
-  ) as AtomInjectorDescriptor[]
-  const { atoms, instances } = globalStore.getState()
-  const hash: Record<string, true> = {}
-
-  depInjectors.forEach(dep => {
-    hash[atoms[instances[dep.instanceId].internals.atomInternalId].key] = true
-  })
-
-  return hash
-}
 
 const getStateType = (val: any) => {
   if (isZeduxStore(val)) return StateType.Store
@@ -77,8 +61,59 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
   evaluate: () => AtomValue<State>,
   scheduleDestruction: () => void
 ) => {
+  const ecosystem = getEcosystem(ecosystemId)
   let evaluationReasons: EvaluationReason[] = []
-  const scheduleEvaluation = (reason: EvaluationReason) => {
+
+  const evaluationTask = () => {
+    const newInjectors: InjectorDescriptor[] = []
+    let newFactoryResult: AtomValue<State>
+
+    try {
+      newFactoryResult = diContext.provide(
+        {
+          atom,
+          ecosystemId,
+          injectors: newInjectors,
+          isInitializing: false,
+          keyHash,
+          prevInjectors: newInternals.injectors,
+          scheduleEvaluation,
+        },
+        evaluate
+      )
+    } catch (err) {
+      newInjectors.forEach(injector => {
+        injector.cleanup?.()
+      })
+      throw err
+    }
+
+    newInternals.injectors = newInjectors // TODO: dispatch an action over stateStore for this mutation
+    const newStateType = getStateType(newFactoryResult)
+
+    if (newStateType !== newInternals.stateType) {
+      throw new Error(
+        `Zedux Error - atom factory for atom "${atom.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
+      )
+    }
+
+    if (newStateType === StateType.Store && newFactoryResult !== stateStore) {
+      throw new Error(
+        `Zedux Error - atom factory for atom "${atom.key}" returned a different store. Did you mean to use \`injectState()\`, \`injectStore()\`, or \`injectMemo()\`?`
+      )
+    }
+
+    // I believe there is no way to cause a scheduleEvaluation loop when the StateType is Value
+    if (newStateType === StateType.Value) {
+      stateStore.setState(newFactoryResult as State)
+    }
+
+    runWhyInjectors(newInjectors, evaluationReasons)
+
+    evaluationReasons = []
+  }
+
+  const scheduleEvaluation = (reason: EvaluationReason, flagScore = 0) => {
     if (evaluationReasons.length) {
       evaluationReasons.push(reason)
       return
@@ -86,57 +121,9 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
 
     evaluationReasons = [reason] // TODO: there may be a race condition here - with the evaluationTask not running before new scheduleEvaluations come in
 
-    const evaluationTask = () => {
-      const newInjectors: InjectorDescriptor[] = []
-      let newFactoryResult: AtomValue<State>
-
-      try {
-        newFactoryResult = diContext.provide(
-          {
-            ecosystemId,
-            atom,
-            injectors: newInjectors,
-            isInitializing: false,
-            prevInjectors: newInternals.injectors,
-            scheduleEvaluation,
-          },
-          evaluate
-        )
-      } catch (err) {
-        newInjectors.forEach(injector => {
-          injector.cleanup?.()
-        })
-        throw err
-      }
-
-      newInternals.injectors = newInjectors // TODO: dispatch an action over stateStore for this mutation
-      const newStateType = getStateType(newFactoryResult)
-
-      if (newStateType !== newInternals.stateType) {
-        throw new Error(
-          `Zedux Error - atom factory for atom "${atom.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
-        )
-      }
-
-      if (newStateType === StateType.Store && newFactoryResult !== stateStore) {
-        throw new Error(
-          `Zedux Error - atom factory for atom "${atom.key}" returned a different store. Did you mean to use \`injectStore()\` or \`injectMemo(() => theStore, [])\`?`
-        )
-      }
-
-      // I believe there is no way to cause a scheduleEvaluation loop when the StateType is Value
-      if (newStateType === StateType.Value) {
-        stateStore.setState(newFactoryResult as State)
-      }
-
-      runWhyInjectors(newInjectors, evaluationReasons)
-
-      evaluationReasons = []
-    }
-
-    scheduleJob({
-      dependencies: getDependencies(newInternals.injectors),
-      key: atom.key,
+    ecosystem.scheduler.scheduleJob({
+      flagScore,
+      keyHash,
       task: evaluationTask,
       type: JobType.EvaluateAtom,
     })
@@ -150,10 +137,11 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
   try {
     factoryResult = diContext.provide(
       {
-        ecosystemId,
         atom,
+        ecosystemId,
         injectors,
         isInitializing: true,
+        keyHash,
         scheduleEvaluation,
       },
       evaluate
@@ -206,6 +194,9 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
         subscription.unsubscribe()
         newInternals.scheduleDestruction()
       }
+    },
+    next: () => {
+      ecosystem.graph.scheduleDependents(keyHash, evaluationReasons)
     },
   })
 

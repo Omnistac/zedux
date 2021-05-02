@@ -15,7 +15,10 @@ export const EcosystemProvider: FC<EcosystemProviderProps> = ({
   flags,
   preload,
 }) => {
-  const newEcosystem = useMemo(() => ecosystem({ atoms, contexts, flags }), [])
+  const newEcosystem = useMemo(
+    () => ecosystem({ atoms, contexts, destroyOnUnmount: true, flags }),
+    []
+  )
 
   return (
     <newEcosystem.Provider {...{ atoms, children, contexts, flags, preload }} />

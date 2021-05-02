@@ -1,15 +1,12 @@
-import { Subscriber } from '@zedux/core'
+import { getEcosystem } from '../store/public-api'
 import { AtomBaseProperties, AtomInstanceBase } from '../types'
 import {
-  EvaluationType,
-  EvaluationTargetType,
-  EvaluationReason,
   split,
   AtomWithSubscriptionInjectorDescriptor,
   InjectorType,
+  haveDepsChanged,
 } from '../utils'
 import { diContext } from '../utils/csContexts'
-import { injectAtomWithoutSubscription } from './injectAtomWithoutSubscription'
 
 /**
  * injectAtomWithSubscription
@@ -39,57 +36,47 @@ export const injectAtomWithSubscription = <
   atom: AtomBaseProperties<State, Params, InstanceType>,
   params: Params
 ) => {
-  const { scheduleEvaluation } = diContext.consume()
+  const { ecosystemId, keyHash } = diContext.consume()
+  const ecosystem = getEcosystem(ecosystemId)
 
-  const atomInstance = injectAtomWithoutSubscription(atom, params)
-
-  const subscriber: Subscriber<State> = (newState, oldState) => {
-    const reasons = atomInstance.internals.getEvaluationReasons()
-    const reason: EvaluationReason = {
-      newState,
-      oldState,
-      operation,
-      targetType: EvaluationTargetType.Atom,
-      targetKey: atom.key,
-      targetParams: params,
-      type: EvaluationType.StateChanged,
-    }
-
-    if (reasons.length) reason.reasons = reasons
-
-    scheduleEvaluation(reason)
-  }
-
-  split<AtomWithSubscriptionInjectorDescriptor>(
-    'injectAtomWithSubscription',
+  const { instance } = split<
+    AtomWithSubscriptionInjectorDescriptor<InstanceType>
+  >(
+    'injectAtomWithoutSubscription',
     InjectorType.AtomWithSubscription,
     () => {
-      const subscription = atomInstance.internals.stateStore.subscribe(
-        subscriber
-      )
+      const instance = ecosystem.load(atom, params)
+      ecosystem.graph.addDependency(keyHash, instance.internals.keyHash)
 
       return {
-        cleanup: () => subscription.unsubscribe(),
-        instanceId: atomInstance.internals.keyHash,
+        instance,
         type: InjectorType.AtomWithSubscription,
       }
     },
     prevDescriptor => {
-      if (prevDescriptor.instanceId === atomInstance.internals.keyHash) {
-        return prevDescriptor
-      }
+      const atomHasChanged =
+        atom.internalId !== prevDescriptor.instance.internals.atomInternalId
 
-      prevDescriptor.cleanup?.()
-
-      const subscription = atomInstance.internals.stateStore.subscribe(
-        subscriber
+      const paramsHaveChanged = haveDepsChanged(
+        prevDescriptor.instance.internals.params,
+        params
       )
 
-      prevDescriptor.cleanup = () => subscription.unsubscribe()
+      if (!atomHasChanged && !paramsHaveChanged) return prevDescriptor
 
+      const instance = ecosystem.load(atom, params)
+
+      // update the graph
+      ecosystem.graph.removeDependency(
+        keyHash,
+        prevDescriptor.instance.internals.keyHash
+      )
+      ecosystem.graph.addDependency(keyHash, instance.internals.keyHash)
+
+      prevDescriptor.instance = instance
       return prevDescriptor
     }
   )
 
-  return atomInstance
+  return instance
 }

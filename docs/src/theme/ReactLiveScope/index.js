@@ -6,15 +6,15 @@
  */
 
 import React from 'react'
-import * as Zedux from '../../../../packages/core/src'
-import * as ReactZedux from '../../../../packages/react/src'
+// import * as Zedux from '../../../../packages/core/src'
+// import * as ReactZedux from '../../../../packages/react/src'
 
 // Add react-live imports you need here
 const ReactLiveScope = {
   React,
   ...React,
-  ...Zedux,
-  ...ReactZedux,
+  // ...Zedux,
+  // ...ReactZedux,
 }
 
 export default ReactLiveScope

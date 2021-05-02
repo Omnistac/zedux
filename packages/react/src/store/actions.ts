@@ -22,7 +22,6 @@ export const addMolecule = createActor<Molecule<any, any>>('addMolecule')
 
 export const removeEcosystem = createActor<{
   ecosystemId: string
-  instances: string[]
 }>('removeEcosystem')
 
 // should only be dispatched from an Ecosystem

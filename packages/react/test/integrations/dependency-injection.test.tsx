@@ -7,7 +7,7 @@ import {
   injectStore,
 } from '@zedux/react'
 import React, { FC } from 'react'
-import { renderInApp } from '@zedux/react-test/utils/renderInApp'
+import { renderInEcosystem } from '@zedux/react-test/utils/renderInEcosystem'
 
 const normalAtom = atom('normal', () => {
   const store = injectMemo(() => createStore(null, 0), [])
@@ -40,7 +40,7 @@ describe('DI: atom -> component', () => {
         return null
       }
 
-      renderInApp(<Test />)
+      renderInEcosystem(<Test />)
     })
 
     test("subscribes to the atom instance's store", async () => {
@@ -52,7 +52,7 @@ describe('DI: atom -> component', () => {
         return <div data-testid="a">{val}</div>
       }
 
-      const { findByTestId } = renderInApp(<Test />)
+      const { findByTestId } = renderInEcosystem(<Test />)
 
       const div = await findByTestId('a')
 

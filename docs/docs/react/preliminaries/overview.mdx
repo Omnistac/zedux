@@ -58,23 +58,23 @@ function Seconds() {
 
 See [the injectors tutorial](TODO:link)
 
-### AppProvider
+### EcosystemProvider
 
-An optional `<AppProvider />` can be rendered at the top level of your app. All atom instances created in any children will be scoped to the AppProvider.
+An optional `<EcosystemProvider />` can be rendered at the top level of your app. All atom instances created in any children will be scoped to the EcosystemProvider.
 
 ```tsx
-import { AppProvider } from '@zedux/react'
+import { EcosystemProvider } from '@zedux/react'
 
 function App() {
   return (
-    <AppProvider>
+    <EcosystemProvider>
       <Routes />
-    </AppProvider>
+    </EcosystemProvider>
   )
 }
 ```
 
-See [the Dependency Injection tutorial](TODO:link) and [`<AppProvider />`](TODO:link)
+See [the Dependency Injection tutorial](TODO:link) and [`<EcosystemProvider />`](TODO:link)
 
 ### Selectors
 
@@ -112,18 +112,18 @@ function SomeComponent() {
 
 function TestApp() {
   return (
-    <AppProvider>
+    <EcosystemProvider>
       <SomeComponent />
-    </AppProvider>
+    </EcosystemProvider>
   )
 }
 // logs warning: Unsafe atom "axios" encountered with flag "async"
 
 function DevApp() {
   return (
-    <AppProvider flags={['async']}>
+    <EcosystemProvider flags={['async']}>
       <SomeComponent />
-    </AppProvider>
+    </EcosystemProvider>
   )
 }
 // no warnings
@@ -208,9 +208,9 @@ const fetchTodosTestAtom = fetchTodosAtom.override(['Mock Todo 1', 'Mock Todo 2'
 function TestApp() {
   return (
     // highlight-next-line
-    <AppProvider atoms={[fetchTodosTestAtom]}>
+    <EcosystemProvider atoms={[fetchTodosTestAtom]}>
       <MyComponent />
-    </AppProvider>
+    </EcosystemProvider>
   )
 }
 ```
@@ -568,7 +568,7 @@ See [the persistence tutorial](TODO:link) and [`molecule()`](TODO:link)
 Data can be provided from an app's components layer to the atoms layer with atom context.
 
 ```tsx
-import { AppProvider, atom, atomContext } from '@zedux/react'
+import { EcosystemProvider, atom, atomContext } from '@zedux/react'
 
 const reduxContext = atomContext('redux')
 
@@ -581,9 +581,9 @@ function App() {
 
   return (
     <Provider store={store}>
-      <AppProvider contexts={[reduxInstance]}>
+      <EcosystemProvider contexts={[reduxInstance]}>
         <Routes />
-      </AppProvider>
+      </EcosystemProvider>
     </Provider>
   )
 }
@@ -622,17 +622,17 @@ See [the persistence tutorial](TODO:link).
 Atoms (including molecules) can be preloaded to kickstart hydration or alleviate render waterfalls.
 
 ```tsx
-import { AppProvider } from '@zedux/react'
+import { EcosystemProvider } from '@zedux/react'
 
 function App() {
   const loadStorage = persistenceMolecule.useLazy()
 
   return (
-    <AppProvider preload={() => {
+    <EcosystemProvider preload={() => {
       loadStorage()
     }}>
       <Routes />
-    </AppProvider>
+    </EcosystemProvider>
   )
 }
 ```
@@ -705,10 +705,10 @@ import { StateHub } from '@zedux/react/state-hub'
 
 function App() {
   return (
-    <AppProvider>
+    <EcosystemProvider>
       <StateHub />
       <Routes />
-    </AppProvider>
+    </EcosystemProvider>
   )
 }
 ```

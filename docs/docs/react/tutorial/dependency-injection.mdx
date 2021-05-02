@@ -68,14 +68,14 @@ const axiosAtom = atom('axios', axios)
 const testAxiosAtom = axiosAtom.override({ post: jest.fn() })
 ```
 
-These overridden atoms can then be supplied to an `<AppProvider>` via the `atoms` prop:
+These overridden atoms can then be supplied to an `<EcosystemProvider>` via the `atoms` prop:
 
 ```tsx
 function TestApp() {
   return (
-    <AppProvider atoms={[testAxiosAtom]}>
+    <EcosystemProvider atoms={[testAxiosAtom]}>
       <Routes />
-    </AppProvider>
+    </EcosystemProvider>
   )
 }
 ```
@@ -105,12 +105,12 @@ function Child() {
 function App() {
   return (
     <>
-      <AppProvider>
+      <EcosystemProvider>
         <Child />
-      </AppProvider>
-      <AppProvider atoms={[betterTextAtom]}>
+      </EcosystemProvider>
+      <EcosystemProvider atoms={[betterTextAtom]}>
         <Child />
-      </AppProvider>
+      </EcosystemProvider>
     </>
   )
 }

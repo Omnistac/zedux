@@ -52,7 +52,7 @@ html[data-theme='dark'] {
 
 .playgroundHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground-.playgroundEditorHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground-::before {
   content: '';
-  background: url('/zedux/img/logo.png') 0 0 no-repeat;
+  background: url('/img/logo.png') 0 0 no-repeat;
   background-size: contain;
   display: inline-block;
   height: 24px;

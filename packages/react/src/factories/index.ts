@@ -1,4 +1,5 @@
 export * from './atom'
 export * from './atomContext'
+export * from './ecosystem'
 export * from './localAtom'
 export * from './selector'

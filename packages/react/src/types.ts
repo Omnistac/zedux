@@ -381,7 +381,7 @@ export interface AtomInstanceInternals<State, Params extends any[]> {
   keyHash: string
   params: Params
   scheduleDestruction: () => void
-  scheduleEvaluation: (reason: EvaluationReason) => void
+  scheduleEvaluation: (reason: EvaluationReason, flagScore?: number) => void
   stateStore: Store<State>
   stateType: StateType
 }

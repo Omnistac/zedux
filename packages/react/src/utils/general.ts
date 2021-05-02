@@ -32,6 +32,7 @@ export const EMPTY_CONTEXT = {}
 export const generateAppId = () => `ecosystem-${generateId()}`
 export const generateImplementationId = () => `im-${generateId()}`
 export const generateLocalId = () => `lo-${generateId()}`
+export const generateNodeId = () => `no-${generateId()}`
 
 export const getKeyHash = (
   ecosystemId: string,

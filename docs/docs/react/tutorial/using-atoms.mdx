@@ -236,19 +236,19 @@ There is also an injector equivalent - `.injectInstance()`.
 
 ### `.useLazy()`
 
-Returns a function that can be used to dynamically create atom instances. Often used in conjunction with AppProvider's [`preload`](TODO:link) prop:
+Returns a function that can be used to dynamically create atom instances. Often used in conjunction with EcosystemProvider's [`preload`](TODO:link) prop:
 
 ```tsx
 function App() {
   const loadSocketConnection = socketConnectionAtom.useLazy()
 
   return (
-    <AppProvider preload={() => {
+    <EcosystemProvider preload={() => {
       const configSocketInstance = loadSocketConnection('/config')
       const userSocketInstance = loadSocketConnection('/user')
     }}>
       <Routes />
-    </AppProvider>
+    </EcosystemProvider>
   )
 }
 ```

@@ -1,6 +1,8 @@
-import { useLayoutEffect, useState } from 'react'
+import { useContext, useLayoutEffect, useMemo, useState } from 'react'
+import { ecosystemContext } from '../classes'
+import { getEcosystem } from '../store/public-api'
 import { AtomBaseProperties, AtomInstanceBase } from '../types'
-import { useAtomWithoutSubscription } from './useAtomWithoutSubscription'
+import { useStableReference } from './useStableReference'
 
 /**
  * useAtomWithSubscription
@@ -32,29 +34,43 @@ export const useAtomWithSubscription = <
   atom: AtomBaseProperties<State, Params, InstanceType>,
   params: Params
 ) => {
-  const atomInstance = useAtomWithoutSubscription(atom, params)
-
   const [, setReactState] = useState<State>()
+  const ecosystemId = useContext(ecosystemContext)
+  const ecosystem = getEcosystem(ecosystemId)
+  const stableParams = useStableReference(params)
 
-  useLayoutEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | undefined
+  const [atomInstance, unregister] = useMemo(() => {
+    const instance = ecosystem.load(atom, stableParams)
 
-    const subscriber = () => {
-      if (timeoutId) return
+    const unregister = ecosystem.graph.registerExternalDynamicDependency(
+      instance,
+      val => setReactState(val)
+    )
 
-      timeoutId = setTimeout(() => {
-        setReactState(atomInstance.internals.stateStore.getState())
-        timeoutId = undefined
-      })
-    }
+    return [instance, unregister] as const
+  }, [ecosystem, atom, stableParams])
 
-    const subscription = atomInstance.internals.stateStore.subscribe(subscriber)
+  useLayoutEffect(() => unregister, [unregister])
 
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId)
-      subscription.unsubscribe()
-    }
-  }, [atomInstance])
+  // useLayoutEffect(() => {
+  //   let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+  //   const subscriber = () => {
+  //     if (timeoutId) return
+
+  //     timeoutId = setTimeout(() => {
+  //       setReactState(atomInstance.internals.stateStore.getState())
+  //       timeoutId = undefined
+  //     })
+  //   }
+
+  //   const subscription = atomInstance.internals.stateStore.subscribe(subscriber)
+
+  //   return () => {
+  //     if (timeoutId) clearTimeout(timeoutId)
+  //     subscription.unsubscribe()
+  //   }
+  // }, [atomInstance])
 
   return atomInstance
 }

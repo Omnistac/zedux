@@ -1,5 +1,9 @@
-import { injectMemo } from './injectMemo'
-import { AtomInjectorDescriptor, InjectorType, split } from '../utils'
+import {
+  AtomInjectorDescriptor,
+  haveDepsChanged,
+  InjectorType,
+  split,
+} from '../utils'
 import { diContext } from '../utils/csContexts'
 import { AtomBaseProperties, AtomInstanceBase } from '../types'
 import { getEcosystem } from '../store/public-api'
@@ -31,31 +35,45 @@ export const injectAtomWithoutSubscription = <
   atom: AtomBaseProperties<State, Params, InstanceType>,
   params: Params
 ) => {
-  const { ecosystemId } = diContext.consume()
+  const { ecosystemId, keyHash } = diContext.consume()
+  const ecosystem = getEcosystem(ecosystemId)
 
-  // NOTE: We don't want to re-run when params change - the array could change every time
-  // Calculate the full key from the params and use that to determine when items in the params list change.
-  const atomInstance = injectMemo(
-    () => getEcosystem(ecosystemId).load(atom, params),
-    // TODO: Changing the atom is _probably_ not supported. Maybe. Mmmm maybe.
-    // TODO: params will probably change every time, making this pretty
-    // inefficient if lots of params are passed (since the keyHash is
-    // recalculated). Use a more stable reference for this dep.
-    [ecosystemId, atom, params]
-  )
-
-  split<AtomInjectorDescriptor>(
+  const { instance } = split<AtomInjectorDescriptor<InstanceType>>(
     'injectAtomWithoutSubscription',
     InjectorType.Atom,
-    () => ({
-      type: InjectorType.Atom,
-      instanceId: atomInstance.internals.keyHash,
-    }),
+    () => {
+      const instance = ecosystem.load(atom, params)
+      ecosystem.graph.addStaticDependency(keyHash, instance.internals.keyHash)
+
+      return {
+        instance,
+        type: InjectorType.Atom,
+      }
+    },
     prevDescriptor => {
-      prevDescriptor.instanceId = atomInstance.internals.keyHash
+      const atomHasChanged =
+        atom.internalId !== prevDescriptor.instance.internals.atomInternalId
+
+      const paramsHaveChanged = haveDepsChanged(
+        prevDescriptor.instance.internals.params,
+        params
+      )
+
+      if (!atomHasChanged && !paramsHaveChanged) return prevDescriptor
+
+      const instance = ecosystem.load(atom, params)
+
+      // update the graph
+      ecosystem.graph.removeStaticDependency(
+        keyHash,
+        prevDescriptor.instance.internals.keyHash
+      )
+      ecosystem.graph.addStaticDependency(keyHash, instance.internals.keyHash)
+
+      prevDescriptor.instance = instance
       return prevDescriptor
     }
   )
 
-  return atomInstance
+  return instance
 }

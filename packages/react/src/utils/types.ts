@@ -1,14 +1,21 @@
-import { AtomBaseProperties, RefObject } from '@zedux/react/types'
+import {
+  AtomBaseProperties,
+  AtomInstanceBase,
+  RefObject,
+} from '@zedux/react/types'
 import { ActionChain, Store } from '@zedux/core'
 
-export interface AtomInjectorDescriptor extends InjectorDescriptor {
-  instanceId: string
+export interface AtomInjectorDescriptor<
+  InstanceType extends AtomInstanceBase<any, any>
+> extends InjectorDescriptor {
+  instance: InstanceType
   type: InjectorType.Atom
 }
 
-export interface AtomWithSubscriptionInjectorDescriptor
-  extends InjectorDescriptor {
-  instanceId: string
+export interface AtomWithSubscriptionInjectorDescriptor<
+  InstanceType extends AtomInstanceBase<any, any>
+> extends InjectorDescriptor {
+  instance: InstanceType
   type: InjectorType.AtomWithSubscription
 }
 
@@ -23,6 +30,13 @@ export interface CallStackContextInstance<T = any> {
   value: T
 }
 
+export interface DependentEdge {
+  callback?: (val: any) => any
+  isAsync?: boolean
+  isExternal?: boolean
+  isStatic?: boolean
+}
+
 export interface DepsInjectorDescriptor extends InjectorDescriptor {
   deps?: any[]
 }
@@ -32,13 +46,14 @@ export interface DiContext {
   atom: AtomBaseProperties<any, any[]>
   injectors: InjectorDescriptor[]
   isInitializing: boolean
+  keyHash: string
   prevInjectors?: InjectorDescriptor[]
   scheduleEvaluation: (reason: EvaluationReason) => void
 }
 
 export interface EcosystemGraphNode {
   dependencies: Record<string, true>
-  dependents: Record<string, true>
+  dependents: Record<string, DependentEdge>
   weight: number
 }
 
@@ -80,8 +95,8 @@ export interface ExportsInjectorDescriptor<
 }
 
 export interface EvaluateAtomJob extends JobBase {
-  dependencies: Record<string, true> // map of atom key to true
-  key: string
+  flagScore: number
+  keyHash: string
   type: JobType.EvaluateAtom
 }
 
@@ -106,11 +121,12 @@ export interface JobBase {
   type: JobType
 }
 
-export type Job = EvaluateAtomJob | RunEffectJob
+export type Job = EvaluateAtomJob | RunEffectJob | UpdateExternalDependentJob
 
 export enum JobType {
   EvaluateAtom = 'EvaluateAtom',
   RunEffect = 'RunEffect',
+  UpdateExternalDependent = 'UpdateExternalDependent',
 }
 
 export interface MemoInjectorDescriptor<State = any>
@@ -131,6 +147,11 @@ export interface StateInjectorDescriptor<State = any>
   extends InjectorDescriptor {
   store: Store<State>
   type: InjectorType.State
+}
+
+export interface UpdateExternalDependentJob extends JobBase {
+  flagScore: number
+  type: JobType.UpdateExternalDependent
 }
 
 export interface WhyInjectorDescriptor extends InjectorDescriptor {
