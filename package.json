@@ -1,6 +1,6 @@
 {
   "name": "zedux",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Elite state management for React",
   "scripts": {
     "docs:dev": "cd docs && yarn start",
