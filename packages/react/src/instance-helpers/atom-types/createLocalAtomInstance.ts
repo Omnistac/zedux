@@ -9,13 +9,11 @@ export const createLocalAtomInstance = <
   ecosystemId: string,
   atom: ReadonlyLocalAtom<State, Params, Exports>,
   keyHash: string,
-  params: Params,
-  destroy: () => void
+  params: Params
 ) =>
   createStandardAtomInstanceWithDestruction<State, Params, Exports>(
     ecosystemId,
     atom,
     keyHash,
-    params,
-    destroy
+    params
   )

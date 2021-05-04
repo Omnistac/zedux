@@ -85,10 +85,6 @@ export class Ecosystem {
     globalStore.dispatch(addEcosystem(this))
   }
 
-  public destroy() {
-    // TODO: Find all leaf nodes in the graph, iterate over those, and destroy each - that'll clean up everything in a good order
-  }
-
   public destroyAtomInstance(keyHash: string) {
     // try to destroy instance (if not destroyed - this fn is called as part of that destruction process too)
     this.graph.removeNode(keyHash)
@@ -266,6 +262,16 @@ export class Ecosystem {
         {children}
       </ecosystemContext.Provider>
     )
+  }
+
+  public wipe() {
+    Object.values(this.instances).forEach(instance => {
+      instance.internals.destroy()
+      delete this.instances[instance.internals.keyHash]
+    })
+
+    this.graph.wipe()
+    this.scheduler.wipe()
   }
 
   private resolveAtom<AtomType extends AtomBaseProperties<any, any[]>>(

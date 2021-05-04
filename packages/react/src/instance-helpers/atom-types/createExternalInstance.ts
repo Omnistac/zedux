@@ -9,8 +9,7 @@ export const createExternalInstance = <
   ecosystemId: string,
   atom: AtomBaseProperties<State, Params, InstanceType>,
   keyHash: string,
-  params: Params,
-  destroy: () => void
+  params: Params
 ) => {
   // TODO: allow plugins to provide instantiation logic
   const internals = createAtomInstanceInternals(
@@ -18,8 +17,7 @@ export const createExternalInstance = <
     atom,
     keyHash,
     params,
-    () => undefined,
-    destroy
+    () => undefined
   )
 
   return { internals } as AtomInstanceBase<State, Params>

@@ -47,11 +47,11 @@ const RECALCULATE_ACTION = { type: actionTypes.RECALCULATE }
 const SUBSCRIBED_EFFECT = { effectType: effectTypes.SUBSCRIBER_ADDED }
 const UNSUBSCRIBED_EFFECT = { effectType: effectTypes.SUBSCRIBER_REMOVED }
 
-const dispatchAction = (
+const dispatchAction = <State = any>(
   action: ActionChain,
   unwrappedAction: Action,
   storeInternals: StoreInternals,
-  rootState = storeInternals.currentState
+  rootState: State
 ) => {
   if (storeInternals.isDispatching) {
     throw new Error(invalidAccess('dispatch(), hydrate(), setState()'))
@@ -366,7 +366,12 @@ const doUse = <State = any>(
   storeInternals.rootReducer = storeInternals.currentDiffTree.reducer
 
   if (storeInternals.rootReducer) {
-    dispatchAction(RECALCULATE_ACTION, RECALCULATE_ACTION, storeInternals)
+    dispatchAction(
+      RECALCULATE_ACTION,
+      RECALCULATE_ACTION,
+      storeInternals,
+      storeInternals.currentState
+    )
   }
 }
 
@@ -428,7 +433,12 @@ const routeAction = (action: ActionChain, storeInternals: StoreInternals) => {
     return doSetState(unwrappedAction.payload, storeInternals)
   }
 
-  return dispatchAction(action, unwrappedAction, storeInternals)
+  return dispatchAction(
+    action,
+    unwrappedAction,
+    storeInternals,
+    storeInternals.currentState
+  )
 }
 
 /**

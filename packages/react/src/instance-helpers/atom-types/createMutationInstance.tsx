@@ -18,8 +18,7 @@ export const createMutationInstance = <
   ecosystemId: string,
   atom: MutationAtom<State, MutationParams>,
   keyHash: string,
-  params: Params,
-  destroy: () => void
+  params: Params
 ) => {
   let mutateRef: MutationAtomInstance<State, MutationParams>['mutate'] = () =>
     undefined as any
@@ -41,8 +40,7 @@ export const createMutationInstance = <
     atom,
     keyHash,
     params,
-    evaluate,
-    destroy
+    evaluate
   )
 
   const Provider: FC = ({ children }) => {

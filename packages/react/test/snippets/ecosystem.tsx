@@ -64,6 +64,15 @@ function Child() {
   const atom1val = atom1.useValue()
   const getSetter = setterAtom.useValue()
 
+  console.log('rendering Child', {
+    atom5val,
+    atom4val,
+    atom3val,
+    atom2val,
+    atom1val,
+    test,
+  })
+
   return (
     <>
       <div>{atom1val}</div>
@@ -77,6 +86,7 @@ function Child() {
         Change One
       </button>
       <button onClick={() => console.log(testEcosystem)}>log ecosystem</button>
+      <button onClick={() => testEcosystem.wipe()}>wipe ecosystem</button>
     </>
   )
 }

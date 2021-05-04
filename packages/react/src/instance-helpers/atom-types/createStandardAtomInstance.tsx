@@ -34,8 +34,7 @@ export const createStandardAtomInstance = <
   ecosystemId: string,
   atom: ReadonlyAtom<State, Params, Exports>,
   keyHash: string,
-  params: Params,
-  destroy: () => void
+  params: Params
 ) => {
   const scheduleDestruction = () => {
     const { ttl } = atom as any
@@ -44,19 +43,26 @@ export const createStandardAtomInstance = <
     if (ttl == null) return
 
     if (ttl === 0) {
-      return destroy()
+      return newAtomInstance.internals.destroy()
     }
 
     // schedule destruction (if ttl is > 0)
     if (typeof ttl === 'number') {
-      const timeoutId = setTimeout(destroy, ttl)
+      const timeoutId = setTimeout(
+        () => newAtomInstance.internals.destroy(),
+        ttl
+      )
       // TODO: dispatch an action over stateStore for these mutations
       newAtomInstance.internals.destructionTimeout = timeoutId
       newAtomInstance.internals.activeState = ActiveState.Destroying
     }
   }
 
-  const newAtomInstance = createStandardAtomInstanceWithDestruction(
+  const newAtomInstance: ReadonlyAtomInstance<
+    State,
+    Params,
+    Exports
+  > = createStandardAtomInstanceWithDestruction(
     ecosystemId,
     atom,
     keyHash,
@@ -78,7 +84,7 @@ export const createStandardAtomInstanceWithDestruction = <
     | ReadonlyAtom<State, Params, Exports>,
   keyHash: string,
   params: Params,
-  destroy: () => void
+  scheduleDestruction: () => void = () => internals.destroy()
 ) => {
   const evaluate = () => {
     const { value } = atom
@@ -106,7 +112,7 @@ export const createStandardAtomInstanceWithDestruction = <
     keyHash,
     params,
     evaluate,
-    destroy
+    scheduleDestruction
   )
 
   const injectSelector = <D extends any = any>(

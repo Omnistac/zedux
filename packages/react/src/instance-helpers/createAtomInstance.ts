@@ -26,12 +26,11 @@ const createTypedInstance = <
   ecosystemId: string,
   atom: AtomBaseProperties<State, Params, InstanceType>,
   keyHash: string,
-  params: Params,
-  destroy: () => void
+  params: Params
 ) => {
   switch (atom.type) {
     case AtomType.External:
-      return createExternalInstance(ecosystemId, atom, keyHash, params, destroy)
+      return createExternalInstance(ecosystemId, atom, keyHash, params)
     case AtomType.Local:
       return createLocalAtomInstance(
         ecosystemId,
@@ -42,32 +41,28 @@ const createTypedInstance = <
           ReadonlyAtomInstance<State, Params, any>
         >,
         keyHash,
-        params,
-        destroy
+        params
       )
     case AtomType.Molecule:
       return createMoleculeInstance(
         ecosystemId,
         atom as Molecule<State, any>,
         keyHash,
-        params,
-        destroy
+        params
       )
     case AtomType.Mutation:
       return createMutationInstance(
         ecosystemId,
         atom as MutationAtom<State, any>,
         keyHash,
-        [],
-        destroy
+        []
       )
     case AtomType.Query:
       return createQueryInstance(
         ecosystemId,
         atom as QueryAtom<State, Params>,
         keyHash,
-        params,
-        destroy
+        params
       )
     case AtomType.Standard:
     default:
@@ -80,8 +75,7 @@ const createTypedInstance = <
           ReadonlyAtomInstance<State, Params, any>
         >,
         keyHash,
-        params,
-        destroy
+        params
       )
   }
 }
@@ -96,27 +90,11 @@ export const createAtomInstance = <
   keyHash: string,
   params: Params = ([] as unknown) as Params
 ) => {
-  const destroy = () => {
-    // TODO: dispatch an action over stateStore for this mutation
-    newAtomInstance.internals.activeState = ActiveState.Destroyed
-
-    ecosystem.destroyAtomInstance(keyHash)
-
-    newAtomInstance.internals.injectors.forEach(injector => {
-      injector.cleanup?.()
-    })
-
-    newAtomInstance.internals.subscription?.unsubscribe()
-
-    // TODO: any other cleanup items? (subscriptions to remove, timeouts to cancel, etc)
-  }
-
   const newAtomInstance = createTypedInstance(
     ecosystem.ecosystemId,
     atom,
     keyHash,
-    params,
-    destroy
+    params
   ) as InstanceType
 
   // const map = new WeakMap();

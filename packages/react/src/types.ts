@@ -387,6 +387,7 @@ export interface AtomInstanceBase<State, Params extends any[]> {
 export interface AtomInstanceInternals<State, Params extends any[]> {
   activeState: ActiveState
   atomInternalId: string
+  destroy: () => void
   destructionTimeout?: ReturnType<typeof setTimeout>
   getEvaluationReasons: () => EvaluationReason[]
   injectors: InjectorDescriptor[]

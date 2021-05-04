@@ -98,9 +98,11 @@ export class Graph {
 
   // Should only be used internally
   public removeDependency(dependentKey: string, dependencyKey: string) {
-    const dependency = this.nodes[dependencyKey]
-
     delete this.nodes[dependentKey].dependencies[dependencyKey]
+
+    const dependency = this.nodes[dependencyKey]
+    if (!dependency) return // dependency has already been cleaned up; nothing more to do
+
     delete dependency.dependents[dependentKey]
 
     if (!Object.keys(dependency.dependents).length) {
@@ -112,9 +114,11 @@ export class Graph {
 
   // Should only be used internally
   public removeStaticDependency(dependentKey: string, dependencyKey: string) {
-    const dependency = this.nodes[dependencyKey]
-
     delete this.nodes[dependentKey].dependencies[dependencyKey]
+
+    const dependency = this.nodes[dependencyKey]
+    if (!dependency) return // dependency has already been cleaned up; nothing more to do
+
     delete dependency.dependents[dependentKey]
 
     if (!Object.keys(dependency.dependents).length) {
@@ -135,6 +139,18 @@ export class Graph {
 
     // Remove this dependency from all its dependents and recalculate all weights recursively
     Object.keys(node.dependents).forEach(dependentKey => {
+      const dependentEdge = node.dependents[dependentKey]
+
+      if (dependentEdge.isExternal) {
+        this.ecosystem.scheduler.scheduleJob({
+          flagScore: getFlagScore(dependentEdge),
+          task: () => dependentEdge.callback?.(undefined),
+          type: JobType.UpdateExternalDependent,
+        })
+
+        return
+      }
+
       this.recalculateWeight(dependentKey, -node.weight)
 
       delete this.nodes[dependentKey].dependencies[nodeKey]
@@ -176,6 +192,11 @@ export class Graph {
         type: JobType.UpdateExternalDependent,
       })
     })
+  }
+
+  public wipe() {
+    // TODO: Delete nodes in an optimal order (starting with leaf nodes - nodes with no internal dependents)
+    this.nodes = {}
   }
 
   private recalculateWeight(nodeKey: string, weightDiff: number) {

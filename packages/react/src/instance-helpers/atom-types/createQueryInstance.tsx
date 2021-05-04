@@ -14,8 +14,7 @@ export const createQueryInstance = <State, Params extends any[]>(
   ecosystemId: string,
   atom: QueryAtom<State, Params>,
   keyHash: string,
-  params: Params,
-  destroy: () => void
+  params: Params
 ) => {
   const evaluate = () => {
     const run = atom.value(...params)
@@ -35,8 +34,7 @@ export const createQueryInstance = <State, Params extends any[]>(
     atom,
     keyHash,
     params,
-    evaluate,
-    destroy
+    evaluate
   )
 
   const Provider: FC = ({ children }) => {

@@ -33,6 +33,13 @@ export class Scheduler {
     }
   }
 
+  public wipe() {
+    // allow external jobs to proceed
+    this.scheduledJobs = this.scheduledJobs.filter(
+      job => job.type === JobType.UpdateExternalDependent
+    )
+  }
+
   private insertEvaluateAtomJob(newJob: EvaluateAtomJob) {
     const { nodes } = this.ecosystem.graph
     const newJobGraphNode = nodes[newJob.keyHash]

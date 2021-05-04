@@ -63,10 +63,24 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
   keyHash: string,
   params: Params = ([] as unknown) as Params,
   evaluate: () => AtomValue<State>,
-  scheduleDestruction: () => void
+  scheduleDestruction: () => void = () => destroy()
 ) => {
   const ecosystem = getEcosystem(ecosystemId)
   let evaluationReasons: EvaluationReason[] = []
+
+  const destroy = () => {
+    // TODO: dispatch an action over stateStore for this mutation
+    newInternals.activeState = ActiveState.Destroyed
+
+    newInternals.injectors.forEach(injector => {
+      injector.cleanup?.()
+    })
+
+    newInternals.subscription?.unsubscribe()
+    ecosystem.destroyAtomInstance(keyHash)
+
+    // TODO: any other cleanup items? (subscriptions to remove, timeouts to cancel, etc)
+  }
 
   const evaluationTask = () => {
     const newInjectors: InjectorDescriptor[] = []
@@ -171,6 +185,7 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
   const newInternals: AtomInstanceInternals<State, Params> = {
     activeState: ActiveState.Active,
     atomInternalId: atom.internalId,
+    destroy,
     keyHash,
     getEvaluationReasons: () => evaluationReasons,
     injectors,

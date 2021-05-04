@@ -9,8 +9,7 @@ export const createMoleculeInstance = <
   ecosystemId: string,
   atom: Molecule<State, Exports>,
   keyHash: string,
-  params: Params,
-  destroy: () => void
+  params: Params
 ) => {
   const evaluate = () => {
     return atom.value()
@@ -21,8 +20,7 @@ export const createMoleculeInstance = <
     atom,
     keyHash,
     params,
-    evaluate,
-    destroy
+    evaluate
   )
 
   return { internals } as AtomInstanceBase<State, Params>
