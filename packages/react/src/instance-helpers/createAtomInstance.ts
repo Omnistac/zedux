@@ -106,6 +106,8 @@ export const createAtomInstance = <
       injector.cleanup?.()
     })
 
+    newAtomInstance.internals.subscription?.unsubscribe()
+
     // TODO: any other cleanup items? (subscriptions to remove, timeouts to cancel, etc)
   }
 

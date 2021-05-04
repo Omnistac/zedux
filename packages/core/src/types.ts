@@ -156,10 +156,7 @@ export type Selector<State = any, Derivation = any> = (
   ...args: any[]
 ) => Derivation
 
-export type Settable<State = any> =
-  | ((state: State) => RecursivePartial<State> | Partial<State>)
-  | RecursivePartial<State>
-  | Partial<State> // this shouldn't be necessary, but for some reason TS has problems sometimes without it
+export type Settable<State = any> = ((state: State) => State) | State
 
 export interface MachineState<Type extends string = string> {
   transitions: Record<string, string>
@@ -177,16 +174,12 @@ export type SideEffectHandler<State = any> = (
 export type StateSetter<State = any> = (settable: Settable<State>) => State
 
 export interface Store<State = any> extends Observable<State> {
-  action$: { [Symbol.observable]: () => Observable<Action> }
   configureHierarchy(options: HierarchyConfig): Store<State>
   dispatch: Dispatcher<State>
-  getRefCount(includeInternalSubscribers?: boolean): number
   getState(): State
-  hydrate(newState: State): Store<State>
   setState: StateSetter<State>
   use(newHierarchy?: HierarchyDescriptor<State>): Store<State>
   $$typeof: symbol
-  [Symbol.observable]: () => Store<State>
 }
 
 export type SubReducer<State = any, Payload = any> = (

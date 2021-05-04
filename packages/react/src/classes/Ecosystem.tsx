@@ -3,7 +3,6 @@ import { useStableReference } from '../hooks/useStableReference'
 import { createAtomInstance } from '../instance-helpers/createAtomInstance'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
-  AllAtoms,
   Atom,
   AtomBaseProperties,
   AtomContext,

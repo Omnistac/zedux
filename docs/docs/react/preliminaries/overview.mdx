@@ -74,7 +74,17 @@ function App() {
 }
 ```
 
-See [the Dependency Injection tutorial](TODO:link) and [`<EcosystemProvider />`](TODO:link)
+An ecosystem can also be created and used completely outside of React.
+
+```ts
+import { ecosystem } from '@zedux/react'
+
+const rootEcosystem = ecosystem({ id: 'root' })
+
+const myAtomInstance = rootEcosystem.load(myAtom, ['a param'])
+```
+
+See [the Dependency Injection tutorial](TODO:link), [`<EcosystemProvider />`](TODO:link), and [`ecosystem()`](TODO:link)
 
 ### Selectors
 
@@ -203,7 +213,7 @@ function MyComponent() {
 
 // In some test:
 // highlight-next-line
-const fetchTodosTestAtom = fetchTodosAtom.override(['Mock Todo 1', 'Mock Todo 2'])
+const fetchTodosTestAtom = fetchTodosAtom.override(['Todo 1', 'Todo 2'])
 
 function TestApp() {
   return (

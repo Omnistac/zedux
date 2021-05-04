@@ -27,24 +27,22 @@ export const atomContext = <T = any>(
 ) => {
   const injectConsumer = () => injectAtomContext(newAtomContext)
 
-  const injectDispatch = () =>
-    injectAtomContext(newAtomContext).injectDispatch()
+  const injectDispatch = () => injectAtomContext(newAtomContext).store.dispatch
 
   const injectSelector = <D = any>(selector: (state: T) => D) =>
     injectAtomContext(newAtomContext).injectSelector(selector)
 
-  const injectSetState = () =>
-    injectAtomContext(newAtomContext).injectSetState()
+  const injectSetState = () => injectAtomContext(newAtomContext).store.setState
 
   const injectState = () => injectAtomContext(newAtomContext).injectState()
 
-  const injectStore = () => injectAtomContext(newAtomContext).injectStore()
+  const injectStore = () => injectAtomContext(newAtomContext).store
 
   const injectValue = () => injectAtomContext(newAtomContext).injectValue()
 
   const useConsumer = () => useAtomContext(newAtomContext)
 
-  const useDispatch = () => useAtomContext(newAtomContext).useDispatch()
+  const useDispatch = () => useAtomContext(newAtomContext).store.dispatch
 
   const useInstance = (initialState: T) =>
     useMemo(() => instantiateAtomContext(newAtomContext, initialState), [])
@@ -52,11 +50,11 @@ export const atomContext = <T = any>(
   const useSelector = <D = any>(selector: (state: T) => D) =>
     useAtomContext(newAtomContext).useSelector(selector)
 
-  const useSetState = () => useAtomContext(newAtomContext).useSetState()
+  const useSetState = () => useAtomContext(newAtomContext).store.setState
 
   const useState = () => useAtomContext(newAtomContext).useState()
 
-  const useStore = () => useAtomContext(newAtomContext).useStore()
+  const useStore = () => useAtomContext(newAtomContext).store
 
   const useValue = () => useAtomContext(newAtomContext).useValue()
 

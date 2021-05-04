@@ -1,5 +1,5 @@
 import { hierarchyDescriptorToDiffTree } from '../hierarchy/create'
-import { mergeDiffTrees, mergeStateTrees } from '../hierarchy/merge'
+import { mergeDiffTrees } from '../hierarchy/merge'
 import { delegate, propagateChange } from '../hierarchy/traverse'
 import {
   Action,
@@ -11,7 +11,6 @@ import {
   HierarchyConfig,
   HierarchyDescriptor,
   Inducer,
-  RecursivePartial,
   Reducer,
   Settable,
   Store,
@@ -26,11 +25,7 @@ import {
   getError,
   invalidAccess,
 } from '../utils/errors'
-import {
-  INTERNAL_SUBSCRIBER_ID,
-  observableSymbol,
-  STORE_IDENTIFIER,
-} from '../utils/general'
+import { INTERNAL_SUBSCRIBER_ID, STORE_IDENTIFIER } from '../utils/general'
 import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
 import { DiffNode, RegisterSubStore } from '../utils/types'
 import { actionTypes, effectTypes, metaTypes } from './constants'
@@ -121,10 +116,10 @@ const dispatchInducer = <State = any>(
   inducer: Inducer<State>,
   storeInternals: StoreInternals<State>
 ) => {
-  let partialStateTree
+  let newState
 
   try {
-    partialStateTree = inducer(storeInternals.currentState)
+    newState = inducer(storeInternals.currentState)
   } catch (error) {
     informSubscribers(
       storeInternals.currentState,
@@ -137,24 +132,7 @@ const dispatchInducer = <State = any>(
     throw error
   }
 
-  return dispatchPartialHydration(partialStateTree, storeInternals)
-}
-
-const dispatchPartialHydration = <State = any>(
-  partialStateTree: Partial<State> | RecursivePartial<State>,
-  storeInternals: StoreInternals<State>
-) => {
-  const [newState] = mergeStateTrees(
-    storeInternals.currentState,
-    partialStateTree,
-    storeInternals.hierarchyConfig
-  )
-
-  return dispatchHydration(
-    newState,
-    storeInternals,
-    actionTypes.PARTIAL_HYDRATE
-  )
+  return dispatchHydration(newState, storeInternals)
 }
 
 /**
@@ -293,7 +271,7 @@ const doSetState = <State = any>(
     return dispatchInducer(settable as Inducer<State>, storeInternals)
   }
 
-  return dispatchPartialHydration(settable, storeInternals)
+  return dispatchHydration(settable, storeInternals)
 }
 
 /**
@@ -392,18 +370,6 @@ const doUse = <State = any>(
   }
 }
 
-const getAction$ = <State = any>(storeInternals: StoreInternals<State>) => ({
-  subscribe: (subscriber: { next: (action: ActionChain) => any }) =>
-    doSubscribe(
-      {
-        effects: ({ action }) => {
-          if (action) subscriber.next(action)
-        },
-      },
-      storeInternals
-    ),
-})
-
 const informSubscribers = <State = any>(
   newState: State,
   storeInternals: StoreInternals<State>,
@@ -490,18 +456,6 @@ export const createStore: {
   const dispatch = (action: Dispatchable) => doDispatch(action, internals)
 
   /**
-    Returns the number of subscribers to this store.
-
-    Pass true to include subscribers registered by Zedux
-    (e.g. from parent stores)
-  */
-  const getRefCount = (includeInternalSubscribers?: boolean) =>
-    includeInternalSubscribers
-      ? internals.subscribers.size
-      : [...internals.subscribers.values()].filter(isInternal => !isInternal)
-          .length
-
-  /**
     Returns the current state of the store.
 
     Do not mutate this value.
@@ -512,12 +466,6 @@ export const createStore: {
     }
 
     return internals.currentState
-  }
-
-  const hydrate = (newState: State) => {
-    dispatchHydration(newState, internals)
-
-    return internals.store // for chaining
   }
 
   const setState = (settable: Settable<State>) =>
@@ -541,20 +489,14 @@ export const createStore: {
     registerChildStore,
     subscribers: new Map(),
     store: {
-      action$: {
-        [observableSymbol]: () => getAction$(internals),
-      } as any,
-      dispatch,
-      getRefCount,
-      getState,
-      hydrate,
       configureHierarchy,
+      dispatch,
+      getState,
       setState,
       subscribe,
       use,
-      [observableSymbol]: () => internals.store,
       $$typeof: STORE_IDENTIFIER,
-    } as any,
+    },
   }
 
   if (typeof initialState !== 'undefined') internals.currentState = initialState

@@ -11,8 +11,6 @@ export const instantiateAtomContext = <T = any>(
 ) => {
   const store = atomContext.storeFactory(initialState)
 
-  const injectDispatch = () => store.dispatch
-
   const injectSelector = <D = any>(selector: (state: T) => D) => {
     const { scheduleEvaluation } = diContext.consume()
     const selectorRef = injectRef(selector)
@@ -52,8 +50,6 @@ export const instantiateAtomContext = <T = any>(
     return selector(store.getState())
   }
 
-  const injectSetState = () => store.setState
-
   const injectState = () => {
     const { scheduleEvaluation } = diContext.consume()
 
@@ -83,8 +79,6 @@ export const instantiateAtomContext = <T = any>(
     // I think this is fine:
     return [store.getState(), store.setState] as const
   }
-
-  const injectStore = () => store
 
   const injectValue = () => {
     const { scheduleEvaluation } = diContext.consume()
@@ -116,8 +110,6 @@ export const instantiateAtomContext = <T = any>(
     return store.getState()
   }
 
-  const useDispatch = () => store.dispatch
-
   const useSelector = <D = any>(selector: (state: T) => D) => {
     const [state, setState] = useStateReact(selector(store.getState()))
     const selectorRef = useRef(selector)
@@ -143,8 +135,6 @@ export const instantiateAtomContext = <T = any>(
     return state
   }
 
-  const useSetState = () => store.setState
-
   const useState = () => {
     const [state, setState] = useStateReact(store.getState())
 
@@ -160,8 +150,6 @@ export const instantiateAtomContext = <T = any>(
 
     return [state, store.setState] as const
   }
-
-  const useStore = () => store
 
   const useValue = () => {
     const [state, setState] = useStateReact(store.getState())
@@ -181,17 +169,12 @@ export const instantiateAtomContext = <T = any>(
 
   const newInstance: AtomContextInstance<T> = {
     atomContext,
-    injectDispatch,
     injectSelector,
-    injectSetState,
     injectState,
-    injectStore,
     injectValue,
-    useDispatch,
+    store,
     useSelector,
-    useSetState,
     useState,
-    useStore,
     useValue,
   }
 

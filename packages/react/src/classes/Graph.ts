@@ -34,11 +34,13 @@ export class Graph {
     const dependency = this.nodes[dependencyKey]
 
     this.nodes[dependentKey].dependencies[dependencyKey] = true
-    this.nodes[dependencyKey].dependents[dependentKey] = { isAsync }
+    dependency.dependents[dependentKey] = { isAsync }
 
+    this.unscheduleDestruction(dependencyKey)
     this.recalculateWeight(dependentKey, dependency.weight)
   }
 
+  // Should only be used internally
   public addNode(nodeKey: string) {
     if (this.nodes[nodeKey]) return // already added
 
@@ -49,6 +51,7 @@ export class Graph {
     }
   }
 
+  // Should only be used internally
   // static dependencies don't change a node's weight
   public addStaticDependency(
     dependentKey: string,
@@ -60,6 +63,8 @@ export class Graph {
       isAsync,
       isStatic: true,
     }
+
+    this.unscheduleDestruction(dependencyKey)
   }
 
   // external dependencies don't change a node's weight
@@ -99,12 +104,13 @@ export class Graph {
     delete dependency.dependents[dependentKey]
 
     if (!Object.keys(dependency.dependents).length) {
-      console.log('scheduling destruction!')
+      this.ecosystem.instances[dependencyKey].internals.scheduleDestruction()
     }
 
     this.recalculateWeight(dependentKey, -dependency.weight)
   }
 
+  // Should only be used internally
   public removeStaticDependency(dependentKey: string, dependencyKey: string) {
     const dependency = this.nodes[dependencyKey]
 
@@ -112,10 +118,11 @@ export class Graph {
     delete dependency.dependents[dependentKey]
 
     if (!Object.keys(dependency.dependents).length) {
-      console.log('scheduling destruction!')
+      this.ecosystem.instances[dependencyKey].internals.scheduleDestruction()
     }
   }
 
+  // Should only be used internally
   public removeNode(nodeKey: string) {
     const node = this.nodes[nodeKey]
 
@@ -137,6 +144,7 @@ export class Graph {
   }
 
   // an atom just updated. Schedule an update for all dynamic dependents
+  // Should only be used internally
   public scheduleDependents(nodeKey: string, reasons: EvaluationReason[]) {
     const instance = this.ecosystem.instances[nodeKey]
     const node = this.nodes[nodeKey]
@@ -180,5 +188,18 @@ export class Graph {
     Object.keys(node.dependents).forEach(dependentKey => {
       this.recalculateWeight(dependentKey, weightDiff)
     })
+  }
+
+  private unscheduleDestruction(nodeKey: string) {
+    const dependency = this.nodes[nodeKey]
+
+    if (Object.keys(dependency.dependents).length === 1) {
+      const instance = this.ecosystem.instances[nodeKey]
+
+      // unschedule destruction of this atom
+      if (instance.internals.destructionTimeout) {
+        clearTimeout(instance.internals.destructionTimeout)
+      }
+    }
   }
 }

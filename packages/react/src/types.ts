@@ -1,5 +1,5 @@
 import { Context } from 'react'
-import { Dispatcher, StateSetter, Store } from '@zedux/core'
+import { Dispatcher, StateSetter, Store, Subscription } from '@zedux/core'
 import { EvaluationReason, InjectorDescriptor } from './utils/types'
 
 export enum ActiveState {
@@ -353,23 +353,18 @@ export interface AtomContextInstance<T = any>
   extends AtomContextInstanceInjectorApi<T>,
     AtomContextInstanceReactApi<T> {
   atomContext: AtomContext<T>
+  store: Store<T>
 }
 
 export interface AtomContextInstanceInjectorApi<T = any> {
-  injectDispatch: () => Dispatcher<T>
   injectSelector: <D = any>(selector: (state: T) => D) => D
-  injectSetState: () => Store<T>['setState']
   injectState: () => readonly [T, Store<T>['setState']]
-  injectStore: () => Store<T>
   injectValue: () => T
 }
 
 export interface AtomContextInstanceReactApi<T = any> {
-  useDispatch: () => Dispatcher<T>
   useSelector: <D = any>(selector: (state: T) => D) => D
-  useSetState: () => Store<T>['setState']
   useState: () => readonly [T, Store<T>['setState']]
-  useStore: () => Store<T>
   useValue: () => T
 }
 
@@ -399,6 +394,7 @@ export interface AtomInstanceInternals<State, Params extends any[]> {
   params: Params
   scheduleDestruction: () => void
   scheduleEvaluation: (reason: EvaluationReason, flagScore?: number) => void
+  subscription?: Subscription
   stateStore: Store<State>
   stateType: StateType
 }

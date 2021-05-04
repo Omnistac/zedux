@@ -34,7 +34,7 @@ const getStateStore = <State extends any = any>(
 
   // define how we populate our store (doesn't apply to user-supplied stores)
   if (stateType === StateType.Value) {
-    stateStore.hydrate(factoryResult as State)
+    stateStore.setState(factoryResult as State)
   }
 
   return [stateType, stateStore] as const
@@ -155,6 +155,11 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
 
   const [stateType, stateStore] = getStateStore(factoryResult)
 
+  // handle detaching this atom instance from the global store and all destruction stuff
+  const subscription = stateStore.subscribe(() => {
+    ecosystem.graph.scheduleDependents(keyHash, evaluationReasons)
+  })
+
   const newInternals: AtomInstanceInternals<State, Params> = {
     activeState: ActiveState.Active,
     atomInternalId: atom.internalId,
@@ -166,39 +171,8 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
     scheduleDestruction,
     stateStore,
     stateType,
+    subscription,
   }
-
-  // handle detaching this atom instance from the global store and all destruction stuff
-  let zeroRefCount: number
-  const subscription = stateStore.subscribe({
-    effects: ({ effect, store }) => {
-      // only interested in non-inherited effects
-      if (!effect || !('effectType' in effect)) return
-
-      if (effect.effectType === effectTypes.SUBSCRIBER_ADDED) {
-        // Subscribers can be added to the store before this runs - if so, ignore those subscribers
-        if (typeof zeroRefCount === 'undefined') {
-          zeroRefCount = store.getRefCount()
-        }
-
-        // unschedule destruction of this atom
-        if (newInternals.destructionTimeout) {
-          clearTimeout(newInternals.destructionTimeout)
-        }
-      }
-
-      if (
-        effect.effectType === effectTypes.SUBSCRIBER_REMOVED &&
-        store.getRefCount() === zeroRefCount
-      ) {
-        subscription.unsubscribe()
-        newInternals.scheduleDestruction()
-      }
-    },
-    next: () => {
-      ecosystem.graph.scheduleDependents(keyHash, evaluationReasons)
-    },
-  })
 
   return newInternals
 }

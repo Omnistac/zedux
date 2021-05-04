@@ -45,7 +45,15 @@ export const injectAtomWithoutSubscription = <
       const instance = ecosystem.load(atom, params)
       ecosystem.graph.addStaticDependency(keyHash, instance.internals.keyHash)
 
+      const cleanup = () => {
+        ecosystem.graph.removeStaticDependency(
+          keyHash,
+          instance.internals.keyHash
+        )
+      }
+
       return {
+        cleanup,
         instance,
         type: InjectorType.Atom,
       }
@@ -64,13 +72,17 @@ export const injectAtomWithoutSubscription = <
       const instance = ecosystem.load(atom, params)
 
       // update the graph
-      ecosystem.graph.removeStaticDependency(
-        keyHash,
-        prevDescriptor.instance.internals.keyHash
-      )
+      prevDescriptor.cleanup?.()
       ecosystem.graph.addStaticDependency(keyHash, instance.internals.keyHash)
 
+      prevDescriptor.cleanup = () => {
+        ecosystem.graph.removeStaticDependency(
+          keyHash,
+          instance.internals.keyHash
+        )
+      }
       prevDescriptor.instance = instance
+
       return prevDescriptor
     }
   )
