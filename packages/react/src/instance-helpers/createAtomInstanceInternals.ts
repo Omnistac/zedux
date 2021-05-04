@@ -34,7 +34,11 @@ const getStateStore = <State extends any = any>(
 
   // define how we populate our store (doesn't apply to user-supplied stores)
   if (stateType === StateType.Value) {
-    stateStore.setState(factoryResult as State)
+    stateStore.setState(
+      typeof factoryResult === 'function'
+        ? () => factoryResult as State
+        : (factoryResult as State)
+    )
   }
 
   return [stateType, stateStore] as const
@@ -105,7 +109,11 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
 
     // I believe there is no way to cause a scheduleEvaluation loop when the StateType is Value
     if (newStateType === StateType.Value) {
-      stateStore.setState(newFactoryResult as State)
+      stateStore.setState(
+        typeof newFactoryResult === 'function'
+          ? () => newFactoryResult as State
+          : (newFactoryResult as State)
+      )
     }
 
     runWhyInjectors(newInjectors, evaluationReasons)
