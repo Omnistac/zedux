@@ -8,6 +8,18 @@ export enum ActiveState {
   Destroying = 'Destroying',
 }
 
+// An extremely helpful type for functions that take any type of atom (anything
+// that extends AtomBaseProperties). Still need to figure out query/mutation tho
+export type AllAtoms<
+  State,
+  Params extends any[],
+  InstanceType extends AtomInstanceBase<State, Params>
+> =
+  | Atom<State, Params, any, InstanceType>
+  | LocalAtom<State, Params, any, InstanceType>
+  | ReadonlyAtom<State, Params, any, InstanceType>
+  | ReadonlyLocalAtom<State, Params, any, InstanceType>
+
 export interface AsyncState<T> {
   data?: T
   error?: Error
@@ -26,9 +38,14 @@ export type AsyncStore<T> = Store<AsyncState<T>>
 export interface Atom<
   State,
   Params extends any[],
-  Exports extends Record<string, any>
+  Exports extends Record<string, any>,
+  InstanceType extends AtomInstanceBase<State, Params> = AtomInstance<
+    State,
+    Params,
+    Exports
+  >
 > extends Omit<
-    ReadonlyAtom<State, Params, Exports, AtomInstance<State, Params, Exports>>,
+    ReadonlyAtom<State, Params, Exports, InstanceType>,
     'override' | 'readonly'
   > {
   injectDispatch: (...params: Params) => Dispatcher<State>
@@ -417,14 +434,14 @@ export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
 export interface LocalAtom<
   State,
   Params extends any[],
-  Exports extends Record<string, any>
+  Exports extends Record<string, any>,
+  InstanceType extends AtomInstanceBase<State, Params> = AtomInstance<
+    State,
+    Params,
+    Exports
+  >
 > extends Omit<
-    ReadonlyLocalAtom<
-      State,
-      Params,
-      Exports,
-      AtomInstance<State, Params, Exports>
-    >,
+    ReadonlyLocalAtom<State, Params, Exports, InstanceType>,
     'override' | 'readonly'
   > {
   override: (
@@ -558,15 +575,17 @@ export interface Query<
   status: AsyncStatus
 }
 
-export interface QueryAtom<State, Params extends any[]>
-  extends AtomBaseProperties<
+export interface QueryAtom<
+  State,
+  Params extends any[],
+  InstanceType extends AtomInstanceBase<
     AsyncState<State>,
-    Params,
-    QueryAtomInstance<State, Params>
-  > {
-  getReactContext: () => Context<QueryAtomInstance<State, Params>>
-  injectInstance: (...params: Params) => QueryAtomInstance<State, Params>
-  injectLazy: () => (...params: Params) => QueryAtomInstance<State, Params>
+    Params
+  > = QueryAtomInstance<State, Params>
+> extends AtomBaseProperties<AsyncState<State>, Params, InstanceType> {
+  getReactContext: () => Context<InstanceType>
+  injectInstance: (...params: Params) => InstanceType
+  injectLazy: () => (...params: Params) => InstanceType
   injectQuery: (...params: Params) => Query<State, Params>
   injectSelector: InjectOrUseSelector<State, Params>
   molecules?: Molecule<any, any> // TODO: type this first `any` (the second `any` is correct as-is)
@@ -577,9 +596,9 @@ export interface QueryAtom<State, Params extends any[]>
   tts?: Scheduler
   ttl?: Scheduler
   type: AtomType.Query
-  useConsumer: () => QueryAtomInstance<State, Params>
-  useInstance: (...params: Params) => QueryAtomInstance<State, Params>
-  useLazy: () => (...params: Params) => QueryAtomInstance<State, Params>
+  useConsumer: () => InstanceType
+  useInstance: (...params: Params) => InstanceType
+  useLazy: () => (...params: Params) => InstanceType
   useQuery: (...params: Params) => Query<State, Params>
   useSelector: InjectOrUseSelector<State, Params>
   value: (...params: Params) => () => State | Promise<State>
@@ -612,11 +631,11 @@ export interface ReadonlyLocalAtom<
   State,
   Params extends any[],
   Exports extends Record<string, any>,
-  InstanceType extends ReadonlyAtomInstance<
+  InstanceType extends AtomInstanceBase<State, Params> = ReadonlyAtomInstance<
     State,
     Params,
     Exports
-  > = ReadonlyAtomInstance<State, Params, Exports>
+  >
 > extends AtomBaseProperties<State, Params, InstanceType> {
   getReactContext: () => Context<InstanceType>
   injectInstance: (...params: Params) => InstanceType
@@ -638,11 +657,11 @@ export interface ReadonlyAtom<
   State,
   Params extends any[],
   Exports extends Record<string, any>,
-  InstanceType extends ReadonlyAtomInstance<
+  InstanceType extends AtomInstanceBase<State, Params> = ReadonlyAtomInstance<
     State,
     Params,
     Exports
-  > = ReadonlyAtomInstance<State, Params, Exports>
+  >
 > extends AtomBaseProperties<State, Params, InstanceType> {
   getReactContext: () => Context<InstanceType>
   injectExports: (...params: Params) => Exports

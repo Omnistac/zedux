@@ -47,5 +47,5 @@ export const useAtomWithoutSubscription = <
 
   useLayoutEffect(() => unregister, [unregister])
 
-  return atomInstance
+  return (atomInstance as unknown) as InstanceType
 }

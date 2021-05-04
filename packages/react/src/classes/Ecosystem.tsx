@@ -3,12 +3,19 @@ import { useStableReference } from '../hooks/useStableReference'
 import { createAtomInstance } from '../instance-helpers/createAtomInstance'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
+  AllAtoms,
+  Atom,
   AtomBaseProperties,
   AtomContext,
   AtomContextInstance,
+  AtomInstance,
   AtomInstanceBase,
   EcosystemConfig,
   EcosystemProviderProps,
+  LocalAtom,
+  ReadonlyAtom,
+  ReadonlyAtomInstance,
+  ReadonlyLocalAtom,
 } from '../types'
 import { generateAppId, getKeyHash } from '../utils'
 import { ecosystemCsContext } from '../utils/csContexts'
@@ -90,11 +97,86 @@ export class Ecosystem {
     delete this.instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
   }
 
+  public getAtomContextInstance<T extends any = any>(
+    atomContext: AtomContext<T>
+  ) {
+    const instance = this.atomContexts?.get(atomContext)
+
+    if (!instance) {
+      throw new Error(
+        `Zedux - given atom context has not been provided in ecosystem "${this.ecosystemId}"`
+      )
+    }
+
+    return instance
+  }
+
+  public load<
+    State,
+    Params extends [],
+    Exports extends Record<string, any>,
+    InstanceType extends AtomInstance<State, Params, Exports>
+  >(
+    atom:
+      | Atom<State, Params, Exports, InstanceType>
+      | LocalAtom<State, Params, Exports, InstanceType>
+  ): InstanceType
+
+  public load<
+    State,
+    Params extends any[],
+    Exports extends Record<string, any>,
+    InstanceType extends AtomInstance<State, Params, Exports>
+  >(
+    atom:
+      | Atom<State, Params, Exports, InstanceType>
+      | LocalAtom<State, Params, Exports, InstanceType>,
+    params: Params
+  ): InstanceType
+
+  public load<
+    State,
+    Params extends [],
+    Exports extends Record<string, any>,
+    InstanceType extends ReadonlyAtomInstance<State, Params, Exports>
+  >(
+    atom:
+      | ReadonlyAtom<State, Params, Exports, InstanceType>
+      | ReadonlyLocalAtom<State, Params, Exports, InstanceType>
+  ): InstanceType
+
+  public load<
+    State,
+    Params extends any[],
+    Exports extends Record<string, any>,
+    InstanceType extends ReadonlyAtomInstance<State, Params, Exports>
+  >(
+    atom:
+      | ReadonlyAtom<State, Params, Exports, InstanceType>
+      | ReadonlyLocalAtom<State, Params, Exports, InstanceType>,
+    params: Params
+  ): InstanceType
+
+  public load<
+    State,
+    Params extends [],
+    InstanceType extends AtomInstanceBase<State, Params>
+  >(atom: AtomBaseProperties<State, Params, InstanceType>): InstanceType
+
   public load<
     State,
     Params extends any[],
     InstanceType extends AtomInstanceBase<State, Params>
-  >(atom: AtomBaseProperties<State, Params, InstanceType>, params: Params) {
+  >(
+    atom: AtomBaseProperties<State, Params, InstanceType>,
+    params: Params
+  ): InstanceType
+
+  public load<
+    State,
+    Params extends any[],
+    InstanceType extends AtomInstanceBase<State, Params>
+  >(atom: AtomBaseProperties<State, Params, InstanceType>, params?: Params) {
     const keyHash = getKeyHash(this.ecosystemId, atom, params)
 
     // try to find an existing instance
@@ -201,7 +283,7 @@ export class Ecosystem {
 
       if (badFlag) {
         console.error(
-          `Zedux - encountered unsafe atom "${atom.key}" with flag "${badFlag}. This atom should be overridden in the current environment.`
+          `Zedux - encountered unsafe atom "${atom.key}" with flag "${badFlag}". This atom should be overridden in the current environment.`
         )
       }
     }

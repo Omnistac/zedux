@@ -88,4 +88,6 @@ export const query = <State, Params extends any[]>(
     type: AtomType.Query,
     value,
   } as any
+
+  return newAtom
 }
