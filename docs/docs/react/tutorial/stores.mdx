@@ -15,16 +15,13 @@ import { createStore } from '@zedux/react'
 const easySauceStore = createStore()
 ```
 
-That's it! Updating state is usually done with `.setState()`, which works like React's `setState()` method on class components:
+That's it! Updating state is usually done with `.setState()`, which works like React's state setters:
 
 ```ts
 easySauceStore.setState(true) // set state straight-up
 easySauceStore.setState(currentState => !currentState) // function syntax
-easySauceStore.setState({ nested: { field: 'here' } }) // overwrite state
-easySauceStore.setState({ nested: { otherField: 'here' } }) // deep merge
 
-easySauceStore.getState()
-// { nested: { field: 'here', otherField: 'here' } }
+easySauceStore.getState() // false
 ```
 
 ## Reducer Hierarchy
@@ -267,7 +264,7 @@ const dateAtom = atom('date', () => {
 
 Notice that we returned the store. This is important! Zedux creates a store for every atom instance **unless** you return a store from the instance factory. This is essentially telling Zedux, "Don't create a store for me; I created my own. Use this one."
 
-Consumers of this atom will now use the returned store - subscribing to it to receive updates and setting state on or dispatching actions to the store directly.
+Consumers of this atom will now use the returned store - setting its state and dispatching actions to it directly.
 
 ## Recap
 

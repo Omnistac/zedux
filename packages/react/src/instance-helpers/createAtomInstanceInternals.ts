@@ -1,4 +1,4 @@
-import { createStore, effectTypes, isZeduxStore, Store } from '@zedux/core'
+import { createStore, isZeduxStore, Store } from '@zedux/core'
 import { getEcosystem } from '../store/public-api'
 import {
   ActiveState,
@@ -68,6 +68,7 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
   const ecosystem = getEcosystem(ecosystemId)
   let evaluationReasons: EvaluationReason[] = []
 
+  // handle detaching this atom instance from the global store and all destruction stuff
   const destroy = () => {
     // TODO: dispatch an action over stateStore for this mutation
     newInternals.activeState = ActiveState.Destroyed
@@ -104,6 +105,10 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
         injector.cleanup?.()
       })
       throw err
+    } finally {
+      runWhyInjectors(newInjectors, evaluationReasons)
+
+      evaluationReasons = []
     }
 
     newInternals.injectors = newInjectors // TODO: dispatch an action over stateStore for this mutation
@@ -129,10 +134,6 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
           : (newFactoryResult as State)
       )
     }
-
-    runWhyInjectors(newInjectors, evaluationReasons)
-
-    evaluationReasons = []
   }
 
   const scheduleEvaluation = (reason: EvaluationReason, flagScore = 0) => {
@@ -177,7 +178,6 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
 
   const [stateType, stateStore] = getStateStore(factoryResult)
 
-  // handle detaching this atom instance from the global store and all destruction stuff
   const subscription = stateStore.subscribe(() => {
     ecosystem.graph.scheduleDependents(keyHash, evaluationReasons)
   })

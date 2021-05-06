@@ -5,11 +5,11 @@ title: Using Atoms
 
 import { LiveEditor } from '../../LiveEditor'
 
-In the quick start, we learned a few basic ways to instantiate and consume atoms. In this page, we'll learn about stores - the secret sauce behind atoms. We'll also cover more hooks and injectors for atom instantiation and consumption.
+In the quick start, we learned a few basic ways to instantiate and consume atoms. In this page, we'll discover stores - the secret sauce behind atoms. We'll also cover more hooks and injectors for atom instantiation and consumption.
 
 ## Stores
 
-Every instance of every atom creates a light-weight Zedux store. Stores manage lots of the heavy lifting for atoms, such as storing and updating state, telling consumer atoms to reevaluate, telling React components to rerender, and running side effects based on dispatched actions or resulting state changes.
+Every instance of every atom creates a light-weight store. Stores manage state and serve as a message bus for running side effects based on dispatched actions or state changes.
 
 Atoms create most stores for you. But you can easily create them manually:
 
@@ -21,26 +21,35 @@ const myStore = createStore()
 
 Stores have lots of cool features that we'll look at in [the stores tutorial](stores). For now, just remember that every atom instance has an underlying store.
 
-## Subscribing Hooks/Injectors
+## Dynamic Hooks/Injectors
 
-Some hooks/injectors automatically subscribe to the atom instance's underlying store. That means that when the atom instance's store's state changes, components that use these hooks will rerender and atoms that use these injectors will reevaluate.
+Some hooks/injectors create a dynamic dependency on the atom. This means that when the atom instance's store's state changes, components/atoms that use these hooks/injectors will rerender/reevaluate (😅).
 
 ### `.useSelector()`
 
 Returns a portion or derivation of the state of the store. Also ensures that the component only reevaluates when the selector's result changes. Similar to Redux' [`useSelector()`](https://react-redux.js.org/api/hooks#useselector).
 
 <LiveEditor resultVar="App">{`
-const userAtom = atom('user', () => ({ name: 'Joe', lastUpdated: new Date() }))\n
+const userAtom = atom('user', () => ({
+  name: 'Joe',
+  lastUpdated: new Date()
+}))\n
 function Child() {
   const [state, setState] = userAtom.useState()\n
   return (
     <>
       <input
-        onChange={({ target }) => setState({ name: target.value })}
+        onChange={({ target }) => setState(val => ({
+          lastUpdated: new Date(),
+          name: target.value
+        })}
         value={state.name}
       />
       <div>Last Updated: {state.lastUpdated.toLocaleString()}</div>
-      <button onClick={() => setState({ lastUpdated: new Date() })}>
+      <button onClick={() => setState(val => ({
+        ...val,
+        lastUpdated: new Date()
+      })}>
         Update Date
       </button>
     </>
@@ -97,7 +106,7 @@ const userAtom = atom('user', () => {
 
 ### `.useState()`
 
-`.useState()` works kind of like React's `useState()` hook.
+`.useState()` is similar to React's `useState()` hook.
 
 ```tsx
 function App() {
@@ -107,7 +116,7 @@ function App() {
 }
 ```
 
-`setState` is a reference to the `setState` function on the instance's store - the only difference to React's state setters being that it will recursively merge nested objects.
+`setState` is a reference to the `setState` function on the instance's store, which functions like a React state setter.
 
 `.useState()` differs from React's `useState()` in that you don't pass the initial state - we defined that when we created the atom. Instead, you pass the params of the atom (if any):
 
@@ -150,9 +159,9 @@ const dependentAtom = atom('dependent', () => {
 })
 ```
 
-## Non-Subscribing Hooks/Injectors
+## Static Hooks/Injectors
 
-The following hooks/injectors do not subscribe to the atom instance's underlying store.
+The following hooks/injectors do not cause rerenders/reevaluations when their atom's state changes.
 
 ### `.useConsumer()`
 

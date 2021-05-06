@@ -40,15 +40,46 @@ export class Scheduler {
     )
   }
 
+  // An O(log n) replacement for this.scheduledJobs.findIndex()
+  private findInsertionIndex(
+    cb: (job: Job) => number,
+    index = Math.ceil(this.scheduledJobs.length / 2) - 1,
+    iteration = 1
+  ): number {
+    const job = this.scheduledJobs[index]
+    if (typeof job === 'undefined') return index
+
+    const direction = cb(job)
+    if (!direction) return index
+
+    const divisor = 2 ** iteration
+    const isDone = divisor > this.scheduledJobs.length
+
+    if (isDone) {
+      return index + (direction === 1 ? 1 : 0)
+    }
+
+    const effectualSize = Math.round(this.scheduledJobs.length / divisor)
+    const newIndex = Math.min(
+      this.scheduledJobs.length - 1,
+      Math.max(0, index + Math.ceil(effectualSize / 2) * direction)
+    )
+
+    // if (log) console.log('stuff!', { index, iteration, isDone, job, length: scheduledJobs.length, divisor, direction, effectualSize, newIndex })
+    return this.findInsertionIndex(cb, newIndex, iteration + 1)
+  }
+
   private insertEvaluateAtomJob(newJob: EvaluateAtomJob) {
     const { nodes } = this.ecosystem.graph
     const newJobGraphNode = nodes[newJob.keyHash]
 
-    const index = this.scheduledJobs.findIndex(job => {
-      if (job.type !== JobType.EvaluateAtom) return true
+    const index = this.findInsertionIndex(job => {
+      if (job.type !== JobType.EvaluateAtom) return -1
 
       const thatJobGraphNode = nodes[job.keyHash]
-      return newJobGraphNode.weight <= thatJobGraphNode.weight
+      return newJobGraphNode.weight < thatJobGraphNode.weight
+        ? -1
+        : +(newJobGraphNode.weight > thatJobGraphNode.weight)
     })
 
     if (index === -1) {
@@ -60,11 +91,13 @@ export class Scheduler {
   }
 
   private insertUpdateExternalDependentJob(newJob: UpdateExternalDependentJob) {
-    const index = this.scheduledJobs.findIndex(job => {
-      if (job.type === JobType.EvaluateAtom) return false
-      if (job.type !== JobType.UpdateExternalDependent) return true
+    const index = this.findInsertionIndex(job => {
+      if (job.type === JobType.EvaluateAtom) return 1
+      if (job.type !== JobType.UpdateExternalDependent) return -1
 
-      return newJob.flagScore <= job.flagScore
+      return newJob.flagScore < job.flagScore
+        ? -1
+        : +(newJob.flagScore > job.flagScore)
     })
 
     if (index === -1) {

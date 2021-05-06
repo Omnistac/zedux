@@ -170,6 +170,7 @@ export class Graph {
 
       const flagScore = getFlagScore(dependentEdge)
 
+      // let internal dependents (other atoms) schedule themselves
       if (!dependentEdge.isExternal) {
         return this.ecosystem.instances[
           dependentKey

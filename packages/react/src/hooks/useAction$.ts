@@ -14,7 +14,7 @@ export const useState$ = <State, Params extends any[]>(
   useEffect(() => {
     const subscription = instance.internals.stateStore.subscribe({
       effects: ({ action }) => {
-        subject.next(action)
+        if (action) subject.next(action)
       },
     })
 

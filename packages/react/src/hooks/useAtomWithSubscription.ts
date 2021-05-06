@@ -1,7 +1,6 @@
-import { useContext, useLayoutEffect, useMemo, useState } from 'react'
-import { ecosystemContext } from '../classes'
-import { getEcosystem } from '../store/public-api'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { AtomBaseProperties, AtomInstanceBase } from '../types'
+import { useEcosystem } from './useEcosystem'
 import { useStableReference } from './useStableReference'
 
 /**
@@ -35,8 +34,7 @@ export const useAtomWithSubscription = <
   params: Params
 ) => {
   const [, setReactState] = useState<State>()
-  const ecosystemId = useContext(ecosystemContext)
-  const ecosystem = getEcosystem(ecosystemId)
+  const ecosystem = useEcosystem()
   const stableParams = useStableReference(params)
 
   const [atomInstance, unregister] = useMemo(() => {

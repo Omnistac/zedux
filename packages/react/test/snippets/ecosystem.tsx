@@ -70,7 +70,6 @@ function Child() {
     atom3val,
     atom2val,
     atom1val,
-    test,
   })
 
   return (
