@@ -48,6 +48,10 @@ export const createStandardAtomInstance = <
 
     // schedule destruction (if ttl is > 0)
     if (typeof ttl === 'number') {
+      if (newAtomInstance.internals.destructionTimeout) {
+        clearTimeout(newAtomInstance.internals.destructionTimeout)
+      }
+
       const timeoutId = setTimeout(
         () => newAtomInstance.internals.destroy(),
         ttl

@@ -39,21 +39,17 @@ export const atom: {
       State,
       Params,
       AtomInstance<State, Params, Exports>
-    >(newAtom, params).dispatch
+    >('injectDispatch', newAtom, params).dispatch
 
   newAtom.injectSetState = (...params: Params) =>
     injectAtomWithoutSubscription<
       State,
       Params,
       AtomInstance<State, Params, Exports>
-    >(newAtom, params).setState
+    >('injectSetState', newAtom, params).setState
 
   newAtom.injectState = (...params: Params) => {
-    const instance = injectAtomWithSubscription(
-      'injectState()',
-      newAtom,
-      params
-    )
+    const instance = injectAtomWithSubscription('injectState', newAtom, params)
 
     return [
       instance.internals.stateStore.getState(),
@@ -67,7 +63,7 @@ export const atom: {
       State,
       Params,
       AtomInstance<State, Params, Exports>
-    >(newAtom, params).store
+    >('injectStore', newAtom, params).store
 
   newAtom.override = (newValue: Atom<State, Params, Exports>['value']) =>
     atom<State, Params, Exports>(key, newValue, config)

@@ -8,7 +8,6 @@ import {
 import { useAtomWithoutSubscription } from '../hooks'
 import { injectAtomWithoutSubscription } from '../injectors'
 import {
-  AtomInstance,
   AtomType,
   LocalAtom,
   LocalAtomConfig,
@@ -41,7 +40,7 @@ const createReadonlyLocalAtom = <
       State,
       Params,
       ReadonlyAtomInstance<State, Params, Exports>
-    >(newAtom, params)
+    >('injectInstance', newAtom, params)
 
   const override = (
     newValue: ReadonlyLocalAtom<State, Params, Exports>['value']
@@ -57,6 +56,7 @@ const createReadonlyLocalAtom = <
     const instance = useConsumer()
     const [, setState] = useState(instance.internals.stateStore.getState())
 
+    // TODO: not this - register a graph dependency
     useLayoutEffect(() => {
       const subscription = instance.internals.stateStore.subscribe(setState)
 
@@ -151,12 +151,7 @@ export const localAtom: {
     ] as const
   }
 
-  newLocalAtom.useStore = (...params: Params) =>
-    useAtomWithoutSubscription<
-      State,
-      Params,
-      AtomInstance<State, Params, Exports>
-    >(newLocalAtom, params).store
+  newLocalAtom.useStore = () => newLocalAtom.useConsumer().store
 
   return newLocalAtom as any // the overloads of this function give consumers all the type info they need
 }

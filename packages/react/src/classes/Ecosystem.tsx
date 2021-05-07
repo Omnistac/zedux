@@ -85,6 +85,7 @@ export class Ecosystem {
     globalStore.dispatch(addEcosystem(this))
   }
 
+  // Should only be used internally
   public destroyAtomInstance(keyHash: string) {
     // try to destroy instance (if not destroyed - this fn is called as part of that destruction process too)
     this.graph.removeNode(keyHash)

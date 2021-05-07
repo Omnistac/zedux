@@ -1,5 +1,4 @@
 import {
-  ActiveState,
   AtomBaseProperties,
   AtomInstanceBase,
   AtomType,

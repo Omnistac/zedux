@@ -1,5 +1,5 @@
-import { EffectCallback } from 'react'
 import { getEcosystem } from '../store/public-api'
+import { EffectCallback } from '../types'
 import { haveDepsChanged, validateInjector } from '../utils'
 import { diContext } from '../utils/csContexts'
 import { EffectInjectorDescriptor, InjectorType, JobType } from '../utils/types'
@@ -23,25 +23,30 @@ export const injectEffect = (effect: EffectCallback, deps?: any[]) => {
   }
 
   if (depsHaveChanged) {
-    descriptor.cleanup = ecosystem.scheduler.scheduleJob({
-      task: () => {
-        if (prevDescriptor) {
-          prevDescriptor.cleanup?.()
-          prevDescriptor.isCleanedUp = true
-        }
+    const task = () => {
+      if (prevDescriptor) {
+        prevDescriptor.cleanup?.()
+        prevDescriptor.isCleanedUp = true
+      }
 
-        // There is an edge case where an effect could be cleaned up before it
-        // even runs. I _think_ it's fine to not even run the effect in this case.
-        if (descriptor.isCleanedUp) return
+      // There is an edge case where an effect could be cleaned up before it
+      // even runs. I _think_ it's fine to not even run the effect in this case.
+      if (descriptor.isCleanedUp) return
 
-        const cleanup = effect()
+      const cleanup = effect()
 
-        if (typeof cleanup === 'function') {
-          descriptor.cleanup = cleanup
-        }
-      },
+      // now that the task has run, there's no need for the scheduler cleanup
+      // function; replace it with the cleanup logic returned from the effect
+      // (if any)
+      descriptor.cleanup = cleanup || undefined
+    }
+
+    ecosystem.scheduler.scheduleJob({
+      task,
       type: JobType.RunEffect,
     })
+
+    descriptor.cleanup = () => ecosystem.scheduler.unscheduleJob(task)
   }
 
   injectors.push(descriptor)

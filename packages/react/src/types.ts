@@ -1,5 +1,5 @@
 import { Context } from 'react'
-import { Dispatcher, StateSetter, Store, Subscription } from '@zedux/core'
+import { Dispatcher, StateSetter, Store } from '@zedux/core'
 import { EvaluationReason, InjectorDescriptor } from './utils/types'
 
 export enum ActiveState {
@@ -19,6 +19,10 @@ export type AllAtoms<
   | LocalAtom<State, Params, any, InstanceType>
   | ReadonlyAtom<State, Params, any, InstanceType>
   | ReadonlyLocalAtom<State, Params, any, InstanceType>
+
+export type AsyncEffectCallback<T = any> = (
+  cleanup: (destructor: Destructor) => void
+) => Promise<T> | void
 
 export interface AsyncState<T> {
   data?: T
@@ -395,7 +399,6 @@ export interface AtomInstanceInternals<State, Params extends any[]> {
   params: Params
   scheduleDestruction: () => void
   scheduleEvaluation: (reason: EvaluationReason, flagScore?: number) => void
-  subscription?: Subscription
   stateStore: Store<State>
   stateType: StateType
 }
@@ -411,6 +414,8 @@ export enum AtomType {
 
 export type AtomValue<State = any> = State | Store<State>
 
+export type Destructor = () => void
+
 export interface EcosystemProviderProps {
   atoms?: AtomBaseProperties<any, any[]>[]
   contexts?: AtomContextInstance[]
@@ -423,6 +428,8 @@ export interface EcosystemConfig
   destroyOnUnmount?: boolean
   id?: string
 }
+
+export type EffectCallback = () => void | Destructor
 
 export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   ? <D = any>(selector: (state: State) => D) => D

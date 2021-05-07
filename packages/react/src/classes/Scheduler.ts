@@ -14,7 +14,6 @@ export class Scheduler {
   public scheduleJob(newJob: Job) {
     const shouldSetTimeout = this.scheduledJobs.length === 0
 
-    // insertJob(this.scheduledJobs, newJob)
     if (newJob.type === JobType.RunEffect) {
       this.scheduledJobs.push(newJob)
     } else if (newJob.type === JobType.EvaluateAtom) {
@@ -27,10 +26,10 @@ export class Scheduler {
     if (shouldSetTimeout) {
       setTimeout(() => this.runJobs())
     }
+  }
 
-    return () => {
-      this.scheduledJobs = this.scheduledJobs.filter(job => job !== newJob)
-    }
+  public unscheduleJob(task: () => void) {
+    this.scheduledJobs = this.scheduledJobs.filter(job => job.task !== task)
   }
 
   public wipe() {
@@ -65,10 +64,11 @@ export class Scheduler {
       Math.max(0, index + Math.ceil(effectualSize / 2) * direction)
     )
 
-    // if (log) console.log('stuff!', { index, iteration, isDone, job, length: scheduledJobs.length, divisor, direction, effectualSize, newIndex })
     return this.findInsertionIndex(cb, newIndex, iteration + 1)
   }
 
+  // EvaluateAtom jobs go before any other job type and are sorted amongst
+  // themselves by weight - lower weight evaluated first
   private insertEvaluateAtomJob(newJob: EvaluateAtomJob) {
     const { nodes } = this.ecosystem.graph
     const newJobGraphNode = nodes[newJob.keyHash]
@@ -90,6 +90,8 @@ export class Scheduler {
     this.scheduledJobs.splice(index, 0, newJob)
   }
 
+  // UpdateExternalDependent jobs go just after EvaluateAtom jobs, but before
+  // anything else (there is only one other job type right now - RunEffect)
   private insertUpdateExternalDependentJob(newJob: UpdateExternalDependentJob) {
     const index = this.findInsertionIndex(job => {
       if (job.type === JobType.EvaluateAtom) return 1

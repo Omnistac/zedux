@@ -32,6 +32,7 @@ export const injectAtomWithoutSubscription = <
     Params
   >
 >(
+  operation: string,
   atom: AtomBaseProperties<State, Params, InstanceType>,
   params: Params
 ) => {
@@ -43,13 +44,15 @@ export const injectAtomWithoutSubscription = <
     InjectorType.Atom,
     () => {
       const instance = ecosystem.load(atom, params)
-      ecosystem.graph.addStaticDependency(keyHash, instance.internals.keyHash)
+      ecosystem.graph.addDependency(
+        keyHash,
+        instance.internals.keyHash,
+        operation,
+        true
+      )
 
       const cleanup = () => {
-        ecosystem.graph.removeStaticDependency(
-          keyHash,
-          instance.internals.keyHash
-        )
+        ecosystem.graph.removeDependency(keyHash, instance.internals.keyHash)
       }
 
       return {
@@ -73,13 +76,15 @@ export const injectAtomWithoutSubscription = <
 
       // update the graph
       prevDescriptor.cleanup?.()
-      ecosystem.graph.addStaticDependency(keyHash, instance.internals.keyHash)
+      ecosystem.graph.addDependency(
+        keyHash,
+        instance.internals.keyHash,
+        operation,
+        true
+      )
 
       prevDescriptor.cleanup = () => {
-        ecosystem.graph.removeStaticDependency(
-          keyHash,
-          instance.internals.keyHash
-        )
+        ecosystem.graph.removeDependency(keyHash, instance.internals.keyHash)
       }
       prevDescriptor.instance = instance
 

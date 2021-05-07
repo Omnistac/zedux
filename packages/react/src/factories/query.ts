@@ -31,7 +31,7 @@ export const query = <State, Params extends any[]>(
       AsyncState<State>,
       Params,
       QueryAtomInstance<State, Params>
-    >(newAtom, params)
+    >('injectInstance', newAtom, params)
 
   const injectLazy = () => {
     const initialContext = diContext.consume()
@@ -54,7 +54,7 @@ export const query = <State, Params extends any[]>(
       AsyncState<State>,
       Params,
       QueryAtomInstance<State, Params>
-    >('injectQuery()', newAtom, params)
+    >('injectQuery', newAtom, params)
 
     const state = instance.internals.stateStore.getState()
     const query: Query<State, Params> = {

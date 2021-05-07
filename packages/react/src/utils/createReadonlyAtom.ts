@@ -36,21 +36,21 @@ export const createReadonlyAtom = <
       State,
       Params,
       ReadonlyAtomInstance<State, Params, Exports>
-    >(newAtom, params).exports
+    >('injectExports', newAtom, params).exports
 
   const injectInstance = (...params: Params) =>
     injectAtomWithoutSubscription<
       State,
       Params,
       ReadonlyAtomInstance<State, Params, Exports>
-    >(newAtom, params)
+    >('injectInstances', newAtom, params)
 
   const injectInvalidate = (...params: Params) =>
     injectAtomWithoutSubscription<
       State,
       Params,
       ReadonlyAtomInstance<State, Params, Exports>
-    >(newAtom, params).invalidate
+    >('injectInvalidate', newAtom, params).invalidate
 
   const injectLazy = () => {
     const initialContext = diContext.consume()
@@ -80,7 +80,7 @@ export const createReadonlyAtom = <
       State,
       Params,
       ReadonlyAtomInstance<State, Params, Exports>
-    >(newAtom, params).useSelector(
+    >('injectSelector', newAtom, params).injectSelector(
       selectorArg || (paramsArg as (state: State) => D)
     )
   }
@@ -90,7 +90,7 @@ export const createReadonlyAtom = <
       State,
       Params,
       ReadonlyAtomInstance<State, Params, Exports>
-    >('injectValue()', newAtom, params).internals.stateStore.getState()
+    >('injectValue', newAtom, params).internals.stateStore.getState()
 
   const override = (newValue: ReadonlyAtom<State, Params, Exports>['value']) =>
     createReadonlyAtom({ ...atomConfig, value: newValue })

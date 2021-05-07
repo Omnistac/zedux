@@ -1,5 +1,6 @@
-import { useLayoutEffect, useMemo } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { AtomBaseProperties, AtomInstanceBase } from '../types'
+import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useStableReference } from './useStableReference'
 
@@ -32,16 +33,24 @@ export const useAtomWithoutSubscription = <
 ) => {
   const ecosystem = useEcosystem()
   const stableParams = useStableReference(params)
+  const [force, forceRender] = useState<any>()
 
   const [atomInstance, unregister] = useMemo(() => {
     const instance = ecosystem.load(atom, stableParams)
 
-    const unregister = ecosystem.graph.registerExternalStaticDependency(
-      instance
+    const unregister = ecosystem.graph.registerExternalDependent(
+      instance,
+      signal => {
+        if (signal === GraphEdgeSignal.Destroyed) {
+          forceRender({})
+        }
+      },
+      'a React static hook',
+      true
     )
 
     return [instance, unregister] as const
-  }, [ecosystem, atom, stableParams])
+  }, [atom, ecosystem, force, stableParams])
 
   useLayoutEffect(() => unregister, [unregister])
 

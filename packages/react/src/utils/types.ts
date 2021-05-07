@@ -31,10 +31,12 @@ export interface CallStackContextInstance<T = any> {
 }
 
 export interface DependentEdge {
-  callback?: (val: any) => any
+  callback?: (signal: GraphEdgeSignal, val?: any) => any
+  task?: () => void
   isAsync?: boolean
   isExternal?: boolean
   isStatic?: boolean
+  operation: string
 }
 
 export interface DepsInjectorDescriptor extends InjectorDescriptor {
@@ -64,6 +66,7 @@ export interface EffectInjectorDescriptor extends DepsInjectorDescriptor {
 
 export enum EvaluationType {
   CacheInvalidated = 'cache invalidated',
+  InstanceDestroyed = 'atom instance destroyed',
   StateChanged = 'state changed',
 }
 
@@ -98,6 +101,11 @@ export interface EvaluateAtomJob extends JobBase {
   flagScore: number
   keyHash: string
   type: JobType.EvaluateAtom
+}
+
+export enum GraphEdgeSignal {
+  Destroyed = 'Destroyed',
+  Updated = 'Updated',
 }
 
 export interface InjectorDescriptor {

@@ -73,11 +73,24 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
     // TODO: dispatch an action over stateStore for this mutation
     newInternals.activeState = ActiveState.Destroyed
 
+    if (evaluationReasons.length) {
+      ecosystem.scheduler.unscheduleJob(evaluationTask)
+    }
+
+    // Clean up effect injectors first, then everything else
+    const nonEffectInjectors: InjectorDescriptor[] = []
     newInternals.injectors.forEach(injector => {
+      if (injector.type !== InjectorType.Effect) {
+        nonEffectInjectors.push(injector)
+        return
+      }
+      injector.cleanup?.()
+    })
+    nonEffectInjectors.forEach(injector => {
       injector.cleanup?.()
     })
 
-    newInternals.subscription?.unsubscribe()
+    subscription.unsubscribe()
     ecosystem.destroyAtomInstance(keyHash)
 
     // TODO: any other cleanup items? (subscriptions to remove, timeouts to cancel, etc)
@@ -142,7 +155,7 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
       return
     }
 
-    evaluationReasons = [reason] // TODO: there may be a race condition here - with the evaluationTask not running before new scheduleEvaluations come in
+    evaluationReasons = [reason]
 
     ecosystem.scheduler.scheduleJob({
       flagScore,
@@ -194,7 +207,6 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
     scheduleDestruction,
     stateStore,
     stateType,
-    subscription,
   }
 
   return newInternals

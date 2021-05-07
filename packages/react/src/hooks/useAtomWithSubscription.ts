@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
 import { AtomBaseProperties, AtomInstanceBase } from '../types'
+import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useStableReference } from './useStableReference'
 
@@ -10,7 +11,8 @@ import { useStableReference } from './useStableReference'
  * an instance has already been created for the passed params, reuses the
  * existing instance.
  *
- * Does **not** subscribe to the instance's store.
+ * Creates a dynamic graph edge that receives updates when the atom instance's
+ * store's state changes
  *
  * This is a low-level hook that probably shouldn't be used directly. Use the
  * hooks built into atoms - e.g.
@@ -34,41 +36,31 @@ export const useAtomWithSubscription = <
   params: Params
 ) => {
   const [, setReactState] = useState<State>()
+  const [force, forceRender] = useState<any>()
   const ecosystem = useEcosystem()
   const stableParams = useStableReference(params)
 
   const [atomInstance, unregister] = useMemo(() => {
     const instance = ecosystem.load(atom, stableParams)
 
-    const unregister = ecosystem.graph.registerExternalDynamicDependency(
+    const unregister = ecosystem.graph.registerExternalDependent(
       instance,
-      val => setReactState(val)
+      (signal, val) => {
+        if (signal === GraphEdgeSignal.Destroyed) {
+          forceRender({})
+          return
+        }
+
+        setReactState(val)
+      },
+      'a React dynamic hook',
+      false
     )
 
     return [instance, unregister] as const
-  }, [ecosystem, atom, stableParams])
+  }, [atom, ecosystem, force, stableParams])
 
   useLayoutEffect(() => unregister, [unregister])
-
-  // useLayoutEffect(() => {
-  //   let timeoutId: ReturnType<typeof setTimeout> | undefined
-
-  //   const subscriber = () => {
-  //     if (timeoutId) return
-
-  //     timeoutId = setTimeout(() => {
-  //       setReactState(atomInstance.internals.stateStore.getState())
-  //       timeoutId = undefined
-  //     })
-  //   }
-
-  //   const subscription = atomInstance.internals.stateStore.subscribe(subscriber)
-
-  //   return () => {
-  //     if (timeoutId) clearTimeout(timeoutId)
-  //     subscription.unsubscribe()
-  //   }
-  // }, [atomInstance])
 
   return atomInstance
 }

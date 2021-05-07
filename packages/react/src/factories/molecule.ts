@@ -15,6 +15,7 @@ export const molecule = <
 ) => {
   const injectExports = () =>
     injectAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
+      'injectExports',
       newMolecule,
       []
     ).exports
@@ -24,7 +25,7 @@ export const molecule = <
       State,
       [],
       MoleculeInstance<State, Exports>
-    >('injectState()', newMolecule, [])
+    >('injectState', newMolecule, [])
 
     return [
       instance.internals.stateStore.getState(),
@@ -35,6 +36,7 @@ export const molecule = <
 
   const injectStore = () =>
     injectAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
+      'injectStore',
       newMolecule,
       []
     ).internals.stateStore
@@ -62,7 +64,7 @@ export const molecule = <
   }
 
   const useStore = () =>
-    injectAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
+    useAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
       newMolecule,
       []
     ).internals.stateStore

@@ -27,7 +27,7 @@ export const mutation = <State, MutationParams extends any[]>(
       AsyncState<State>,
       [],
       MutationAtomInstance<State, MutationParams>
-    >('injectMutation()', newAtom, [])
+    >('injectMutation', newAtom, [])
 
     const state = instance.internals.stateStore.getState()
     const mutation: Mutation<State, MutationParams> = {
