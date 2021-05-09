@@ -173,7 +173,7 @@ export class Ecosystem {
     Params extends any[],
     InstanceType extends AtomInstanceBase<State, Params>
   >(atom: AtomBaseProperties<State, Params, InstanceType>, params?: Params) {
-    const keyHash = getKeyHash(this.ecosystemId, atom, params)
+    const keyHash = getKeyHash(atom, params)
 
     // try to find an existing instance
     const existingInstance = this.instances[keyHash]

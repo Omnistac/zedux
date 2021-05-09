@@ -40,7 +40,12 @@ export const createStandardAtomInstance = <
     const { ttl } = atom as any
 
     // By default, atoms live forever.
-    if (ttl == null) return
+    if (
+      ttl == null ||
+      newAtomInstance.internals.activeState === ActiveState.Destroyed
+    ) {
+      return
+    }
 
     if (ttl === 0) {
       return newAtomInstance.internals.destroy()

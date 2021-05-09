@@ -1,22 +1,16 @@
 import '@testing-library/jest-dom/extend-expect'
-import {
-  atom,
-  createStore,
-  injectEffect,
-  injectMemo,
-  injectStore,
-} from '@zedux/react'
+import { atom, injectEffect, injectStore } from '@zedux/react'
 import React, { FC } from 'react'
 import { renderInEcosystem } from '@zedux/react-test/utils/renderInEcosystem'
 
 const normalAtom = atom('normal', () => {
-  const store = injectMemo(() => createStore(null, 0), [])
+  const store = injectStore(0)
 
   return store
 })
 
 const updatingAtom = atom('updating', () => {
-  const store = injectMemo(() => createStore(null, 0), [])
+  const store = injectStore(0)
 
   injectEffect(() => {
     const timeoutId = setTimeout(() => {

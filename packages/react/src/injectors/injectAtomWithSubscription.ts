@@ -42,7 +42,7 @@ export const injectAtomWithSubscription = <
   const { instance } = split<
     AtomWithSubscriptionInjectorDescriptor<InstanceType>
   >(
-    'injectAtomWithoutSubscription',
+    'injectAtomWithSubscription',
     InjectorType.AtomWithSubscription,
     () => {
       const instance = ecosystem.load(atom, params)

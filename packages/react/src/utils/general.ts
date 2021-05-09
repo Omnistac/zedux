@@ -35,14 +35,13 @@ export const generateLocalId = () => `lo-${generateId()}`
 export const generateNodeId = () => `no-${generateId()}`
 
 export const getKeyHash = (
-  ecosystemId: string,
   atom: AtomBaseProperties<any, any[]>,
   params?: any[]
 ) => {
   // every time a local atom is got, a new instance is created
   if (atom.type === AtomType.Local) return generateLocalId()
 
-  const base = `${ecosystemId}-${atom.key}`
+  const base = `${atom.key}`
 
   if (!params?.length) return base
 

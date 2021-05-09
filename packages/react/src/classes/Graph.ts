@@ -221,7 +221,7 @@ export class Graph {
   private scheduleInstanceDestruction(nodeKey: string) {
     const node = this.nodes[nodeKey]
 
-    if (!Object.keys(node.dependents).length) {
+    if (node && !Object.keys(node.dependents).length) {
       this.ecosystem.instances[nodeKey].internals.scheduleDestruction()
     }
   }

@@ -16,7 +16,8 @@
     "build:umd": "cross-env NODE_ENV=development webpack",
     "build:umd:min": "cross-env NODE_ENV=production webpack",
     "dev": "yarn build:es -- --watch & yarn build:umd -- --watch",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "test": "cd ../.. && yarn test packages/core"
   },
   "keywords": [
     "abstraction",
