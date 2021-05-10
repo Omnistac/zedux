@@ -150,6 +150,12 @@ export const createAtomInstanceInternals = <State, Params extends any[]>(
   }
 
   const scheduleEvaluation = (reason: EvaluationReason, flagScore = 0) => {
+    // TODO: Any calls in this case probably indicate a memory leak on the
+    // user's part. Notify them. TODO: Can we pause evaluations while
+    // activeState is Destroying (and should we just always evaluate once when
+    // waking up a stale atom)?
+    if (newInternals.activeState === ActiveState.Destroyed) return
+
     if (evaluationReasons.length) {
       evaluationReasons.push(reason)
       return

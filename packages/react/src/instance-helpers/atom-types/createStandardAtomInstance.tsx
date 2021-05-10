@@ -39,10 +39,11 @@ export const createStandardAtomInstance = <
   const scheduleDestruction = () => {
     const { ttl } = atom as any
 
-    // By default, atoms live forever.
+    // By default, atoms live forever. Also the atom may already be scheduled
+    // for destruction or destroyed
     if (
       ttl == null ||
-      newAtomInstance.internals.activeState === ActiveState.Destroyed
+      newAtomInstance.internals.activeState !== ActiveState.Active
     ) {
       return
     }
@@ -52,19 +53,13 @@ export const createStandardAtomInstance = <
     }
 
     // schedule destruction (if ttl is > 0)
-    if (typeof ttl === 'number') {
-      if (newAtomInstance.internals.destructionTimeout) {
-        clearTimeout(newAtomInstance.internals.destructionTimeout)
-      }
+    if (typeof ttl !== 'number') return
 
-      const timeoutId = setTimeout(
-        () => newAtomInstance.internals.destroy(),
-        ttl
-      )
-      // TODO: dispatch an action over stateStore for these mutations
-      newAtomInstance.internals.destructionTimeout = timeoutId
-      newAtomInstance.internals.activeState = ActiveState.Destroying
-    }
+    const timeoutId = setTimeout(() => newAtomInstance.internals.destroy(), ttl)
+
+    // TODO: dispatch an action over stateStore for these mutations
+    newAtomInstance.internals.destructionTimeout = timeoutId
+    newAtomInstance.internals.activeState = ActiveState.Destroying
   }
 
   const newAtomInstance: ReadonlyAtomInstance<

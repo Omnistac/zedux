@@ -97,12 +97,13 @@ export class Graph {
 
     const dependentEdge = dependency.dependents[dependentKey]
     delete dependency.dependents[dependentKey]
-    this.scheduleInstanceDestruction(dependencyKey)
 
     // static dependencies don't change a node's weight
     if (!dependentEdge.isStatic) {
       this.recalculateWeight(dependentKey, -dependency.weight)
     }
+
+    this.scheduleInstanceDestruction(dependencyKey)
   }
 
   // Should only be used internally
@@ -171,7 +172,7 @@ export class Graph {
         ].internals.scheduleEvaluation(
           {
             newState: instance.internals.stateStore.getState(),
-            operation: 'injected atom',
+            operation: dependentEdge.operation,
             reasons,
             targetKey: nodeKey,
             targetType: EvaluationTargetType.Atom,
