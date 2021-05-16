@@ -9,18 +9,20 @@ import { EcosystemProviderProps } from '../types'
  * be altered with props passed here.
  */
 export const EcosystemProvider: FC<EcosystemProviderProps> = ({
-  atoms,
   children,
   contexts,
   flags,
+  overrides,
   preload,
 }) => {
   const newEcosystem = useMemo(
-    () => ecosystem({ atoms, contexts, destroyOnUnmount: true, flags }),
+    () => ecosystem({ contexts, destroyOnUnmount: true, flags, overrides }),
     []
   )
 
   return (
-    <newEcosystem.Provider {...{ atoms, children, contexts, flags, preload }} />
+    <newEcosystem.Provider
+      {...{ children, contexts, flags, overrides, preload }}
+    />
   )
 }

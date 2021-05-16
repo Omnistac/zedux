@@ -1,8 +1,7 @@
-import { getEcosystem } from '../store/public-api'
 import { diContext } from '../utils/csContexts'
 
 export const injectEcosystem = () => {
-  const { ecosystemId } = diContext.consume()
+  const { instance } = diContext.consume()
 
-  return getEcosystem(ecosystemId)
+  return instance.ecosystem
 }

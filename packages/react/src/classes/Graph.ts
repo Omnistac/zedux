@@ -1,4 +1,3 @@
-import { AtomInstanceBase } from '../types'
 import {
   DependentEdge,
   EcosystemGraphNode,
@@ -10,6 +9,8 @@ import {
   JobType,
 } from '../utils'
 import { Ecosystem } from './Ecosystem'
+import { AtomInstance } from './instances/AtomInstance'
+import { AtomInstanceBase } from './instances/AtomInstanceBase'
 
 const getFlagScore = (dependentEdge: DependentEdge) => {
   let score = 0
@@ -27,17 +28,18 @@ export class Graph {
   public constructor(private readonly ecosystem: Ecosystem) {}
 
   // Should only be used internally
-  public addDependency(
+  public addDependency<State>(
     dependentKey: string,
     dependencyKey: string,
     operation: string,
     isStatic: boolean,
-    isAsync = false
+    isAsync = false,
+    shouldUpdate?: (state: State) => boolean
   ) {
     const dependency = this.nodes[dependencyKey]
 
     this.nodes[dependentKey].dependencies[dependencyKey] = true
-    dependency.dependents[dependentKey] = { isAsync, operation }
+    dependency.dependents[dependentKey] = { isAsync, operation, shouldUpdate }
 
     this.unscheduleDestruction(dependencyKey)
 
@@ -57,13 +59,13 @@ export class Graph {
   }
 
   public registerExternalDependent<State>(
-    dependency: AtomInstanceBase<State, any>,
+    dependency: AtomInstanceBase<State, any[], any>,
     callback: (signal: GraphEdgeSignal, newState: State) => any,
     operation: string,
     isStatic: boolean,
     isAsync = false
   ) {
-    const nodeKey = dependency.internals.keyHash
+    const nodeKey = dependency.keyHash
     const node = this.nodes[nodeKey]
     const id = generateNodeId()
 
@@ -84,7 +86,7 @@ export class Graph {
       }
 
       delete node.dependents[id]
-      this.scheduleInstanceDestruction(dependency.internals.keyHash)
+      this.scheduleInstanceDestruction(dependency.keyHash)
     }
   }
 
@@ -138,7 +140,7 @@ export class Graph {
 
       delete this.nodes[dependentKey].dependencies[nodeKey]
 
-      this.ecosystem.instances[dependentKey].internals.scheduleEvaluation(
+      this.ecosystem.instances[dependentKey]._scheduleEvaluation(
         {
           operation: dependentEdge.operation,
           targetKey: nodeKey,
@@ -164,14 +166,20 @@ export class Graph {
       if (dependentEdge.isStatic || dependentEdge.task) return
 
       const flagScore = getFlagScore(dependentEdge)
+      const newState = instance._stateStore.getState()
 
       // let internal dependents (other atoms) schedule themselves
       if (!dependentEdge.isExternal) {
-        return this.ecosystem.instances[
-          dependentKey
-        ].internals.scheduleEvaluation(
+        if (
+          dependentEdge.shouldUpdate &&
+          !dependentEdge.shouldUpdate(newState)
+        ) {
+          return
+        }
+
+        return this.ecosystem.instances[dependentKey]._scheduleEvaluation(
           {
-            newState: instance.internals.stateStore.getState(),
+            newState,
             operation: dependentEdge.operation,
             reasons,
             targetKey: nodeKey,
@@ -184,10 +192,7 @@ export class Graph {
 
       const task = () => {
         dependentEdge.task = undefined
-        dependentEdge.callback?.(
-          GraphEdgeSignal.Updated,
-          instance.internals.stateStore.getState()
-        )
+        dependentEdge.callback?.(GraphEdgeSignal.Updated, newState)
       }
 
       this.ecosystem.scheduler.scheduleJob({
@@ -223,7 +228,7 @@ export class Graph {
     const node = this.nodes[nodeKey]
 
     if (node && !Object.keys(node.dependents).length) {
-      this.ecosystem.instances[nodeKey].internals.scheduleDestruction()
+      this.ecosystem.instances[nodeKey]._scheduleDestruction()
     }
   }
 
@@ -231,11 +236,15 @@ export class Graph {
     const dependency = this.nodes[nodeKey]
 
     if (Object.keys(dependency.dependents).length === 1) {
-      const instance = this.ecosystem.instances[nodeKey]
+      const instance = this.ecosystem.instances[nodeKey] as AtomInstance<
+        any,
+        any[],
+        any
+      >
 
       // unschedule destruction of this atom
-      if (instance.internals.destructionTimeout) {
-        clearTimeout(instance.internals.destructionTimeout)
+      if (instance._destructionTimeout) {
+        clearTimeout(instance._destructionTimeout)
       }
     }
   }

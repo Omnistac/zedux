@@ -1,4 +1,3 @@
-import { getEcosystem } from '../store/public-api'
 import { EffectCallback } from '../types'
 import { haveDepsChanged, validateInjector } from '../utils'
 import { diContext } from '../utils/csContexts'
@@ -6,8 +5,10 @@ import { EffectInjectorDescriptor, InjectorType, JobType } from '../utils/types'
 
 export const injectEffect = (effect: EffectCallback, deps?: any[]) => {
   const context = diContext.consume()
-  const { ecosystemId, injectors } = context
-  const ecosystem = getEcosystem(ecosystemId)
+  const {
+    injectors,
+    instance: { ecosystem },
+  } = context
 
   const prevDescriptor = validateInjector<EffectInjectorDescriptor>(
     'injectEffect',

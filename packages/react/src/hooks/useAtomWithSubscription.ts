@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
-import { AtomBaseProperties, AtomInstanceBase } from '../types'
+import { AtomBase } from '../classes/atoms/AtomBase'
+import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useStableReference } from './useStableReference'
@@ -27,12 +28,13 @@ import { useStableReference } from './useStableReference'
 export const useAtomWithSubscription = <
   State = any,
   Params extends any[] = [],
-  InstanceType extends AtomInstanceBase<State, Params> = AtomInstanceBase<
+  InstanceType extends AtomInstanceBase<
     State,
-    Params
-  >
+    Params,
+    AtomBase<State, Params, any>
+  > = AtomInstanceBase<State, Params, AtomBase<State, Params, any>>
 >(
-  atom: AtomBaseProperties<State, Params, InstanceType>,
+  atom: AtomBase<State, Params, InstanceType>,
   params: Params
 ) => {
   const [, setReactState] = useState<State>()
@@ -53,7 +55,7 @@ export const useAtomWithSubscription = <
 
         setReactState(val)
       },
-      'a React dynamic hook',
+      'a dynamic React hook',
       false
     )
 

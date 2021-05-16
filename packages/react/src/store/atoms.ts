@@ -1,10 +1,10 @@
 import { createReducer } from '@zedux/core'
-import { AtomBaseProperties } from '../types'
+import { AtomBase } from '../classes'
 import { addAtomInstance, wipe } from './actions'
 
-// TODO: This (how will tracking atom implementations work with hot reloading)
+// TODO: how will tracking atom implementations work with hot reloading?
 export const atomsReducer = createReducer<{
-  [implementationId: string]: AtomBaseProperties<any, any[]>
+  [implementationId: string]: AtomBase<any, any[], any>
 }>({})
   .reduce(addAtomInstance, (state, { atom }) => ({
     ...state,

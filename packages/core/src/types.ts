@@ -55,7 +55,7 @@ export type Branch<T = any> = {
 
 export type Composable<T = any> = (arg: T) => T
 
-export type Dispatchable = ActionChain // Just an ActionChain for now. May include Thunks in a future release!
+export type Dispatchable = ActionChain // Just an ActionChain for now. Could include thunks but probably won't happen.
 
 export type Dispatcher<State = any> = (dispatchable: Dispatchable) => State
 

@@ -2,11 +2,11 @@ import { EvaluationTargetType, EvaluationType } from '../utils'
 import { diContext } from '../utils/csContexts'
 
 export const injectInvalidate = () => {
-  const { scheduleEvaluation } = diContext.consume()
+  const { instance } = diContext.consume()
 
   return () => {
-    scheduleEvaluation({
-      operation: 'injectInvalidate()',
+    instance._scheduleEvaluation({
+      operation: 'injectInvalidate',
       targetType: EvaluationTargetType.Injector,
       type: EvaluationType.CacheInvalidated,
     })

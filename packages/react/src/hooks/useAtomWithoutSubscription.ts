@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
-import { AtomBaseProperties, AtomInstanceBase } from '../types'
+import { AtomBase } from '../classes/atoms/AtomBase'
+import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useStableReference } from './useStableReference'
@@ -26,9 +27,13 @@ import { useStableReference } from './useStableReference'
 export const useAtomWithoutSubscription = <
   State,
   Params extends any[],
-  InstanceType extends AtomInstanceBase<State, Params>
+  InstanceType extends AtomInstanceBase<
+    State,
+    Params,
+    AtomBase<State, Params, any>
+  >
 >(
-  atom: AtomBaseProperties<State, Params, InstanceType>,
+  atom: AtomBase<State, Params, InstanceType>,
   params: Params
 ) => {
   const ecosystem = useEcosystem()
@@ -45,7 +50,7 @@ export const useAtomWithoutSubscription = <
           forceRender({})
         }
       },
-      'a React static hook',
+      'a static React hook',
       true
     )
 

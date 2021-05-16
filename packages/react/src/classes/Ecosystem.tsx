@@ -1,24 +1,19 @@
 import React, { createContext, FC, useEffect, useRef } from 'react'
 import { useStableReference } from '../hooks/useStableReference'
-import { createAtomInstance } from '../instance-helpers/createAtomInstance'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
-  Atom,
-  AtomBaseProperties,
   AtomContext,
   AtomContextInstance,
-  AtomInstance,
-  AtomInstanceBase,
   EcosystemConfig,
   EcosystemProviderProps,
-  LocalAtom,
-  ReadonlyAtom,
-  ReadonlyAtomInstance,
-  ReadonlyLocalAtom,
 } from '../types'
-import { generateAppId, getKeyHash } from '../utils'
+import { generateAppId } from '../utils'
 import { ecosystemCsContext } from '../utils/csContexts'
+import { Atom } from './atoms/Atom'
+import { AtomBase } from './atoms/AtomBase'
 import { Graph } from './Graph'
+import { AtomInstance } from './instances/AtomInstance'
+import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
 
 const mapAtomContexts = (atomContexts?: AtomContextInstance[]) =>
@@ -35,23 +30,18 @@ export class Ecosystem {
   public ecosystemId: string
   public flags?: string[] = []
   public graph = new Graph(this)
-  public instances: Record<string, AtomInstanceBase<any, any>> = {}
-  public overrides: Record<string, AtomBaseProperties<any, any[]>> = {}
+  public instances: Record<string, AtomInstanceBase<any, any[], any>> = {}
+  public overrides: Record<string, AtomBase<any, any[], any>> = {}
   public refCount = 0
   public scheduler = new Scheduler(this)
 
   constructor({
-    atoms,
     contexts,
     destroyOnUnmount,
     flags,
     id,
+    overrides,
   }: EcosystemConfig) {
-    if (atoms && !Array.isArray(atoms)) {
-      throw new TypeError(
-        "Zedux Error - The Ecosystem's `atoms` property must be an array of Atom objects"
-      )
-    }
     if (contexts && !Array.isArray(contexts)) {
       throw new TypeError(
         "Zedux Error - The Ecosystem's `contexts` property must be an array of AtomContext objects"
@@ -62,10 +52,16 @@ export class Ecosystem {
         "Zedux Error - The Ecosystem's `flags` property must be an array of strings"
       )
     }
+    if (overrides && !Array.isArray(overrides)) {
+      throw new TypeError(
+        "Zedux Error - The Ecosystem's `overrides` property must be an array of Atom objects"
+      )
+    }
 
     this.ecosystemId = id || generateAppId()
-    if (atoms) {
-      this.overrides = atoms.reduce(
+
+    if (overrides) {
+      this.overrides = overrides.reduce(
         (map, atom) => ({
           ...map,
           [atom.key]: atom,
@@ -73,12 +69,15 @@ export class Ecosystem {
         {}
       )
     }
+
     if (contexts) {
       this.atomContexts = mapAtomContexts(contexts)
     }
+
     if (flags) {
       this.flags = flags
     }
+
     this.destroyOnUnmount = !!destroyOnUnmount
 
     // yep. Dispatch this here. We'll make sure no component can ever be updated sychronously from this call (causing state-update-during-render react warnings)
@@ -107,73 +106,33 @@ export class Ecosystem {
     return instance
   }
 
-  public load<
-    State,
-    Params extends [],
-    Exports extends Record<string, any>,
-    InstanceType extends AtomInstance<State, Params, Exports>
-  >(
-    atom:
-      | Atom<State, Params, Exports, InstanceType>
-      | LocalAtom<State, Params, Exports, InstanceType>
-  ): InstanceType
+  public load<State, Params extends [], Exports extends Record<string, any>>(
+    atom: Atom<State, Params, Exports>
+  ): AtomInstance<State, Params, Exports>
 
-  public load<
-    State,
-    Params extends any[],
-    Exports extends Record<string, any>,
-    InstanceType extends AtomInstance<State, Params, Exports>
-  >(
-    atom:
-      | Atom<State, Params, Exports, InstanceType>
-      | LocalAtom<State, Params, Exports, InstanceType>,
+  public load<State, Params extends any[], Exports extends Record<string, any>>(
+    atom: Atom<State, Params, Exports>,
     params: Params
-  ): InstanceType
+  ): AtomInstance<State, Params, Exports>
 
   public load<
     State,
     Params extends [],
-    Exports extends Record<string, any>,
-    InstanceType extends ReadonlyAtomInstance<State, Params, Exports>
-  >(
-    atom:
-      | ReadonlyAtom<State, Params, Exports, InstanceType>
-      | ReadonlyLocalAtom<State, Params, Exports, InstanceType>
-  ): InstanceType
+    InstanceType extends AtomInstanceBase<State, Params, any>
+  >(atom: AtomBase<State, Params, InstanceType>): InstanceType
 
   public load<
     State,
     Params extends any[],
-    Exports extends Record<string, any>,
-    InstanceType extends ReadonlyAtomInstance<State, Params, Exports>
-  >(
-    atom:
-      | ReadonlyAtom<State, Params, Exports, InstanceType>
-      | ReadonlyLocalAtom<State, Params, Exports, InstanceType>,
-    params: Params
-  ): InstanceType
-
-  public load<
-    State,
-    Params extends [],
-    InstanceType extends AtomInstanceBase<State, Params>
-  >(atom: AtomBaseProperties<State, Params, InstanceType>): InstanceType
+    InstanceType extends AtomInstanceBase<State, Params, any>
+  >(atom: AtomBase<State, Params, InstanceType>, params: Params): InstanceType
 
   public load<
     State,
     Params extends any[],
-    InstanceType extends AtomInstanceBase<State, Params>
-  >(
-    atom: AtomBaseProperties<State, Params, InstanceType>,
-    params: Params
-  ): InstanceType
-
-  public load<
-    State,
-    Params extends any[],
-    InstanceType extends AtomInstanceBase<State, Params>
-  >(atom: AtomBaseProperties<State, Params, InstanceType>, params?: Params) {
-    const keyHash = getKeyHash(atom, params)
+    InstanceType extends AtomInstanceBase<State, Params, any>
+  >(atom: AtomBase<State, Params, InstanceType>, params?: Params) {
+    const keyHash = atom.getKeyHash(params as Params)
 
     // try to find an existing instance
     const existingInstance = this.instances[keyHash]
@@ -183,26 +142,25 @@ export class Ecosystem {
     const resolvedAtom = this.resolveAtom(atom)
     this.graph.addNode(keyHash)
 
-    const newInstance = createAtomInstance(this, resolvedAtom, keyHash, params)
+    const newInstance = resolvedAtom.createInstance(
+      this,
+      keyHash,
+      params || (([] as unknown) as Params)
+    )
     this.instances[keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
 
     return newInstance
   }
 
   public Provider: FC<EcosystemProviderProps> = ({
-    atoms,
     children,
     contexts,
     flags,
+    overrides,
     preload,
   }) => {
     const isFirstRenderRef = useRef(true)
 
-    if (atoms && !Array.isArray(atoms)) {
-      throw new TypeError(
-        "Zedux Error - The EcosystemProvider's `atoms` prop must be an array of Atom objects"
-      )
-    }
     if (contexts && !Array.isArray(contexts)) {
       throw new TypeError(
         "Zedux Error - The EcosystemProvider's `contexts` prop must be an array of AtomContext objects"
@@ -213,10 +171,15 @@ export class Ecosystem {
         "Zedux Error - The EcosystemProvider's `flags` prop must be an array of strings"
       )
     }
+    if (overrides && !Array.isArray(overrides)) {
+      throw new TypeError(
+        "Zedux Error - The EcosystemProvider's `overrides` prop must be an array of Atom objects"
+      )
+    }
 
-    const preservedAtoms = useStableReference(atoms)
     const preservedContexts = useStableReference(contexts)
     const preservedFlags = useStableReference(flags)
+    const preservedOverrides = useStableReference(overrides)
 
     useEffect(() => {
       if (isFirstRenderRef.current) return
@@ -225,7 +188,7 @@ export class Ecosystem {
         "Zedux Warning - Dynamically updating an ecosystem's overrides, atom contexts, and flags is not currently supported."
       )
       // TODO: Update class members and trigger evaluations
-    }, [preservedAtoms, preservedContexts, preservedFlags])
+    }, [preservedContexts, preservedFlags, preservedOverrides])
 
     useEffect(() => {
       this.refCount += 1
@@ -238,12 +201,12 @@ export class Ecosystem {
         const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
         if (!ecosystem) return
 
-        // TODO: iterate over the instances in an effect and destroy them all
         globalStore.dispatch(
           removeEcosystem({
             ecosystemId: this.ecosystemId,
           })
         )
+        this.wipe()
       }
     }, [])
 
@@ -255,7 +218,9 @@ export class Ecosystem {
     useEffect(() => {
       if (!preload) return
 
-      ecosystemCsContext.provide({ ecosystemId: this.ecosystemId }, preload)
+      ecosystemCsContext.provide({ ecosystemId: this.ecosystemId }, () =>
+        preload(this)
+      )
     }, [])
 
     return (
@@ -267,15 +232,14 @@ export class Ecosystem {
 
   public wipe() {
     Object.values(this.instances).forEach(instance => {
-      instance.internals.destroy()
-      delete this.instances[instance.internals.keyHash]
+      instance._destroy()
     })
 
     this.graph.wipe()
     this.scheduler.wipe()
   }
 
-  private resolveAtom<AtomType extends AtomBaseProperties<any, any[]>>(
+  private resolveAtom<AtomType extends AtomBase<any, any[], any>>(
     atom: AtomType
   ) {
     const override = this.overrides?.[atom.key]

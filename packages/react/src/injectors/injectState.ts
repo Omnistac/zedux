@@ -11,7 +11,7 @@ export const injectState = <State = any>(initialState?: Settable<State>) => {
   const { store } = split<StateInjectorDescriptor<State>>(
     'injectState',
     InjectorType.State,
-    ({ scheduleEvaluation }) => {
+    ({ instance }) => {
       const store = createStore<State>()
       if (typeof initialState !== 'undefined') store.setState(initialState)
 
@@ -19,16 +19,16 @@ export const injectState = <State = any>(initialState?: Settable<State>) => {
         effects: ({ action, newState, oldState }) => {
           if (newState === oldState) return
 
-          scheduleEvaluation({
+          instance._scheduleEvaluation({
             newState,
             oldState,
-            operation: 'injectStore()',
+            operation: 'injectState',
             reasons: [
               {
                 action,
                 newState,
                 oldState,
-                operation: 'dispatch()',
+                operation: 'dispatch',
                 targetType: EvaluationTargetType.Store,
                 type: EvaluationType.StateChanged,
               },

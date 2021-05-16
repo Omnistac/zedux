@@ -5,8 +5,8 @@ import {
   split,
 } from '../utils'
 import { diContext } from '../utils/csContexts'
-import { AtomBaseProperties, AtomInstanceBase } from '../types'
-import { getEcosystem } from '../store/public-api'
+import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
+import { AtomBase } from '../classes/atoms/AtomBase'
 
 /**
  * injectAtomWithoutSubscription
@@ -21,38 +21,35 @@ import { getEcosystem } from '../store/public-api'
  * the injectors built into atoms - e.g.
  *
  * ```ts
- * const [state, setState, store] = myAtom.injectState()
+ * const [state, setState] = myAtom.injectState()
  * ```
  */
 export const injectAtomWithoutSubscription = <
   State = any,
   Params extends any[] = [],
-  InstanceType extends AtomInstanceBase<State, Params> = AtomInstanceBase<
+  InstanceType extends AtomInstanceBase<
     State,
-    Params
-  >
+    Params,
+    AtomBase<State, Params, any>
+  > = AtomInstanceBase<State, Params, AtomBase<State, Params, any>>
 >(
   operation: string,
-  atom: AtomBaseProperties<State, Params, InstanceType>,
+  atom: AtomBase<State, Params, InstanceType>,
   params: Params
 ) => {
-  const { ecosystemId, keyHash } = diContext.consume()
-  const ecosystem = getEcosystem(ecosystemId)
+  const {
+    instance: { ecosystem, keyHash },
+  } = diContext.consume()
 
   const { instance } = split<AtomInjectorDescriptor<InstanceType>>(
     'injectAtomWithoutSubscription',
     InjectorType.Atom,
     () => {
       const instance = ecosystem.load(atom, params)
-      ecosystem.graph.addDependency(
-        keyHash,
-        instance.internals.keyHash,
-        operation,
-        true
-      )
+      ecosystem.graph.addDependency(keyHash, instance.keyHash, operation, true)
 
       const cleanup = () => {
-        ecosystem.graph.removeDependency(keyHash, instance.internals.keyHash)
+        ecosystem.graph.removeDependency(keyHash, instance.keyHash)
       }
 
       return {
@@ -63,10 +60,10 @@ export const injectAtomWithoutSubscription = <
     },
     prevDescriptor => {
       const atomHasChanged =
-        atom.internalId !== prevDescriptor.instance.internals.atomInternalId
+        atom.internalId !== prevDescriptor.instance.atom.internalId
 
       const paramsHaveChanged = haveDepsChanged(
-        prevDescriptor.instance.internals.params,
+        prevDescriptor.instance.params,
         params
       )
 
@@ -76,15 +73,10 @@ export const injectAtomWithoutSubscription = <
 
       // update the graph
       prevDescriptor.cleanup?.()
-      ecosystem.graph.addDependency(
-        keyHash,
-        instance.internals.keyHash,
-        operation,
-        true
-      )
+      ecosystem.graph.addDependency(keyHash, instance.keyHash, operation, true)
 
       prevDescriptor.cleanup = () => {
-        ecosystem.graph.removeDependency(keyHash, instance.internals.keyHash)
+        ecosystem.graph.removeDependency(keyHash, instance.keyHash)
       }
       prevDescriptor.instance = instance
 

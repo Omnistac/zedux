@@ -12,7 +12,7 @@ export const instantiateAtomContext = <T = any>(
   const store = atomContext.storeFactory(initialState)
 
   const injectSelector = <D = any>(selector: (state: T) => D) => {
-    const { scheduleEvaluation } = diContext.consume()
+    const { instance } = diContext.consume()
     const selectorRef = injectRef(selector)
     selectorRef.current = selector
 
@@ -31,7 +31,7 @@ export const instantiateAtomContext = <T = any>(
 
         prevResult = newResult
 
-        scheduleEvaluation({
+        instance._scheduleEvaluation({
           action,
           newState,
           oldState,
@@ -51,7 +51,7 @@ export const instantiateAtomContext = <T = any>(
   }
 
   const injectState = () => {
-    const { scheduleEvaluation } = diContext.consume()
+    const { instance } = diContext.consume()
 
     injectEffect(() => {
       const subscriber: EffectsSubscriber<T> = ({
@@ -61,7 +61,7 @@ export const instantiateAtomContext = <T = any>(
       }) => {
         if (newState === oldState) return
 
-        scheduleEvaluation({
+        instance._scheduleEvaluation({
           action,
           newState,
           oldState,
@@ -81,7 +81,7 @@ export const instantiateAtomContext = <T = any>(
   }
 
   const injectValue = () => {
-    const { scheduleEvaluation } = diContext.consume()
+    const { instance } = diContext.consume()
 
     injectEffect(() => {
       const subscriber: EffectsSubscriber<T> = ({
@@ -91,7 +91,7 @@ export const instantiateAtomContext = <T = any>(
       }) => {
         if (newState === oldState) return
 
-        scheduleEvaluation({
+        instance._scheduleEvaluation({
           action,
           newState,
           oldState,

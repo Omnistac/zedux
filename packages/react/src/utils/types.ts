@@ -1,19 +1,17 @@
-import {
-  AtomBaseProperties,
-  AtomInstanceBase,
-  RefObject,
-} from '@zedux/react/types'
+import { RefObject } from '@zedux/react/types'
 import { ActionChain, Store } from '@zedux/core'
+import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
+import { AtomBase } from '../classes/atoms/AtomBase'
 
 export interface AtomInjectorDescriptor<
-  InstanceType extends AtomInstanceBase<any, any>
+  InstanceType extends AtomInstanceBase<any, any[], AtomBase<any, any[], any>>
 > extends InjectorDescriptor {
   instance: InstanceType
   type: InjectorType.Atom
 }
 
 export interface AtomWithSubscriptionInjectorDescriptor<
-  InstanceType extends AtomInstanceBase<any, any>
+  InstanceType extends AtomInstanceBase<any, any[], any>
 > extends InjectorDescriptor {
   instance: InstanceType
   type: InjectorType.AtomWithSubscription
@@ -37,6 +35,7 @@ export interface DependentEdge {
   isExternal?: boolean
   isStatic?: boolean
   operation: string
+  shouldUpdate?: (state: any) => boolean
 }
 
 export interface DepsInjectorDescriptor extends InjectorDescriptor {
@@ -44,13 +43,9 @@ export interface DepsInjectorDescriptor extends InjectorDescriptor {
 }
 
 export interface DiContext {
-  ecosystemId: string
-  atom: AtomBaseProperties<any, any[]>
   injectors: InjectorDescriptor[]
+  instance: AtomInstanceBase<any, any[], any>
   isInitializing: boolean
-  keyHash: string
-  prevInjectors?: InjectorDescriptor[]
-  scheduleEvaluation: (reason: EvaluationReason) => void
 }
 
 export interface EcosystemGraphNode {
@@ -120,7 +115,10 @@ export enum InjectorType {
   Exports = 'Exports',
   Memo = 'Memo',
   Ref = 'Ref',
+  Selector = 'Selector',
   State = 'State',
+  Store = 'Store',
+  Value = 'Value',
   Why = 'Why',
 }
 
@@ -151,10 +149,23 @@ export interface RunEffectJob extends JobBase {
   type: JobType.RunEffect
 }
 
+export interface SelectorInjectorDescriptor<State = any, D = any>
+  extends InjectorDescriptor {
+  selector: (state: State) => D
+  selectorResult: D
+  type: InjectorType.Selector
+}
+
 export interface StateInjectorDescriptor<State = any>
   extends InjectorDescriptor {
   store: Store<State>
   type: InjectorType.State
+}
+
+export interface StoreInjectorDescriptor<State = any>
+  extends InjectorDescriptor {
+  store: Store<State>
+  type: InjectorType.Store
 }
 
 export interface UpdateExternalDependentJob extends JobBase {

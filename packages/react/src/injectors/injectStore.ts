@@ -1,8 +1,40 @@
 import { createStore, Store } from '@zedux/core'
-import { EvaluationType, EvaluationTargetType } from '../utils'
-import { diContext } from '../utils/csContexts'
-import { injectEffect } from './injectEffect'
-import { injectMemo } from './injectMemo'
+import { AtomInstanceBase } from '../classes'
+import {
+  EvaluationType,
+  EvaluationTargetType,
+  split,
+  StoreInjectorDescriptor,
+  InjectorType,
+} from '../utils'
+
+const doSubscribe = <State>(
+  instance: AtomInstanceBase<any, any[], any>,
+  store: Store<State>
+) =>
+  store.subscribe({
+    effects: ({ action, newState, oldState }) => {
+      if (newState === oldState) return
+
+      instance._scheduleEvaluation({
+        newState,
+        oldState,
+        operation: 'injectStore',
+        reasons: [
+          {
+            action,
+            newState,
+            oldState,
+            operation: 'dispatch',
+            targetType: EvaluationTargetType.Store,
+            type: EvaluationType.StateChanged,
+          },
+        ],
+        targetType: EvaluationTargetType.Injector,
+        type: EvaluationType.StateChanged,
+      })
+    },
+  })
 
 /**
  * injectStore()
@@ -42,46 +74,42 @@ export const injectStore = <State = any>(
   storeFactory?: State | (() => Store<State>),
   shouldSubscribe = false
 ) => {
-  const { scheduleEvaluation } = diContext.consume()
+  const { store } = split<StoreInjectorDescriptor<State>>(
+    'injectStore',
+    InjectorType.Store,
+    ({ instance }) => {
+      const getStore =
+        typeof storeFactory === 'function'
+          ? (storeFactory as () => Store<State>)
+          : () => createStore<State>(null, storeFactory)
 
-  const store = injectMemo(() => {
-    const getStore =
-      typeof storeFactory === 'function'
-        ? (storeFactory as () => Store<State>)
-        : () => createStore<State>(null, storeFactory)
+      const store = getStore()
 
-    return getStore()
-  }, [])
+      const subscription = shouldSubscribe && doSubscribe(instance, store)
 
-  injectEffect(() => {
-    if (!shouldSubscribe) return
+      return {
+        cleanup: subscription ? () => subscription.unsubscribe() : undefined,
+        store,
+        type: InjectorType.Store,
+      }
+    },
+    (prevInjector, { instance }) => {
+      const prevShouldSubscribe = !!prevInjector.cleanup
 
-    const subscription = store.subscribe({
-      effects: ({ action, newState, oldState }) => {
-        if (newState === oldState) return
+      if (prevShouldSubscribe === shouldSubscribe) return prevInjector
 
-        scheduleEvaluation({
-          newState,
-          oldState,
-          operation: 'injectStore()',
-          reasons: [
-            {
-              action,
-              newState,
-              oldState,
-              operation: 'dispatch()',
-              targetType: EvaluationTargetType.Store,
-              type: EvaluationType.StateChanged,
-            },
-          ],
-          targetType: EvaluationTargetType.Injector,
-          type: EvaluationType.StateChanged,
-        })
-      },
-    })
+      if (!shouldSubscribe) {
+        prevInjector.cleanup?.()
+        prevInjector.cleanup = undefined
+        return prevInjector
+      }
 
-    return () => subscription.unsubscribe()
-  }, [scheduleEvaluation, shouldSubscribe, store])
+      const subscription = doSubscribe(instance, prevInjector.store)
+      prevInjector.cleanup = () => subscription.unsubscribe()
+
+      return prevInjector
+    }
+  )
 
   return store
 }

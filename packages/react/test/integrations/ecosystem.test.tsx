@@ -119,6 +119,6 @@ describe('ecosystem', () => {
       '0 2',
       '0'
     )
-    expect(evaluations).toEqual([5, 2, 1, 4, 3, 2, 3, 4, 5])
+    expect(evaluations).toEqual([5, 2, 1, 4, 3, 1, 2, 3, 4, 5])
   })
 })
