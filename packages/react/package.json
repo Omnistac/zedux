@@ -1,6 +1,6 @@
 {
   "name": "@zedux/react",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Elite state management for React",
   "main": "./dist/es/react/src/index.js",
   "module": "./dist/es/react/src/index.js",
