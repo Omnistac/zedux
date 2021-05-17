@@ -8,6 +8,7 @@ export enum ActiveState {
   Active = 'Active',
   Destroyed = 'Destroyed',
   Destroying = 'Destroying',
+  Initializing = 'Initializing',
 }
 
 export type AsyncEffectCallback<T = any> = (

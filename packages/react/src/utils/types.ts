@@ -45,7 +45,6 @@ export interface DepsInjectorDescriptor extends InjectorDescriptor {
 export interface DiContext {
   injectors: InjectorDescriptor[]
   instance: AtomInstanceBase<any, any[], any>
-  isInitializing: boolean
 }
 
 export interface EcosystemGraphNode {

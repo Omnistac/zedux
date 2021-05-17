@@ -4,6 +4,7 @@ import {
   split,
   WhyInjectorDescriptor,
 } from '../utils'
+import { diContext } from '../utils/csContexts'
 
 export const injectWhy = (
   callback: (reasons: EvaluationReason[]) => unknown
@@ -24,4 +25,6 @@ export const injectWhy = (
       return prevDescriptor
     }
   )
+
+  return diContext.consume().instance._evaluationReasons
 }

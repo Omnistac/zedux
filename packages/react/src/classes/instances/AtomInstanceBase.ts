@@ -60,7 +60,7 @@ export abstract class AtomInstanceBase<
   Params extends any[],
   AtomType extends AtomBase<State, Params, any>
 > {
-  public _activeState = ActiveState.Active
+  public _activeState = ActiveState.Initializing
   public _evaluationReasons: EvaluationReason[] = [] // TODO: Make this undefined in prod and don't use
   public _injectors?: InjectorDescriptor[]
   public _stateType?: StateType
@@ -82,7 +82,6 @@ export abstract class AtomInstanceBase<
         {
           injectors,
           instance: this,
-          isInitializing: true,
         },
         this.evaluate
       )
@@ -99,6 +98,8 @@ export abstract class AtomInstanceBase<
     this._subscription = this._stateStore.subscribe(() => {
       ecosystem.graph.scheduleDependents(keyHash, this._evaluationReasons)
     })
+
+    this._activeState = ActiveState.Active
   }
 
   // handle detaching this atom instance from the global store and all destruction stuff
@@ -168,7 +169,6 @@ export abstract class AtomInstanceBase<
         {
           injectors: newInjectors,
           instance: this,
-          isInitializing: false,
         },
         this.evaluate
       )

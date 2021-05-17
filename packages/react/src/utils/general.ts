@@ -1,6 +1,7 @@
 import { isPlainObject } from '@zedux/core/utils/general'
 import { DiContext, InjectorDescriptor, InjectorType } from './types'
 import { diContext } from './csContexts'
+import { ActiveState } from '../types'
 
 let idCounter = 0
 
@@ -47,7 +48,7 @@ export const split = <T extends InjectorDescriptor>(
 ) => {
   const context = diContext.consume()
 
-  if (context.isInitializing) {
+  if (context.instance._activeState === ActiveState.Initializing) {
     const descriptor = first(context)
     context.injectors.push(descriptor)
 
@@ -75,7 +76,7 @@ export const validateInjector = <T extends InjectorDescriptor>(
   type: InjectorType,
   context: DiContext
 ): T | undefined => {
-  if (context.isInitializing) {
+  if (context.instance._activeState === ActiveState.Initializing) {
     return
   }
 
