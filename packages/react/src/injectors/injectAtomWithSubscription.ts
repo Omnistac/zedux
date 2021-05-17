@@ -48,10 +48,15 @@ export const injectAtomWithSubscription = <
     InjectorType.AtomWithSubscription,
     () => {
       const instance = ecosystem.load(atom, params)
-      ecosystem.graph.addDependency(keyHash, instance.keyHash, operation, false)
+      const edge = ecosystem.graph.addDependency(
+        keyHash,
+        instance.keyHash,
+        operation,
+        false
+      )
 
       const cleanup = () => {
-        ecosystem.graph.removeDependency(keyHash, instance.keyHash)
+        ecosystem.graph.removeDependency(keyHash, instance.keyHash, edge)
       }
 
       return {
@@ -75,10 +80,15 @@ export const injectAtomWithSubscription = <
 
       // update the graph
       prevDescriptor.cleanup?.()
-      ecosystem.graph.addDependency(keyHash, instance.keyHash, operation, false)
+      const edge = ecosystem.graph.addDependency(
+        keyHash,
+        instance.keyHash,
+        operation,
+        false
+      )
 
       prevDescriptor.cleanup = () => {
-        ecosystem.graph.removeDependency(keyHash, instance.keyHash)
+        ecosystem.graph.removeDependency(keyHash, instance.keyHash, edge)
       }
       prevDescriptor.instance = instance
 

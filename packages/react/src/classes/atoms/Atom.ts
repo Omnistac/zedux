@@ -57,11 +57,7 @@ export class Atom<
         newContext?.ecosystemId || initialContext.instance.ecosystem.ecosystemId
       const ecosystem = getEcosystem(ecosystemId)
 
-      return ecosystem.load<
-        State,
-        Params,
-        AtomInstance<State, Params, Exports>
-      >(this, params)
+      return ecosystem.load<State, Params, Exports>(this, params)
     }
   }
 
@@ -164,11 +160,7 @@ export class Atom<
       const ecosystemId = newAppId || initialAppId
       const ecosystem = getEcosystem(ecosystemId)
 
-      return ecosystem.load<
-        State,
-        Params,
-        AtomInstance<State, Params, Exports>
-      >(this, params)
+      return ecosystem.load<State, Params, Exports>(this, params)
     }
   }
 

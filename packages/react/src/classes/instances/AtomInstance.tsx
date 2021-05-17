@@ -125,7 +125,7 @@ export class AtomInstance<
       'injectSelector',
       InjectorType.Selector,
       ({ instance }) => {
-        this.ecosystem.graph.addDependency<State>(
+        const edge = this.ecosystem.graph.addDependency<State>(
           instance.keyHash,
           this.keyHash,
           'injectSelector',
@@ -141,7 +141,11 @@ export class AtomInstance<
         )
 
         const cleanup = () => {
-          this.ecosystem.graph.removeDependency(instance.keyHash, this.keyHash)
+          this.ecosystem.graph.removeDependency(
+            instance.keyHash,
+            this.keyHash,
+            edge
+          )
         }
 
         const descriptor: SelectorInjectorDescriptor<State> = {
@@ -172,7 +176,7 @@ export class AtomInstance<
       'injectState',
       InjectorType.State,
       ({ instance }) => {
-        this.ecosystem.graph.addDependency(
+        const edge = this.ecosystem.graph.addDependency(
           instance.keyHash,
           this.keyHash,
           'injectState',
@@ -180,7 +184,11 @@ export class AtomInstance<
         )
 
         const cleanup = () => {
-          this.ecosystem.graph.removeDependency(instance.keyHash, this.keyHash)
+          this.ecosystem.graph.removeDependency(
+            instance.keyHash,
+            this.keyHash,
+            edge
+          )
         }
 
         return {
@@ -199,7 +207,7 @@ export class AtomInstance<
       'injectValue',
       InjectorType.Value,
       ({ instance }) => {
-        this.ecosystem.graph.addDependency(
+        const edge = this.ecosystem.graph.addDependency(
           instance.keyHash,
           this.keyHash,
           'injectValue',
@@ -207,7 +215,11 @@ export class AtomInstance<
         )
 
         const cleanup = () => {
-          this.ecosystem.graph.removeDependency(instance.keyHash, this.keyHash)
+          this.ecosystem.graph.removeDependency(
+            instance.keyHash,
+            this.keyHash,
+            edge
+          )
         }
 
         return {

@@ -112,7 +112,7 @@ export class Ecosystem {
 
   public load<State, Params extends any[], Exports extends Record<string, any>>(
     atom: Atom<State, Params, Exports>,
-    params: Params
+    params: [...Params]
   ): AtomInstance<State, Params, Exports>
 
   public load<
@@ -125,7 +125,10 @@ export class Ecosystem {
     State,
     Params extends any[],
     InstanceType extends AtomInstanceBase<State, Params, any>
-  >(atom: AtomBase<State, Params, InstanceType>, params: Params): InstanceType
+  >(
+    atom: AtomBase<State, Params, InstanceType>,
+    params: [...Params]
+  ): InstanceType
 
   public load<
     State,

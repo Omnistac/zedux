@@ -37,7 +37,7 @@ export class AtomApi<State, Exports extends Record<string, any>> {
 
   public setExports<NewExports extends Record<string, any>>(
     exports: NewExports
-  ) {
+  ): AtomApi<State, NewExports> {
     ;(this as AtomApi<State, NewExports>).exports = exports
 
     return this as AtomApi<State, NewExports> // for chaining
@@ -60,7 +60,7 @@ export class AtomApi<State, Exports extends Record<string, any>> {
       next
     )
 
-    return intercept?.(action)
+    return (intercept || next)(action)
   }
 
   public _interceptSetState(
@@ -74,6 +74,6 @@ export class AtomApi<State, Exports extends Record<string, any>> {
       next
     )
 
-    return intercept?.(settable)
+    return (intercept || next)(settable)
   }
 }
