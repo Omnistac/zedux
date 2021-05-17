@@ -29,7 +29,7 @@ export class Atom<
       State,
       Params,
       AtomInstance<State, Params, Exports>
-    >('injectExports', this, params).exports
+    >('injectExports', this, params).api?.exports as Exports
   }
 
   public injectInstance(...params: Params) {
@@ -112,7 +112,7 @@ export class Atom<
     >('injectValue', this, params)._stateStore.getState()
   }
 
-  public override(newValue: AtomValueOrFactory<State, Params>) {
+  public override(newValue: AtomValueOrFactory<State, Params, Exports>) {
     return atom(this.key, newValue, {
       flags: this.flags,
       maxInstances: this.maxInstances,
@@ -137,7 +137,7 @@ export class Atom<
       State,
       Params,
       AtomInstance<State, Params, Exports>
-    >(this, params).exports
+    >(this, params).api?.exports as Exports
   }
 
   public useInstance(...params: Params) {

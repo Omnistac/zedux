@@ -33,7 +33,9 @@ export class LocalAtom<
     >('injectInstance', this, params)
   }
 
-  public override(newValue: AtomValueOrFactory<State, LocalParams<Params>>) {
+  public override(
+    newValue: AtomValueOrFactory<State, LocalParams<Params>, Exports>
+  ) {
     return localAtom(this.key, newValue, {
       flags: this.flags,
     })
@@ -74,7 +76,7 @@ export class LocalAtom<
   }
 
   public useExports() {
-    return this.useConsumer().exports
+    return this.useConsumer().api?.exports as Exports
   }
 
   public useInstance(...params: LocalParams<Params>) {

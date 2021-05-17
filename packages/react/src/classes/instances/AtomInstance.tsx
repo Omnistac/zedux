@@ -1,7 +1,6 @@
 import { ActionChain, Settable, Store } from '@zedux/core'
 import { ActiveState, AtomValue } from '@zedux/react/types'
 import {
-  ExportsInjectorDescriptor,
   GraphEdgeSignal,
   InjectorDescriptor,
   InjectorType,
@@ -10,16 +9,10 @@ import {
   StateInjectorDescriptor,
 } from '@zedux/react/utils'
 import React, { FC, useEffect, useRef, useState } from 'react'
+import { AtomApi } from '../AtomApi'
 import { StandardAtomBase } from '../atoms/StandardAtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { AtomInstanceBase } from './AtomInstanceBase'
-
-const getExports = <Exports extends Record<string, any>>(
-  injectors?: InjectorDescriptor[]
-) =>
-  (injectors?.find(injector => injector.type === InjectorType.Exports) as
-    | ExportsInjectorDescriptor<Exports>
-    | undefined)?.exports
 
 export class AtomInstance<
   State,
@@ -31,18 +24,8 @@ export class AtomInstance<
   StandardAtomBase<State, Params, Exports>
 > {
   public _destructionTimeout?: ReturnType<typeof setTimeout>
-  public exports?: Exports
+  public api?: AtomApi<State, Exports>
   public store: Store<State>
-
-  private dispatchInterceptor?: (
-    action: ActionChain,
-    next: (action: ActionChain) => State
-  ) => State
-
-  private setStateInterceptor?: (
-    settable: Settable<State>,
-    next: (settable: Settable<State>) => State
-  ) => State
 
   constructor(
     ecosystem: Ecosystem,
@@ -51,8 +34,6 @@ export class AtomInstance<
     params: Params
   ) {
     super(ecosystem, atom, keyHash, params)
-
-    this.exports = getExports(this._injectors)
 
     // standard atom instances expose this (so consumers can use a
     // non-underscore-prefixed property)
@@ -71,12 +52,26 @@ export class AtomInstance<
   public _evaluate() {
     const { _value } = this.atom
 
+    if (_value instanceof AtomApi) {
+      this.api = _value
+      return _value.value
+    }
+
     if (typeof _value !== 'function') {
       return _value
     }
 
     try {
-      return (_value as (...params: Params) => AtomValue<State>)(...this.params)
+      const val = (_value as (
+        ...params: Params
+      ) => AtomValue<State> | AtomApi<State, Exports>)(...this.params)
+
+      if (val instanceof AtomApi) {
+        this.api = val
+        return val.value
+      }
+
+      return val
     } catch (err) {
       console.error(
         `Zedux - Error while instantiating atom "${this.atom.key}" with params:`,
@@ -116,8 +111,8 @@ export class AtomInstance<
   }
 
   public dispatch = (action: ActionChain) => {
-    if (this.dispatchInterceptor) {
-      return this.dispatchInterceptor(action, (newAction: ActionChain) =>
+    if (this.api?.dispatchInterceptors?.length) {
+      return this.api._interceptDispatch(action, (newAction: ActionChain) =>
         this._stateStore.dispatch(newAction)
       )
     }
@@ -232,8 +227,8 @@ export class AtomInstance<
   }
 
   public setState = (settable: Settable<State>) => {
-    if (this.setStateInterceptor) {
-      return this.setStateInterceptor(
+    if (this.api?.setStateInterceptors?.length) {
+      return this.api._interceptSetState(
         settable,
         (newSettable: Settable<State>) => this._stateStore.setState(newSettable)
       )

@@ -1,5 +1,7 @@
-import { Dispatcher, Store } from '@zedux/core'
+import { ActionChain, Dispatcher, Settable, Store } from '@zedux/core'
+import { Observable } from 'rxjs'
 import { Ecosystem } from './classes'
+import { AtomApi } from './classes/AtomApi'
 import { AtomBase } from './classes/atoms/AtomBase'
 
 export enum ActiveState {
@@ -26,49 +28,6 @@ export enum AsyncStatus {
 }
 
 export type AsyncStore<T> = Store<AsyncState<T>>
-
-// export interface Atom<
-//   State,
-//   Params extends any[],
-//   Exports extends Record<string, any>,
-//   InstanceType extends AtomInstanceBase<State, Params> = AtomInstance<
-//     State,
-//     Params,
-//     Exports
-//   >
-// > extends Omit<
-//     ReadonlyAtom<State, Params, Exports, InstanceType>,
-//     'override' | 'readonly'
-//   > {
-//   injectDispatch: (...params: Params) => Dispatcher<State>
-//   injectSetState: (...params: Params) => StateSetter<State>
-//   injectState: (
-//     ...params: Params
-//   ) => readonly [State, Store<State>['setState'], Store<State>]
-//   injectStore: (...params: Params) => Store<State>
-//   override: (
-//     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
-//   ) => Atom<State, Params, Exports>
-//   readonly?: false
-//   useDispatch: (...params: Params) => Dispatcher<State>
-//   useSetState: (...params: Params) => StateSetter<State>
-//   useState: (...params: Params) => readonly [State, Store<State>['setState']]
-//   useStore: (...params: Params) => Store<State>
-// }
-
-// export interface AtomBaseProperties<
-//   State,
-//   Params extends any[],
-//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//   InstanceType extends AtomInstanceBase<State, Params> = AtomInstanceBase<
-//     State,
-//     Params
-//   >
-// > {
-//   flags?: string[]
-//   internalId: string
-//   key: string
-// }
 
 export interface AtomConfig {
   flags?: string[]
@@ -359,44 +318,25 @@ export interface AtomContextInstanceReactApi<T = any> {
   useValue: () => T
 }
 
-// export interface AtomInstance<
-//   State,
-//   Params extends any[],
-//   Exports extends Record<string, any>
-// > extends ReadonlyAtomInstance<State, Params, Exports> {
-//   dispatch: Dispatcher<State>
-//   injectState: () => readonly [State, Store<State>['setState'], Store<State>]
-//   setState: StateSetter<State>
-//   useState: () => readonly [State, Store<State>['setState']]
-//   store: Store<State>
-// }
-
-// export interface AtomInstanceBase<State, Params extends any[]> {
-//   internals: AtomInstanceInternals<State, Params>
-// }
-
-// export interface AtomInstanceInternals<State, Params extends any[]> {
-//   activeState: ActiveState
-//   atomInternalId: string
-//   destroy: () => void
-//   destructionTimeout?: ReturnType<typeof setTimeout>
-//   getEvaluationReasons: () => EvaluationReason[]
-//   injectors: InjectorDescriptor[]
-//   keyHash: string
-//   params: Params
-//   scheduleDestruction: () => void
-//   scheduleEvaluation: (reason: EvaluationReason, flagScore?: number) => void
-//   stateStore: Store<State>
-//   stateType: StateType
-// }
+export type AtomInstanceTtl = number | Promise<any> | Observable<any>
 
 export type AtomValue<State = any> = State | Store<State>
 
-export type AtomValueOrFactory<State = any, Params extends any[] = []> =
+export type AtomValueOrFactory<
+  State = any,
+  Params extends any[] = [],
+  Exports extends Record<string, any> = Record<string, any>
+> =
   | AtomValue<State>
-  | ((...params: Params) => AtomValue<State>)
+  | AtomApi<State, Exports>
+  | ((...params: Params) => AtomValue<State> | AtomApi<State, Exports>)
 
 export type Destructor = () => void
+
+export type DispatchInterceptor<State = any> = (
+  action: ActionChain,
+  next: (action: ActionChain) => State
+) => State
 
 export interface EcosystemProviderProps {
   contexts?: AtomContextInstance[]
@@ -416,29 +356,6 @@ export type EffectCallback = () => void | Destructor
 export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   ? <D = any>(selector: (state: State) => D) => D
   : <D = any>(params: Params, selector: (state: State) => D) => D
-
-// export interface LocalAtom<
-//   State,
-//   Params extends any[],
-//   Exports extends Record<string, any>,
-//   InstanceType extends AtomInstanceBase<State, Params> = AtomInstance<
-//     State,
-//     Params,
-//     Exports
-//   >
-// > extends Omit<
-//     ReadonlyLocalAtom<State, Params, Exports, InstanceType>,
-//     'override' | 'readonly'
-//   > {
-//   override: (
-//     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
-//   ) => LocalAtom<State, Params, Exports>
-//   readonly?: false
-//   useDispatch: () => Dispatcher<State>
-//   useSetState: () => StateSetter<State>
-//   useState: () => readonly [State, Store<State>['setState']]
-//   useStore: () => Store<State>
-// }
 
 export type LocalAtomConfig = Omit<AtomConfig, 'maxInstances' | 'ttl'>
 
@@ -596,86 +513,18 @@ export type LocalAtomConfig = Omit<AtomConfig, 'maxInstances' | 'ttl'>
 //   store: AsyncStore<State>
 // }
 
-// export interface ReadonlyAtomInstance<
-//   State,
-//   Params extends any[],
-//   Exports extends Record<string, any>
-// > extends AtomInstanceBase<State, Params> {
-//   exports: Exports
-//   injectSelector: <D = any>(selector: (state: State) => D) => D
-//   injectValue: () => State
-//   invalidate: () => void
-//   Provider: React.ComponentType
-//   useSelector: <D = any>(selector: (state: State) => D) => D
-//   useValue: () => State
-// }
-
-// export interface ReadonlyLocalAtom<
-//   State,
-//   Params extends any[],
-//   Exports extends Record<string, any>,
-//   InstanceType extends AtomInstanceBase<State, Params> = ReadonlyAtomInstance<
-//     State,
-//     Params,
-//     Exports
-//   >
-// > extends AtomBaseProperties<State, Params, InstanceType> {
-//   getReactContext: () => Context<InstanceType>
-//   injectInstance: (...params: Params) => InstanceType
-//   molecules?: Molecule<any, any>[] // TODO: type this first `any` (the second `any` is correct as-is)
-//   override: (
-//     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
-//   ) => ReadonlyLocalAtom<State, Params, Exports, InstanceType>
-//   readonly: true
-//   useConsumer: () => InstanceType
-//   useExports: () => Exports
-//   useInstance: (...params: Params) => InstanceType
-//   useSelector: <D = any>(selector: (state: State) => D) => D
-//   useValue: () => State
-//   value: AtomValue<State> | ((...params: Params) => AtomValue<State>)
-// }
-
-// export interface ReadonlyAtom<
-//   State,
-//   Params extends any[],
-//   Exports extends Record<string, any>,
-//   InstanceType extends AtomInstanceBase<State, Params> = ReadonlyAtomInstance<
-//     State,
-//     Params,
-//     Exports
-//   >
-// > extends AtomBaseProperties<State, Params, InstanceType> {
-//   getReactContext: () => Context<InstanceType>
-//   injectExports: (...params: Params) => Exports
-//   injectInstance: (...params: Params) => InstanceType
-//   injectInvalidate: (...params: Params) => () => void
-//   injectLazy: () => (...params: Params) => InstanceType
-//   injectSelector: InjectOrUseSelector<State, Params>
-//   injectValue: (...params: Params) => State
-//   maxInstances?: number
-//   molecules?: Molecule<any, any>[] // TODO: type this first `any`
-//   override: (
-//     newValue: AtomValue<State> | ((...params: Params) => AtomValue<State>)
-//   ) => ReadonlyAtom<State, Params, Exports, InstanceType>
-//   readonly: true
-//   ttl?: Scheduler
-//   useConsumer: () => InstanceType
-//   useExports: (...params: Params) => Exports
-//   useInstance: (...params: Params) => InstanceType
-//   useInvalidate: (...params: Params) => () => void
-//   useLazy: () => (...params: Params) => InstanceType
-//   useSelector: InjectOrUseSelector<State, Params>
-//   useValue: (...params: Params) => State
-//   value: AtomValue<State> | ((...params: Params) => AtomValue<State>)
-// }
-
 export interface RefObject<T = any> {
   current: T | null
 }
+
+export type Scheduler = number // | Observable<any> | (store: Store<T>) => Observable<any> - not implementing observable ttl for now
+
+export type SetStateInterceptor<State = any> = (
+  settable: Settable<State>,
+  next: (settable: Settable<State>) => State
+) => State
 
 export enum StateType {
   Store,
   Value,
 }
-
-export type Scheduler = number // | Observable<any> | (store: Store<T>) => Observable<any> - not implementing observable ttl for now

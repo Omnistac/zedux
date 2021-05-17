@@ -1,0 +1,79 @@
+import { ActionChain, Settable } from '@zedux/core'
+import {
+  AtomInstanceTtl,
+  AtomValue,
+  DispatchInterceptor,
+  SetStateInterceptor,
+} from '@zedux/react/types'
+
+export class AtomApi<State, Exports extends Record<string, any>> {
+  public dispatchInterceptors?: DispatchInterceptor<State>[]
+  public setStateInterceptors?: SetStateInterceptor<State>[]
+  public suspensePromise?: Promise<any>
+  public ttl?: AtomInstanceTtl | (() => AtomInstanceTtl)
+  public exports?: Exports
+
+  constructor(public value: AtomValue<State>) {}
+
+  public addDispatchInterceptor(interceptor: DispatchInterceptor<State>) {
+    if (!this.dispatchInterceptors) {
+      this.dispatchInterceptors = []
+    }
+
+    this.dispatchInterceptors.push(interceptor)
+
+    return this // for chaining
+  }
+
+  public addSetStateInterceptor(interceptor: SetStateInterceptor<State>) {
+    if (!this.setStateInterceptors) {
+      this.setStateInterceptors = []
+    }
+
+    this.setStateInterceptors.push(interceptor)
+
+    return this // for chaining
+  }
+
+  public setExports<NewExports extends Record<string, any>>(
+    exports: NewExports
+  ) {
+    ;(this as AtomApi<State, NewExports>).exports = exports
+
+    return this as AtomApi<State, NewExports> // for chaining
+  }
+
+  public setTtl(ttl: AtomInstanceTtl | (() => AtomInstanceTtl)) {
+    this.ttl = ttl
+
+    return this // for chaining
+  }
+
+  public _interceptDispatch(
+    action: ActionChain,
+    next: (action: ActionChain) => State
+  ) {
+    const intercept = this.dispatchInterceptors?.reduceRight(
+      (nextInterceptor: (action: ActionChain) => State, interceptor) => (
+        newAction: ActionChain
+      ) => interceptor(newAction, nextInterceptor),
+      next
+    )
+
+    return intercept?.(action)
+  }
+
+  public _interceptSetState(
+    settable: Settable<State>,
+    next: (settable: Settable<State>) => State
+  ) {
+    const intercept = this.setStateInterceptors?.reduceRight(
+      (nextInterceptor: (settable: Settable<State>) => State, interceptor) => (
+        newSettable: Settable<State>
+      ) => interceptor(newSettable, nextInterceptor),
+      next
+    )
+
+    return intercept?.(settable)
+  }
+}

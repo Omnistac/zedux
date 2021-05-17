@@ -15,7 +15,7 @@ export class StandardAtomBase<
 
   constructor(
     key: string,
-    public readonly _value: AtomValueOrFactory<State, Params>,
+    public readonly _value: AtomValueOrFactory<State, Params, Exports>,
     config?: AtomConfig
   ) {
     super(key, config?.flags, config?.maxInstances)
