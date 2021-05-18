@@ -70,7 +70,7 @@ export class Scheduler {
   // EvaluateAtom jobs go before any other job type and are sorted amongst
   // themselves by weight - lower weight evaluated first
   private insertEvaluateAtomJob(newJob: EvaluateAtomJob) {
-    const { nodes } = this.ecosystem.graph
+    const { nodes } = this.ecosystem._graph
     const newJobGraphNode = nodes[newJob.keyHash]
 
     const index = this.findInsertionIndex(job => {

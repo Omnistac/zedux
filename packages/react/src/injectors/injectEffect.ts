@@ -42,12 +42,12 @@ export const injectEffect = (effect: EffectCallback, deps?: any[]) => {
       descriptor.cleanup = cleanup || undefined
     }
 
-    ecosystem.scheduler.scheduleJob({
+    ecosystem._scheduler.scheduleJob({
       task,
       type: JobType.RunEffect,
     })
 
-    descriptor.cleanup = () => ecosystem.scheduler.unscheduleJob(task)
+    descriptor.cleanup = () => ecosystem._scheduler.unscheduleJob(task)
   }
 
   injectors.push(descriptor)

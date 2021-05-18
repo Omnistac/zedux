@@ -82,7 +82,7 @@ export abstract class AtomInstanceBase<
     ;[this._stateType, this._stateStore] = getStateStore(factoryResult)
 
     this._subscription = this._stateStore.subscribe(() => {
-      ecosystem.graph.scheduleDependents(keyHash, this._evaluationReasons)
+      ecosystem._graph.scheduleDependents(keyHash, this._evaluationReasons)
     })
 
     this._activeState = ActiveState.Active
@@ -94,7 +94,7 @@ export abstract class AtomInstanceBase<
     this._activeState = ActiveState.Destroyed
 
     if (this._evaluationReasons.length) {
-      this.ecosystem.scheduler.unscheduleJob(this.evaluationTask)
+      this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
     }
 
     // Clean up effect injectors first, then everything else
@@ -112,12 +112,16 @@ export abstract class AtomInstanceBase<
 
     if (this._getKeyHashes) {
       Object.entries(this._getKeyHashes).forEach(([dependencyKey, edge]) => {
-        this.ecosystem.graph.removeDependency(this.keyHash, dependencyKey, edge)
+        this.ecosystem._graph.removeDependency(
+          this.keyHash,
+          dependencyKey,
+          edge
+        )
       })
     }
 
     this._subscription?.unsubscribe()
-    this.ecosystem.destroyAtomInstance(this.keyHash)
+    this.ecosystem._destroyAtomInstance(this.keyHash)
 
     // TODO: any other cleanup items? (subscriptions to remove, timeouts to cancel, etc)
   }
@@ -139,7 +143,7 @@ export abstract class AtomInstanceBase<
 
     this._evaluationReasons = [reason]
 
-    this.ecosystem.scheduler.scheduleJob({
+    this.ecosystem._scheduler.scheduleJob({
       flagScore,
       keyHash: this.keyHash,
       task: this.evaluationTask,
@@ -274,7 +278,11 @@ export abstract class AtomInstanceBase<
       Object.entries(this._getKeyHashes).forEach(([dependencyKey, edge]) => {
         if (this._nextGetKeyHashes?.[dependencyKey]) return
 
-        this.ecosystem.graph.removeDependency(this.keyHash, dependencyKey, edge)
+        this.ecosystem._graph.removeDependency(
+          this.keyHash,
+          dependencyKey,
+          edge
+        )
       })
     }
 
@@ -290,7 +298,7 @@ export abstract class AtomInstanceBase<
           return
         }
 
-        const edge = this.ecosystem.graph.addDependency(
+        const edge = this.ecosystem._graph.addDependency(
           this.keyHash,
           dependencyKey,
           'get',

@@ -51,7 +51,7 @@ export class LocalAtom<
     const [, forceRender] = useState<any>()
 
     useLayoutEffect(() => {
-      const unregister = instance.ecosystem.graph.registerExternalDependent(
+      const unregister = instance.ecosystem._graph.registerExternalDependent(
         instance,
         (signal, val) => {
           if (signal === GraphEdgeSignal.Destroyed) {

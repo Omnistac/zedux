@@ -90,7 +90,7 @@ describe('ecosystem', () => {
 
     const { findByText } = render(<Test />)
 
-    expect(testEcosystem.instances).toEqual({
+    expect(testEcosystem._instances).toEqual({
       atom1: expect.any(Object),
       atom2: expect.any(Object),
       'atom3-["1"]': expect.any(Object),

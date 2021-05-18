@@ -91,7 +91,7 @@ export class Graph {
 
     return () => {
       if (newEdge.task) {
-        this.ecosystem.scheduler.unscheduleJob(newEdge.task)
+        this.ecosystem._scheduler.unscheduleJob(newEdge.task)
       }
 
       // this is fine; external dependents can't register multiple edges on the
@@ -155,7 +155,7 @@ export class Graph {
         const flagScore = getFlagScore(dependentEdge)
 
         if (dependentEdge.isExternal) {
-          this.ecosystem.scheduler.scheduleJob({
+          this.ecosystem._scheduler.scheduleJob({
             flagScore,
             task: () => dependentEdge.callback?.(GraphEdgeSignal.Destroyed),
             type: JobType.UpdateExternalDependent,
@@ -170,7 +170,7 @@ export class Graph {
 
         delete this.nodes[dependentKey].dependencies[nodeKey]
 
-        this.ecosystem.instances[dependentKey]._scheduleEvaluation(
+        this.ecosystem._instances[dependentKey]._scheduleEvaluation(
           {
             operation: dependentEdge.operation,
             targetKey: nodeKey,
@@ -188,7 +188,7 @@ export class Graph {
   // an atom just updated. Schedule an update for all dynamic dependents
   // Should only be used internally
   public scheduleDependents(nodeKey: string, reasons: EvaluationReason[]) {
-    const instance = this.ecosystem.instances[nodeKey]
+    const instance = this.ecosystem._instances[nodeKey]
     const node = this.nodes[nodeKey]
 
     Object.entries(node.dependents).forEach(
@@ -210,7 +210,7 @@ export class Graph {
               return
             }
 
-            return this.ecosystem.instances[dependentKey]._scheduleEvaluation(
+            return this.ecosystem._instances[dependentKey]._scheduleEvaluation(
               {
                 newState,
                 operation: dependentEdge.operation,
@@ -228,14 +228,14 @@ export class Graph {
             dependentEdge.callback?.(GraphEdgeSignal.Updated, newState)
           }
 
-          this.ecosystem.scheduler.scheduleJob({
+          this.ecosystem._scheduler.scheduleJob({
             flagScore,
             task,
             type: JobType.UpdateExternalDependent,
           })
 
           dependentEdge.task = () =>
-            this.ecosystem.scheduler.unscheduleJob(task)
+            this.ecosystem._scheduler.unscheduleJob(task)
         })
       }
     )
@@ -264,7 +264,7 @@ export class Graph {
     const node = this.nodes[nodeKey]
 
     if (node && !Object.keys(node.dependents).length) {
-      this.ecosystem.instances[nodeKey]._scheduleDestruction()
+      this.ecosystem._instances[nodeKey]._scheduleDestruction()
     }
   }
 
@@ -272,7 +272,7 @@ export class Graph {
     const dependency = this.nodes[nodeKey]
 
     if (Object.keys(dependency.dependents).length === 1) {
-      const instance = this.ecosystem.instances[nodeKey] as AtomInstance<
+      const instance = this.ecosystem._instances[nodeKey] as AtomInstance<
         any,
         any[],
         any

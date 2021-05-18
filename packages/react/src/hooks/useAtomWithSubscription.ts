@@ -45,7 +45,7 @@ export const useAtomWithSubscription = <
   const [atomInstance, unregister] = useMemo(() => {
     const instance = ecosystem.load(atom, stableParams)
 
-    const unregister = ecosystem.graph.registerExternalDependent(
+    const unregister = ecosystem._graph.registerExternalDependent(
       instance,
       (signal, val) => {
         if (signal === GraphEdgeSignal.Destroyed) {

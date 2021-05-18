@@ -125,7 +125,7 @@ export class AtomInstance<
       'injectSelector',
       InjectorType.Selector,
       ({ instance }) => {
-        const edge = this.ecosystem.graph.addDependency<State>(
+        const edge = this.ecosystem._graph.addDependency<State>(
           instance.keyHash,
           this.keyHash,
           'injectSelector',
@@ -141,7 +141,7 @@ export class AtomInstance<
         )
 
         const cleanup = () => {
-          this.ecosystem.graph.removeDependency(
+          this.ecosystem._graph.removeDependency(
             instance.keyHash,
             this.keyHash,
             edge
@@ -176,7 +176,7 @@ export class AtomInstance<
       'injectState',
       InjectorType.State,
       ({ instance }) => {
-        const edge = this.ecosystem.graph.addDependency(
+        const edge = this.ecosystem._graph.addDependency(
           instance.keyHash,
           this.keyHash,
           'injectState',
@@ -184,7 +184,7 @@ export class AtomInstance<
         )
 
         const cleanup = () => {
-          this.ecosystem.graph.removeDependency(
+          this.ecosystem._graph.removeDependency(
             instance.keyHash,
             this.keyHash,
             edge
@@ -207,7 +207,7 @@ export class AtomInstance<
       'injectValue',
       InjectorType.Value,
       ({ instance }) => {
-        const edge = this.ecosystem.graph.addDependency(
+        const edge = this.ecosystem._graph.addDependency(
           instance.keyHash,
           this.keyHash,
           'injectValue',
@@ -215,7 +215,7 @@ export class AtomInstance<
         )
 
         const cleanup = () => {
-          this.ecosystem.graph.removeDependency(
+          this.ecosystem._graph.removeDependency(
             instance.keyHash,
             this.keyHash,
             edge
@@ -258,7 +258,7 @@ export class AtomInstance<
     selectorRef.current = selector
 
     useEffect(() => {
-      const unregister = this.ecosystem.graph.registerExternalDependent(
+      const unregister = this.ecosystem._graph.registerExternalDependent(
         this,
         (signal, val) => {
           if (signal === GraphEdgeSignal.Destroyed) {
@@ -283,7 +283,7 @@ export class AtomInstance<
     const [, forceRender] = useState<any>()
 
     useEffect(() => {
-      const unregister = this.ecosystem.graph.registerExternalDependent(
+      const unregister = this.ecosystem._graph.registerExternalDependent(
         this,
         (signal, val) => {
           if (signal === GraphEdgeSignal.Destroyed) {
@@ -308,7 +308,7 @@ export class AtomInstance<
     const [, forceRender] = useState<any>()
 
     useEffect(() => {
-      const unregister = this.ecosystem.graph.registerExternalDependent(
+      const unregister = this.ecosystem._graph.registerExternalDependent(
         this,
         (signal, val) => {
           if (signal === GraphEdgeSignal.Destroyed) {

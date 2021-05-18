@@ -27,11 +27,14 @@ export class Ecosystem {
   public destroyOnUnmount = false
   public ecosystemId: string
   public flags?: string[] = []
-  public graph = new Graph(this)
-  public instances: Record<string, AtomInstanceBase<any, any[], any>> = {}
+  public _graph = new Graph(this)
+  public _instances: Record<
+    string,
+    AtomInstanceBase<any, any[], AtomBase<any, any[], any>>
+  > = {}
   public overrides: Record<string, AtomBase<any, any[], any>> = {}
   public refCount = 0
-  public scheduler = new Scheduler(this)
+  public _scheduler = new Scheduler(this)
 
   constructor({
     contexts,
@@ -83,11 +86,11 @@ export class Ecosystem {
   }
 
   // Should only be used internally
-  public destroyAtomInstance(keyHash: string) {
+  public _destroyAtomInstance(keyHash: string) {
     // try to destroy instance (if not destroyed - this fn is called as part of that destruction process too)
-    this.graph.removeNode(keyHash)
+    this._graph.removeNode(keyHash)
 
-    delete this.instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
+    delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
   }
 
   public getAtomContextInstance<T extends any = any>(
@@ -102,6 +105,21 @@ export class Ecosystem {
     }
 
     return instance
+  }
+
+  public inspectInstanceValues(atom?: AtomBase<any, any[], any> | string) {
+    const hash: Record<string, any> = {}
+    const filterKey = typeof atom === 'string' ? atom : atom?.key
+
+    Object.entries(this._instances)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([key, instance]) => {
+        if (filterKey && instance.atom.key !== filterKey) return
+
+        hash[key] = instance._stateStore.getState()
+      })
+
+    return hash
   }
 
   public load<InstanceType extends AtomInstanceBase<any, [], any>>(
@@ -134,19 +152,19 @@ export class Ecosystem {
     const keyHash = atom.getKeyHash(params as Params)
 
     // try to find an existing instance
-    const existingInstance = this.instances[keyHash]
+    const existingInstance = this._instances[keyHash]
     if (existingInstance) return existingInstance as InstanceType
 
     // create a new instance
     const resolvedAtom = this.resolveAtom(atom)
-    this.graph.addNode(keyHash)
+    this._graph.addNode(keyHash)
 
     const newInstance = resolvedAtom.createInstance(
       this,
       keyHash,
       params || (([] as unknown) as Params)
     )
-    this.instances[keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
+    this._instances[keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
 
     return newInstance
   }
@@ -230,12 +248,12 @@ export class Ecosystem {
   }
 
   public wipe() {
-    Object.values(this.instances).forEach(instance => {
+    Object.values(this._instances).forEach(instance => {
       instance._destroy()
     })
 
-    this.graph.wipe()
-    this.scheduler.wipe()
+    this._graph.wipe()
+    this._scheduler.wipe()
   }
 
   private resolveAtom<AtomType extends AtomBase<any, any[], any>>(

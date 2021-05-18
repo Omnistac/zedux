@@ -69,17 +69,17 @@ describe('graph', () => {
       },
     ]
 
-    expect(testEcosystem.graph.nodes.atom1.dependents).toEqual({
+    expect(testEcosystem._graph.nodes.atom1.dependents).toEqual({
       atom4: expectedEdges,
     })
 
-    expect(testEcosystem.graph.nodes.atom2.dependents).toEqual({
+    expect(testEcosystem._graph.nodes.atom2.dependents).toEqual({
       atom4: expectedEdges,
     })
 
-    expect(testEcosystem.graph.nodes.atom3).toBeUndefined()
+    expect(testEcosystem._graph.nodes.atom3).toBeUndefined()
 
-    expect(testEcosystem.graph.nodes.atom4.dependencies).toEqual({
+    expect(testEcosystem._graph.nodes.atom4.dependencies).toEqual({
       atom1: true,
       atom2: true,
     })
@@ -93,17 +93,17 @@ describe('graph', () => {
 
     expect(div).toHaveTextContent('4')
 
-    expect(testEcosystem.graph.nodes.atom1.dependents).toEqual({
+    expect(testEcosystem._graph.nodes.atom1.dependents).toEqual({
       atom4: expectedEdges,
     })
 
-    expect(testEcosystem.graph.nodes.atom2.dependents).toEqual({})
+    expect(testEcosystem._graph.nodes.atom2.dependents).toEqual({})
 
-    expect(testEcosystem.graph.nodes.atom3.dependents).toEqual({
+    expect(testEcosystem._graph.nodes.atom3.dependents).toEqual({
       atom4: expectedEdges,
     })
 
-    expect(testEcosystem.graph.nodes.atom4.dependencies).toEqual({
+    expect(testEcosystem._graph.nodes.atom4.dependencies).toEqual({
       atom1: true,
       atom3: true,
     })
