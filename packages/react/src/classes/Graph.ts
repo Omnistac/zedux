@@ -1,3 +1,4 @@
+import { ActiveState } from '../types'
 import {
   DependentEdge,
   EcosystemGraphNode,
@@ -37,7 +38,7 @@ export class Graph {
     shouldUpdate?: (state: State) => boolean
   ) {
     const dependency = this.nodes[dependencyKey]
-    const newEdge = { isAsync, operation, shouldUpdate }
+    const newEdge = { isAsync, isStatic, operation, shouldUpdate }
 
     this.nodes[dependentKey].dependencies[dependencyKey] = true
 
@@ -111,11 +112,11 @@ export class Graph {
 
     // if this edge has multiple dependent edges, unregister one of them
     if (dependentEdges?.length > 1) {
-      const index = dependency.dependents[dependentKey].indexOf(dependentEdge)
+      const index = dependentEdges.indexOf(dependentEdge)
 
       // shouldn't happen:
       if (index !== -1) {
-        dependency.dependents[dependentKey].splice(index, 1)
+        dependentEdges.splice(index, 1)
       }
 
       return
@@ -279,7 +280,9 @@ export class Graph {
 
       // unschedule destruction of this atom
       if (instance._destructionTimeout) {
+        // TODO: dispatch an action over instance._stateStore for this mutation
         clearTimeout(instance._destructionTimeout)
+        instance._activeState = ActiveState.Active
       }
     }
   }

@@ -1,6 +1,7 @@
 import { Subscription } from '@zedux/core'
 import { ActiveState, AtomValue, StateType } from '@zedux/react/types'
 import {
+  DependentEdge,
   EvaluationReason,
   EvaluationTargetType,
   EvaluationType,
@@ -65,6 +66,9 @@ export abstract class AtomInstanceBase<
   public _injectors?: InjectorDescriptor[]
   public _stateType?: StateType
   public _stateStore: Store<State>
+  private _getKeyHashes?: Record<string, DependentEdge>
+  private _isEvaluating = false
+  private _nextGetKeyHashes?: Record<string, true>
   private _subscription?: Subscription
 
   constructor(
@@ -73,26 +77,8 @@ export abstract class AtomInstanceBase<
     public readonly keyHash: string,
     public readonly params: Params
   ) {
-    // Boot up the atom!
-    let factoryResult: AtomValue<State>
-    const injectors: InjectorDescriptor[] = []
+    const factoryResult = this._doEvaluate()
 
-    try {
-      factoryResult = diContext.provide(
-        {
-          injectors,
-          instance: this,
-        },
-        this.evaluate
-      )
-    } catch (err) {
-      injectors.forEach(injector => {
-        injector.cleanup?.()
-      })
-      throw err
-    }
-
-    this._injectors = injectors
     ;[this._stateType, this._stateStore] = getStateStore(factoryResult)
 
     this._subscription = this._stateStore.subscribe(() => {
@@ -123,6 +109,12 @@ export abstract class AtomInstanceBase<
     nonEffectInjectors.forEach(injector => {
       injector.cleanup?.()
     })
+
+    if (this._getKeyHashes) {
+      Object.entries(this._getKeyHashes).forEach(([dependencyKey, edge]) => {
+        this.ecosystem.graph.removeDependency(this.keyHash, dependencyKey, edge)
+      })
+    }
 
     this._subscription?.unsubscribe()
     this.ecosystem.destroyAtomInstance(this.keyHash)
@@ -155,14 +147,58 @@ export abstract class AtomInstanceBase<
     })
   }
 
+  public _get<S>(atom: AtomBase<S, [], AtomInstanceBase<S, [], any>>): S
+
+  public _get<S, P extends any[]>(
+    atom: AtomBase<S, [...P], AtomInstanceBase<S, [...P], any>>,
+    params: [...P]
+  ): S
+
+  public _get<
+    S,
+    InstanceType extends AtomInstanceBase<S, [], AtomType>,
+    AtomType extends AtomBase<S, [], InstanceType>
+  >(atom: AtomType): S
+
+  public _get<
+    S,
+    InstanceType extends AtomInstanceBase<S, [], AtomType>,
+    AtomType extends AtomBase<S, [], InstanceType>
+  >(atom: AtomType): S
+
+  public _get<P extends any[]>(
+    atom: AtomBase<any, [...P], AtomInstanceBase<any, [...P], any>>,
+    params?: [...P]
+  ) {
+    // TODO: check if the instance exists so we know if we create it here so we
+    // can destroy it if the evaluate call errors (to prevent that memory leak)
+    const instance = this.ecosystem.load(atom, params as P)
+
+    // if get is called during evaluation, track the loaded instances so we can
+    // add graph dependencies for them
+    if (this._isEvaluating) {
+      if (!this._nextGetKeyHashes) {
+        this._nextGetKeyHashes = {}
+      }
+
+      // we could make this true or false depending on whether we created the
+      // instance in this call
+      this._nextGetKeyHashes[instance.keyHash] = true
+    }
+
+    // otherwise, instance.get() is just an alias for ecosystem.load()
+    return instance._stateStore.getState()
+  }
+
   // create small, memory-efficient bound function properties we can pass around
   public invalidate = () => this._invalidate()
   private evaluate = () => this._evaluate()
   private evaluationTask = () => this._evaluationTask()
 
-  private _evaluationTask() {
+  private _doEvaluate(): AtomValue<State> {
     const newInjectors: InjectorDescriptor[] = []
     let newFactoryResult: AtomValue<State>
+    this._isEvaluating = true
 
     try {
       newFactoryResult = diContext.provide(
@@ -178,12 +214,24 @@ export abstract class AtomInstanceBase<
       })
       throw err
     } finally {
-      runWhyInjectors(newInjectors, this._evaluationReasons)
+      this._isEvaluating = false
 
-      this._evaluationReasons = []
+      if (this._activeState !== ActiveState.Initializing) {
+        runWhyInjectors(newInjectors, this._evaluationReasons)
+
+        this._evaluationReasons = []
+      }
     }
 
     this._injectors = newInjectors // TODO: dispatch an action over stateStore for this mutation
+    this._updateGetEdges()
+
+    return newFactoryResult
+  }
+
+  private _evaluationTask() {
+    const newFactoryResult = this._doEvaluate()
+
     const newStateType = getStateType(newFactoryResult)
 
     if (newStateType !== this._stateType) {
@@ -217,5 +265,43 @@ export abstract class AtomInstanceBase<
       targetType: EvaluationTargetType.External,
       type: EvaluationType.CacheInvalidated,
     })
+  }
+
+  private _updateGetEdges() {
+    // remove any edges that were not recreated this evaluation
+    if (this._getKeyHashes) {
+      Object.entries(this._getKeyHashes).forEach(([dependencyKey, edge]) => {
+        if (this._nextGetKeyHashes?.[dependencyKey]) return
+
+        this.ecosystem.graph.removeDependency(this.keyHash, dependencyKey, edge)
+      })
+    }
+
+    // add new edges that were added this evaluation
+    if (this._nextGetKeyHashes) {
+      const nextGetKeyHashes: Record<string, DependentEdge> = {}
+
+      Object.keys(this._nextGetKeyHashes).forEach(dependencyKey => {
+        const existingEdge = this._getKeyHashes?.[dependencyKey]
+
+        if (existingEdge) {
+          nextGetKeyHashes[dependencyKey] = existingEdge
+          return
+        }
+
+        const edge = this.ecosystem.graph.addDependency(
+          this.keyHash,
+          dependencyKey,
+          'get',
+          false
+        )
+
+        nextGetKeyHashes[dependencyKey] = edge
+      })
+
+      this._getKeyHashes = nextGetKeyHashes
+    }
+
+    this._nextGetKeyHashes = undefined
   }
 }

@@ -1,4 +1,11 @@
-import { atom, ecosystem, injectEffect, injectStore } from '@zedux/react'
+import {
+  atom,
+  ecosystem,
+  injectEffect,
+  injectGet,
+  injectInvalidate,
+  injectStore,
+} from '@zedux/react'
 import React, { useState } from 'react'
 
 const testEcosystem = ecosystem({ id: 'test' })
@@ -39,18 +46,26 @@ const atom3 = atom(
 const atom4 = atom(
   'atom4',
   () => {
-    console.log('evaluating atom4')
-    const atom3val = atom3.injectValue('1')
-    const atom1val = atom1.injectValue()
+    const roll = Math.random() > 0.5
+    console.log('evaluating atom4', { roll })
+    const get = injectGet()
+    const invalidate = injectInvalidate()
+    const atom3val = get(atom3, ['1'])
+    const otherVal = roll ? get(atom1) : get(atom2)
 
-    injectEffect(
-      () => () => {
+    injectEffect(() => {
+      console.log('setting interval for atom4!')
+      const intervalId = setInterval(() => {
+        invalidate()
+      }, 5000)
+
+      return () => {
+        clearInterval(intervalId)
         console.log('cleaning up atom4!')
-      },
-      []
-    )
+      }
+    }, [])
 
-    return `${atom3val} ${atom1val}`
+    return `${atom3val} ${otherVal}`
   },
   { ttl: 2000 }
 )

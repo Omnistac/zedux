@@ -27,6 +27,7 @@ const config: Config.InitialOptions = {
     '<rootDir>/packages/react/src',
     '<rootDir>/packages/react/test',
   ],
+  setupFilesAfterEnv: ['./jest.setup.ts'],
   testRegex: '/test/.*\\.test\\.tsx?$',
 }
 

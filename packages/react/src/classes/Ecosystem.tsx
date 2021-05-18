@@ -9,10 +9,8 @@ import {
 } from '../types'
 import { generateAppId } from '../utils'
 import { ecosystemCsContext } from '../utils/csContexts'
-import { Atom } from './atoms/Atom'
 import { AtomBase } from './atoms/AtomBase'
 import { Graph } from './Graph'
-import { AtomInstance } from './instances/AtomInstance'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
 
@@ -106,29 +104,27 @@ export class Ecosystem {
     return instance
   }
 
-  public load<State, Params extends [], Exports extends Record<string, any>>(
-    atom: Atom<State, Params, Exports>
-  ): AtomInstance<State, Params, Exports>
-
-  public load<State, Params extends any[], Exports extends Record<string, any>>(
-    atom: Atom<State, Params, Exports>,
-    params: [...Params]
-  ): AtomInstance<State, Params, Exports>
-
-  public load<
-    State,
-    Params extends [],
-    InstanceType extends AtomInstanceBase<State, Params, any>
-  >(atom: AtomBase<State, Params, InstanceType>): InstanceType
-
-  public load<
-    State,
-    Params extends any[],
-    InstanceType extends AtomInstanceBase<State, Params, any>
-  >(
-    atom: AtomBase<State, Params, InstanceType>,
-    params: [...Params]
+  public load<InstanceType extends AtomInstanceBase<any, [], any>>(
+    atom: AtomBase<any, [], InstanceType>
   ): InstanceType
+
+  public load<
+    P extends any[],
+    InstanceType extends AtomInstanceBase<any, [...P], any>
+  >(atom: AtomBase<any, [...P], InstanceType>, params: [...P]): InstanceType
+
+  public load<
+    S,
+    InstanceType extends AtomInstanceBase<S, [], AtomType>,
+    AtomType extends AtomBase<S, [], InstanceType>
+  >(atom: AtomType): InstanceType
+
+  public load<
+    S,
+    P extends any[],
+    InstanceType extends AtomInstanceBase<S, [...P], AtomType>,
+    AtomType extends AtomBase<S, [...P], InstanceType>
+  >(atom: AtomType, params: [...P]): InstanceType
 
   public load<
     State,
