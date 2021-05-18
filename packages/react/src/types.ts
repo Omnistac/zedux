@@ -1,6 +1,6 @@
 import { ActionChain, Dispatcher, Settable, Store } from '@zedux/core'
 import { Observable } from 'rxjs'
-import { Ecosystem } from './classes'
+import { AtomInstance, AtomInstanceBase, Ecosystem } from './classes'
 import { AtomApi } from './classes/AtomApi'
 import { AtomBase } from './classes/atoms/AtomBase'
 
@@ -357,6 +357,96 @@ export type EffectCallback = () => void | Destructor
 export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   ? <D = any>(selector: (state: State) => D) => D
   : <D = any>(params: Params, selector: (state: State) => D) => D
+
+export type IonGet<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>
+> = (
+  utils: IonGetUtils,
+  ...params: Params
+) => AtomValue<State> | AtomApi<State, Exports>
+
+export interface IonGetUtils {
+  ecosystem: Ecosystem
+
+  get<S>(atom: AtomBase<S, [], AtomInstanceBase<S, [], any>>): S
+
+  get<S, P extends any[]>(
+    atom: AtomBase<S, [...P], AtomInstanceBase<S, [...P], any>>,
+    params: [...P]
+  ): S
+
+  get<
+    S,
+    InstanceType extends AtomInstanceBase<S, [], AtomType>,
+    AtomType extends AtomBase<S, [], InstanceType>
+  >(
+    atom: AtomType
+  ): S
+
+  get<
+    S,
+    P extends any[],
+    InstanceType extends AtomInstanceBase<S, [...P], AtomType>,
+    AtomType extends AtomBase<S, [...P], InstanceType>
+  >(
+    atom: AtomType,
+    params: [...P]
+  ): S
+}
+
+export type IonSet<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>
+> = (
+  utils: IonSetUtils<State, Params, Exports>,
+  settable: Settable<State>
+) => State | void
+
+export interface IonSetUtils<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>
+> {
+  ecosystem: Ecosystem
+
+  get: IonGetUtils['get']
+
+  instance: AtomInstance<State, Params, Exports>
+
+  set<S>(
+    atom: AtomBase<S, [], AtomInstanceBase<S, [], any>>,
+    settable: Settable<S>
+  ): S
+
+  set<S, P extends any[]>(
+    atom: AtomBase<S, [...P], AtomInstanceBase<S, [...P], any>>,
+    params: [...P],
+    settable: Settable<S>
+  ): S
+
+  set<
+    S,
+    InstanceType extends AtomInstanceBase<S, [], AtomType>,
+    AtomType extends AtomBase<S, [], InstanceType>
+  >(
+    atom: AtomType,
+    settable: Settable<S>
+  ): S
+
+  set<
+    S,
+    P extends any[],
+    InstanceType extends AtomInstanceBase<S, [...P], AtomType>,
+    AtomType extends AtomBase<S, [...P], InstanceType>
+  >(
+    atom: AtomType,
+    params: [...P],
+    settable: Settable<S>
+  ): S
+}
 
 export type LocalAtomConfig = Omit<AtomConfig, 'maxInstances' | 'ttl'>
 

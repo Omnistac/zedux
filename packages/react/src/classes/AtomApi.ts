@@ -8,12 +8,24 @@ import {
 
 export class AtomApi<State, Exports extends Record<string, any>> {
   public dispatchInterceptors?: DispatchInterceptor<State>[]
+  public exports?: Exports
   public setStateInterceptors?: SetStateInterceptor<State>[]
   public suspensePromise?: Promise<any>
   public ttl?: AtomInstanceTtl | (() => AtomInstanceTtl)
-  public exports?: Exports
+  public value: AtomValue<State>
 
-  constructor(public value: AtomValue<State>) {}
+  constructor(value: AtomValue<State> | AtomApi<State, Exports>) {
+    if (value instanceof AtomApi) {
+      this.dispatchInterceptors = value.dispatchInterceptors
+      this.exports = value.exports
+      this.setStateInterceptors = value.setStateInterceptors
+      this.suspensePromise = value.suspensePromise
+      this.ttl = value.ttl
+      this.value = value.value
+    } else {
+      this.value = value
+    }
+  }
 
   public addDispatchInterceptor(interceptor: DispatchInterceptor<State>) {
     if (!this.dispatchInterceptors) {

@@ -1,5 +1,4 @@
 import { atom } from '@zedux/react'
-import { api } from '@zedux/react/factories/api'
 import { ion } from '@zedux/react/factories/ion'
 import React, { useState } from 'react'
 
@@ -11,30 +10,24 @@ const testAtom = ion(
     const other = get(otherAtom)
     const setOther = otherAtom.injectSetState()
 
-    return api(other).setExports({
-      doStuff: (newVal: string) => {
-        const result = setOther(newVal)
-        return [other, result] as const
-      },
-    })
+    return other + ' world!'
+  },
+  ({ set }, newVal) => {
+    set(otherAtom, newVal)
+    console.log('setting!', newVal)
   },
   { ttl: 0 }
 )
 
 function Child() {
-  const test = testAtom.useValue()
-  const { doStuff } = testAtom.useExports()
-  let prev = undefined
-  let next = test
+  const [test, setTest] = testAtom.useState()
 
   return (
     <div>
-      <div>
-        {test} prev: {prev} next: {next}
-      </div>
+      <div>test: {test}</div>
       <button
         onClick={() => {
-          ;[prev, next] = doStuff('yoo')
+          setTest('yooooo')
         }}
       >
         click me!

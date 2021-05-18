@@ -162,9 +162,10 @@ export abstract class AtomInstanceBase<
 
   public _get<
     S,
-    InstanceType extends AtomInstanceBase<S, [], AtomType>,
-    AtomType extends AtomBase<S, [], InstanceType>
-  >(atom: AtomType): S
+    P extends any[],
+    InstanceType extends AtomInstanceBase<S, [...P], AtomType>,
+    AtomType extends AtomBase<S, [...P], InstanceType>
+  >(atom: AtomType, params: [...P]): S
 
   public _get<P extends any[]>(
     atom: AtomBase<any, [...P], AtomInstanceBase<any, [...P], any>>,
