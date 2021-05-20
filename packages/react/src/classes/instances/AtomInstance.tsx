@@ -224,7 +224,7 @@ export class AtomInstance<
 
         return {
           cleanup,
-          type: InjectorType.State,
+          type: InjectorType.Value,
         }
       }
     )
@@ -298,7 +298,7 @@ export class AtomInstance<
       )
 
       return unregister
-    })
+    }, [])
 
     return state
   }
@@ -323,7 +323,7 @@ export class AtomInstance<
       )
 
       return unregister
-    })
+    }, [])
 
     return [state, this._stateStore.setState] as const
   }

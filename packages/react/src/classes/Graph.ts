@@ -76,6 +76,16 @@ export class Graph {
   ) {
     const nodeKey = dependency.keyHash
     const node = this.nodes[nodeKey]
+
+    if (!node) {
+      console.warn(
+        'Zedux - tried registering external dependent after its dependency was destroyed. This may indicate a memory leak in your application'
+      )
+      return () => {}
+    }
+
+    // would be nice if React provided a way to know that multiple hooks were
+    // part of the same component
     const id = generateNodeId()
     const newEdge: DependentEdge = {
       callback,
@@ -225,7 +235,10 @@ export class Graph {
 
           const task = () => {
             dependentEdge.task = undefined
-            dependentEdge.callback?.(GraphEdgeSignal.Updated, newState)
+            dependentEdge.callback?.(
+              GraphEdgeSignal.Updated,
+              instance._stateStore.getState() // don't use the snapshotted newState above
+            )
           }
 
           this.ecosystem._scheduler.scheduleJob({

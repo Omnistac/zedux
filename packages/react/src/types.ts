@@ -1,6 +1,11 @@
 import { ActionChain, Dispatcher, Settable, Store } from '@zedux/core'
 import { Observable } from 'rxjs'
-import { AtomInstance, AtomInstanceBase, Ecosystem } from './classes'
+import {
+  AtomInstance,
+  AtomInstanceBase,
+  Ecosystem,
+  StandardAtomBase,
+} from './classes'
 import { AtomApi } from './classes/AtomApi'
 import { AtomBase } from './classes/atoms/AtomBase'
 
@@ -319,7 +324,25 @@ export interface AtomContextInstanceReactApi<T = any> {
   useValue: () => T
 }
 
+export type AtomExportsType<
+  AtomType extends StandardAtomBase<any, any, any>
+> = AtomType extends StandardAtomBase<any, any, infer T> ? T : never
+
+export type AtomInstanceType<
+  AtomType extends AtomBase<any, any, any>
+> = AtomType extends AtomBase<any, any, infer T> ? T : never
+
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
+
+export type AtomParamsType<
+  AtomType extends AtomBase<any, any, any>
+> = AtomType extends AtomBase<any, infer T, any> ? T : never
+
+export type AtomStateType<
+  AtomType extends AtomBase<any, any, any>
+> = AtomType extends AtomBase<infer T, any, AtomInstanceBase<infer T, any, any>>
+  ? T
+  : never
 
 export type AtomValue<State = any> = State | Store<State>
 
@@ -370,30 +393,7 @@ export type IonGet<
 export interface IonGetUtils {
   ecosystem: Ecosystem
 
-  get<S>(atom: AtomBase<S, [], AtomInstanceBase<S, [], any>>): S
-
-  get<S, P extends any[]>(
-    atom: AtomBase<S, [...P], AtomInstanceBase<S, [...P], any>>,
-    params: [...P]
-  ): S
-
-  get<
-    S,
-    InstanceType extends AtomInstanceBase<S, [], AtomType>,
-    AtomType extends AtomBase<S, [], InstanceType>
-  >(
-    atom: AtomType
-  ): S
-
-  get<
-    S,
-    P extends any[],
-    InstanceType extends AtomInstanceBase<S, [...P], AtomType>,
-    AtomType extends AtomBase<S, [...P], InstanceType>
-  >(
-    atom: AtomType,
-    params: [...P]
-  ): S
+  get: typeof AtomInstanceBase.prototype['_get']
 }
 
 export type IonSet<

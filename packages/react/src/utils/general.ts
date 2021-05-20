@@ -2,6 +2,7 @@ import { isPlainObject } from '@zedux/core/utils/general'
 import { DiContext, InjectorDescriptor, InjectorType } from './types'
 import { diContext } from './csContexts'
 import { ActiveState } from '../types'
+import { AtomInstanceBase } from '../classes'
 
 let idCounter = 0
 
@@ -19,6 +20,7 @@ export const generateNodeId = () => `no-${generateId()}`
 
 export const hashParams = (params: any): string =>
   JSON.stringify(params, (_, param) => {
+    if (param instanceof AtomInstanceBase) return param.keyHash
     if (!isPlainObject(param)) return param
 
     return Object.keys(param)

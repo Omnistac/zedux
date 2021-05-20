@@ -171,13 +171,25 @@ export abstract class AtomInstanceBase<
     AtomType extends AtomBase<S, [...P], InstanceType>
   >(atom: AtomType, params: [...P]): S
 
+  public _get<S>(instance: AtomInstanceBase<S, [], AtomBase<S, [], any>>): S
+
+  public _get<S, P extends any[]>(
+    instance: AtomInstanceBase<S, [], AtomBase<S, [], any>>,
+    params: [...P]
+  ): S
+
   public _get<P extends any[]>(
-    atom: AtomBase<any, [...P], AtomInstanceBase<any, [...P], any>>,
+    atomOrInstance:
+      | AtomBase<any, [...P], AtomInstanceBase<any, [...P], any>>
+      | AtomInstanceBase<any, [], AtomBase<any, [], any>>,
     params?: [...P]
   ) {
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
-    const instance = this.ecosystem.load(atom, params as P)
+    const instance =
+      atomOrInstance instanceof AtomInstanceBase
+        ? atomOrInstance
+        : this.ecosystem.load(atomOrInstance, params as P)
 
     // if get is called during evaluation, track the loaded instances so we can
     // add graph dependencies for them
