@@ -4,6 +4,8 @@ import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
   AtomContext,
   AtomContextInstance,
+  AtomInstanceType,
+  AtomParamsType,
   EcosystemConfig,
   EcosystemProviderProps,
 } from '../types'
@@ -122,38 +124,21 @@ export class Ecosystem {
     return hash
   }
 
-  public load<InstanceType extends AtomInstanceBase<any, [], any>>(
-    atom: AtomBase<any, [], InstanceType>
-  ): InstanceType
+  public load<A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+  public load<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomInstanceType<A>
 
-  public load<
-    P extends any[],
-    InstanceType extends AtomInstanceBase<any, [...P], any>
-  >(atom: AtomBase<any, [...P], InstanceType>, params: [...P]): InstanceType
-
-  public load<
-    S,
-    InstanceType extends AtomInstanceBase<S, [], AtomType>,
-    AtomType extends AtomBase<S, [], InstanceType>
-  >(atom: AtomType): InstanceType
-
-  public load<
-    S,
-    P extends any[],
-    InstanceType extends AtomInstanceBase<S, [...P], AtomType>,
-    AtomType extends AtomBase<S, [...P], InstanceType>
-  >(atom: AtomType, params: [...P]): InstanceType
-
-  public load<
-    State,
-    Params extends any[],
-    InstanceType extends AtomInstanceBase<State, Params, any>
-  >(atom: AtomBase<State, Params, InstanceType>, params?: Params) {
-    const keyHash = atom.getKeyHash(params as Params)
+  public load<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params?: AtomParamsType<A>
+  ) {
+    const keyHash = atom.getKeyHash(params as AtomParamsType<A>)
 
     // try to find an existing instance
     const existingInstance = this._instances[keyHash]
-    if (existingInstance) return existingInstance as InstanceType
+    if (existingInstance) return existingInstance as AtomInstanceType<A>
 
     // create a new instance
     const resolvedAtom = this.resolveAtom(atom)
@@ -162,7 +147,7 @@ export class Ecosystem {
     const newInstance = resolvedAtom.createInstance(
       this,
       keyHash,
-      params || (([] as unknown) as Params)
+      params || (([] as unknown) as AtomParamsType<A>)
     )
     this._instances[keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
 

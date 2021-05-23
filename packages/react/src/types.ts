@@ -328,6 +328,22 @@ export type AtomExportsType<
   AtomType extends StandardAtomBase<any, any, any>
 > = AtomType extends StandardAtomBase<any, any, infer T> ? T : never
 
+export type AtomInstanceAtomType<
+  AtomInstanceType extends AtomInstanceBase<any, any, any>
+> = AtomInstanceType extends AtomInstanceBase<any, any, infer T> ? T : never
+
+export type AtomInstanceExportsType<
+  AtomInstanceType extends AtomInstance<any, any, any>
+> = AtomInstanceType extends AtomInstance<any, any, infer T> ? T : never
+
+export type AtomInstanceParamsType<
+  AtomInstanceType extends AtomInstanceBase<any, any, any>
+> = AtomInstanceType extends AtomInstanceBase<any, infer T, any> ? T : never
+
+export type AtomInstanceStateType<
+  AtomInstanceType extends AtomInstanceBase<any, any, any>
+> = AtomInstanceType extends AtomInstanceBase<infer T, any, any> ? T : never
+
 export type AtomInstanceType<
   AtomType extends AtomBase<any, any, any>
 > = AtomType extends AtomBase<any, any, infer T> ? T : never
@@ -416,36 +432,16 @@ export interface IonSetUtils<
 
   instance: AtomInstance<State, Params, Exports>
 
-  set<S>(
-    atom: AtomBase<S, [], AtomInstanceBase<S, [], any>>,
-    settable: Settable<S>
-  ): S
+  set<A extends AtomBase<any, [], any>>(
+    atom: A,
+    settable: Settable<AtomStateType<A>>
+  ): AtomStateType<A>
 
-  set<S, P extends any[]>(
-    atom: AtomBase<S, [...P], AtomInstanceBase<S, [...P], any>>,
-    params: [...P],
-    settable: Settable<S>
-  ): S
-
-  set<
-    S,
-    InstanceType extends AtomInstanceBase<S, [], AtomType>,
-    AtomType extends AtomBase<S, [], InstanceType>
-  >(
-    atom: AtomType,
-    settable: Settable<S>
-  ): S
-
-  set<
-    S,
-    P extends any[],
-    InstanceType extends AtomInstanceBase<S, [...P], AtomType>,
-    AtomType extends AtomBase<S, [...P], InstanceType>
-  >(
-    atom: AtomType,
-    params: [...P],
-    settable: Settable<S>
-  ): S
+  set<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>,
+    settable: Settable<AtomStateType<A>>
+  ): AtomStateType<A>
 }
 
 export type LocalAtomConfig = Omit<AtomConfig, 'maxInstances' | 'ttl'>

@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { AtomValueOrFactory } from '../../types'
+import { AtomParamsType, AtomValueOrFactory } from '../../types'
 import { useAtomWithSubscription } from '../../hooks/useAtomWithSubscription'
 import { injectAtomWithSubscription } from '../../injectors/injectAtomWithSubscription'
 import { injectAtomWithoutSubscription } from '../../injectors/injectAtomWithoutSubscription'
@@ -51,16 +51,15 @@ export class Atom<
   public injectLazy() {
     const initialContext = diContext.consume()
 
-    return (...params: Params): AtomInstance<State, Params, Exports> => {
+    return (
+      ...params: AtomParamsType<this>
+    ): AtomInstance<State, Params, Exports> => {
       const newContext = ecosystemCsContext.consume(false)
       const ecosystemId =
         newContext?.ecosystemId || initialContext.instance.ecosystem.ecosystemId
       const ecosystem = getEcosystem(ecosystemId)
 
-      return ecosystem.load<Params, AtomInstance<State, Params, Exports>>(
-        this,
-        params
-      )
+      return ecosystem.load(this, params)
     }
   }
 
@@ -158,15 +157,12 @@ export class Atom<
   public useLazy() {
     const initialAppId = useContext(ecosystemContext)
 
-    return (...params: Params) => {
+    return (...params: AtomParamsType<this>) => {
       const newAppId = ecosystemCsContext.consume(false)?.ecosystemId
       const ecosystemId = newAppId || initialAppId
       const ecosystem = getEcosystem(ecosystemId)
 
-      return ecosystem.load<Params, AtomInstance<State, Params, Exports>>(
-        this,
-        params
-      )
+      return ecosystem.load(this, params)
     }
   }
 

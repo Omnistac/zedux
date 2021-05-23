@@ -25,6 +25,7 @@ export class AtomInstance<
 > {
   public _destructionTimeout?: ReturnType<typeof setTimeout>
   public api?: AtomApi<State, Exports>
+  public exports: Exports = undefined as any
   public store: Store<State>
 
   constructor(
@@ -68,6 +69,7 @@ export class AtomInstance<
 
       if (val instanceof AtomApi) {
         this.api = val
+        this.exports = val.exports as Exports
         return val.value
       }
 

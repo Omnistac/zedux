@@ -1,5 +1,13 @@
 import { Subscription } from '@zedux/core'
-import { ActiveState, AtomValue, StateType } from '@zedux/react/types'
+import {
+  ActiveState,
+  AtomInstanceParamsType,
+  AtomInstanceStateType,
+  AtomParamsType,
+  AtomStateType,
+  AtomValue,
+  StateType,
+} from '@zedux/react/types'
 import {
   DependentEdge,
   EvaluationReason,
@@ -151,32 +159,20 @@ export abstract class AtomInstanceBase<
     })
   }
 
-  public _get<S>(atom: AtomBase<S, [], AtomInstanceBase<S, [], any>>): S
+  public _get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+  public _get<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomStateType<A>
 
-  public _get<S, P extends any[]>(
-    atom: AtomBase<S, [...P], AtomInstanceBase<S, [...P], any>>,
-    params: [...P]
-  ): S
+  public _get<I extends AtomInstanceBase<any, [], any>>(
+    instance: I
+  ): AtomInstanceStateType<I>
 
-  public _get<
-    S,
-    InstanceType extends AtomInstanceBase<S, [], AtomType>,
-    AtomType extends AtomBase<S, [], InstanceType>
-  >(atom: AtomType): S
-
-  public _get<
-    S,
-    P extends any[],
-    InstanceType extends AtomInstanceBase<S, [...P], AtomType>,
-    AtomType extends AtomBase<S, [...P], InstanceType>
-  >(atom: AtomType, params: [...P]): S
-
-  public _get<S>(instance: AtomInstanceBase<S, [], AtomBase<S, [], any>>): S
-
-  public _get<S, P extends any[]>(
-    instance: AtomInstanceBase<S, [], AtomBase<S, [], any>>,
-    params: [...P]
-  ): S
+  public _get<I extends AtomInstanceBase<any, [...any], any>>(
+    instance: I,
+    params: AtomInstanceParamsType<I>
+  ): AtomInstanceStateType<I>
 
   public _get<P extends any[]>(
     atomOrInstance:
