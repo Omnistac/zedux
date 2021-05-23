@@ -1,7 +1,7 @@
 import { actionTypes, createStore } from '@zedux/core/index'
 
 describe('zero-configuration', () => {
-  test("setState() can set the initial state of the store (not what it's for)", () => {
+  test('setState() can set the initial state of the store', () => {
     const store = createStore()
     const initialState = {
       a: {
@@ -15,26 +15,9 @@ describe('zero-configuration', () => {
     expect(state).toBe(initialState)
   })
 
-  test('hydrate() dispatches the special HYDRATE action to the store', () => {
+  test('setState() dispatches the special HYDRATE action to the store', () => {
     const effectSubscriber = jest.fn()
-    const store = createStore()
-
-    store.subscribe({ effects: effectSubscriber })
-    store.hydrate(1)
-
-    expect(effectSubscriber).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: {
-          type: actionTypes.HYDRATE,
-          payload: 1,
-        },
-      })
-    )
-  })
-
-  test('setState() dispatches the special PARTIAL_HYDRATE action to the store', () => {
-    const effectSubscriber = jest.fn()
-    const store = createStore().hydrate(1)
+    const store = createStore(null, 1)
 
     store.subscribe({ effects: effectSubscriber })
     store.setState(2)
@@ -42,16 +25,16 @@ describe('zero-configuration', () => {
     expect(effectSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
-          type: actionTypes.PARTIAL_HYDRATE,
+          type: actionTypes.HYDRATE,
           payload: 2,
         },
       })
     )
   })
 
-  test('inducers dispatch the special PARTIAL_HYDRATE action to the store', () => {
+  test('inducers dispatch the special HYDRATE action to the store', () => {
     const effectSubscriber = jest.fn()
-    const store = createStore().hydrate(1)
+    const store = createStore(null, 1)
 
     store.subscribe({ effects: effectSubscriber })
     store.setState(() => 2)
@@ -59,14 +42,14 @@ describe('zero-configuration', () => {
     expect(effectSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
-          type: actionTypes.PARTIAL_HYDRATE,
+          type: actionTypes.HYDRATE,
           payload: 2,
         },
       })
     )
   })
 
-  test('inducers apply a partial update to the store', () => {
+  test('inducers fully replace the state', () => {
     const initialState = {
       a: 1,
       b: {
@@ -77,16 +60,18 @@ describe('zero-configuration', () => {
       },
     }
 
-    const store = createStore().hydrate(initialState)
+    const store = createStore(null, initialState)
 
-    const state = store.setState(() => ({
+    const state = store.setState(state => ({
+      a: 11,
       b: {
+        ...state.b,
         c: 4,
       },
     }))
 
     expect(state).toEqual({
-      a: 1,
+      a: 11,
       b: {
         c: 4,
         d: {

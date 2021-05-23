@@ -18,7 +18,6 @@ export const dispatchables = [
 export const getStoreBase = (store: Store) => ({
   dispatch: store.dispatch,
   getState: store.getState,
-  hydrate: store.hydrate,
   setState: store.setState,
 })
 

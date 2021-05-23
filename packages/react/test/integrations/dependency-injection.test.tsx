@@ -1,7 +1,9 @@
 import '@testing-library/jest-dom/extend-expect'
-import { atom, injectEffect, injectStore } from '@zedux/react'
+import { api, atom, createStore, injectEffect, injectStore } from '@zedux/react'
 import React, { FC } from 'react'
 import { renderInEcosystem } from '@zedux/react-test/utils/renderInEcosystem'
+import { fireEvent } from '@testing-library/dom'
+import { act } from '@testing-library/react'
 
 const normalAtom = atom('normal', () => {
   const store = injectStore(0)
@@ -23,7 +25,20 @@ const updatingAtom = atom('updating', () => {
   return store
 })
 
-describe('DI: atom -> component', () => {
+const composedStoresAtom = atom('composedStores', () => {
+  const a = injectStore(1)
+  const b = injectStore(2)
+  const store = injectStore(() => createStore({ a, b }))
+
+  return api(store).setExports({
+    update: () => {
+      a.setState(11)
+      b.setState(22)
+    },
+  })
+})
+
+describe('using atoms in components', () => {
   describe('atom.useValue()', () => {
     test('returns current state of the atom', () => {
       const Test: FC = () => {
@@ -37,7 +52,7 @@ describe('DI: atom -> component', () => {
       renderInEcosystem(<Test />)
     })
 
-    test("subscribes to the atom instance's store", async () => {
+    test('creates a dynamic graph dependency that renders component when atom state changes', async () => {
       const Test: FC = () => {
         const val = updatingAtom.useValue()
 
@@ -52,5 +67,47 @@ describe('DI: atom -> component', () => {
 
       expect(div).toHaveTextContent('1')
     })
+  })
+
+  test('multiple synchronous state changes will result in one component rerender', async () => {
+    jest.useFakeTimers()
+    const renders: { a: number; b: number }[] = []
+
+    const Test: FC = () => {
+      const val = composedStoresAtom.useValue()
+      const { update } = composedStoresAtom.useExports()
+
+      renders.push(val)
+
+      return (
+        <>
+          <div data-testid="a">{val.a}</div>
+          <div data-testid="b">{val.b}</div>
+          <button onClick={update}>update</button>
+        </>
+      )
+    }
+
+    const { findByTestId, findByText } = renderInEcosystem(<Test />)
+
+    const divA = await findByTestId('a')
+    const divB = await findByTestId('b')
+    const button = await findByText('update')
+
+    expect(divA).toHaveTextContent('1')
+    expect(divB).toHaveTextContent('2')
+    expect(renders).toEqual([{ a: 1, b: 2 }])
+
+    act(() => {
+      fireEvent.click(button)
+      jest.runAllTimers()
+    })
+
+    expect(divA).toHaveTextContent('11')
+    expect(divB).toHaveTextContent('22')
+    expect(renders).toEqual([
+      { a: 1, b: 2 },
+      { a: 11, b: 22 },
+    ])
   })
 })

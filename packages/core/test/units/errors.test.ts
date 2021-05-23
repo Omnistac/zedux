@@ -88,16 +88,16 @@ describe('assertIsValidActor()', () => {
       expect(assertIsValidActor.bind(null, nonDispatchable)).toThrow(TypeError)
     )
 
-    const actor1 = () => {}
+    const actor1: any = () => {}
     actor1.type = 0
 
     const actor2: any = () => {}
     actor2.type = []
 
-    const actor3 = () => {}
+    const actor3: any = () => {}
     actor3.type = undefined
 
-    const actor4 = () => {}
+    const actor4: any = () => {}
     actor4.type = ''
 
     expect(assertIsValidActor.bind(null, actor1)).toThrow(TypeError)
@@ -107,10 +107,10 @@ describe('assertIsValidActor()', () => {
   })
 
   test('does not throw if the actor is valid', () => {
-    const actor = () => {}
+    const actor = () => ({ type: 'a' })
     actor.type = 'a'
 
-    expect(assertIsValidActor.bind(null, actor)).not.toThrow()
+    expect(() => assertIsValidActor(actor, '')).not.toThrow()
   })
 })
 
@@ -123,7 +123,9 @@ describe('assertIsValidNodeOption()', () => {
       set: true,
     }
 
-    expect(assertIsValidNodeOption.bind(null, validOptions, 'a')).toThrow(Error)
+    expect(() =>
+      assertIsValidNodeOption(validOptions as any, 'a', () => {})
+    ).toThrow(Error)
   })
 
   test('throws a TypeError of the given value is not a function', () => {
@@ -134,8 +136,8 @@ describe('assertIsValidNodeOption()', () => {
       set: true,
     }
 
-    expect(
-      assertIsValidNodeOption.bind(null, validOptions, 'clone', 'a')
+    expect(() =>
+      assertIsValidNodeOption(validOptions as any, 'clone', 'a')
     ).toThrow(TypeError)
   })
 })
@@ -156,7 +158,7 @@ describe('invalidAction()', () => {
 
     expect(invalidAction({ type: [] } as any)).toMatch(/received array/i)
 
-    expect(invalidAction({ type: null })).toMatch(/received null/i)
+    expect(invalidAction({ type: null } as any)).toMatch(/received null/i)
 
     expect(invalidAction({ type: new Map() } as any)).toMatch(
       /received complex object/i

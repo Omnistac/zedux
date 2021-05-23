@@ -5,7 +5,6 @@ import {
   createStore,
   effectTypes,
   states,
-  Store,
   when,
 } from '@zedux/core/index'
 
@@ -93,7 +92,7 @@ describe('WhenBuilder', () => {
         .machine(({ machine }) => machine)
         .leaves(a, subscriber)
 
-      store.setState({ other: 2 })
+      store.setState(state => ({ ...state, other: 2 }))
 
       expect(subscriber).not.toHaveBeenCalled()
     })
@@ -409,7 +408,7 @@ describe('WhenBuilder', () => {
       expect(subscriber).toHaveBeenCalledTimes(1)
       expect(subscriber).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          action: { type: actionTypes.PARTIAL_HYDRATE, payload: 'a' },
+          action: { type: actionTypes.HYDRATE, payload: 'a' },
           newState: 'a',
           oldState: undefined,
         })
@@ -431,7 +430,7 @@ describe('WhenBuilder', () => {
       const store = createStore(null, 'apple')
       const subscriber = jest.fn()
 
-      when(store).stateMatches(val => val.startsWith('a'), subscriber)
+      when(store).stateMatches(val => !!val?.startsWith('a'), subscriber)
 
       store.setState('apricot')
 
@@ -446,7 +445,7 @@ describe('WhenBuilder', () => {
       expect(subscriber).toHaveBeenCalledTimes(1)
       expect(subscriber).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          action: { type: actionTypes.PARTIAL_HYDRATE, payload: 'acorn' },
+          action: { type: actionTypes.HYDRATE, payload: 'acorn' },
           newState: 'acorn',
           oldState: 'banana',
         })

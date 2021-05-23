@@ -124,7 +124,7 @@ describe('registrations', () => {
   describe('error subscribers', () => {
     test('all error subscribers are notified of an error', () => {
       const err = new Error('a')
-      const store = createStore(state => {
+      const store = createStore((state = 0) => {
         if (state > 0) throw err
 
         return state + 1
@@ -158,7 +158,7 @@ describe('registrations', () => {
 
       store.subscribe({ error: errorSubscriber })
 
-      let error: Error
+      let error: Error | undefined = undefined
       try {
         store.dispatch({ type: 'b' })
       } catch (err) {
@@ -186,7 +186,7 @@ describe('registrations', () => {
       child.subscribe({ error: childErrorSubscriber })
       parent.subscribe({ error: parentErrorSubscriber })
 
-      let error: Error
+      let error: Error | undefined = undefined
       try {
         parent.dispatch({ type: 'c' })
       } catch (err) {
@@ -413,7 +413,7 @@ describe('registrations', () => {
             metaType: metaTypes.DELEGATE,
             metaData: ['b', 'c', 'd'],
             payload: {
-              type: actionTypes.PARTIAL_HYDRATE,
+              type: actionTypes.HYDRATE,
               payload: 'a',
             },
           },

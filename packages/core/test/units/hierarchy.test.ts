@@ -43,13 +43,16 @@ describe('delegate()', () => {
   }
 
   test('does nothing and returns false if the action does not contain the special DELEGATE meta node', () => {
+    // @ts-expect-error null isn't a valid node
     expect(delegate(null, { type: 'a' })).toBe(false)
   })
 
-  test('throws a ReferenceError if the node path does not exist in the hierarchy', () => {
-    expect(delegate.bind(null, {}, action1)).toThrow(ReferenceError)
+  test('throws an error if the node path does not exist in the hierarchy', () => {
+    // @ts-expect-error {} isn't a valid node
+    expect(delegate.bind(null, {}, action1)).toThrowError()
 
     expect(
+      // @ts-expect-error {} isn't a valid node
       delegate.bind(
         null,
         {
@@ -61,11 +64,12 @@ describe('delegate()', () => {
         },
         action3
       )
-    ).toThrow(ReferenceError)
+    ).toThrowError()
   })
 
-  test('throws a TypeError if the node at the given path is not a store node', () => {
+  test('throws an error if the node at the given path is not a store node', () => {
     expect(
+      // @ts-expect-error {} isn't a valid node
       delegate.bind(
         null,
         {
@@ -75,9 +79,10 @@ describe('delegate()', () => {
         },
         action1
       )
-    ).toThrow(TypeError)
+    ).toThrowError()
 
     expect(
+      // @ts-expect-error {} isn't a valid node
       delegate.bind(
         null,
         {
@@ -91,7 +96,7 @@ describe('delegate()', () => {
         },
         action2
       )
-    ).toThrow(TypeError)
+    ).toThrowError()
   })
 
   test('delegates the one-delegate-layer-unwrapped action to the store at the given node', () => {
@@ -102,8 +107,9 @@ describe('delegate()', () => {
         type: HierarchyType.Branch,
         children: {
           a: {
-            type: HierarchyType.Store,
+            reducer: () => 1,
             store: mockStore,
+            type: HierarchyType.Store,
           },
         },
       },
@@ -123,8 +129,9 @@ describe('delegate()', () => {
                 type: HierarchyType.Branch,
                 children: {
                   c: {
-                    type: HierarchyType.Store,
+                    reducer: () => 1,
                     store: mockStore,
+                    type: HierarchyType.Store,
                   },
                 },
               },

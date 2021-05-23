@@ -68,7 +68,7 @@ describe('store composition', () => {
     const parentEffectSubscriber = jest.fn()
     parent.subscribe({ effects: parentEffectSubscriber })
 
-    child.hydrate(1)
+    child.setState(1)
 
     expect(parentEffectSubscriber).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -166,7 +166,7 @@ describe('store composition', () => {
 
     const initialState = parent.getState()
 
-    parent.hydrate({
+    parent.setState({
       a: {
         b: {
           ...initialState.a.b,
@@ -215,9 +215,6 @@ describe('store composition', () => {
     const childEffectsSubscriber = jest.fn()
     child.subscribe({ effects: childEffectsSubscriber })
 
-    const initialParentState = parent.getState()
-    const initialChildState = child.getState()
-
     parent.setState({
       a: {
         b: {
@@ -247,18 +244,12 @@ describe('store composition', () => {
       },
     })
 
-    expect(newParentState.a.b.d).toBe(initialParentState.a.b.d)
-    expect(newChildState.d).toBe(initialChildState.d)
-
     expect(childEffectsSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
           type: actionTypes.HYDRATE,
           payload: {
             c: 3,
-            d: {
-              e: 2,
-            },
           },
         },
       })
@@ -267,7 +258,7 @@ describe('store composition', () => {
 
   test('child store can be integrated into a complex object', () => {
     const parent = createStore()
-    const child = Object.create(createStore().hydrate(1), {
+    const child = Object.create(createStore(null, 1), {
       a: { value: 2 },
     })
 

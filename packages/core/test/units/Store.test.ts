@@ -1,13 +1,7 @@
 import { from } from 'rxjs'
 import { filter } from 'rxjs/operators'
 
-import {
-  actionTypes,
-  createStore,
-  effectTypes,
-  metaTypes,
-  Store,
-} from '@zedux/core/index'
+import { actionTypes, createStore, metaTypes, Store } from '@zedux/core/index'
 import {
   dispatchables,
   nonDispatchables,
@@ -19,37 +13,6 @@ import { observableSymbol } from '@zedux/core/utils/general'
 const nonFunctions = nonDispatchables.filter(
   thing => typeof thing !== 'function'
 )
-
-describe('store.action$', () => {
-  test('can be converted to an RxJS observable', () => {
-    const store = createStore()
-    const action$ = from(store.action$)
-    const subscriber = jest.fn()
-
-    action$.subscribe(subscriber)
-
-    store.dispatch({ type: 'a' })
-
-    expect(subscriber).toHaveBeenCalledWith({ type: 'a' })
-    expect(subscriber).toHaveBeenCalledTimes(1)
-  })
-
-  test('we can go RxJS crazy with the observable action$', () => {
-    const store = createStore()
-    const subscriber = jest.fn()
-
-    from(store.action$)
-      .pipe(filter(action => action.type !== 'a'))
-      .subscribe(subscriber)
-
-    store.dispatch({ type: 'a' })
-    store.dispatch({ type: 'b' })
-    store.dispatch({ type: 'a' })
-
-    expect(subscriber).toHaveBeenCalledWith({ type: 'b' })
-    expect(subscriber).toHaveBeenCalledTimes(1)
-  })
-})
 
 describe('Store.dispatch()', () => {
   test('throws a TypeError if the thing dispatched is not a plain object', () => {
@@ -118,11 +81,13 @@ describe('Store.dispatch()', () => {
   test('throws an Error if the dispatched action object does not have a string "type" property', () => {
     const store = createStore()
 
-    expect(store.dispatch.bind(null, {})).toThrowError(
+    // @ts-expect-error type must be a string
+    expect(() => store.dispatch({})).toThrowError(
       /action must have a string "type" property/i
     )
 
-    expect(store.dispatch.bind(null, { type: 1 })).toThrow(TypeError)
+    // @ts-expect-error type must be a string
+    expect(() => store.dispatch({ type: 1 })).toThrow(TypeError)
   })
 
   test('notifies effects subscribers of a wrapped action', () => {
@@ -218,31 +183,6 @@ describe('Store.dispatch()', () => {
   })
 })
 
-describe('Store.getRefCount()', () => {
-  test('returns the number of subscribers', () => {
-    const store = createStore()
-
-    store.subscribe(() => {})
-    store.subscribe(() => {})
-
-    expect(store.getRefCount()).toBe(2)
-  })
-
-  test('passing true includes internal Zedux subscribers in the count', () => {
-    const child = createStore()
-    const parent = createStore(child)
-
-    expect(child.getRefCount()).toBe(0)
-    expect(child.getRefCount(true)).toBe(1)
-
-    child.subscribe(() => {})
-
-    expect(child.getRefCount()).toBe(1)
-    expect(child.getRefCount(true)).toBe(2)
-    expect(parent.getRefCount(true)).toBe(0)
-  })
-})
-
 describe('Store.getState()', () => {
   test('cannot be called inside a reducer; throws an Error', () => {
     const store = createStore()
@@ -273,66 +213,6 @@ describe('Store.getState()', () => {
   })
 })
 
-describe('Store.hydrate()', () => {
-  test('cannot be called inside a reducer; throws an Error', () => {
-    const store = createStore()
-
-    const reducer = () => {
-      store.hydrate('a')
-
-      return 'b'
-    }
-
-    expect(() => store.use(reducer)).toThrowError(
-      /cannot be called within a reducer/i
-    )
-  })
-
-  test('short-circuits if the new state === the current state', () => {
-    const obj = {}
-    const store = createStore().use(() => obj)
-
-    store.hydrate(obj)
-
-    expect(store.getState()).toBe(obj)
-  })
-
-  test('informs effect subscribers of the special HYDRATE action', () => {
-    const effectsSubscriber = jest.fn()
-    const store = createStore()
-    const hydratedState = { a: 1 }
-
-    store.subscribe({ effects: effectsSubscriber })
-    store.hydrate(hydratedState)
-
-    expect(effectsSubscriber).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: {
-          type: actionTypes.HYDRATE,
-          payload: hydratedState,
-        },
-      })
-    )
-  })
-
-  test('informs subscribers of the new state', () => {
-    const subscriber = jest.fn()
-    const store = createStore()
-    const hydratedState = { a: 1 }
-
-    store.subscribe(subscriber)
-    store.hydrate(hydratedState)
-
-    expect(subscriber).toHaveBeenCalledWith(hydratedState, undefined)
-  })
-
-  test('returns the store for chaining', () => {
-    const store = createStore().hydrate('a').hydrate('b')
-
-    expect(store.getState()).toBe('b')
-  })
-})
-
 describe('store.configureHierarchy()', () => {
   test('throws a TypeError if the options hash is not a plain object', () => {
     const store = createStore()
@@ -347,11 +227,13 @@ describe('store.configureHierarchy()', () => {
   test('throws an Error if the options hash contains an invalid option key', () => {
     const store = createStore()
 
-    expect(store.configureHierarchy.bind(null, { a: 1 })).toThrow(Error)
+    // @ts-expect-error "a" is not a valid option
+    expect(() => store.configureHierarchy({ a: 1 })).toThrow(Error)
     expect(
       store.configureHierarchy.bind(null, {
         clone: () => {},
         create: () => {},
+        // @ts-expect-error "a" is not a valid option
         a: () => {},
       })
     ).toThrow(Error)
@@ -361,14 +243,15 @@ describe('store.configureHierarchy()', () => {
     const store = createStore()
 
     nonFunctions.forEach(nonFunction =>
-      expect(
-        store.configureHierarchy.bind(null, { clone: nonFunction })
-      ).toThrow(TypeError)
+      // @ts-expect-error clone prop needs to be a function
+      expect(() => store.configureHierarchy({ clone: nonFunction })).toThrow(
+        TypeError
+      )
     )
   })
 
   test('returns the store for chaining', () => {
-    const store = createStore().configureHierarchy({})
+    const store = createStore().configureHierarchy({} as any)
 
     expect(store.$$typeof).toBe(Symbol.for('zedux.store'))
   })
@@ -421,7 +304,7 @@ describe('Store.setState()', () => {
   })
 
   test('accepts a non-modifying inducer', () => {
-    const store = createStore().hydrate({})
+    const store = createStore(null, {})
     const inducer = (state: any) => state
 
     const prevState = store.getState()
@@ -442,15 +325,16 @@ describe('Store.setState()', () => {
   })
 
   test('short-circuits if the new state === the current state', () => {
-    const store = createStore().hydrate({ a: 1 })
+    const obj = { a: 1 }
+    const store = createStore(null, obj)
     const prevState = store.getState()
 
-    store.setState({ a: 1 })
+    store.setState(obj)
 
     expect(store.getState()).toBe(prevState)
   })
 
-  test('creates a PARTIAL_HYDRATE dispatch effect', () => {
+  test('informs effect subscribers of the special HYDRATE action', () => {
     const effectsSubscriber = jest.fn()
     const store = createStore()
     const hydratedState = { a: 1 }
@@ -461,7 +345,7 @@ describe('Store.setState()', () => {
     expect(effectsSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
-          type: actionTypes.PARTIAL_HYDRATE,
+          type: actionTypes.HYDRATE,
           payload: hydratedState,
         },
       })
@@ -480,7 +364,7 @@ describe('Store.setState()', () => {
   })
 
   test('does nothing if the state did not change', () => {
-    const store = createStore().hydrate(1)
+    const store = createStore(null, 1)
 
     const initialState = store.getState()
 
@@ -493,39 +377,39 @@ describe('Store.setState()', () => {
     expect(state).toBe(initialState)
   })
 
-  test('deeply merges the new state into the old state', () => {
-    const initialState = {
-      a: 1,
-      b: {
-        c: 2,
-        d: {
-          e: 3,
-        },
-      },
-    }
+  // test('deeply merges the new state into the old state', () => {
+  //   const initialState = {
+  //     a: 1,
+  //     b: {
+  //       c: 2,
+  //       d: {
+  //         e: 3,
+  //       },
+  //     },
+  //   }
 
-    const store = createStore().hydrate(initialState)
+  //   const store = createStore().hydrate(initialState)
 
-    const state = store.setState({
-      b: {
-        c: 4,
-        f: 5,
-      },
-    })
+  //   const state = store.setState({
+  //     b: {
+  //       c: 4,
+  //       f: 5,
+  //     },
+  //   })
 
-    expect(state).toEqual({
-      a: 1,
-      b: {
-        c: 4,
-        d: {
-          e: 3,
-        },
-        f: 5,
-      },
-    })
+  //   expect(state).toEqual({
+  //     a: 1,
+  //     b: {
+  //       c: 4,
+  //       d: {
+  //         e: 3,
+  //       },
+  //       f: 5,
+  //     },
+  //   })
 
-    expect(state.b.d).toBe(initialState.b.d)
-  })
+  //   expect(state.b.d).toBe(initialState.b.d)
+  // })
 })
 
 describe('store.subscribe()', () => {
@@ -582,42 +466,5 @@ describe('store.use()', () => {
       .use(null)
 
     expect(store.$$typeof).toBe(Symbol.for('zedux.store'))
-  })
-})
-
-describe('store[Symbol.observable]', () => {
-  test('returns the store (which is an observable)', () => {
-    const store = createStore()
-
-    expect((store[observableSymbol as keyof Store] as any)()).toBe(store)
-  })
-
-  test('can be converted to an RxJS observable', () => {
-    const store = createStore()
-    const state$ = from(store)
-    const subscriber = jest.fn()
-
-    state$.subscribe(subscriber)
-
-    store.setState('a')
-
-    expect(subscriber).toHaveBeenCalledWith('a')
-    expect(subscriber).toHaveBeenCalledTimes(1)
-  })
-
-  test('we can go RxJS crazy with the observable store', () => {
-    const store = createStore()
-    const subscriber = jest.fn()
-
-    from(store)
-      .pipe(filter(state => state !== 'a'))
-      .subscribe(subscriber)
-
-    store.setState('a')
-    store.setState('b')
-    store.setState('a')
-
-    expect(subscriber).toHaveBeenCalledWith('b')
-    expect(subscriber).toHaveBeenCalledTimes(1)
   })
 })
