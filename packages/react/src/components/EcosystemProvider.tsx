@@ -6,23 +6,18 @@ import { EcosystemProviderProps } from '../types'
  * EcosystemProvider
  *
  * Creates an atom ecosystem. The behavior of atoms inside this EcosystemProvider can
- * be altered with props passed here.
+ * be configured with props passed here.
  */
 export const EcosystemProvider: FC<EcosystemProviderProps> = ({
   children,
-  contexts,
   flags,
   overrides,
   preload,
 }) => {
   const newEcosystem = useMemo(
-    () => ecosystem({ contexts, destroyOnUnmount: true, flags, overrides }),
+    () => ecosystem({ destroyOnUnmount: true, flags, overrides }),
     []
   )
 
-  return (
-    <newEcosystem.Provider
-      {...{ children, contexts, flags, overrides, preload }}
-    />
-  )
+  return <newEcosystem.Provider {...{ children, flags, overrides, preload }} />
 }

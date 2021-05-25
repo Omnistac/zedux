@@ -1,6 +1,5 @@
 export * from './api'
 export * from './atom'
-export * from './atomContext'
 export * from './ecosystem'
 export * from './ion'
 export * from './localAtom'

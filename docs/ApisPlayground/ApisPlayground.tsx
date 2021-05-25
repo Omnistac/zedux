@@ -1,13 +1,13 @@
 import React from 'react'
 import { Button, Wrapper, ZenText } from './styles'
 import {
+  api,
   atom,
   createActor,
   createMachine,
   createReducer,
   createStore,
   injectEffect,
-  injectMethods,
   injectStore,
   states,
   when,
@@ -96,22 +96,17 @@ const zenAtom = atom('zen', () => {
     }
   }, [])
 
-  injectMethods(
-    () => ({
-      fetchZen: () => {
-        store.dispatch(startRequest())
-      },
-    }),
-    []
-  )
-
-  return store
+  return api(store).setExports({
+    fetchZen: () => {
+      store.dispatch(startRequest())
+    },
+  })
 })
 
 export const ApisPlayground = () => {
   const zenInstance = zenAtom.useInstance()
   const { requestState, zen } = zenInstance.useValue()
-  const { fetchZen } = zenInstance.useMethods()
+  const { fetchZen } = zenInstance.api.exports
 
   return (
     <Wrapper>

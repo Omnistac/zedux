@@ -1,4 +1,3 @@
-export * from './injectAtomContext'
 export * from './injectAtomWithoutSubscription'
 export * from './injectAtomWithSubscription'
 export * from './injectCallback'

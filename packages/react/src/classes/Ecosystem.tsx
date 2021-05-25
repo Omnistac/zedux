@@ -2,8 +2,6 @@ import React, { createContext, FC, useEffect, useRef } from 'react'
 import { useStableReference } from '../hooks/useStableReference'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
-  AtomContext,
-  AtomContextInstance,
   AtomInstanceType,
   AtomParamsType,
   EcosystemConfig,
@@ -16,40 +14,29 @@ import { Graph } from './Graph'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
 
-const mapAtomContexts = (atomContexts?: AtomContextInstance[]) =>
-  atomContexts?.reduce((map, atomContext) => {
-    map.set(atomContext.atomContext, atomContext)
-    return map
-  }, new Map<AtomContext, AtomContextInstance>())
-
 export const ecosystemContext = createContext('global')
 
 export class Ecosystem {
-  public atomContexts?: Map<AtomContext, AtomContextInstance>
-  public destroyOnUnmount = false
-  public ecosystemId: string
-  public flags?: string[] = []
   public _graph = new Graph(this)
   public _instances: Record<
     string,
     AtomInstanceBase<any, any[], AtomBase<any, any[], any>>
   > = {}
+  public _scheduler = new Scheduler(this)
+  public destroyOnUnmount = false
+  public ecosystemId: string
+  public flags?: string[] = []
   public overrides: Record<string, AtomBase<any, any[], any>> = {}
   public refCount = 0
-  public _scheduler = new Scheduler(this)
+  private _preload?: (ecosystem: this) => void
 
   constructor({
-    contexts,
     destroyOnUnmount,
     flags,
     id,
     overrides,
+    preload,
   }: EcosystemConfig) {
-    if (contexts && !Array.isArray(contexts)) {
-      throw new TypeError(
-        "Zedux Error - The Ecosystem's `contexts` property must be an array of AtomContext objects"
-      )
-    }
     if (flags && !Array.isArray(flags)) {
       throw new TypeError(
         "Zedux Error - The Ecosystem's `flags` property must be an array of strings"
@@ -73,18 +60,17 @@ export class Ecosystem {
       )
     }
 
-    if (contexts) {
-      this.atomContexts = mapAtomContexts(contexts)
-    }
-
     if (flags) {
       this.flags = flags
     }
 
     this.destroyOnUnmount = !!destroyOnUnmount
+    this._preload = preload
 
     // yep. Dispatch this here. We'll make sure no component can ever be updated sychronously from this call (causing state-update-during-render react warnings)
     globalStore.dispatch(addEcosystem(this))
+
+    preload?.(this)
   }
 
   // Should only be used internally
@@ -93,20 +79,6 @@ export class Ecosystem {
     this._graph.removeNode(keyHash)
 
     delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
-  }
-
-  public getAtomContextInstance<T extends any = any>(
-    atomContext: AtomContext<T>
-  ) {
-    const instance = this.atomContexts?.get(atomContext)
-
-    if (!instance) {
-      throw new Error(
-        `Zedux - given atom context has not been provided in ecosystem "${this.ecosystemId}"`
-      )
-    }
-
-    return instance
   }
 
   public inspectInstanceValues(atom?: AtomBase<any, any[], any> | string) {
@@ -156,18 +128,12 @@ export class Ecosystem {
 
   public Provider: FC<EcosystemProviderProps> = ({
     children,
-    contexts,
     flags,
     overrides,
     preload,
   }) => {
     const isFirstRenderRef = useRef(true)
 
-    if (contexts && !Array.isArray(contexts)) {
-      throw new TypeError(
-        "Zedux Error - The EcosystemProvider's `contexts` prop must be an array of AtomContext objects"
-      )
-    }
     if (flags && !Array.isArray(flags)) {
       throw new TypeError(
         "Zedux Error - The EcosystemProvider's `flags` prop must be an array of strings"
@@ -179,7 +145,6 @@ export class Ecosystem {
       )
     }
 
-    const preservedContexts = useStableReference(contexts)
     const preservedFlags = useStableReference(flags)
     const preservedOverrides = useStableReference(overrides)
 
@@ -187,10 +152,10 @@ export class Ecosystem {
       if (isFirstRenderRef.current) return
 
       console.warn(
-        "Zedux Warning - Dynamically updating an ecosystem's overrides, atom contexts, and flags is not currently supported."
+        "Zedux Warning - Dynamically updating an ecosystem's overrides and flags is not currently supported."
       )
       // TODO: Update class members and trigger evaluations
-    }, [preservedContexts, preservedFlags, preservedOverrides])
+    }, [preservedFlags, preservedOverrides])
 
     useEffect(() => {
       this.refCount += 1
@@ -230,6 +195,11 @@ export class Ecosystem {
         {children}
       </ecosystemContext.Provider>
     )
+  }
+
+  public reset() {
+    this.wipe()
+    this._preload?.(this)
   }
 
   public wipe() {
