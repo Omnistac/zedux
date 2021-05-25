@@ -408,7 +408,6 @@ export type IonGet<
 
 export interface IonGetUtils {
   ecosystem: Ecosystem
-
   get: typeof AtomInstanceBase.prototype['_get']
 }
 
@@ -427,9 +426,7 @@ export interface IonSetUtils<
   Exports extends Record<string, any>
 > {
   ecosystem: Ecosystem
-
   get: IonGetUtils['get']
-
   instance: AtomInstance<State, Params, Exports>
 
   set<A extends AtomBase<any, [], any>>(
@@ -600,8 +597,12 @@ export type LocalAtomConfig = Omit<AtomConfig, 'maxInstances' | 'ttl'>
 //   store: AsyncStore<State>
 // }
 
+export interface MutableRefObject<T = any> {
+  current: T
+}
+
 export interface RefObject<T = any> {
-  current: T | null
+  readonly current: T | null
 }
 
 export type Scheduler = number // | Observable<any> | (store: Store<T>) => Observable<any> - not implementing observable ttl for now

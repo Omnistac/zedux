@@ -19,7 +19,7 @@ export const ion: {
   setIn?: IonSet<State, Params, Exports> | AtomConfig,
   configIn?: AtomConfig
 ) => {
-  const set = configIn ? (setIn as IonSet<State, Params, Exports>) : undefined
+  const set = typeof setIn === 'function' ? setIn : undefined
   const config = configIn || (setIn as AtomConfig)
 
   return new Ion(key, get, set, config)

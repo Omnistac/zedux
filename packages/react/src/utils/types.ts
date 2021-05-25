@@ -1,4 +1,4 @@
-import { RefObject } from '@zedux/react/types'
+import { MutableRefObject, RefObject } from '@zedux/react/types'
 import { ActionChain, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 import { AtomBase } from '../classes/atoms/AtomBase'
@@ -141,7 +141,7 @@ export interface MemoInjectorDescriptor<State = any>
 }
 
 export interface RefInjectorDescriptor<T = any> extends InjectorDescriptor {
-  ref: RefObject<T>
+  ref: RefObject<T> | MutableRefObject<T>
 }
 
 export interface RunEffectJob extends JobBase {

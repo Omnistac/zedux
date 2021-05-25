@@ -7,6 +7,7 @@ import {
   ecosystem,
   injectGet,
   injectStore,
+  ion,
 } from '@zedux/react'
 import React from 'react'
 
@@ -37,7 +38,7 @@ describe('graph', () => {
   test('injectGet', async () => {
     jest.useFakeTimers()
 
-    const testEcosystem = ecosystem({ id: 'test' })
+    const testEcosystem = ecosystem({ id: 'test1' })
 
     function Test() {
       const { sum } = atom4.useValue()
@@ -107,5 +108,78 @@ describe('graph', () => {
       atom1: true,
       atom3: true,
     })
+  })
+
+  test('get(atom, true) returns the instance', () => {
+    const testEcosystem = ecosystem({ id: 'test2' })
+    const evaluations: number[] = []
+
+    const ion1 = ion(
+      'ion1',
+      ({ get }) => {
+        const instance1 = get(atom1, true)
+        const instance2 = get(atom2, [], true)
+
+        evaluations.push(instance1.store.getState())
+
+        return instance1.store.getState() + instance2.store.getState()
+      },
+      ({ get, set }, newVal) => {
+        get(atom1, true).setState(newVal)
+        set(atom1, 12)
+      }
+    )
+
+    const ionInstance = testEcosystem.load(ion1)
+
+    expect(testEcosystem._instances).toEqual({
+      atom1: expect.any(Object),
+      atom2: expect.any(Object),
+      ion1: expect.any(Object),
+    })
+
+    expect(testEcosystem._graph.nodes).toEqual({
+      atom1: {
+        dependencies: {},
+        dependents: {
+          ion1: [
+            {
+              isAsync: false,
+              isStatic: true,
+              operation: 'get',
+              shouldUpdate: undefined,
+            },
+          ],
+        },
+        weight: 1,
+      },
+      atom2: {
+        dependencies: {},
+        dependents: {
+          ion1: [
+            {
+              isAsync: false,
+              isStatic: true,
+              operation: 'get',
+              shouldUpdate: undefined,
+            },
+          ],
+        },
+        weight: 1,
+      },
+      ion1: {
+        dependencies: { atom1: true, atom2: true },
+        dependents: {},
+        weight: 1, // static dependencies don't affect the weight
+      },
+    })
+
+    expect(evaluations).toEqual([1])
+
+    ionInstance.setState(11)
+
+    expect(evaluations).toEqual([1])
+    expect(ionInstance.store.getState()).toBe(3)
+    expect(testEcosystem.load(atom1).store.getState()).toBe(12)
   })
 })

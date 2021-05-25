@@ -3,6 +3,7 @@ import {
   ActiveState,
   AtomInstanceParamsType,
   AtomInstanceStateType,
+  AtomInstanceType,
   AtomParamsType,
   AtomStateType,
   AtomValue,
@@ -22,6 +23,11 @@ import { diContext } from '@zedux/react/utils/csContexts'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { createStore, isZeduxStore, Store } from '@zedux/core'
+
+enum DynamicGraphEdge {
+  Dynamic = 1,
+  Static = 2,
+}
 
 const getStateType = (val: any) => {
   if (isZeduxStore(val)) return StateType.Store
@@ -76,7 +82,7 @@ export abstract class AtomInstanceBase<
   public _stateStore: Store<State>
   private _getKeyHashes?: Record<string, DependentEdge>
   private _isEvaluating = false
-  private _nextGetKeyHashes?: Record<string, true>
+  private _nextGetKeyHashes?: Record<string, DynamicGraphEdge>
   private _subscription?: Subscription
 
   constructor(
@@ -162,8 +168,20 @@ export abstract class AtomInstanceBase<
   public _get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
   public _get<A extends AtomBase<any, [...any], any>>(
     atom: A,
-    params: AtomParamsType<A>
+    params: AtomParamsType<A>,
+    returnInstance?: boolean
   ): AtomStateType<A>
+
+  public _get<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    returnInstance: true
+  ): AtomInstanceType<A>
+
+  public _get<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>,
+    returnInstance: true
+  ): AtomInstanceType<A>
 
   public _get<I extends AtomInstanceBase<any, [], any>>(
     instance: I
@@ -178,8 +196,12 @@ export abstract class AtomInstanceBase<
     atomOrInstance:
       | AtomBase<any, [...P], AtomInstanceBase<any, [...P], any>>
       | AtomInstanceBase<any, [], AtomBase<any, [], any>>,
-    params?: [...P]
+    paramsIn?: [...P] | boolean,
+    returnInstanceIn?: boolean
   ) {
+    const params = Array.isArray(paramsIn) ? paramsIn : undefined
+    const returnInstance = Array.isArray(paramsIn) ? returnInstanceIn : paramsIn
+
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
     const instance =
@@ -194,13 +216,15 @@ export abstract class AtomInstanceBase<
         this._nextGetKeyHashes = {}
       }
 
-      // we could make this true or false depending on whether we created the
+      // we could add more flags on this enum to indicate whether we created the
       // instance in this call
-      this._nextGetKeyHashes[instance.keyHash] = true
+      this._nextGetKeyHashes[instance.keyHash] = returnInstance
+        ? DynamicGraphEdge.Static
+        : DynamicGraphEdge.Dynamic
     }
 
     // otherwise, instance.get() is just an alias for ecosystem.load()
-    return instance._stateStore.getState()
+    return returnInstance ? instance : instance._stateStore.getState()
   }
 
   // create small, memory-efficient bound function properties we can pass around
@@ -281,10 +305,16 @@ export abstract class AtomInstanceBase<
   }
 
   private _updateGetEdges() {
+    const curr = this._getKeyHashes
+    const next = this._nextGetKeyHashes
+
     // remove any edges that were not recreated this evaluation
-    if (this._getKeyHashes) {
-      Object.entries(this._getKeyHashes).forEach(([dependencyKey, edge]) => {
-        if (this._nextGetKeyHashes?.[dependencyKey]) return
+    if (curr) {
+      Object.entries(curr).forEach(([dependencyKey, edge]) => {
+        const nextFlags = next?.[dependencyKey]
+        const nextIsStatic = nextFlags === DynamicGraphEdge.Static
+
+        if (nextFlags && nextIsStatic === edge.isStatic) return
 
         this.ecosystem._graph.removeDependency(
           this.keyHash,
@@ -295,11 +325,12 @@ export abstract class AtomInstanceBase<
     }
 
     // add new edges that were added this evaluation
-    if (this._nextGetKeyHashes) {
+    if (next) {
       const nextGetKeyHashes: Record<string, DependentEdge> = {}
 
-      Object.keys(this._nextGetKeyHashes).forEach(dependencyKey => {
-        const existingEdge = this._getKeyHashes?.[dependencyKey]
+      Object.keys(next).forEach(dependencyKey => {
+        const isStatic = next?.[dependencyKey] === DynamicGraphEdge.Static
+        const existingEdge = curr?.[dependencyKey]
 
         if (existingEdge) {
           nextGetKeyHashes[dependencyKey] = existingEdge
@@ -310,7 +341,7 @@ export abstract class AtomInstanceBase<
           this.keyHash,
           dependencyKey,
           'get',
-          false
+          isStatic
         )
 
         nextGetKeyHashes[dependencyKey] = edge
