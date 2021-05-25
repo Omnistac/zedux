@@ -27,6 +27,15 @@ export class AtomApi<State, Exports extends Record<string, any>> {
     }
   }
 
+  public addExports<NewExports extends Record<string, any>>(
+    exports: NewExports
+  ): AtomApi<State, Exports & NewExports> {
+    if (!this.exports) this.exports = exports as any
+    else this.exports = { ...this.exports, ...exports }
+
+    return this as AtomApi<State, Exports & NewExports>
+  }
+
   public addDispatchInterceptor(interceptor: DispatchInterceptor<State>) {
     if (!this.dispatchInterceptors) {
       this.dispatchInterceptors = []

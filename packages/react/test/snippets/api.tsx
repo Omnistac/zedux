@@ -11,26 +11,30 @@ const testAtom = ion(
     const other = get(otherAtom)
     const setOther = otherAtom.injectSetState()
 
-    return api(other).setExports({
-      doStuff: (newVal: string) => {
-        const result = setOther(newVal)
-        return [other, result] as const
-      },
-    })
+    return api(other)
+      .setExports({
+        doStuff: (newVal: string) => {
+          const result = setOther(newVal)
+          return [other, result] as const
+        },
+      })
+      .addExports({
+        aProp: 'test',
+      })
   },
   { ttl: 0 }
 )
 
 function Child() {
   const test = testAtom.useValue()
-  const { doStuff } = testAtom.useExports()
+  const { aProp, doStuff } = testAtom.useExports()
   let prev = undefined
   let next = test
 
   return (
     <div>
       <div>
-        {test} prev: {prev} next: {next}
+        {test} prev: {prev} next: {next} aProp: {aProp}
       </div>
       <button
         onClick={() => {
