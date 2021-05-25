@@ -1,5 +1,11 @@
 import { render } from '@testing-library/react'
-import { atom, ecosystem, injectStore, injectWhy } from '@zedux/react'
+import {
+  atom,
+  Ecosystem,
+  ecosystem,
+  injectStore,
+  injectWhy,
+} from '@zedux/react'
 import React from 'react'
 
 const testEcosystem = ecosystem({ id: 'test' })
@@ -120,5 +126,33 @@ describe('ecosystem', () => {
       '0'
     )
     expect(evaluations).toEqual([5, 2, 1, 4, 3, 1, 2, 3, 4, 5])
+  })
+
+  test('ecosystem reset runs preload function again', () => {
+    const evaluations: string[] = []
+    const atom1 = atom('atom1', () => {
+      evaluations.push('1')
+      return '1'
+    })
+
+    const preload = (theEcosystem: Ecosystem) => {
+      theEcosystem.load(atom1)
+    }
+
+    const preloadedEcosystem = ecosystem({ preload })
+
+    expect(evaluations).toEqual(['1'])
+    expect(preloadedEcosystem._instances).toEqual({
+      atom1: expect.any(Object),
+    })
+
+    preloadedEcosystem.reset()
+
+    expect(evaluations).toEqual(['1', '1'])
+    expect(preloadedEcosystem._instances).toEqual({
+      atom1: expect.any(Object),
+    })
+
+    preloadedEcosystem.destroy(true)
   })
 })

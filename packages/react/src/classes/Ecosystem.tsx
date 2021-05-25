@@ -81,6 +81,22 @@ export class Ecosystem {
     delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
   }
 
+  public destroy(force?: boolean) {
+    if (!force && this.refCount > 0) return
+
+    // Check if this ecosystem has been destroyed manually already
+    const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
+    if (!ecosystem) return
+
+    this.wipe()
+
+    globalStore.dispatch(
+      removeEcosystem({
+        ecosystemId: this.ecosystemId,
+      })
+    )
+  }
+
   public inspectInstanceValues(atom?: AtomBase<any, any[], any> | string) {
     const hash: Record<string, any> = {}
     const filterKey = typeof atom === 'string' ? atom : atom?.key
@@ -162,18 +178,9 @@ export class Ecosystem {
 
       return () => {
         this.refCount -= 1
-        if (this.refCount > 0 || !this.destroyOnUnmount) return
+        if (!this.destroyOnUnmount) return
 
-        // Check if this ecosystem has been destroyed manually already
-        const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
-        if (!ecosystem) return
-
-        globalStore.dispatch(
-          removeEcosystem({
-            ecosystemId: this.ecosystemId,
-          })
-        )
-        this.wipe()
+        this.destroy()
       }
     }, [])
 
