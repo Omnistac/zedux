@@ -1,4 +1,4 @@
-import { atom, AtomInstanceType } from '@zedux/react'
+import { atom, AtomInstanceType, useAtomConsumer } from '@zedux/react'
 import { ion } from '@zedux/react/factories/ion'
 import React, { useState } from 'react'
 
@@ -25,7 +25,7 @@ const upperCaseAtom = ion(
 )
 
 function Child() {
-  const testInstance = testAtom.useConsumer()
+  const testInstance = useAtomConsumer(testAtom, [])
   const upperCase = upperCaseAtom.useValue(testInstance)
 
   return (

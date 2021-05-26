@@ -1,6 +1,7 @@
 import {
   atom,
   ecosystem,
+  EcosystemProvider,
   injectEffect,
   injectGet,
   injectInvalidate,
@@ -111,8 +112,8 @@ function Child() {
 
 function Greeting() {
   return (
-    <testEcosystem.Provider>
+    <EcosystemProvider ecosystem={testEcosystem}>
       <Child />
-    </testEcosystem.Provider>
+    </EcosystemProvider>
   )
 }

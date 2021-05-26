@@ -1,4 +1,10 @@
-import { atom, ecosystem, injectEffect, injectStore } from '@zedux/react'
+import {
+  atom,
+  ecosystem,
+  EcosystemProvider,
+  injectEffect,
+  injectStore,
+} from '@zedux/react'
 import React, { useState } from 'react'
 
 const testEcosystem = ecosystem({ id: 'test' })
@@ -109,8 +115,8 @@ function Parent() {
 
 function Greeting() {
   return (
-    <testEcosystem.Provider>
+    <EcosystemProvider ecosystem={testEcosystem}>
       <Parent />
-    </testEcosystem.Provider>
+    </EcosystemProvider>
   )
 }
