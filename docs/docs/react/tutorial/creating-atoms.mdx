@@ -97,7 +97,55 @@ Now there are only 2 instances, which is within the `maxInstances`. The next ins
 
 Remember that atoms live forever, if no `ttl` is specified. In this case, `maxInstances` can be used to only clean up excess instances, allowing all others to live forever.
 
-## Selector Atoms
+## Ions
+
+```ts
+import { ion } from '@zedux/react'
+
+const filteredTodosAtom = ion('filteredTodos', ({ get }) => {
+  const todos = get(todosAtom), isDone: boolean
+
+  injectEffect(() => {
+
+  }, [])
+
+  return todos.filter(todo => todo.isDone === isDone)
+})
+
+function Todos() {
+  const finishedTodos = filteredTodosAtom.useValue(true)
+  const unfinishedTodos = filteredTodosAtom.useValue(false)
+
+  ...
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 One atom configuration is particularly common in Zedux:
 
@@ -142,12 +190,25 @@ const filteredTodosAtom = selector('filteredTodos', (isDone: boolean) => {
 })
 ```
 
+## Stores
+
+Every instance of every atom creates a light-weight store. Stores manage state and serve as a message bus for running side effects based on dispatched actions or state changes.
+
+Atoms create most stores for you. But you can easily create them manually:
+
+```ts
+import { createStore } from '@zedux/react'
+
+const myStore = createStore()
+```
+
+Stores have lots of cool features that we'll look at in [the stores tutorial](stores). For now, just remember that every atom instance has an underlying store.
+
 ## Recap
 
 - `atom()` can take a config object.
-- Readonly atoms can be created using `readonly: true`
-- Atoms can be given a global or local scope with the `scope` property. All atoms are app-scoped by default.
-- Atoms can be destroyed using `ttl`.
-- Selector atoms are atoms with `readonly: true, ttl: 0`. They can be created with the `selector()` shorthand.
+- Atoms can be destroyed using `ttl` and/or `maxInstances`.
+- 
+- Ions are a special type of atom. They provide a convenient shorthand for state derivations. Use `ion()` to create them.
 
 Next up we'll cover more ways to [consume atoms](using-atoms).

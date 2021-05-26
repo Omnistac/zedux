@@ -1,4 +1,4 @@
-// import { useAtomWithoutSubscription, useAtomWithSubscription } from '../hooks'
+// import { useAtomInstance, useAtomInstanceDynamic } from '../hooks'
 // import {
 //   injectAtomWithoutSubscription,
 //   injectAtomWithSubscription,
@@ -45,13 +45,13 @@
 //     molecule<State, Exports>(key, newValue)
 
 //   const useExports = () =>
-//     useAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
+//     useAtomInstance<State, [], MoleculeInstance<State, Exports>>(
 //       newMolecule,
 //       []
 //     ).exports
 
 //   const useState = () => {
-//     const instance = useAtomWithSubscription<
+//     const instance = useAtomInstanceDynamic<
 //       State,
 //       [],
 //       MoleculeInstance<State, Exports>
@@ -64,7 +64,7 @@
 //   }
 
 //   const useStore = () =>
-//     useAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
+//     useAtomInstance<State, [], MoleculeInstance<State, Exports>>(
 //       newMolecule,
 //       []
 //     ).internals.stateStore

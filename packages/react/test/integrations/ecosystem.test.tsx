@@ -3,8 +3,11 @@ import {
   atom,
   Ecosystem,
   ecosystem,
+  EcosystemProvider,
   injectStore,
   injectWhy,
+  useAtomState,
+  useAtomValue,
 } from '@zedux/react'
 import React from 'react'
 
@@ -67,8 +70,8 @@ describe('ecosystem', () => {
     })
 
     function Child() {
-      const atom5val = atom5.useValue()
-      const atom4val = atom4.useValue()
+      const atom5val = useAtomValue(atom5)
+      const [atom4val] = useAtomState(atom4)
       const atom3val = atom3.useValue('1')
       const atom2val = atom2.useValue()
       const atom1val = atom1.useValue()
@@ -88,9 +91,9 @@ describe('ecosystem', () => {
 
     function Test() {
       return (
-        <testEcosystem.Provider>
+        <EcosystemProvider ecosystem={testEcosystem}>
           <Child />
-        </testEcosystem.Provider>
+        </EcosystemProvider>
       )
     }
 

@@ -5,9 +5,11 @@ import {
   atom,
   createStore,
   ecosystem,
+  EcosystemProvider,
   injectGet,
   injectStore,
   ion,
+  useAtomInstance,
 } from '@zedux/react'
 import React from 'react'
 
@@ -42,7 +44,7 @@ describe('graph', () => {
 
     function Test() {
       const { sum } = atom4.useValue()
-      const { toggle } = atom4.useExports()
+      const { toggle } = useAtomInstance(atom4).exports
 
       return (
         <>
@@ -53,9 +55,9 @@ describe('graph', () => {
     }
 
     const { findByTestId, findByText } = render(
-      <testEcosystem.Provider>
+      <EcosystemProvider ecosystem={testEcosystem}>
         <Test />
-      </testEcosystem.Provider>
+      </EcosystemProvider>
     )
 
     const div = await findByTestId('sum')

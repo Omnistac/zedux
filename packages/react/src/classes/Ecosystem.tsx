@@ -1,14 +1,7 @@
-import React, { createContext, FC } from 'react'
-import { useStableReference } from '../hooks/useStableReference'
+import { createContext } from 'react'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
-import {
-  AtomInstanceType,
-  AtomParamsType,
-  EcosystemConfig,
-  EcosystemProviderProps,
-} from '../types'
+import { AtomInstanceType, AtomParamsType, EcosystemConfig } from '../types'
 import { generateAppId } from '../utils'
-import { ecosystemCsContext } from '../utils/csContexts'
 import { AtomBase } from './atoms/AtomBase'
 import { Graph } from './Graph'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
@@ -22,13 +15,13 @@ export class Ecosystem {
     string,
     AtomInstanceBase<any, any[], AtomBase<any, any[], any>>
   > = {}
+  public _preload?: (ecosystem: this) => void
+  public _refCount = 0
   public _scheduler = new Scheduler(this)
   public destroyOnUnmount = false
   public ecosystemId: string
   public flags?: string[] = []
   public overrides: Record<string, AtomBase<any, any[], any>> = {}
-  public refCount = 0
-  private _preload?: (ecosystem: this) => void
 
   constructor({
     destroyOnUnmount,
@@ -82,7 +75,7 @@ export class Ecosystem {
   }
 
   public destroy(force?: boolean) {
-    if (!force && this.refCount > 0) return
+    if (!force && this._refCount > 0) return
 
     // Check if this ecosystem has been destroyed manually already
     const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
@@ -140,76 +133,6 @@ export class Ecosystem {
     this._instances[keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
 
     return newInstance
-  }
-
-  public Provider: FC<EcosystemProviderProps> = ({
-    children,
-    flags,
-    overrides,
-    preload,
-  }) => {
-    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
-
-    // If this ecosystem is shared across windows, it may still need to be added
-    // to this window's instance of Zedux' globalStore
-    if (!globalStore.getState().ecosystems[this.ecosystemId]) {
-      globalStore.dispatch(addEcosystem(this))
-    }
-
-    const isFirstRenderRef = react.useRef(true)
-
-    if (flags && !Array.isArray(flags)) {
-      throw new TypeError(
-        "Zedux Error - The EcosystemProvider's `flags` prop must be an array of strings"
-      )
-    }
-    if (overrides && !Array.isArray(overrides)) {
-      throw new TypeError(
-        "Zedux Error - The EcosystemProvider's `overrides` prop must be an array of Atom objects"
-      )
-    }
-
-    const preservedFlags = useStableReference(flags)
-    const preservedOverrides = useStableReference(overrides)
-
-    react.useEffect(() => {
-      if (isFirstRenderRef.current) return
-
-      console.warn(
-        "Zedux Warning - Dynamically updating an ecosystem's overrides and flags is not currently supported."
-      )
-      // TODO: Update class members and trigger evaluations
-    }, [preservedFlags, preservedOverrides])
-
-    react.useEffect(() => {
-      this.refCount += 1
-
-      return () => {
-        this.refCount -= 1
-        if (!this.destroyOnUnmount) return
-
-        this.destroy()
-      }
-    }, [])
-
-    react.useEffect(() => {
-      // I think it's fine to assume this effect runs after the others in this file. Easy to change approaches if not.
-      isFirstRenderRef.current = false
-    }, [])
-
-    react.useEffect(() => {
-      if (!preload) return
-
-      ecosystemCsContext.provide({ ecosystemId: this.ecosystemId }, () =>
-        preload(this)
-      )
-    }, [])
-
-    return (
-      <ecosystemContext.Provider value={this.ecosystemId}>
-        {children}
-      </ecosystemContext.Provider>
-    )
   }
 
   public reset() {

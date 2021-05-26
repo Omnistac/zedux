@@ -10,7 +10,9 @@ export class StandardAtomBase<
   Params extends any[],
   Exports extends Record<string, any>
 > extends AtomBase<State, Params, AtomInstance<State, Params, Exports>> {
-  private reactContext?: Context<AtomInstance<State, Params, Exports>>
+  private reactContext?: Context<
+    AtomInstance<State, Params, Exports> | Record<string, never>
+  >
   public ttl?: number
 
   constructor(
@@ -43,8 +45,6 @@ export class StandardAtomBase<
   public getReactContext() {
     if (this.reactContext) return this.reactContext
 
-    return (this.reactContext = createContext(
-      EMPTY_CONTEXT as AtomInstance<State, Params, Exports>
-    ))
+    return (this.reactContext = createContext(EMPTY_CONTEXT))
   }
 }

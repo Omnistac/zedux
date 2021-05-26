@@ -98,6 +98,7 @@ const userAtom = selector('user', () => {
 <LiveEditor resultVar="App">{`
 const textAtom = atom('text', 'the text!')
 const betterTextAtom = textAtom.override('better text!')\n
+const betterEcosystem = ecosystem({ overrides: [betterTextAtom] })\n
 function Child() {
   const text = textAtom.useValue()\n
   return <div>{text}</div>
@@ -108,7 +109,7 @@ function App() {
       <EcosystemProvider>
         <Child />
       </EcosystemProvider>
-      <EcosystemProvider atoms={[betterTextAtom]}>
+      <EcosystemProvider ecosystem={betterEcosystem}>
         <Child />
       </EcosystemProvider>
     </>

@@ -152,8 +152,7 @@ export type Reducer<State = any> = (
 ) => State
 
 export type Selector<State = any, Derivation = any> = (
-  state: State,
-  ...args: any[]
+  state: State
 ) => Derivation
 
 export type Settable<State = any> = ((state: State) => State) | State

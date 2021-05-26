@@ -1,5 +1,11 @@
 import { fireEvent, render } from '@testing-library/react'
-import { atom, ecosystem, injectEffect, injectStore } from '@zedux/react'
+import {
+  atom,
+  ecosystem,
+  EcosystemProvider,
+  injectEffect,
+  injectStore,
+} from '@zedux/react'
 import React, { useState } from 'react'
 
 const testEcosystem = ecosystem({ id: 'test' })
@@ -109,9 +115,9 @@ describe('ttl', () => {
 
     function Test() {
       return (
-        <testEcosystem.Provider>
+        <EcosystemProvider ecosystem={testEcosystem}>
           <Child />
-        </testEcosystem.Provider>
+        </EcosystemProvider>
       )
     }
 

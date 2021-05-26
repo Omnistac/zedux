@@ -1,13 +1,12 @@
-import React from 'react'
+import { useMemo, useRef } from 'react'
 
 export const useStableReference: {
   <T extends any[]>(arr: T): T
   <T extends any[]>(arr?: T): T | undefined
 } = (arr?: any[]) => {
-  const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
-  const prevArr = react.useRef(arr)
+  const prevArr = useRef(arr)
 
-  return react.useMemo(() => {
+  return useMemo(() => {
     if (arr === prevArr.current) return prevArr.current
 
     if (!arr || !prevArr.current) return arr

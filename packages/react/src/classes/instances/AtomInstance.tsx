@@ -8,7 +8,7 @@ import {
   split,
   StateInjectorDescriptor,
 } from '@zedux/react/utils'
-import React, { FC } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import { AtomApi } from '../AtomApi'
 import { StandardAtomBase } from '../atoms/StandardAtomBase'
 import { Ecosystem } from '../Ecosystem'
@@ -25,7 +25,7 @@ export class AtomInstance<
 > {
   public _destructionTimeout?: ReturnType<typeof setTimeout>
   public api?: AtomApi<State, Exports>
-  public exports: Exports = undefined as any
+  public exports: Exports
   public store: Store<State>
 
   constructor(
@@ -39,6 +39,9 @@ export class AtomInstance<
     // standard atom instances expose this (so consumers can use a
     // non-underscore-prefixed property)
     this.store = this._stateStore
+
+    // lol
+    this.exports = (this as any).exports || undefined
   }
 
   /**
@@ -252,15 +255,14 @@ export class AtomInstance<
   }
 
   public useSelector<D extends any = any>(selector: (state: State) => D) {
-    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
-    const [state, setState] = react.useState(() =>
+    const [state, setState] = useState(() =>
       selector(this._stateStore.getState())
     )
-    const [, forceRender] = react.useState<any>()
-    const selectorRef = react.useRef(selector)
+    const [, forceRender] = useState<any>()
+    const selectorRef = useRef(selector)
     selectorRef.current = selector
 
-    react.useEffect(() => {
+    useEffect(() => {
       const unregister = this.ecosystem._graph.registerExternalDependent(
         this,
         (signal, val) => {
@@ -282,11 +284,10 @@ export class AtomInstance<
   }
 
   public useValue() {
-    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
-    const [state, setState] = react.useState(this._stateStore.getState())
-    const [, forceRender] = react.useState<any>()
+    const [state, setState] = useState(this._stateStore.getState())
+    const [, forceRender] = useState<any>()
 
-    react.useEffect(() => {
+    useEffect(() => {
       const unregister = this.ecosystem._graph.registerExternalDependent(
         this,
         (signal, val) => {
@@ -308,11 +309,10 @@ export class AtomInstance<
   }
 
   public useState() {
-    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
-    const [state, setState] = react.useState(this._stateStore.getState())
-    const [, forceRender] = react.useState<any>()
+    const [state, setState] = useState(this._stateStore.getState())
+    const [, forceRender] = useState<any>()
 
-    react.useEffect(() => {
+    useEffect(() => {
       const unregister = this.ecosystem._graph.registerExternalDependent(
         this,
         (signal, val) => {

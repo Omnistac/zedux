@@ -1,10 +1,13 @@
 import { localAtom } from '@zedux/react/factories'
-import { useAtomWithoutSubscription } from '@zedux/react/hooks'
+import { useAtomInstance } from '@zedux/react/hooks'
 import { injectAtomWithoutSubscription } from '@zedux/react/injectors'
-import { AtomValueOrFactory } from '@zedux/react/types'
+import {
+  AtomInstanceType,
+  AtomParamsType,
+  AtomValueOrFactory,
+} from '@zedux/react/types'
 import { generateLocalId, GraphEdgeSignal } from '@zedux/react/utils'
-import React from 'react'
-import { AtomInstance } from '../instances/AtomInstance'
+import { useContext, useLayoutEffect, useState } from 'react'
 import { StandardAtomBase } from './StandardAtomBase'
 
 type LocalParams<Params extends any[]> = [string | undefined, ...Params]
@@ -25,12 +28,8 @@ export class LocalAtom<
     ])
   }
 
-  public injectInstance(...params: LocalParams<Params>) {
-    return injectAtomWithoutSubscription<
-      State,
-      LocalParams<Params>,
-      AtomInstance<State, LocalParams<Params>, Exports>
-    >('injectInstance', this, params)
+  public injectInstance(...params: AtomParamsType<this>) {
+    return injectAtomWithoutSubscription('injectInstance', this, params)
   }
 
   public override(
@@ -42,17 +41,15 @@ export class LocalAtom<
   }
 
   public useConsumer() {
-    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
-    return react.useContext(this.getReactContext())
+    return useContext(this.getReactContext())
   }
 
   private useConsumerWithSubscription() {
-    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
-    const instance = this.useConsumer()
-    const [, setState] = react.useState(instance._stateStore.getState())
-    const [, forceRender] = react.useState<any>()
+    const instance = this.useConsumer() as AtomInstanceType<this>
+    const [, setState] = useState(instance._stateStore.getState())
+    const [, forceRender] = useState<any>()
 
-    react.useLayoutEffect(() => {
+    useLayoutEffect(() => {
       const unregister = instance.ecosystem._graph.registerExternalDependent(
         instance,
         (signal, val) => {
@@ -81,12 +78,8 @@ export class LocalAtom<
     return this.useConsumer().api?.exports as Exports
   }
 
-  public useInstance(...params: LocalParams<Params>) {
-    return useAtomWithoutSubscription<
-      State,
-      LocalParams<Params>,
-      AtomInstance<State, LocalParams<Params>, Exports>
-    >(this, params)
+  public useInstance(...params: AtomParamsType<this>) {
+    return useAtomInstance(this, params)
   }
 
   public useSelector<D = any>(selector: (state: State) => D) {

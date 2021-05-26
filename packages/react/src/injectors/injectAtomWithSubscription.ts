@@ -1,5 +1,5 @@
 import { AtomBase } from '../classes/atoms/AtomBase'
-import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
+import { AtomInstanceType, AtomParamsType } from '../types'
 import {
   split,
   AtomWithSubscriptionInjectorDescriptor,
@@ -21,28 +21,20 @@ import { diContext } from '../utils/csContexts'
  * the injectors built into atoms - e.g.
  *
  * ```ts
- * const [state, setState, store] = myAtom.injectState()
+ * const [state, setState] = myAtom.injectState()
  * ```
  */
-export const injectAtomWithSubscription = <
-  State = any,
-  Params extends any[] = [],
-  InstanceType extends AtomInstanceBase<
-    State,
-    Params,
-    AtomBase<State, Params, any>
-  > = AtomInstanceBase<State, Params, AtomBase<State, Params, any>>
->(
+export const injectAtomWithSubscription = <A extends AtomBase<any, any, any>>(
   operation: string,
-  atom: AtomBase<State, Params, InstanceType>,
-  params: Params
+  atom: A,
+  params: AtomParamsType<A>
 ) => {
   const {
     instance: { ecosystem, keyHash },
   } = diContext.consume()
 
   const { instance } = split<
-    AtomWithSubscriptionInjectorDescriptor<InstanceType>
+    AtomWithSubscriptionInjectorDescriptor<AtomInstanceType<A>>
   >(
     'injectAtomWithSubscription',
     InjectorType.AtomWithSubscription,

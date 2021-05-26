@@ -5,21 +5,7 @@ title: Using Atoms
 
 import { LiveEditor } from '../../LiveEditor'
 
-In the quick start, we learned a few basic ways to instantiate and consume atoms. In this page, we'll discover stores - the secret sauce behind atoms. We'll also cover more hooks and injectors for atom instantiation and consumption.
-
-## Stores
-
-Every instance of every atom creates a light-weight store. Stores manage state and serve as a message bus for running side effects based on dispatched actions or state changes.
-
-Atoms create most stores for you. But you can easily create them manually:
-
-```ts
-import { createStore } from '@zedux/react'
-
-const myStore = createStore()
-```
-
-Stores have lots of cool features that we'll look at in [the stores tutorial](stores). For now, just remember that every atom instance has an underlying store.
+In the quick start, we learned a few basic ways to instantiate and consume atoms. In this page, we'll cover more hooks and injectors for atom instantiation and consumption, as well as how to use atoms outside React.
 
 ## Dynamic Hooks/Injectors
 
@@ -301,11 +287,10 @@ Live playground for fun:
 const counterAtom = atom('counter', () => {
   const store = injectStore(0)\n
   // Expose methods
-  injectExports({
+  return api(store).setExports({
     decrement: () => store.setState(state => state - 1),
     increment: () => store.setState(state => state + 1)
-  })\n
-  return store
+  })
 })\n
 function App() {
   const { decrement, increment } = counterAtom.useExports()

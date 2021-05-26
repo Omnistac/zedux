@@ -1,64 +1,60 @@
-import React from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { AtomBase } from '../classes/atoms/AtomBase'
-import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
+import { AtomParamsType, AtomStateType } from '../types'
 import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useStableReference } from './useStableReference'
 
 /**
- * useAtomWithoutSubscription
+ * useAtomInstanceDynamic
  *
  * Creates an atom instance for the passed atom based on the passed params. If
  * an instance has already been created for the passed params, reuses the
  * existing instance.
  *
- * Does **not** subscribe to the instance's store.
+ * Creates a dynamic graph edge that receives updates when the atom instance's
+ * state changes
  *
- * This is a low-level hook that probably shouldn't be used directly. Use the
- * hooks built into atoms - e.g.
+ * This is a low-level hook that probably shouldn't be used directly. Use
+ * higher-level hooks like useAtomValue, useAtomState, and useAtomSelector
  *
  * ```ts
- * const [state, setState] = myAtom.useState()
+ * const [state, setState] = useAtomState(myAtom)
  * ```
  *
  * @param atom The atom to instantiate (or reuse an instantiation of)
  * @param params The params to pass the atom and calculate its keyHash
  */
-export const useAtomWithoutSubscription = <
-  State,
-  Params extends any[],
-  InstanceType extends AtomInstanceBase<
-    State,
-    Params,
-    AtomBase<State, Params, any>
-  >
->(
-  atom: AtomBase<State, Params, InstanceType>,
-  params: Params
+export const useAtomInstanceDynamic = <A extends AtomBase<any, any, any>>(
+  atom: A,
+  params: AtomParamsType<A>
 ) => {
-  const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
+  const [, setReactState] = useState<AtomStateType<A>>()
+  const [force, forceRender] = useState<any>()
   const ecosystem = useEcosystem()
   const stableParams = useStableReference(params)
-  const [force, forceRender] = react.useState<any>()
 
-  const [atomInstance, unregister] = react.useMemo(() => {
+  const [atomInstance, unregister] = useMemo(() => {
     const instance = ecosystem.load(atom, stableParams)
 
     const unregister = ecosystem._graph.registerExternalDependent(
       instance,
-      signal => {
+      (signal, val: AtomStateType<A>) => {
         if (signal === GraphEdgeSignal.Destroyed) {
           forceRender({})
+          return
         }
+
+        setReactState(val)
       },
-      'a static React hook',
-      true
+      'a dynamic React hook',
+      false
     )
 
     return [instance, unregister] as const
   }, [atom, ecosystem, force, stableParams])
 
-  react.useLayoutEffect(() => unregister, [unregister])
+  useLayoutEffect(() => unregister, [unregister])
 
-  return (atomInstance as unknown) as InstanceType
+  return atomInstance
 }

@@ -97,15 +97,12 @@ export type DispatchInterceptor<State = any> = (
   next: (action: ActionChain) => State
 ) => State
 
-export interface EcosystemProviderProps {
+export interface EcosystemConfig {
+  destroyOnUnmount?: boolean
   flags?: string[]
+  id?: string
   overrides?: AtomBase<any, any[], any>[]
   preload?: (ecosystem: Ecosystem) => void
-}
-
-export interface EcosystemConfig extends EcosystemProviderProps {
-  destroyOnUnmount?: boolean
-  id?: string
 }
 
 export type EffectCallback = () => void | Destructor

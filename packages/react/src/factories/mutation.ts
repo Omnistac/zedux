@@ -1,5 +1,5 @@
 // import { Context, createContext } from 'react'
-// import { useAtomWithSubscription } from '../hooks'
+// import { useAtomInstanceDynamic } from '../hooks'
 // import { injectAtomWithSubscription } from '../injectors'
 // import {
 //   AsyncState,
@@ -49,7 +49,7 @@
 //     mutation(key, newValue)
 
 //   const useMutation = () => {
-//     const instance = useAtomWithSubscription<
+//     const instance = useAtomInstanceDynamic<
 //       AsyncState<State>,
 //       [],
 //       MutationAtomInstance<State, MutationParams>
