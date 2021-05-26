@@ -147,8 +147,9 @@ export class Ecosystem {
     flags,
     overrides,
     preload,
-    react = React,
   }) => {
+    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
+
     // If this ecosystem is shared across windows, it may still need to be added
     // to this window's instance of Zedux' globalStore
     if (!globalStore.getState().ecosystems[this.ecosystemId]) {
