@@ -1,4 +1,5 @@
 import { ActionChain, Settable, Store } from '@zedux/core'
+import React from 'react'
 import { Observable } from 'rxjs'
 import {
   AtomInstance,
@@ -101,6 +102,7 @@ export interface EcosystemProviderProps {
   flags?: string[]
   overrides?: AtomBase<any, any[], any>[]
   preload?: (ecosystem: Ecosystem) => void
+  react?: typeof React
 }
 
 export interface EcosystemConfig extends EcosystemProviderProps {

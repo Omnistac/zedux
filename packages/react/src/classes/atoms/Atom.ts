@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import React from 'react'
 import { AtomParamsType, AtomValueOrFactory } from '../../types'
 import { useAtomWithSubscription } from '../../hooks/useAtomWithSubscription'
 import { injectAtomWithSubscription } from '../../injectors/injectAtomWithSubscription'
@@ -118,8 +118,8 @@ export class Atom<
     })
   }
 
-  public useConsumer() {
-    return useContext(this.getReactContext())
+  public useConsumer(react: typeof React = React) {
+    return react.useContext(this.getReactContext())
   }
 
   public useDispatch(...params: Params) {
@@ -154,8 +154,8 @@ export class Atom<
     >(this, params).invalidate
   }
 
-  public useLazy() {
-    const initialAppId = useContext(ecosystemContext)
+  public useLazy(react: typeof React = React) {
+    const initialAppId = react.useContext(ecosystemContext)
 
     return (...params: AtomParamsType<this>) => {
       const newAppId = ecosystemCsContext.consume(false)?.ecosystemId

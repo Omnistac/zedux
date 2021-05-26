@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from 'react'
+import React from 'react'
 import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 import { GraphEdgeSignal } from '../utils'
@@ -36,11 +36,12 @@ export const useAtomWithoutSubscription = <
   atom: AtomBase<State, Params, InstanceType>,
   params: Params
 ) => {
+  const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
   const ecosystem = useEcosystem()
   const stableParams = useStableReference(params)
-  const [force, forceRender] = useState<any>()
+  const [force, forceRender] = react.useState<any>()
 
-  const [atomInstance, unregister] = useMemo(() => {
+  const [atomInstance, unregister] = react.useMemo(() => {
     const instance = ecosystem.load(atom, stableParams)
 
     const unregister = ecosystem._graph.registerExternalDependent(
@@ -57,7 +58,7 @@ export const useAtomWithoutSubscription = <
     return [instance, unregister] as const
   }, [atom, ecosystem, force, stableParams])
 
-  useLayoutEffect(() => unregister, [unregister])
+  react.useLayoutEffect(() => unregister, [unregister])
 
   return (atomInstance as unknown) as InstanceType
 }

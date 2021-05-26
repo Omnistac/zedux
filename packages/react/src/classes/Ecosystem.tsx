@@ -1,4 +1,4 @@
-import React, { createContext, FC, useEffect, useRef } from 'react'
+import React, { createContext, FC } from 'react'
 import { useStableReference } from '../hooks/useStableReference'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
@@ -147,8 +147,15 @@ export class Ecosystem {
     flags,
     overrides,
     preload,
+    react = React,
   }) => {
-    const isFirstRenderRef = useRef(true)
+    // If this ecosystem is shared across windows, it may still need to be added
+    // to this window's instance of Zedux' globalStore
+    if (!globalStore.getState().ecosystems[this.ecosystemId]) {
+      globalStore.dispatch(addEcosystem(this))
+    }
+
+    const isFirstRenderRef = react.useRef(true)
 
     if (flags && !Array.isArray(flags)) {
       throw new TypeError(
@@ -164,7 +171,7 @@ export class Ecosystem {
     const preservedFlags = useStableReference(flags)
     const preservedOverrides = useStableReference(overrides)
 
-    useEffect(() => {
+    react.useEffect(() => {
       if (isFirstRenderRef.current) return
 
       console.warn(
@@ -173,7 +180,7 @@ export class Ecosystem {
       // TODO: Update class members and trigger evaluations
     }, [preservedFlags, preservedOverrides])
 
-    useEffect(() => {
+    react.useEffect(() => {
       this.refCount += 1
 
       return () => {
@@ -184,12 +191,12 @@ export class Ecosystem {
       }
     }, [])
 
-    useEffect(() => {
+    react.useEffect(() => {
       // I think it's fine to assume this effect runs after the others in this file. Easy to change approaches if not.
       isFirstRenderRef.current = false
     }, [])
 
-    useEffect(() => {
+    react.useEffect(() => {
       if (!preload) return
 
       ecosystemCsContext.provide({ ecosystemId: this.ecosystemId }, () =>

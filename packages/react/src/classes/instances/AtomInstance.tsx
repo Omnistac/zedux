@@ -8,7 +8,7 @@ import {
   split,
   StateInjectorDescriptor,
 } from '@zedux/react/utils'
-import React, { FC, useEffect, useRef, useState } from 'react'
+import React, { FC } from 'react'
 import { AtomApi } from '../AtomApi'
 import { StandardAtomBase } from '../atoms/StandardAtomBase'
 import { Ecosystem } from '../Ecosystem'
@@ -252,14 +252,15 @@ export class AtomInstance<
   }
 
   public useSelector<D extends any = any>(selector: (state: State) => D) {
-    const [state, setState] = useState(() =>
+    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
+    const [state, setState] = react.useState(() =>
       selector(this._stateStore.getState())
     )
-    const [, forceRender] = useState<any>()
-    const selectorRef = useRef(selector)
+    const [, forceRender] = react.useState<any>()
+    const selectorRef = react.useRef(selector)
     selectorRef.current = selector
 
-    useEffect(() => {
+    react.useEffect(() => {
       const unregister = this.ecosystem._graph.registerExternalDependent(
         this,
         (signal, val) => {
@@ -281,10 +282,11 @@ export class AtomInstance<
   }
 
   public useValue() {
-    const [state, setState] = useState(this._stateStore.getState())
-    const [, forceRender] = useState<any>()
+    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
+    const [state, setState] = react.useState(this._stateStore.getState())
+    const [, forceRender] = react.useState<any>()
 
-    useEffect(() => {
+    react.useEffect(() => {
       const unregister = this.ecosystem._graph.registerExternalDependent(
         this,
         (signal, val) => {
@@ -306,10 +308,11 @@ export class AtomInstance<
   }
 
   public useState() {
-    const [state, setState] = useState(this._stateStore.getState())
-    const [, forceRender] = useState<any>()
+    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
+    const [state, setState] = react.useState(this._stateStore.getState())
+    const [, forceRender] = react.useState<any>()
 
-    useEffect(() => {
+    react.useEffect(() => {
       const unregister = this.ecosystem._graph.registerExternalDependent(
         this,
         (signal, val) => {

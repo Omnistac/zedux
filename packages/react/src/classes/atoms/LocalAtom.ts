@@ -3,7 +3,7 @@ import { useAtomWithoutSubscription } from '@zedux/react/hooks'
 import { injectAtomWithoutSubscription } from '@zedux/react/injectors'
 import { AtomValueOrFactory } from '@zedux/react/types'
 import { generateLocalId, GraphEdgeSignal } from '@zedux/react/utils'
-import { useContext, useLayoutEffect, useState } from 'react'
+import React from 'react'
 import { AtomInstance } from '../instances/AtomInstance'
 import { StandardAtomBase } from './StandardAtomBase'
 
@@ -42,15 +42,17 @@ export class LocalAtom<
   }
 
   public useConsumer() {
-    return useContext(this.getReactContext())
+    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
+    return react.useContext(this.getReactContext())
   }
 
   private useConsumerWithSubscription() {
+    const react = require('react') as typeof React // eslint-disable-line @typescript-eslint/no-var-requires
     const instance = this.useConsumer()
-    const [, setState] = useState(instance._stateStore.getState())
-    const [, forceRender] = useState<any>()
+    const [, setState] = react.useState(instance._stateStore.getState())
+    const [, forceRender] = react.useState<any>()
 
-    useLayoutEffect(() => {
+    react.useLayoutEffect(() => {
       const unregister = instance.ecosystem._graph.registerExternalDependent(
         instance,
         (signal, val) => {

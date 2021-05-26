@@ -7,6 +7,7 @@ import {
 import { Ecosystem } from './Ecosystem'
 
 export class Scheduler {
+  // private _runStartTime?: number
   private scheduledJobs: Job[] = []
 
   constructor(private readonly ecosystem: Ecosystem) {}
@@ -111,9 +112,17 @@ export class Scheduler {
   }
 
   private runJobs() {
+    // this._runStartTime = performance.now()
+    // let counter = 0
+
     while (this.scheduledJobs.length) {
       const job = this.scheduledJobs.shift() as Job
       job.task()
+
+      // if (!(++counter % 20) && performance.now() - this._runStartTime >= 100) {
+      //   setTimeout(() => this.runJobs())
+      //   break
+      // }
     }
   }
 }

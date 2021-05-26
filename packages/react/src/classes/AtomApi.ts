@@ -10,7 +10,7 @@ export class AtomApi<State, Exports extends Record<string, any>> {
   public dispatchInterceptors?: DispatchInterceptor<State>[]
   public exports?: Exports
   public setStateInterceptors?: SetStateInterceptor<State>[]
-  public suspensePromise?: Promise<any>
+  public promise?: Promise<any>
   public ttl?: AtomInstanceTtl | (() => AtomInstanceTtl)
   public value: AtomValue<State>
 
@@ -19,7 +19,7 @@ export class AtomApi<State, Exports extends Record<string, any>> {
       this.dispatchInterceptors = value.dispatchInterceptors
       this.exports = value.exports
       this.setStateInterceptors = value.setStateInterceptors
-      this.suspensePromise = value.suspensePromise
+      this.promise = value.promise
       this.ttl = value.ttl
       this.value = value.value
     } else {
@@ -62,6 +62,12 @@ export class AtomApi<State, Exports extends Record<string, any>> {
     ;(this as AtomApi<State, NewExports>).exports = exports
 
     return this as AtomApi<State, NewExports> // for chaining
+  }
+
+  public setPromise(promise: Promise<any>) {
+    this.promise = promise
+
+    return this // for chaining
   }
 
   public setTtl(ttl: AtomInstanceTtl | (() => AtomInstanceTtl)) {
