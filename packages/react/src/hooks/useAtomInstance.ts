@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
-import { AtomInstance } from '../classes'
+import { AtomInstanceBase } from '../classes'
 import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomInstanceType, AtomParamsType } from '../types'
 import { GraphEdgeSignal } from '../utils'
@@ -31,8 +31,13 @@ export const useAtomInstance: {
     params: AtomParamsType<A>,
     shouldRegisterDependency?: boolean
   ): AtomInstanceType<A>
+  <AI extends AtomInstanceBase<any, any, any>>(
+    instance: AI | AtomBase<any, any, any>, // This '| AtomBase' fixes some types. I think it's fine.
+    params?: [],
+    shouldRegisterDependency?: boolean
+  ): AI
 } = <A extends AtomBase<any, any, any>>(
-  atom: A,
+  atom: A | AtomInstanceBase<any, any, any>,
   params?: AtomParamsType<A>,
   shouldRegisterDependency = true
 ) => {
@@ -41,10 +46,12 @@ export const useAtomInstance: {
   const [force, forceRender] = useState<any>()
 
   const [atomInstance, unregister] = useMemo(() => {
-    const instance = ecosystem.getInstance(
-      atom,
-      stableParams as AtomParamsType<A>
-    ) as AtomInstance<any, any, any>
+    const instance = (atom instanceof AtomInstanceBase
+      ? atom
+      : ecosystem.getInstance(
+          atom,
+          stableParams as AtomParamsType<A>
+        )) as AtomInstanceType<A>
 
     if (instance.promise && !instance._isPromiseResolved) {
       throw instance.promise

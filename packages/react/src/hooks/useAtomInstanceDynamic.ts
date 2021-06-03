@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
-import { AtomInstance } from '../classes'
+import { AtomInstanceBase } from '../classes'
 import { AtomBase } from '../classes/atoms/AtomBase'
-import { AtomParamsType, AtomStateType } from '../types'
+import { AtomInstanceType, AtomParamsType, AtomStateType } from '../types'
 import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useStableReference } from './useStableReference'
@@ -26,9 +26,19 @@ import { useStableReference } from './useStableReference'
  * @param atom The atom to instantiate or reuse an instantiation of.
  * @param params The params for generating the instance's key.
  */
-export const useAtomInstanceDynamic = <A extends AtomBase<any, any, any>>(
-  atom: A,
-  params: AtomParamsType<A>
+export const useAtomInstanceDynamic: {
+  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+  <A extends AtomBase<any, any, any>>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomInstanceType<A>
+  <AI extends AtomInstanceBase<any, any, any>>(
+    instance: AI | AtomBase<any, any, any>,
+    params?: []
+  ): AI
+} = <A extends AtomBase<any, any, any>>(
+  atom: A | AtomInstanceBase<any, any, any>,
+  params?: AtomParamsType<A>
 ) => {
   const [, setReactState] = useState<AtomStateType<A>>()
   const [force, forceRender] = useState<any>()
@@ -36,11 +46,12 @@ export const useAtomInstanceDynamic = <A extends AtomBase<any, any, any>>(
   const stableParams = useStableReference(params)
 
   const [atomInstance, unregister] = useMemo(() => {
-    const instance = ecosystem.getInstance(atom, stableParams) as AtomInstance<
-      any,
-      any,
-      any
-    >
+    const instance = (atom instanceof AtomInstanceBase
+      ? atom
+      : ecosystem.getInstance(
+          atom,
+          stableParams as AtomParamsType<A>
+        )) as AtomInstanceType<A>
 
     if (instance.promise && !instance._isPromiseResolved) {
       throw instance.promise

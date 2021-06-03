@@ -162,15 +162,15 @@ Used in conjuction with `useAtomInstance` to consume atom instances provided ove
 Returns a reference to an instance of the atom. Atom instances have many features.
 
 ```ts
-import { useAtomInstance, useAtomInstanceValue } from '@zedux/react'
+import { useAtomInstance, useAtomValue } from '@zedux/react'
 
 function MyComponent() {
   const instance = useAtomInstance(myAtom)
-  const value = useAtomInstanceValue(instance)
+  const value = useAtomValue(instance) // useAtomValue accepts an instance
 }
 ```
 
-In this example, when we use `useAtomInstance()`, it creates a static dependency. This means MyComponent will not rerender when the instance's state changes. However, we then use another hook - `useAtomInstanceValue()` - to make the dependency dynamic.
+In this example, when we use `useAtomInstance()`, it creates a static dependency. This means MyComponent will not rerender when the instance's state changes. However, we then use another hook - `useAtomValue()` - to make the dependency dynamic.
 
 `useAtomInstance()` can also be used in conjunction with `useAtomConsumer()` to provide an instance over React context, so deeply nested children don't need to know the params of a specific atom instance they want to reuse:
 
@@ -193,13 +193,13 @@ function Parent() {
 
 function Child() {
   const instance = useAtomConsumer(myAtom) // no need to pass params here
-  const value = useAtomInstanceValue(instance) // subscribe to the instance
+  const value = useAtomValue(instance) // subscribe to the instance
   ...
 }
 ```
 
 :::note
-While `useAtomConsumer()` creates a static dependency, `useAtomInstanceValue()` makes it dynamic.
+While `useAtomConsumer()` creates a static dependency, `useAtomValue()` makes it dynamic.
 :::
 
 Instances also expose lots of extra, low-level functionality. We'll cover more of that in the [instances walkthrough](/not-done).

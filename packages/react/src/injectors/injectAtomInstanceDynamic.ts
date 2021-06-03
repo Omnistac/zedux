@@ -1,3 +1,4 @@
+import { AtomInstanceBase } from '../classes'
 import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomInstanceType, AtomParamsType } from '../types'
 import {
@@ -44,8 +45,13 @@ export const injectAtomInstanceDynamic: {
     params: AtomParamsType<A>,
     operation?: string
   ): AtomInstanceType<A>
+  <AI extends AtomInstanceBase<any, any, any>>(
+    instance: AI | AtomBase<any, any, any>,
+    params?: [],
+    operation?: string
+  ): AI
 } = <A extends AtomBase<any, any, any>>(
-  atom: A,
+  atom: A | AtomInstanceBase<any, any, any>,
   params?: AtomParamsType<A>,
   operation = defaultOperation
 ) => {
@@ -57,19 +63,23 @@ export const injectAtomInstanceDynamic: {
     defaultOperation, // yeah, not the passed operation
     InjectorType.AtomDynamic,
     () => {
-      const instance = getInstance(atom, params as AtomParamsType<A>, [
-        GraphEdgeDynamicity.Dynamic,
-        operation,
-      ])
+      const instance =
+        atom instanceof AtomInstanceBase
+          ? atom
+          : getInstance(atom, params as AtomParamsType<A>, [
+              GraphEdgeDynamicity.Dynamic,
+              operation,
+            ])
 
       return {
-        instance,
+        instance: instance as AtomInstanceType<A>,
         type: InjectorType.AtomDynamic,
       }
     },
     prevDescriptor => {
+      const resolvedAtom = atom instanceof AtomInstanceBase ? atom.atom : atom
       const atomHasChanged =
-        atom.internalId !== prevDescriptor.instance.atom.internalId
+        resolvedAtom.internalId !== prevDescriptor.instance.atom.internalId
 
       const paramsHaveChanged = haveDepsChanged(
         prevDescriptor.instance.params,
@@ -79,12 +89,15 @@ export const injectAtomInstanceDynamic: {
       if (!atomHasChanged && !paramsHaveChanged) return prevDescriptor
 
       // update the graph
-      const instance = getInstance(atom, params as AtomParamsType<A>, [
-        GraphEdgeDynamicity.Dynamic,
-        operation,
-      ])
+      const instance =
+        atom instanceof AtomInstanceBase
+          ? atom
+          : getInstance(atom, params as AtomParamsType<A>, [
+              GraphEdgeDynamicity.Dynamic,
+              operation,
+            ])
 
-      prevDescriptor.instance = instance
+      prevDescriptor.instance = instance as AtomInstanceType<A>
 
       return prevDescriptor
     }

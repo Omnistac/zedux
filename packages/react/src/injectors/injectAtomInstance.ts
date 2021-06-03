@@ -9,6 +9,7 @@ import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomInstanceType, AtomParamsType } from '../types'
 import { injectGetInstance } from './injectGetInstance'
 import { injectEcosystem } from './injectEcosystem'
+import { AtomInstanceBase } from '../classes'
 
 /**
  * injectAtomInstance
@@ -40,8 +41,14 @@ export const injectAtomInstance: {
     operation?: string,
     shouldRegisterDependency?: boolean
   ): AtomInstanceType<A>
+  <AI extends AtomInstanceBase<any, any, any>>(
+    instance: AI | AtomBase<any, any, any>,
+    params?: [],
+    operation?: string,
+    shouldRegisterDependency?: boolean
+  ): AI
 } = <A extends AtomBase<any, any, any>>(
-  atom: A,
+  atom: A | AtomInstanceBase<any, any, any>,
   params?: AtomParamsType<A>,
   operation = 'injectAtomInstance',
   shouldRegisterDependency = true
@@ -53,21 +60,25 @@ export const injectAtomInstance: {
     'injectAtomInstance',
     InjectorType.Atom,
     () => {
-      const instance = shouldRegisterDependency
-        ? getInstance(atom, params as AtomParamsType<A>, [
-            GraphEdgeDynamicity.Static,
-            operation,
-          ])
-        : ecosystem.getInstance(atom, params as AtomParamsType<A>)
+      const instance =
+        atom instanceof AtomInstanceBase
+          ? atom
+          : shouldRegisterDependency
+          ? getInstance(atom, params as AtomParamsType<A>, [
+              GraphEdgeDynamicity.Static,
+              operation,
+            ])
+          : ecosystem.getInstance(atom, params as AtomParamsType<A>)
 
       return {
-        instance,
+        instance: instance as AtomInstanceType<A>,
         type: InjectorType.Atom,
       }
     },
     prevDescriptor => {
+      const resolvedAtom = atom instanceof AtomInstanceBase ? atom.atom : atom
       const atomHasChanged =
-        atom.internalId !== prevDescriptor.instance.atom.internalId
+        resolvedAtom.internalId !== prevDescriptor.instance.atom.internalId
 
       const paramsHaveChanged = haveDepsChanged(
         prevDescriptor.instance.params,
@@ -76,14 +87,17 @@ export const injectAtomInstance: {
 
       if (!atomHasChanged && !paramsHaveChanged) return prevDescriptor
 
-      const instance = shouldRegisterDependency
-        ? getInstance(atom, params as AtomParamsType<A>, [
-            GraphEdgeDynamicity.Static,
-            operation,
-          ])
-        : ecosystem.getInstance(atom, params as AtomParamsType<A>)
+      const instance =
+        atom instanceof AtomInstanceBase
+          ? atom
+          : shouldRegisterDependency
+          ? getInstance(atom, params as AtomParamsType<A>, [
+              GraphEdgeDynamicity.Static,
+              operation,
+            ])
+          : ecosystem.getInstance(atom, params as AtomParamsType<A>)
 
-      prevDescriptor.instance = instance
+      prevDescriptor.instance = instance as AtomInstanceType<A>
 
       return prevDescriptor
     }

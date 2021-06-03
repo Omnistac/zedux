@@ -1,5 +1,5 @@
 import { AtomBase, AtomInstanceBase } from '../classes'
-import { AtomParamsType, AtomStateType } from '../types'
+import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
 import { useAtomInstanceDynamic } from './useAtomInstanceDynamic'
 
 export const useAtomValue: {
@@ -8,8 +8,12 @@ export const useAtomValue: {
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
+  <AI extends AtomInstanceBase<any, any, any>>(
+    instance: AI | AtomBase<any, any, any>,
+    params?: []
+  ): AtomInstanceStateType<AI>
 } = <A extends AtomBase<any, any, any>>(
-  atom: A,
+  atom: A | AtomInstanceBase<any, any, any>,
   params?: AtomParamsType<A>
 ) => {
   const instance = useAtomInstanceDynamic(
