@@ -1,0 +1,85 @@
+---
+id: IonSetUtils
+title: IonSetUtils
+---
+
+The object Zedux passes as the first parameter to [ion setters](../factories/ion#set).
+
+## Definition
+
+```ts
+interface IonSetUtils<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>
+> {
+  ecosystem: Ecosystem
+
+  get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+
+  get<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomStateType<A>
+
+  get<I extends AtomInstanceBase<any, [...any], any>>(
+    instance: I
+  ): AtomInstanceStateType<I>
+
+  getInstance<A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+
+  getInstance<A extends AtomBase<any, any, any>>(
+      atom: A,
+      params: AtomParamsType<A>
+    ): AtomInstanceType<A>
+
+  instance: AtomInstance<State, Params, Exports>
+
+  set<A extends AtomBase<any, [], any>>(
+    atom: A,
+    settable: Settable<AtomStateType<A>>
+  ): AtomStateType<A>
+
+  set<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>,
+    settable: Settable<AtomStateType<A>>
+  ): AtomStateType<A>
+}
+```
+
+### `ecosystem`
+
+A reference to the [ecosystem](../classes/Ecosystem) this ion instance was created in.
+
+### `get`
+
+A function that returns the current state of an atom instance. You can pass either an instance directly or an atom and its params (if any).
+
+```ts
+({ get }, newVal) => get(otherAtom)
+({ get }, newVal) => get(otherAtom, ['param 1', 'param 2'])
+({ get }, newVal) => get(anInstance)
+```
+
+### `getInstance`
+
+A function that returns an atom instance. Pass an atom and its params (if any)
+
+```ts
+({ getInstance }, newVal) => getInstance(otherAtom)
+({ getInstance }, newVal) => getInstance(otherAtom, ['param 1', 'param 2'])
+```
+
+### `instance`
+
+A reference to the current ion [atom instance](../classes/AtomInstance).
+
+### `set`
+
+A function that sets the state of an atom instance. Pass an atom and its params (if any) and either the new state or a function that receives the current state of that atom and returns the new state. Returns the new state.
+
+```ts
+({ set }, newVal) => set(otherAtom, newVal)
+({ set }, newVal) => set(otherAtom, ['param 1', 'param 2'], newVal)
+```

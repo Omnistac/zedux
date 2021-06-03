@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
+import { AtomInstance } from '../classes'
 import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomParamsType, AtomStateType } from '../types'
 import { GraphEdgeSignal } from '../utils'
@@ -22,8 +23,8 @@ import { useStableReference } from './useStableReference'
  * const [state, setState] = useAtomState(myAtom)
  * ```
  *
- * @param atom The atom to instantiate (or reuse an instantiation of)
- * @param params The params to pass the atom and calculate its keyHash
+ * @param atom The atom to instantiate or reuse an instantiation of.
+ * @param params The params for generating the instance's key.
  */
 export const useAtomInstanceDynamic = <A extends AtomBase<any, any, any>>(
   atom: A,
@@ -35,7 +36,15 @@ export const useAtomInstanceDynamic = <A extends AtomBase<any, any, any>>(
   const stableParams = useStableReference(params)
 
   const [atomInstance, unregister] = useMemo(() => {
-    const instance = ecosystem.load(atom, stableParams)
+    const instance = ecosystem.getInstance(atom, stableParams) as AtomInstance<
+      any,
+      any,
+      any
+    >
+
+    if (instance.promise && !instance._isPromiseResolved) {
+      throw instance.promise
+    }
 
     const unregister = ecosystem._graph.registerExternalDependent(
       instance,
@@ -47,7 +56,7 @@ export const useAtomInstanceDynamic = <A extends AtomBase<any, any, any>>(
 
         setReactState(val)
       },
-      'a dynamic React hook',
+      'useAtomInstanceDynamic',
       false
     )
 

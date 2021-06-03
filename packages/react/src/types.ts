@@ -8,6 +8,7 @@ import {
 } from './classes'
 import { AtomApi } from './classes/AtomApi'
 import { AtomBase } from './classes/atoms/AtomBase'
+import { injectGetInstance } from './injectors'
 
 export enum ActiveState {
   Active = 'Active',
@@ -123,6 +124,7 @@ export type IonGet<
 export interface IonGetUtils {
   ecosystem: Ecosystem
   get: typeof AtomInstanceBase.prototype['_get']
+  getInstance: ReturnType<typeof injectGetInstance>
 }
 
 export type IonSet<
@@ -141,6 +143,7 @@ export interface IonSetUtils<
 > {
   ecosystem: Ecosystem
   get: IonGetUtils['get']
+  getInstance: ReturnType<typeof injectGetInstance>
   instance: AtomInstance<State, Params, Exports>
 
   set<A extends AtomBase<any, [], any>>(
@@ -156,6 +159,11 @@ export interface IonSetUtils<
 }
 
 export type LocalAtomConfig = Omit<AtomConfig, 'maxInstances' | 'ttl'>
+
+export type LocalParams<P extends any[]> = [
+  id?: string | undefined,
+  ...params: P
+]
 
 /**
  * Molecule

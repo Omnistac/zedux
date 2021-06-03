@@ -1,14 +1,5 @@
 import { ActionChain, Settable, Store } from '@zedux/core'
 import { ActiveState, AtomValue } from '@zedux/react/types'
-import {
-  GraphEdgeSignal,
-  InjectorDescriptor,
-  InjectorType,
-  SelectorInjectorDescriptor,
-  split,
-  StateInjectorDescriptor,
-} from '@zedux/react/utils'
-import React, { FC, useEffect, useRef, useState } from 'react'
 import { AtomApi } from '../AtomApi'
 import { StandardAtomBase } from '../atoms/StandardAtomBase'
 import { Ecosystem } from '../Ecosystem'
@@ -24,8 +15,10 @@ export class AtomInstance<
   StandardAtomBase<State, Params, Exports>
 > {
   public _destructionTimeout?: ReturnType<typeof setTimeout>
+  public _isPromiseResolved
   public api?: AtomApi<State, Exports>
   public exports: Exports
+  public promise?: Promise<any>
   public store: Store<State>
 
   constructor(
@@ -42,6 +35,7 @@ export class AtomInstance<
 
     // lol
     this.exports = (this as any).exports || undefined
+    this._isPromiseResolved = (this as any)._isPromiseResolved ?? true
   }
 
   /**
@@ -72,7 +66,21 @@ export class AtomInstance<
 
       if (val instanceof AtomApi) {
         this.api = val
-        this.exports = val.exports as Exports
+
+        // Exports can only be set on initial evaluation
+        if (this._activeState === ActiveState.Initializing) {
+          this.exports = val.exports as Exports
+
+          if (val.promise) {
+            this.promise = val.promise
+            this._isPromiseResolved = false
+
+            val.promise.then(() => {
+              this._isPromiseResolved = true
+            })
+          }
+        }
+
         return val.value
       }
 
@@ -97,7 +105,7 @@ export class AtomInstance<
 
     // By default, atoms live forever. Also the atom may already be scheduled
     // for destruction or destroyed
-    if (ttl == null || this._activeState !== ActiveState.Active) {
+    if (ttl == null || ttl === -1 || this._activeState !== ActiveState.Active) {
       return
     }
 
@@ -125,124 +133,6 @@ export class AtomInstance<
     return this._stateStore.dispatch(action)
   }
 
-  public injectSelector<D extends any = any>(selector: (state: State) => D) {
-    const { selectorResult } = split<SelectorInjectorDescriptor<State, D>>(
-      'injectSelector',
-      InjectorType.Selector,
-      ({ instance }) => {
-        const edge = this.ecosystem._graph.addDependency<State>(
-          instance.keyHash,
-          this.keyHash,
-          'injectSelector',
-          false,
-          false,
-          newState => {
-            const newResult = descriptor.selector(newState)
-            const shouldUpdate = newResult !== descriptor.selectorResult
-            descriptor.selectorResult = newResult
-
-            return shouldUpdate
-          }
-        )
-
-        const cleanup = () => {
-          this.ecosystem._graph.removeDependency(
-            instance.keyHash,
-            this.keyHash,
-            edge
-          )
-        }
-
-        const descriptor: SelectorInjectorDescriptor<State> = {
-          cleanup,
-          selector,
-          selectorResult: selector(this._stateStore.getState()),
-          type: InjectorType.Selector,
-        }
-
-        return descriptor
-      },
-      prevDescriptor => {
-        if (prevDescriptor.selector === selector) return prevDescriptor
-
-        const newResult = selector(this._stateStore.getState())
-        prevDescriptor.selectorResult = newResult
-        prevDescriptor.selector = selector
-
-        return prevDescriptor
-      }
-    )
-
-    return selectorResult
-  }
-
-  public injectState() {
-    split<StateInjectorDescriptor>(
-      'injectState',
-      InjectorType.State,
-      ({ instance }) => {
-        const edge = this.ecosystem._graph.addDependency(
-          instance.keyHash,
-          this.keyHash,
-          'injectState',
-          false
-        )
-
-        const cleanup = () => {
-          this.ecosystem._graph.removeDependency(
-            instance.keyHash,
-            this.keyHash,
-            edge
-          )
-        }
-
-        return {
-          cleanup,
-          store: this._stateStore, // just 'cause we're reusing this injector descriptor type. It's fine.
-          type: InjectorType.State,
-        }
-      }
-    )
-
-    return [this._stateStore.getState(), this.setState] as const
-  }
-
-  public injectValue() {
-    split<InjectorDescriptor>(
-      'injectValue',
-      InjectorType.Value,
-      ({ instance }) => {
-        const edge = this.ecosystem._graph.addDependency(
-          instance.keyHash,
-          this.keyHash,
-          'injectValue',
-          false
-        )
-
-        const cleanup = () => {
-          this.ecosystem._graph.removeDependency(
-            instance.keyHash,
-            this.keyHash,
-            edge
-          )
-        }
-
-        return {
-          cleanup,
-          type: InjectorType.Value,
-        }
-      }
-    )
-
-    return this._stateStore.getState()
-  }
-
-  public Provider: FC = ({ children }) => {
-    const context = this.atom.getReactContext()
-
-    return <context.Provider value={this}>{children}</context.Provider>
-  }
-
   public setState = (settable: Settable<State>) => {
     if (this.api?.setStateInterceptors?.length) {
       return this.api._interceptSetState(
@@ -252,84 +142,5 @@ export class AtomInstance<
     }
 
     return this._stateStore.setState(settable)
-  }
-
-  public useSelector<D extends any = any>(selector: (state: State) => D) {
-    const [state, setState] = useState(() =>
-      selector(this._stateStore.getState())
-    )
-    const [, forceRender] = useState<any>()
-    const selectorRef = useRef(selector)
-    selectorRef.current = selector
-
-    useEffect(() => {
-      const unregister = this.ecosystem._graph.registerExternalDependent(
-        this,
-        (signal, val) => {
-          if (signal === GraphEdgeSignal.Destroyed) {
-            forceRender({})
-            return
-          }
-
-          setState(selectorRef.current(val))
-        },
-        'useSelector',
-        false
-      )
-
-      return unregister
-    }, [])
-
-    return state
-  }
-
-  public useValue() {
-    const [state, setState] = useState(this._stateStore.getState())
-    const [, forceRender] = useState<any>()
-
-    useEffect(() => {
-      const unregister = this.ecosystem._graph.registerExternalDependent(
-        this,
-        (signal, val) => {
-          if (signal === GraphEdgeSignal.Destroyed) {
-            forceRender({})
-            return
-          }
-
-          setState(val)
-        },
-        'useValue',
-        false
-      )
-
-      return unregister
-    }, [])
-
-    return state
-  }
-
-  public useState() {
-    const [state, setState] = useState(this._stateStore.getState())
-    const [, forceRender] = useState<any>()
-
-    useEffect(() => {
-      const unregister = this.ecosystem._graph.registerExternalDependent(
-        this,
-        (signal, val) => {
-          if (signal === GraphEdgeSignal.Destroyed) {
-            forceRender({})
-            return
-          }
-
-          setState(val)
-        },
-        'useState',
-        false
-      )
-
-      return unregister
-    }, [])
-
-    return [state, this._stateStore.setState] as const
   }
 }

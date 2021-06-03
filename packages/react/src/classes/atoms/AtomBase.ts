@@ -7,7 +7,7 @@ export abstract class AtomBase<
   Params extends any[],
   InstanceType extends AtomInstanceBase<State, Params, any>
 > {
-  public internalId: string
+  public readonly internalId: string
 
   constructor(
     public readonly key: string,

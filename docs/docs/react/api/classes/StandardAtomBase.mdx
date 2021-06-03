@@ -1,0 +1,14 @@
+---
+id: StandardAtomBase
+title: StandardAtomBase
+---
+
+Extends [AtomBase](AtomBase).
+
+An abstract class with functionality most atom types need.
+
+## Properties
+
+### `.ttl`
+
+A number. May be undefined. If not set or if set to -1, instances of this atom will live forever. If set to 0, the atom instance will be destroyed immediately when it has no more dependents.

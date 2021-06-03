@@ -9,4 +9,4 @@ export const getEcosystem = (id: string) => {
 
 export const wipe = () => globalStore.dispatch(wipeAction())
 
-export const zeduxStore = globalStore
+export const zeduxGlobalStore = globalStore

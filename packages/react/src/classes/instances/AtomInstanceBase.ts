@@ -1,7 +1,6 @@
 import { Subscription } from '@zedux/core'
 import {
   ActiveState,
-  AtomInstanceParamsType,
   AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
@@ -14,6 +13,8 @@ import {
   EvaluationReason,
   EvaluationTargetType,
   EvaluationType,
+  GraphEdgeDynamicity,
+  GraphEdgeInfo,
   InjectorDescriptor,
   InjectorType,
   JobType,
@@ -23,11 +24,6 @@ import { diContext } from '@zedux/react/utils/csContexts'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { createStore, isZeduxStore, Store } from '@zedux/core'
-
-enum DynamicGraphEdge {
-  Dynamic = 1,
-  Static = 2,
-}
 
 const getStateType = (val: any) => {
   if (isZeduxStore(val)) return StateType.Store
@@ -78,11 +74,11 @@ export abstract class AtomInstanceBase<
   public _activeState = ActiveState.Initializing
   public _evaluationReasons: EvaluationReason[] = [] // TODO: Make this undefined in prod and don't use
   public _injectors?: InjectorDescriptor[]
+  public _isEvaluating = false
   public _stateType?: StateType
   public _stateStore: Store<State>
   private _getKeyHashes?: Record<string, DependentEdge>
-  private _isEvaluating = false
-  private _nextGetKeyHashes?: Record<string, DynamicGraphEdge>
+  private _nextGetKeyHashes?: Record<string, GraphEdgeInfo>
   private _subscription?: Subscription
 
   constructor(
@@ -103,7 +99,18 @@ export abstract class AtomInstanceBase<
   }
 
   // handle detaching this atom instance from the global store and all destruction stuff
-  public _destroy() {
+  public _destroy(force?: boolean) {
+    if (this._activeState === ActiveState.Destroyed) return
+
+    // If we're not force-destroying, don't destroy if there are dependents
+    if (
+      !force &&
+      Object.keys(this.ecosystem._graph.nodes[this.keyHash]?.dependents || {})
+        .length
+    ) {
+      return
+    }
+
     // TODO: dispatch an action over stateStore for this mutation
     this._activeState = ActiveState.Destroyed
 
@@ -168,46 +175,26 @@ export abstract class AtomInstanceBase<
   public _get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
   public _get<A extends AtomBase<any, [...any], any>>(
     atom: A,
-    params: AtomParamsType<A>,
-    returnInstance?: boolean
+    params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  public _get<A extends AtomBase<any, [...any], any>>(
-    atom: A,
-    returnInstance: true
-  ): AtomInstanceType<A>
-
-  public _get<A extends AtomBase<any, [...any], any>>(
-    atom: A,
-    params: AtomParamsType<A>,
-    returnInstance: true
-  ): AtomInstanceType<A>
-
-  public _get<I extends AtomInstanceBase<any, [], any>>(
+  public _get<I extends AtomInstanceBase<any, [...any], any>>(
     instance: I
   ): AtomInstanceStateType<I>
 
-  public _get<I extends AtomInstanceBase<any, [...any], any>>(
-    instance: I,
-    params: AtomInstanceParamsType<I>
-  ): AtomInstanceStateType<I>
-
-  public _get<P extends any[]>(
-    atomOrInstance:
-      | AtomBase<any, [...P], AtomInstanceBase<any, [...P], any>>
-      | AtomInstanceBase<any, [], AtomBase<any, [], any>>,
-    paramsIn?: [...P] | boolean,
-    returnInstanceIn?: boolean
+  public _get<A extends AtomBase<any, [...any], any>>(
+    atomOrInstance: A | AtomInstanceBase<any, [], AtomBase<any, [], any>>,
+    params?: AtomParamsType<A>
   ) {
-    const params = Array.isArray(paramsIn) ? paramsIn : undefined
-    const returnInstance = Array.isArray(paramsIn) ? returnInstanceIn : paramsIn
-
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
-    const instance =
+    const instance: AtomInstanceBase<any, any, any> =
       atomOrInstance instanceof AtomInstanceBase
         ? atomOrInstance
-        : this.ecosystem.load(atomOrInstance, params as P)
+        : this.ecosystem.getInstance(
+            atomOrInstance,
+            params as AtomParamsType<A>
+          )
 
     // if get is called during evaluation, track the loaded instances so we can
     // add graph dependencies for them
@@ -218,13 +205,56 @@ export abstract class AtomInstanceBase<
 
       // we could add more flags on this enum to indicate whether we created the
       // instance in this call
-      this._nextGetKeyHashes[instance.keyHash] = returnInstance
-        ? DynamicGraphEdge.Static
-        : DynamicGraphEdge.Dynamic
+      this._nextGetKeyHashes[instance.keyHash] = [
+        GraphEdgeDynamicity.Dynamic,
+        'get',
+      ]
     }
 
-    // otherwise, instance.get() is just an alias for ecosystem.load()
-    return returnInstance ? instance : instance._stateStore.getState()
+    // otherwise, instance._get() is just an alias for
+    // ecosystem.getInstance()._stateStore.getState()
+    return instance._stateStore.getState()
+  }
+
+  public _getInstance<A extends AtomBase<any, [], any>>(
+    atom: A
+  ): AtomInstanceType<A>
+
+  public _getInstance<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>,
+    edgeInfo?: GraphEdgeInfo
+  ): AtomInstanceType<A>
+
+  public _getInstance<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params?: AtomParamsType<A>,
+    edgeInfo?: GraphEdgeInfo
+  ) {
+    // TODO: check if the instance exists so we know if we create it here so we
+    // can destroy it if the evaluate call errors (to prevent that memory leak)
+    const instance = this.ecosystem.getInstance(
+      atom,
+      params as AtomParamsType<A>
+    )
+
+    // if getInstance is called during evaluation, track the loaded instances so
+    // we can add graph dependencies for them
+    if (this._isEvaluating) {
+      if (!this._nextGetKeyHashes) {
+        this._nextGetKeyHashes = {}
+      }
+
+      // we could add more flags on this enum to indicate whether we created the
+      // instance in this call
+      this._nextGetKeyHashes[instance.keyHash] = edgeInfo || [
+        GraphEdgeDynamicity.Static,
+        'getInstance',
+      ]
+    }
+
+    // otherwise, instance._getInstance() is just an alias for ecosystem.getInstance()
+    return instance
   }
 
   // create small, memory-efficient bound function properties we can pass around
@@ -286,7 +316,7 @@ export abstract class AtomInstanceBase<
       )
     }
 
-    // I believe there is no way to cause a scheduleEvaluation loop when the StateType is Value
+    // I believe there is no way to cause an evaluation loop when the StateType is Value
     if (newStateType === StateType.Value) {
       this._stateStore.setState(
         typeof newFactoryResult === 'function'
@@ -311,10 +341,10 @@ export abstract class AtomInstanceBase<
     // remove any edges that were not recreated this evaluation
     if (curr) {
       Object.entries(curr).forEach(([dependencyKey, edge]) => {
-        const nextFlags = next?.[dependencyKey]
-        const nextIsStatic = nextFlags === DynamicGraphEdge.Static
+        const nextEdge = next?.[dependencyKey]
+        const nextIsStatic = nextEdge?.[0] === GraphEdgeDynamicity.Static
 
-        if (nextFlags && nextIsStatic === edge.isStatic) return
+        if (nextEdge && nextIsStatic === edge.isStatic) return
 
         this.ecosystem._graph.removeDependency(
           this.keyHash,
@@ -329,7 +359,8 @@ export abstract class AtomInstanceBase<
       const nextGetKeyHashes: Record<string, DependentEdge> = {}
 
       Object.keys(next).forEach(dependencyKey => {
-        const isStatic = next?.[dependencyKey] === DynamicGraphEdge.Static
+        const nextEdge = next[dependencyKey]
+        const isStatic = nextEdge[0] === GraphEdgeDynamicity.Static
         const existingEdge = curr?.[dependencyKey]
 
         if (existingEdge) {
@@ -340,7 +371,7 @@ export abstract class AtomInstanceBase<
         const edge = this.ecosystem._graph.addDependency(
           this.keyHash,
           dependencyKey,
-          'get',
+          nextEdge[1],
           isStatic
         )
 

@@ -113,31 +113,39 @@ export const when = <State = any>(store: Store<State>) => {
     machineHandlers.push(machineHandler)
 
     const enters = (
-      state: MachineStateRepresentation,
+      stateIn: MachineStateRepresentation | MachineStateRepresentation[],
       sideEffect: SideEffectHandler<State>
     ) => {
-      const stateName = extractStateType(state)
+      const states = Array.isArray(stateIn) ? stateIn : [stateIn]
 
-      if (!machineHandler.enterHooks[stateName]) {
-        machineHandler.enterHooks[stateName] = []
-      }
+      states.forEach(state => {
+        const stateName = extractStateType(state)
 
-      machineHandler.enterHooks[stateName].push(sideEffect)
+        if (!machineHandler.enterHooks[stateName]) {
+          machineHandler.enterHooks[stateName] = []
+        }
+
+        machineHandler.enterHooks[stateName].push(sideEffect)
+      })
 
       return whenMachineBuilder
     }
 
     const leaves = (
-      state: MachineStateRepresentation,
+      stateIn: MachineStateRepresentation | MachineStateRepresentation[],
       sideEffect: SideEffectHandler<State>
     ) => {
-      const stateName = extractStateType(state)
+      const states = Array.isArray(stateIn) ? stateIn : [stateIn]
 
-      if (!machineHandler.leaveHooks[stateName]) {
-        machineHandler.leaveHooks[stateName] = []
-      }
+      states.forEach(state => {
+        const stateName = extractStateType(state)
 
-      machineHandler.leaveHooks[stateName].push(sideEffect)
+        if (!machineHandler.leaveHooks[stateName]) {
+          machineHandler.leaveHooks[stateName] = []
+        }
+
+        machineHandler.leaveHooks[stateName].push(sideEffect)
+      })
 
       return whenMachineBuilder
     }

@@ -1,7 +1,7 @@
 // import { useAtomInstance, useAtomInstanceDynamic } from '../hooks'
 // import {
-//   injectAtomWithoutSubscription,
-//   injectAtomWithSubscription,
+//   injectAtomInstance,
+//   injectAtomInstanceDynamic,
 // } from '../injectors'
 // import { AtomType, Molecule, MoleculeInstance } from '../types'
 // import { generateImplementationId } from '../utils'
@@ -14,18 +14,18 @@
 //   value: Molecule<State, Exports>['value']
 // ) => {
 //   const injectExports = () =>
-//     injectAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
-//       'injectExports',
+//     injectAtomInstance<State, [], MoleculeInstance<State, Exports>>(
 //       newMolecule,
-//       []
+//       [],
+//       'injectExports'
 //     ).exports
 
 //   const injectState = () => {
-//     const instance = injectAtomWithSubscription<
+//     const instance = injectAtomInstanceDynamic<
 //       State,
 //       [],
 //       MoleculeInstance<State, Exports>
-//     >('injectState', newMolecule, [])
+//     >(newMolecule, [], 'injectState')
 
 //     return [
 //       instance.internals.stateStore.getState(),
@@ -35,10 +35,10 @@
 //   }
 
 //   const injectStore = () =>
-//     injectAtomWithoutSubscription<State, [], MoleculeInstance<State, Exports>>(
-//       'injectStore',
+//     injectAtomInstance<State, [], MoleculeInstance<State, Exports>>(
 //       newMolecule,
-//       []
+//       [],
+//       'injectStore'
 //     ).internals.stateStore
 
 //   const override = (newValue: Molecule<State, Exports>['value']) =>

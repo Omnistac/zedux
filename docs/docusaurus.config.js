@@ -21,7 +21,7 @@ module.exports = {
       },
       items: [
         {
-          to: 'docs/react/tutorial/quick-start',
+          to: 'docs/react/walkthrough/quick-start',
           activeBasePath: 'docs/react',
           label: 'React Docs',
           position: 'left',
@@ -32,7 +32,6 @@ module.exports = {
           label: 'Core Docs',
           position: 'left',
         },
-        { to: 'blog', label: 'Blog', position: 'left' },
         {
           href: 'https://github.com/bowheart/zedux',
           label: 'GitHub',
@@ -48,11 +47,11 @@ module.exports = {
           items: [
             {
               label: 'React',
-              to: 'react-docs/getting-started/quick-start',
+              to: 'docs/react/walkthrough/quick-start',
             },
             {
               label: 'Core',
-              to: 'core-docs/getting-started/quick-start',
+              to: 'docs/core/getting-started/quick-start',
             },
           ],
         },
@@ -69,12 +68,8 @@ module.exports = {
           title: 'Social',
           items: [
             {
-              label: 'Blog',
-              to: 'blog',
-            },
-            {
               label: 'GitHub',
-              href: 'https://github.com/bowheart/zedux',
+              href: 'https://github.com/Omnistac/zedux',
             },
             {
               label: 'Twitter',

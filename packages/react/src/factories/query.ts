@@ -1,7 +1,7 @@
 // import { Context, createContext } from 'react'
 // import {
-//   injectAtomWithoutSubscription,
-//   injectAtomWithSubscription,
+//   injectAtomInstance,
+//   injectAtomInstanceDynamic,
 // } from '../injectors'
 // import { getEcosystem } from '../store/public-api'
 // import {
@@ -13,7 +13,7 @@
 //   QueryAtomInstance,
 // } from '../types'
 // import { EMPTY_CONTEXT, generateImplementationId } from '../utils'
-// import { ecosystemCsContext, diContext } from '../utils/csContexts'
+// import { diContext } from '../utils/csContexts'
 
 // export const query = <State, Params extends any[]>(
 //   key: string,
@@ -27,34 +27,18 @@
 //   }
 
 //   const injectInstance = (...params: Params) =>
-//     injectAtomWithoutSubscription<
+//     injectAtomInstance<
 //       AsyncState<State>,
 //       Params,
 //       QueryAtomInstance<State, Params>
-//     >('injectInstance', newAtom, params)
-
-//   const injectLazy = () => {
-//     const initialContext = diContext.consume()
-
-//     return (...params: Params) => {
-//       const newContext = ecosystemCsContext.consume(false)
-//       const { ecosystemId } = newContext || initialContext
-//       const ecosystem = getEcosystem(ecosystemId)
-
-//       return ecosystem.load<
-//         AsyncState<State>,
-//         Params,
-//         QueryAtomInstance<State, Params>
-//       >(newAtom, params)
-//     }
-//   }
+//     >(newAtom, params, 'injectInstance')
 
 //   const injectQuery = (...params: Params) => {
-//     const instance = injectAtomWithSubscription<
+//     const instance = injectAtomInstanceDynamic<
 //       AsyncState<State>,
 //       Params,
 //       QueryAtomInstance<State, Params>
-//     >('injectQuery', newAtom, params)
+//     >(newAtom, params, 'injectQuery')
 
 //     const state = instance.internals.stateStore.getState()
 //     const query: Query<State, Params> = {

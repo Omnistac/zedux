@@ -5,7 +5,7 @@ import { Ecosystem } from '../Ecosystem'
 import { AtomInstance } from '../instances/AtomInstance'
 import { AtomBase } from './AtomBase'
 
-export class StandardAtomBase<
+export abstract class StandardAtomBase<
   State,
   Params extends any[],
   Exports extends Record<string, any>
@@ -21,7 +21,7 @@ export class StandardAtomBase<
     config?: AtomConfig
   ) {
     super(key, config?.flags, config?.maxInstances)
-    this.ttl = config?.ttl
+    this.ttl = config?.ttl ?? -1 // by default, atoms live forever (-1 means forever)
 
     // const map = new WeakMap();
     // map.set(newAtomInstance, true);

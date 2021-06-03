@@ -1,0 +1,38 @@
+---
+id: Atom
+title: Atom
+---
+
+Extends [StandardAtomBase](StandardAtomBase).
+
+The standard, default atom type you'll use. Instances of this class are passed to most of Zedux' hooks and injectors.
+
+An atom defines a template that Zedux will use to create atom instances. Do not confuse "atom instances" with instances of this Atom class! Atom instances are actually instances of [the AtomInstance class](AtomInstance) 🤕. We refer to instances of this Atom class as simply "atoms".
+
+## Creation
+
+Use [the `atom()` factory](../factories/atom) to create atoms:
+
+```ts
+import { Atom, atom } from '@zedux/react'
+
+const exampleAtom = atom('example', 'initial state')
+
+exampleAtom instanceof Atom // true
+```
+
+## Methods
+
+This class exposes only one method apart from those inherited from [StandardAtomBase](StandardAtomBase).
+
+### `.override`
+
+Creates an exact clone of this atom, but with a different value.
+
+```ts
+.override(newValue) => Atom
+```
+
+#### `newValue`
+
+Can be any of the same [six value types](../factories/atom#value) that `atom()` accepts.

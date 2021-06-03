@@ -2,17 +2,8 @@ import React from 'react'
 import Layout from '@theme/Layout'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
 import useBaseUrl from '@docusaurus/useBaseUrl'
-import {
-  Buttons,
-  Features,
-  FeatureImage,
-  H1,
-  Header,
-  HeaderContent,
-  Link,
-  SlidingBg,
-  Tagline,
-} from '../css/index.styles'
+import { Features, FeatureImage } from '../css/index.styles'
+import { Header } from '../components/Header'
 
 const features = [
   {
@@ -71,21 +62,9 @@ function Home() {
       title={`${siteConfig.title} - ${siteConfig.tagline}`}
       description="Zedux is an elite state management tool for React"
     >
-      <Header>
-        <SlidingBg url={textureUrl} />
-        <HeaderContent className="container">
-          <H1>{siteConfig.title}</H1>
-          <Tagline>{siteConfig.tagline}</Tagline>
-          <Buttons>
-            <Link to={useBaseUrl('docs/react/tutorial/quick-start')}>
-              Quick Start!
-            </Link>
-            <Link to={useBaseUrl('docs/api')}>API Docs</Link>
-          </Buttons>
-        </HeaderContent>
-      </Header>
+      <Header />
       <main>
-        {features && features.length && (
+        {features && features.length ? (
           <Features>
             <div className="container">
               <div className="row">
@@ -95,7 +74,7 @@ function Home() {
               </div>
             </div>
           </Features>
-        )}
+        ) : null}
       </main>
     </Layout>
   )

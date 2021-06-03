@@ -254,13 +254,6 @@ export class Graph {
     )
   }
 
-  public wipe() {
-    // TODO: Delete nodes in an optimal order (starting with leaf nodes - nodes
-    // with no internal dependents). Use `instance.destroy()` on those and let
-    // that clean up this object. Don't wipe it manually like this:
-    this.nodes = {}
-  }
-
   private recalculateWeight(nodeKey: string, weightDiff: number) {
     const node = this.nodes[nodeKey]
 

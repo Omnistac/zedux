@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
+import { AtomInstance } from '../classes'
 import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomInstanceType, AtomParamsType } from '../types'
 import { GraphEdgeSignal } from '../utils'
@@ -12,28 +13,44 @@ import { useStableReference } from './useStableReference'
  * an instance has already been created for the passed params, reuses the
  * existing instance.
  *
- * Creates a static dependency on the atom instance. This means components that
- * use this hook will *not* rerender when this atom instance's state changes.
+ * Registers a static graph dependency on the atom instance. This means
+ * components that use this hook will not rerender when this atom instance's
+ * state changes.
  *
- * @param atom The atom to instantiate (or reuse an instantiation of)
- * @param params The params to pass the atom and calculate its keyHash
+ * Pass false as the 3rd param to prevent this graph dependency from being
+ * registered. Useful when you need to control the graph dependency manually.
+ * `useAtomSelector` does this internally.
+ *
+ * @param atom The atom to instantiate or reuse an instantiation of
+ * @param params The params for generating the instance's key.
  */
 export const useAtomInstance: {
   <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
   <A extends AtomBase<any, any, any>>(
     atom: A,
-    params: AtomParamsType<A>
+    params: AtomParamsType<A>,
+    shouldRegisterDependency?: boolean
   ): AtomInstanceType<A>
 } = <A extends AtomBase<any, any, any>>(
   atom: A,
-  params?: AtomParamsType<A>
+  params?: AtomParamsType<A>,
+  shouldRegisterDependency = true
 ) => {
   const ecosystem = useEcosystem()
   const stableParams = useStableReference(params)
   const [force, forceRender] = useState<any>()
 
   const [atomInstance, unregister] = useMemo(() => {
-    const instance = ecosystem.load(atom, stableParams as AtomParamsType<A>)
+    const instance = ecosystem.getInstance(
+      atom,
+      stableParams as AtomParamsType<A>
+    ) as AtomInstance<any, any, any>
+
+    if (instance.promise && !instance._isPromiseResolved) {
+      throw instance.promise
+    }
+
+    if (!shouldRegisterDependency) return [instance]
 
     const unregister = ecosystem._graph.registerExternalDependent(
       instance,
@@ -42,12 +59,12 @@ export const useAtomInstance: {
           forceRender({})
         }
       },
-      'a static React hook',
+      'useAtomInstance',
       true
     )
 
     return [instance, unregister] as const
-  }, [atom, ecosystem, force, stableParams])
+  }, [atom, ecosystem, force, shouldRegisterDependency, stableParams])
 
   useLayoutEffect(() => unregister, [unregister])
 

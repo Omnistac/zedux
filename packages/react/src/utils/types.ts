@@ -10,11 +10,11 @@ export interface AtomInjectorDescriptor<
   type: InjectorType.Atom
 }
 
-export interface AtomWithSubscriptionInjectorDescriptor<
+export interface AtomDynamicInjectorDescriptor<
   InstanceType extends AtomInstanceBase<any, any[], any>
 > extends InjectorDescriptor {
   instance: InstanceType
-  type: InjectorType.AtomWithSubscription
+  type: InjectorType.AtomDynamic
 }
 
 export interface CallStackContext<T = any> {
@@ -96,6 +96,13 @@ export interface EvaluateAtomJob extends JobBase {
   type: JobType.EvaluateAtom
 }
 
+export enum GraphEdgeDynamicity {
+  Dynamic = 1,
+  Static = 2,
+}
+
+export type GraphEdgeInfo = [GraphEdgeDynamicity, string]
+
 export enum GraphEdgeSignal {
   Destroyed = 'Destroyed',
   Updated = 'Updated',
@@ -108,7 +115,7 @@ export interface InjectorDescriptor {
 
 export enum InjectorType {
   Atom = 'Atom',
-  AtomWithSubscription = 'AtomWithSubscription',
+  AtomDynamic = 'AtomDynamic',
   Effect = 'Effect',
   Exports = 'Exports',
   Memo = 'Memo',

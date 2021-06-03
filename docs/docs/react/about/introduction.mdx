@@ -1,0 +1,76 @@
+---
+id: introduction
+title: Introducing Zedux
+---
+
+Zedux is a flexible, multi-paradigm state management tool for React. It is packed with features covering all aspects of state management.
+
+## Features
+
+- Atomic architecture
+
+- Global state management
+
+- Local (component, fractal) state management
+
+- High-level abstractions for React context
+
+- Standardized Dependency Injection
+
+- Cache management
+
+- State machines
+
+- Selectors
+
+- Side effect helpers
+
+- Optional zero configuration and high-level APIs
+
+- Dev, debugging, and performance tools
+
+## Project Goals
+
+1. Be flexible.
+
+2. Create a rich and rewarding ecosystem for state management.
+
+3. Be easy for beginners to start using.
+
+### Flexible
+
+The core philosophy of Zedux. Atoms and stores are flexible, meaning they can adapt to every use case. Need more power? Build a reducer hierarchy. Need some simple, local state? Use zero config stores. Need something even simpler? Don't use stores at all!
+
+Apps of all sizes should be able to use Zedux comfortably. Zedux is designed to scale as your state management demands increase. Zero configuration can always be opted out of. All high-level APIs have low-level counterparts for when you need to dig in and do something crazy.
+
+### Rich and Rewarding
+
+(Buzz words much?)
+
+Zedux strives profusely to avoid being just another state management library that fills some niche and gets people excited for a while. It is a mature tool that yields higher returns the more you use it and spend time learning its features.
+
+Zedux doesn't leave you reaching for other libraries to fill the holes in your state management needs. Rather, it tries to be as complete as possible while not rewriting the world. Zedux is not on a byte diet but is still pretty small.
+
+Another way a library can be rewarding is to make sure knowledge gained from working with it is transferrable. To this end, Zedux tries to stay close to other popular libraries in the space. The atomic APIs are similar to Recoil. The store APIs are similar to Redux. The cache management tools are similar to React Query. If one day you ditch Zedux forever, you should be able to easily jump into other libraries and feel familiar with the concepts.
+
+### Easy
+
+Zero configuration and high-level APIs are standard across all features. A few simple lines of code is all you need to learn to start using Zedux. In fact, here they are:
+
+```tsx
+import { atom } from '@zedux/react'
+
+const myFirstAtom = atom('myFirst', 'Hello, world!')
+
+function MyComponent() {
+  const [state, setState] = myFirstAtom.useState()
+
+  return <div>A message from the universe: {state}</div>
+}
+```
+
+## Next Steps
+
+The [quick start](../walkthrough/quick-start) will expound on this introduction with lots of examples.
+
+Or head to the [overview page](overview) to get a quick look at everything Zedux offers.

@@ -1,5 +1,13 @@
 import '@testing-library/jest-dom/extend-expect'
-import { api, atom, createStore, injectEffect, injectStore } from '@zedux/react'
+import {
+  api,
+  atom,
+  createStore,
+  injectEffect,
+  injectStore,
+  useAtomInstance,
+  useAtomValue,
+} from '@zedux/react'
 import React, { FC } from 'react'
 import { renderInEcosystem } from '@zedux/react-test/utils/renderInEcosystem'
 import { fireEvent } from '@testing-library/dom'
@@ -39,10 +47,10 @@ const composedStoresAtom = atom('composedStores', () => {
 })
 
 describe('using atoms in components', () => {
-  describe('atom.useValue()', () => {
+  describe('useAtomValue()', () => {
     test('returns current state of the atom', () => {
       const Test: FC = () => {
-        const val = normalAtom.useValue()
+        const val = useAtomValue(normalAtom)
 
         expect(val).toBe(0)
 
@@ -54,7 +62,7 @@ describe('using atoms in components', () => {
 
     test('creates a dynamic graph dependency that renders component when atom state changes', async () => {
       const Test: FC = () => {
-        const val = updatingAtom.useValue()
+        const val = useAtomValue(updatingAtom)
 
         if (!val) return null
 
@@ -74,8 +82,8 @@ describe('using atoms in components', () => {
     const renders: { a: number; b: number }[] = []
 
     const Test: FC = () => {
-      const val = composedStoresAtom.useValue()
-      const { update } = composedStoresAtom.useExports()
+      const val = useAtomValue(composedStoresAtom)
+      const { update } = useAtomInstance(composedStoresAtom).exports
 
       renders.push(val)
 

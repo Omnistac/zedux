@@ -1,0 +1,155 @@
+---
+id: dependency-injection
+title: Dependency Injection
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+React creates a perfect environment for Inversion of Control. Yet this amazing principle is often massively underused. Zedux aims to help bring Dependency Injection (DI) to the forefront of React workflows.
+
+There are 2 parts to DI:
+
+- Injection
+- Overrides
+
+## Injection
+
+Any atom can be injected into any other atom.
+
+```ts
+const configAtom = atom('config', { apiUrl: 'example.com/api' })
+
+const localStorageAtom = atom('localStorage', { ...localStorage })
+
+const authAtom = ion('auth', ({ get }) => {
+  const { apiUrl } = get(configAtom)
+  const storage = get(localStorageAtom)
+
+  return injectFetch(`${apiUrl}/auth`, storage.jwt)
+})
+
+const axiosAtom = ion('axios', ({ get }) => {
+  const apiUrl = injectAtomSelector(configAtom, config => config.apiUrl)
+  const { data } = get(authAtom)
+
+  if (!data?.token) return null
+
+  return axios.create({
+    baseURL: apiUrl,
+    headers: {
+      Authorization: `Bearer ${data.token}`
+    }
+  })
+})
+
+const userAtom = ion('user', ({ get }) => {
+  const axios = get(axiosAtom)
+  const store = injectStore()
+
+  injectEffect(() => {
+    if (!axios) return
+
+    axios.get(`/user`).then(({ data }) => store.setState(data))
+  }, [axios])
+
+  return store
+})
+```
+
+This creates a graph of atom dependencies, which can be seen in all its glory in the [StateHub](/not-done).
+
+### The Graph
+
+As you use atoms, Zedux creates and updates a graph of atom dependencies. The nodes of the graph are atom instances and consumers of atom instances. The edges of the graph are relationships between atom instances.
+
+When we "inject an atom", what we're really doing is instructing Zedux to create an edge on the graph. There are 8 different types of edges, based on the 3 edge flags:
+
+- isExternal - whether the graph edge is between two atom instances or between an atom instance and something outside of Zedux - usually a React component.
+- isAsync - async edges are edges created and cleaned up manually, usually in a useEffect hook or injectEffect injector. There currently aren't any APIs to create these edges. We're working on it.
+- isStatic - whether the dependent should be notified of updates to the dependency's state (causing a dependent atom instance to reevaluate or a dependent component to rerender).
+
+Ignoring `isAsync`, since there are no ways to create those edges currently, the 4 edge types you'll encounter are `external-static`, `external-dynamic`, `internal-static`, and `internal-dynamic`. There are many hooks and injectors for creating these 4 edge types:
+
+- `injectAtomValue` - creates an `internal-dynamic` edge.
+- `injectAtomState` - creates an `internal-dynamic` edge.
+- `injectAtomSelector` - creates an `internal-dynamic` edge that will only cause reevaluations when the selector's returned value changes.
+- `injectAtomInstance` - creates an `internal-static` edge.
+- `useAtomValue` - creates an `external-dynamic` edge.
+- `useAtomState` - creates an `external-dynamic` edge.
+- `useAtomSelector` - creates an `external-dynamic` edge that will only cause rerenders when the selector's returned value changes.
+- `useAtomInstance` - creates an `external-static` edge.
+
+#### What's the point of a static edge?
+
+Static edges don't trigger reevaluations or rerenders, so what's the point? There are 2 main reasons why static edges are important:
+
+- They inform Zedux that someone is using the injected atom instance. As long as an atom instance has any graph edges, Zedux won't try to clean it up.
+- If an atom instance is force-destroyed while it has static dependents, those dependents will be informed of the destruction and actually will schedule an evaluation or render to create a new instance.
+
+## Overrides
+
+Now that we've got dependencies injected, we need a way to swap them out. Atoms have a `.override()` function which will create an exact clone of the atom, but with a different value.
+
+```ts
+const axiosAtom = atom('axios', axios)
+
+const testAxiosAtom = axiosAtom.override({ post: jest.fn() })
+```
+
+These overridden atoms can then be supplied to an `ecosystem` via the `overrides` field:
+
+```tsx
+const testEcosystem = ecosystem({
+  atoms: [testAxiosAtom],
+  id: 'test'
+})
+
+function TestApp() {
+  return (
+    <EcosystemProvider ecosystem={testEcosystem}>
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+Now this test ecosystem will use `testAxiosAtom` everywhere `axiosAtom` is used:
+
+```tsx
+function Routes {
+  const axios = useAtomValue(axiosAtom) // testAxiosAtom is used instead
+  ...
+}
+
+const userAtom = ion('user', ({ get }) => {
+  const axios = get(axiosAtom) // testAxiosAtom is injected instead
+})
+```
+
+## Simple Example
+
+<LiveEditor resultVar="App">{`
+const textAtom = atom('text', 'the text!')
+const betterTextAtom = textAtom.override('better text!')\n
+const betterEcosystem = ecosystem({ overrides: [betterTextAtom] })\n
+function Child() {
+  const text = useAtomValue(textAtom)\n
+  return <div>{text}</div>
+}\n
+function App() {
+  return (
+    <>
+      <EcosystemProvider>
+        <Child />
+      </EcosystemProvider>
+      <EcosystemProvider ecosystem={betterEcosystem}>
+        <Child />
+      </EcosystemProvider>
+    </>
+  )
+}
+`}</LiveEditor>
+
+## Next Steps
+
+Now that we've mastered the art of the atom, it's time to step into the low-levels and learn about [stores](stores).

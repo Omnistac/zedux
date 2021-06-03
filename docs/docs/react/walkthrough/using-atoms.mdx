@@ -1,0 +1,343 @@
+---
+id: using-atoms
+title: Using Atoms
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+In the quick start, we learned a few basic ways to instantiate and consume atoms. In this page, we'll cover more hooks and injectors for atom instantiation and consumption, as well as how to interact with atom instances directly.
+
+## Dynamic Hooks/Injectors
+
+Some hooks/injectors create a dynamic dependency on the atom. This means that when the atom instance's store's state changes, components/atoms that use these hooks/injectors will rerender/reevaluate (😅).
+
+### `useAtomSelector`
+
+Returns a portion or derivation of the state of an atom instance's store. Also ensures that the component only reevaluates when the selector's result changes. Similar to Redux' [`useSelector()`](https://react-redux.js.org/api/hooks#useselector).
+
+<LiveEditor resultVar="App">{`
+const userAtom = atom('user', () => ({
+  name: 'Joe',
+  lastUpdated: new Date()
+}))\n
+function Child() {
+  const [state, setState] = useAtomState(userAtom)\n
+  return (
+    <>
+      <input
+        onChange={({ target }) => setState(val => ({
+          lastUpdated: new Date(),
+          name: target.value
+        })}
+        value={state.name}
+      />
+      <div>Last Updated: {state.lastUpdated.toLocaleString()}</div>
+      <button onClick={() => setState(val => ({
+        ...val,
+        lastUpdated: new Date()
+      })}>
+        Update Date
+      </button>
+    </>
+  )
+}\n
+function App() {
+  // whenever userAtom's state changes, this selector will run.
+  // If the selector returns a new value, this component will rerender.
+  const renders = useRef(0)
+  const userName = useAtomSelector(userAtom, ({ name }) => name)
+  renders.current += 1\n
+  return (
+    <>
+      <div>renders: {renders.current}, name: {userName}</div>
+      <Child />
+    </>
+  )
+}
+`}</LiveEditor>
+
+If the atom takes params, pass those as the second parameter to `useAtomSelector`:
+
+```ts
+const usersByRoleAtom = ion('usersByRole', ({ get }, role: string) =>
+  get(usersAtom).filter(user => user.role === role)
+)
+
+function App() {
+  const userIds = useAtomSelector(
+    usersByRoleAtom,
+    // highlight-next-line
+    ['admin'],
+    users => users.map(({ id }) => id)
+  )
+  ...
+}
+```
+
+Note that while you can use a selector memoizing library like [reselect](https://github.com/reduxjs/reselect), it isn't necessary in Zedux. If more sophisticated selector behavior is required, use selector atoms like we did with `usersByRoleAtom` in the above example. [Ions](/not-done) are particulary suited for this use case.
+
+Selector atoms are composable, memoized by default (since they live in an atom ecosystem), and the cache size and ttl are configurable too - all because they're atoms. The memoization details can even be handled more granularly using [`injectMemo()`](/not-done). That's a lot of power for such a simple API.
+
+#### `injectAtomSelector`
+
+The injector equivalent of `useAtomSelector` - for use in atoms:
+
+```ts
+const userAtom = atom('user', () => {
+  const token = injectAtomSelector(authAtom, authData => authData.token)
+  ...
+})
+```
+
+### `useAtomState()`
+
+`useAtomState()` is similar to React's `useState()` hook.
+
+```tsx
+import { useAtomState } from '@zedux/react'
+
+function App() {
+  // whenever myAtom's state changes, this component will rerender
+  const [state, setState] = useAtomState(myAtom)
+  ...
+}
+```
+
+`setState` is a reference to the `setState` function on the atom instance, which wraps the `setState` function of the instance's store. It functions like a React state setter.
+
+`useAtomState()` differs from React's `useState()` in that you don't pass the initial state - we defined that when we created the atom. Instead, you pass the params of the atom (if any):
+
+```ts
+const [darkTheme, setDarkTheme] = useAtomState(themeAtom, ['dark'])
+const [lightTheme, setLightTheme] = useAtomState(themeAtom, ['light'])
+```
+
+#### `injectAtomState`
+
+The injector equivalent of `useAtomState` - for use in atoms.
+
+```ts
+const userAtom = atom('user', () => {
+  const [auth, setAuth] = injectAtomState(authAtom)
+})
+```
+
+### `useAtomValue`
+
+The simplest way to consume an atom's state. Returns an atom instance's value. Creates a dynamic graph dependency on the resolved atom instance. This means that the current component will rerender when the resolved atom instance's state changes.
+
+```ts
+function MyComponent() {
+  // whenever myAtom's state changes, this component will rerender
+  const currentState = useAtomValue(myAtom, ['param 1', 'param 2'])
+  const paramless = useAtomValue(paramlessAtom)
+  ...
+}
+```
+
+### `injectAtomValue`
+
+The injector equivalent of `useAtomValue`. Returns an atom instance's value. Creates a dynamic graph dependency on the resolved atom instance. This means that the current atom instance will reevaluate when the resolved atom instance's state changes.
+
+```ts
+const dependentAtom = atom('dependent', () => {
+  // whenever myAtom's state changes, this atom will reevaluate
+  const currentState = injectAtomValue(myAtom)
+  ...
+})
+```
+
+This injector is your main tool for Dependency Injection.
+
+## Static Hooks/Injectors
+
+The following hooks/injectors do not cause rerenders/reevaluations when the resolved atom instance's state changes. They do, however, register static graph dependencies on the resolved atom instance. This means that Zedux will prevent the instance from being cleaned up as long as the dependent depends on it.
+
+### `useAtomConsumer`
+
+Used in conjuction with `useAtomInstance` to consume atom instances provided over React context. Note that there is no such thing as `injectAtomConsumer`.
+
+### `useAtomInstance`
+
+Returns a reference to an instance of the atom. Atom instances have many features.
+
+```ts
+import { useAtomInstance, useAtomInstanceValue } from '@zedux/react'
+
+function MyComponent() {
+  const instance = useAtomInstance(myAtom)
+  const value = useAtomInstanceValue(instance)
+}
+```
+
+In this example, when we use `useAtomInstance()`, it creates a static dependency. This means MyComponent will not rerender when the instance's state changes. However, we then use another hook - `useAtomInstanceValue()` - to make the dependency dynamic.
+
+`useAtomInstance()` can also be used in conjunction with `useAtomConsumer()` to provide an instance over React context, so deeply nested children don't need to know the params of a specific atom instance they want to reuse:
+
+```tsx
+import {
+  AtomInstanceProvider,
+  useAtomConsumer,
+  useAtomInstance
+} from '@zedux/react'
+
+function Parent() {
+  const instance = useAtomInstance(myAtom, ['some', 'params'])
+
+  return (
+    <AtomInstanceProvider instance={instance}>
+      <Child />
+    </AtomInstanceProvider>
+  )
+}
+
+function Child() {
+  const instance = useAtomConsumer(myAtom) // no need to pass params here
+  const value = useAtomInstanceValue(instance) // subscribe to the instance
+  ...
+}
+```
+
+:::note
+While `useAtomConsumer()` creates a static dependency, `useAtomInstanceValue()` makes it dynamic.
+:::
+
+Instances also expose lots of extra, low-level functionality. We'll cover more of that in the [instances walkthrough](/not-done).
+
+#### `injectAtomInstance`
+
+The injector equivalent of `useAtomInstance` - for use in atoms.
+
+### `useGetInstance`
+
+Returns a function that can be used to dynamically create/retrieve atom instances. Often used to preload atoms, especially for kicking off render-as-you-fetch React suspense flows.
+
+```tsx
+import { useGetInstance } from '@zedux/react'
+
+function BlogPostThumbnail({ id }: { id: string }) {
+  const lazyLoad = useGetInstance()
+
+  return (
+    <button onClick={() => {
+      lazyLoad(blogPostAtom, [id])
+    }}>
+      View Post
+    </button>
+  )
+}
+```
+
+Calling the loader function instantiates the atom, if no instance has been created for the given params yet, and returns the instance.
+
+`useGetInstance` also accepts an optional `atom` param that partially applies the returned `getInstance` function.
+
+```ts
+const getBlogPostInstance = useGetInstance(blogPostAtom)
+...
+const instance = getBlogPostInstance([id])
+```
+
+#### `injectGetInstance`
+
+The injector equivalent of `useGetInstance` - for use in atoms. This injector will also dynamically register static graph dependencies when called during synchronous atom evaluation.
+
+## Instances
+
+You'll often interact with atom instances directly. Atom instances have many useful properties.
+
+### `.store`
+
+A reference to the underlying store of this atom instance. Don't use this directly if you can avoid it. That said, there are many cases where it can be useful. We'll cover some of these in the [side effects walkthrough](side-effects).
+
+### `.setState()`
+
+The most common way to set an atom instance's state. The tuple returned by `useAtomState` contains a reference to this function. `.setState()` accepts either the new state or a function that receives the current state and returns the new state.
+
+```ts
+const instance = getInstance(myAtom)
+instance.setState(newState)
+instance.setState(currentState => newState)
+```
+
+This `.setState()` function is **not** a reference to the instance's store's `.setState()` function. `instance.setState()` is a wrapper around `instance.store.setState()`. This is important because `instance.setState()` allows interceptors to run before calling `.store.setState()`.
+
+:::important
+Always prefer calling `instance.setState()` over `instance.store.setState()`
+:::
+
+### `.dispatch()`
+
+The recommended way to dispatch actions to the instance's store.
+
+```ts
+const instance = getInstance(myAtom)
+instance.dispatch({ type: 'some-type' })
+```
+
+Similar to `instance.setState()`, `instance.dispatch()` is a wrapper around `instance.store.dispatch()`. The difference is that `instance.dispatch()` allows dispatch interceptors to run before calling `.store.dispatch()`.
+
+:::important
+Always prefer calling `instance.dispatch()` over `instance.store.dispatch()`
+:::
+
+### `.exports`
+
+A reference to the exports of the atom.
+
+```ts
+const instance = getInstance(myAtom)
+const { someExport } = instance.exports
+```
+
+These exports are constant - they are set the first time an atom instance evaluates and they will not change on subsequent evaluations.
+
+### `.invalidate()`
+
+Call this to force the atom instance to reevaluate. Outside of testing, there shouldn't be a need for this. Unless you know what you're doing, avoid impure or mutation-oriented patterns that require you to manually invalidate atom instances.
+
+<LiveEditor resultVar="RandomNum">{`
+const randomNumAtom = atom('randomNum', () => Math.floor(Math.random() * 100))\n
+function RandomNum() {
+  const instance = useAtomInstance(randomNumAtom)
+  const value = useAtomValue(randomNumAtom)\n
+  return (
+    <>
+      <div>Random Number: {value}</div>
+      <button onClick={() => instance.invalidate()}>Re-roll</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+### Hooks and Injectors
+
+Most hooks and injectors that return an atom instance create a static graph dependency on that instance. To turn that into a dynamic dependency (one that'll cause rerenders/reevaluations when the instance's state updates), we need to pass the instance to another hook/injector.
+
+It just so happens that instances can be passed directly to `useAtomSelector`, `useAtomState`, `useAtomValue`, and their corresponding injectors. Yep, we've already seen all of those 💪.
+
+```ts
+function App() {
+  const instance = useAtomInstance(myAtom) // static dep 😢
+  const val = useAtomValue(instance) // dynamic dep 🎉
+  ...
+}
+```
+
+## Recap
+
+- Every atom instance has an underlying Zedux store.
+
+- `useAtomSelector`, `useAtomState`, `useAtomValue`, and their corresponding injectors all create dynamic graph dependencies that trigger updates when the resolved atom instance's state changes.
+
+- `useAtomInstance` and `useAtomConsumer` can be used together to provide and consume atom instances over React context.
+
+- `useGetInstance` and `injectGetInstance` return a function that can be used to preload or lazy-load atoms.
+
+- Atom instances have `.store`, `.setState`, `.dispatch`, `.exports`, and `.invalidate` properties that can be used directly.
+
+- `useAtomSelector`, `useAtomState`, `useAtomValue`, and their corresponding injectors all accept atom instances too.
+
+## Next Steps
+
+Now we know how to create and consume atoms. Next we'll learn how to create and configure isolated atom environments using [ecosystems](ecosystems).

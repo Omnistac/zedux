@@ -3,8 +3,10 @@ import {
   atom,
   ecosystem,
   EcosystemProvider,
+  injectAtomValue,
   injectEffect,
   injectStore,
+  useAtomValue,
 } from '@zedux/react'
 import React, { useState } from 'react'
 
@@ -29,7 +31,7 @@ describe('ttl', () => {
 
     const atom2 = atom('atom2', () => {
       evaluations.push(2)
-      const atom1val = atom1.injectValue()
+      const atom1val = injectAtomValue(atom1)
 
       return atom1val + '2'
     })
@@ -38,8 +40,8 @@ describe('ttl', () => {
       'atom3',
       (id: string) => {
         evaluations.push(3)
-        const atom1val = atom1.injectValue()
-        const atom2val = atom2.injectValue()
+        const atom1val = injectAtomValue(atom1)
+        const atom2val = injectAtomValue(atom2)
 
         injectEffect(
           () => () => {
@@ -57,8 +59,8 @@ describe('ttl', () => {
       'atom4',
       () => {
         evaluations.push(4)
-        const atom3val = atom3.injectValue('1')
-        const atom1val = atom1.injectValue()
+        const atom3val = injectAtomValue(atom3, ['1'])
+        const atom1val = injectAtomValue(atom1)
 
         injectEffect(
           () => () => {
@@ -73,9 +75,9 @@ describe('ttl', () => {
     )
 
     function One() {
-      const atom3val = atom3.useValue('2')
-      const atom2val = atom2.useValue()
-      const atom1val = atom1.useValue()
+      const atom3val = useAtomValue(atom3, ['2'])
+      const atom2val = useAtomValue(atom2)
+      const atom1val = useAtomValue(atom1)
 
       return (
         <>
@@ -88,8 +90,8 @@ describe('ttl', () => {
     }
 
     function Two() {
-      const atom4val = atom4.useValue()
-      const atom3val = atom3.useValue('1')
+      const atom4val = useAtomValue(atom4)
+      const atom3val = useAtomValue(atom3, ['1'])
 
       return (
         <>

@@ -3,6 +3,30 @@ id: AtomConfig
 title: AtomConfig
 ---
 
-### `key`
+An AtomConfig object is the 3rd argument passed to [the `atom()` factory](../factories/atom).
 
-Does not have to be unique between atoms, but Zedux logs a warning if 2 different atoms with the same key are used. Zedux uses this key for lots of helpful error and debugging messages. It also determines
+## Definition
+
+```ts
+interface AtomConfig {
+  flags?: string[]
+  maxInstances?: number
+  ttl?: number
+}
+```
+
+### `flags`
+
+Optional. An array of strings. These flags correlate to the [Ecosystem's `flags` property](../classes/Ecosystem#flags). See that page for an example.
+
+### `maxInstances`
+
+:::note
+🚧 `maxInstances` is under construction.
+:::
+
+Optional. A number. Indicates the largest ideal cache size for this atom. See [AtomBase](../classes/AtomBase#maxinstances) for more info.
+
+### `ttl`
+
+Optional. A number. If set to 0, atom instances will be destroyed immediately upon going stale. If set to -1, atom instances will live forever, unless destroyed manually. If set to any positive integer, Zedux will wait `<ttl>` milliseconds before cleaning up the atom instance. If the atom instance is used during that time, cleanup is cancelled.

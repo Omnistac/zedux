@@ -1,0 +1,60 @@
+---
+id: Action
+title: Action
+---
+
+The objects ultimately dispatched to [Zedux stores](../classes/Store).
+
+Actions can also be wrapped in [ActionChains](ActionChain), which can contain additional metadata. Zedux uses this pattern internally for its [store composition model](/not-done).
+
+## Definition
+
+```ts
+export interface Action<
+  Payload = any,
+  Type extends string = string,
+  Meta = any
+> {
+  meta?: Meta
+  payload?: Payload
+  type: Type
+}
+```
+
+Zedux actions must contain a string `type` property and may contain optional `meta` and `payload` properties.
+
+## Examples
+
+```ts
+const normalAction: Action = {
+  type: 'todos/add',
+  payload: { text: 'be awesome' }
+}
+
+const withMeta: Action = {
+  type: 'todos/add',
+  meta: {
+    dispatchedFrom: 'MyComponent'
+  }
+}
+
+const typeOnly: Action = {
+  type: 'dropdown/toggle'
+}
+```
+
+## Creation
+
+Zedux provides high-level APIs for action creation. You typically won't create action objects manually.
+
+```ts
+import { createActor } from '@zedux/react'
+
+createActor('test')('payload') // { type: 'test', payload: 'payload' }
+
+const addTodo = createActor<Todo>('todos/add')
+
+store.dispatch(addTodo({ text: 'be awesome' }))
+```
+
+See [`createActor()`](../factories/createActor).

@@ -33,7 +33,7 @@ export const EcosystemProvider: FC<{ ecosystem?: Ecosystem }> = ({
 
     return () => {
       theEcosystem._refCount -= 1
-      if (!theEcosystem.destroyOnUnmount) return
+      if (!theEcosystem._destroyOnUnmount) return
 
       theEcosystem.destroy()
     }

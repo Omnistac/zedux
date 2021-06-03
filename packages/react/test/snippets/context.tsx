@@ -1,9 +1,15 @@
 import {
   atom,
+  AtomInstanceProvider,
   ecosystem,
   EcosystemProvider,
+  injectAtomValue,
   injectEffect,
   injectStore,
+  useAtomConsumer,
+  useAtomInstance,
+  useAtomInstanceValue,
+  useAtomValue,
 } from '@zedux/react'
 import React, { useState } from 'react'
 
@@ -18,7 +24,7 @@ const atom1 = atom('atom1', () => {
 
 const atom2 = atom('atom2', () => {
   console.log('evaluating atom2')
-  const atom1val = atom1.injectValue()
+  const atom1val = injectAtomValue(atom1)
 
   return atom1val + '2'
 })
@@ -27,8 +33,8 @@ const atom3 = atom(
   'atom3',
   (id: string) => {
     console.log('evaluating atom3')
-    const atom1val = atom1.injectValue()
-    const atom2val = atom2.injectValue()
+    const atom1val = injectAtomValue(atom1)
+    const atom2val = injectAtomValue(atom2)
 
     injectEffect(
       () => () => {
@@ -46,8 +52,8 @@ const atom4 = atom(
   'atom4',
   () => {
     console.log('evaluating atom4')
-    const atom3val = atom3.injectValue('1')
-    const atom1val = atom1.injectValue()
+    const atom3val = injectAtomValue(atom3, ['1'])
+    const atom1val = injectAtomValue(atom1)
 
     injectEffect(
       () => () => {
@@ -62,9 +68,9 @@ const atom4 = atom(
 )
 
 function One() {
-  const atom3val = atom3.useConsumer().useValue()
-  const atom2val = atom2.useValue()
-  const atom1val = atom1.useConsumer().useValue()
+  const atom3val = useAtomInstanceValue(useAtomConsumer(atom3, ['1']))
+  const atom2val = useAtomValue(atom2)
+  const atom1val = useAtomInstanceValue(useAtomConsumer(atom1, []))
 
   return (
     <>
@@ -76,8 +82,8 @@ function One() {
 }
 
 function Two() {
-  const atom4val = atom4.useValue()
-  const atom3val = atom3.useConsumer().useValue()
+  const atom4val = useAtomValue(atom4)
+  const atom3val = useAtomInstanceValue(useAtomConsumer(atom3, ['1']))
 
   return (
     <>
@@ -101,15 +107,13 @@ function Child() {
 }
 
 function Parent() {
-  const instance1 = atom1.useInstance()
-  const instance3 = atom3.useInstance('1')
+  const instance1 = useAtomInstance(atom1)
+  const instance3 = useAtomInstance(atom3, ['1'])
 
   return (
-    <instance1.Provider>
-      <instance3.Provider>
-        <Child />
-      </instance3.Provider>
-    </instance1.Provider>
+    <AtomInstanceProvider instances={[instance1, instance3]}>
+      <Child />
+    </AtomInstanceProvider>
   )
 }
 

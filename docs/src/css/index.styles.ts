@@ -24,44 +24,6 @@ export const H1 = styled.h1`
   font-weight: normal;
 `
 
-export const Header = styled.header`
-  align-items: center;
-  color: #fff;
-  display: flex;
-  padding: 6rem 0;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-
-  &::after,
-  &::before {
-    content: '';
-    height: 6rem;
-    position: absolute;
-    right: 0;
-    left: 0;
-  }
-
-  &::before {
-    background: linear-gradient(180deg, var(--color-dark), transparent);
-    top: 0;
-  }
-
-  &::after {
-    background: linear-gradient(0, var(--color-dark), transparent);
-    bottom: 0;
-  }
-
-  @media screen and (max-width: 966px) {
-    padding: 4rem 2rem;
-
-    &::before,
-    &::after {
-      height: 4rem;
-    }
-  }
-`
-
 export const HeaderContent = styled.div`
   z-index: 1;
 `

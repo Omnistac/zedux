@@ -1,6 +1,12 @@
 import { createContext } from 'react'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
-import { AtomInstanceType, AtomParamsType, EcosystemConfig } from '../types'
+import {
+  AtomInstanceStateType,
+  AtomInstanceType,
+  AtomParamsType,
+  AtomStateType,
+  EcosystemConfig,
+} from '../types'
 import { generateAppId } from '../utils'
 import { AtomBase } from './atoms/AtomBase'
 import { Graph } from './Graph'
@@ -15,10 +21,10 @@ export class Ecosystem {
     string,
     AtomInstanceBase<any, any[], AtomBase<any, any[], any>>
   > = {}
+  public _destroyOnUnmount = false
   public _preload?: (ecosystem: this) => void
   public _refCount = 0
   public _scheduler = new Scheduler(this)
-  public destroyOnUnmount = false
   public ecosystemId: string
   public flags?: string[] = []
   public overrides: Record<string, AtomBase<any, any[], any>> = {}
@@ -57,7 +63,7 @@ export class Ecosystem {
       this.flags = flags
     }
 
-    this.destroyOnUnmount = !!destroyOnUnmount
+    this._destroyOnUnmount = !!destroyOnUnmount
     this._preload = preload
 
     // yep. Dispatch this here. We'll make sure no component can ever be updated sychronously from this call (causing state-update-during-render react warnings)
@@ -90,28 +96,43 @@ export class Ecosystem {
     )
   }
 
-  public inspectInstanceValues(atom?: AtomBase<any, any[], any> | string) {
-    const hash: Record<string, any> = {}
-    const filterKey = typeof atom === 'string' ? atom : atom?.key
+  public get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
 
-    Object.entries(this._instances)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .forEach(([key, instance]) => {
-        if (filterKey && instance.atom.key !== filterKey) return
+  public get<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomStateType<A>
 
-        hash[key] = instance._stateStore.getState()
-      })
+  public get<AI extends AtomInstanceBase<any, [...any], any>>(
+    instance: AI
+  ): AtomInstanceStateType<AI>
 
-    return hash
+  public get<A extends AtomBase<any, [...any], any>>(
+    atom: A | AtomInstanceBase<any, [...any], any>,
+    params?: AtomParamsType<A>
+  ) {
+    if (atom instanceof AtomInstanceBase) {
+      return atom._stateStore.getState()
+    }
+
+    const instance = this.getInstance(
+      atom,
+      params as AtomParamsType<A>
+    ) as AtomInstanceBase<any, any, any>
+
+    return instance._stateStore.getState()
   }
 
-  public load<A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
-  public load<A extends AtomBase<any, [...any], any>>(
+  public getInstance<A extends AtomBase<any, [], any>>(
+    atom: A
+  ): AtomInstanceType<A>
+
+  public getInstance<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A>
 
-  public load<A extends AtomBase<any, [...any], any>>(
+  public getInstance<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params?: AtomParamsType<A>
   ) {
@@ -135,17 +156,39 @@ export class Ecosystem {
     return newInstance
   }
 
+  public inspectInstanceValues(atom?: AtomBase<any, any[], any> | string) {
+    const hash: Record<string, any> = {}
+    const filterKey = typeof atom === 'string' ? atom : atom?.key
+
+    Object.entries(this._instances)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([key, instance]) => {
+        if (
+          filterKey &&
+          !instance.atom.key.includes(filterKey) &&
+          !instance.keyHash.includes(filterKey)
+        ) {
+          return
+        }
+
+        hash[key] = instance._stateStore.getState()
+      })
+
+    return hash
+  }
+
   public reset() {
     this.wipe()
     this._preload?.(this)
   }
 
   public wipe() {
+    // TODO: Delete nodes in an optimal order (starting with leaf nodes - nodes
+    // with no internal dependents).
     Object.values(this._instances).forEach(instance => {
-      instance._destroy()
+      instance._destroy(true)
     })
 
-    this._graph.wipe()
     this._scheduler.wipe()
   }
 

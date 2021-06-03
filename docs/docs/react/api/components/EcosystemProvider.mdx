@@ -1,0 +1,34 @@
+---
+id: EcosystemProvider
+title: EcosystemProvider
+---
+
+```ts
+import { EcosystemProvider } from '@zedux/react'
+```
+
+A component that provides an [ecosystem](../classes/Ecosystem). The provided ecosystem will take command of all atom usages in any child components.
+
+## Usage
+
+```tsx
+import { EcosystemProvider, ecosystem } from '@zedux/react'
+
+const rootEcosystem = ecosystem({ id: 'root' })
+
+function App() {
+  return (
+    <EcosystemProvider ecosystem={rootEcosystem}>
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+### Props
+
+`<EcosystemProvider>` accepts the following props:
+
+#### `ecosystem`
+
+Required. The ecosystem to provide.

@@ -1,0 +1,58 @@
+---
+id: ActionChain
+title: ActionChain
+---
+
+The object accepted by [`store.dispatch()`](../classes/Store#dispatch), thus also the object passed to [`instance.dispatch()`](../classes/AtomInstance#dispatch) and to [DispatchInterceptors](DispatchInterceptor).
+
+The ActionChain is the key to Zedux' [store composition model](/not-done). ActionChains are just nested objects.
+
+All objects except the innermost contain metadata. Zedux uses certain meta types to know whether actions came from a parent or child store.
+
+The last node in the chain is a normal [Action object](Action). An ActionChain that doesn't contain any metadata is thus simply an Action.
+
+## Definition
+
+```ts
+interface ActionMeta<
+  Payload = any,
+  Type extends string = string,
+  Data = any
+> {
+  metaType: string
+  metaData?: Data
+  payload: ActionChain<Payload, Type>
+}
+
+type ActionChain<Payload = any, Type extends string = string> =
+  | ActionMeta<Payload, Type>
+  | Action<Payload, Type>
+```
+
+## Examples
+
+```ts
+const justAnAction: ActionChain = {
+  type: 'todos/add',
+  payload: { text: 'be awesome' }
+}
+
+const fromParent: ActionChain = {
+  metaType: '@@zedux/inherit',
+  payload: {
+    type: 'todos/add',
+    payload: { text: 'be awesome' }
+  }
+}
+
+const fromChild: ActionChain = {
+  metaType: '@@zedux/delegate',
+  metaData: ['a', 'b'],
+  payload: {
+    type: 'todos/add',
+    payload: { text: 'be awesome' }
+  }
+}
+```
+
+See [Zedux' `metaTypes`](/not-done).

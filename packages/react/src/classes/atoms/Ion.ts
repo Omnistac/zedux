@@ -1,7 +1,11 @@
 import { Settable } from '@zedux/core'
 import { Atom } from '@zedux/react/classes/atoms/Atom'
 import { api } from '@zedux/react/factories'
-import { injectEcosystem, injectGet } from '@zedux/react/injectors'
+import {
+  injectEcosystem,
+  injectGet,
+  injectGetInstance,
+} from '@zedux/react/injectors'
 import { AtomConfig, IonGet, IonSet, IonSetUtils } from '@zedux/react/types'
 import { diContext } from '@zedux/react/utils/csContexts'
 import { AtomInstance } from '../instances/AtomInstance'
@@ -21,8 +25,9 @@ export class Ion<
     const value = (...params: Params) => {
       const ecosystem = injectEcosystem()
       const innerGet = injectGet()
+      const getInstance = injectGetInstance()
       const { instance } = diContext.consume()
-      const val = get({ ecosystem, get: innerGet }, ...params)
+      const val = get({ ecosystem, get: innerGet, getInstance }, ...params)
 
       const ionApi = api(val)
 
@@ -37,13 +42,14 @@ export class Ion<
             const params = settableIn ? paramsIn : []
             const settable = settableIn || paramsIn
 
-            ecosystem.load(atom, params).setState(settable)
+            ecosystem.getInstance(atom, params).setState(settable)
           }
 
           const result = set(
             {
               ecosystem,
               get: innerGet,
+              getInstance,
               instance: instance as AtomInstance<State, Params, Exports>,
               set: innerSet,
             },

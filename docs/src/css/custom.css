@@ -39,6 +39,11 @@ html[data-theme='dark'] {
   border-radius: var(--ifm-global-radius);
 }
 
+.main-wrapper {
+  display: flex;
+  flex-flow: column nowrap;
+}
+
 .prism-code > .codeBlockLines_node_modules-\@docusaurus-theme-classic-lib-next-theme-CodeBlock- {
   font-size: 13.5px;
 }

@@ -1,4 +1,4 @@
-import { atom } from '@zedux/react'
+import { atom, useAtomInstance, useAtomValue } from '@zedux/react'
 import { api } from '@zedux/react/factories/api'
 import { ion } from '@zedux/react/factories/ion'
 import React, { useState } from 'react'
@@ -7,9 +7,9 @@ const otherAtom = atom('other', () => 'hello')
 
 const testAtom = ion(
   'test',
-  ({ get }) => {
+  ({ get, getInstance }) => {
     const other = get(otherAtom)
-    const setOther = otherAtom.injectSetState()
+    const setOther = getInstance(otherAtom).setState
 
     return api(other)
       .setExports({
@@ -26,8 +26,8 @@ const testAtom = ion(
 )
 
 function Child() {
-  const test = testAtom.useValue()
-  const { aProp, doStuff } = testAtom.useExports()
+  const test = useAtomValue(testAtom)
+  const { aProp, doStuff } = useAtomInstance(testAtom).exports
   let prev = undefined
   let next = test
 

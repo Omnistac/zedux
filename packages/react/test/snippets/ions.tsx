@@ -1,4 +1,11 @@
-import { atom, AtomInstanceType, useAtomConsumer } from '@zedux/react'
+import {
+  atom,
+  AtomInstanceProvider,
+  AtomInstanceType,
+  useAtomConsumer,
+  useAtomInstance,
+  useAtomValue,
+} from '@zedux/react'
 import { ion } from '@zedux/react/factories/ion'
 import React, { useState } from 'react'
 
@@ -26,7 +33,7 @@ const upperCaseAtom = ion(
 
 function Child() {
   const testInstance = useAtomConsumer(testAtom, [])
-  const upperCase = upperCaseAtom.useValue(testInstance)
+  const upperCase = useAtomValue(upperCaseAtom, [testInstance])
 
   return (
     <div>
@@ -44,12 +51,12 @@ function Child() {
 
 function Greeting() {
   const [view, setView] = useState(true)
-  const testInstance = testAtom.useInstance()
+  const testInstance = useAtomInstance(testAtom)
 
   return (
-    <testInstance.Provider>
+    <AtomInstanceProvider instance={testInstance}>
       {view ? <div>the first view!</div> : <Child />}
       <button onClick={() => setView(curr => !curr)}>change view</button>
-    </testInstance.Provider>
+    </AtomInstanceProvider>
   )
 }

@@ -26,7 +26,7 @@ export const useAtomSelector: {
 
   const selector = selectorArg || (paramsArg as Selector<AtomStateType<A>, D>)
 
-  const instance = useAtomInstance(atom, params) as AtomInstanceBase<
+  const instance = useAtomInstance(atom, params, false) as AtomInstanceBase<
     AtomStateType<A>,
     any,
     any

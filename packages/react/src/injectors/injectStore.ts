@@ -14,7 +14,11 @@ const doSubscribe = <State>(
 ) =>
   store.subscribe({
     effects: ({ action, newState, oldState }) => {
-      if (newState === oldState) return
+      // Nothing to do if the state hasn't changed. Also, ignore state updates
+      // during evaluation. TODO: Create an ecosystem-level flag to turn on
+      // warning logging for state-updates-during-evaluation, since this may be
+      // considered an anti-pattern.
+      if (newState === oldState || instance._isEvaluating) return
 
       instance._scheduleEvaluation({
         newState,

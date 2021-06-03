@@ -23,5 +23,5 @@ export const useAtomConsumer: {
 
   const ecosystem = useEcosystem()
 
-  return ecosystem.load(atom, defaultParams)
+  return ecosystem.getInstance(atom, defaultParams)
 }

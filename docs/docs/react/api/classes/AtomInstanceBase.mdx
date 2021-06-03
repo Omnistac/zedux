@@ -1,0 +1,45 @@
+---
+id: AtomInstanceBase
+title: AtomInstanceBase
+---
+
+The abstract base class of all atom instances. When [creating your own atom class](/not-done), you'll typically create a corresponding atom instance class that extends this class.
+
+## Properties
+
+This class exposes the following **readonly** properties:
+
+#### `.ecosystem`
+
+A reference to the [ecosystem](Ecosystem) that created and controls this atom instance.
+
+#### `.atom`
+
+A reference to the [atom](Atom) that this atom instance was created from.
+
+### `.keyHash`
+
+A string representing the stable, unique key of this atom instance in the ecosystem. This keyHash is the combination of the [atom's `key`](Atom#key) and a stable stringification of the params of this atom instance.
+
+```ts
+useAtomInstance(atom('a', null)).keyHash // 'a'
+useAtomInstance(atom('b', (param: string) => param), ['c']).keyHash // 'b-["c"]'
+```
+
+## Methods
+
+This class only exposes one method that should be used publicly:
+
+### `.invalidate`
+
+Forces a reevaluation of the atom instance.
+
+#### Signature
+
+```ts
+.invalidate() => void
+```
+
+## Extending
+
+There are many aspects of an atom instance's behavior you can overwrite when extending this class. This is an extremely advanced feature. We're not documenting it yet as the internals of this class may change. Someday there will probably be a nice, complex, over-detailed explanation sitting right here on this page. Or maybe not.

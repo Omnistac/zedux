@@ -10,6 +10,7 @@ import {
   injectStore,
   ion,
   useAtomInstance,
+  useAtomValue,
 } from '@zedux/react'
 import React from 'react'
 
@@ -43,7 +44,7 @@ describe('graph', () => {
     const testEcosystem = ecosystem({ id: 'test1' })
 
     function Test() {
-      const { sum } = atom4.useValue()
+      const { sum } = useAtomValue(atom4)
       const { toggle } = useAtomInstance(atom4).exports
 
       return (
@@ -112,27 +113,27 @@ describe('graph', () => {
     })
   })
 
-  test('get(atom, true) returns the instance', () => {
+  test('getInstance(atom) returns the instance', () => {
     const testEcosystem = ecosystem({ id: 'test2' })
     const evaluations: number[] = []
 
     const ion1 = ion(
       'ion1',
-      ({ get }) => {
-        const instance1 = get(atom1, true)
-        const instance2 = get(atom2, [], true)
+      ({ getInstance }) => {
+        const instance1 = getInstance(atom1)
+        const instance2 = getInstance(atom2)
 
         evaluations.push(instance1.store.getState())
 
         return instance1.store.getState() + instance2.store.getState()
       },
-      ({ get, set }, newVal) => {
-        get(atom1, true).setState(newVal)
+      ({ getInstance, set }, newVal) => {
+        getInstance(atom1).setState(newVal)
         set(atom1, 12)
       }
     )
 
-    const ionInstance = testEcosystem.load(ion1)
+    const ionInstance = testEcosystem.getInstance(ion1)
 
     expect(testEcosystem._instances).toEqual({
       atom1: expect.any(Object),
@@ -148,7 +149,7 @@ describe('graph', () => {
             {
               isAsync: false,
               isStatic: true,
-              operation: 'get',
+              operation: 'getInstance',
               shouldUpdate: undefined,
             },
           ],
@@ -162,7 +163,7 @@ describe('graph', () => {
             {
               isAsync: false,
               isStatic: true,
-              operation: 'get',
+              operation: 'getInstance',
               shouldUpdate: undefined,
             },
           ],
@@ -182,6 +183,6 @@ describe('graph', () => {
 
     expect(evaluations).toEqual([1])
     expect(ionInstance.store.getState()).toBe(3)
-    expect(testEcosystem.load(atom1).store.getState()).toBe(12)
+    expect(testEcosystem.getInstance(atom1).store.getState()).toBe(12)
   })
 })

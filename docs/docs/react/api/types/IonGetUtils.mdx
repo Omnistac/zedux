@@ -1,0 +1,63 @@
+---
+id: IonGetUtils
+title: IonGetUtils
+---
+
+The object Zedux passes as the first parameter to [ion getters](../factories/ion#get).
+
+## Definition
+
+```ts
+interface IonGetUtils {
+  ecosystem: Ecosystem
+
+  get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+
+  get<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomStateType<A>
+
+  get<I extends AtomInstanceBase<any, [...any], any>>(
+    instance: I
+  ): AtomInstanceStateType<I>
+
+  getInstance<A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+
+  getInstance<A extends AtomBase<any, any, any>>(
+      atom: A,
+      params: AtomParamsType<A>
+    ): AtomInstanceType<A
+}
+```
+
+### `ecosystem`
+
+A reference to the [ecosystem](../classes/Ecosystem) this ion instance was created in.
+
+### `get`
+
+A function that returns the current state of an atom instance. You can pass either an instance directly or an atom and its params (if any).
+
+```ts
+({ get }) => get(otherAtom)
+({ get }) => get(otherAtom, ['param 1', 'param 2'])
+({ get }) => get(anInstance)
+```
+
+When called synchronously during instance evaluation, `get` registers a [dynamic graph dependency](../glossary#dynamicgraphdependency) on the resolved atom instance.
+
+When called asynchronously (e.g. in an [`injectEffect`](../injectors/injectEffect)), it does not register a dependency; it simply returns the resolved atom instance's value.
+
+### `getInstance`
+
+A function that returns an atom instance. Pass an atom and its params (if any)
+
+```ts
+({ getInstance }) => getInstance(otherAtom)
+({ getInstance }) => getInstance(otherAtom, ['param 1', 'param 2'])
+```
+
+When called synchronously during instance evaluation, `getInstance` registers a [static graph dependency](../glossary#staticgraphdependency) on the resolved atom instance.
+
+When called asynchronously (e.g. in an [`injectEffect`](../injectors/injectEffect)), it does not register a dependency; it simply returns the resolved atom instance.

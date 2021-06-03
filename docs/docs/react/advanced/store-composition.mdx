@@ -1,0 +1,12 @@
+---
+id: store-composition
+title: Store Composition
+---
+
+## ActionChains
+
+Zedux' store composition model works by making actions themselves composable objects called ActionChains. The ActionChain contains needed metadata for Zedux to perform its store composition magic. ActionChains consist of any number of "meta nodes" with the wrapped action being the last node in the chain.
+
+An action dispatched to a parent store will be wrapped in an INHERIT meta node before being passed to children. If the child has children, it will wrap the wrapped action again with another INHERIT meta node.
+
+Child stores don't dispatch actions to their parent. But they will inform their parent of state updates and the action that caused them. When this happens, the action will be wrapped in a DELEGATE meta node before being passed to the parent.

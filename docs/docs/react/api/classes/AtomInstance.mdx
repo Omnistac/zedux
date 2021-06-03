@@ -1,0 +1,110 @@
+---
+id: AtomInstance
+title: AtomInstance
+---
+
+Extends [AtomInstanceBase](AtomInstanceBase).
+
+All standard "atom instances" are actually instances of this class. [Ions](Ion), [Standard Atoms](Atom), and [Local Atoms](LocalAtom) all create instances of this class.
+
+## Creation
+
+You should never instantiate this class yourself. Zedux does it for you. An instance is created the first time a given atom + params combo is used.
+
+Many hooks and injectors return instances of this class.
+
+```ts
+import { useAtomInstance } from '@zedux/react'
+
+function MyComponent() {
+  // creates the instance if it doesn't exist yet
+  const instance = useAtomInstance(myAtom)
+  ...
+}
+```
+
+## Providing
+
+An atom instance can be provided over React context via [`<AtomInstanceProvider>`](../components/AtomInstanceProvider).
+
+```tsx
+import { AtomInstanceProvider, useAtomInstance } from '@zedux/react'
+
+function App() {
+  const instance = useAtomInstance(myAtom)
+
+  return (
+    <AtomInstanceProvider instance={instance}>
+      <Routes />
+    </AtomInstanceProvider>
+  )
+}
+```
+
+Consume provided instances with [`useAtomConsumer`](../hooks/useAtomConsumer)
+
+```ts
+import { useAtomConsumer } from '@zedux/react'
+
+function Child() {
+  const instance = useAtomConsumer(myAtom)
+}
+```
+
+## Properties
+
+Atom instances have the following properties, in addition to those exposed from [AtomInstanceBase](AtomInstanceBase):
+
+### `.exports`
+
+An object. May be undefined, if nothing was exported.
+
+The exports of the atom instance, as defined by the instance's [AtomApi](AtomApi).
+
+This object is stable. It is set the first time an atom instance is created and will not change on subsequent evaluations.
+
+```ts
+import { api, atom } from '@zedux/react'
+
+const exportsAtom = atom('exports', api().setExports({ hello: 'world' }))
+
+const importAtom = atom('import', () => {
+  const { hello } = injectAtomInstance(exportsAtom).exports
+})
+```
+
+### `.promise`
+
+A promise. May be undefined, if no promise was set on a returned [AtomApi](AtomApi).
+
+This promise will be used to cause React to suspend whenever this atom instance is used in a component until the promise completes.
+
+### `.store`
+
+A Zedux [store](Store). A reference to this atom instance's store. All atom instances have a store.
+
+## Methods
+
+Atom instances have the following methods, in addition to those exposed from [AtomInstanceBase](AtomInstanceBase):
+
+### `.dispatch`
+
+A bound function property. Dispatches an action to this atom instance's store. Accepts an [action chain](../types/ActionChain). Returns the new state.
+
+```ts
+const instance = useAtomInstance(myAtom)
+const newState = instance.dispatch(myActor())
+```
+
+This function differs from `instance.store.dispatch` in that it allows any [AtomApi dispatch interceptors](AtomApi#adddispatchinterceptor) to run. Always prefer calling `instance.dispatch` to calling `instance.store.dispatch`.
+
+### `.setState`
+
+A bound function property. Sets the state of this atom instance's store. Accepts a [Settable](../types/Settable) (either the new state or a function that receives the current state and returns the new state). Returns the new state.
+
+```ts
+const instance = useAtomInstance(myAtom)
+const newState = instance.setState('new state')
+```
+
+This function differs from `instance.store.setState` in that it allows any [AtomApi setState interceptors](AtomApi#addsetstateinterceptor) to run. Always prefer calling `instance.setState` to calling `instance.store.setState`.

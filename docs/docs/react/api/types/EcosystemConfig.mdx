@@ -1,0 +1,40 @@
+---
+id: EcosystemConfig
+title: EcosystemConfig
+---
+
+The config object passed to [the `ecosystem()` factory](../factories/ecosystem).
+
+## Definition
+
+```ts
+interface EcosystemConfig {
+  destroyOnUnmount?: boolean
+  flags?: string[]
+  id?: string
+  overrides?: AtomBase<any, any[], any>[]
+  preload?: (ecosystem: Ecosystem) => void
+}
+```
+
+All fields are optional. It is recommended to at least pass an id.
+
+### `destroyOnUnmount`
+
+Whether the ecosystem should destroy itself when its last [`<EcosystemProvider>`](../components/EcosystemProvider) unmounts. Useful for testing.
+
+### `flags`
+
+An array of strings. Will be set as the [ecosystem's flags](../classes/Ecosystem#flags).
+
+### `id`
+
+A string. Identifies the ecosystem in the [zeduxGlobalStore](../constants/zeduxGlobalStore) and in dev tools.
+
+### `overrides`
+
+An array of [atoms](../classes/Atom). Will be set as the [ecosystem's overrides](../classes/Ecosystem#overrides). Used for [Dependency Injection](../../walkthrough/dependency-injection).
+
+### `preload`
+
+A function. Will be called as soon as the ecosystem has initialized. Can be used to bootstrap data and preload atoms.
