@@ -72,15 +72,15 @@ These interceptors function like middleware. They will be called every time [`in
 
 The object of the exports added to this AtomApi via [`.setExports()`](#setexports) and/or [`.addExports()`](#addexports). May be undefined.
 
+### `.promise`
+
+A promise that Zedux will use to cause React to suspend everywhere this atom instance is used until the promise resolves. Set this via [`.setPromise()`](#setpromise).
+
 ### `.setStateInterceptors`
 
 An array of the [setState interceptors](../types/SetStateInterceptor) added to this AtomApi via [`.addSetStateInterceptor()`](#addsetstateinterceptor). May be undefined.
 
 These interceptors function like middleware. They will be called every time [`instance.setState()`](AtomInstance#setstate) is called and can cancel the state setting.
-
-### `.promise`
-
-A promise that Zedux will use to cause React to suspend everywhere this atom instance is used until the promise resolves. Set this via [`.setPromise()`](#setpromise).
 
 ### `.ttl`
 
@@ -89,6 +89,12 @@ A promise that Zedux will use to cause React to suspend everywhere this atom ins
 :::
 
 An [AtomInstanceTtl](../types/AtomInstanceTtl) or a function that returns an AtomInstanceTtl. If a function, it will be called when Zedux schedules this atom instance's destruction. Will override any ecosystem- or atom-level ttl for this atom instance.
+
+### `.value`
+
+A reference to the value passed to [the `api()` factory](../factories/api). Can be either a raw value or a [Zedux store](Store).
+
+If it's a store and this AtomApi is returned from an evaluator function, the store should be a stable reference that won't change on subsequent evaluations, e.g. by using [`injectStore()`](../injectors/injectStore).
 
 ## Methods
 

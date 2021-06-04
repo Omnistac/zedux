@@ -1,0 +1,79 @@
+---
+id: injectRef
+title: injectRef
+---
+
+import { LiveEditor } from '../../../LiveEditor'
+
+```ts
+import { injectRef } from '@zedux/react'
+```
+
+An [injector](../glossary#injector) that returns a stable, mutable Ref object. The injector equivalent of [React's `useRef` hook](https://reactjs.org/docs/hooks-reference.html#useref).
+
+The returned Ref object has a `.current` property that is set initially to the passed value.
+
+## Examples
+
+<LiveEditor resultVar="Seconds">{`
+const secondsAtom = atom('seconds', () => {
+  const ref = injectRef(0)\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => ref.current++, // doesn't trigger an update
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return ref.current
+})\n
+function Seconds() {
+  const seconds = useAtomValue(secondsAtom)
+  const instance = useAtomInstance(secondsAtom)\n
+  return (
+    <>
+      <div>Unchanging Seconds: {seconds}</div>
+      <button onClick={() => instance.invalidate()}>Force Update</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+Miscellaneous:
+
+```ts
+const ref = injectRef('initial value')
+ref.current // 'initial value'
+ref.current = { something: 'else' }
+
+const noValRef = injectRef()
+noValRef.current // undefined
+```
+
+Exporting a Ref:
+
+```tsx
+import { api, atom, injectRef } from '@zedux/react'
+
+const tableAtom = atom('table', () => {
+  const tableRef = injectRef(null)
+
+  return api().setExports({ tableRef })
+})
+
+function Table() {
+  const { tableRef } = useAtomInstance(tableAtom).exports
+
+  return <BigExternalTableComponent ref={tableRef} />
+}
+```
+
+## Signature
+
+```ts
+injectRef(initialValue?) => MutableRefObject
+```
+
+### `initialValue`
+
+Optional. Can be absolutely anything. The returned Ref object will have its `.current` property set to this value initially. Will be ignored on subsequent evaluations.

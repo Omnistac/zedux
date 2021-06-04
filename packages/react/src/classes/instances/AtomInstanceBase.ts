@@ -18,7 +18,6 @@ import {
   InjectorDescriptor,
   InjectorType,
   JobType,
-  WhyInjectorDescriptor,
 } from '@zedux/react/utils'
 import { diContext } from '@zedux/react/utils/csContexts'
 import { AtomBase } from '../atoms/AtomBase'
@@ -51,19 +50,6 @@ const getStateStore = <State extends any = any>(
   }
 
   return [stateType, stateStore] as const
-}
-
-const runWhyInjectors = (
-  newInjectors: InjectorDescriptor[],
-  evaluationReasons: EvaluationReason[]
-) => {
-  const whyInjectors = newInjectors.filter(
-    injector => injector.type === InjectorType.Why
-  ) as WhyInjectorDescriptor[]
-
-  whyInjectors.forEach(({ callback }) => {
-    callback(evaluationReasons)
-  })
 }
 
 export abstract class AtomInstanceBase<
@@ -290,8 +276,6 @@ export abstract class AtomInstanceBase<
       this._isEvaluating = false
 
       if (this._activeState !== ActiveState.Initializing) {
-        runWhyInjectors(newInjectors, this._evaluationReasons)
-
         this._evaluationReasons = []
       }
     }

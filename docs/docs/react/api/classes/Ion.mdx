@@ -1,0 +1,44 @@
+---
+id: Ion
+title: Ion
+---
+
+Extends [Atom](Atom).
+
+Ions are a specialized atom type. They excel at selector-type operations.
+
+Ions extend the Atom class and provide just a little extra functionality and utility to your [evaluator function](../glossary#evaluator).
+
+Unlike atoms, ions must be given an evaluator function. That's the whole point! We call ion evaluators "getters". Ions can also be given a "setter".
+
+An ion getter is really just an evaluator that receives a special [IonGetUtils object](../types/IonGetUtils) as its first parameter.
+
+An ion setter is similar to a [SetStateInterceptor](../types/SetStateInterceptor). But it receives a special [IonSetUtils object](../types/IonSetUtils) as its first parameter and the value passed to [`instance.setState()`](AtomInstance#setstate) as its second parameter. Unlike SetStateInterceptors, ion setters do not need to return the new state.
+
+## Creation
+
+Create ions using [the `ion()` factory](../factories/ion).
+
+```ts
+import { ion } from '@zedux/react'
+
+const selectorAtom = ion('selector', ({ get }) => get(otherAtom).someField)
+const derivedAtom = ion('derived', ({ get }) => deriveStuff(get(otherAtom)))
+
+const withParams = ion('withParams', ({ get }, one: string, two: number) => {
+  return `${one} ${two}`
+})
+
+const withInjectors = ion('withInjectors', ({ get }) => {
+  // any injector can be used in the "getter" function.
+  const val = injectMemo(() => getExpensiveVal(), [])
+
+  return val
+})
+
+const withSetter = ion('withSetter', getter, ({ get, set }, newValue) => {
+  set(otherAtom, newValue) // forward state setting on to another atom
+})
+```
+
+Ions expose no unique properties or methods besides those exposed by [Atom](Atom).

@@ -17,22 +17,24 @@ import { atom } from '@zedux/react'
 const myFirstAtom = atom('myFirst', 'Hello, world!')
 ```
 
-See [the quick start](../walkthrough/quick-start#meet-the-atoms) and [`atom()`](/not-done).
+See [the quick start](../walkthrough/quick-start#meet-the-atoms) and [the `atom()` factory](../api/factories/atom).
 
 ### Hooks
 
-Atoms have several built-in hooks.
+Zedux exports various hooks for accessing and updating atom values.
 
 ```tsx
+import { useAtomInstance, useAtomState } from '@zedux/react'
+
 function MyComponent() {
-  const [state, setState] = myFirstAtom.useState()
-  const dispatch = myFirstAtom.useDispatch()
+  const [state, setState] = useAtomState(myFirstAtom)
+  const instance = useAtomInstance(myFirstAtom)
 
   return <div>A message from the universe: {state}</div>
 }
 ```
 
-See [the `Atom` type](../api/types/Atom).
+See [the using atoms walkthrough](../walkthrough/using-atoms).
 
 ### Injectors
 
@@ -40,10 +42,10 @@ Injectors are like hooks for atoms.
 
 <LiveEditor resultVar="Seconds">{`
 const secondsAtom = atom('seconds', () => {
-  const [state, setState, store] = injectState(0)\n
+  const store = injectStore(0)\n
   injectEffect(() => {
     const intervalId = setInterval(
-      () => setState(val => val + 1),
+      () => store.setState(val => val + 1),
       1000
     )\n
     return () => clearInterval(intervalId)
@@ -51,7 +53,7 @@ const secondsAtom = atom('seconds', () => {
   return store
 })\n
 function Seconds() {
-  const state = secondsAtom.useValue()\n
+  const state = useAtomValue(secondsAtom)\n
   return <div>{state}</div>
 }
 `}</LiveEditor>
@@ -81,14 +83,14 @@ import { ecosystem } from '@zedux/react'
 
 const rootEcosystem = ecosystem({ id: 'root' })
 
-const myAtomInstance = rootEcosystem.load(myAtom, ['a param'])
+const myAtomInstance = rootEcosystem.getInstance(myAtom, ['a param'])
 ```
 
-See [the Dependency Injection walkthrough](/not-done), [`<EcosystemProvider />`](/not-done), and [`ecosystem()`](/not-done)
+See [the Dependency Injection walkthrough](../walkthrough/dependency-injection), [`<EcosystemProvider />`](../api/components/EcosystemProvider), and [the `ecosystem()` factory](../api/factories/ecosystem).
 
-### Selectors
+### Ions
 
-Readonly atoms can be created with `selector()`.
+Selector-type operations can be done with special atoms called [ions](../api/classes/Ion).
 
 ```tsx
 import { atom, selector } from '@zedux/react'

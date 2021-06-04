@@ -3,9 +3,11 @@ id: Ecosystem
 title: Ecosystem
 ---
 
-The ecosystem is an isolated atom environment. It creates a scheduler for running atom-related tasks. It creates a graph that manages atom dependencies.
+The ecosystem is an isolated atom environment. It creates a scheduler for running atom-related tasks and a graph that manages atom dependencies.
 
-This class defines many methods for creating, destroying, and inspecting atom instances in the ecosystem and the graph they create.
+This class defines many methods for creating, destroying, and inspecting atom instances and the graph they form.
+
+Ecosystems can be used completely outside of React. This can be helpful for testing atoms.
 
 ## Creation
 
@@ -43,7 +45,15 @@ An array of strings. These work in conjunction with [atom flags](AtomBase#flags)
 
 If an atom has a flag that is not present in this array, Zedux will log a warning.
 
-Which atoms, which flags, and which environments, is all up to you. You may want to flag atoms that run side effects you don't want to run in tests. You may want to flag atoms that use APIs that only work in the browser or in electron or any other environment.
+Flag checking is off by default - simply don't pass a flags array to `ecosystem()` and Zedux will ignore all flags. To turn it on, but with no flags, pass an empty array.
+
+```ts
+ecosystem() // flag checking disabled. Zedux will ignore all atom flags.
+ecosystem({ flags: [] }) // flag checking enabled! All flags will log warnings
+ecosystem({ flags: ['a'] }) // all atom flags except 'a' will log a warning
+```
+
+Which atoms, which flags, and which environments, is all up to you. You may want to flag atoms that run side effects you don't want to run in tests. Or you may want to flag atoms that use APIs that only work in the browser or in electron or any other environment.
 
 ### `.overrides`
 

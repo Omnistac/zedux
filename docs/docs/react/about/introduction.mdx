@@ -58,12 +58,12 @@ Another way a library can be rewarding is to make sure knowledge gained from wor
 Zero configuration and high-level APIs are standard across all features. A few simple lines of code is all you need to learn to start using Zedux. In fact, here they are:
 
 ```tsx
-import { atom } from '@zedux/react'
+import { atom, useAtomState } from '@zedux/react'
 
 const myFirstAtom = atom('myFirst', 'Hello, world!')
 
 function MyComponent() {
-  const [state, setState] = myFirstAtom.useState()
+  const [state, setState] = useAtomState(myFirstAtom)
 
   return <div>A message from the universe: {state}</div>
 }

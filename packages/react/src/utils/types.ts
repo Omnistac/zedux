@@ -59,12 +59,6 @@ export interface EffectInjectorDescriptor extends DepsInjectorDescriptor {
   type: InjectorType.Effect
 }
 
-export enum EvaluationType {
-  CacheInvalidated = 'cache invalidated',
-  InstanceDestroyed = 'atom instance destroyed',
-  StateChanged = 'state changed',
-}
-
 export interface EvaluationReason<State = any> {
   action?: ActionChain
   newState?: State
@@ -82,6 +76,12 @@ export enum EvaluationTargetType {
   External = 'External',
   Injector = 'Injector',
   Store = 'Store',
+}
+
+export enum EvaluationType {
+  CacheInvalidated = 'cache invalidated',
+  InstanceDestroyed = 'atom instance destroyed',
+  StateChanged = 'state changed',
 }
 
 export interface ExportsInjectorDescriptor<
@@ -181,5 +181,5 @@ export interface UpdateExternalDependentJob extends JobBase {
 }
 
 export interface WhyInjectorDescriptor extends InjectorDescriptor {
-  callback: (reasons: EvaluationReason[]) => unknown
+  type: InjectorType.Why
 }

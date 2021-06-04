@@ -1,7 +1,7 @@
 import useBaseUrl from '@docusaurus/useBaseUrl'
 import usePrismTheme from '@theme/hooks/usePrismTheme'
 import Highlight, { Prism } from 'prism-react-renderer'
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
 import Editor from 'react-simple-code-editor'
 import styled, { keyframes } from 'styled-components'
 import * as ReactZedux from '../../packages/react/dist/es/react/src'
@@ -32,7 +32,7 @@ const Header = styled.div<{ url: string }>`
   padding: 0.5rem 1rem;
   position: relative;
 
-  &::before {
+  &::after {
     animation: ${slide} 40s infinite linear;
     background: ${({ url }) => `url(${url})`} 0 0 repeat;
     content: '';
@@ -51,8 +51,20 @@ const Img = styled.img`
   width: 2rem;
 `
 
-const ResultText = styled.div<{ url: string }>`
+const ResetButton = styled.button`
+  position: relative;
+  z-index: 1;
+`
+
+const ResultText = styled.span`
+  flex: 1;
+`
+
+const ResultTextWrapper = styled.div<{ url: string }>`
+  align-items: center;
   background: var(--color-dark);
+  display: flex;
+  flex-flow: row nowrap;
   padding: 0.5rem 1rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-top: 0;
@@ -60,7 +72,7 @@ const ResultText = styled.div<{ url: string }>`
   overflow: hidden;
   position: relative;
 
-  &::before {
+  &::after {
     animation: ${slide} 40s infinite linear;
     background: ${({ url }) => `url(${url})`} 0 0 repeat;
     content: '';
@@ -95,12 +107,11 @@ const scopeKeys = Object.keys(scope)
 const scopeValues = scopeKeys.map(key => scope[key])
 
 const evalCode = (code: string, resultVarName: string) => {
+  const resultStr = `var ${resultVarName}; ${code}; var _$_$res = typeof ${resultVarName} === 'function' ? React.createElement(${resultVarName}) : ${resultVarName};`
+  const wrapped = `${resultStr} return React.createElement(EcosystemProvider, { children: _$_$res })`
+
   // eslint-disable-next-line no-new-func
-  const fn = new Function(
-    'React',
-    ...scopeKeys,
-    `var ${resultVarName}; ${code}; return typeof ${resultVarName} === 'function' ? React.createElement(${resultVarName}) : ${resultVarName}`
-  )
+  const fn = new Function('React', ...scopeKeys, wrapped)
 
   return fn.call(null, React, ...scopeValues)
 }
@@ -161,28 +172,56 @@ export const LiveEditor: FC<{ extraScope?: string; resultVar?: string }> = ({
   extraScope,
   resultVar = 'Result',
 }) => {
+  const isMountedRef = useRef(true)
+  const initialCodeRef = useRef((children as string).trim())
+  const [force, forceRender] = useState<any>()
   const [tsCode, setTsCode] = useState((children as string).trim())
   const [result, setResult] = useState('')
   const bgUrl = useBaseUrl('img/bg-texture.png')
   theme = usePrismTheme()
 
-  useEffect(() => {
-    try {
-      ReactZedux.wipe()
+  const debouncedSetter = useMemo(() => {
+    const data = { latestVal: null, timeoutId: null }
 
-      const jsCode = (window as any)?.ts.transpile(`${extraScope}; ${tsCode}`, {
-        jsx: 'react',
-      })
+    return (newVal: string) => {
+      data.latestVal = newVal
+      if (data.timeoutId) return
 
-      if (!jsCode) return
+      data.timeoutId = setTimeout(() => {
+        try {
+          ReactZedux.wipe()
 
-      const evalResult = evalCode(jsCode, resultVar)
-      setResult(evalResult)
-    } catch (err) {
-      setResult(err.message)
-      console.error('Live Editor error:', err)
+          const jsCode = (window as any)?.ts.transpile(
+            `${extraScope}; ${data.latestVal}`,
+            {
+              jsx: 'react',
+            }
+          )
+
+          if (!jsCode) return
+
+          const evalResult = evalCode(jsCode, resultVar)
+          if (isMountedRef.current) setResult(evalResult)
+        } catch (err) {
+          if (isMountedRef.current) setResult(err.message)
+          console.error('Live Editor error:', err)
+        }
+
+        data.timeoutId = null
+      }, 500)
     }
-  }, [resultVar, tsCode])
+  }, [])
+
+  useEffect(() => {
+    debouncedSetter(tsCode)
+  }, [force, resultVar, tsCode])
+
+  useEffect(
+    () => () => {
+      isMountedRef.current = false
+    },
+    []
+  )
 
   return (
     <Wrapper>
@@ -201,9 +240,18 @@ export const LiveEditor: FC<{ extraScope?: string; resultVar?: string }> = ({
           ...theme.plain,
         }}
       />
-      <ResultText url={bgUrl}>
-        <Img src={useBaseUrl('img/zedux-icon.png')} /> Live Result:
-      </ResultText>
+      <ResultTextWrapper url={bgUrl}>
+        <Img src={useBaseUrl('img/zedux-icon.png')} />{' '}
+        <ResultText>Live Result:</ResultText>{' '}
+        <ResetButton
+          onClick={() => {
+            setTsCode(initialCodeRef.current)
+            forceRender({})
+          }}
+        >
+          Reset
+        </ResetButton>
+      </ResultTextWrapper>
       <ResultView>
         <ErrorBoundary>{result}</ErrorBoundary>
       </ResultView>

@@ -7,6 +7,14 @@ export const getEcosystem = (id: string) => {
   return existingEcosystem || ecosystem({ id })
 }
 
-export const wipe = () => globalStore.dispatch(wipeAction())
+export const wipe = () => {
+  const ecosystems = Object.values(globalStore.getState().ecosystems)
+
+  ecosystems.forEach(es => {
+    es.destroy(true)
+  })
+
+  globalStore.dispatch(wipeAction())
+}
 
 export const zeduxGlobalStore = globalStore

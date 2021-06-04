@@ -1,0 +1,49 @@
+---
+id: api
+title: api
+---
+
+```ts
+import { api } from '@zedux/react'
+```
+
+A factory for creating [AtomApis](../classes/AtomApi).
+
+## Example
+
+```ts
+import { api } from '@zedux/react'
+
+const myApi = api()
+const withValue = api('some value')
+const withStore = api(createStore())
+const withExports = api(val).setExports({ ...myExports })
+const withPromise = api(val).setPromise(myPromise)
+const fromApi = api(myApi)
+const addingExports = api(withExports).addExports({ ...moreExports })
+const overwritingExports = api(withExports).setExports({ ...newExports })
+```
+
+## Signature
+
+```ts
+api(value?) => AtomApi
+```
+
+### Overloads
+
+```ts
+atom(store?) => AtomApi
+```
+
+### `value`
+
+Any raw value. If this AtomApi is returned from an [evaluator function](../glossary#evaluator), this value will be set as the atom instance's state.
+
+### `store`
+
+A [Zedux store](../classes/Store). If this AtomApi is returned from an evaluator function, this store will be set as the [atom instance's store](../classes/AtomInstance#store). It should therefore be a stable reference that won't change across reevaluations, e.g. by using [injectStore](../injectors/injectStore).
+
+## Notes
+
+See [the AtomApi class](../classes/AtomApi) for more info.

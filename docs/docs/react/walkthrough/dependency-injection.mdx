@@ -60,6 +60,8 @@ This creates a graph of atom dependencies, which can be seen in all its glory in
 
 ### The Graph
 
+Detour! You can [skip this section](#overrides).
+
 As you use atoms, Zedux creates and updates a graph of atom dependencies. The nodes of the graph are atom instances and consumers of atom instances. The edges of the graph are relationships between atom instances.
 
 When we "inject an atom", what we're really doing is instructing Zedux to create an edge on the graph. There are 8 different types of edges, based on the 3 edge flags:
@@ -84,11 +86,11 @@ Ignoring `isAsync`, since there are no ways to create those edges currently, the
 Static edges don't trigger reevaluations or rerenders, so what's the point? There are 2 main reasons why static edges are important:
 
 - They inform Zedux that someone is using the injected atom instance. As long as an atom instance has any graph edges, Zedux won't try to clean it up.
-- If an atom instance is force-destroyed while it has static dependents, those dependents will be informed of the destruction and actually will schedule an evaluation or render to create a new instance.
+- If an atom instance is force-destroyed while it has static dependents, those dependents will be informed of the destruction and actually will schedule a reevaluation or rerender to create a new instance.
 
 ## Overrides
 
-Now that we've got dependencies injected, we need a way to swap them out. Atoms have a `.override()` function which will create an exact clone of the atom, but with a different value.
+Now that we've got dependencies injected, we need a way to swap them out. Atoms have a [`.override()` method](../api/classes/Atom#override) which will create an exact clone of the atom, but with a different value.
 
 ```ts
 const axiosAtom = atom('axios', axios)

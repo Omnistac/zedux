@@ -1,0 +1,71 @@
+---
+id: EvaluationReason
+title: EvaluationReason
+---
+
+Every update that causes an atom instance to reevaluate produces an EvaluationReason. You can get the list of reasons that caused an atom instance to reevaluate using [`injectWhy()`](../injectors/injectWhy).
+
+## Definition
+
+```ts
+interface EvaluationReason<State = any> {
+  action?: ActionChain
+  newState?: State
+  oldState?: State
+  operation: string // e.g. a function like "injectAtomValue"
+  targetType: EvaluationTargetType
+  targetKey?: string // e.g. an atom like "myAtom"
+  targetParams?: any
+  reasons?: EvaluationReason[]
+  type: EvaluationType
+}
+
+enum EvaluationTargetType {
+  Atom = 'Atom',
+  External = 'External',
+  Injector = 'Injector',
+  Store = 'Store',
+}
+
+enum EvaluationType {
+  CacheInvalidated = 'cache invalidated',
+  InstanceDestroyed = 'atom instance destroyed',
+  StateChanged = 'state changed',
+}
+```
+
+### `action`
+
+If this EvaluationReason was a store's state updating, then this will be a reference to the [ActionChain object](ActionChain) that caused the update. Otherwise, will be undefined.
+
+### `newState`
+
+The target's new state after updating. If the target is a store, this is the new state of the store. If the target is an atom instance, it's the new state of the atom instance's store. If the target is external (e.g. an invalidation from a React component), this will be undefined.
+
+### `oldState`
+
+The target's state before updating. If the target is a store, this is the previous state of the store. If the target is an atom instance, it's the old state of the atom instance's store. If the target is external, this will be undefined.
+
+### `operation`
+
+The name of the function triggering this evaluation. If the target is an atom, injector, or store, `operation` will be the function name you called to create the [dynamic graph dependency](../glossary#dynamicgraphdependency) - e.g. an injector name like "injectStore" or "injectAtomValue". If the target is external, the operation name will be "invalidate".
+
+### `targetType`
+
+What changed. Could be a store we're subscribed to via [`injectStore()`](../injectors/injectStore), or an atom instance that we injected, or an [`.invalidate()`](../classes/AtomInstanceBase#invalidate) call from a dependent.
+
+### `targetKey`
+
+If the target dependency was another atom instance, this will be the key of that atom instance's atom. Otherwise, this will be undefined.
+
+### `targetParams`
+
+If the target dependency was another atom instance, this will be the raw, unserialized parameters of the atom instance. Otherwise, this will be undefined.
+
+### `reasons`
+
+If the target dependency itself was updated in response to one of its dependencies updating, those EvaluationReasons will be listed here. This is recursive! With this, you can see an update that originated many layers deep in the dependency tree and ultimately led to this atom reevaluating. If the target dependency was the instigator of the change, then this will be undefined.
+
+### `type`
+
+The type of update that occurred. Could be a store's state changing, an atom instance being destroyed, or an invalidation triggered externally.
