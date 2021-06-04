@@ -48,7 +48,8 @@ const atom5 = atom('atom5', () => {
   const atom4val = injectAtomValue(atom4)
   const atom1val = injectAtomValue(atom1)
 
-  injectWhy(reasons => console.log('why did atom5 evaluate?', reasons))
+  const reasons = injectWhy()
+  console.log('why did atom5 evaluate?', reasons)
 
   return `${atom4val} ${atom2val} ${atom1val}`
 })

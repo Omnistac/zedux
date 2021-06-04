@@ -11,7 +11,8 @@ const atom3 = atom('3', (id: string) => {
   const atom2val = injectAtomValue(atom2)
 
   console.log('atom3 evaluating..', { greeting, atom2val })
-  injectWhy(reason => console.log('why??', reason))
+  const reasons = injectWhy()
+  console.log('why??', reasons)
 
   return greeting + ' ' + atom2val + ' id: ' + id
 })

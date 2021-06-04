@@ -65,7 +65,7 @@ describe('ecosystem', () => {
       const atom4val = injectAtomValue(atom4)
       const atom1val = injectAtomValue(atom1)
 
-      injectWhy(why5)
+      why5(injectWhy())
 
       return `${atom4val} ${atom2val} ${atom1val}`
     })
