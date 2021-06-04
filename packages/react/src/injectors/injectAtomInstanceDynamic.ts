@@ -40,11 +40,13 @@ const defaultOperation = 'injectAtomInstanceDynamic'
  */
 export const injectAtomInstanceDynamic: {
   <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+
   <A extends AtomBase<any, any, any>>(
     atom: A,
     params: AtomParamsType<A>,
     operation?: string
   ): AtomInstanceType<A>
+
   <AI extends AtomInstanceBase<any, any, any>>(
     instance: AI | AtomBase<any, any, any>,
     params?: [],
@@ -63,13 +65,10 @@ export const injectAtomInstanceDynamic: {
     defaultOperation, // yeah, not the passed operation
     InjectorType.AtomDynamic,
     () => {
-      const instance =
-        atom instanceof AtomInstanceBase
-          ? atom
-          : getInstance(atom, params as AtomParamsType<A>, [
-              GraphEdgeDynamicity.Dynamic,
-              operation,
-            ])
+      const instance = getInstance(atom, params as AtomParamsType<A>, [
+        GraphEdgeDynamicity.Dynamic,
+        operation,
+      ])
 
       return {
         instance: instance as AtomInstanceType<A>,
@@ -89,13 +88,10 @@ export const injectAtomInstanceDynamic: {
       if (!atomHasChanged && !paramsHaveChanged) return prevDescriptor
 
       // update the graph
-      const instance =
-        atom instanceof AtomInstanceBase
-          ? atom
-          : getInstance(atom, params as AtomParamsType<A>, [
-              GraphEdgeDynamicity.Dynamic,
-              operation,
-            ])
+      const instance = getInstance(atom, params as AtomParamsType<A>, [
+        GraphEdgeDynamicity.Dynamic,
+        operation,
+      ])
 
       prevDescriptor.instance = instance as AtomInstanceType<A>
 

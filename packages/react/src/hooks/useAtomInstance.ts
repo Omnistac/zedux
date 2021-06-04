@@ -26,11 +26,13 @@ import { useStableReference } from './useStableReference'
  */
 export const useAtomInstance: {
   <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+
   <A extends AtomBase<any, any, any>>(
     atom: A,
     params: AtomParamsType<A>,
     shouldRegisterDependency?: boolean
   ): AtomInstanceType<A>
+
   <AI extends AtomInstanceBase<any, any, any>>(
     instance: AI | AtomBase<any, any, any>, // This '| AtomBase' fixes some types. I think it's fine.
     params?: [],

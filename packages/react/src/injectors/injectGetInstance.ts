@@ -1,4 +1,4 @@
-import { AtomBase } from '../classes'
+import { AtomBase, AtomInstanceBase } from '../classes'
 import { AtomInstanceType, AtomParamsType } from '../types'
 import { GraphEdgeDynamicity, GraphEdgeInfo } from '../utils'
 import { diContext } from '../utils/csContexts'
@@ -40,15 +40,25 @@ export const injectGetInstance: {
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ) => AtomInstanceType<A>
+
   (): {
     <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+
     <A extends AtomBase<any, any, any>>(
       atom: A,
       params: AtomParamsType<A>,
       edgeInfo?: GraphEdgeInfo
     ): AtomInstanceType<A>
+
+    <AI extends AtomInstanceBase<any, any, any>>(
+      instance: AI | AtomBase<any, any, any>,
+      params?: [],
+      edgeInfo?: GraphEdgeInfo
+    ): AI
   }
-} = <A extends AtomBase<any, any, any>>(atom?: A) => {
+} = <A extends AtomBase<any, any, any>>(
+  atom?: A | AtomInstanceBase<any, any, any>
+) => {
   const { instance } = diContext.consume()
 
   if (atom) {
@@ -57,8 +67,8 @@ export const injectGetInstance: {
   }
 
   return <A extends AtomBase<any, any, any>>(
-    atom: A,
+    atom: A | AtomInstanceBase<any, any, any>,
     params: AtomParamsType<A>,
     edgeInfo = defaultEdgeInfo
-  ) => instance._getInstance(atom, params as AtomParamsType<A>, edgeInfo)
+  ) => instance._getInstance(atom, params, edgeInfo)
 }

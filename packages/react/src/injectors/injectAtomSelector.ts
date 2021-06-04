@@ -19,9 +19,9 @@ const injectAtomInstanceSelector = <
   >(
     'injectAtomSelector',
     InjectorType.Selector,
-    ({ instance }) => {
+    ({ instance: currentInstance }) => {
       const edge = ecosystem._graph.addDependency<AtomInstanceStateType<AI>>(
-        instance.keyHash,
+        currentInstance.keyHash,
         instance.keyHash,
         'injectAtomSelector',
         false,
@@ -37,7 +37,7 @@ const injectAtomInstanceSelector = <
 
       const cleanup = () => {
         ecosystem._graph.removeDependency(
-          instance.keyHash,
+          currentInstance.keyHash,
           instance.keyHash,
           edge
         )
@@ -47,6 +47,7 @@ const injectAtomInstanceSelector = <
         AtomInstanceStateType<AI>
       > = {
         cleanup,
+        instance,
         selector,
         selectorResult: selector(instance._stateStore.getState()),
         type: InjectorType.Selector,
@@ -54,7 +55,35 @@ const injectAtomInstanceSelector = <
 
       return descriptor
     },
-    prevDescriptor => {
+    (prevDescriptor, { instance: currentInstance }) => {
+      if (instance !== prevDescriptor.instance) {
+        prevDescriptor.cleanup?.()
+
+        const edge = ecosystem._graph.addDependency<AtomInstanceStateType<AI>>(
+          currentInstance.keyHash,
+          instance.keyHash,
+          'injectAtomSelector',
+          false,
+          false,
+          newState => {
+            const newResult = prevDescriptor.selector(newState)
+            const shouldUpdate = newResult !== prevDescriptor.selectorResult
+            prevDescriptor.selectorResult = newResult
+
+            return shouldUpdate
+          }
+        )
+
+        prevDescriptor.cleanup = () => {
+          ecosystem._graph.removeDependency(
+            currentInstance.keyHash,
+            instance.keyHash,
+            edge
+          )
+        }
+        prevDescriptor.instance = instance
+      }
+
       if (prevDescriptor.selector === selector) return prevDescriptor
 
       const newResult = selector(instance._stateStore.getState())

@@ -7,6 +7,7 @@ export interface AtomInjectorDescriptor<
   InstanceType extends AtomInstanceBase<any, any[], AtomBase<any, any[], any>>
 > extends InjectorDescriptor {
   instance: InstanceType
+  shouldRegisterDependency: boolean
   type: InjectorType.Atom
 }
 
@@ -156,6 +157,7 @@ export interface RunEffectJob extends JobBase {
 
 export interface SelectorInjectorDescriptor<State = any, D = any>
   extends InjectorDescriptor {
+  instance: AtomInstanceBase<State, any, any>
   selector: (state: State) => D
   selectorResult: D
   type: InjectorType.Selector

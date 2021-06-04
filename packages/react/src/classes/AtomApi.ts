@@ -9,8 +9,8 @@ import {
 export class AtomApi<State, Exports extends Record<string, any>> {
   public dispatchInterceptors?: DispatchInterceptor<State>[]
   public exports?: Exports
-  public setStateInterceptors?: SetStateInterceptor<State>[]
   public promise?: Promise<any>
+  public setStateInterceptors?: SetStateInterceptor<State>[]
   public ttl?: AtomInstanceTtl | (() => AtomInstanceTtl)
   public value: AtomValue<State>
 

@@ -226,17 +226,23 @@ export abstract class AtomInstanceBase<
     edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A>
 
+  public _getInstance<AI extends AtomInstanceBase<any, any, any>>(
+    instance: AI | AtomBase<any, any, any>,
+    params?: [],
+    edgeInfo?: GraphEdgeInfo
+  ): AI
+
   public _getInstance<A extends AtomBase<any, [...any], any>>(
-    atom: A,
+    atom: A | AtomInstanceBase<any, any, any>,
     params?: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ) {
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
-    const instance = this.ecosystem.getInstance(
-      atom,
-      params as AtomParamsType<A>
-    )
+    const instance =
+      atom instanceof AtomInstanceBase
+        ? atom
+        : this.ecosystem.getInstance(atom, params as AtomParamsType<A>)
 
     // if getInstance is called during evaluation, track the loaded instances so
     // we can add graph dependencies for them
