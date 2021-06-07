@@ -21,7 +21,6 @@ import {
   assert,
   assertIsPlainObject,
   assertIsValidAction,
-  assertIsValidNodeOption,
   getError,
   invalidAccess,
 } from '../utils/errors'
@@ -156,7 +155,6 @@ const doConfigureHierarchy = (
   const clonedPrev = { ...prev }
 
   Object.entries(next).forEach(([key, val]) => {
-    assertIsValidNodeOption(prev, key, val)
     ;(clonedPrev as any)[key] = val
   })
 
@@ -450,19 +448,20 @@ const routeAction = (action: ActionChain, storeInternals: StoreInternals) => {
 export const createStore: {
   <State = any>(
     initialHierarchy?: HierarchyDescriptor<State>,
-    initialState?: State
+    initialState?: State,
+    hierarchyConfig?: HierarchyConfig
   ): Store<State>
-  <State = any>(initialHierarchy: null, initialState: State): Store<State>
+
+  <State = any>(
+    initialHierarchy: null,
+    initialState: State,
+    hierarchyConfig?: HierarchyConfig
+  ): Store<State>
 } = <State = any>(
   initialHierarchy?: HierarchyDescriptor<State>,
-  initialState?: State
+  initialState?: State,
+  hierarchyConfig?: HierarchyConfig
 ) => {
-  const configureHierarchy = (newConfig: HierarchyConfig) => {
-    doConfigureHierarchy(newConfig, internals)
-
-    return internals.store // for chaining
-  }
-
   const dispatch = (action: Dispatchable) => doDispatch(action, internals)
 
   /**
@@ -495,11 +494,10 @@ export const createStore: {
 
   const internals: StoreInternals<State> = {
     currentState: undefined as any,
-    hierarchyConfig: defaultHierarchyConfig as HierarchyConfig,
+    hierarchyConfig: hierarchyConfig || defaultHierarchyConfig,
     registerChildStore,
     subscribers: new Map(),
     store: {
-      configureHierarchy,
       dispatch,
       getState,
       setState,
@@ -509,6 +507,7 @@ export const createStore: {
     },
   }
 
+  if (hierarchyConfig) doConfigureHierarchy(hierarchyConfig, internals)
   if (typeof initialState !== 'undefined') internals.currentState = initialState
   if (initialHierarchy) internals.store.use(initialHierarchy)
 

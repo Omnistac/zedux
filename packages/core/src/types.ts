@@ -173,7 +173,6 @@ export type SideEffectHandler<State = any> = (
 export type StateSetter<State = any> = (settable: Settable<State>) => State
 
 export interface Store<State = any> extends Observable<State> {
-  configureHierarchy(options: HierarchyConfig): Store<State>
   dispatch: Dispatcher<State>
   getState(): State
   setState: StateSetter<State>

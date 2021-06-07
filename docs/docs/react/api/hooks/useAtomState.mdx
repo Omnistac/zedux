@@ -1,0 +1,75 @@
+---
+id: useAtomState
+title: useAtomState
+---
+
+import { LiveEditor } from '../../../LiveEditor'
+
+```ts
+import { useAtomState } from '@zedux/react'
+```
+
+A React hook that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning a tuple of the current value and a state setter.
+
+The component that uses this hook will rerender whenever the resolved atom instance's state changes.
+
+## Example
+
+<LiveEditor resultVar="Seconds">{`
+const secondsAtom = atom('seconds', () => {
+  const store = injectStore(0)\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => store.setState(val => val + 1),
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return store
+})\n
+function Seconds() {
+  const [state, setState] = useAtomState(secondsAtom)\n
+  return (
+    <>
+      <div>Seconds: {state}</div>
+      <button onClick={() => setState(val => val + 1)}>Increment</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+Miscellaneous:
+
+```ts
+const [val, setVal] = useAtomState(myAtom)
+const [withParams, setter] = useAtomState(myAtom, ['param 1', 'param 2'])
+const [fromInstance, setter] = useAtomState(instance)
+```
+
+## Signature
+
+```ts
+useAtomState(atom, params?) => [state, setState]
+```
+
+Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns a tuple of the resolved atom instance's current state and [state setter](../classes/AtomInstance#setstate).
+
+### Overloads
+
+```ts
+useAtomState(instance) => [state, setState]
+```
+
+### `atom`
+
+Required. The [atom](Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
+
+### `params`
+
+Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
+
+TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
+
+### `instance`
+
+Required (in this overload). An [atom instance](../classes/AtomInstanceBase). Will register a dynamic dependency on the passed instance and return a tuple of the atom instance's current state and `.setState` function.

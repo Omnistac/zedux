@@ -48,12 +48,12 @@ export const injectAtomInstanceDynamic: {
   ): AtomInstanceType<A>
 
   <AI extends AtomInstanceBase<any, any, any>>(
-    instance: AI | AtomBase<any, any, any>,
+    instance: AI,
     params?: [],
     operation?: string
   ): AI
 } = <A extends AtomBase<any, any, any>>(
-  atom: A | AtomInstanceBase<any, any, any>,
+  atom: A,
   params?: AtomParamsType<A>,
   operation = defaultOperation
 ) => {
@@ -82,16 +82,19 @@ export const injectAtomInstanceDynamic: {
 
       const paramsHaveChanged = haveDepsChanged(
         prevDescriptor.instance.params,
-        params
+        params,
+        false
       )
 
-      if (!atomHasChanged && !paramsHaveChanged) return prevDescriptor
-
-      // update the graph
+      // make sure the dependency gets registered for this evaluation
       const instance = getInstance(atom, params as AtomParamsType<A>, [
         GraphEdgeDynamicity.Dynamic,
         operation,
       ])
+
+      if (!atomHasChanged && !paramsHaveChanged) {
+        return prevDescriptor
+      }
 
       prevDescriptor.instance = instance as AtomInstanceType<A>
 

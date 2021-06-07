@@ -1,18 +1,10 @@
-import { from } from 'rxjs'
-import { filter } from 'rxjs/operators'
-
-import { actionTypes, createStore, metaTypes, Store } from '@zedux/core/index'
+import { actionTypes, createStore, metaTypes } from '@zedux/core/index'
 import {
   dispatchables,
   nonDispatchables,
-  nonPlainObjects,
+  nonFunctions,
   createMockReducer,
 } from '@zedux/core-test/utils'
-import { observableSymbol } from '@zedux/core/utils/general'
-
-const nonFunctions = nonDispatchables.filter(
-  thing => typeof thing !== 'function'
-)
 
 describe('Store.dispatch()', () => {
   test('throws a TypeError if the thing dispatched is not a plain object', () => {
@@ -210,50 +202,6 @@ describe('Store.getState()', () => {
     store.setState(() => 'b')
 
     expect(store.getState()).toBe('b')
-  })
-})
-
-describe('store.configureHierarchy()', () => {
-  test('throws a TypeError if the options hash is not a plain object', () => {
-    const store = createStore()
-
-    nonPlainObjects.forEach(nonPlainObject =>
-      expect(store.configureHierarchy.bind(null, nonPlainObject)).toThrow(
-        TypeError
-      )
-    )
-  })
-
-  test('throws an Error if the options hash contains an invalid option key', () => {
-    const store = createStore()
-
-    // @ts-expect-error "a" is not a valid option
-    expect(() => store.configureHierarchy({ a: 1 })).toThrow(Error)
-    expect(
-      store.configureHierarchy.bind(null, {
-        clone: () => {},
-        create: () => {},
-        // @ts-expect-error "a" is not a valid option
-        a: () => {},
-      })
-    ).toThrow(Error)
-  })
-
-  test('throws a TypeError if the options hash contains a non-function option value', () => {
-    const store = createStore()
-
-    nonFunctions.forEach(nonFunction =>
-      // @ts-expect-error clone prop needs to be a function
-      expect(() => store.configureHierarchy({ clone: nonFunction })).toThrow(
-        TypeError
-      )
-    )
-  })
-
-  test('returns the store for chaining', () => {
-    const store = createStore().configureHierarchy({} as any)
-
-    expect(store.$$typeof).toBe(Symbol.for('zedux.store'))
   })
 })
 

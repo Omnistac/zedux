@@ -1,4 +1,4 @@
-import { Action, Actor, HierarchyConfig, MachineState } from '../types'
+import { Action, Actor, MachineState } from '../types'
 import { detailedTypeof, isPlainObject } from './general'
 
 const PREFIX = 'Zedux Error -'
@@ -67,18 +67,6 @@ export const assertIsValidActor = (actor: Actor, method: string) => {
   throw new TypeError(invalidActor(actor, method))
 }
 
-export const assertIsValidNodeOption = (
-  validOptions: HierarchyConfig,
-  optionKey: string,
-  optionValue: any
-) => {
-  if (!(optionKey in validOptions)) {
-    throw new Error(invalidNodeOptionKey(optionKey))
-  }
-
-  assertAreFunctions([optionValue], 'store.configureHierarchy()')
-}
-
 export const assertIsValidState = (state: MachineState) => {
   if (state && typeof state === 'object' && typeof state.type === 'string') {
     return
@@ -123,11 +111,6 @@ export const invalidHierarchyDescriptorNode = (node: any) =>
   `${PREFIX} store.use() - ` +
   'Hierarchy descriptor nodes must be reducers, stores, or plain objects. ' +
   `Received ${detailedTypeof(node)}`
-
-export const invalidNodeOptionKey = (key: string) =>
-  `${PREFIX} store.configureHierarchy() - ` +
-  `Received invalid node option, "${key}". Valid options are: ` +
-  '[ "clone", "create", "get", "isNode", "iterate", "set", "size" ]'
 
 export const invalidNonFunction = (nonFunction: any, method?: string) =>
   `${PREFIX} ${method} - ` +

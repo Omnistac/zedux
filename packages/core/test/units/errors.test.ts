@@ -4,13 +4,11 @@ import {
   assertIsPlainObject,
   assertIsValidAction,
   assertIsValidActor,
-  assertIsValidNodeOption,
   invalidAccess,
   invalidAction,
   invalidActor,
   invalidDelegation,
   invalidHierarchyDescriptorNode,
-  invalidNodeOptionKey,
   invalidNonFunction,
   invalidNonPlainObject,
 } from '@zedux/core/utils/errors'
@@ -114,34 +112,6 @@ describe('assertIsValidActor()', () => {
   })
 })
 
-describe('assertIsValidNodeOption()', () => {
-  test('throws an Error of the given option is not in the validOptions list', () => {
-    const validOptions = {
-      clone: true,
-      create: true,
-      get: true,
-      set: true,
-    }
-
-    expect(() =>
-      assertIsValidNodeOption(validOptions as any, 'a', () => {})
-    ).toThrow(Error)
-  })
-
-  test('throws a TypeError of the given value is not a function', () => {
-    const validOptions = {
-      clone: true,
-      create: true,
-      get: true,
-      set: true,
-    }
-
-    expect(() =>
-      assertIsValidNodeOption(validOptions as any, 'clone', 'a')
-    ).toThrow(TypeError)
-  })
-})
-
 describe('invalidAccess()', () => {
   test('returns a string containing the method name', () => {
     const methodName = 'test method name'
@@ -208,14 +178,6 @@ describe('invalidHierarchyDescriptorNode()', () => {
     expect(invalidHierarchyDescriptorNode([])).toMatch(/received array/i)
 
     expect(invalidHierarchyDescriptorNode(null)).toMatch(/received null/i)
-  })
-})
-
-describe('invalidNodeOptionKey()', () => {
-  test('returns a string containing the passed key and a helpful error message', () => {
-    expect(invalidNodeOptionKey('a')).toMatch(
-      /received invalid node option, "a".*valid options are/i
-    )
   })
 })
 

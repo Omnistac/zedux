@@ -3,28 +3,73 @@ id: AtomInstanceBase
 title: AtomInstanceBase
 ---
 
+import { LiveEditor } from '../../../LiveEditor'
+
 The abstract base class of all atom instances. When [creating your own atom class](/not-done), you'll typically create a corresponding atom instance class that extends this class.
 
 ## Properties
 
 This class exposes the following **readonly** properties:
 
-#### `.ecosystem`
+### `.ecosystem`
 
 A reference to the [ecosystem](Ecosystem) that created and controls this atom instance.
 
-#### `.atom`
+### `.atom`
 
 A reference to the [atom](Atom) that this atom instance was created from.
 
 ### `.keyHash`
 
-A string representing the stable, unique key of this atom instance in the ecosystem. This keyHash is the combination of the [atom's `key`](Atom#key) and a stable stringification of the params of this atom instance.
+A string representing the stable, unique key of this atom instance in the ecosystem. This keyHash is the combination of the [atom's `key`](AtomBase#key) and a stable stringification of the [`params`](#params) of this atom instance.
 
 ```ts
 useAtomInstance(atom('a', null)).keyHash // 'a'
 useAtomInstance(atom('b', (param: string) => param), ['c']).keyHash // 'b-["c"]'
 ```
+
+### `.params`
+
+A reference to the raw, unserialized params that were used to create this atom instance. If the atom doesn't take params, this will be an empty array.
+
+```ts
+const instanceA = useAtomInstance(myAtom, ['param 1', 'param 2'])
+const instanceB = useAtomInstance(myAtom, ['a', 'b'])
+instanceA.params // ['param 1', 'param 2']
+instanceB.params // ['a', 'b']
+```
+
+All params must be serializable (no functions or symbols)! This is because Zedux converts the params to a stable string representation in order to efficiently check for an existing atom instance with the "same" params.
+
+Sameness is determined by deep value comparison, not reference equality. Order matters!
+
+```ts
+// These params are the "same" in Zedux' eyes:
+useAtomInstance(myAtom, ['a', { b: 'b', c: 'c' }])
+useAtomInstance(myAtom, ['a', { c: 'c', b: 'b' }])
+
+// But these are different:
+useAtomInstance(myAtom, ['a', 'b'])
+useAtomInstance(myAtom, ['b', 'a'])
+```
+
+The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`get`](../injectors/injectGet) or any dynamic injector to register a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the passed atom instance.
+
+<LiveEditor resultVar="Shout">{`
+const normalAtom = atom('normal', "I'm just a little, black rain cloud")\n
+const shoutingAtom = atom(
+  'shouting',
+  (instance: AtomInstanceBase<string, any, any>) => {
+    const val = injectAtomValue(instance) // subscribe to updates\n
+    return val.toUpperCase()
+  }
+)\n
+function Shout() {
+  const instance = useAtomInstance(normalAtom)
+  const shout = useAtomValue(shoutingAtom, [instance]) // just pass the instance\n
+  return <div>(In a Singing sort of voice): {shout}</div>
+}
+`}</LiveEditor>
 
 ## Methods
 
@@ -33,6 +78,15 @@ This class only exposes one method that should be used publicly:
 ### `.invalidate`
 
 Forces a reevaluation of the atom instance.
+
+<LiveEditor resultVar="Coin">{`
+const coinTossAtom = atom('coinToss', () => Math.random() < 0.5)\n
+function Coin() {
+  const isHeads = useAtomValue(coinTossAtom)
+  const { invalidate } = useAtomInstance(coinTossAtom)\n
+  return <button onClick={invalidate}>{isHeads ? 'Heads' : 'Tails'}</button>
+}
+`}</LiveEditor>
 
 #### Signature
 

@@ -7,8 +7,10 @@ import styled, { keyframes } from 'styled-components'
 import * as ReactZedux from '../../packages/react/dist/es/react/src'
 import * as Redux from 'redux'
 
+const Zedux = { ...ReactZedux } // resolves all the getters
+
 if (typeof window !== 'undefined') {
-  ;(window as any).ReactZedux = ReactZedux
+  ;(window as any).Zedux = Zedux
   ;(window as any).Redux = Redux
 }
 
@@ -21,6 +23,31 @@ const slide = keyframes`
   100% {
     transform: translate(128px, 128px);
   }
+`
+
+const Button = styled.button<{ shouldHide?: boolean }>`
+  @media all and (max-width: 767px) {
+    ${({ shouldHide }) => (shouldHide ? 'display: none;' : '')}
+  }
+
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  margin-left: 5px;
+  padding: 5px 16px;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+`
+
+const EditorWrapper = styled.div`
+  overflow: auto;
 `
 
 const Header = styled.div<{ url: string }>`
@@ -49,11 +76,6 @@ const Img = styled.img`
   margin-right: 0.5rem;
   vertical-align: middle;
   width: 2rem;
-`
-
-const ResetButton = styled.button`
-  position: relative;
-  z-index: 1;
 `
 
 const ResultText = styled.span`
@@ -92,6 +114,7 @@ const ResultView = styled.div`
   color: #242526;
   line-height: 2.2;
   padding: 0.5rem 1rem;
+  position: relative;
 `
 
 const Wrapper = styled.section`
@@ -100,20 +123,31 @@ const Wrapper = styled.section`
 `
 
 const scope = {
-  ...ReactZedux,
+  ...Zedux,
   ...React,
 }
 const scopeKeys = Object.keys(scope)
 const scopeValues = scopeKeys.map(key => scope[key])
 
-const evalCode = (code: string, resultVarName: string) => {
+const evalCode = (
+  ecosystemId: string,
+  code: string,
+  resultVarName: string,
+  extraScope?: Record<string, any>
+) => {
   const resultStr = `var ${resultVarName}; ${code}; var _$_$res = typeof ${resultVarName} === 'function' ? React.createElement(${resultVarName}) : ${resultVarName};`
-  const wrapped = `${resultStr} return React.createElement(EcosystemProvider, { children: _$_$res })`
+  const wrapped = `${resultStr} return React.createElement(EcosystemProvider, { children: _$_$res, id: '${ecosystemId}' })`
+
+  const extraScopeKeys = extraScope ? [...Object.keys(extraScope)] : []
+  const keys = extraScope ? [...scopeKeys, ...extraScopeKeys] : scopeKeys
+  const vals = extraScope
+    ? [...scopeValues, ...extraScopeKeys.map(key => extraScope[key])]
+    : scopeValues
 
   // eslint-disable-next-line no-new-func
-  const fn = new Function('React', ...scopeKeys, wrapped)
+  const fn = new Function('React', ...keys, wrapped)
 
-  return fn.call(null, React, ...scopeValues)
+  return fn.call(null, React, ...vals)
 }
 
 class ErrorBoundary extends React.Component<any, { hasError: boolean }> {
@@ -140,7 +174,7 @@ class ErrorBoundary extends React.Component<any, { hasError: boolean }> {
 }
 
 const Highlighter = code => (
-  <Highlight Prism={Prism} code={code} language="typescript" theme={theme}>
+  <Highlight Prism={Prism} code={code} language="tsx" theme={theme}>
     {({ tokens, getLineProps, getTokenProps }) => (
       <>
         {tokens.map((line, i) => (
@@ -167,11 +201,12 @@ const Highlighter = code => (
   </Highlight>
 )
 
-export const LiveEditor: FC<{ extraScope?: string; resultVar?: string }> = ({
-  children,
-  extraScope,
-  resultVar = 'Result',
-}) => {
+let idCounter = 0
+
+export const LiveEditor: FC<{
+  extraScope?: string | Record<string, any>
+  resultVar?: string
+}> = ({ children, extraScope, resultVar = 'Result' }) => {
   const isMountedRef = useRef(true)
   const initialCodeRef = useRef((children as string).trim())
   const [force, forceRender] = useState<any>()
@@ -180,19 +215,36 @@ export const LiveEditor: FC<{ extraScope?: string; resultVar?: string }> = ({
   const bgUrl = useBaseUrl('img/bg-texture.png')
   theme = usePrismTheme()
 
-  const debouncedSetter = useMemo(() => {
-    const data = { latestVal: null, timeoutId: null }
+  const ecosystemId = useMemo(() => `editor-ecosystem-${idCounter++}`, [])
 
-    return (newVal: string) => {
+  const debouncedSetter = useMemo(() => {
+    const data = {
+      latestForce: null,
+      latestVal: null,
+      originalForce: null,
+      originalVal: null,
+      timeoutId: null,
+    }
+
+    return (newVal: string, passedForce: any) => {
       data.latestVal = newVal
+      data.latestForce = passedForce
       if (data.timeoutId) return
 
-      data.timeoutId = setTimeout(() => {
-        try {
-          ReactZedux.wipe()
+      const run = () => {
+        // already ran on the leading edge
+        if (
+          data.originalVal === data.latestVal &&
+          data.originalForce === data.latestForce
+        )
+          return
 
+        try {
+          Zedux.wipe()
+
+          const extraScopeStr = typeof extraScope === 'string' ? extraScope : ''
           const jsCode = (window as any)?.ts.transpile(
-            `${extraScope}; ${data.latestVal}`,
+            `${extraScopeStr}; ${data.latestVal}`,
             {
               jsx: 'react',
             }
@@ -200,20 +252,33 @@ export const LiveEditor: FC<{ extraScope?: string; resultVar?: string }> = ({
 
           if (!jsCode) return
 
-          const evalResult = evalCode(jsCode, resultVar)
+          const evalResult = evalCode(
+            ecosystemId,
+            jsCode,
+            resultVar,
+            typeof extraScope === 'string' ? undefined : extraScope
+          )
           if (isMountedRef.current) setResult(evalResult)
         } catch (err) {
           if (isMountedRef.current) setResult(err.message)
           console.error('Live Editor error:', err)
         }
+      }
+
+      run() // run on the leading edge of the timeout
+      data.originalVal = newVal
+      data.originalForce = passedForce
+
+      data.timeoutId = setTimeout(() => {
+        run()
 
         data.timeoutId = null
       }, 500)
     }
-  }, [])
+  }, [ecosystemId])
 
   useEffect(() => {
-    debouncedSetter(tsCode)
+    debouncedSetter(tsCode, force)
   }, [force, resultVar, tsCode])
 
   useEffect(
@@ -228,29 +293,55 @@ export const LiveEditor: FC<{ extraScope?: string; resultVar?: string }> = ({
       <Header url={bgUrl}>
         <Img src={useBaseUrl('img/zedux-icon.png')} /> Live Editor
       </Header>
-      <Editor
-        value={tsCode}
-        padding={10}
-        highlight={Highlighter}
-        onValueChange={setTsCode}
-        style={{
-          fontFamily: 'monospace',
-          lineHeight: '1.4',
-          whiteSpace: 'pre',
-          ...theme.plain,
-        }}
-      />
+      <EditorWrapper>
+        <Editor
+          value={tsCode}
+          padding={10}
+          highlight={Highlighter}
+          onValueChange={setTsCode}
+          style={{
+            fontFamily: 'monospace',
+            fontSize: '15px',
+            letterSpacing: '-0.05px',
+            lineHeight: '1.4',
+            minWidth: '738px',
+            whiteSpace: 'pre',
+            ...theme.plain,
+          }}
+        />
+      </EditorWrapper>
       <ResultTextWrapper url={bgUrl}>
         <Img src={useBaseUrl('img/zedux-icon.png')} />{' '}
         <ResultText>Live Result:</ResultText>{' '}
-        <ResetButton
+        <Button
+          onClick={() => {
+            console.log('Zedux Exports:', Zedux)
+            console.log('React Exports:', React)
+            if (extraScope) console.log('Extra Scope:', extraScope)
+          }}
+          shouldHide
+        >
+          Log Scope
+        </Button>
+        <Button
+          onClick={() => {
+            const es = Zedux.zeduxGlobalStore.getState().ecosystems[ecosystemId]
+
+            console.log('Ecosystem:', es)
+            console.log('Current State:', es.inspectInstanceValues())
+          }}
+          shouldHide
+        >
+          Log State
+        </Button>
+        <Button
           onClick={() => {
             setTsCode(initialCodeRef.current)
             forceRender({})
           }}
         >
           Reset
-        </ResetButton>
+        </Button>
       </ResultTextWrapper>
       <ResultView>
         <ErrorBoundary>{result}</ErrorBoundary>

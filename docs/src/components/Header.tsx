@@ -64,7 +64,7 @@ export const Header = () => {
           <Link to={useBaseUrl('docs/react/walkthrough/quick-start')}>
             Quick Start!
           </Link>
-          <Link to={useBaseUrl('docs/api')}>API Docs</Link>
+          <Link to={useBaseUrl('docs/react/api/classes/Atom')}>API Docs</Link>
         </Buttons>
       </HeaderContent>
     </StyledHeader>

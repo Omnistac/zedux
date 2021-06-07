@@ -58,13 +58,37 @@ const userAtom = ion('user', ({ get }) => {
 
 This creates a graph of atom dependencies, which can be seen in all its glory in the [StateHub](/not-done).
 
+### Instances as Params
+
+As a general rule, all [atom params](../api/classes/AtomInstanceBase#params) must be serializable. There is one exception: You can pass an atom instance to another atom instance.
+
+This is possible because all atom instances already have a unique, serialized [`keyHash`](../api/classes/AtomInstanceBase#keyhash) that will simply be appended to the receiving atom's `keyHash`.
+
+<LiveEditor resultVar="Shout">{`
+const normalAtom = atom('normal', "I'm just a little, black rain cloud")\n
+const shoutingAtom = atom(
+  'shouting',
+  (instance: AtomInstanceBase<string, any, any>) => {
+    const val = injectAtomValue(instance) // subscribe to updates\n
+    return val.toUpperCase()
+  }
+)\n
+function Shout() {
+  const instance = useAtomInstance(normalAtom)
+  const shout = useAtomValue(shoutingAtom, [instance]) // just pass the instance\n
+  return <div>(In a Singing sort of voice): {shout}</div>
+}
+`}</LiveEditor>
+
+This is another form of Dependency Injection.
+
 ### The Graph
 
-Detour! You can [skip this section](#overrides).
+Detour! You can [skip this section](#overrides). Proceed if ye dare:
 
-As you use atoms, Zedux creates and updates a graph of atom dependencies. The nodes of the graph are atom instances and consumers of atom instances. The edges of the graph are relationships between atom instances.
+As you use atoms, Zedux creates and updates a graph of atom dependencies. The nodes of the graph are atom instances and consumers of atom instances. The edges of the graph are relationships between atom instances and their consumers.
 
-When we "inject an atom", what we're really doing is instructing Zedux to create an edge on the graph. There are 8 different types of edges, based on the 3 edge flags:
+When we "inject an atom", what we're really doing is instructing Zedux to create an edge on the graph. There are 8 different types of edges, based on these 3 edge flags:
 
 - isExternal - whether the graph edge is between two atom instances or between an atom instance and something outside of Zedux - usually a React component.
 - isAsync - async edges are edges created and cleaned up manually, usually in a useEffect hook or injectEffect injector. There currently aren't any APIs to create these edges. We're working on it.
@@ -97,6 +121,15 @@ const axiosAtom = atom('axios', axios)
 
 const testAxiosAtom = axiosAtom.override({ post: jest.fn() })
 ```
+
+You don't have to use `.override()`. You can create a clone manually. The only requirement is that the override has the same `key`:
+
+```ts
+const myAtom = atom('my', 'some state')
+const myAtomOverride = atom('my', 'overridden state!', { ttl: 0 })
+```
+
+The nice thing about `.override()` for TS users is that it will tell you if the override doesn't match the overridden atom's type in any way.
 
 These overridden atoms can then be supplied to an `ecosystem` via the `overrides` field:
 
@@ -151,6 +184,10 @@ function App() {
   )
 }
 `}</LiveEditor>
+
+## Recap
+
+
 
 ## Next Steps
 

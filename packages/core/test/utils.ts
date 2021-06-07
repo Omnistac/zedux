@@ -32,6 +32,10 @@ export const nonDispatchables = [
   () => 'a',
 ]
 
+export const nonFunctions = nonDispatchables.filter(
+  thing => typeof thing !== 'function'
+)
+
 export const nonPlainObjects = [
   undefined,
   null,

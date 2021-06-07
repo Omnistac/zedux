@@ -1,0 +1,57 @@
+---
+id: localAtom
+title: localAtom
+---
+
+```ts
+import { localAtom } from '@zedux/react'
+```
+
+A factory for creating [local atoms](../classes/LocalAtom). Local atoms are just atoms that have their first param set to an optional string id. Zedux auto-generates an id every time the atom is used, if you don't pass one. Local atoms also always have their [`ttl`](../classes/StandardAtomBase) set to `0`.
+
+## Example
+
+<LiveEditor resultVar="App">{`
+const counterAtom = localAtom('counter', () => {
+  const store = injectStore(0)\n
+  return store
+})\n
+function App() {
+  const [counter1, setCounter1] = useAtomState(counterAtom)
+  const [counter2, setCounter2] = useAtomState(counterAtom)\n
+  return (
+    <>
+      <div>First state: {counter1}</div>
+      <button onClick={() => setCounter1(state => state + 1)}>Increment</button>
+      <div>Second state: {counter2}</div>
+      <button onClick={() => setCounter2(state => state + 1)}>Increment</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+## Signature
+
+```ts
+localAtom(key, value, config?) => LocalAtom
+```
+
+All params are the same as [the `atom()` factory](atom). Just note that the first param of a passed evaluator function should be a string. And `ttl` is set to 0 by default, instead of -1.
+
+### `key`
+
+Required. A string. The key should typically be unique, though there are cases (e.g. for DI) where you won't make them unique. The key identifies the atom in ecosystems where it's used.
+
+See [`AtomBase#key`](../classes/AtomBase#key).
+
+### `value`
+
+Required. The value of the atom. See [the `atom()` factory](atom#value) for possible values. If an evaluator function is passed, its first parameter should be a string (doesn't have to be an optional param).
+
+### `config`
+
+Optional. An [AtomConfig](../types/AtomConfig) object. If it isn't passed, `ttl` will default to 0, which means the atom instance dies as soon as it has no more dependents.
+
+```ts
+atom('key', getter, { ttl: 0 })
+```

@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react'
+import { act, fireEvent, render } from '@testing-library/react'
 import {
   atom,
   ecosystem,
@@ -14,6 +14,83 @@ const testEcosystem = ecosystem({ id: 'test' })
 
 afterEach(() => {
   testEcosystem.wipe()
+})
+
+describe('maxInstances', () => {
+  test('maxInstances 0 always destroys everything', () => {
+    const atomA = atom('a', 'a', { maxInstances: 0 })
+    const atomB = atom('b', () => {
+      const a = injectAtomValue(atomA)
+
+      return a + 'b'
+    })
+    const es = ecosystem({ id: 'maxInstances' })
+
+    const instanceB = es.getInstance(atomB)
+
+    expect(es._instances).toEqual({
+      a: expect.any(Object),
+      b: expect.any(Object),
+    })
+
+    expect(es.get(atomA)).toBe('a')
+    expect(es.get(atomB)).toBe('ab')
+
+    instanceB._destroy()
+
+    expect(es._instances).toEqual({})
+
+    es.destroy()
+  })
+
+  test('maxInstances takes precedence over ttl', () => {
+    jest.useFakeTimers()
+    const atomA = atom('a', (param: string) => param, {
+      maxInstances: 1,
+      ttl: 10,
+    })
+    const atomB = atom('b', (param: string) => {
+      const a = injectAtomValue(atomA, [param])
+
+      return a + 'b'
+    })
+    const es = ecosystem({ id: 'maxInstances' })
+
+    const instance1 = es.getInstance(atomB, ['a'])
+    const instance2 = es.getInstance(atomB, ['aa'])
+
+    expect(es._instances).toEqual({
+      'a-["a"]': expect.any(Object),
+      'a-["aa"]': expect.any(Object),
+      'b-["a"]': expect.any(Object),
+      'b-["aa"]': expect.any(Object),
+    })
+
+    expect(es.get(atomA, ['a'])).toBe('a')
+    expect(es.get(atomA, ['aa'])).toBe('aa')
+    expect(es.get(atomB, ['a'])).toBe('ab')
+    expect(es.get(atomB, ['aa'])).toBe('aab')
+
+    // The first destruction should destroy the first atomA instance immediately
+    instance1._destroy()
+
+    expect(es._instances).toEqual({
+      'a-["aa"]': expect.any(Object),
+      'b-["aa"]': expect.any(Object),
+    })
+
+    instance2._destroy()
+
+    expect(es._instances).toEqual({
+      'a-["aa"]': expect.any(Object),
+    })
+
+    jest.runAllTimers()
+
+    expect(es._instances).toEqual({})
+
+    es.destroy()
+  })
 })
 
 describe('ttl', () => {
@@ -138,7 +215,10 @@ describe('ttl', () => {
     jest.runAllTimers()
     expect(effects).toEqual([4, 3])
 
-    fireEvent.click(button)
+    act(() => {
+      fireEvent.click(button)
+    })
+
     await findByText('Two')
     expect(effects).toEqual([4, 3, 3])
     expect(evaluations).toEqual([4, 3, 1, 2, 3, 4, 3])
@@ -146,10 +226,16 @@ describe('ttl', () => {
     jest.runAllTimers() // no ttl timeouts should run
     expect(effects).toEqual([4, 3, 3])
 
-    fireEvent.click(button)
+    act(() => {
+      fireEvent.click(button)
+    })
     await findByText('One')
     jest.advanceTimersByTime(2) // allow 3-["2"] effect to run, but not 4 ttl
-    fireEvent.click(button)
+
+    act(() => {
+      fireEvent.click(button)
+    })
+
     await findByText('Two')
     jest.runAllTimers() // again, no ttl timeouts should run
 

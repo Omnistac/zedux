@@ -101,7 +101,15 @@ export class AtomInstance<
    * timeout to destroy this atom instance.
    */
   public _scheduleDestruction() {
-    const { ttl } = this.atom
+    const { maxInstances, ttl } = this.atom
+
+    if (maxInstances != null) {
+      if (maxInstances === 0) return this._destroy()
+
+      const currentCount = this.ecosystem.findInstances(this.atom).length
+
+      if (currentCount > maxInstances) return this._destroy()
+    }
 
     // By default, atoms live forever. Also the atom may already be scheduled
     // for destruction or destroyed
@@ -109,9 +117,7 @@ export class AtomInstance<
       return
     }
 
-    if (ttl === 0) {
-      return this._destroy()
-    }
+    if (ttl === 0) return this._destroy()
 
     // schedule destruction (if ttl is > 0)
     if (typeof ttl !== 'number') return

@@ -3,4 +3,66 @@ id: Reducer
 title: Reducer
 ---
 
-TODO: this
+In Zedux, reducers are exactly the same as in Redux and React. A reducer is just a function that receives the current state and an [action](Action) and returns the new state.
+
+[Stores](../classes/Store) can be configured with reducers by passing a reducer to [`createStore()`](../factories/createStore) or [`store.use()`](../classes/Store#use).
+
+## Example
+
+```ts
+import { createStore } from '@zedux/react'
+
+const counterReducer = (state = 0, action) => {
+  if (action.type === 'increment') {
+    return state + 1
+  }
+
+  if (action.type === 'decrement') {
+    return state - 1
+  }
+
+  return state
+}
+
+const store = createStore(counterReducer)
+
+store.getState() // 0
+store.dispatch({ type: 'increment' }) // 1
+store.dispatch({ type: 'increment' }) // 2
+store.dispatch({ type: 'decrement' }) // 1
+```
+
+## Creation
+
+While you can create reducers manually like we just did, Zedux exports a high-level [`createReducer()`] factory for creating them easily:
+
+```ts
+import { createReducer, createStore } from '@zedux/react'
+
+const counterReducer = createReducer(0) // the initial state
+  .reduce('increment', state => state + 1)
+  .reduce('decrement', state => state - 1)
+
+const store = createStore(counterReducer)
+
+store.getState() // 0
+store.dispatch({ type: 'increment' }) // 1
+store.dispatch({ type: 'increment' }) // 2
+store.dispatch({ type: 'decrement' }) // 1
+```
+
+## Definition
+
+```ts
+(currentState, action) => newState
+```
+
+Return the new state or the currentState if no change.
+
+### `currentState`
+
+Just exactly what it says... Can be any type. If creating reducers manually, be sure to default this value.
+
+### `action`
+
+An [action object](Action). The reducer should look at this action's `type` property to determine what to do.

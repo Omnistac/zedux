@@ -213,7 +213,7 @@ export abstract class AtomInstanceBase<
   ): AtomInstanceType<A>
 
   public _getInstance<AI extends AtomInstanceBase<any, any, any>>(
-    instance: AI | AtomBase<any, any, any>,
+    instance: AI,
     params?: [],
     edgeInfo?: GraphEdgeInfo
   ): AI

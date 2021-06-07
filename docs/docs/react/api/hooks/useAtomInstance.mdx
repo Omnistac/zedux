@@ -1,0 +1,77 @@
+---
+id: useAtomInstance
+title: useAtomInstance
+---
+
+import { LiveEditor } from '../../../LiveEditor'
+
+```ts
+import { useAtomInstance } from '@zedux/react'
+```
+
+A React hook that accepts an atom and its params and registers a [static graph dependency](../glossary#static-graph-dependency) on the resolved atom instance. Returns the resolved [atom instance object](../classes/AtomInstance).
+
+Since the dependency is static, the component that uses this hook will not rerender when the resolved atom instance's state changes.
+
+To make the dependency dynamic, pass the returned atom instance to a dynamic hook like [`useAtomValue`](useAtomValue), [`useAtomState`](useAtomState), or [`useAtomSelector`](useAtomSelector).
+
+You can also pass an atom instance directly to register a static graph dependency on instances received from other sources, e.g. from [useAtomConsumer](useAtomConsumer). You typically won't need to do this.
+
+## Examples
+
+<LiveEditor resultVar="Seconds">{`
+const secondsAtom = atom('seconds', () => {
+  const store = injectStore(0)\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => store.setState(val => val + 1),
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return store
+})\n
+function Seconds() {
+  const instance = useAtomInstance(secondsAtom)
+  const state = useAtomValue(instance)\n
+  return <div>Seconds: {state}</div>
+}
+`}</LiveEditor>
+
+Miscellaneous:
+
+```tsx
+const instance = useAtomInstance(myAtom)
+const withParams = useAtomInstance(myAtom, ['param 1', 'param 2'])
+
+// the instance can be provided over React context:
+<AtomInstanceProvider instance={instance}>{children}</AtomInstanceProvider>
+```
+
+## Signature
+
+```ts
+injectAtomInstance(atom, params?) => AtomInstance
+```
+
+Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns the resolved [atom instance](../classes/AtomInstanceBase).
+
+### Overloads
+
+```ts
+injectAtomInstance(instance) => AtomInstance
+```
+
+### `atom`
+
+Required. The [atom](Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
+
+### `params`
+
+Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
+
+TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
+
+### `instance`
+
+Required (in this overload). An [atom instance](../classes/AtomInstanceBase). Will register a static dependency on the passed instance and return it.

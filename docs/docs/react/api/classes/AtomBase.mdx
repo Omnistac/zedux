@@ -5,7 +5,7 @@ title: AtomBase
 
 export const AtomKeyDesc = () => (
   <div>
-    The key is the key (😂) to Dependency Injection - it's how ecosystems know which atoms to override. It also serves as a dev tool - many errors will log the key of the atom they originated in. Keys also help with a codebase's grepability.
+    The key is the key to Dependency Injection - it's how ecosystems know which atoms to override. It also serves as a dev tool - many errors will log the key of the atom they originated in. Keys also help with a codebase's grepability.
   </div>
 )
 
@@ -28,10 +28,6 @@ A string.
 An array of strings. May be undefined. The flags that will be checked alongside an [ecosystem's flags](Ecosystem#flags) to warn about unsafe atoms being used in certain environments.
 
 ### `.maxInstances`
-
-:::note
-🚧 `maxInstances` is under construction.
-:::
 
 A number. May be undefined. Indicates the largest ideal cache size of the atom.
 

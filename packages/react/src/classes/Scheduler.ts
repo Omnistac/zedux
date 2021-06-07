@@ -9,8 +9,20 @@ import { Ecosystem } from './Ecosystem'
 export class Scheduler {
   // private _runStartTime?: number
   private scheduledJobs: Job[] = []
+  private _timeoutId?: ReturnType<typeof setTimeout>
 
   constructor(private readonly ecosystem: Ecosystem) {}
+
+  /**
+   * scheduler.flush()
+   *
+   * Kill any current timeout and run all jobs immediately
+   */
+  public flush() {
+    if (this._timeoutId) clearTimeout(this._timeoutId)
+
+    this.runJobs()
+  }
 
   public scheduleJob(newJob: Job) {
     const shouldSetTimeout = this.scheduledJobs.length === 0
@@ -25,7 +37,10 @@ export class Scheduler {
 
     // we just pushed the first job onto the queue
     if (shouldSetTimeout) {
-      setTimeout(() => this.runJobs())
+      this._timeoutId = setTimeout(() => {
+        this._timeoutId = undefined
+        this.runJobs()
+      })
     }
   }
 

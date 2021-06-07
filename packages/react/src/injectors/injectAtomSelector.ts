@@ -110,17 +110,11 @@ export const injectAtomSelector: {
   ): D
 
   <AI extends AtomInstanceBase<any, any, any>, D = any>(
-    instance: AI | AtomBase<any, any, any>,
-    selector: Selector<AtomInstanceStateType<AI>, D>
-  ): D
-
-  <AI extends AtomInstanceBase<any, any, any>, D = any>(
-    instance: AI | AtomBase<any, any, any>,
-    params: [],
+    instance: AI,
     selector: Selector<AtomInstanceStateType<AI>, D>
   ): D
 } = <A extends AtomBase<any, any, any>, D = any>(
-  atom: A | AtomInstanceBase<any, any, any>,
+  atom: A,
   paramsArg: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
   selectorArg?: Selector<AtomStateType<A>, D>
 ): D => {

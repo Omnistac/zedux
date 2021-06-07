@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AtomInstanceBase } from '../classes'
 import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomInstanceType, AtomParamsType } from '../types'
@@ -34,7 +34,7 @@ export const useAtomInstance: {
   ): AtomInstanceType<A>
 
   <AI extends AtomInstanceBase<any, any, any>>(
-    instance: AI | AtomBase<any, any, any>, // This '| AtomBase' fixes some types. I think it's fine.
+    instance: AI,
     params?: [],
     shouldRegisterDependency?: boolean
   ): AI
@@ -43,11 +43,17 @@ export const useAtomInstance: {
   params?: AtomParamsType<A>,
   shouldRegisterDependency = true
 ) => {
+  const [force, forceRender] = useState<any>()
   const ecosystem = useEcosystem()
   const stableParams = useStableReference(params)
-  const [force, forceRender] = useState<any>()
+  const cleanupRef = useRef<() => void>()
 
-  const [atomInstance, unregister] = useMemo(() => {
+  const atomInstance = useMemo(() => {
+    if (cleanupRef.current) {
+      cleanupRef.current()
+      cleanupRef.current = undefined
+    }
+
     const instance = (atom instanceof AtomInstanceBase
       ? atom
       : ecosystem.getInstance(
@@ -59,9 +65,9 @@ export const useAtomInstance: {
       throw instance.promise
     }
 
-    if (!shouldRegisterDependency) return [instance]
+    if (!shouldRegisterDependency) return instance
 
-    const unregister = ecosystem._graph.registerExternalDependent(
+    cleanupRef.current = ecosystem._graph.registerExternalDependent(
       instance,
       signal => {
         if (signal === GraphEdgeSignal.Destroyed) {
@@ -72,10 +78,10 @@ export const useAtomInstance: {
       true
     )
 
-    return [instance, unregister] as const
+    return instance
   }, [atom, ecosystem, force, shouldRegisterDependency, stableParams])
 
-  useLayoutEffect(() => unregister, [unregister])
+  useLayoutEffect(() => () => cleanupRef.current?.(), [])
 
   return atomInstance
 }

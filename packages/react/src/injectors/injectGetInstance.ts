@@ -51,14 +51,12 @@ export const injectGetInstance: {
     ): AtomInstanceType<A>
 
     <AI extends AtomInstanceBase<any, any, any>>(
-      instance: AI | AtomBase<any, any, any>,
+      instance: AI,
       params?: [],
       edgeInfo?: GraphEdgeInfo
     ): AI
   }
-} = <A extends AtomBase<any, any, any>>(
-  atom?: A | AtomInstanceBase<any, any, any>
-) => {
+} = <A extends AtomBase<any, any, any>>(atom?: A) => {
   const { instance } = diContext.consume()
 
   if (atom) {
@@ -67,7 +65,7 @@ export const injectGetInstance: {
   }
 
   return <A extends AtomBase<any, any, any>>(
-    atom: A | AtomInstanceBase<any, any, any>,
+    atom: A,
     params: AtomParamsType<A>,
     edgeInfo = defaultEdgeInfo
   ) => instance._getInstance(atom, params, edgeInfo)

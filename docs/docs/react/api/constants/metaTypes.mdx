@@ -3,4 +3,97 @@ id: metaTypes
 title: metaTypes
 ---
 
-TODO: this
+```ts
+import { metaTypes } from '@zedux/react'
+```
+
+An object of the "metaType" values Zedux uses internally in its [ActionChain objects](../types/ActionChain). You may encounter these meta nodes in action chains passed to [effects subscribers](../classes/Store#subscribe) in composed stores. Use this object to identify them.
+
+## Definition
+
+```ts
+const metaTypes = {
+  DELEGATE: `@@zedux/delegate`,
+  INHERIT: `@@zedux/inherit`,
+}
+```
+
+### `DELEGATE`
+
+Zedux attaches this meta node to actions when a child store informs a parent store of a state change.
+
+```ts
+const childStore = createStore(null, 'initial state')
+const parentStore = createStore({ child: childStore })
+
+parentStore.subscribe({
+  effects: ({ action }) => {
+    console.log('action:', action)
+  }
+})
+
+childStore.setState('new state')
+// action: {
+//   metaType: '@@zedux/delegate',
+//   metaData: ['child'],
+//   payload: {
+//     type: '@@zedux/hydrate',
+//     payload: 'new state'
+//   }
+// }
+
+childStore.getState() // 'new state'
+parentStore.getState() // { child: 'new state' }
+```
+
+Dispatching an action wrapped in `DELEGATE` to a parent store tells Zedux to "delegate" the action to the child store. This is the key to time travel! By tracking all actions dispatched to child stores, a parent store can effectively reverse engineer all of its state changes.
+
+```ts
+// this action mimics a `.setState('different state')` call in the child store:
+const action = {
+  metaType: '@@zedux/delegate',
+  metaData: ['child'],
+  payload: {
+    type: '@@zedux/hydrate',
+    payload: 'different state'
+  }
+}
+
+parentStore.dispatch(action)
+
+childStore.getState() // 'different state'
+parentStore.getState() // { child: 'different state' }
+```
+
+### `INHERIT`
+
+Zedux wraps actions in this meta node when passing an action dispatched in a parent store down to its children.
+
+```ts
+const childStore = createStore(null, 'initial state')
+const parentStore = createStore({ child: childStore })
+
+childStore.subscribe({
+  effects: ({ action }) => {
+    console.log('action:', action)
+  }
+})
+
+parentStore.dispatch({ type: 'test' })
+// action: {
+//   metaType: '@@zedux/inherit',
+//   payload: {
+//     type: 'test'
+//   }
+// }
+```
+
+## Removing Meta Nodes
+
+Sometimes we don't care about this metadata. Zedux exports a `removeAllMeta` function that unwraps all meta nodes around an action object.
+
+```ts
+import { removeAllMeta } from '@zedux/react'
+
+const unwrappedAction = removeAllMeta(inheritedAction) // { type: 'test' }
+```

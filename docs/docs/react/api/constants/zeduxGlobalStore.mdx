@@ -3,4 +3,18 @@ id: zeduxGlobalStore
 title: zeduxGlobalStore
 ---
 
-TODO: this
+```ts
+import { zeduxGlobalStore } from '@zedux/react'
+```
+
+Zedux creates a store internally to keep track of all ecosystems. Ecosystems are mutable objects with functions and circular references and all sorts of non-Reduxy patterns. This is by design - for performance and efficiency. But it means you can't use this global store to track state changes like in a normal, immutable flow.
+
+While there isn't much functionality tied to this store right now, we may someday add a flag to ecosystems to make them dispatch actions to this global store for every mutation.
+
+For now, you can use it to inspect the internal state of Zedux. Readonly!
+
+```ts
+import { zeduxGlobalStore } from '@zedux/react'
+
+zeduxGlobalStore.getState() // { ecosystems: <a record of all ecosystems> }
+```

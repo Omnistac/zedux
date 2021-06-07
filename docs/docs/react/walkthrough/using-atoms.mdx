@@ -7,50 +7,37 @@ import { LiveEditor } from '../../LiveEditor'
 
 In the quick start, we learned a few basic ways to instantiate and consume atoms. In this page, we'll cover more hooks and injectors for atom instantiation and consumption, as well as how to interact with atom instances directly.
 
-## Dynamic Hooks/Injectors
+## Dynamic Hooks & Injectors
 
-Some hooks/injectors create a dynamic dependency on the atom. This means that when the atom instance's store's state changes, components/atoms that use these hooks/injectors will rerender/reevaluate (😅).
+Some hooks create a [dynamic graph dependency](../api/glossary#dynamic-graph-dependency) on the atom. This means that when the atom instance's store's state changes, components that use these hooks will rerender.
+
+All these hooks have complementary injectors. When the injected atom instance's state changes, atoms that use these injectors will reevaluate.
 
 ### `useAtomSelector`
 
 Returns a portion or derivation of the state of an atom instance's store. Also ensures that the component only reevaluates when the selector's result changes. Similar to Redux' [`useSelector()`](https://react-redux.js.org/api/hooks#useselector).
 
-<LiveEditor resultVar="App">{`
-const userAtom = atom('user', () => ({
-  name: 'Joe',
-  lastUpdated: new Date()
+<LiveEditor resultVar="SelectorSerendipity">{`
+const countersAtom = atom('counters', () => ({
+  a: 0,
+  b: 0
 }))\n
-function Child() {
-  const [state, setState] = useAtomState(userAtom)\n
-  return (
-    <>
-      <input
-        onChange={({ target }) => setState(val => ({
-          lastUpdated: new Date(),
-          name: target.value
-        })}
-        value={state.name}
-      />
-      <div>Last Updated: {state.lastUpdated.toLocaleString()}</div>
-      <button onClick={() => setState(val => ({
-        ...val,
-        lastUpdated: new Date()
-      })}>
-        Update Date
-      </button>
-    </>
-  )
-}\n
-function App() {
-  // whenever userAtom's state changes, this selector will run.
+function SelectorSerendipity() {
+  // whenever countersAtom's state changes, this selector will run.
   // If the selector returns a new value, this component will rerender.
-  const renders = useRef(0)
-  const userName = useAtomSelector(userAtom, ({ name }) => name)
-  renders.current += 1\n
+  const counterA = useAtomSelector(countersAtom, ({ a }) => a)
+  const instance = useAtomInstance(countersAtom)
+  const { setState } = instance\n
   return (
     <>
-      <div>renders: {renders.current}, name: {userName}</div>
-      <Child />
+      <div>Counter A: {counterA}</div>
+      <button onClick={() => setState(val => ({ ...val, a: val.a + 1 }))}>
+        Increment Counter A (triggers rerender)
+      </button>
+      <div>Counter B: {instance.store.getState().b}</div>
+      <button onClick={() => setState(val => ({ ...val, b: val.b + 1 }))}>
+        Increment Counter B (no rerender)
+      </button>
     </>
   )
 }
@@ -74,9 +61,9 @@ function App() {
 }
 ```
 
-Note that while you can use a selector memoizing library like [reselect](https://github.com/reduxjs/reselect), it isn't necessary in Zedux. If more sophisticated selector behavior is required, use selector atoms like we did with `usersByRoleAtom` in the above example. [Ions](/not-done) are particulary suited for this use case.
+Note that while you can use a selector memoizing library like [reselect](https://github.com/reduxjs/reselect), it isn't necessary in Zedux. If more sophisticated selector behavior is required, use selector atoms like we did with `usersByRoleAtom` in the above example. [Ions](../api/classes/Ion) are particulary suited for this use case.
 
-Selector atoms are composable, memoized by default (since they live in an atom ecosystem), and the cache size and ttl are configurable too - all because they're atoms. The memoization details can even be handled more granularly using [`injectMemo()`](/not-done). That's a lot of power for such a simple API.
+Selector atoms are composable, memoized by default (since they live in an atom ecosystem), and the cache size and ttl are configurable too - all because they're atoms. The memoization details can even be handled more granularly using [`injectMemo()`](../api/hooks/injectMemo).
 
 #### `injectAtomSelector`
 
@@ -89,7 +76,7 @@ const userAtom = atom('user', () => {
 })
 ```
 
-### `useAtomState()`
+### `useAtomState`
 
 `useAtomState()` is similar to React's `useState()` hook.
 
@@ -99,18 +86,14 @@ import { useAtomState } from '@zedux/react'
 function App() {
   // whenever myAtom's state changes, this component will rerender
   const [state, setState] = useAtomState(myAtom)
+  const [withParams, setWithParams] = useAtomState(myAtom, ['a param'])
   ...
 }
 ```
 
 `setState` is a reference to the `setState` function on the atom instance, which wraps the `setState` function of the instance's store. It functions like a React state setter.
 
-`useAtomState()` differs from React's `useState()` in that you don't pass the initial state - we defined that when we created the atom. Instead, you pass the params of the atom (if any):
-
-```ts
-const [darkTheme, setDarkTheme] = useAtomState(themeAtom, ['dark'])
-const [lightTheme, setLightTheme] = useAtomState(themeAtom, ['light'])
-```
+To get a reference to `setState` without creating a dynamic dependency, use [`useAtomInstance()`](#useatominstance).
 
 #### `injectAtomState`
 
@@ -135,7 +118,7 @@ function MyComponent() {
 }
 ```
 
-### `injectAtomValue`
+#### `injectAtomValue`
 
 The injector equivalent of `useAtomValue`. Returns an atom instance's value. Creates a dynamic graph dependency on the resolved atom instance. This means that the current atom instance will reevaluate when the resolved atom instance's state changes.
 
@@ -244,7 +227,7 @@ The injector equivalent of `useGetInstance` - for use in atoms. This injector wi
 
 ## Instances
 
-You'll often interact with atom instances directly. Atom instances have many useful properties.
+You'll often interact with [atom instances](../api/classes/AtomInstance) directly. Atom instances have many useful properties.
 
 ### `.store`
 

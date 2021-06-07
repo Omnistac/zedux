@@ -6,6 +6,7 @@ import {
   createStore,
   ecosystem,
   EcosystemProvider,
+  injectAtomValue,
   injectGet,
   injectStore,
   ion,
@@ -184,5 +185,112 @@ describe('graph', () => {
     expect(evaluations).toEqual([1])
     expect(ionInstance.store.getState()).toBe(3)
     expect(testEcosystem.getInstance(atom1).store.getState()).toBe(12)
+  })
+
+  test('on reevaluation, get() updates the graph', () => {
+    jest.useFakeTimers()
+    let useB = true
+    const atomA = atom('a', () => 'a')
+    const atomB = atom('b', (param: string) => param)
+    const atomC = atom('c', 'c')
+    const atomD = ion('d', ({ get }) => {
+      const a = injectAtomValue(atomA)
+      const b = useB ? get(atomB, ['b']) : get(atomC)
+
+      return a + b
+    })
+
+    const es = ecosystem({ id: 'reevaluation' })
+
+    const instance = es.getInstance(atomD)
+
+    expect(es._graph.nodes).toEqual({
+      a: {
+        dependencies: {},
+        dependents: {
+          d: [
+            {
+              isAsync: false,
+              isStatic: false,
+              operation: 'injectAtomValue',
+              shouldUpdate: undefined,
+            },
+          ],
+        },
+        weight: 1,
+      },
+      'b-["b"]': {
+        dependencies: {},
+        dependents: {
+          d: [
+            {
+              isAsync: false,
+              isStatic: false,
+              operation: 'get',
+              shouldUpdate: undefined,
+            },
+          ],
+        },
+        weight: 1,
+      },
+      d: {
+        dependencies: {
+          a: true,
+          'b-["b"]': true,
+        },
+        dependents: {},
+        weight: 3,
+      },
+    })
+
+    useB = false
+    instance.invalidate()
+    jest.runAllTimers()
+
+    expect(es._graph.nodes).toEqual({
+      a: {
+        dependencies: {},
+        dependents: {
+          d: [
+            {
+              isAsync: false,
+              isStatic: false,
+              operation: 'injectAtomValue',
+              shouldUpdate: undefined,
+            },
+          ],
+        },
+        weight: 1,
+      },
+      'b-["b"]': {
+        dependencies: {},
+        dependents: {},
+        weight: 1,
+      },
+      c: {
+        dependencies: {},
+        dependents: {
+          d: [
+            {
+              isAsync: false,
+              isStatic: false,
+              operation: 'get',
+              shouldUpdate: undefined,
+            },
+          ],
+        },
+        weight: 1,
+      },
+      d: {
+        dependencies: {
+          a: true,
+          c: true,
+        },
+        dependents: {},
+        weight: 3,
+      },
+    })
+
+    es.destroy()
   })
 })

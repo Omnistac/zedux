@@ -98,12 +98,15 @@ export type DispatchInterceptor<State = any> = (
   next: (action: ActionChain) => State
 ) => State
 
-export interface EcosystemConfig {
+export interface EcosystemConfig<
+  Context extends Record<string, any> | undefined = any
+> {
+  context?: Context
   destroyOnUnmount?: boolean
   flags?: string[]
   id?: string
   overrides?: AtomBase<any, any[], any>[]
-  preload?: (ecosystem: Ecosystem) => void
+  preload?: (ecosystem: Ecosystem, context: Context) => void
 }
 
 export type EffectCallback = () => void | Destructor
@@ -157,8 +160,6 @@ export interface IonSetUtils<
     settable: Settable<AtomStateType<A>>
   ): AtomStateType<A>
 }
-
-export type LocalAtomConfig = Omit<AtomConfig, 'maxInstances' | 'ttl'>
 
 export type LocalParams<P extends any[]> = [
   id?: string | undefined,

@@ -41,11 +41,7 @@ const zombieAtom = atom('zombie', null, {
 
 ### Max Instances
 
-:::note
-🚧 `maxInstances` is under construction
-:::
-
-Complementary to `ttl`, `maxInstances` specifies the largest ideal cache size. If more instances than this "maximum" are created, Zedux will start cleaning them up automatically when they go stale, regardless of `ttl`.
+Complementary to `ttl`, `maxInstances` specifies the largest ideal cache size. If more instances than this "maximum" are created, Zedux will start cleaning them up automatically when they go stale, ignoring `ttl`.
 
 No instances will ever be cleaned up while still in use. For example, say `maxInstances` is 2 and `ttl` is 1 minute:
 
@@ -72,7 +68,7 @@ Remember that atoms live forever, if no `ttl` is specified. In this case, `maxIn
 
 ## Stores
 
-Every instance of every atom creates a light-weight store. Stores manage state and serve as a message bus for running side effects based on dispatched actions or state changes.
+Every instance of every atom creates a light-weight [Zedux store](../api/classes/Store). Stores manage state and serve as a message bus for running side effects based on dispatched actions or state changes.
 
 Atoms create most stores for you. But you can easily create them manually:
 
@@ -236,10 +232,6 @@ Exports are constant! This means exported variables should be stable references.
 
 ### Suspense
 
-:::note
-🚧 Suspense support is under construction
-:::
-
 Atoms can be used as suspending resources in React. To suspend, we give a stable promise reference to the AtomApi
 
 ```ts
@@ -248,9 +240,9 @@ return api(val).setPromise(suspensePromise)
 
 Now you may be asking how one is to acquire a stable promise reference without kicking off side effects in the evaluator body. Or what if one wants to forward promises from dependency atoms on to React. Or what if one wants more control, more power, more complete and even utter world domination??
 
-😒 We'll cover much more about suspense in [the suspense walkthrough](/not-done).
+😒 We'll cover much more about suspense in [the suspense walkthrough](../walkthrough/suspense).
 
-AtomApis have many more features that we'll cover eventually. Or check out the [AtomApi reference](/not-done) for all the power.
+AtomApis have many more features that we'll cover eventually. Or check out the [AtomApi reference](../classes/AtomApi) for all the power.
 
 ## Specialized Atoms
 

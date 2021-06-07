@@ -33,8 +33,10 @@ export const useGetInstance: {
   <A extends AtomBase<any, any, any>>(atom: A): (
     params: AtomParamsType<A>
   ) => AtomInstanceType<A>
+
   (): {
     <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+
     <A extends AtomBase<any, any, any>>(
       atom: A,
       params: AtomParamsType<A>

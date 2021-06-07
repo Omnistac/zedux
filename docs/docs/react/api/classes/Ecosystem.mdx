@@ -35,6 +35,14 @@ function App() {
 
 ## Properties
 
+All properties are readonly!
+
+### `.context`
+
+An object. May be undefined. A reference to the `context` object passed to [the `ecosystem()` factory](../factories/ecosystem) (if any) or the latest [`.reset()`](#reset) call. This object should be constant until the ecosystem is reset via `.reset()`.
+
+This object is passed to [the `preload` function](../types/EcosystemConfig#preload). If `.reset()` changes the context, the new context will be passed to `preload` as part of the reset.
+
 ### `.ecosystemId`
 
 A string. The id of the ecosystem. Zedux will generate a simple, incrementing id for the ecosystem if one isn't supplied to `ecosystem()`. It is always recommended to set your own id.
@@ -77,6 +85,44 @@ Destroys all atom instances in the ecosystem, cleans up the ecosystem itself (e.
 
 Optional. A boolean. Default: `false`. If true, will destroy the ecosystem even if it's currently being provided over React context (via `<EcosystemProvider>`).
 
+### `.findInstances`
+
+Returns a list of instances that match the given atom.
+
+#### Example
+
+```ts
+const myAtom = atom('my', (param: string) => param)
+
+myEcosystem.getInstance(myAtom, ['a'])
+myEcosystem.getInstance(myAtom, ['b'])
+
+myEcosystem.findInstances(myAtom)
+// [<AtomInstance with params ['a']>, <AtomInstance with params ['b']>]
+myEcosystem.findInstances('my')
+// [<AtomInstance with params ['a']>, <AtomInstance with params ['b']>]
+```
+
+#### Signature
+
+```ts
+.findInstances(atom)
+```
+
+#### Overloads
+
+```ts
+.findInstances(key)
+```
+
+#### `atom`
+
+Required. An atom, all instances of which will be returned.
+
+#### `key`
+
+Required (in this overload). A string. Instances whose [atom's `key`](AtomBase#key) match this string will be returned.
+
 ### `.get`
 
 Returns the current state of an atom instance. Creates the atom instance if it doesn't exist yet. The atom instance to use will be resolved based on the passed atom and params.
@@ -101,7 +147,7 @@ Required. The [atom](Atom) object whose key will be used to find an existing ato
 
 Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
 
-TS users will be required to pass this for atoms that take params.
+TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
 
 #### `instance`
 
@@ -132,7 +178,7 @@ Required. The [atom](Atom) object whose key will be used to find an existing ato
 
 Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
 
-TS users will be required to pass this for atoms that take params.
+TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
 
 #### Example
 
@@ -170,4 +216,26 @@ Optional. A string to filter results by. Only atom instances whose [atom's key](
 
 ### `.reset`
 
-The preferred way to clear an Ecosystem's state. Calling `.reset` will call [`.wipe()`](#wipe) but will also rerun the preload function.
+The preferred way to clear an Ecosystem's state. Calling `.reset` will call [`.wipe()`](#wipe) but will also rerun [the `preload` function](../types/EcosystemConfig#preloadd).
+
+#### Signature
+
+```ts
+.reset(newContext?) => void
+```
+
+#### `newContext`
+
+Optional. An object. The new context to set on this ecosystem. If not passed, the existing context will be reused. This object will be passed to `preload()` as the second parameter.
+
+```ts
+const myEcosystem = ecosystem({
+  context: { someField: 'some val' },
+  id: 'my',
+  preload: (es, context) => console.log('the context:', context)
+})
+// the context: { someField: 'some val' }
+
+myEcosystem.reset({ someField: 'new val' })
+// the context: { someField: 'new val' }
+```

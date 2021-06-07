@@ -1,0 +1,107 @@
+---
+id: LocalAtom
+title: LocalAtom
+---
+
+import { LiveEditor } from '../../../LiveEditor'
+
+Extends [StandardAtomBase](StandardAtomBase).
+
+[Local atoms](../api/classes/LocalAtom) are a type of atom that specializes in React Context.
+
+The first param of all local atoms is an optional string id. You can pass this string yourself to id local atoms manually. This can be useful e.g. when persisting/rehydrating them, or just so you know what's what when debugging. Manually-id'd local atoms can also be reused anywhere by passing the same id, just like any other normal atom.
+
+Local atoms can be injected in other atoms, but they're not really designed for that.
+
+## Creation
+
+Create local atoms with [the `localAtom()` factory](../factories/localAtom).
+
+```ts
+const myLocalAtom = localAtom('myLocal')
+
+const withParams = localAtom('withParams', (id?: string, other?: number) => {
+  const store = injectStore(other)
+
+  return other
+})
+
+// You can make the id param required:
+const withRequiredParams = localAtom(
+  'withRequiredParams',
+  (id: string, other: number) => {
+    const store = injectStore(other)
+
+    return store
+  }
+)
+```
+
+If you don't pass an id, Zedux will auto-generate one every time you use the local atom in any hook or injector.
+
+```ts
+injectAtomValue(myLocalAtom) // creates a new instance
+injectAtomInstance(myLocalAtom) // creates another new instance
+
+useAtomInstance(myLocalAtom) // creates another new instance
+useAtomState(myLocalAtom) // creates another new instance
+useAtomState(myLocalAtom, []) // creates another new instance
+
+useAtomInstance(myLocalAtom, ['manual-id']) // creates another new instance
+useAtomInstance(myLocalAtom, ['manual-id']) // reuses the 'manual-id' instance
+```
+
+Local atoms also always set [`ttl`](../api/StandardAtomBase#ttl) to `0`, which will clean up atom instances immediately when all components using the atom instance unmount.
+
+## Example
+
+Local atoms are useful when you just want to provide different atom instances to different component trees.
+
+<LiveEditor
+  extraScope="const PopupStyle = { background: 'rgba(255, 255, 255, 0.4)', boxShadow: '2px 2px 5px 1px rgba(0, 0, 0, 0.2)', padding: '12px', position: 'absolute', top: '8px', right: '20px' }"
+  resultVar="Popups"
+>{`
+const popupAtom = localAtom('popup', () => ({ isOpen: false }))\n
+function Popup() {
+  const [{ isOpen }, setVal] = useAtomState(useAtomConsumer(popupAtom, []))
+  const toggle = () => setVal(val => ({ ...val, isOpen: !val.isOpen }))\n
+  return (
+    <div>
+      <button onClick={toggle}>
+        {isOpen ? 'Close' : 'Open'}
+      </button>
+      {isOpen && (
+        <div style={PopupStyle} onClick={toggle}>
+          I Am Open!!
+        </div>
+      )}
+    </div>
+  )
+}\n
+function Popups() {
+  const instanceA = useAtomInstance(popupAtom)
+  const instanceB = useAtomInstance(popupAtom)\n
+  return (
+    <>
+      <AtomInstanceProvider instance={instanceA}>
+        <Popup />
+      </AtomInstanceProvider>
+      <AtomInstanceProvider instance={instanceB}>
+        <Popup />
+      </AtomInstanceProvider>
+    </>
+  )
+}
+`}</LiveEditor>
+
+## Methods
+
+Local atoms expose only one method apart from those inherited from [`StandardAtomBase`](StandardAtomBase):
+
+### `.override`
+
+Creates an exact clone of this local atom, but with a different value.
+
+```ts
+.override(newValue) => Atom
+```

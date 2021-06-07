@@ -37,7 +37,7 @@ The first state passed to `createMachine` is the initial state of the machine.
 
 ## Using Actors
 
-Actors can be used directly, instead of using string constants
+Actors can be used directly, instead of strings. And strings can be used instead of passing state objects to `state.on()`.
 
 ```ts
 import { createActor, createState, createMachine } from '@zedux/react'
@@ -46,11 +46,9 @@ const resolve = createActor('resolve')
 const reject = createActor('reject')
 
 const pending = createState('pending')
-const resolved = createState('resolved')
-const rejected = createState('rejected')
 
 const promiseMachine = createMachine(
-  pending.on(resolve, resolved).on(reject, rejected)
+  pending.on(resolve, 'resolved').on(reject, 'rejected')
 )
 ```
 
@@ -151,7 +149,20 @@ function Machine() {
 
 Since state machines are just reducers, they can be used directly in `useReducer()`
 
-<LiveEditor resultVar="Theme">{`
+export const buttonStyle = { appearance: 'none', border: '1px solid #ccc', cursor: 'pointer', fontSize: '20px', padding: '12px' }
+
+export const getStyle = theme => {
+  switch (theme) {
+    case 'light':
+      return { ...buttonStyle, background: '#f7f7f7' }
+    case 'dark':
+      return { ...buttonStyle, background: '#333542', color: '#fff' }
+    case 'classic':
+      return { ...buttonStyle, background: '#fed', borderRadius: '20px', fontStyle: 'italic' }
+  }
+}
+
+<LiveEditor extraScope={{ getStyle }} resultVar="Theme">{`
 const cycle = createActor('cycle')
 const [light, dark, classic] = states('light', 'dark', 'classic')\n
 const machine = createMachine(
@@ -163,30 +174,13 @@ const themeAtom = atom('theme', () => {
   const store = injectStore(() => createStore(machine))\n
   return store
 })\n
-const getStyle = (theme: string) => {
-  switch (theme) {
-    case light.type:
-      return { background: '#f7f7f7' }
-    case dark.type:
-      return { background: '#333542', color: '#fff' }
-    case classic.type:
-      return { background: '#fed', borderRadius: '20px', fontStyle: 'italic' }
-  }
-}\n
-const buttonStyle = {
-  appearance: 'none',
-  border: '1px solid #ccc',
-  cursor: 'pointer',
-  fontSize: '20px',
-  padding: '12px',
-}\n
 function Theme() {
   const theme = useAtomValue(themeAtom)
   const { dispatch } = useAtomInstance(themeAtom)\n
   return (
     <button
       onClick={() => dispatch(cycle())}
-      style={{ ...buttonStyle, ...getStyle(theme) }}
+      style={getStyle(theme)}
     >Cycle Theme</button>
   )
 }
@@ -200,3 +194,7 @@ function Theme() {
 - A machine reducer can be used in stores or in `useReducer`.
 - `when(store).machine().enters(...)` registers an onEnter hook.
 - `when(store).machine().leaves(...)` registers an onLeave hook.
+
+## Next Steps
+
+We have a solid grip on atoms and stores at this point. It's time to look at some more advanced React usage. We'll start with [React context patterns](context).

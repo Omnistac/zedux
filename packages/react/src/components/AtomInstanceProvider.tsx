@@ -5,6 +5,12 @@ export const AtomInstanceProvider: FC<
   | { instance: AtomInstance<any, any, any>; instances?: undefined }
   | { instance?: undefined; instances: AtomInstance<any, any, any>[] }
 > = ({ children, instance, instances }) => {
+  if (!instance && !instances) {
+    throw new Error(
+      'Zedux - AtomInstanceProvider requires either an `instance` or `instances` prop'
+    )
+  }
+
   const allInstances =
     instances || ([instance] as AtomInstance<any, any, any>[])
 

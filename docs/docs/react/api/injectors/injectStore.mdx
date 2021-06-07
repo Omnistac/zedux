@@ -29,7 +29,7 @@ const secondsAtom = atom('seconds', () => {
 })\n
 function Seconds() {
   const state = useAtomValue(secondsAtom)\n
-  return <div>{state}</div>
+  return <div>Seconds: {state}</div>
 }
 `}</LiveEditor>
 

@@ -1,7 +1,9 @@
 import React, { FC, useEffect, useMemo, useRef } from 'react'
 import { Ecosystem, ecosystemContext } from '../classes'
 import { ecosystem } from '../factories/ecosystem'
+import { useStableReference } from '../hooks/useStableReference'
 import { addEcosystem, globalStore } from '../store'
+import { EcosystemConfig } from '../types'
 
 /**
  * EcosystemProvider
@@ -9,13 +11,25 @@ import { addEcosystem, globalStore } from '../store'
  * Creates an atom ecosystem. The behavior of atoms inside this EcosystemProvider can
  * be configured with props passed here.
  */
-export const EcosystemProvider: FC<{ ecosystem?: Ecosystem }> = ({
+export const EcosystemProvider: FC<
+  | (Partial<{ [k in keyof EcosystemConfig]: undefined }> & {
+      ecosystem?: Ecosystem
+    })
+  | (Partial<EcosystemConfig> & { ecosystem?: undefined })
+> = ({
   children,
+  context,
+  destroyOnUnmount = true,
   ecosystem: passedEcosystem,
+  flags,
+  id,
+  overrides,
+  preload,
 }) => {
-  const theEcosystem = useMemo(() => {
+  const es = useMemo(() => {
     const resolvedEcosystem =
-      passedEcosystem || ecosystem({ destroyOnUnmount: true })
+      passedEcosystem ||
+      ecosystem({ context, destroyOnUnmount, flags, id, overrides, preload })
 
     // If this ecosystem is shared across windows, it may still need to be added
     // to this window's instance of Zedux' globalStore
@@ -24,18 +38,25 @@ export const EcosystemProvider: FC<{ ecosystem?: Ecosystem }> = ({
     }
 
     return resolvedEcosystem
-  }, [passedEcosystem])
+  }, [id, passedEcosystem]) // don't pass other vals; just get snapshot when these change
 
   const isFirstRenderRef = useRef(true)
+  const stableOverrides = useStableReference(overrides)
 
   useEffect(() => {
-    theEcosystem._refCount += 1
+    if (isFirstRenderRef.current || !stableOverrides) return
+
+    es.setOverrides(stableOverrides)
+  }, [stableOverrides]) // don't pass ecosystem; just get snapshot when this changes
+
+  useEffect(() => {
+    es._refCount += 1
 
     return () => {
-      theEcosystem._refCount -= 1
-      if (!theEcosystem._destroyOnUnmount) return
+      es._refCount -= 1
+      if (!es._destroyOnUnmount) return
 
-      theEcosystem.destroy()
+      es.destroy()
     }
   }, [])
 
@@ -45,7 +66,7 @@ export const EcosystemProvider: FC<{ ecosystem?: Ecosystem }> = ({
   }, [])
 
   return (
-    <ecosystemContext.Provider value={theEcosystem.ecosystemId}>
+    <ecosystemContext.Provider value={es.ecosystemId}>
       {children}
     </ecosystemContext.Provider>
   )

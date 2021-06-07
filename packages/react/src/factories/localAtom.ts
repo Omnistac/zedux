@@ -1,21 +1,21 @@
 import { LocalAtom } from '../classes/atoms/LocalAtom'
-import { AtomValueOrFactory, LocalAtomConfig, LocalParams } from '../types'
+import { AtomConfig, AtomValueOrFactory, LocalParams } from '../types'
 
 export const localAtom: {
   <State, Params extends any[], Exports extends Record<string, any>>(
     key: string,
     value: AtomValueOrFactory<State, LocalParams<Params>, Exports>,
-    config?: LocalAtomConfig
+    config?: AtomConfig
   ): LocalAtom<State, LocalParams<Params>, Exports>
   <State, Params extends any[], Exports extends Record<string, any>>(
     key: string,
     value: AtomValueOrFactory<State, [id: string, ...params: Params], Exports>,
-    config?: LocalAtomConfig
+    config?: AtomConfig
   ): LocalAtom<State, [id: string, ...params: Params], Exports>
 } = <State, Params extends any[], Exports extends Record<string, any>>(
   key: string,
   value: AtomValueOrFactory<State, LocalParams<Params>, Exports>,
-  config?: LocalAtomConfig
+  config?: AtomConfig
 ) => {
   if (!key) {
     throw new TypeError('Zedux - All atoms must have a key')

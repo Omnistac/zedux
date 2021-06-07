@@ -31,9 +31,15 @@ export const hashParams = (params: any): string =>
       }, {} as Record<string, any>)
   })
 
-export const haveDepsChanged = (prevDeps?: any[], nextDeps?: any[]) => {
+export const haveDepsChanged = (
+  prevDeps?: any[],
+  nextDeps?: any[],
+  trueIfNeither = true
+) => {
   if (!prevDeps || !nextDeps) {
-    return true
+    if (trueIfNeither) return true
+
+    return prevDeps && nextDeps
   }
 
   return (

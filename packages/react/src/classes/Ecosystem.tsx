@@ -15,27 +15,30 @@ import { Scheduler } from './Scheduler'
 
 export const ecosystemContext = createContext('global')
 
-export class Ecosystem {
-  public _graph = new Graph(this)
+export class Ecosystem<Context extends Record<string, any> | undefined = any> {
+  public _graph: Graph = new Graph(this)
   public _instances: Record<
     string,
     AtomInstanceBase<any, any[], AtomBase<any, any[], any>>
   > = {}
   public _destroyOnUnmount = false
-  public _preload?: (ecosystem: this) => void
+  public _preload?: (ecosystem: this, context: Context) => void
   public _refCount = 0
-  public _scheduler = new Scheduler(this)
+  public _scheduler: Scheduler = new Scheduler(this)
+  public context?: Context
   public ecosystemId: string
   public flags?: string[] = []
   public overrides: Record<string, AtomBase<any, any[], any>> = {}
+  private isInitialized = false
 
   constructor({
+    context,
     destroyOnUnmount,
     flags,
     id,
     overrides,
     preload,
-  }: EcosystemConfig) {
+  }: EcosystemConfig<Context>) {
     if (flags && !Array.isArray(flags)) {
       throw new TypeError(
         "Zedux Error - The Ecosystem's `flags` property must be an array of strings"
@@ -50,31 +53,29 @@ export class Ecosystem {
     this.ecosystemId = id || generateAppId()
 
     if (overrides) {
-      this.overrides = overrides.reduce(
-        (map, atom) => ({
-          ...map,
-          [atom.key]: atom,
-        }),
-        {}
-      )
+      this.setOverrides(overrides)
     }
 
     if (flags) {
       this.flags = flags
     }
 
+    this.context = context
     this._destroyOnUnmount = !!destroyOnUnmount
     this._preload = preload
 
-    // yep. Dispatch this here. We'll make sure no component can ever be updated sychronously from this call (causing state-update-during-render react warnings)
+    // yep. Dispatch this here. We'll make sure no component can ever be updated
+    // sychronously from this call (causing update-during-render react warnings)
     globalStore.dispatch(addEcosystem(this))
 
-    preload?.(this)
+    this.isInitialized = true
+    preload?.(this, context as Context)
   }
 
   // Should only be used internally
   public _destroyAtomInstance(keyHash: string) {
-    // try to destroy instance (if not destroyed - this fn is called as part of that destruction process too)
+    // try to destroy instance (if not destroyed - this fn is called as part of
+    // that destruction process too)
     this._graph.removeNode(keyHash)
 
     delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
@@ -93,6 +94,14 @@ export class Ecosystem {
       removeEcosystem({
         ecosystemId: this.ecosystemId,
       })
+    )
+  }
+
+  public findInstances(atom: AtomBase<any, any, any> | string) {
+    const key = typeof atom === 'string' ? atom : atom.key
+
+    return Object.values(this._instances).filter(
+      instance => instance.atom.key === key
     )
   }
 
@@ -136,7 +145,8 @@ export class Ecosystem {
     atom: A,
     params?: AtomParamsType<A>
   ) {
-    const keyHash = atom.getKeyHash(params as AtomParamsType<A>)
+    const defaultedParams = (params || []) as AtomParamsType<A>
+    const keyHash = atom.getKeyHash(defaultedParams)
 
     // try to find an existing instance
     const existingInstance = this._instances[keyHash]
@@ -149,7 +159,7 @@ export class Ecosystem {
     const newInstance = resolvedAtom.createInstance(
       this,
       keyHash,
-      params || (([] as unknown) as AtomParamsType<A>)
+      defaultedParams
     )
     this._instances[keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
 
@@ -177,9 +187,44 @@ export class Ecosystem {
     return hash
   }
 
-  public reset() {
+  public reset(newContext?: Context) {
     this.wipe()
-    this._preload?.(this)
+
+    if (newContext) this.context = newContext
+
+    this._preload?.(this, newContext || (this.context as Context))
+  }
+
+  public setOverrides(newOverrides: AtomBase<any, any, any>[]) {
+    const oldOverrides = this.overrides
+
+    this.overrides = newOverrides.reduce(
+      (map, atom) => ({
+        ...map,
+        [atom.key]: atom,
+      }),
+      {}
+    )
+
+    if (!this.isInitialized) return
+
+    newOverrides.forEach(atom => {
+      const instances = this.findInstances(atom)
+
+      instances.forEach(instance => {
+        instance._destroy()
+      })
+    })
+
+    if (!oldOverrides) return
+
+    Object.values(oldOverrides).forEach(atom => {
+      const instances = this.findInstances(atom)
+
+      instances.forEach(instance => {
+        instance._destroy(true)
+      })
+    })
   }
 
   public wipe() {
@@ -190,6 +235,7 @@ export class Ecosystem {
     })
 
     this._scheduler.wipe()
+    this._scheduler.flush()
   }
 
   private resolveAtom<AtomType extends AtomBase<any, any[], any>>(
@@ -198,7 +244,7 @@ export class Ecosystem {
     const override = this.overrides?.[atom.key]
     const maybeOverriddenAtom = (override || atom) as AtomType
 
-    // to turn off flag checking, just don't pass the `flags` prop to `<EcosystemProvider />`
+    // to turn off flag checking, just don't pass a `flags` prop
     if (this.flags) {
       const badFlag = maybeOverriddenAtom.flags?.find(
         flag => !this.flags?.includes(flag)

@@ -44,13 +44,13 @@ export const injectAtomInstance: {
   ): AtomInstanceType<A>
 
   <AI extends AtomInstanceBase<any, any, any>>(
-    instance: AI | AtomBase<any, any, any>,
+    instance: AI,
     params?: [],
     operation?: string,
     shouldRegisterDependency?: boolean
   ): AI
 } = <A extends AtomBase<any, any, any>>(
-  atom: A | AtomInstanceBase<any, any, any>,
+  atom: A,
   params?: AtomParamsType<A>,
   operation = 'injectAtomInstance',
   shouldRegisterDependency = true
@@ -84,7 +84,8 @@ export const injectAtomInstance: {
 
       const paramsHaveChanged = haveDepsChanged(
         prevDescriptor.instance.params,
-        params
+        params,
+        false
       )
 
       if (
@@ -92,6 +93,11 @@ export const injectAtomInstance: {
         !paramsHaveChanged &&
         shouldRegisterDependency === prevDescriptor.shouldRegisterDependency
       ) {
+        // make sure the dependency gets registered for this evaluation
+        if (shouldRegisterDependency) {
+          getInstance(atom, params as AtomParamsType<A>)
+        }
+
         return prevDescriptor
       }
 

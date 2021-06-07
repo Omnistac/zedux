@@ -20,6 +20,8 @@ const useAtomInstanceSelector = <
   selectorRef.current = selector
 
   useEffect(() => {
+    let lastResult: D
+
     const unregister = instance.ecosystem._graph.registerExternalDependent(
       instance,
       (signal, val: AtomInstanceStateType<AI>) => {
@@ -28,7 +30,10 @@ const useAtomInstanceSelector = <
           return
         }
 
-        setState(selectorRef.current(val))
+        const newResult = selectorRef.current(val)
+        if (newResult === lastResult) return
+
+        setState((lastResult = newResult))
       },
       'useAtomInstanceSelector',
       false
@@ -53,17 +58,11 @@ export const useAtomSelector: {
   ): D
 
   <AI extends AtomInstanceBase<any, any, any>, D = any>(
-    instance: AI | AtomBase<any, any, any>,
-    selector: Selector<AtomInstanceStateType<AI>, D>
-  ): D
-
-  <AI extends AtomInstanceBase<any, any, any>, D = any>(
-    instance: AI | AtomBase<any, any, any>,
-    params: [],
+    instance: AI,
     selector: Selector<AtomInstanceStateType<AI>, D>
   ): D
 } = <A extends AtomBase<any, any, any>, D = any>(
-  atom: A | AtomInstanceBase<any, any, any>,
+  atom: A,
   paramsArg?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
   selectorArg?: Selector<AtomStateType<A>, D>
 ): D => {

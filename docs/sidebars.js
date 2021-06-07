@@ -18,8 +18,8 @@ module.exports = {
     ],
   },
   react: {
-    About: ['react/about/introduction', 'react/about/overview'],
-    Walkthrough: [
+    '💡 About': ['react/about/introduction', 'react/about/overview'],
+    '🚶 Walkthrough': [
       'react/walkthrough/quick-start',
       'react/walkthrough/creating-atoms',
       'react/walkthrough/using-atoms',
@@ -28,11 +28,13 @@ module.exports = {
       'react/walkthrough/stores',
       'react/walkthrough/side-effects',
       'react/walkthrough/state-machines',
+      'react/walkthrough/context',
+      'react/walkthrough/suspense',
     ],
-    API: [
+    '📖 API': [
       {
         type: 'category',
-        label: 'Classes',
+        label: '📚 Classes',
         items: [
           'react/api/classes/Atom',
           'react/api/classes/AtomApi',
@@ -41,13 +43,14 @@ module.exports = {
           'react/api/classes/AtomInstanceBase',
           'react/api/classes/Ecosystem',
           'react/api/classes/Ion',
+          'react/api/classes/LocalAtom',
           'react/api/classes/StandardAtomBase',
           'react/api/classes/Store',
         ],
       },
       {
         type: 'category',
-        label: 'Components',
+        label: '🧩 Components',
         items: [
           'react/api/components/EcosystemProvider',
           'react/api/components/AtomInstanceProvider',
@@ -55,7 +58,7 @@ module.exports = {
       },
       {
         type: 'category',
-        label: 'Constants',
+        label: '⭐ Constants',
         items: [
           'react/api/constants/metaTypes',
           'react/api/constants/zeduxGlobalStore',
@@ -63,7 +66,7 @@ module.exports = {
       },
       {
         type: 'category',
-        label: 'Factories',
+        label: '🏭 Factories',
         items: [
           'react/api/factories/api',
           'react/api/factories/atom',
@@ -71,15 +74,36 @@ module.exports = {
           'react/api/factories/createStore',
           'react/api/factories/ecosystem',
           'react/api/factories/ion',
+          'react/api/factories/localAtom',
         ],
       },
       {
         type: 'category',
-        label: 'Injectors',
+        label: '⚓ Hooks',
         items: [
+          'react/api/hooks/useAtomConsumer',
+          'react/api/hooks/useAtomInstance',
+          'react/api/hooks/useAtomSelector',
+          'react/api/hooks/useAtomState',
+          'react/api/hooks/useAtomValue',
+          'react/api/hooks/useEcosystem',
+          'react/api/hooks/useGetInstance',
+        ],
+      },
+      {
+        type: 'category',
+        label: '⚔️ Injectors',
+        items: [
+          'react/api/injectors/injectAtomInstance',
+          'react/api/injectors/injectAtomSelector',
+          'react/api/injectors/injectAtomState',
+          'react/api/injectors/injectAtomValue',
           'react/api/injectors/injectCallback',
           'react/api/injectors/injectEcosystem',
           'react/api/injectors/injectEffect',
+          'react/api/injectors/injectGet',
+          'react/api/injectors/injectGetInstance',
+          'react/api/injectors/injectInvalidate',
           'react/api/injectors/injectMemo',
           'react/api/injectors/injectRef',
           'react/api/injectors/injectStore',
@@ -88,7 +112,7 @@ module.exports = {
       },
       {
         type: 'category',
-        label: 'Types',
+        label: '⌨️ Types',
         items: [
           'react/api/types/Action',
           'react/api/types/ActionChain',
@@ -105,6 +129,7 @@ module.exports = {
           'react/api/types/Settable',
         ],
       },
+      'react/api/glossary',
     ],
   },
 }

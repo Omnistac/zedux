@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AtomInstanceBase } from '../classes'
 import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomInstanceType, AtomParamsType, AtomStateType } from '../types'
@@ -28,14 +28,13 @@ import { useStableReference } from './useStableReference'
  */
 export const useAtomInstanceDynamic: {
   <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+
   <A extends AtomBase<any, any, any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A>
-  <AI extends AtomInstanceBase<any, any, any>>(
-    instance: AI | AtomBase<any, any, any>,
-    params?: []
-  ): AI
+
+  <AI extends AtomInstanceBase<any, any, any>>(instance: AI): AI
 } = <A extends AtomBase<any, any, any>>(
   atom: A | AtomInstanceBase<any, any, any>,
   params?: AtomParamsType<A>
@@ -44,8 +43,14 @@ export const useAtomInstanceDynamic: {
   const [force, forceRender] = useState<any>()
   const ecosystem = useEcosystem()
   const stableParams = useStableReference(params)
+  const cleanupRef = useRef<() => void>()
 
-  const [atomInstance, unregister] = useMemo(() => {
+  const atomInstance = useMemo(() => {
+    if (cleanupRef.current) {
+      cleanupRef.current()
+      cleanupRef.current = undefined
+    }
+
     const instance = (atom instanceof AtomInstanceBase
       ? atom
       : ecosystem.getInstance(
@@ -57,7 +62,7 @@ export const useAtomInstanceDynamic: {
       throw instance.promise
     }
 
-    const unregister = ecosystem._graph.registerExternalDependent(
+    cleanupRef.current = ecosystem._graph.registerExternalDependent(
       instance,
       (signal, val: AtomStateType<A>) => {
         if (signal === GraphEdgeSignal.Destroyed) {
@@ -71,10 +76,10 @@ export const useAtomInstanceDynamic: {
       false
     )
 
-    return [instance, unregister] as const
+    return instance
   }, [atom, ecosystem, force, stableParams])
 
-  useLayoutEffect(() => unregister, [unregister])
+  useLayoutEffect(() => () => cleanupRef.current?.(), [])
 
   return atomInstance
 }

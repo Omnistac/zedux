@@ -1,9 +1,5 @@
 import { localAtom } from '@zedux/react/factories'
-import {
-  AtomValueOrFactory,
-  LocalAtomConfig,
-  LocalParams,
-} from '@zedux/react/types'
+import { AtomValueOrFactory, AtomConfig, LocalParams } from '@zedux/react/types'
 import { generateLocalId } from '@zedux/react/utils'
 import { StandardAtomBase } from './StandardAtomBase'
 
@@ -15,9 +11,9 @@ export class LocalAtom<
   constructor(
     key: string,
     value: AtomValueOrFactory<State, LocalParams<Params>, Exports>,
-    config?: LocalAtomConfig
+    config?: AtomConfig
   ) {
-    super(key, value, { ...config, ttl: 0 })
+    super(key, value, { ttl: 0, ...config })
   }
 
   public getKeyHash(params: LocalParams<Params>) {

@@ -14,15 +14,12 @@ export const useAtomState: {
     (settable: Settable<AtomStateType<A>>) => AtomStateType<A>
   ]
 
-  <AI extends AtomInstanceBase<any, any, any>>(
-    instance: AI | AtomBase<any, any, any>,
-    params?: []
-  ): [
+  <AI extends AtomInstanceBase<any, any, any>>(instance: AI): [
     AtomInstanceStateType<AI>,
     (settable: Settable<AtomInstanceStateType<AI>>) => AtomInstanceStateType<AI>
   ]
 } = <A extends AtomBase<any, any, any>>(
-  atom: A | AtomInstanceBase<any, any, any>,
+  atom: A,
   params?: AtomParamsType<A>
 ): [
   AtomStateType<A>,
