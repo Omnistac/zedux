@@ -13,7 +13,7 @@ interface EcosystemConfig<Context extends Record<string, any> = any> {
   destroyOnUnmount?: boolean
   flags?: string[]
   id?: string
-  overrides?: AtomBase<any, any[], any>[]
+  overrides?: Atom[]
   preload?: (ecosystem: Ecosystem, context: Context) => void
 }
 ```

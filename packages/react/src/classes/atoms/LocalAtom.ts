@@ -1,36 +1,34 @@
-import { localAtom } from '@zedux/react/factories'
-import { AtomValueOrFactory, AtomConfig, LocalParams } from '@zedux/react/types'
+import { localAtom } from '@zedux/react/factories/localAtom'
+import { AtomValueOrFactory, AtomConfig } from '@zedux/react/types'
 import { generateLocalId } from '@zedux/react/utils'
-import { StandardAtomBase } from './StandardAtomBase'
+import { Atom } from './Atom'
 
 export class LocalAtom<
   State,
-  Params extends any[],
+  Params extends [id?: string | undefined, ...rest: any[]],
   Exports extends Record<string, any>
-> extends StandardAtomBase<State, LocalParams<Params>, Exports> {
+> extends Atom<State, Params, Exports> {
   constructor(
     key: string,
-    value: AtomValueOrFactory<State, LocalParams<Params>, Exports>,
+    value: AtomValueOrFactory<State, Params, Exports>,
     config?: AtomConfig
   ) {
     super(key, value, { ttl: 0, ...config })
   }
 
-  public getKeyHash(params: LocalParams<Params>) {
+  public getKeyHash(params: Params) {
     // If a string is passed as the first param, it's the id of the local atom.
     // An existing hash can be recreated.
     if (typeof params[0] === 'string') return super.getKeyHash(params)
 
     // Otherwise, every time a local atom is got, we create a new hash.
-    return super.getKeyHash([generateLocalId(), ...params.slice(1)] as [
-      string,
-      ...Params
-    ])
+    return super.getKeyHash(([
+      generateLocalId(),
+      ...params.slice(1),
+    ] as unknown) as Params)
   }
 
-  public override(
-    newValue: AtomValueOrFactory<State, LocalParams<Params>, Exports>
-  ) {
+  public override(newValue: AtomValueOrFactory<State, Params, Exports>) {
     return localAtom(this.key, newValue, {
       flags: this.flags,
     })

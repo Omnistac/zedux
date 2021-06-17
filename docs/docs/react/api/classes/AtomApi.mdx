@@ -34,14 +34,17 @@ AtomApis can be passed to `atom()` as the value. They can also be returned from 
 import { api, atom, injectStore } from '@zedux/react'
 
 const myAtom = atom('my', api('initial state'))
+
 const withEvaluator = atom('withEvaluator', () => {
   return api('initial state')
 })
+
 const withStore = atom('withStore', () => {
   const store = injectStore('initial state')
 
   return api(store)
 })
+
 const withExports = atom('withExports', () => {
   const store = injectStore('initial state')
 
@@ -49,6 +52,7 @@ const withExports = atom('withExports', () => {
     someProp: 'some val'
   })
 })
+
 const composingApis = atom('composingApis', () => {
   const injectedApi = injectSomethingThatReturnsAnApi()
 
@@ -83,10 +87,6 @@ An array of the [setState interceptors](../types/SetStateInterceptor) added to t
 These interceptors function like middleware. They will be called every time [`instance.setState()`](AtomInstance#setstate) is called and can cancel the state setting.
 
 ### `.ttl`
-
-:::note
-🚧 Per-instance ttl is under construction. You can set this property, but it will be ignored for now.
-:::
 
 An [AtomInstanceTtl](../types/AtomInstanceTtl) or a function that returns an AtomInstanceTtl. If a function, it will be called when Zedux schedules this atom instance's destruction. Will override any ecosystem- or atom-level ttl for this atom instance.
 
@@ -178,10 +178,6 @@ This promise should be a stable reference. If you create a new promise on a subs
 
 ### `.setTtl`
 
-:::note
-🚧 Per-instance ttl is under construction. You can call this method, but it will be ignored for now.
-:::
-
 Accepts an [AtomInstanceTtl](../types/AtomInstanceTtl) or a function that returns an AtomInstanceTtl. If a function, it will be called when Zedux schedules this atom instance's destruction.
 
-Sets the [`.ttl`](#ttl) property of this AtomApi.
+Sets the [`.ttl`](#ttl) property of this AtomApi. Overrides any `ttl` set on this [atom](Atom#ttl) or any default ttl on this [ecosystem](Ecosystem#defaultttl).

@@ -1,6 +1,7 @@
 import { actionTypes, metaTypes } from '../api/constants'
+import { Store } from '../api/createStore'
 import { addMeta } from '../api/meta'
-import { Action, Branch, HierarchyDescriptor, Reducer, Store } from '../types'
+import { Action, Branch, HierarchyDescriptor, Reducer } from '../types'
 import { assertIsNullHierarchyDescriptorNode } from '../utils/errors'
 import { HierarchyType, isPlainObject, isZeduxStore } from '../utils/general'
 import { DiffNode, DiffTree, RegisterSubStore } from '../utils/types'

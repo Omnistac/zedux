@@ -19,10 +19,14 @@ interface AtomConfig {
 
 Optional. An array of strings. These flags correlate to the [Ecosystem's `flags` property](../classes/Ecosystem#flags). See that page for an example.
 
+### `forwardPromises`
+
+Optional. A boolean. Whether instances of this atom should create a default [`.promise` property](../classes/AtomInstance#promise) that is a `Promise.all()` of the atom instance's initial dependencies' promises. See [Atom#forwardPromises](../classes/Atom#forwardpromises).
+
 ### `maxInstances`
 
-Optional. A number. Indicates the largest ideal cache size for this atom. See [AtomBase](../classes/AtomBase#maxinstances) for more info.
+Optional. A number. Indicates the largest ideal cache size for this atom. See [Atom#maxInstances](../classes/Atom#maxinstances).
 
 ### `ttl`
 
-Optional. A number. If set to 0, atom instances will be destroyed immediately upon going stale. If set to -1, atom instances will live forever, unless destroyed manually. If set to any positive integer, Zedux will wait `<ttl>` milliseconds before cleaning up the atom instance. If the atom instance is used during that time, cleanup is cancelled.
+Optional. A number. How long instances of the atom should stick around when stale. See [Atom#ttl](../classes/Atom#ttl).

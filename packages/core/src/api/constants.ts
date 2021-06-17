@@ -6,12 +6,9 @@ export const actionTypes = {
   RECALCULATE: `${PREFIX}recalculate`,
 }
 
-export const effectTypes = {
-  SUBSCRIBER_ADDED: `${PREFIX}subscriberAdded`,
-  SUBSCRIBER_REMOVED: `${PREFIX}subscriberRemoved`,
-}
-
 export const metaTypes = {
   DELEGATE: `${PREFIX}delegate`,
   INHERIT: `${PREFIX}inherit`,
+  // for use with atoms in the @zedux/react package:
+  SKIP_EVALUATION: `${PREFIX}skipEvaluation`,
 }

@@ -47,6 +47,6 @@ describe('isZeduxStore()', () => {
     const store = createStore()
 
     expect(isZeduxStore(store)).toBe(true)
-    expect(isZeduxStore(null)).toBe(null)
+    expect(isZeduxStore(null)).toBe(false)
   })
 })

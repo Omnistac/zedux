@@ -1,18 +1,18 @@
 import { createStore } from '@zedux/core/index'
-import { nonFunctions, nonPlainObjects } from '../utils'
 
 describe('Zedux.createStore()', () => {
   test('returns a store', () => {
     const store = createStore()
 
-    expect(store).toEqual({
-      dispatch: expect.any(Function),
-      getState: expect.any(Function),
-      setState: expect.any(Function),
-      subscribe: expect.any(Function),
-      use: expect.any(Function),
-      $$typeof: Symbol.for('zedux.store'),
-    })
+    expect(store).toEqual(
+      expect.objectContaining({
+        dispatch: expect.any(Function),
+        getState: expect.any(Function),
+        setState: expect.any(Function),
+        subscribe: expect.any(Function),
+        use: expect.any(Function),
+      })
+    )
   })
 
   test('accepts an optional initial hierarchy descriptor', () => {
@@ -38,20 +38,4 @@ describe('Zedux.createStore()', () => {
   })
 })
 
-describe('passing hierarchyConfig to createStore()', () => {
-  test('throws a TypeError if the options hash is not a plain object', () => {
-    nonPlainObjects
-      .filter(Boolean)
-      .forEach(nonPlainObject =>
-        expect(() => createStore(null, undefined, nonPlainObject)).toThrow(
-          TypeError
-        )
-      )
-  })
-
-  test('returns the store for chaining', () => {
-    const store = createStore(null, null, {} as any)
-
-    expect(store.$$typeof).toBe(Symbol.for('zedux.store'))
-  })
-})
+// TODO: Test custom store classes that override hierarchyConfig

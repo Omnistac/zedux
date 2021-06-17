@@ -3,7 +3,6 @@ import {
   metaTypes,
   Action,
   ActionChain,
-  effectTypes,
   actionTypes,
 } from '@zedux/core'
 import { createMockReducer } from '@zedux/core-test/utils'
@@ -17,12 +16,15 @@ describe('registrations', () => {
         .split(' ')
         .map(() => jest.fn())
 
-      subscribers.forEach(store.subscribe)
+      subscribers.forEach(subscriber => store.subscribe(subscriber))
 
       store.setState(() => 'a')
 
       subscribers.forEach(subscriber =>
-        expect(subscriber).toHaveBeenCalledWith('a', undefined)
+        expect(subscriber).toHaveBeenCalledWith('a', undefined, {
+          payload: 'a',
+          type: actionTypes.HYDRATE,
+        })
       )
     })
 
@@ -34,7 +36,10 @@ describe('registrations', () => {
 
       store.setState('a')
 
-      expect(observer.next).toHaveBeenCalledWith('a', undefined)
+      expect(observer.next).toHaveBeenCalledWith('a', undefined, {
+        payload: 'a',
+        type: actionTypes.HYDRATE,
+      })
       expect(observer.next).toHaveBeenCalledTimes(1)
     })
 
@@ -57,8 +62,14 @@ describe('registrations', () => {
       store.setState(() => 'a')
 
       expect(subscriber1).not.toHaveBeenCalled()
-      expect(subscriber2).toHaveBeenCalledWith('a', undefined)
-      expect(subscriber3).toHaveBeenCalledWith('a', undefined)
+      expect(subscriber2).toHaveBeenCalledWith('a', undefined, {
+        payload: 'a',
+        type: actionTypes.HYDRATE,
+      })
+      expect(subscriber3).toHaveBeenCalledWith('a', undefined, {
+        payload: 'a',
+        type: actionTypes.HYDRATE,
+      })
 
       subscription2.unsubscribe()
 
@@ -66,9 +77,18 @@ describe('registrations', () => {
 
       store.setState(() => 'b')
 
-      expect(subscriber1).toHaveBeenCalledWith('b', 'a')
-      expect(subscriber2).toHaveBeenLastCalledWith('a', undefined)
-      expect(subscriber3).toHaveBeenLastCalledWith('b', 'a')
+      expect(subscriber1).toHaveBeenCalledWith('b', 'a', {
+        payload: 'b',
+        type: actionTypes.HYDRATE,
+      })
+      expect(subscriber2).toHaveBeenLastCalledWith('a', undefined, {
+        payload: 'a',
+        type: actionTypes.HYDRATE,
+      })
+      expect(subscriber3).toHaveBeenLastCalledWith('b', 'a', {
+        payload: 'b',
+        type: actionTypes.HYDRATE,
+      })
 
       subscription3.unsubscribe()
 
@@ -80,21 +100,48 @@ describe('registrations', () => {
 
       store.setState(() => 'c')
 
-      expect(subscriber1).toHaveBeenLastCalledWith('c', 'b')
-      expect(subscriber2).toHaveBeenLastCalledWith('a', undefined)
-      expect(subscriber3).toHaveBeenLastCalledWith('b', 'a')
+      expect(subscriber1).toHaveBeenLastCalledWith('c', 'b', {
+        payload: 'c',
+        type: actionTypes.HYDRATE,
+      })
+      expect(subscriber2).toHaveBeenLastCalledWith('a', undefined, {
+        payload: 'a',
+        type: actionTypes.HYDRATE,
+      })
+      expect(subscriber3).toHaveBeenLastCalledWith('b', 'a', {
+        payload: 'b',
+        type: actionTypes.HYDRATE,
+      })
       expect(subscriber4).not.toHaveBeenCalled()
-      expect(subscriber5).toHaveBeenCalledWith('c', 'b')
+      expect(subscriber5).toHaveBeenCalledWith('c', 'b', {
+        payload: 'c',
+        type: actionTypes.HYDRATE,
+      })
 
       subscription1.unsubscribe()
 
       store.setState(() => 'd')
 
-      expect(subscriber1).toHaveBeenLastCalledWith('c', 'b')
-      expect(subscriber2).toHaveBeenLastCalledWith('a', undefined)
-      expect(subscriber3).toHaveBeenLastCalledWith('b', 'a')
-      expect(subscriber4).toHaveBeenCalledWith('d', 'c')
-      expect(subscriber5).toHaveBeenLastCalledWith('d', 'c')
+      expect(subscriber1).toHaveBeenLastCalledWith('c', 'b', {
+        payload: 'c',
+        type: actionTypes.HYDRATE,
+      })
+      expect(subscriber2).toHaveBeenLastCalledWith('a', undefined, {
+        payload: 'a',
+        type: actionTypes.HYDRATE,
+      })
+      expect(subscriber3).toHaveBeenLastCalledWith('b', 'a', {
+        payload: 'b',
+        type: actionTypes.HYDRATE,
+      })
+      expect(subscriber4).toHaveBeenCalledWith('d', 'c', {
+        payload: 'd',
+        type: actionTypes.HYDRATE,
+      })
+      expect(subscriber5).toHaveBeenLastCalledWith('d', 'c', {
+        payload: 'd',
+        type: actionTypes.HYDRATE,
+      })
     })
 
     test('a parent store unsubscribes from a removed child store', () => {
@@ -210,8 +257,8 @@ describe('registrations', () => {
 
       store.dispatch(action)
 
-      effectsSubscribers.forEach((effectsSubscriber, i) => {
-        expect(effectsSubscriber).toHaveBeenCalledTimes(21 - i)
+      effectsSubscribers.forEach(effectsSubscriber => {
+        expect(effectsSubscriber).toHaveBeenCalledTimes(1)
 
         expect(effectsSubscriber).toHaveBeenLastCalledWith(
           expect.objectContaining({ action })
@@ -245,17 +292,13 @@ describe('registrations', () => {
       child.subscribe({ effects: childEffectsSubscriber })
       grandchild.subscribe({ effects: grandchildEffectsSubscriber })
 
-      expect(parentEffectsSubscriber).toHaveBeenCalledTimes(3)
-      expect(childEffectsSubscriber).toHaveBeenCalledTimes(2)
-      expect(grandchildEffectsSubscriber).toHaveBeenCalledTimes(1)
-
       try {
         parent.dispatch({ type: 'c' })
       } catch (err) {}
 
-      expect(parentEffectsSubscriber).toHaveBeenCalledTimes(4)
-      expect(childEffectsSubscriber).toHaveBeenCalledTimes(3)
-      expect(grandchildEffectsSubscriber).toHaveBeenCalledTimes(2)
+      expect(parentEffectsSubscriber).toHaveBeenCalledTimes(1)
+      expect(childEffectsSubscriber).toHaveBeenCalledTimes(1)
+      expect(grandchildEffectsSubscriber).toHaveBeenCalledTimes(1)
 
       expect(parentEffectsSubscriber).toHaveBeenLastCalledWith(
         expect.objectContaining({
@@ -274,7 +317,7 @@ describe('registrations', () => {
       )
     })
 
-    test('all upstream effects subscribers are notified of all downstream actions and effects', () => {
+    test('all upstream effects subscribers are notified of all downstream actions', () => {
       const reducer = () => 1
 
       const parent = createStore()
@@ -287,9 +330,6 @@ describe('registrations', () => {
       const childEffectsSubscriber = jest.fn()
       const grandchildEffectsSubscriber = jest.fn()
 
-      const subscriberAddedEffect = {
-        effectType: effectTypes.SUBSCRIBER_ADDED,
-      }
       const action: Action = {
         type: 'c',
       }
@@ -304,65 +344,14 @@ describe('registrations', () => {
       }
 
       parent.subscribe({ effects: parentEffectsSubscriber })
-
-      expect(parentEffectsSubscriber).toHaveBeenCalledTimes(1)
-      expect(parentEffectsSubscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({ effect: subscriberAddedEffect })
-      )
-
       child.subscribe({ effects: childEffectsSubscriber })
-
-      expect(parentEffectsSubscriber).toHaveBeenCalledTimes(2)
-      expect(childEffectsSubscriber).toHaveBeenCalledTimes(1)
-      expect(parentEffectsSubscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          effect: {
-            metaType: metaTypes.DELEGATE,
-            metaData: [],
-            payload: subscriberAddedEffect,
-          },
-        })
-      )
-      expect(childEffectsSubscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({ effect: subscriberAddedEffect })
-      )
-
       grandchild.subscribe({ effects: grandchildEffectsSubscriber })
-
-      expect(parentEffectsSubscriber).toHaveBeenCalledTimes(3)
-      expect(childEffectsSubscriber).toHaveBeenCalledTimes(2)
-      expect(grandchildEffectsSubscriber).toHaveBeenCalledTimes(1)
-      expect(parentEffectsSubscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          effect: {
-            metaType: metaTypes.DELEGATE,
-            metaData: [],
-            payload: {
-              metaType: metaTypes.DELEGATE,
-              metaData: ['grandchild'],
-              payload: subscriberAddedEffect,
-            },
-          },
-        })
-      )
-      expect(childEffectsSubscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          effect: {
-            metaType: metaTypes.DELEGATE,
-            metaData: ['grandchild'],
-            payload: subscriberAddedEffect,
-          },
-        })
-      )
-      expect(grandchildEffectsSubscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({ effect: subscriberAddedEffect })
-      )
 
       child.dispatch({ type: 'c' })
 
-      expect(parentEffectsSubscriber).toHaveBeenCalledTimes(4)
-      expect(childEffectsSubscriber).toHaveBeenCalledTimes(3)
-      expect(grandchildEffectsSubscriber).toHaveBeenCalledTimes(2)
+      expect(parentEffectsSubscriber).toHaveBeenCalledTimes(1)
+      expect(childEffectsSubscriber).toHaveBeenCalledTimes(1)
+      expect(grandchildEffectsSubscriber).toHaveBeenCalledTimes(1)
       expect(parentEffectsSubscriber).toHaveBeenLastCalledWith(
         expect.objectContaining({
           action: delegateAction,
@@ -397,16 +386,9 @@ describe('registrations', () => {
       const effectsSubscriber = jest.fn()
       parent.subscribe({ effects: effectsSubscriber })
 
-      expect(effectsSubscriber).toHaveBeenCalledTimes(1)
-      expect(effectsSubscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          effect: { effectType: effectTypes.SUBSCRIBER_ADDED },
-        })
-      )
-
       child.setState(() => 'a')
 
-      expect(effectsSubscriber).toHaveBeenCalledTimes(2)
+      expect(effectsSubscriber).toHaveBeenCalledTimes(1)
       expect(effectsSubscriber).toHaveBeenLastCalledWith(
         expect.objectContaining({
           action: {
@@ -423,7 +405,7 @@ describe('registrations', () => {
       parent.use(null)
       child.setState(() => 'b')
 
-      expect(effectsSubscriber).toHaveBeenCalledTimes(2)
+      expect(effectsSubscriber).toHaveBeenCalledTimes(1)
     })
   })
 })

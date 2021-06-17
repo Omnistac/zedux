@@ -11,23 +11,23 @@ The object Zedux passes as the first parameter to [ion getters](../factories/ion
 interface IonGetUtils {
   ecosystem: Ecosystem
 
-  get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+  get<A extends Atom<any, []>>(atom: A): AtomStateType<A>
 
-  get<A extends AtomBase<any, [...any], any>>(
+  get<A extends Atom<any, [...any]>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  get<I extends AtomInstanceBase<any, [...any], any>>(
+  get<I extends AtomInstance>(
     instance: I
   ): AtomInstanceStateType<I>
 
-  getInstance<A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+  getInstance<A extends Atom<any, []>>(atom: A): AtomInstanceType<A>
 
-  getInstance<A extends AtomBase<any, any, any>>(
-      atom: A,
-      params: AtomParamsType<A>
-    ): AtomInstanceType<A
+  getInstance<A extends Atom<any, any, any>>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomInstanceType<A>
 }
 ```
 

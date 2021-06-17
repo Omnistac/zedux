@@ -1,4 +1,5 @@
-import { Reducer, Store } from '../types'
+import { Store } from '../api/createStore'
+import { Reducer } from '../types'
 import { HierarchyType } from './general'
 
 export interface BranchNode extends DiffNodeBase {

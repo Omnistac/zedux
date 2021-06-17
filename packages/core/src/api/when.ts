@@ -1,15 +1,14 @@
 import {
   EffectData,
   EffectsSubscriber,
-  EffectType,
   MachineStateRepresentation,
   Reactable,
   SideEffectHandler,
-  Store,
   WhenBuilder,
 } from '../types'
 import { extractActionType, extractStateType } from '../utils/actor'
 import { assertAreFunctions } from '../utils/errors'
+import { Store } from './createStore'
 import { removeAllMeta } from './meta'
 
 interface MachineHandler<State = any> {
@@ -26,18 +25,13 @@ interface StateMatchHandler<State = any> {
 export const when = <State = any>(store: Store<State>) => {
   const actionHandlers: Record<string, SideEffectHandler<State>[]> = {}
   const anyActionHandlers: SideEffectHandler<State>[] = []
-  const anyEffectHandlers: SideEffectHandler<State>[] = []
-  const effectHandlers: Record<string, SideEffectHandler<State>[]> = {}
   const machineHandlers: MachineHandler[] = []
-  const stateChangeHandlers: SideEffectHandler<State>[] = [] // TODO
-  const stateMatchHandlers: StateMatchHandler<State>[] = [] // TODO
+  const stateChangeHandlers: SideEffectHandler<State>[] = []
+  const stateMatchHandlers: StateMatchHandler<State>[] = []
 
   const effectsSubscriber: EffectsSubscriber<State> = effectData => {
     if (effectData.action) {
       runActionHandlers(effectData)
-    }
-    if (effectData.effect) {
-      runEffectHandlers(effectData)
     }
 
     if (effectData.newState === effectData.oldState) return
@@ -53,17 +47,6 @@ export const when = <State = any>(store: Store<State>) => {
 
     const unwrappedAction = removeAllMeta(effectData.action)
     const handlers = actionHandlers[unwrappedAction.type]
-
-    handlers?.forEach(handler => handler(effectData))
-  }
-
-  const runEffectHandlers = (effectData: EffectData<State>) => {
-    if (!effectData.effect) return
-
-    anyEffectHandlers.forEach(handler => handler(effectData))
-
-    const unwrappedEffect = removeAllMeta(effectData.effect)
-    const handlers = effectHandlers[unwrappedEffect.effectType]
 
     handlers?.forEach(handler => handler(effectData))
   }
@@ -192,34 +175,6 @@ export const when = <State = any>(store: Store<State>) => {
     return whenBuilder
   }
 
-  const receivesEffect = (
-    effectOrEffectHandler: EffectType | SideEffectHandler<State>,
-    sideEffect?: SideEffectHandler<State>
-  ) => {
-    if (typeof sideEffect === 'undefined') {
-      assertAreFunctions(
-        [effectOrEffectHandler],
-        'whenBuilder.receivesAction()'
-      )
-
-      anyEffectHandlers.push(effectOrEffectHandler as SideEffectHandler<State>)
-
-      return whenBuilder
-    }
-
-    assertAreFunctions([sideEffect], 'whenBuilder.receivesEffect()')
-
-    const effectType = effectOrEffectHandler as EffectType
-
-    if (!effectHandlers[effectType]) {
-      effectHandlers[effectType] = []
-    }
-
-    effectHandlers[effectType].push(sideEffect)
-
-    return whenBuilder
-  }
-
   const stateChanges = (sideEffect: SideEffectHandler<State>) => {
     stateChangeHandlers.push(sideEffect)
 
@@ -242,7 +197,6 @@ export const when = <State = any>(store: Store<State>) => {
   const whenBuilder: WhenBuilder<State> = {
     machine,
     receivesAction,
-    receivesEffect,
     stateChanges,
     stateMatches,
     subscription,

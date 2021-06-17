@@ -56,19 +56,30 @@ const userAtom = ion('user', ({ get }) => {
 })
 ```
 
-This creates a graph of atom dependencies, which can be seen in all its glory in the [StateHub](/not-done).
+Here we used [ion's `get`](../api/types/IonGetUtils#get) to dynamically inject dependencies. We can also use any number of injectors, such as [`injectAtomValue()`](../api/injectors/injectAtomValue) or [`injectAtomInstance()`](../api/injectors/injectAtomInstance).
+
+```ts
+const authAtom = atom('auth', () => {
+  const { apiUrl } = injectAtomValue(configAtom)
+  const storage = injectAtomValue(localStorageAtom)
+
+  return injectFetch(`${apiUrl}/auth`, storage.jwt)
+})
+```
+
+But these have the caveats of being injectors - they can only be used at the top level of the atom evaluator function.
 
 ### Instances as Params
 
-As a general rule, all [atom params](../api/classes/AtomInstanceBase#params) must be serializable. There is one exception: You can pass an atom instance to another atom instance.
+As a general rule, all [atom params](../api/classes/AtomInstance#params) must be serializable. There is one exception: You can pass an atom instance to another atom instance. This is another form of "Dependency Injection".
 
-This is possible because all atom instances already have a unique, serialized [`keyHash`](../api/classes/AtomInstanceBase#keyhash) that will simply be appended to the receiving atom's `keyHash`.
+This is possible because all atom instances already have a unique, serialized [`keyHash`](../api/classes/AtomInstance#keyhash) that will simply be appended to the receiving atom's `keyHash`.
 
 <LiveEditor resultVar="Shout">{`
 const normalAtom = atom('normal', "I'm just a little, black rain cloud")\n
 const shoutingAtom = atom(
   'shouting',
-  (instance: AtomInstanceBase<string, any, any>) => {
+  (instance: AtomInstance<string>) => {
     const val = injectAtomValue(instance) // subscribe to updates\n
     return val.toUpperCase()
   }
@@ -80,13 +91,17 @@ function Shout() {
 }
 `}</LiveEditor>
 
-This is another form of Dependency Injection.
+When an atom instance receives another atom instance via params, it doesn't create any kind of dependency on that instance. This is usually fine: Whoever passed the instance is probably already registering their own dependency on the instance they're passing.
+
+See [AtomInstance#params](../api/classes/AtomInstance#params) for more info.
 
 ### The Graph
 
 Detour! You can [skip this section](#overrides). Proceed if ye dare:
 
 As you use atoms, Zedux creates and updates a graph of atom dependencies. The nodes of the graph are atom instances and consumers of atom instances. The edges of the graph are relationships between atom instances and their consumers.
+
+Zedux provides several methods to inspect and manipulate this graph.
 
 When we "inject an atom", what we're really doing is instructing Zedux to create an edge on the graph. There are 8 different types of edges, based on these 3 edge flags:
 

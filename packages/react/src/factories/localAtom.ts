@@ -1,20 +1,32 @@
 import { LocalAtom } from '../classes/atoms/LocalAtom'
-import { AtomConfig, AtomValueOrFactory, LocalParams } from '../types'
+import { AtomConfig, AtomValueOrFactory } from '../types'
 
 export const localAtom: {
-  <State, Params extends any[], Exports extends Record<string, any>>(
+  <
+    State,
+    Params extends [id?: string | undefined, ...rest: any[]],
+    Exports extends Record<string, any>
+  >(
     key: string,
-    value: AtomValueOrFactory<State, LocalParams<Params>, Exports>,
+    value: AtomValueOrFactory<State, Params, Exports>,
     config?: AtomConfig
-  ): LocalAtom<State, LocalParams<Params>, Exports>
-  <State, Params extends any[], Exports extends Record<string, any>>(
+  ): LocalAtom<State, Params, Exports>
+  <
+    State,
+    Params extends [id?: string | undefined, ...rest: any[]],
+    Exports extends Record<string, any>
+  >(
     key: string,
-    value: AtomValueOrFactory<State, [id: string, ...params: Params], Exports>,
+    value: AtomValueOrFactory<State, Params, Exports>,
     config?: AtomConfig
-  ): LocalAtom<State, [id: string, ...params: Params], Exports>
-} = <State, Params extends any[], Exports extends Record<string, any>>(
+  ): LocalAtom<State, Params, Exports>
+} = <
+  State,
+  Params extends [id?: string | undefined, ...rest: any[]],
+  Exports extends Record<string, any>
+>(
   key: string,
-  value: AtomValueOrFactory<State, LocalParams<Params>, Exports>,
+  value: AtomValueOrFactory<State, Params, Exports>,
   config?: AtomConfig
 ) => {
   if (!key) {

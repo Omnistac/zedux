@@ -1,3 +1,4 @@
+export * from './injectAsyncEffect'
 export * from './injectAtomInstance'
 export * from './injectAtomInstanceDynamic'
 export * from './injectAtomSelector'

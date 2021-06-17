@@ -5,7 +5,7 @@ title: Glossary
 
 ### Dynamic Graph Dependency
 
-When one [graph node](#graphnode) depends on another, Zedux draws an edge between those two nodes in its internal graph algorithm.
+When one [graph node](#graph-node) depends on another, Zedux draws an edge between those two nodes in its internal graph algorithm.
 
 A "dynamic" dependency is a dependency that will trigger updates in the dependent node when the dependency node's state updates. Contrast this to [static dependencies](#static-graph-dependency), which do not trigger updates.
 
@@ -46,7 +46,7 @@ Like hooks, you can create custom injectors. The convention is to start all inje
 
 ### Static Graph Dependency
 
-When one [graph node](#graphnode) depends on another, Zedux draws an edge between those two nodes in its internal graph algorithm.
+When one [graph node](#graph-node) depends on another, Zedux draws an edge between those two nodes in its internal graph algorithm.
 
 A "static" dependency is a dependency that does not trigger updates in the dependent node when the dependency node's state updates. Contrast this to [dynamic dependencies](#dynamic-graph-dependency), which do trigger updates.
 

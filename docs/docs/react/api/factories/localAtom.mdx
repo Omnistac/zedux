@@ -7,7 +7,9 @@ title: localAtom
 import { localAtom } from '@zedux/react'
 ```
 
-A factory for creating [local atoms](../classes/LocalAtom). Local atoms are just atoms that have their first param set to an optional string id. Zedux auto-generates an id every time the atom is used, if you don't pass one. Local atoms also always have their [`ttl`](../classes/StandardAtomBase) set to `0`.
+A factory for creating [local atoms](../classes/LocalAtom).
+
+Local atoms are just atoms that have their first param set to an optional string id. Zedux auto-generates an id every time the atom is used, if you don't pass one. Local atoms also always have their [`ttl`](../classes/Atom#ttl) set to `0`.
 
 ## Example
 
@@ -42,7 +44,7 @@ All params are the same as [the `atom()` factory](atom). Just note that the firs
 
 Required. A string. The key should typically be unique, though there are cases (e.g. for DI) where you won't make them unique. The key identifies the atom in ecosystems where it's used.
 
-See [`AtomBase#key`](../classes/AtomBase#key).
+See [`Atom#key`](../classes/Atom#key).
 
 ### `value`
 

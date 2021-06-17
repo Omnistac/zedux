@@ -1,5 +1,5 @@
 import { createStore, Store } from '@zedux/core'
-import { AtomInstanceBase } from '../classes'
+import { AtomInstance } from '../classes'
 import {
   EvaluationType,
   EvaluationTargetType,
@@ -9,7 +9,7 @@ import {
 } from '../utils'
 
 const doSubscribe = <State>(
-  instance: AtomInstanceBase<any, any[], any>,
+  instance: AtomInstance<any, [...any], any, any>,
   store: Store<State>
 ) =>
   store.subscribe({

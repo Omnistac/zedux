@@ -1,3 +1,5 @@
+import { Store } from './api/createStore'
+
 // Same workaround rxjs uses for Symbol.observable:
 declare global {
   interface SymbolConstructor {
@@ -36,7 +38,9 @@ export interface ActionMeta<
 > {
   metaType: string
   metaData?: Data
+  meta?: undefined // to make this type compatible with Action type
   payload: ActionChain<Payload, Type>
+  type?: undefined // to make this type compatible with Action type
 }
 
 export type ActionType = string
@@ -128,7 +132,8 @@ export interface MachineHooksBuilder<State = any> {
 
 export type NextSubscriber<State = any> = (
   newState: State,
-  prevState?: State
+  prevState: State | undefined,
+  action: ActionChain
 ) => any
 
 export interface Observable<State = any> {
@@ -172,14 +177,6 @@ export type SideEffectHandler<State = any> = (
 
 export type StateSetter<State = any> = (settable: Settable<State>) => State
 
-export interface Store<State = any> extends Observable<State> {
-  dispatch: Dispatcher<State>
-  getState(): State
-  setState: StateSetter<State>
-  use(newHierarchy?: HierarchyDescriptor<State>): Store<State>
-  $$typeof: symbol
-}
-
 export type SubReducer<State = any, Payload = any> = (
   state: State,
   payload: Payload
@@ -203,13 +200,6 @@ export interface WhenBuilder<State = any> {
   machine: (getMachine?: (state: State) => string) => WhenMachineBuilder<State>
   receivesAction: {
     (actor: Reactable, sideEffect: SideEffectHandler<State>): WhenBuilder<State>
-    (sideEffect: SideEffectHandler<State>): WhenBuilder<State>
-  }
-  receivesEffect: {
-    (
-      effect: EffectType,
-      sideEffect: SideEffectHandler<State>
-    ): WhenBuilder<State>
     (sideEffect: SideEffectHandler<State>): WhenBuilder<State>
   }
   stateChanges: (sideEffect: SideEffectHandler<State>) => WhenBuilder<State>

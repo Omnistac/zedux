@@ -13,7 +13,7 @@ An [injector](../glossary#injector) that accepts an atom and its params and regi
 
 Since the dependency is static, the atom instance that uses this injector will not reevaluate when the resolved atom instance's state changes.
 
-You can also pass an atom instance directly to register a static graph dependency on instances received from other sources, e.g. an [atom instance param](../classes/AtomInstanceBase#params).
+You can also pass an atom instance directly to register a static graph dependency on instances received from other sources, e.g. an [atom instance param](../classes/AtomInstance#params).
 
 ## Examples
 
@@ -76,7 +76,7 @@ injectAtomInstance(
 ) => AtomInstance
 ```
 
-Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns the resolved [atom instance](../classes/AtomInstanceBase).
+Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns the resolved [atom instance](../classes/AtomInstance).
 
 ### Overloads
 
@@ -117,4 +117,4 @@ You typically won't pass this.
 
 ### `instance`
 
-Required (in this overload). An [atom instance](../classes/AtomInstanceBase). Will register a static dependency on the passed instance and return it.
+Required (in this overload). An [atom instance](../classes/AtomInstance). Will register a static dependency on the passed instance and return it.

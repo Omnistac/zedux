@@ -120,7 +120,7 @@ instance.invalidate() // all good again! TS smiles upon you
 
 ## Subscribing
 
-The amazing thing about using atoms for React context is that neither the providing nor consuming component subscribe to the atom instance by default. This gives you full control over rerenders.
+The amazing thing about using atoms for React context is that neither the providing nor consuming component subscribes to the atom instance by default. This gives you full control over rerenders.
 
 Any component can set the state of the atom without subscribing to the state itself. And, of course, any component can subscribe itself to the atom instance using [`useAtomValue`](../api/hooks/useAtomValue) or similar.
 
@@ -132,8 +132,9 @@ function Parent() {
 }
 
 function Child() {
-  const instance = useAtomInstance(myAtom, []) // doesn't subscribe
+  const instance = useAtomConsumer(myAtom, []) // doesn't subscribe
   const value = useAtomValue(instance) // subscribes
+  ...
 }
 ```
 
@@ -143,7 +144,7 @@ A common pattern is to pass the provided atom instance to [`useAtomSelector`](..
 
 ```tsx
 function Child() {
-  const instance = useAtomInstance(myAtom, []) // doesn't subscribe
+  const instance = useAtomConsumer(myAtom, []) // doesn't subscribe
 
   // subscribes, but only causes a rerender when `someField` changes.
   const someField = useAtomSelector(instance, ({ someField }) => someField)
@@ -176,7 +177,7 @@ useAtomInstance(myContextAtom, ['manual-id']) // creates another new instance
 useAtomInstance(myContextAtom, ['manual-id']) // reuses the 'manual-id' instance
 ```
 
-Local atoms also always set [`ttl`](../api/StandardAtomBase#ttl) to `0`, which will clean up atom instances immediately when all components using the atom instance unmount.
+Local atoms also always set [`ttl`](../api/Atom#ttl) to `0`, which will clean up atom instances immediately when all components using the atom instance unmount.
 
 ### Example
 
@@ -192,7 +193,7 @@ export const popupStyle = {
 }
 
 <LiveEditor
-  extraScope={popupStyle}
+  extraScope={{ popupStyle }}
   resultVar="Popups"
 >{`
 const popupAtom = localAtom('popup', () => ({ isOpen: false }))\n

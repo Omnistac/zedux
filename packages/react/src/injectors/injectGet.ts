@@ -1,4 +1,4 @@
-import { AtomBase } from '../classes'
+import { Atom } from '../classes'
 import { diContext } from '../utils/csContexts'
 
 /**
@@ -18,7 +18,7 @@ export const injectGet = () => {
   const { instance } = diContext.consume()
 
   const get: typeof instance._get = (
-    ...args: [AtomBase<any, any, any>, any?]
+    ...args: [Atom<any, [...any], any>, any?]
   ) => instance._get(...args)
 
   return get

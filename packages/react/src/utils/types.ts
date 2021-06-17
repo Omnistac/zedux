@@ -1,10 +1,20 @@
-import { MutableRefObject, RefObject } from '@zedux/react/types'
-import { ActionChain, Store } from '@zedux/core'
-import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
-import { AtomBase } from '../classes/atoms/AtomBase'
+import { AsyncState, MutableRefObject, RefObject } from '@zedux/react/types'
+import { ActionChain, Store, Subscription } from '@zedux/core'
+import { AtomInstance } from '../classes/AtomInstance'
+
+export interface AsyncEffectInjectorDescriptor<T>
+  extends DepsInjectorDescriptor {
+  cleanupTask?: () => void
+  machineStore: Store<AsyncState<T>>
+  promise: Promise<T>
+  rejectRef?: (err: any) => void
+  resolveRef?: (val: any) => void
+  subscription: Subscription
+  type: InjectorType.AsyncEffect
+}
 
 export interface AtomInjectorDescriptor<
-  InstanceType extends AtomInstanceBase<any, any[], AtomBase<any, any[], any>>
+  InstanceType extends AtomInstance<any, any[], any, any>
 > extends InjectorDescriptor {
   instance: InstanceType
   shouldRegisterDependency: boolean
@@ -12,7 +22,7 @@ export interface AtomInjectorDescriptor<
 }
 
 export interface AtomDynamicInjectorDescriptor<
-  InstanceType extends AtomInstanceBase<any, any[], any>
+  InstanceType extends AtomInstance<any, any[], any, any>
 > extends InjectorDescriptor {
   instance: InstanceType
   type: InjectorType.AtomDynamic
@@ -45,7 +55,7 @@ export interface DepsInjectorDescriptor extends InjectorDescriptor {
 
 export interface DiContext {
   injectors: InjectorDescriptor[]
-  instance: AtomInstanceBase<any, any[], any>
+  instance: AtomInstance<any, any[], any, any>
 }
 
 export interface EcosystemGraphNode {
@@ -55,7 +65,6 @@ export interface EcosystemGraphNode {
 }
 
 export interface EffectInjectorDescriptor extends DepsInjectorDescriptor {
-  isCleanedUp?: boolean
   type: InjectorType.Effect
 }
 
@@ -115,6 +124,7 @@ export interface InjectorDescriptor {
 }
 
 export enum InjectorType {
+  AsyncEffect = 'AsyncEffect',
   Atom = 'Atom',
   AtomDynamic = 'AtomDynamic',
   Effect = 'Effect',
@@ -157,7 +167,7 @@ export interface RunEffectJob extends JobBase {
 
 export interface SelectorInjectorDescriptor<State = any, D = any>
   extends InjectorDescriptor {
-  instance: AtomInstanceBase<State, any, any>
+  instance: AtomInstance<State, any, any, any>
   selector: (state: State) => D
   selectorResult: D
   type: InjectorType.Selector

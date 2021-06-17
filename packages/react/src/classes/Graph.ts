@@ -1,4 +1,3 @@
-import { ActiveState } from '../types'
 import {
   DependentEdge,
   EcosystemGraphNode,
@@ -10,8 +9,7 @@ import {
   JobType,
 } from '../utils'
 import { Ecosystem } from './Ecosystem'
-import { AtomInstance } from './instances/AtomInstance'
-import { AtomInstanceBase } from './instances/AtomInstanceBase'
+import { AtomInstance } from './AtomInstance'
 
 const getFlagScore = (dependentEdge: DependentEdge) => {
   let score = 0
@@ -68,7 +66,7 @@ export class Graph {
   }
 
   public registerExternalDependent<State>(
-    dependency: AtomInstanceBase<State, any[], any>,
+    dependency: AtomInstance<State, any[], any, any>,
     callback: (signal: GraphEdgeSignal, newState: State) => any,
     operation: string,
     isStatic: boolean,
@@ -197,7 +195,12 @@ export class Graph {
 
   // an atom just updated. Schedule an update for all dynamic dependents
   // Should only be used internally
-  public scheduleDependents(nodeKey: string, reasons: EvaluationReason[]) {
+  public scheduleDependents(
+    nodeKey: string,
+    reasons: EvaluationReason[],
+    newState: any,
+    oldState: any
+  ) {
     const instance = this.ecosystem._instances[nodeKey]
     const node = this.nodes[nodeKey]
 
@@ -209,7 +212,6 @@ export class Graph {
           if (dependentEdge.isStatic || dependentEdge.task) return
 
           const flagScore = getFlagScore(dependentEdge)
-          const newState = instance._stateStore.getState()
 
           // let internal dependents (other atoms) schedule themselves
           if (!dependentEdge.isExternal) {
@@ -223,6 +225,7 @@ export class Graph {
             return this.ecosystem._instances[dependentKey]._scheduleEvaluation(
               {
                 newState,
+                oldState,
                 operation: dependentEdge.operation,
                 reasons,
                 targetKey: nodeKey,
@@ -237,7 +240,7 @@ export class Graph {
             dependentEdge.task = undefined
             dependentEdge.callback?.(
               GraphEdgeSignal.Updated,
-              instance._stateStore.getState() // don't use the snapshotted newState above
+              instance.store.getState() // don't use the snapshotted newState above
             )
           }
 
@@ -281,15 +284,12 @@ export class Graph {
       const instance = this.ecosystem._instances[nodeKey] as AtomInstance<
         any,
         any[],
+        any,
         any
       >
 
       // unschedule destruction of this atom
-      if (instance._destructionTimeout) {
-        // TODO: dispatch an action over instance._stateStore for this mutation
-        clearTimeout(instance._destructionTimeout)
-        instance._activeState = ActiveState.Active
-      }
+      instance._cancelDestruction?.()
     }
   }
 }

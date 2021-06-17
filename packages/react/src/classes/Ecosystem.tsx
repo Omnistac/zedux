@@ -8,10 +8,16 @@ import {
   EcosystemConfig,
 } from '../types'
 import { generateAppId } from '../utils'
-import { AtomBase } from './atoms/AtomBase'
+import { AtomInstance } from './AtomInstance'
+import { Atom } from './atoms/Atom'
 import { Graph } from './Graph'
-import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
+
+const mapOverrides = (overrides: Atom<any, any, any>[]) =>
+  overrides.reduce((map, atom) => {
+    map[atom.key] = atom
+    return map
+  }, {} as Record<string, Atom<any, any, any>>)
 
 export const ecosystemContext = createContext('global')
 
@@ -19,20 +25,24 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   public _graph: Graph = new Graph(this)
   public _instances: Record<
     string,
-    AtomInstanceBase<any, any[], AtomBase<any, any[], any>>
+    AtomInstance<any, any[], any, Atom<any, any[], any>>
   > = {}
   public _destroyOnUnmount = false
   public _preload?: (ecosystem: this, context: Context) => void
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
   public context?: Context
+  public defaultForwardPromises?: boolean
+  public defaultTtl?: number
   public ecosystemId: string
   public flags?: string[] = []
-  public overrides: Record<string, AtomBase<any, any[], any>> = {}
+  public overrides: Record<string, Atom<any, any[], any>> = {}
   private isInitialized = false
 
   constructor({
     context,
+    defaultForwardPromises,
+    defaultTtl,
     destroyOnUnmount,
     flags,
     id,
@@ -61,24 +71,29 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     }
 
     this.context = context
+    this.defaultForwardPromises = defaultForwardPromises
+    this.defaultTtl = defaultTtl ?? -1
     this._destroyOnUnmount = !!destroyOnUnmount
     this._preload = preload
 
     // yep. Dispatch this here. We'll make sure no component can ever be updated
-    // sychronously from this call (causing update-during-render react warnings)
+    // synchronously from this call (causing update-during-render react warnings)
     globalStore.dispatch(addEcosystem(this))
 
     this.isInitialized = true
     preload?.(this, context as Context)
   }
 
-  // Should only be used internally
-  public _destroyAtomInstance(keyHash: string) {
-    // try to destroy instance (if not destroyed - this fn is called as part of
-    // that destruction process too)
-    this._graph.removeNode(keyHash)
+  public addOverrides(overrides: Atom<any, any, any>[]) {
+    this.overrides = {
+      ...this.overrides,
+      ...mapOverrides(overrides),
+    }
 
-    delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
+    overrides.forEach(override => {
+      const instances = this.findInstances(override)
+      instances.forEach(instance => instance._destroy(true))
+    })
   }
 
   public destroy(force?: boolean) {
@@ -97,7 +112,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     )
   }
 
-  public findInstances(atom: AtomBase<any, any, any> | string) {
+  public findInstances(atom: Atom<any, any, any> | string) {
     const key = typeof atom === 'string' ? atom : atom.key
 
     return Object.values(this._instances).filter(
@@ -105,43 +120,41 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     )
   }
 
-  public get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+  public get<A extends Atom<any, [], any>>(atom: A): AtomStateType<A>
 
-  public get<A extends AtomBase<any, [...any], any>>(
+  public get<A extends Atom<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  public get<AI extends AtomInstanceBase<any, [...any], any>>(
+  public get<AI extends AtomInstance<any, [...any], any, any>>(
     instance: AI
   ): AtomInstanceStateType<AI>
 
-  public get<A extends AtomBase<any, [...any], any>>(
-    atom: A | AtomInstanceBase<any, [...any], any>,
+  public get<A extends Atom<any, [...any], any>>(
+    atom: A | AtomInstance<any, [...any], any, any>,
     params?: AtomParamsType<A>
   ) {
-    if (atom instanceof AtomInstanceBase) {
-      return atom._stateStore.getState()
+    if (atom instanceof AtomInstance) {
+      return atom.store.getState()
     }
 
     const instance = this.getInstance(
       atom,
       params as AtomParamsType<A>
-    ) as AtomInstanceBase<any, any, any>
+    ) as AtomInstance<any, any, any, any>
 
-    return instance._stateStore.getState()
+    return instance.store.getState()
   }
 
-  public getInstance<A extends AtomBase<any, [], any>>(
-    atom: A
-  ): AtomInstanceType<A>
+  public getInstance<A extends Atom<any, [], any>>(atom: A): AtomInstanceType<A>
 
-  public getInstance<A extends AtomBase<any, [...any], any>>(
+  public getInstance<A extends Atom<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A>
 
-  public getInstance<A extends AtomBase<any, [...any], any>>(
+  public getInstance<A extends Atom<any, [...any], any>>(
     atom: A,
     params?: AtomParamsType<A>
   ) {
@@ -150,13 +163,13 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
 
     // try to find an existing instance
     const existingInstance = this._instances[keyHash]
-    if (existingInstance) return existingInstance as AtomInstanceType<A>
+    if (existingInstance) return existingInstance
 
     // create a new instance
     const resolvedAtom = this.resolveAtom(atom)
     this._graph.addNode(keyHash)
 
-    const newInstance = resolvedAtom.createInstance(
+    const newInstance = resolvedAtom._createInstance(
       this,
       keyHash,
       defaultedParams
@@ -166,7 +179,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     return newInstance
   }
 
-  public inspectInstanceValues(atom?: AtomBase<any, any[], any> | string) {
+  public inspectInstanceValues(atom?: Atom<any, any[], any> | string) {
     const hash: Record<string, any> = {}
     const filterKey = typeof atom === 'string' ? atom : atom?.key
 
@@ -181,10 +194,28 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
           return
         }
 
-        hash[key] = instance._stateStore.getState()
+        hash[key] = instance.store.getState()
       })
 
     return hash
+  }
+
+  public removeOverrides(overrides: (Atom<any, any, any> | string)[]) {
+    this.overrides = mapOverrides(
+      Object.values(this.overrides).filter(atom =>
+        overrides.every(override => {
+          const key = typeof override === 'string' ? override : override.key
+
+          return key !== atom.key
+        })
+      )
+    )
+
+    overrides.forEach(override => {
+      const instances = this.findInstances(override)
+
+      instances.forEach(instance => instance._destroy(true))
+    })
   }
 
   public reset(newContext?: Context) {
@@ -195,16 +226,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     this._preload?.(this, newContext || (this.context as Context))
   }
 
-  public setOverrides(newOverrides: AtomBase<any, any, any>[]) {
+  public setOverrides(newOverrides: Atom<any, any, any>[]) {
     const oldOverrides = this.overrides
 
-    this.overrides = newOverrides.reduce(
-      (map, atom) => ({
-        ...map,
-        [atom.key]: atom,
-      }),
-      {}
-    )
+    this.overrides = mapOverrides(newOverrides)
 
     if (!this.isInitialized) return
 
@@ -212,7 +237,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
       const instances = this.findInstances(atom)
 
       instances.forEach(instance => {
-        instance._destroy()
+        instance._destroy(true)
       })
     })
 
@@ -238,9 +263,16 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     this._scheduler.flush()
   }
 
-  private resolveAtom<AtomType extends AtomBase<any, any[], any>>(
-    atom: AtomType
-  ) {
+  // Should only be used internally
+  public _destroyAtomInstance(keyHash: string) {
+    // try to destroy instance (if not destroyed - this fn is called as part of
+    // that destruction process too)
+    this._graph.removeNode(keyHash)
+
+    delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
+  }
+
+  private resolveAtom<AtomType extends Atom<any, any[], any>>(atom: AtomType) {
     const override = this.overrides?.[atom.key]
     const maybeOverriddenAtom = (override || atom) as AtomType
 

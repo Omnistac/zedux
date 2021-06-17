@@ -1,7 +1,11 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { AtomInstanceBase } from '../classes'
-import { AtomBase } from '../classes/atoms/AtomBase'
-import { AtomInstanceType, AtomParamsType, AtomStateType } from '../types'
+import { Atom, AtomInstance } from '../classes'
+import {
+  AtomInstanceType,
+  AtomParamsType,
+  AtomStateType,
+  PromiseStatus,
+} from '../types'
 import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useStableReference } from './useStableReference'
@@ -27,16 +31,16 @@ import { useStableReference } from './useStableReference'
  * @param params The params for generating the instance's key.
  */
 export const useAtomInstanceDynamic: {
-  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+  <A extends Atom<any, [], any>>(atom: A): AtomInstanceType<A>
 
-  <A extends AtomBase<any, any, any>>(
+  <A extends Atom<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A>
 
-  <AI extends AtomInstanceBase<any, any, any>>(instance: AI): AI
-} = <A extends AtomBase<any, any, any>>(
-  atom: A | AtomInstanceBase<any, any, any>,
+  <AI extends AtomInstance<any, [...any], any, any>>(instance: AI): AI
+} = <A extends Atom<any, [...any], any>>(
+  atom: A | AtomInstance<any, [...any], any, any>,
   params?: AtomParamsType<A>
 ) => {
   const [, setReactState] = useState<AtomStateType<A>>()
@@ -51,15 +55,19 @@ export const useAtomInstanceDynamic: {
       cleanupRef.current = undefined
     }
 
-    const instance = (atom instanceof AtomInstanceBase
+    const instance = (atom instanceof AtomInstance
       ? atom
       : ecosystem.getInstance(
           atom,
           stableParams as AtomParamsType<A>
         )) as AtomInstanceType<A>
 
-    if (instance.promise && !instance._isPromiseResolved) {
-      throw instance.promise
+    if (instance.promise) {
+      if (instance._promiseStatus === PromiseStatus.Pending) {
+        throw instance.promise
+      } else if (instance._promiseStatus === PromiseStatus.Rejected) {
+        throw instance._promiseError
+      }
     }
 
     cleanupRef.current = ecosystem._graph.registerExternalDependent(

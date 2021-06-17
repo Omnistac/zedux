@@ -1,19 +1,13 @@
 import { ActionChain, Settable, Store } from '@zedux/core'
 import { Observable } from 'rxjs'
-import {
-  AtomInstance,
-  AtomInstanceBase,
-  Ecosystem,
-  StandardAtomBase,
-} from './classes'
+import { Atom, AtomInstance, Ecosystem } from './classes'
 import { AtomApi } from './classes/AtomApi'
-import { AtomBase } from './classes/atoms/AtomBase'
 import { injectGetInstance } from './injectors'
 
 export enum ActiveState {
   Active = 'Active',
   Destroyed = 'Destroyed',
-  Destroying = 'Destroying',
+  Stale = 'Stale',
   Initializing = 'Initializing',
 }
 
@@ -24,6 +18,11 @@ export type AsyncEffectCallback<T = any> = (
 export interface AsyncState<T> {
   data?: T
   error?: Error
+  isError: boolean
+  isIdle: boolean
+  isLoading: boolean
+  isSuccess: boolean
+  prevStatus?: AsyncStatus
   status: AsyncStatus
 }
 
@@ -38,6 +37,7 @@ export type AsyncStore<T> = Store<AsyncState<T>>
 
 export interface AtomConfig {
   flags?: string[]
+  forwardPromises?: boolean
   maxInstances?: number
   // molecules?: Molecule<any, any>[] // TODO: type this first `any` (the second `any` is correct as-is)
   // readonly?: boolean
@@ -45,40 +45,41 @@ export interface AtomConfig {
 }
 
 export type AtomExportsType<
-  AtomType extends StandardAtomBase<any, any, any>
-> = AtomType extends StandardAtomBase<any, any, infer T> ? T : never
+  AtomType extends Atom<any, any, any>
+> = AtomType extends Atom<any, any, infer T> ? T : never
 
 export type AtomInstanceAtomType<
-  AtomInstanceType extends AtomInstanceBase<any, any, any>
-> = AtomInstanceType extends AtomInstanceBase<any, any, infer T> ? T : never
+  AtomInstanceType extends AtomInstance<any, any, any, any>
+> = AtomInstanceType extends AtomInstance<any, any, any, infer T> ? T : never
 
 export type AtomInstanceExportsType<
-  AtomInstanceType extends AtomInstance<any, any, any>
-> = AtomInstanceType extends AtomInstance<any, any, infer T> ? T : never
+  AtomInstanceType extends AtomInstance<any, any, any, any>
+> = AtomInstanceType extends AtomInstance<any, any, infer T, any> ? T : never
 
 export type AtomInstanceParamsType<
-  AtomInstanceType extends AtomInstanceBase<any, any, any>
-> = AtomInstanceType extends AtomInstanceBase<any, infer T, any> ? T : never
+  AtomInstanceType extends AtomInstance<any, any, any, any>
+> = AtomInstanceType extends AtomInstance<any, infer T, any, any> ? T : never
 
 export type AtomInstanceStateType<
-  AtomInstanceType extends AtomInstanceBase<any, any, any>
-> = AtomInstanceType extends AtomInstanceBase<infer T, any, any> ? T : never
+  AtomInstanceType extends AtomInstance<any, any, any, any>
+> = AtomInstanceType extends AtomInstance<infer T, any, any, any> ? T : never
 
-export type AtomInstanceType<
-  AtomType extends AtomBase<any, any, any>
-> = AtomType extends AtomBase<any, any, infer T> ? T : never
+export type AtomInstanceType<A extends Atom<any, any, any>> = AtomInstance<
+  AtomStateType<A>,
+  AtomParamsType<A>,
+  AtomExportsType<A>,
+  A
+>
 
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
 
 export type AtomParamsType<
-  AtomType extends AtomBase<any, any, any>
-> = AtomType extends AtomBase<any, infer T, any> ? T : never
+  AtomType extends Atom<any, any, any>
+> = AtomType extends Atom<any, infer T, any> ? T : never
 
 export type AtomStateType<
-  AtomType extends AtomBase<any, any, any>
-> = AtomType extends AtomBase<infer T, any, AtomInstanceBase<infer T, any, any>>
-  ? T
-  : never
+  AtomType extends Atom<any, any, any>
+> = AtomType extends Atom<infer T, any, any> ? T : never
 
 export type AtomValue<State = any> = State | Store<State>
 
@@ -102,10 +103,12 @@ export interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
 > {
   context?: Context
+  defaultForwardPromises?: boolean
+  defaultTtl?: number
   destroyOnUnmount?: boolean
   flags?: string[]
   id?: string
-  overrides?: AtomBase<any, any[], any>[]
+  overrides?: Atom<any, any[], any>[]
   preload?: (ecosystem: Ecosystem, context: Context) => void
 }
 
@@ -126,7 +129,7 @@ export type IonGet<
 
 export interface IonGetUtils {
   ecosystem: Ecosystem
-  get: typeof AtomInstanceBase.prototype['_get']
+  get: typeof AtomInstance.prototype['_get']
   getInstance: ReturnType<typeof injectGetInstance>
 }
 
@@ -147,24 +150,19 @@ export interface IonSetUtils<
   ecosystem: Ecosystem
   get: IonGetUtils['get']
   getInstance: ReturnType<typeof injectGetInstance>
-  instance: AtomInstance<State, Params, Exports>
+  instance: AtomInstance<State, Params, Exports, Atom<State, Params, Exports>>
 
-  set<A extends AtomBase<any, [], any>>(
+  set<A extends Atom<any, [], any>>(
     atom: A,
     settable: Settable<AtomStateType<A>>
   ): AtomStateType<A>
 
-  set<A extends AtomBase<any, [...any], any>>(
+  set<A extends Atom<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
     settable: Settable<AtomStateType<A>>
   ): AtomStateType<A>
 }
-
-export type LocalParams<P extends any[]> = [
-  id?: string | undefined,
-  ...params: P
-]
 
 /**
  * Molecule
@@ -322,6 +320,12 @@ export type LocalParams<P extends any[]> = [
 
 export interface MutableRefObject<T = any> {
   current: T
+}
+
+export enum PromiseStatus {
+  Pending,
+  Resolved,
+  Rejected,
 }
 
 export interface RefObject<T = any> {

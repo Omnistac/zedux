@@ -7,20 +7,19 @@ import { LiveEditor } from '../../LiveEditor'
 
 Zedux stores do not have middleware. Read more on that in the [Redux comparison](/not-done). Basic side effects like logging and state persistence can be done by hooking into a store's side effects layer.
 
+In general, side effects should be colocated with the state that triggers them and that they act upon. This is exactly what we do in React thanks to hooks. In Zedux, we can use injectors:
+
 ## `injectEffect()`
 
 Your primary weapon for running side effects in atoms. This works just like React's [`useEffect()`](https://reactjs.org/docs/hooks-reference.html#useeffect).
 
 <LiveEditor resultVar="Alert">{`
 const alertAtom = atom('alert', () => {
-  const initialRef = injectRef(true)\n
-  const store = injectStore(0, true) // subscribe to the store\n
+  const store = injectStore(0, true) // true subscribes to the store\n
   injectEffect(() => {
-    if (initialRef.current) {
-      initialRef.current = false
-      return
-    }\n
-    alert('Hey! You changed the state to ' + store.getState())
+    const state = store.getState()\n
+    if (state === 0) return\n
+    alert('Hey! You changed the state to ' + state)
   }, [store.getState()])\n
   return store // remember to return the store
 })\n
@@ -212,11 +211,60 @@ when(store).receivesAction(({ action }) => {
 
   switch (unwrappedAction.type) { ... }
 })
+
+store.subscribe((newState, oldState, actionChain) => {
+  const action = removeAllMeta(actionChain)
+})
 ```
 
 ## Observables
 
+Zedux stores are a type of observable. However, Zedux doesn't have any built-in helpers (currently) for integrating with observable libraries such as [RxJS](https://github.com/ReactiveX/rxjs). But Zedux' extreme flexibility makes working with observables easy.
 
+For example, any atom's value can be an observable:
+
+```ts
+import { atom } from '@zedux/react'
+import { of } from 'rxjs'
+
+const observableValue = atom('observableValue', of('hello, world'))
+```
+
+This can be useful for taking advantage of Zedux' caching abilities to share observable references.
+
+You can export an observable from any atom:
+
+```ts
+import { api, atom, injectMemo } from '@zedux/react'
+import { from } from 'rxjs'
+
+const usersStreamAtom = atom('usersStream', () => {
+  const users$ = injectMemo(() => from(streamUsers()), [])
+
+  return api().setExports({
+    users$
+  })
+})
+```
+
+Handling observable subscriptions is easy with `injectEffect()`:
+
+```ts
+import { atom, injectAtomValue, injectEffect, injectStore } from '@zedux/react'
+
+const userAtom = atom('user', () => {
+  const user$ = injectAtomValue(userStreamAtom)
+  const store = injectStore(null)
+
+  injectEffect(() => {
+    const subscription = user$.subscribe(val => store.setState(val))
+
+    return () => subscription.unsubscribe()
+  }, [user$])
+
+  return store
+})
+```
 
 ## Recap
 
@@ -227,6 +275,7 @@ when(store).receivesAction(({ action }) => {
 - `when(store).machine().enters()` runs a side effect when a state machine in the store enters a state.
 - `when(store).machine().leaves()` runs a side effect when a state machine in the store leaves a state.
 - `when(store).subscription.unsubscribe()` cleans up the subscription.
+- Zedux' flexible paradigm allows you to use any tools for managing asynchrony or any kind of side effects, such as RxJS streams or JavaScript generators.
 
 ## Next Steps
 

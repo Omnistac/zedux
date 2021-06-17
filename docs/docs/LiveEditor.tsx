@@ -240,7 +240,7 @@ export const LiveEditor: FC<{
           return
 
         try {
-          Zedux.wipe()
+          Zedux.getEcosystem(ecosystemId).wipe()
 
           const extraScopeStr = typeof extraScope === 'string' ? extraScope : ''
           const jsCode = (window as any)?.ts.transpile(

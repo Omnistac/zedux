@@ -1,4 +1,4 @@
-import { AtomBase } from '../classes'
+import { Atom } from '../classes'
 import { AtomInstanceType, AtomParamsType } from '../types'
 import { useEcosystem } from './useEcosystem'
 
@@ -30,19 +30,19 @@ import { useEcosystem } from './useEcosystem'
  * @returns The value of an instance of the atom
  */
 export const useGetInstance: {
-  <A extends AtomBase<any, any, any>>(atom: A): (
+  <A extends Atom<any, [...any], any>>(atom: A): (
     params: AtomParamsType<A>
   ) => AtomInstanceType<A>
 
   (): {
-    <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+    <A extends Atom<any, [], any>>(atom: A): AtomInstanceType<A>
 
-    <A extends AtomBase<any, any, any>>(
+    <A extends Atom<any, [...any], any>>(
       atom: A,
       params: AtomParamsType<A>
     ): AtomInstanceType<A>
   }
-} = <A extends AtomBase<any, any, any>>(atom?: A) => {
+} = <A extends Atom<any, [...any], any>>(atom?: A) => {
   const ecosystem = useEcosystem()
 
   if (atom) {
@@ -50,7 +50,7 @@ export const useGetInstance: {
       ecosystem.getInstance(atom, params)) as any // unfortunate
   }
 
-  return <A extends AtomBase<any, any, any>>(
+  return <A extends Atom<any, [...any], any>>(
     atom: A,
     params?: AtomParamsType<A>
   ) => ecosystem.getInstance(atom, params as AtomParamsType<A>)

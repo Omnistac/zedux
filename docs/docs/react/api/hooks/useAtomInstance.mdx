@@ -45,21 +45,23 @@ const instance = useAtomInstance(myAtom)
 const withParams = useAtomInstance(myAtom, ['param 1', 'param 2'])
 
 // the instance can be provided over React context:
-<AtomInstanceProvider instance={instance}>{children}</AtomInstanceProvider>
+<AtomInstanceProvider instance={instance}>
+  {children}
+</AtomInstanceProvider>
 ```
 
 ## Signature
 
 ```ts
-injectAtomInstance(atom, params?) => AtomInstance
+useAtomInstance(atom, params?) => AtomInstance
 ```
 
-Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns the resolved [atom instance](../classes/AtomInstanceBase).
+Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns the resolved [atom instance](../classes/AtomInstance).
 
 ### Overloads
 
 ```ts
-injectAtomInstance(instance) => AtomInstance
+useAtomInstance(instance) => AtomInstance
 ```
 
 ### `atom`
@@ -74,4 +76,4 @@ TS users will be required to pass this for atoms that take params. If you don't 
 
 ### `instance`
 
-Required (in this overload). An [atom instance](../classes/AtomInstanceBase). Will register a static dependency on the passed instance and return it.
+Required (in this overload). An [atom instance](../classes/AtomInstance). Will register a static dependency on the passed instance and return it.

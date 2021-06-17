@@ -103,7 +103,7 @@ There is an overload for passing instances:
 getInstance(instance) => instance
 ```
 
-This overload is mostly just for interop in cases where you have a value that may be either an atom or instance (Zedux does this internally). However, it can be useful for purposefully registering a static dependency on an instance when the instance was [passed via params](../classes/AtomInstanceBase#params).
+This overload is mostly just for interop in cases where you have a value that may be either an atom or instance (Zedux does this internally). However, it can be useful for purposefully registering a static dependency on an instance when the instance was [passed via params](../classes/AtomInstance#params).
 
 ### Overloads
 
@@ -119,7 +119,7 @@ getAtomInstance(params?) => AtomInstance
 
 ### `atom`
 
-Required. An [atom](../classes/AtomBase).
+Required. An [atom](../classes/Atom).
 
 ### `params`
 
@@ -129,4 +129,4 @@ TS users will be required to pass this for atoms that take params. If you don't 
 
 ### `instance`
 
-Required (in this overload). An [atom instance](../classes/AtomInstanceBase). The same atom instance will be returned. When called synchronously during evaluation, this will register a static dependency on the passed atom instance (usually not necessary).
+Required (in this overload). An [atom instance](../classes/AtomInstance). The same atom instance will be returned. When called synchronously during evaluation, this will register a static dependency on the passed atom instance (usually not necessary).

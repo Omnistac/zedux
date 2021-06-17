@@ -3,6 +3,8 @@ id: Ecosystem
 title: Ecosystem
 ---
 
+import { LiveEditor } from '../../../LiveEditor'
+
 The ecosystem is an isolated atom environment. It creates a scheduler for running atom-related tasks and a graph that manages atom dependencies.
 
 This class defines many methods for creating, destroying, and inspecting atom instances and the graph they form.
@@ -33,6 +35,28 @@ function App() {
 }
 ```
 
+## Modifying Overrides
+
+The ability to swap out atom implementations on the fly is one of Zedux' superpowers. Use [`.addOverrides`](#addoverrides), [`.removeOverrides`](#removeoverrides), or [`.setOverrides`](#setoverrides).
+
+<LiveEditor resultVar="Swapper">{`
+const one = atom('common-key', () => 'Numero Uno')
+const two = atom('common-key', () => 'I am the best')
+const three = atom('common-key', () => 'Two is not the best')\n
+function Swapper() {
+  const ecosystem = useEcosystem()
+  const state = useAtomValue(one)\n
+  return (
+    <>
+      <div>Current State: {state}</div>
+      <button onClick={() => ecosystem.setOverrides([one])}>Use One</button>
+      <button onClick={() => ecosystem.setOverrides([two])}>Use Two</button>
+      <button onClick={() => ecosystem.setOverrides([three])}>Use Three</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
 ## Properties
 
 All properties are readonly!
@@ -43,13 +67,30 @@ An object. May be undefined. A reference to the `context` object passed to [the 
 
 This object is passed to [the `preload` function](../types/EcosystemConfig#preload). If `.reset()` changes the context, the new context will be passed to `preload` as part of the reset.
 
+### `.defaultForwardPromises`
+
+A boolean. May be undefined. Set this via the [EcosystemConfig option](../types/EcosystemConfig#defaultforwardpromises) passed to [the `ecosystem()` factory](../factories/ecosystem).
+
+This value will be used as the default [`forwardPromises` config value](Atom#forwardpromises) for all atoms used in this ecosystem that don't set their own. If set to `true`, all atoms used in this ecosystem will default to forwarding promises. If not set or if set to `false`, atoms will not forward promises by default.
+
+Setting an atom's [`forwardPromises` option](Atom#forwardpromises) will override this default.
+
+### `.defaultTtl`
+
+A number. Default `-1` (which means atom instances never die). Set this via the [EcosystemConfig option](../types/EcosystemConfig#defaultttl) passed to [the `ecosystem()` factory](../factories/ecosystem).
+
+This value will be used as the default [`ttl` config value](Atom#ttl) for all atoms used in this ecosystem that don't set their own.
+
+- Set to `0` to make all atom instances in this ecosystem die by default as soon as they go stale.
+- Set to any positive integer to make atoms live in a stale state for that many milliseconds before being cleaned up.
+
 ### `.ecosystemId`
 
 A string. The id of the ecosystem. Zedux will generate a simple, incrementing id for the ecosystem if one isn't supplied to `ecosystem()`. It is always recommended to set your own id.
 
 ### `.flags`
 
-An array of strings. These work in conjunction with [atom flags](AtomBase#flags) to raise warnings when unsafe atoms are not overridden in certain environments.
+An array of strings. These work in conjunction with [atom flags](Atom#flags) to raise warnings when unsafe atoms are not overridden in certain environments.
 
 If an atom has a flag that is not present in this array, Zedux will log a warning.
 
@@ -65,11 +106,29 @@ Which atoms, which flags, and which environments, is all up to you. You may want
 
 ### `.overrides`
 
-An array of [atom](Atom) objects. Atoms in this list will override any atoms with the same key used in this ecosystem. See [the Dependency Injection walkthrough](../../walkthrough/dependency-injection) for more info.
+An array of [atom](Atom) objects. Atoms in this list will override any atoms with the same key used in this ecosystem.
+
+Set this list via the [EcosystemConfig](../types/EcosystemConfig#overrides) passed to the `ecosystem()` factory or via [`.setOverrides()`](#setoverrides).
+
+See [the Dependency Injection walkthrough](../../walkthrough/dependency-injection) for more info.
 
 ## Methods
 
 The ecosystem class has the following public methods:
+
+### `.addOverrides`
+
+Adds new overrides to the current list of overrides and/or swaps out currently-overridden atoms with different implementations. All existing instances of atoms in the passed list will be force-destroyed, allowing their dependents to recreate them.
+
+#### Signature
+
+```ts
+.addOverrides(overrides) => void
+```
+
+#### `overrides`
+
+Required. An array of [atoms](Atom).
 
 ### `.destroy`
 
@@ -121,7 +180,7 @@ Required. An atom, all instances of which will be returned.
 
 #### `key`
 
-Required (in this overload). A string. Instances whose [atom's `key`](AtomBase#key) match this string will be returned.
+Required (in this overload). A string. Instances whose [atom's `key`](Atom#key) match this string will be returned.
 
 ### `.get`
 
@@ -192,7 +251,7 @@ instance.setState('new state')
 
 ### `.inspectInstanceValues`
 
-Returns an object mapping the [keyHash](AtomInstanceBase#keyhash) of all atom instances in the ecosystem to their current values.
+Returns an object mapping the [keyHash](AtomInstance#keyhash) of all atom instances in the ecosystem to their current values.
 
 #### Signature
 
@@ -212,7 +271,7 @@ Optional. An atom object to filter results by. Only instances of the atom will i
 
 #### `searchKey`
 
-Optional. A string to filter results by. Only atom instances whose [atom's key](AtomBase#key) or whose own [keyHash](AtomInstanceBase#keyhash) match the searchKey will be included in the result.
+Optional. A string to filter results by. Only atom instances whose [atom's key](Atom#key) or whose own [keyHash](AtomInstance#keyhash) match the searchKey will be included in the result.
 
 ### `.reset`
 
@@ -239,3 +298,33 @@ const myEcosystem = ecosystem({
 myEcosystem.reset({ someField: 'new val' })
 // the context: { someField: 'new val' }
 ```
+
+### `.removeOverrides`
+
+Removes atoms from the ecosystem's list of overrides. All instances of atoms in the passed list will be force-destroyed, allowing their dependencies to recreate them using the no-longer-overridden implementations.
+
+#### Signature
+
+```ts
+.removeOverrides(overrides) => void
+```
+
+#### `overrides`
+
+Required. An array of [atoms](Atom) and/or string keys.
+
+### `.setOverrides`
+
+Replaces the ecosystem's list of overridden atoms with the passed overrides. All instances of atoms in either the new or old lists will be force-destroyed, allowing their dependencies to recreate them.
+
+To selectively update only certain atoms in the list, use [`.addOverrides`](addoverrides) or [`.removeOverrides`](removeoverrides).
+
+#### Signature
+
+```ts
+.setOverrides(newOverrides) => void
+```
+
+#### `newOverrides`
+
+Required. An array of [atoms](Atom). Will be set as the new [`.overrides`](#overrides) property.

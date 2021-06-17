@@ -3,7 +3,6 @@ import {
   createActor,
   createMachine,
   createStore,
-  effectTypes,
   states,
   when,
 } from '@zedux/core/index'
@@ -285,71 +284,6 @@ describe('WhenBuilder', () => {
       expect(subscriber2).toHaveBeenLastCalledWith(
         expect.objectContaining({
           action: { type: advance.type },
-        })
-      )
-    })
-  })
-
-  describe('.receivesEffect()', () => {
-    test('with no type passed, effect handler is called every time any effect is propagated', () => {
-      const store = createStore()
-      const subscriber = jest.fn()
-
-      when(store).receivesEffect(subscriber)
-
-      // Since `when` subscribes as soon as it's called, the SUBSCRIBER_ADDED effect will happen before .receivesEffect() is called
-      expect(subscriber).not.toHaveBeenCalled()
-
-      const subscription = store.subscribe(() => {})
-
-      expect(subscriber).toHaveBeenCalledTimes(1)
-      expect(subscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          effect: { effectType: effectTypes.SUBSCRIBER_ADDED },
-        })
-      )
-
-      subscription.unsubscribe()
-
-      expect(subscriber).toHaveBeenCalledTimes(2)
-      expect(subscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          effect: { effectType: effectTypes.SUBSCRIBER_REMOVED },
-        })
-      )
-    })
-
-    test('when a type is passed, effect handler is only called when that effect is propagated', () => {
-      const store = createStore()
-      const subscriber = jest.fn()
-      const subscriber2 = jest.fn()
-
-      when(store)
-        .receivesEffect(effectTypes.SUBSCRIBER_REMOVED, subscriber)
-        .receivesEffect(effectTypes.SUBSCRIBER_REMOVED, subscriber2)
-
-      // Since `when` subscribes as soon as it's called, the SUBSCRIBER_ADDED effect will happen before .receivesEffect() is called
-      expect(subscriber).not.toHaveBeenCalled()
-      expect(subscriber2).not.toHaveBeenCalled()
-
-      const subscription = store.subscribe(() => {})
-
-      expect(subscriber).not.toHaveBeenCalled()
-      expect(subscriber2).not.toHaveBeenCalled()
-
-      subscription.unsubscribe()
-
-      expect(subscriber).toHaveBeenCalledTimes(1)
-      expect(subscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          effect: { effectType: effectTypes.SUBSCRIBER_REMOVED },
-        })
-      )
-
-      expect(subscriber2).toHaveBeenCalledTimes(1)
-      expect(subscriber2).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          effect: { effectType: effectTypes.SUBSCRIBER_REMOVED },
         })
       )
     })

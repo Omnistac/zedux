@@ -187,11 +187,13 @@ const subscription = myStore.subscribe((newState, oldState) => {
 })
 ```
 
-The returned subscription object has a single property - `unsubscribe()`. Be sure to call this in `useEffect()` cleanup:
+Normal subscribers receive the new state, the old state, and the action responsible for the update as arguments.
+
+The returned subscription object has a single property - `unsubscribe()`. Be sure to call this in `useEffect()` and `injectEffect()` cleanup:
 
 ```ts
 useEffect(() => {
-  const subscription = myStore.subscribe(...)
+  const subscription = myStore.subscribe(mySubscriber)
   return () => subscription.unsubscribe()
 }, [myStore])
 ```

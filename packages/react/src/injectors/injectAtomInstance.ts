@@ -5,11 +5,10 @@ import {
   InjectorType,
   split,
 } from '../utils'
-import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomInstanceType, AtomParamsType } from '../types'
 import { injectGetInstance } from './injectGetInstance'
 import { injectEcosystem } from './injectEcosystem'
-import { AtomInstanceBase } from '../classes'
+import { Atom, AtomInstance } from '../classes'
 
 /**
  * injectAtomInstance
@@ -34,22 +33,22 @@ import { AtomInstanceBase } from '../classes'
  * @returns An atom instance, keyed based on the passed params.
  */
 export const injectAtomInstance: {
-  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+  <A extends Atom<any, [], any>>(atom: A): AtomInstanceType<A>
 
-  <A extends AtomBase<any, any, any>>(
+  <A extends Atom<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
     operation?: string,
     shouldRegisterDependency?: boolean
   ): AtomInstanceType<A>
 
-  <AI extends AtomInstanceBase<any, any, any>>(
+  <AI extends AtomInstance<any, [...any], any, any>>(
     instance: AI,
     params?: [],
     operation?: string,
     shouldRegisterDependency?: boolean
   ): AI
-} = <A extends AtomBase<any, any, any>>(
+} = <A extends Atom<any, [...any], any>>(
   atom: A,
   params?: AtomParamsType<A>,
   operation = 'injectAtomInstance',
@@ -67,7 +66,7 @@ export const injectAtomInstance: {
             GraphEdgeDynamicity.Static,
             operation,
           ])
-        : atom instanceof AtomInstanceBase
+        : atom instanceof AtomInstance
         ? atom
         : ecosystem.getInstance(atom, params as AtomParamsType<A>)
 
@@ -78,7 +77,7 @@ export const injectAtomInstance: {
       }
     },
     prevDescriptor => {
-      const resolvedAtom = atom instanceof AtomInstanceBase ? atom.atom : atom
+      const resolvedAtom = atom instanceof AtomInstance ? atom.atom : atom
       const atomHasChanged =
         resolvedAtom.internalId !== prevDescriptor.instance.atom.internalId
 
@@ -106,7 +105,7 @@ export const injectAtomInstance: {
             GraphEdgeDynamicity.Static,
             operation,
           ])
-        : atom instanceof AtomInstanceBase
+        : atom instanceof AtomInstance
         ? atom
         : ecosystem.getInstance(atom, params as AtomParamsType<A>)
 

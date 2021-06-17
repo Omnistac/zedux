@@ -3,11 +3,7 @@ id: AtomInstanceTtl
 title: AtomInstanceTtl
 ---
 
-:::note
-🚧 Per-instance ttl is under construction.
-:::
-
-Ttl can be set at the ecosystem, atom, or atom instance levels. Setting a ttl at the atom instance level is the most flexible. You can do so using an [AtomApi](../classes/AtomApi).
+Ttl can be set at the [ecosystem](../classes/Ecosystem#defaultttl), [atom](../classes/Atom#ttl), or atom instance levels. Setting a ttl at the atom instance level is the most flexible. You can do so using an [AtomApi](../classes/AtomApi#setttl).
 
 ## Definition
 
@@ -19,10 +15,8 @@ Note that the [`.ttl` property of an AtomApi](../classes/AtomApi#ttl) can also b
 
 This is far more flexible than ecosystem- and atom-level ttl, which can only be a number.
 
-When a number is set, Zedux will set a timeout for `<ttl>` milliseconds. When that timeout times out, Zedux will clean up the atom instance.
-
-When a promise is set, Zedux will wait for that promise to resolve before cleaning up the atom instance.
-
-When an observable is set, Zedux will wait for that observable to emit before cleaning up the atom instance.
+- When a number is set, Zedux will set a timeout for `<ttl>` milliseconds. When that timeout times out, Zedux will clean up the atom instance.
+- When a promise is set, Zedux will wait for that promise to resolve before cleaning up the atom instance.
+- When an observable is set, Zedux will wait for that observable to emit before cleaning up the atom instance.
 
 In all cases, if the atom instance is used again while Zedux is awaiting the ok for cleanup, cleanup will be cancelled.

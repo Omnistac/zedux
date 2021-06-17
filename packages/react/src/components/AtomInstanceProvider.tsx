@@ -2,8 +2,8 @@ import React, { FC } from 'react'
 import { AtomInstance } from '../classes'
 
 export const AtomInstanceProvider: FC<
-  | { instance: AtomInstance<any, any, any>; instances?: undefined }
-  | { instance?: undefined; instances: AtomInstance<any, any, any>[] }
+  | { instance: AtomInstance<any, any, any, any>; instances?: undefined }
+  | { instance?: undefined; instances: AtomInstance<any, any, any, any>[] }
 > = ({ children, instance, instances }) => {
   if (!instance && !instances) {
     throw new Error(
@@ -12,7 +12,7 @@ export const AtomInstanceProvider: FC<
   }
 
   const allInstances =
-    instances || ([instance] as AtomInstance<any, any, any>[])
+    instances || ([instance] as AtomInstance<any, any, any, any>[])
 
   const el = allInstances.reduceRight((child, instance) => {
     const context = instance.atom.getReactContext()

@@ -159,11 +159,12 @@ export function mergeStateTrees(
   newStateTree: any,
   hierarchyConfig: HierarchyConfig
 ) {
-  if (!hierarchyConfig.isNode(oldStateTree)) {
-    return [newStateTree, newStateTree !== oldStateTree]
+  if (
+    !hierarchyConfig.isNode(oldStateTree) ||
+    !hierarchyConfig.isNode(newStateTree)
+  ) {
+    return [newStateTree, newStateTree !== oldStateTree] as const
   }
-
-  // TODO: Do we handle the case where the state used to be a tree, but is now a primitive?
 
   let hasChanges = false
   const mergedTree = hierarchyConfig.clone(oldStateTree)
@@ -182,5 +183,5 @@ export function mergeStateTrees(
     hierarchyConfig.set(mergedTree, key, clonedVal)
   })
 
-  return [hasChanges ? mergedTree : oldStateTree, hasChanges]
+  return [hasChanges ? mergedTree : oldStateTree, hasChanges] as const
 }

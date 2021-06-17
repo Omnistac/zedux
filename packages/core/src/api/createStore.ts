@@ -1,5 +1,5 @@
 import { hierarchyDescriptorToDiffTree } from '../hierarchy/create'
-import { mergeDiffTrees } from '../hierarchy/merge'
+import { mergeDiffTrees, mergeStateTrees } from '../hierarchy/merge'
 import { delegate, propagateChange } from '../hierarchy/traverse'
 import {
   Action,
@@ -11,9 +11,9 @@ import {
   HierarchyConfig,
   HierarchyDescriptor,
   Inducer,
+  RecursivePartial,
   Reducer,
   Settable,
-  Store,
   Subscriber,
   SubscriberObject,
 } from '../types'
@@ -26,59 +26,269 @@ import {
 } from '../utils/errors'
 import { INTERNAL_SUBSCRIBER_ID, STORE_IDENTIFIER } from '../utils/general'
 import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
-import { DiffNode, RegisterSubStore } from '../utils/types'
-import { actionTypes, effectTypes, metaTypes } from './constants'
+import { DiffNode } from '../utils/types'
+import { actionTypes, metaTypes } from './constants'
 import { addMeta, removeAllMeta } from './meta'
 
-interface StoreInternals<State = any> {
-  currentDiffTree?: DiffNode
-  currentState: State
-  hierarchyConfig: HierarchyConfig
-  isDispatching?: boolean
-  registerChildStore: RegisterSubStore
-  rootReducer?: Reducer<State>
-  store: Store<State>
-  // map subscriber to true if it's an internal subscriber
-  subscribers: Map<SubscriberObject<State>, boolean>
-}
-
 const RECALCULATE_ACTION = { type: actionTypes.RECALCULATE }
-const SUBSCRIBED_EFFECT = { effectType: effectTypes.SUBSCRIBER_ADDED }
-const UNSUBSCRIBED_EFFECT = { effectType: effectTypes.SUBSCRIBER_REMOVED }
-
-const dispatchAction = <State = any>(
-  action: ActionChain,
-  unwrappedAction: Action,
-  storeInternals: StoreInternals,
-  rootState: State
-) => {
-  if (storeInternals.isDispatching) {
-    throw new Error(invalidAccess('dispatch(), hydrate(), setState()'))
-  }
-
-  storeInternals.isDispatching = true
-
-  let error: Error | undefined
-  let newState = rootState
-
-  try {
-    if (storeInternals.rootReducer) {
-      newState = storeInternals.rootReducer(rootState, unwrappedAction)
-    }
-  } catch (err) {
-    error = err
-
-    throw err
-  } finally {
-    storeInternals.isDispatching = false
-
-    informSubscribers(newState, storeInternals, action, undefined, error)
-  }
-
-  return newState
-}
 
 /**
+  Creates a new Zedux store.
+*/
+export const createStore: {
+  <State = any>(
+    initialHierarchy?: HierarchyDescriptor<State>,
+    initialState?: State
+  ): Store<State>
+
+  <State = any>(initialHierarchy: null, initialState: State): Store<State>
+} = <State = any>(
+  initialHierarchy?: HierarchyDescriptor<State>,
+  initialState?: State
+) => {
+  return new Store<State>(initialHierarchy, initialState)
+}
+
+export class Store<State = any> {
+  /**
+    Used by the store's branch reducers in the generated reducer hierarchy to
+    interact with the hierarchical data type returned by the store's reducers.
+
+    This "hierarchical data type" is a plain object by default. But these
+    hierarchy config options can teach Zedux how to use an Immutable `Map` or
+    any recursive, map-like data structure.
+  */
+  static readonly hierarchyConfig: HierarchyConfig = defaultHierarchyConfig
+  static readonly $$typeof = STORE_IDENTIFIER
+
+  private _currentDiffTree?: DiffNode
+  private _currentState: State
+  private _isDispatching?: boolean
+  private _rootReducer?: Reducer<State>
+  private _subscribers = new Map<SubscriberObject<State>, boolean>()
+
+  constructor(
+    initialHierarchy?: HierarchyDescriptor<State>,
+    initialState?: State
+  ) {
+    this._currentState = initialState as State
+
+    if (initialHierarchy) this.use(initialHierarchy)
+  }
+
+  /**
+    Dispatches an action to the store.
+
+    The action will be sent through this store's reducer hierarchy (if any) and
+    passed on to any child stores after being wrapped in INHERIT meta nodes
+
+    The resulting state will be returned synchronously from this call.
+
+    This is a bound function property. Every store recreates this small
+    function. But it's always bound and can be passed around easily.
+  */
+  public dispatch = (action: Dispatchable) => this._dispatch(action)
+
+  /**
+    Returns the current state of the store.
+
+    Do not mutate the returned value.
+  */
+  public getState() {
+    if (this._isDispatching) {
+      throw new Error(invalidAccess('store.getState()'))
+    }
+
+    return this._currentState
+  }
+
+  /**
+    Applies a full hydration to the store.
+
+    Accepts either the new state or a function that accepts the current state
+    and returns the new state.
+
+    Dispatches the special HYDRATE action to the store's reducers. Effects
+    subscribers can inspect and record this action to implement time travel.
+
+    The HYDRATE action's `payload` property will be set to the new state. The
+    action's `meta` property will be set to the passed meta, if any.
+
+    Throws an error if called from the reducer layer.
+
+    Returns the new state.
+
+    Unlike setStateDeep, setState is a bound function property. Every store
+    recreates this small function. But it's always bound and can be passed
+    around easily.
+  */
+  public setState = (settable: Settable<State>, meta?: any) =>
+    this._setState(settable, meta)
+
+  /**
+    Applies a partial state update to the store.
+
+    Accepts either a deep partial state object or a function that accepts the
+    current state and returns a deep partial state object.
+
+    Dispatches the special PARTIAL_HYDRATE action to the store's reducers.
+    Effects subscribers can inspect and record this action to implement time
+    travel.
+
+    The PARTIAL_HYDRATE action's `payload` property will be set to the partial
+    state update.
+
+    Note that deep setting cannot remove properties from the state tree. If that
+    functionality is needed, use store.setState() or create a new reducer
+    hierarchy and pass it to store.use().
+
+    Throws an error if called from the reducer layer.
+
+    Returns the new state.
+
+    Unlike setState, setStateDeep is not bound. You must call it with context -
+    e.g. by using dot-notation: `store.setStateDeep(...)`
+  */
+  public setStateDeep(settable: Settable<State>, meta?: any) {
+    return this._setState(settable, meta, true)
+  }
+
+  /**
+    Registers a subscriber with the store.
+
+    The subscriber will be notified every time the store's state
+    changes.
+
+    Returns a subscription object. Calling `subscription.unsubscribe()`
+    unregisters the subscriber.
+  */
+  public subscribe(subscriber: Subscriber<State>) {
+    const subscriberObj =
+      typeof subscriber === 'function' ? { next: subscriber } : subscriber
+
+    if (subscriberObj.next) {
+      assert(
+        typeof subscriberObj.next === 'function',
+        getError('subscriberNext'),
+        subscriberObj.next
+      )
+    }
+
+    if (subscriberObj.error) {
+      assert(
+        typeof subscriberObj.error === 'function',
+        getError('subscriberError'),
+        subscriberObj.error
+      )
+    }
+
+    if (subscriberObj.effects) {
+      assert(
+        typeof subscriberObj.effects === 'function',
+        getError('subscriberEffects'),
+        subscriberObj.effects
+      )
+    }
+
+    // as any - this "id" field is hidden from the outside world
+    // so it doesn't exist on the Subscriber type
+    this._subscribers.set(
+      subscriberObj,
+      (subscriberObj as any).id === INTERNAL_SUBSCRIBER_ID
+    )
+
+    return {
+      unsubscribe: () => {
+        this._subscribers.delete(subscriberObj)
+      },
+    }
+  }
+
+  /**
+    Merges a hierarchy descriptor into the existing hierarchy descriptor.
+
+    Intelligently diffs the two hierarchies and only creates/recreates the
+    necessary reducers.
+
+    Dispatches the special RECALCULATE action to the store.
+  */
+  public use(newHierarchy: HierarchyDescriptor<State>) {
+    const newDiffTree = hierarchyDescriptorToDiffTree(
+      newHierarchy,
+      this._registerChildStore.bind(this)
+    )
+
+    this._currentDiffTree = mergeDiffTrees(
+      this._currentDiffTree,
+      newDiffTree,
+      (this.constructor as typeof Store).hierarchyConfig
+    )
+    this._rootReducer = this._currentDiffTree.reducer
+
+    if (this._rootReducer) {
+      this._dispatchAction(
+        RECALCULATE_ACTION,
+        RECALCULATE_ACTION,
+        this._currentState
+      )
+    }
+
+    return this // for chaining
+  }
+
+  private _dispatch(action: Dispatchable) {
+    if (typeof action === 'function') {
+      throw new TypeError(`
+      Zedux Error - store.dispatch() - Thunks are not currently supported.
+      Only normal action objects can be passed to store.dispatch().
+      Inducers should be passed to store.setState()`)
+    }
+
+    assertIsPlainObject(action, 'Action')
+
+    const delegateResult = delegate(this._currentDiffTree, action)
+
+    if (delegateResult !== false) {
+      // No need to inform subscribers - this store's effects subscriber
+      // on the child store will have already done that by this point
+      return this._currentState
+    }
+
+    return this._routeAction(action)
+  }
+
+  private _dispatchAction(
+    action: ActionChain,
+    unwrappedAction: Action,
+    rootState: State
+  ) {
+    if (this._isDispatching) {
+      throw new Error(invalidAccess('dispatch(), hydrate(), setState()'))
+    }
+
+    this._isDispatching = true
+
+    let error: Error | undefined
+    let newState = rootState
+
+    try {
+      if (this._rootReducer) {
+        newState = this._rootReducer(rootState, unwrappedAction)
+      }
+    } catch (err) {
+      error = err
+
+      throw err
+    } finally {
+      this._isDispatching = false
+
+      this._informSubscribers(newState, action, undefined, error)
+    }
+
+    return newState
+  }
+
+  /**
   "Hydrates" the store with the given state.
 
   Dispatches the special HYDRATE action to the store's inspectors
@@ -88,428 +298,190 @@ const dispatchAction = <State = any>(
 
   Throws an Error if called from the reducer layer.
 */
-const dispatchHydration = <State = any>(
-  newState: State,
-  storeInternals: StoreInternals<State>,
-  actionType = actionTypes.HYDRATE
-) => {
-  if (newState === storeInternals.currentState) {
-    // Nothing to do. Should this inform effects subscribers?
-    return storeInternals.currentState
+  private _dispatchHydration<State = any>(
+    state: State | RecursivePartial<State>,
+    actionType: string,
+    meta?: any
+  ) {
+    const newState =
+      actionType === actionTypes.HYDRATE
+        ? state
+        : mergeStateTrees(
+            this._currentState,
+            state,
+            (this.constructor as typeof Store).hierarchyConfig
+          )[0]
+
+    if (newState === this._currentState) {
+      // Nothing to do. TODO: Should this inform effects subscribers?
+      return this._currentState
+    }
+
+    const action: Action = {
+      payload: newState,
+      type: actionType,
+    }
+
+    if (meta != null) action.meta = meta
+
+    // Maybe we can provide a utility for setting a description for the
+    // hydration. Then wrap the action in an ActionMeta with that description
+    // as the metaData.
+
+    // Propagate the change to child stores and allow for effects.
+    return this._dispatchAction(action, action, newState)
   }
 
-  const action = {
-    type: actionType,
-    payload: newState,
-  }
+  private _dispatchInducer(
+    inducer: Inducer<State>,
+    meta?: any,
+    deep?: boolean
+  ) {
+    let newState
 
-  // Maybe we can provide a utility for setting a description for the
-  // hydration. Then wrap the action in an ActionMeta with that description
-  // as the metaData.
-
-  // Propagate the change to child stores and allow for effects.
-  return dispatchAction(action, action, storeInternals, newState)
-}
-
-const dispatchInducer = <State = any>(
-  inducer: Inducer<State>,
-  storeInternals: StoreInternals<State>
-) => {
-  let newState
-
-  try {
-    newState = inducer(storeInternals.currentState)
-  } catch (error) {
-    informSubscribers(
-      storeInternals.currentState,
-      storeInternals,
-      { type: actionTypes.PARTIAL_HYDRATE },
-      undefined,
-      error
-    )
-
-    throw error
-  }
-
-  return dispatchHydration(newState, storeInternals)
-}
-
-/**
-  Sets one or more hierarchy config options that will be used by the
-  store's intermediate reducers in the generated reducer hierarchy to
-  interact with the hierarchical data type returned by the store's
-  reducers. There _is_ sense in that sentence.
-
-  This "hierarchical data type" is a plain object by default. But these
-  hierarchy config options can teach Zedux how to use an Immutable `Map`
-  or any recursive, map-like data structure.
-*/
-const doConfigureHierarchy = (
-  next: Partial<HierarchyConfig>,
-  storeInternals: StoreInternals
-) => {
-  assertIsPlainObject(next, 'Hierarchy config object')
-
-  // Clone the existing config
-  const prev = storeInternals.hierarchyConfig
-  const clonedPrev = { ...prev }
-
-  Object.entries(next).forEach(([key, val]) => {
-    ;(clonedPrev as any)[key] = val
-  })
-
-  return clonedPrev
-}
-
-/**
-  Dispatches an action to the store.
-
-  The action will be sent through this store's reducer hierarchy (if any)
-  and passed on to any child stores after being wrapped in INHERIT meta nodes
-
-  The resulting state will be returned synchronously from this call.
-*/
-const doDispatch = (action: ActionChain, storeInternals: StoreInternals) => {
-  if (typeof action === 'function') {
-    throw new TypeError(`
-      Zedux Error - store.dispatch() - Thunks are not currently supported.
-      Only normal action objects can be passed to store.dispatch().
-      Inducers should be passed to store.setState()`)
-  }
-
-  assertIsPlainObject(action, 'Action')
-
-  const delegateResult = delegate(storeInternals.currentDiffTree, action)
-
-  if (delegateResult !== false) {
-    // No need to inform subscribers - this store's effects subscriber
-    // on the child store will have already done that by this point
-    return storeInternals.currentState
-  }
-
-  return routeAction(action, storeInternals)
-}
-
-const doRegisterChildStore = <State = any>(
-  childStorePath: string[],
-  childStore: Store,
-  storeInternals: StoreInternals<State>
-) => {
-  const effectsSubscriber: EffectsSubscriber<State> = ({
-    action,
-    effect,
-    error,
-    newState,
-    oldState,
-  }) => {
-    // If this store's reducer layer dispatched this action to this
-    // substore in the first place, ignore the propagation; this store
-    // will receive it anyway.
-    // const isInherited = hasMeta(action, metaTypes.INHERIT)
-    if (storeInternals.isDispatching) return
-
-    const newOwnState =
-      newState === oldState
-        ? storeInternals.currentState
-        : propagateChange(
-            storeInternals.currentState,
-            childStorePath,
-            newState,
-            storeInternals.hierarchyConfig
-          )
-
-    // Tell the subscribers what child store this effect came from.
-    const wrappedEffect =
-      effect && addMeta(effect, metaTypes.DELEGATE, childStorePath)
-
-    // Tell the subscribers what child store this action came from.
-    // This store (the parent) can use this info to determine how to
-    // recreate this state update.
-    const wrappedAction =
-      action && addMeta(action, metaTypes.DELEGATE, childStorePath)
-
-    informSubscribers(
-      newOwnState,
-      storeInternals,
-      wrappedAction,
-      wrappedEffect,
-      error
-    )
-  }
-
-  return childStore.subscribe({
-    effects: effectsSubscriber,
-    id: INTERNAL_SUBSCRIBER_ID,
-  } as any).unsubscribe
-}
-
-/**
-  Applies a partial state update to the store.
-
-  Accepts either a deep partial state object or a function that returns one.
-
-  Dispatches the special PARTIAL_HYDRATE action to the store's inspectors
-  and reducers. The PARTIAL_HYDRATE action's `payload` property will be
-  set to the partial state update, allowing inspectors to pick up on
-  the changes and implement time travel and whatnot.
-
-  Works similar to React's `setState()` but deeply merges nested nodes.
-
-  Note that this method cannot remove properties from the
-  state tree. If that functionality is needed, use store.hydrate()
-  or create a reducer hierarchy and .use() it.
-
-  Throws an error if called from the reducer layer.
-*/
-const doSetState = <State = any>(
-  settable: Settable<State>,
-  storeInternals: StoreInternals<State>
-) => {
-  if (typeof settable === 'function') {
-    return dispatchInducer(settable as Inducer<State>, storeInternals)
-  }
-
-  return dispatchHydration(settable, storeInternals)
-}
-
-/**
-  Registers a subscriber with the store.
-
-  The subscriber will be notified every time the store's state
-  changes.
-
-  Returns a subscription object. Calling `subscription.unsubscribe()`
-  unregisters the subscriber.
-*/
-const doSubscribe = <State = any>(
-  subscriber: Subscriber<State>,
-  storeInternals: StoreInternals<State>
-) => {
-  const subscriberObj =
-    typeof subscriber === 'function' ? { next: subscriber } : subscriber
-
-  if (subscriberObj.next) {
-    assert(
-      typeof subscriberObj.next === 'function',
-      getError('subscriberNext'),
-      subscriberObj.next
-    )
-  }
-
-  if (subscriberObj.error) {
-    assert(
-      typeof subscriberObj.error === 'function',
-      getError('subscriberError'),
-      subscriberObj.error
-    )
-  }
-
-  if (subscriberObj.effects) {
-    assert(
-      typeof subscriberObj.effects === 'function',
-      getError('subscriberEffects'),
-      subscriberObj.effects
-    )
-  }
-
-  // as any - this "id" field is hidden from the outside world
-  // so it doesn't exist on the Subscriber type
-  storeInternals.subscribers.set(
-    subscriberObj,
-    (subscriberObj as any).id === INTERNAL_SUBSCRIBER_ID
-  )
-
-  informSubscribers(
-    storeInternals.currentState,
-    storeInternals,
-    undefined,
-    SUBSCRIBED_EFFECT
-  )
-
-  return {
-    unsubscribe() {
-      storeInternals.subscribers.delete(subscriberObj)
-      informSubscribers(
-        storeInternals.currentState,
-        storeInternals,
+    try {
+      newState = inducer(this._currentState)
+    } catch (error) {
+      this._informSubscribers(
+        this._currentState,
+        { type: actionTypes.PARTIAL_HYDRATE },
         undefined,
-        UNSUBSCRIBED_EFFECT
+        error
       )
-    },
-  }
-}
 
-/**
-  Merges a hierarchy descriptor into the existing hierarchy descriptor.
+      throw error
+    }
 
-  Intelligently diffs the two hierarchies and only creates/recreates the
-  necessary reducers.
-
-  Dispatches the special RECALCULATE action to the store.
-*/
-const doUse = <State = any>(
-  newHierarchy: HierarchyDescriptor<State>,
-  storeInternals: StoreInternals<State>
-) => {
-  const newDiffTree = hierarchyDescriptorToDiffTree(
-    newHierarchy,
-    storeInternals.registerChildStore
-  )
-
-  storeInternals.currentDiffTree = mergeDiffTrees(
-    storeInternals.currentDiffTree,
-    newDiffTree,
-    storeInternals.hierarchyConfig
-  )
-  storeInternals.rootReducer = storeInternals.currentDiffTree.reducer
-
-  if (storeInternals.rootReducer) {
-    dispatchAction(
-      RECALCULATE_ACTION,
-      RECALCULATE_ACTION,
-      storeInternals,
-      storeInternals.currentState
+    return this._dispatchHydration(
+      newState,
+      deep ? actionTypes.PARTIAL_HYDRATE : actionTypes.HYDRATE,
+      meta
     )
   }
-}
 
-const informSubscribers = <State = any>(
-  newState: State,
-  storeInternals: StoreInternals<State>,
-  action?: ActionChain,
-  effect?: EffectChain,
-  error?: Error
-) => {
-  const oldState = storeInternals.currentState
+  private _informSubscribers(
+    newState: State,
+    action?: ActionChain,
+    effect?: EffectChain,
+    error?: Error
+  ) {
+    const oldState = this._currentState
 
-  // There is a case here where a reducer in this store could
-  // dispatch an action to a parent or child store. Investigate
-  // ways to handle this.
+    // There is a case here where a reducer in this store could
+    // dispatch an action to a parent or child store. Investigate
+    // ways to handle this.
 
-  // Update the stored state
-  storeInternals.currentState = newState
+    // Update the stored state
+    this._currentState = newState
 
-  let infoObj: EffectData<State> | undefined
+    let infoObj: EffectData<State> | undefined
 
-  // Clone the subscribers in case of mutation mid-iteration
-  const subscribers = [...storeInternals.subscribers.keys()]
+    // Clone the subscribers in case of mutation mid-iteration
+    const subscribers = [...this._subscribers.keys()]
 
-  for (const subscriber of subscribers) {
-    if (error && subscriber.error) subscriber.error(error)
+    for (const subscriber of subscribers) {
+      if (error && subscriber.error) subscriber.error(error)
 
-    if (newState !== oldState && subscriber.next) {
-      subscriber.next(newState, oldState)
-    }
-
-    if (!subscriber.effects) continue
-
-    if (!infoObj) {
-      infoObj = {
-        action,
-        effect,
-        error,
-        newState,
-        oldState,
-        store: storeInternals.store,
+      if (newState !== oldState && subscriber.next) {
+        subscriber.next(newState, oldState, action as ActionChain)
       }
+
+      if (!subscriber.effects) continue
+
+      if (!infoObj) {
+        infoObj = {
+          action,
+          effect,
+          error,
+          newState,
+          oldState,
+          store: this,
+        }
+      }
+
+      subscriber.effects(infoObj as EffectData<State>)
+    }
+  }
+
+  private _registerChildStore<State = any>(
+    childStorePath: string[],
+    childStore: Store
+  ) {
+    const effectsSubscriber: EffectsSubscriber<State> = ({
+      action,
+      effect,
+      error,
+      newState,
+      oldState,
+    }) => {
+      // If this store's reducer layer dispatched this action to this
+      // substore in the first place, ignore the propagation; this store
+      // will receive it anyway.
+      // const isInherited = hasMeta(action, metaTypes.INHERIT)
+      if (this._isDispatching) return
+
+      const newOwnState =
+        newState === oldState
+          ? this._currentState
+          : propagateChange(
+              this._currentState,
+              childStorePath,
+              newState,
+              (this.constructor as typeof Store).hierarchyConfig
+            )
+
+      // Tell the subscribers what child store this effect came from.
+      const wrappedEffect =
+        effect && addMeta(effect, metaTypes.DELEGATE, childStorePath)
+
+      // Tell the subscribers what child store this action came from.
+      // This store (the parent) can use this info to determine how to
+      // recreate this state update.
+      const wrappedAction =
+        action && addMeta(action, metaTypes.DELEGATE, childStorePath)
+
+      this._informSubscribers(newOwnState, wrappedAction, wrappedEffect, error)
     }
 
-    subscriber.effects(infoObj)
-  }
-}
-
-const routeAction = (action: ActionChain, storeInternals: StoreInternals) => {
-  const unwrappedAction = removeAllMeta(action)
-
-  assertIsValidAction(unwrappedAction)
-
-  if (unwrappedAction.type === actionTypes.HYDRATE) {
-    return dispatchHydration(unwrappedAction.payload, storeInternals)
+    return childStore.subscribe({
+      effects: effectsSubscriber,
+      id: INTERNAL_SUBSCRIBER_ID,
+    } as any).unsubscribe
   }
 
-  if (unwrappedAction.type === actionTypes.PARTIAL_HYDRATE) {
-    return doSetState(unwrappedAction.payload, storeInternals)
-  }
+  private _routeAction(action: ActionChain) {
+    const unwrappedAction = removeAllMeta(action)
 
-  return dispatchAction(
-    action,
-    unwrappedAction,
-    storeInternals,
-    storeInternals.currentState
-  )
-}
+    assertIsValidAction(unwrappedAction)
 
-/**
-  Creates a new Zedux store.
-
-  A store is just a few functions and a special $$typeof symbol that identifies
-  it internally.
-*/
-export const createStore: {
-  <State = any>(
-    initialHierarchy?: HierarchyDescriptor<State>,
-    initialState?: State,
-    hierarchyConfig?: HierarchyConfig
-  ): Store<State>
-
-  <State = any>(
-    initialHierarchy: null,
-    initialState: State,
-    hierarchyConfig?: HierarchyConfig
-  ): Store<State>
-} = <State = any>(
-  initialHierarchy?: HierarchyDescriptor<State>,
-  initialState?: State,
-  hierarchyConfig?: HierarchyConfig
-) => {
-  const dispatch = (action: Dispatchable) => doDispatch(action, internals)
-
-  /**
-    Returns the current state of the store.
-
-    Do not mutate this value.
-  */
-  const getState = () => {
-    if (internals.isDispatching) {
-      throw new Error(invalidAccess('store.getState()'))
+    if (unwrappedAction.type === actionTypes.HYDRATE) {
+      return this._dispatchHydration(
+        unwrappedAction.payload,
+        actionTypes.HYDRATE,
+        unwrappedAction.meta
+      )
     }
 
-    return internals.currentState
+    if (unwrappedAction.type === actionTypes.PARTIAL_HYDRATE) {
+      return this._dispatchHydration(
+        unwrappedAction.payload,
+        actionTypes.PARTIAL_HYDRATE,
+        unwrappedAction.meta
+      )
+    }
+
+    return this._dispatchAction(action, unwrappedAction, this._currentState)
   }
 
-  const setState = (settable: Settable<State>) =>
-    doSetState(settable, internals)
+  private _setState(settable: Settable<State>, meta?: any, deep = false) {
+    if (typeof settable === 'function') {
+      return this._dispatchInducer(settable as Inducer<State>, meta, deep)
+    }
 
-  const subscribe = (subscriber: Subscriber<State>) =>
-    doSubscribe(subscriber, internals)
-
-  const use = (newHierarchy: HierarchyDescriptor<State>) => {
-    doUse(newHierarchy, internals)
-
-    return internals.store // for chaining
+    return this._dispatchHydration(
+      settable,
+      deep ? actionTypes.PARTIAL_HYDRATE : actionTypes.HYDRATE,
+      meta
+    )
   }
-
-  const registerChildStore = (childStorePath: string[], childStore: Store) =>
-    doRegisterChildStore(childStorePath, childStore, internals)
-
-  const internals: StoreInternals<State> = {
-    currentState: undefined as any,
-    hierarchyConfig: hierarchyConfig || defaultHierarchyConfig,
-    registerChildStore,
-    subscribers: new Map(),
-    store: {
-      dispatch,
-      getState,
-      setState,
-      subscribe,
-      use,
-      $$typeof: STORE_IDENTIFIER,
-    },
-  }
-
-  if (hierarchyConfig) doConfigureHierarchy(hierarchyConfig, internals)
-  if (typeof initialState !== 'undefined') internals.currentState = initialState
-  if (initialHierarchy) internals.store.use(initialHierarchy)
-
-  return internals.store
 }

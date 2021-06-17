@@ -9,7 +9,7 @@ import { LiveEditor } from '../../../LiveEditor'
 import { useAtomConsumer } from '@zedux/react'
 ```
 
-A React hook accepts an [atom](../classes/AtomBase) and returns an [instance](../classes/AtomInstanceBase) of that atom that has been provided over React context via [`<AtomInstanceProvider>`](../components/AtomInstanceProvider).
+A React hook accepts an [atom](../classes/Atom) and returns an [instance](../classes/AtomInstance) of that atom that has been provided over React context via [`<AtomInstanceProvider>`](../components/AtomInstanceProvider).
 
 If no instance has been provided, this hook will return an empty object. Pass default params as the second argument to tell Zedux to create an atom instance if one wasn't provided. Pass `true` as the second argument to tell Zedux to throw an error if you forgot to provide an instance.
 
@@ -96,4 +96,4 @@ If the atom doesn't take parameters, pass an empty array to tell Zedux to create
 
 ### `throwIfNotProvided`
 
-Optional. A boolean. If true, Zedux will throw an error if you forgot to provide an atom instance.
+Optional. A boolean. If true, Zedux will throw an error if you forgot to provide an atom instance above this component in the component tree.

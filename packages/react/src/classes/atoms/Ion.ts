@@ -1,6 +1,7 @@
 import { Settable } from '@zedux/core'
 import { Atom } from '@zedux/react/classes/atoms/Atom'
-import { api } from '@zedux/react/factories'
+import { api } from '@zedux/react/factories/api'
+import { ion } from '@zedux/react/factories/ion'
 import {
   injectEcosystem,
   injectGet,
@@ -8,14 +9,16 @@ import {
 } from '@zedux/react/injectors'
 import { AtomConfig, IonGet, IonSet, IonSetUtils } from '@zedux/react/types'
 import { diContext } from '@zedux/react/utils/csContexts'
-import { AtomInstance } from '../instances/AtomInstance'
-import { AtomBase } from './AtomBase'
+import { AtomInstance } from '../AtomInstance'
 
 export class Ion<
   State,
   Params extends any[],
   Exports extends Record<string, any>
 > extends Atom<State, Params, Exports> {
+  private _get: IonGet<State, Params, Exports>
+  private _set?: IonSet<State, Params, Exports>
+
   constructor(
     key: string,
     get: IonGet<State, Params, Exports>,
@@ -34,7 +37,7 @@ export class Ion<
       if (set) {
         ionApi.addSetStateInterceptor(settable => {
           const innerSet: IonSetUtils<State, Params, Exports>['set'] = (
-            atom: AtomBase<any, any[], any>,
+            atom: Atom<any, [...any], any>,
             paramsIn: any[],
             settableIn?: Settable
           ) => {
@@ -50,14 +53,19 @@ export class Ion<
               ecosystem,
               get: innerGet,
               getInstance,
-              instance: instance as AtomInstance<State, Params, Exports>,
+              instance: instance as AtomInstance<
+                State,
+                Params,
+                Exports,
+                Atom<State, Params, Exports>
+              >,
               set: innerSet,
             },
             settable
           )
 
           return typeof result === 'undefined'
-            ? instance._stateStore.getState()
+            ? instance.store.getState()
             : result
         })
       }
@@ -66,5 +74,19 @@ export class Ion<
     }
 
     super(key, value, config)
+
+    this._get = get
+    this._set = set
+  }
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  public override(
+    newGet?: IonGet<State, Params, Exports>,
+    newSet?: IonSet<State, Params, Exports>
+  ) {
+    return ion(this.key, newGet || this._get, newSet || this._set, {
+      flags: this.flags,
+    })
   }
 }

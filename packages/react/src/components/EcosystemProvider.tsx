@@ -19,6 +19,8 @@ export const EcosystemProvider: FC<
 > = ({
   children,
   context,
+  defaultForwardPromises,
+  defaultTtl,
   destroyOnUnmount = true,
   ecosystem: passedEcosystem,
   flags,
@@ -29,7 +31,16 @@ export const EcosystemProvider: FC<
   const es = useMemo(() => {
     const resolvedEcosystem =
       passedEcosystem ||
-      ecosystem({ context, destroyOnUnmount, flags, id, overrides, preload })
+      ecosystem({
+        context,
+        defaultForwardPromises,
+        defaultTtl,
+        destroyOnUnmount,
+        flags,
+        id,
+        overrides,
+        preload,
+      })
 
     // If this ecosystem is shared across windows, it may still need to be added
     // to this window's instance of Zedux' globalStore

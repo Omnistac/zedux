@@ -12,6 +12,7 @@ import {
   nullNodes,
   plainObjects,
 } from '@zedux/core-test/utils'
+import { createStore } from '@zedux/core'
 
 describe('delegate()', () => {
   const action1 = {
@@ -177,7 +178,7 @@ describe('getHierarchyType()', () => {
   })
 
   test('detects a Store node', () => {
-    const mockStore = createMockStore()
+    const mockStore = createStore()
 
     expect(getHierarchyType(mockStore)).toBe(HierarchyType.Store)
   })

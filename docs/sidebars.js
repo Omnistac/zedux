@@ -18,8 +18,8 @@ module.exports = {
     ],
   },
   react: {
-    '💡 About': ['react/about/introduction', 'react/about/overview'],
-    '🚶 Walkthrough': [
+    About: ['react/about/introduction', 'react/about/overview'],
+    Walkthrough: [
       'react/walkthrough/quick-start',
       'react/walkthrough/creating-atoms',
       'react/walkthrough/using-atoms',
@@ -31,20 +31,17 @@ module.exports = {
       'react/walkthrough/context',
       'react/walkthrough/suspense',
     ],
-    '📖 API': [
+    API: [
       {
         type: 'category',
         label: '📚 Classes',
         items: [
           'react/api/classes/Atom',
           'react/api/classes/AtomApi',
-          'react/api/classes/AtomBase',
           'react/api/classes/AtomInstance',
-          'react/api/classes/AtomInstanceBase',
           'react/api/classes/Ecosystem',
           'react/api/classes/Ion',
           'react/api/classes/LocalAtom',
-          'react/api/classes/StandardAtomBase',
           'react/api/classes/Store',
         ],
       },

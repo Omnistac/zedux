@@ -1,4 +1,4 @@
-import { actionTypes, createStore, metaTypes } from '@zedux/core/index'
+import { actionTypes, createStore, metaTypes, Store } from '@zedux/core/index'
 import {
   dispatchables,
   nonDispatchables,
@@ -135,7 +135,7 @@ describe('Store.dispatch()', () => {
 
     store.dispatch(action)
 
-    expect(subscriber).toHaveBeenCalledWith({ a: 2 }, { a: 1 })
+    expect(subscriber).toHaveBeenCalledWith({ a: 2 }, { a: 1 }, action)
     expect(subscriber).toHaveBeenCalledTimes(1)
   })
 
@@ -308,7 +308,10 @@ describe('Store.setState()', () => {
     store.subscribe(subscriber)
     store.setState(hydratedState)
 
-    expect(subscriber).toHaveBeenCalledWith(hydratedState, undefined)
+    expect(subscriber).toHaveBeenCalledWith(hydratedState, undefined, {
+      payload: hydratedState,
+      type: actionTypes.HYDRATE,
+    })
   })
 
   test('does nothing if the state did not change', () => {
@@ -324,40 +327,43 @@ describe('Store.setState()', () => {
     expect(subscriber).not.toHaveBeenCalled()
     expect(state).toBe(initialState)
   })
+})
 
-  // test('deeply merges the new state into the old state', () => {
-  //   const initialState = {
-  //     a: 1,
-  //     b: {
-  //       c: 2,
-  //       d: {
-  //         e: 3,
-  //       },
-  //     },
-  //   }
+describe('Store.setStateDeep()', () => {
+  test('deeply merges the new state into the old state', () => {
+    const initialState = {
+      a: 1,
+      b: {
+        c: 2,
+        d: {
+          e: 3,
+        },
+      },
+    }
 
-  //   const store = createStore().hydrate(initialState)
+    const store = createStore(null, initialState)
 
-  //   const state = store.setState({
-  //     b: {
-  //       c: 4,
-  //       f: 5,
-  //     },
-  //   })
+    const state = store.setStateDeep({
+      b: {
+        c: 4,
+        // @ts-expect-error f doesn't exist in State type
+        f: 5,
+      },
+    })
 
-  //   expect(state).toEqual({
-  //     a: 1,
-  //     b: {
-  //       c: 4,
-  //       d: {
-  //         e: 3,
-  //       },
-  //       f: 5,
-  //     },
-  //   })
+    expect(state).toEqual({
+      a: 1,
+      b: {
+        c: 4,
+        d: {
+          e: 3,
+        },
+        f: 5,
+      },
+    })
 
-  //   expect(state.b.d).toBe(initialState.b.d)
-  // })
+    expect(state.b.d).toBe(initialState.b.d)
+  })
 })
 
 describe('store.subscribe()', () => {
@@ -409,10 +415,12 @@ describe('store.subscribe()', () => {
 describe('store.use()', () => {
   test('returns the store for chaining', () => {
     const store = createStore()
-      .use()
+      .use(undefined as any)
       .use(() => 1)
       .use(null)
 
-    expect(store.$$typeof).toBe(Symbol.for('zedux.store'))
+    expect((store.constructor as typeof Store).$$typeof).toBe(
+      Symbol.for('zedux.store')
+    )
   })
 })

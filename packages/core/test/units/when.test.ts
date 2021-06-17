@@ -9,7 +9,6 @@ describe('Zedux.when()', () => {
     expect(builder).toEqual({
       machine: expect.any(Function),
       receivesAction: expect.any(Function),
-      receivesEffect: expect.any(Function),
       stateChanges: expect.any(Function),
       stateMatches: expect.any(Function),
       subscription: {
@@ -28,7 +27,6 @@ describe('Zedux.when()', () => {
       leaves: expect.any(Function),
       machine: expect.any(Function),
       receivesAction: expect.any(Function),
-      receivesEffect: expect.any(Function),
       stateChanges: expect.any(Function),
       stateMatches: expect.any(Function),
       subscription: expect.objectContaining({

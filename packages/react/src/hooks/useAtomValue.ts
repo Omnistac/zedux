@@ -1,26 +1,26 @@
-import { AtomBase, AtomInstanceBase } from '../classes'
+import { Atom, AtomInstance } from '../classes'
 import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
 import { useAtomInstanceDynamic } from './useAtomInstanceDynamic'
 
 export const useAtomValue: {
-  <A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+  <A extends Atom<any, [], any>>(atom: A): AtomStateType<A>
 
-  <A extends AtomBase<any, any, any>>(
+  <A extends Atom<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  <AI extends AtomInstanceBase<any, any, any>>(
+  <AI extends AtomInstance<any, [...any], any, any>>(
     instance: AI
   ): AtomInstanceStateType<AI>
-} = <A extends AtomBase<any, any, any>>(
+} = <A extends Atom<any, [...any], any>>(
   atom: A,
   params?: AtomParamsType<A>
 ) => {
   const instance = useAtomInstanceDynamic(
     atom,
     params as AtomParamsType<A>
-  ) as AtomInstanceBase<AtomStateType<A>, any, any>
+  ) as AtomInstance<AtomStateType<A>, [...any], any, any>
 
-  return instance._stateStore.getState()
+  return instance.store.getState()
 }

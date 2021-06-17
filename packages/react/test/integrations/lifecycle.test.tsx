@@ -207,7 +207,10 @@ describe('ttl', () => {
     jest.runAllTimers() // make 4 and 3-["1"] effects run
 
     const button = await findByText('Change Children')
-    fireEvent.click(button)
+
+    act(() => {
+      fireEvent.click(button)
+    })
 
     await findByText('One')
     expect(effects).toEqual([])

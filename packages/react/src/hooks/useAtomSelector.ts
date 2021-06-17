@@ -1,20 +1,18 @@
 import { Selector } from '@zedux/core'
-import { AtomBase, AtomInstanceBase } from '../classes'
 import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
 import { useAtomInstance } from './useAtomInstance'
 import { useEffect, useRef, useState } from 'react'
 import { GraphEdgeSignal } from '../utils'
+import { Atom, AtomInstance } from '../classes'
 
 const useAtomInstanceSelector = <
-  AI extends AtomInstanceBase<any, any, any>,
+  AI extends AtomInstance<any, any, any, any>,
   D extends any = any
 >(
   instance: AI,
   selector: (state: AtomInstanceStateType<AI>) => D
 ) => {
-  const [state, setState] = useState(() =>
-    selector(instance._stateStore.getState())
-  )
+  const [state, setState] = useState(() => selector(instance.store.getState()))
   const [, forceRender] = useState<any>()
   const selectorRef = useRef(selector)
   selectorRef.current = selector
@@ -46,22 +44,22 @@ const useAtomInstanceSelector = <
 }
 
 export const useAtomSelector: {
-  <A extends AtomBase<any, [], any>, D = any>(
+  <A extends Atom<any, [], any>, D = any>(
     atom: A,
     selector: Selector<AtomStateType<A>, D>
   ): D
 
-  <A extends AtomBase<any, any, any>, D = any>(
+  <A extends Atom<any, [...any], any>, D = any>(
     atom: A,
     params: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
     selector: Selector<AtomStateType<A>, D>
   ): D
 
-  <AI extends AtomInstanceBase<any, any, any>, D = any>(
+  <AI extends AtomInstance<any, [...any], any, any>, D = any>(
     instance: AI,
     selector: Selector<AtomInstanceStateType<AI>, D>
   ): D
-} = <A extends AtomBase<any, any, any>, D = any>(
+} = <A extends Atom<any, [...any], any>, D = any>(
   atom: A,
   paramsArg?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
   selectorArg?: Selector<AtomStateType<A>, D>
@@ -72,8 +70,9 @@ export const useAtomSelector: {
 
   const selector = selectorArg || (paramsArg as Selector<AtomStateType<A>, D>)
 
-  const instance = useAtomInstance(atom, params, false) as AtomInstanceBase<
+  const instance = useAtomInstance(atom, params, false) as AtomInstance<
     AtomStateType<A>,
+    [...any],
     any,
     any
   >

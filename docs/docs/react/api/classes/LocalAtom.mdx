@@ -5,9 +5,9 @@ title: LocalAtom
 
 import { LiveEditor } from '../../../LiveEditor'
 
-Extends [StandardAtomBase](StandardAtomBase).
+Extends [Atom](Atom).
 
-[Local atoms](../api/classes/LocalAtom) are a type of atom that specializes in React Context.
+Local atoms are a type of atom that specializes in React Context.
 
 The first param of all local atoms is an optional string id. You can pass this string yourself to id local atoms manually. This can be useful e.g. when persisting/rehydrating them, or just so you know what's what when debugging. Manually-id'd local atoms can also be reused anywhere by passing the same id, just like any other normal atom.
 
@@ -51,7 +51,7 @@ useAtomInstance(myLocalAtom, ['manual-id']) // creates another new instance
 useAtomInstance(myLocalAtom, ['manual-id']) // reuses the 'manual-id' instance
 ```
 
-Local atoms also always set [`ttl`](../api/StandardAtomBase#ttl) to `0`, which will clean up atom instances immediately when all components using the atom instance unmount.
+Local atoms also always set [`ttl`](../api/Atom#ttl) to `0`, which will clean up atom instances immediately when all components using the atom instance unmount.
 
 ## Example
 
@@ -94,14 +94,14 @@ function Popups() {
 }
 `}</LiveEditor>
 
-## Methods
+## Overriding
 
-Local atoms expose only one method apart from those inherited from [`StandardAtomBase`](StandardAtomBase):
-
-### `.override`
-
-Creates an exact clone of this local atom, but with a different value.
+This class overrides the Atom class's [`.override` method](Atom#override) to return instances of this class instead of the Atom class.
 
 ```ts
-.override(newValue) => Atom
+import { localAtom } from '@zedux/react'
+
+const myLocalAtom = localAtom('myLocal', initialValue)
+
+const clone = myLocalAtom.override(newValue)
 ```

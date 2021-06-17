@@ -170,13 +170,8 @@ const machine = createMachine(
   dark.on(cycle, classic),
   classic.on(cycle, light)
 )\n
-const themeAtom = atom('theme', () => {
-  const store = injectStore(() => createStore(machine))\n
-  return store
-})\n
 function Theme() {
-  const theme = useAtomValue(themeAtom)
-  const { dispatch } = useAtomInstance(themeAtom)\n
+  const [theme, dispatch] = useReducer(machine, light.type)\n
   return (
     <button
       onClick={() => dispatch(cycle())}

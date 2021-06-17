@@ -43,12 +43,29 @@ describe('store composition', () => {
 
     child.setState(() => 'a')
 
-    expect(parentSubscriber).toHaveBeenLastCalledWith('a', undefined)
+    const getExpectedAction = (payload: string) => ({
+      metaData: [],
+      metaType: metaTypes.DELEGATE,
+      payload: {
+        payload,
+        type: actionTypes.HYDRATE,
+      },
+    })
+
+    expect(parentSubscriber).toHaveBeenLastCalledWith(
+      'a',
+      undefined,
+      getExpectedAction('a')
+    )
     expect(parentSubscriber).toHaveBeenCalledTimes(1)
 
     grandchild.setState(() => 'b')
 
-    expect(parentSubscriber).toHaveBeenLastCalledWith('b', 'a')
+    expect(parentSubscriber).toHaveBeenLastCalledWith('b', 'a', {
+      metaData: [],
+      metaType: metaTypes.DELEGATE,
+      payload: getExpectedAction('b'),
+    })
     expect(parentSubscriber).toHaveBeenCalledTimes(2)
 
     parent.use(grandchild)

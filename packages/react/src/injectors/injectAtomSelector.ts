@@ -1,12 +1,12 @@
 import { Selector } from '@zedux/core'
-import { AtomBase, AtomInstanceBase } from '../classes'
 import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
 import { injectAtomInstance } from './injectAtomInstance'
 import { InjectorType, SelectorInjectorDescriptor, split } from '../utils'
 import { injectEcosystem } from './injectEcosystem'
+import { Atom, AtomInstance } from '../classes'
 
 const injectAtomInstanceSelector = <
-  AI extends AtomInstanceBase<any, any, any>,
+  AI extends AtomInstance<any, any, any, any>,
   D extends any = any
 >(
   instance: AI,
@@ -49,7 +49,7 @@ const injectAtomInstanceSelector = <
         cleanup,
         instance,
         selector,
-        selectorResult: selector(instance._stateStore.getState()),
+        selectorResult: selector(instance.store.getState()),
         type: InjectorType.Selector,
       }
 
@@ -86,7 +86,7 @@ const injectAtomInstanceSelector = <
 
       if (prevDescriptor.selector === selector) return prevDescriptor
 
-      const newResult = selector(instance._stateStore.getState())
+      const newResult = selector(instance.store.getState())
       prevDescriptor.selectorResult = newResult
       prevDescriptor.selector = selector
 
@@ -98,22 +98,22 @@ const injectAtomInstanceSelector = <
 }
 
 export const injectAtomSelector: {
-  <A extends AtomBase<any, [], any>, D = any>(
+  <A extends Atom<any, [], any>, D = any>(
     atom: A,
     selector: Selector<AtomStateType<A>, D>
   ): D
 
-  <A extends AtomBase<any, any, any>, D = any>(
+  <A extends Atom<any, [...any], any>, D = any>(
     atom: A,
     params: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
     selector: Selector<AtomStateType<A>, D>
   ): D
 
-  <AI extends AtomInstanceBase<any, any, any>, D = any>(
+  <AI extends AtomInstance<any, [...any], any, any>, D = any>(
     instance: AI,
     selector: Selector<AtomInstanceStateType<AI>, D>
   ): D
-} = <A extends AtomBase<any, any, any>, D = any>(
+} = <A extends Atom<any, [...any], any>, D = any>(
   atom: A,
   paramsArg: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
   selectorArg?: Selector<AtomStateType<A>, D>
@@ -129,7 +129,7 @@ export const injectAtomSelector: {
     params,
     'injectAtomSelector',
     false
-  ) as AtomInstanceBase<AtomStateType<A>, any, any>
+  ) as AtomInstance<AtomStateType<A>, [...any], any, any>
 
   return injectAtomInstanceSelector(instance, selector)
 }

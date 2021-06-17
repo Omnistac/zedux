@@ -1,4 +1,4 @@
-import { AtomBase, AtomInstanceBase } from '../classes'
+import { Atom, AtomInstance } from '../classes'
 import { AtomInstanceType, AtomParamsType } from '../types'
 import { GraphEdgeDynamicity, GraphEdgeInfo } from '../utils'
 import { diContext } from '../utils/csContexts'
@@ -36,27 +36,27 @@ const defaultEdgeInfo: GraphEdgeInfo = [
  * @returns A `getInstance` function that returns instances of an atom
  */
 export const injectGetInstance: {
-  <A extends AtomBase<any, any, any>>(atom: A): (
+  <A extends Atom<any, [...any], any>>(atom: A): (
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ) => AtomInstanceType<A>
 
   (): {
-    <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+    <A extends Atom<any, [], any>>(atom: A): AtomInstanceType<A>
 
-    <A extends AtomBase<any, any, any>>(
+    <A extends Atom<any, [...any], any>>(
       atom: A,
       params: AtomParamsType<A>,
       edgeInfo?: GraphEdgeInfo
     ): AtomInstanceType<A>
 
-    <AI extends AtomInstanceBase<any, any, any>>(
+    <AI extends AtomInstance<any, [...any], any, any>>(
       instance: AI,
       params?: [],
       edgeInfo?: GraphEdgeInfo
     ): AI
   }
-} = <A extends AtomBase<any, any, any>>(atom?: A) => {
+} = <A extends Atom<any, [...any], any>>(atom?: A) => {
   const { instance } = diContext.consume()
 
   if (atom) {
@@ -64,7 +64,7 @@ export const injectGetInstance: {
       instance._getInstance(atom, params, edgeInfo)) as any // unfortunate
   }
 
-  return <A extends AtomBase<any, any, any>>(
+  return <A extends Atom<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
     edgeInfo = defaultEdgeInfo
