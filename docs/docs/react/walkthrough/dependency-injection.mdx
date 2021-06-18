@@ -129,7 +129,11 @@ Static edges don't trigger reevaluations or rerenders, so what's the point? Ther
 
 ## Overrides
 
-Now that we've got dependencies injected, we need a way to swap them out. Atoms have a [`.override()` method](../api/classes/Atom#override) which will create an exact clone of the atom, but with a different value.
+Now that we've got dependencies injected, we need a way to swap them out.
+
+### Creating
+
+Atoms have a [`.override()` method](../api/classes/Atom#override) which will create an exact clone of the atom, but with a different value.
 
 ```ts
 const axiosAtom = atom('axios', axios)
@@ -140,23 +144,20 @@ const testAxiosAtom = axiosAtom.override({ post: jest.fn() })
 You don't have to use `.override()`. You can create a clone manually. The only requirement is that the override has the same `key`:
 
 ```ts
-const myAtom = atom('my', 'some state')
-const myAtomOverride = atom('my', 'overridden state!', { ttl: 0 })
+const testAtom = atom('test', 'some state')
+const testAtomOverride = atom('test', 'overridden state!', { ttl: 0 })
 ```
 
 The nice thing about `.override()` for TS users is that it will tell you if the override doesn't match the overridden atom's type in any way.
 
+### Using
+
 These overridden atoms can then be supplied to an `ecosystem` via the `overrides` field:
 
 ```tsx
-const testEcosystem = ecosystem({
-  atoms: [testAxiosAtom],
-  id: 'test'
-})
-
 function TestApp() {
   return (
-    <EcosystemProvider ecosystem={testEcosystem}>
+    <EcosystemProvider id="test" overrides={[testAxiosAtom]}>
       <Routes />
     </EcosystemProvider>
   )
@@ -175,6 +176,48 @@ const userAtom = ion('user', ({ get }) => {
   const axios = get(axiosAtom) // testAxiosAtom is injected instead
 })
 ```
+
+### Updating
+
+Atom implementations can be swapped out dynamically using [`ecosystem.setOverrides()`](../api/classes/Ecosystem#setoverrides). This is an extremely powerful feature of Zedux' DI model.
+
+<LiveEditor resultVar="Swapper">{`
+const one = atom('common-key', () => 'Numero Uno')
+const two = atom('common-key', () => 'I am the best')
+const three = atom('common-key', () => 'Two is not the best')\n
+function Swapper() {
+  const ecosystem = useEcosystem()
+  const state = useAtomValue(one)\n
+  return (
+    <>
+      <div>Current State: {state}</div>
+      <button onClick={() => ecosystem.setOverrides([one])}>Use One</button>
+      <button onClick={() => ecosystem.setOverrides([two])}>Use Two</button>
+      <button onClick={() => ecosystem.setOverrides([three])}>Use Three</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+Use [`ecosystem.addOverrides()`](../api/classes/Ecosystem#addoverrides) and [`ecosystem.removeOverrides()`](../api/classes/Ecosystem#removeoverrides) to selectively update only certain overrides.
+
+<LiveEditor resultVar="Overrider">{`
+const original = atom('common-key', () => 'Pick Me')
+const override = atom('common-key', () => 'No, Me')\n
+function Overrider() {
+  const ecosystem = useEcosystem()
+  const state = useAtomValue(original)\n
+  return (
+    <>
+      <div>Current State: {state}</div>
+      <button onClick={() => ecosystem.addOverrides([override])}>Override</button>
+      <button onClick={() => ecosystem.removeOverrides([override])}>
+        Remove Override
+      </button>
+    </>
+  )
+}
+`}</LiveEditor>
 
 ## Simple Example
 

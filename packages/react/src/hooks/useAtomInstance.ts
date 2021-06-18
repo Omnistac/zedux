@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Atom, AtomInstance } from '../classes'
+import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
 import { AtomInstanceType, AtomParamsType, PromiseStatus } from '../types'
 import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
@@ -24,21 +24,21 @@ import { useStableReference } from './useStableReference'
  * @param params The params for generating the instance's key.
  */
 export const useAtomInstance: {
-  <A extends Atom<any, [], any>>(atom: A): AtomInstanceType<A>
+  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
 
-  <A extends Atom<any, [...any], any>>(
+  <A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
     shouldRegisterDependency?: boolean
   ): AtomInstanceType<A>
 
-  <AI extends AtomInstance<any, [...any], any, any>>(
+  <AI extends AtomInstance<any, [...any], any>>(
     instance: AI,
     params?: [],
     shouldRegisterDependency?: boolean
   ): AI
-} = <A extends Atom<any, [...any], any>>(
-  atom: A | AtomInstance<any, [...any], any, any>,
+} = <A extends AtomBase<any, [...any], any>>(
+  atom: A | AtomInstanceBase<any, [...any], any>,
   params?: AtomParamsType<A>,
   shouldRegisterDependency = true
 ) => {
@@ -53,7 +53,7 @@ export const useAtomInstance: {
       cleanupRef.current = undefined
     }
 
-    const instance = (atom instanceof AtomInstance
+    const instance = (atom instanceof AtomInstanceBase
       ? atom
       : ecosystem.getInstance(
           atom,

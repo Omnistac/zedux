@@ -3,10 +3,10 @@ import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
 import { useAtomInstance } from './useAtomInstance'
 import { useEffect, useRef, useState } from 'react'
 import { GraphEdgeSignal } from '../utils'
-import { Atom, AtomInstance } from '../classes'
+import { AtomBase, AtomInstanceBase } from '../classes'
 
 const useAtomInstanceSelector = <
-  AI extends AtomInstance<any, any, any, any>,
+  AI extends AtomInstanceBase<any, any, any>,
   D extends any = any
 >(
   instance: AI,
@@ -44,22 +44,22 @@ const useAtomInstanceSelector = <
 }
 
 export const useAtomSelector: {
-  <A extends Atom<any, [], any>, D = any>(
+  <A extends AtomBase<any, [], any>, D = any>(
     atom: A,
     selector: Selector<AtomStateType<A>, D>
   ): D
 
-  <A extends Atom<any, [...any], any>, D = any>(
+  <A extends AtomBase<any, [...any], any>, D = any>(
     atom: A,
     params: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
     selector: Selector<AtomStateType<A>, D>
   ): D
 
-  <AI extends AtomInstance<any, [...any], any, any>, D = any>(
+  <AI extends AtomInstanceBase<any, [...any], any>, D = any>(
     instance: AI,
     selector: Selector<AtomInstanceStateType<AI>, D>
   ): D
-} = <A extends Atom<any, [...any], any>, D = any>(
+} = <A extends AtomBase<any, [...any], any>, D = any>(
   atom: A,
   paramsArg?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
   selectorArg?: Selector<AtomStateType<A>, D>
@@ -70,10 +70,9 @@ export const useAtomSelector: {
 
   const selector = selectorArg || (paramsArg as Selector<AtomStateType<A>, D>)
 
-  const instance = useAtomInstance(atom, params, false) as AtomInstance<
+  const instance = useAtomInstance(atom, params, false) as AtomInstanceBase<
     AtomStateType<A>,
     [...any],
-    any,
     any
   >
 

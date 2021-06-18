@@ -10,6 +10,7 @@ import {
 } from '../utils'
 import { Ecosystem } from './Ecosystem'
 import { AtomInstance } from './AtomInstance'
+import { AtomInstanceBase } from './instances/AtomInstanceBase'
 
 const getFlagScore = (dependentEdge: DependentEdge) => {
   let score = 0
@@ -66,7 +67,7 @@ export class Graph {
   }
 
   public registerExternalDependent<State>(
-    dependency: AtomInstance<State, any[], any, any>,
+    dependency: AtomInstanceBase<State, any[], any>,
     callback: (signal: GraphEdgeSignal, newState: State) => any,
     operation: string,
     isStatic: boolean,
@@ -284,7 +285,6 @@ export class Graph {
       const instance = this.ecosystem._instances[nodeKey] as AtomInstance<
         any,
         any[],
-        any,
         any
       >
 

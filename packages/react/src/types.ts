@@ -1,6 +1,12 @@
 import { ActionChain, Settable, Store } from '@zedux/core'
 import { Observable } from 'rxjs'
-import { Atom, AtomInstance, Ecosystem } from './classes'
+import {
+  AtomBase,
+  AtomInstance,
+  AtomInstanceBase,
+  Ecosystem,
+  StandardAtomBase,
+} from './classes'
 import { AtomApi } from './classes/AtomApi'
 import { injectGetInstance } from './injectors'
 
@@ -45,41 +51,40 @@ export interface AtomConfig {
 }
 
 export type AtomExportsType<
-  AtomType extends Atom<any, any, any>
-> = AtomType extends Atom<any, any, infer T> ? T : never
+  AtomType extends StandardAtomBase<any, any, any>
+> = AtomType extends StandardAtomBase<any, any, infer T> ? T : never
 
 export type AtomInstanceAtomType<
-  AtomInstanceType extends AtomInstance<any, any, any, any>
-> = AtomInstanceType extends AtomInstance<any, any, any, infer T> ? T : never
+  AtomInstanceType extends AtomInstanceBase<any, any, any>
+> = AtomInstanceType extends AtomInstanceBase<any, any, infer T> ? T : never
 
 export type AtomInstanceExportsType<
-  AtomInstanceType extends AtomInstance<any, any, any, any>
-> = AtomInstanceType extends AtomInstance<any, any, infer T, any> ? T : never
+  AtomInstanceType extends AtomInstance<any, any, any>
+> = AtomInstanceType extends AtomInstance<any, any, infer T> ? T : never
 
 export type AtomInstanceParamsType<
-  AtomInstanceType extends AtomInstance<any, any, any, any>
-> = AtomInstanceType extends AtomInstance<any, infer T, any, any> ? T : never
+  AtomInstanceType extends AtomInstanceBase<any, any, any>
+> = AtomInstanceType extends AtomInstanceBase<any, infer T, any> ? T : never
 
 export type AtomInstanceStateType<
-  AtomInstanceType extends AtomInstance<any, any, any, any>
-> = AtomInstanceType extends AtomInstance<infer T, any, any, any> ? T : never
+  AtomInstanceType extends AtomInstanceBase<any, any, any>
+> = AtomInstanceType extends AtomInstanceBase<infer T, any, any> ? T : never
 
-export type AtomInstanceType<A extends Atom<any, any, any>> = AtomInstance<
-  AtomStateType<A>,
-  AtomParamsType<A>,
-  AtomExportsType<A>,
-  A
->
+export type AtomInstanceType<
+  AtomType extends AtomBase<any, any, any>
+> = AtomType extends AtomBase<any, any, infer T> ? T : never
 
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
 
 export type AtomParamsType<
-  AtomType extends Atom<any, any, any>
-> = AtomType extends Atom<any, infer T, any> ? T : never
+  AtomType extends AtomBase<any, any, any>
+> = AtomType extends AtomBase<any, infer T, any> ? T : never
 
 export type AtomStateType<
-  AtomType extends Atom<any, any, any>
-> = AtomType extends Atom<infer T, any, any> ? T : never
+  AtomType extends AtomBase<any, any, any>
+> = AtomType extends AtomBase<infer T, any, AtomInstanceBase<infer T, any, any>>
+  ? T
+  : never
 
 export type AtomValue<State = any> = State | Store<State>
 
@@ -108,7 +113,7 @@ export interface EcosystemConfig<
   destroyOnUnmount?: boolean
   flags?: string[]
   id?: string
-  overrides?: Atom<any, any[], any>[]
+  overrides?: AtomBase<any, any[], any>[]
   preload?: (ecosystem: Ecosystem, context: Context) => void
 }
 
@@ -150,14 +155,14 @@ export interface IonSetUtils<
   ecosystem: Ecosystem
   get: IonGetUtils['get']
   getInstance: ReturnType<typeof injectGetInstance>
-  instance: AtomInstance<State, Params, Exports, Atom<State, Params, Exports>>
+  instance: AtomInstance<State, Params, Exports>
 
-  set<A extends Atom<any, [], any>>(
+  set<A extends AtomBase<any, [], any>>(
     atom: A,
     settable: Settable<AtomStateType<A>>
   ): AtomStateType<A>
 
-  set<A extends Atom<any, [...any], any>>(
+  set<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
     settable: Settable<AtomStateType<A>>

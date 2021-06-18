@@ -31,6 +31,9 @@ import { Atom } from './atoms/Atom'
 import { Ecosystem } from './Ecosystem'
 import { createStore, isZeduxStore, Store } from '@zedux/core'
 import { AtomApi } from './AtomApi'
+import { AtomInstanceBase } from './instances/AtomInstanceBase'
+import { StandardAtomBase } from './atoms/StandardAtomBase'
+import { AtomBase } from './atoms/AtomBase'
 
 const getStateType = (val: any) => {
   if (isZeduxStore(val)) return StateType.Store
@@ -63,8 +66,11 @@ const getStateStore = <State extends any = any>(
 export class AtomInstance<
   State,
   Params extends any[],
-  Exports extends Record<string, any>,
-  AtomType extends Atom<State, Params, Exports>
+  Exports extends Record<string, any>
+> extends AtomInstanceBase<
+  State,
+  Params,
+  StandardAtomBase<State, Params, Exports>
 > {
   public api?: AtomApi<State, Exports>
   public exports: Exports
@@ -86,10 +92,11 @@ export class AtomInstance<
 
   constructor(
     public readonly ecosystem: Ecosystem,
-    public readonly atom: AtomType,
+    public readonly atom: Atom<State, Params, Exports>,
     public readonly keyHash: string,
     public readonly params: Params
   ) {
+    super()
     const factoryResult = this._doEvaluate()
 
     ;[this._stateType, this.store] = getStateStore(factoryResult)
@@ -236,24 +243,24 @@ export class AtomInstance<
     }
   }
 
-  public _get<A extends Atom<any, [], any>>(atom: A): AtomStateType<A>
-  public _get<A extends Atom<any, [...any], any>>(
+  public _get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+  public _get<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  public _get<I extends AtomInstance<any, [...any], any, any>>(
+  public _get<I extends AtomInstanceBase<any, [...any], any>>(
     instance: I
   ): AtomInstanceStateType<I>
 
   public _get<A extends Atom<any, [...any], any>>(
-    atomOrInstance: A | AtomInstance<any, [], any, Atom<any, [], any>>,
+    atomOrInstance: A | AtomInstanceBase<any, [], any>,
     params?: AtomParamsType<A>
   ) {
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
-    const instance: AtomInstance<any, any, any, any> =
-      atomOrInstance instanceof AtomInstance
+    const instance: AtomInstanceBase<any, any, any> =
+      atomOrInstance instanceof AtomInstanceBase
         ? atomOrInstance
         : this.ecosystem.getInstance(
             atomOrInstance,
@@ -280,31 +287,31 @@ export class AtomInstance<
     return instance.store.getState()
   }
 
-  public _getInstance<A extends Atom<any, [], any>>(
+  public _getInstance<A extends AtomBase<any, [], any>>(
     atom: A
   ): AtomInstanceType<A>
 
-  public _getInstance<A extends Atom<any, [...any], any>>(
+  public _getInstance<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A>
 
-  public _getInstance<AI extends AtomInstance<any, any, any, any>>(
+  public _getInstance<AI extends AtomInstanceBase<any, any, any>>(
     instance: AI,
     params?: [],
     edgeInfo?: GraphEdgeInfo
   ): AI
 
   public _getInstance<A extends Atom<any, [...any], any>>(
-    atom: A | AtomInstance<any, any, any, any>,
+    atom: A | AtomInstanceBase<any, any, any>,
     params?: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
-  ) {
+  ): AtomInstanceType<A> {
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
     const instance =
-      atom instanceof AtomInstance
+      atom instanceof AtomInstanceBase
         ? atom
         : this.ecosystem.getInstance(atom, params as AtomParamsType<A>)
 
@@ -330,7 +337,7 @@ export class AtomInstance<
     }
 
     // otherwise, instance._getInstance() is just an alias for ecosystem.getInstance()
-    return instance
+    return instance as AtomInstanceType<A>
   }
 
   /**

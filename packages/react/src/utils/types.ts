@@ -1,6 +1,6 @@
 import { AsyncState, MutableRefObject, RefObject } from '@zedux/react/types'
 import { ActionChain, Store, Subscription } from '@zedux/core'
-import { AtomInstance } from '../classes/AtomInstance'
+import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 
 export interface AsyncEffectInjectorDescriptor<T>
   extends DepsInjectorDescriptor {
@@ -14,7 +14,7 @@ export interface AsyncEffectInjectorDescriptor<T>
 }
 
 export interface AtomInjectorDescriptor<
-  InstanceType extends AtomInstance<any, any[], any, any>
+  InstanceType extends AtomInstanceBase<any, any[], any>
 > extends InjectorDescriptor {
   instance: InstanceType
   shouldRegisterDependency: boolean
@@ -22,7 +22,7 @@ export interface AtomInjectorDescriptor<
 }
 
 export interface AtomDynamicInjectorDescriptor<
-  InstanceType extends AtomInstance<any, any[], any, any>
+  InstanceType extends AtomInstanceBase<any, any[], any>
 > extends InjectorDescriptor {
   instance: InstanceType
   type: InjectorType.AtomDynamic
@@ -55,7 +55,7 @@ export interface DepsInjectorDescriptor extends InjectorDescriptor {
 
 export interface DiContext {
   injectors: InjectorDescriptor[]
-  instance: AtomInstance<any, any[], any, any>
+  instance: AtomInstanceBase<any, any[], any>
 }
 
 export interface EcosystemGraphNode {
@@ -167,7 +167,7 @@ export interface RunEffectJob extends JobBase {
 
 export interface SelectorInjectorDescriptor<State = any, D = any>
   extends InjectorDescriptor {
-  instance: AtomInstance<State, any, any, any>
+  instance: AtomInstanceBase<State, any, any>
   selector: (state: State) => D
   selectorResult: D
   type: InjectorType.Selector

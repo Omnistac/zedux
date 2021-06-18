@@ -53,12 +53,7 @@ export class Ion<
               ecosystem,
               get: innerGet,
               getInstance,
-              instance: instance as AtomInstance<
-                State,
-                Params,
-                Exports,
-                Atom<State, Params, Exports>
-              >,
+              instance: instance as AtomInstance<State, Params, Exports>,
               set: innerSet,
             },
             settable

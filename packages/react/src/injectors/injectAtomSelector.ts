@@ -3,10 +3,10 @@ import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
 import { injectAtomInstance } from './injectAtomInstance'
 import { InjectorType, SelectorInjectorDescriptor, split } from '../utils'
 import { injectEcosystem } from './injectEcosystem'
-import { Atom, AtomInstance } from '../classes'
+import { Atom, AtomInstance, AtomInstanceBase } from '../classes'
 
 const injectAtomInstanceSelector = <
-  AI extends AtomInstance<any, any, any, any>,
+  AI extends AtomInstanceBase<any, any, any>,
   D extends any = any
 >(
   instance: AI,
@@ -109,7 +109,7 @@ export const injectAtomSelector: {
     selector: Selector<AtomStateType<A>, D>
   ): D
 
-  <AI extends AtomInstance<any, [...any], any, any>, D = any>(
+  <AI extends AtomInstance<any, [...any], any>, D = any>(
     instance: AI,
     selector: Selector<AtomInstanceStateType<AI>, D>
   ): D
@@ -129,7 +129,7 @@ export const injectAtomSelector: {
     params,
     'injectAtomSelector',
     false
-  ) as AtomInstance<AtomStateType<A>, [...any], any, any>
+  ) as AtomInstance<AtomStateType<A>, [...any], any>
 
   return injectAtomInstanceSelector(instance, selector)
 }

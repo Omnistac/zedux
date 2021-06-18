@@ -1,4 +1,4 @@
-import { Atom, AtomInstance } from '../classes'
+import { AtomBase, AtomInstanceBase } from '../classes'
 import { AtomInstanceType, AtomParamsType } from '../types'
 import {
   split,
@@ -38,20 +38,20 @@ const defaultOperation = 'injectAtomInstanceDynamic'
  * @returns An atom instance, keyed based on the passed params.
  */
 export const injectAtomInstanceDynamic: {
-  <A extends Atom<any, [], any>>(atom: A): AtomInstanceType<A>
+  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
 
-  <A extends Atom<any, [...any], any>>(
+  <A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
     operation?: string
   ): AtomInstanceType<A>
 
-  <AI extends AtomInstance<any, [...any], any, any>>(
+  <AI extends AtomInstanceBase<any, [...any], any>>(
     instance: AI,
     params?: [],
     operation?: string
   ): AI
-} = <A extends Atom<any, [...any], any>>(
+} = <A extends AtomBase<any, [...any], any>>(
   atom: A,
   params?: AtomParamsType<A>,
   operation = defaultOperation
@@ -75,7 +75,7 @@ export const injectAtomInstanceDynamic: {
       }
     },
     prevDescriptor => {
-      const resolvedAtom = atom instanceof AtomInstance ? atom.atom : atom
+      const resolvedAtom = atom instanceof AtomInstanceBase ? atom.atom : atom
       const atomHasChanged =
         resolvedAtom.internalId !== prevDescriptor.instance.atom.internalId
 

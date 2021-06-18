@@ -10,23 +10,22 @@ import {
 import { generateAppId } from '../utils'
 import { AtomInstance } from './AtomInstance'
 import { Atom } from './atoms/Atom'
+import { AtomBase } from './atoms/AtomBase'
 import { Graph } from './Graph'
+import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
 
-const mapOverrides = (overrides: Atom<any, any, any>[]) =>
+const mapOverrides = (overrides: AtomBase<any, any, any>[]) =>
   overrides.reduce((map, atom) => {
     map[atom.key] = atom
     return map
-  }, {} as Record<string, Atom<any, any, any>>)
+  }, {} as Record<string, AtomBase<any, any, any>>)
 
 export const ecosystemContext = createContext('global')
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   public _graph: Graph = new Graph(this)
-  public _instances: Record<
-    string,
-    AtomInstance<any, any[], any, Atom<any, any[], any>>
-  > = {}
+  public _instances: Record<string, AtomInstance<any, any[], any>> = {}
   public _destroyOnUnmount = false
   public _preload?: (ecosystem: this, context: Context) => void
   public _refCount = 0
@@ -36,7 +35,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   public defaultTtl?: number
   public ecosystemId: string
   public flags?: string[] = []
-  public overrides: Record<string, Atom<any, any[], any>> = {}
+  public overrides: Record<string, AtomBase<any, any[], any>> = {}
   private isInitialized = false
 
   constructor({
@@ -112,7 +111,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     )
   }
 
-  public findInstances(atom: Atom<any, any, any> | string) {
+  public findInstances(atom: AtomBase<any, any, any> | string) {
     const key = typeof atom === 'string' ? atom : atom.key
 
     return Object.values(this._instances).filter(
@@ -120,41 +119,43 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     )
   }
 
-  public get<A extends Atom<any, [], any>>(atom: A): AtomStateType<A>
+  public get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
 
-  public get<A extends Atom<any, [...any], any>>(
+  public get<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  public get<AI extends AtomInstance<any, [...any], any, any>>(
+  public get<AI extends AtomInstanceBase<any, [...any], any>>(
     instance: AI
   ): AtomInstanceStateType<AI>
 
-  public get<A extends Atom<any, [...any], any>>(
-    atom: A | AtomInstance<any, [...any], any, any>,
+  public get<A extends AtomBase<any, [...any], any>>(
+    atom: A | AtomInstanceBase<any, [...any], any>,
     params?: AtomParamsType<A>
   ) {
-    if (atom instanceof AtomInstance) {
+    if (atom instanceof AtomInstanceBase) {
       return atom.store.getState()
     }
 
     const instance = this.getInstance(
       atom,
       params as AtomParamsType<A>
-    ) as AtomInstance<any, any, any, any>
+    ) as AtomInstanceBase<any, any, any>
 
     return instance.store.getState()
   }
 
-  public getInstance<A extends Atom<any, [], any>>(atom: A): AtomInstanceType<A>
+  public getInstance<A extends AtomBase<any, [], any>>(
+    atom: A
+  ): AtomInstanceType<A>
 
-  public getInstance<A extends Atom<any, [...any], any>>(
+  public getInstance<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A>
 
-  public getInstance<A extends Atom<any, [...any], any>>(
+  public getInstance<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params?: AtomParamsType<A>
   ) {
@@ -226,7 +227,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     this._preload?.(this, newContext || (this.context as Context))
   }
 
-  public setOverrides(newOverrides: Atom<any, any, any>[]) {
+  public setOverrides(newOverrides: AtomBase<any, any, any>[]) {
     const oldOverrides = this.overrides
 
     this.overrides = mapOverrides(newOverrides)
@@ -272,7 +273,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
   }
 
-  private resolveAtom<AtomType extends Atom<any, any[], any>>(atom: AtomType) {
+  private resolveAtom<AtomType extends AtomBase<any, any[], any>>(
+    atom: AtomType
+  ) {
     const override = this.overrides?.[atom.key]
     const maybeOverriddenAtom = (override || atom) as AtomType
 

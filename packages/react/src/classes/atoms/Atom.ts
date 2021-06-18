@@ -1,32 +1,27 @@
 import { atom } from '@zedux/react/factories/atom'
 import { AtomConfig, AtomValueOrFactory } from '@zedux/react/types'
-import {
-  EMPTY_CONTEXT,
-  generateImplementationId,
-  hashParams,
-} from '@zedux/react/utils'
-import { Context, createContext } from 'react'
+import { generateImplementationId, hashParams } from '@zedux/react/utils'
 import { AtomInstance } from '../AtomInstance'
 import { Ecosystem } from '../Ecosystem'
+import { StandardAtomBase } from './StandardAtomBase'
 
 export class Atom<
   State,
   Params extends any[],
   Exports extends Record<string, any>
-> {
+> extends StandardAtomBase<State, Params, Exports> {
   public readonly flags?: string[]
   public readonly forwardPromises?: boolean
   public readonly internalId: string
   public readonly maxInstances?: number
   public readonly ttl?: number
 
-  private reactContext?: Context<any>
-
   constructor(
     public readonly key: string,
     public readonly _value: AtomValueOrFactory<State, Params, Exports>,
     config?: AtomConfig
   ) {
+    super()
     this.flags = config?.flags
     this.forwardPromises = config?.forwardPromises
     this.internalId = generateImplementationId()
@@ -48,8 +43,8 @@ export class Atom<
     ecosystem: Ecosystem,
     keyHash: string,
     params: Params
-  ): AtomInstance<State, Params, Exports, any> {
-    return new AtomInstance<State, Params, Exports, any>(
+  ): AtomInstance<State, Params, Exports> {
+    return new AtomInstance<State, Params, Exports>(
       ecosystem,
       this,
       keyHash,
@@ -63,12 +58,6 @@ export class Atom<
     if (!params?.length) return base
 
     return `${base}-${hashParams(params)}`
-  }
-
-  public getReactContext() {
-    if (this.reactContext) return this.reactContext
-
-    return (this.reactContext = createContext(EMPTY_CONTEXT))
   }
 
   public override(newValue: AtomValueOrFactory<State, Params, Exports>) {
