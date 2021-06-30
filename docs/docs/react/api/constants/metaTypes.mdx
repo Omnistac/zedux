@@ -13,8 +13,9 @@ An object of the "metaType" values Zedux uses internally in its [ActionChain obj
 
 ```ts
 const metaTypes = {
-  DELEGATE: `@@zedux/delegate`,
-  INHERIT: `@@zedux/inherit`,
+  DELEGATE: '@@zedux/delegate',
+  INHERIT: '@@zedux/inherit',
+  SKIP_EVALUATION: '@@zedux/skipEvaluation',
 }
 ```
 
@@ -86,6 +87,30 @@ parentStore.dispatch({ type: 'test' })
 //     type: 'test'
 //   }
 // }
+```
+
+### `SKIP_EVALUATION`
+
+For use with stores that belong to atom instances. Set this string to an action's `meta` property to tell Zedux not to reevaluate the atom instance:
+
+```ts
+store.dispatch({ type: 'my-action-type', meta: metaTypes.SKIP_EVALUATION })
+```
+
+This meta property can also be set when calling [`instance.setState()`](../classes/AtomInstance#setstate) or [`store.setState()`](../classes/Store#setstate) by passing it as the second parameter:
+
+```ts
+store.setState(newState, metaTypes.SKIP_EVALUATION)
+```
+
+It is not necessary to use this when updating an injected store's state synchronously during atom evaluation. Zedux always prevents these cases from causing a reevaluation, as that would lead to an evaluation loop.
+
+```ts
+const testAtom = atom('test', () => {
+  const store = injectStore(initialState, true) // true to subscribe
+
+  store.setState(newState) // won't cause an evaluation loop
+})
 ```
 
 ## Removing Meta Nodes

@@ -3,3 +3,263 @@ id: suspense
 title: Suspense
 ---
 
+import { LiveEditor } from '../../LiveEditor'
+
+Atoms are extremely flexible when working with React suspense. Suspense works by throwing a promise during render that React can catch and await.
+
+## Setting a Promise
+
+Atoms can be given a promise via an [AtomApi](../api/classes/AtomApi). Simply pass the promise to [AtomApi's `.setPromise()`](../api/classes/AtomApi#setpromise) and return the api from the atom evaluator function:
+
+```ts
+import { api, atom } from '@zedux/react'
+
+const fetchAtom = atom('fetch', (url: string) => {
+  const promise = fetch(url).then(result => result.json())
+  
+  return api().setPromise(promise)
+})
+```
+
+When `fetchAtom` is used in a component, Zedux will throw the promise, allowing React to suspend. When the promise completes, React will recreate the component and Zedux will no longer throw the now-completed promise.
+
+Currently promises are a one-off per atom instance. You can't set a new promise on a subsequent atom evaluation. If you do, Zedux will ignore the new promise. This is because the promise's job is really just to indicate initial loading state. To indicate more states, add state to the atom.
+
+The promise can also be useful in general for indicating the loading status of the atom.
+
+```ts
+const fetchUsersInstance = myEcosystem.getInstance(fetchAtom, ['/users'])
+fetchUsersInstance.promise.then(() => {
+  // users are loaded!
+})
+```
+
+## Deferring Side Effects
+
+You may have noticed in the above example we kicked off a fetch directly in the body of `fetchAtom`'s evaluator function. While this can be fine if you know what you're doing, it typically isn't good practice.
+
+- A side effect is running immediately when the atom instance is initialized. Since atoms are often initialized during a React render, this means we're kicking off side effects during render 😮. Especially when using SSR, this can be a problem.
+
+- The fetch will run every time this `fetchAtom` instance is reevaluated. In Zedux, we typically do have more control over when evaluations happen than we do over rerenders in React components. But relying on this pattern still makes code more brittle. For example, it's easy for someone to add code later that causes this atom to reevaluate in new cases and voila we have a bug.
+
+We could use `injectMemo` to at least prevent the fetch from running unnecessarily on reevaluations.
+
+```ts
+const promise = injectMemo(() => fetch(url), [url])
+```
+
+But we still have the first problem of the side effect running immediately.
+
+### `injectAsyncEffect`
+
+Fortunately Zedux ships with a high-level injector for creating promises whose evaluation is deferred. It works rather like [`injectEffect()`](../api/injectors/injectEffect), but with a few differences:
+
+- You can pass an async function (or any function that returns a promise).
+- Rather than returning a cleanup function, cleanup functions can be passed to a received `cleanup` param.
+- It returns a tuple consisting of a promise and a special [async store](../api/types/AsyncStore).
+
+<LiveEditor resultVar="App">{`
+const asyncAtom = atom('async', () => {
+  const [promise, store] = injectAsyncEffect(cleanup => {
+    return new Promise(resolve => {
+      const timeoutId = setTimeout(() => {
+        resolve('🎉')
+      }, 2000)\n
+      cleanup(() => clearTimeout(timeoutId))
+    })
+  }, [])\n
+  return api(store).setPromise(promise)
+})\n
+function Child() {
+  const { data } = useAtomValue(asyncAtom)\n
+  return <div>The long-awaited value: {data}</div>
+}\n
+function App() {
+  const [isRunning, setIsRunning] = useState(false)\n
+  return (
+    <Suspense fallback={<div>Falling Back (stuff is loading)</div>}>
+      {isRunning ? (
+        <Child />
+      ) : (
+        <button onClick={() => setIsRunning(true)}>Run</button>
+      )}
+    </Suspense>
+  )
+}
+`}</LiveEditor>
+
+The promise returned from `injectAsyncEffect` can be passed directly to `api.setPromise()`.
+
+### AsyncStore
+
+The [async store](../api/types/AsyncStore) is a special store that holds a state machine representing an async flow and the resulting `data` or `error`. It's patterned after the object returned from [React Query's `useQuery`](https://react-query.tanstack.com/reference/useQuery).
+
+```ts
+const [promise, store] = injectAsyncEffect(...)
+
+const {
+  data,
+  error,
+  isError,
+  isIdle,
+  isLoading,
+  isSuccess,
+  status
+} = store.getState()
+```
+
+In components that you don't want to suspend, these flags can be used to implement old-school loading flows:
+
+```tsx
+function UserList() {
+  const { data, isLoading, isSuccess } = useAtomValue(fetchUsersAtom)
+
+  if (isLoading) return <div>Loading...</div>
+
+  if (isSuccess) return data.map(user => <User id={user.id} />)
+}
+```
+
+### Composing State
+
+The async store returned from `injectAsyncEffect` can be composed with any other state in a parent store.
+
+```ts
+const composedAtom = atom('composed', () => {
+  const otherStore = injectStore('some state')
+  const [, asyncStore] = injectAsyncEffect(myEffect, [])
+  
+  return injectStore(
+    () => createStore({ other: otherStore, request: asyncStore })
+  )
+})
+
+// then in SomeComponent:
+const { other, request: { isLoading } } = useAtomValue(composedAtom)
+```
+
+## Configuring Suspense
+
+There aren't currently any flags to turn suspense on or off. It's always on by default. To turn it off, just don't `setPromise` 🙃. We may add ecosystem- and hook/injector-level options to configure this in the future. Feel free to open an issue if you need this functionality (or PR it!).
+
+### Forwarding Promises
+
+The atom dependency graph can get very big. Say we have a setup where atom `a` injects atom `b` which injects atom `c`:
+
+```
+a -> b -> c
+```
+
+Atoms `a` and `b` don't set promises, but atom `c` does. Now say we use atom `a` in a component. Since we didn't set a promise in atom `a` itself, React won't suspend. Atom `c`'s promise will be ignored!
+
+Zedux is designed to be flexible in handling this situation. We can forward the promise manually:
+
+```ts
+const atomC = atom('c', () => {
+  return api().setPromise(myPromise)
+})
+
+const atomB = atom('b', () => {
+  const c = injectAtomInstance(atomC)
+
+  return api().setPromise(c.promise)
+})
+
+const atomA = atom('a', () => {
+  const b = injectAtomInstance(atomB)
+
+  return api().setPromise(b.promise)
+})
+```
+
+But this is obviously very tedious and error-prone. Fortunately, atoms can be given an option to automatically forward their dependencies' promises.
+
+### `forwardPromises`
+
+```ts
+const atomB = atom('b', () => {
+  injectAtomInstance(atomC) // just create a dependency
+}, {
+  forwardPromises: true
+})
+
+const atomA = atom('a', () => {
+  injectAtomInstance(atomB) // just create a dependency
+}, {
+  forwardPromises: true
+})
+```
+
+When `forwardPromises` is true, Zedux will automatically find all the promises of all initial dependencies, `Promise.all()` them, and set that as the atom instance's [`promise`](../api/classes/AtomInstance#promise).
+
+Setting a promise in the atom will override this option:
+
+```ts
+const atomA = atom('a', (doTheThing: boolean) => {
+  injectAtomInstance(atomB)
+
+  return doTheThing ? api(myValue).setPromise(myPromise) : myValue
+}, {
+  forwardPromises: true // ignored when `doTheThing` param is true
+})
+```
+
+### `defaultForwardPromises`
+
+Setting the `forwardPromises` option manually on lots of atoms can also be tedious. Sometimes that's fine. But this option can also be configured at the [ecosystem level](../api/classes/Ecosystem#defaultforwardpromises).
+
+We do this by setting `defaultForwardPromises`:
+
+```tsx
+import { EcosystemProvider } from '@zedux/react'
+
+function App() {
+  return (
+    <EcosystemProvider defaultForwardPromises id="root">
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+With this set, our `a` atom will cause React to suspend by default, with no manual forwarding or nuthin'.
+
+```ts
+const atomC = atom('c', () => {
+  return api().setPromise(myPromise)
+})
+
+const atomB = atom('b', () => {
+  injectAtomInstance(atomC) // just create the dependency
+})
+
+const atomA = atom('a', () => {
+  injectAtomInstance(atomB) // just create the dependency
+})
+
+function SuspendingComponent() {
+  const a = useAtomValue(atomA)
+}
+```
+
+### More Control
+
+Sometimes manually forwarding promises is okay! It gives you full flexibility over the async flow. You can use `Promise.all()` yourself. Or use a `Promise.race()` or any helper or library for handling parallelization or serialization of promises - you can even use RxJS.
+
+```ts
+import { from } from 'rxjs'
+
+const rxAtom = atom('rx', () => {
+  const asyncInstance = injectAtomInstance(myAsyncAtom)
+
+  const [promise, store] = injectAsyncEffect(cleanup => {
+    const subscription = from(asyncInstance.promise)
+      .pipe(doCrazyRxStuff)
+      .subscribe(val => console.log('val:', val))
+
+    cleanup(() => subscription.unsubscribe())
+  }, [asyncInstance])
+
+  return api(store).setPromise(promise)
+})
+```

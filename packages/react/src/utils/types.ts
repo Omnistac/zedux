@@ -1,11 +1,11 @@
-import { AsyncState, MutableRefObject, RefObject } from '@zedux/react/types'
+import { AsyncStore, MutableRefObject, RefObject } from '@zedux/react/types'
 import { ActionChain, Store, Subscription } from '@zedux/core'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 
 export interface AsyncEffectInjectorDescriptor<T>
   extends DepsInjectorDescriptor {
   cleanupTask?: () => void
-  machineStore: Store<AsyncState<T>>
+  asyncStore: AsyncStore<T>
   promise: Promise<T>
   rejectRef?: (err: any) => void
   resolveRef?: (val: any) => void

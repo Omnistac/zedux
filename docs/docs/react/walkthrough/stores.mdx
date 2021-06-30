@@ -45,11 +45,7 @@ const store = createStore(reducer)
 These high-level APIs are optional. You can of course use old-school switch statements and string constants if you wish, or any other means of creating reducers and actions.
 :::
 
-:::info
-Zedux actions must have a string `type` property and can have optional `payload` and `meta` properties.
-:::
-
-Updating the state of reducer-driven stores is usually done with `.dispatch()`. Just like Redux:
+Updating the state of reducer-driven stores is usually done with `.dispatch()`. Just like Redux. Zedux actions must have a string `type` property and can have optional `payload` and `meta` properties.
 
 ```ts
 store.dispatch(
@@ -252,9 +248,18 @@ const storeB = injectStore('b')
 const store = injectStore(() => createStore({ a: storeA, b: storeB }))
 ```
 
-#### Setting state during evaluation
+#### Mixing stores and reducers
 
-You can set a store's state during evaluation.
+```ts
+const store = injectStore(() => createStore({
+  a: myStore,
+  b: myReducer
+}))
+```
+
+### Setting state during evaluation
+
+You can set a store's state during atom evaluation.
 
 ```ts
 // injectStore doesn't subscribe by default...
@@ -283,11 +288,7 @@ injectEffect(someSideEffect, [store.getState()])
 store.setState(injectSomeDerivation())
 ```
 
-:::tip
-Both `store.setState()` and `store.dispatch()` run completely synchronously. After calling these, you can always know that the store's state has been updated.
-:::
-
-`store.setState()` and `store.dispatch()` return the new state. We could rewrite the above example to make use of this:
+Since `store.setState()` and `store.dispatch()` return the new state, we could rewrite the above example to make use of this:
 
 ```ts
 const store = injectStore('initial state', true)
@@ -295,6 +296,21 @@ const newstate = store.setState(injectSomeDerivation()) // update synchronously
 
 // pass this newState as the dep, instead of store.getState()
 injectEffect(someSideEffect, [newState])
+```
+
+Sometimes you will encounter an asynchronous evaluation loop, e.g. with `injectEffect`, where an effect needs to set the store's state but then the effect also reruns every time the state changes.
+
+Since the above only applies during synchronus evaluation, these situations require something special. It may be possible in some cases to fix this by narrowing your effect's dependency so that only a piece of state causes the effect to rerun. Or you may be able to reorganize your state so that the effect updates a separate store than the one it depends on.
+
+If all else fails, we can pass [`metaTypes.SKIP_EVALUATION`](../api/constants/metaTypes#skip_evaluation) as an action's `meta` property to prevent Zedux from reevaluating this atom on this particular state change.
+
+```ts
+import { metaTypes } from '@zedux/react'
+
+myStore.dispatch({ type: 'my-action-type', meta: metaTypes.SKIP_EVALUATION })
+
+// metadata can be passed as the second param to .setState():
+myStore.setState(newState, metaTypes.SKIP_EVALUATION)
 ```
 
 ### Wrapper Atoms

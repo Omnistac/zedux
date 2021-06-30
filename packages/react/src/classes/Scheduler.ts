@@ -9,6 +9,7 @@ import { Ecosystem } from './Ecosystem'
 export class Scheduler {
   // private _runStartTime?: number
   private scheduledJobs: Job[] = []
+  private _isRunning?: boolean
   private _timeoutId?: ReturnType<typeof setTimeout>
 
   constructor(private readonly ecosystem: Ecosystem) {}
@@ -19,6 +20,7 @@ export class Scheduler {
    * Kill any current timeout and run all jobs immediately
    */
   public flush() {
+    if (this._isRunning) return // already flushing
     if (this._timeoutId) clearTimeout(this._timeoutId)
 
     this.runJobs()
@@ -130,6 +132,7 @@ export class Scheduler {
     // this._runStartTime = performance.now()
     // let counter = 0
 
+    this._isRunning = true
     while (this.scheduledJobs.length) {
       const job = this.scheduledJobs.shift() as Job
       job.task()
@@ -139,5 +142,6 @@ export class Scheduler {
       //   break
       // }
     }
+    this._isRunning = false
   }
 }

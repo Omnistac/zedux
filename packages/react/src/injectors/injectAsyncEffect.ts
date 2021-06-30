@@ -6,13 +6,7 @@ import {
   JobType,
   split,
 } from '../utils'
-import {
-  cancel,
-  createAsyncMachineStore,
-  load,
-  loadError,
-  loadSuccess,
-} from '../utils/asyncMachine'
+import { asyncUtils } from '../utils/asyncUtils'
 import { injectEcosystem } from './injectEcosystem'
 
 const getTask = <T>(
@@ -23,7 +17,7 @@ const getTask = <T>(
   let isCleanedUp = false
 
   const task = () => {
-    descriptor.machineStore.dispatch(load())
+    descriptor.asyncStore.dispatch(asyncUtils.actions.load())
 
     const promise = callback(destructor => {
       if (isCleanedUp) return destructor()
@@ -38,14 +32,14 @@ const getTask = <T>(
 
           // calling resolve/reject again does nothing
           descriptor.resolveRef?.(val)
-          descriptor.machineStore.dispatch(loadSuccess(val))
+          descriptor.asyncStore.dispatch(asyncUtils.actions.loadSuccess(val))
         })
         .catch(err => {
           if (isCleanedUp) return
 
           // calling resolve/reject again does nothing
           descriptor.rejectRef?.(err)
-          descriptor.machineStore.dispatch(loadError(err))
+          descriptor.asyncStore.dispatch(asyncUtils.actions.loadError(err))
         })
     }
 
@@ -72,11 +66,13 @@ export const injectAsyncEffect = <T>(
     'injectAsyncEffect',
     InjectorType.AsyncEffect,
     () => {
-      const machineStore = createAsyncMachineStore<T>()
+      const asyncStore = asyncUtils.createAsyncStore<T>()
 
-      const subscription = machineStore.subscribe({
+      const subscription = asyncStore.subscribe({
         effects: ({ action }) => {
-          if (action?.type === cancel.type) descriptor.cleanupTask?.()
+          if (action?.type === asyncUtils.actions.cancel.type) {
+            descriptor.cleanupTask?.()
+          }
         },
       })
 
@@ -86,7 +82,7 @@ export const injectAsyncEffect = <T>(
           subscription.unsubscribe()
         },
         deps,
-        machineStore,
+        asyncStore,
         subscription,
         type: InjectorType.AsyncEffect,
       }
@@ -135,5 +131,5 @@ export const injectAsyncEffect = <T>(
     }
   )
 
-  return [descriptor.promise, descriptor.machineStore] as const
+  return [descriptor.promise, descriptor.asyncStore] as const
 }

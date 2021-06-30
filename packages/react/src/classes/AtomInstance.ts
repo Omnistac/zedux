@@ -122,24 +122,25 @@ export class AtomInstance<
   }
 
   public dispatch = (action: ActionChain) => {
-    if (this.api?.dispatchInterceptors?.length) {
-      return this.api._interceptDispatch(action, (newAction: ActionChain) =>
-        this.store.dispatch(newAction)
-      )
-    }
+    const val = this.api?.dispatchInterceptors?.length
+      ? this.api._interceptDispatch(action, (newAction: ActionChain) =>
+          this.store.dispatch(newAction)
+        )
+      : this.store.dispatch(action)
 
-    return this.store.dispatch(action)
+    this.ecosystem._scheduler.flush()
+    return val
   }
 
-  public setState = (settable: Settable<State>) => {
-    if (this.api?.setStateInterceptors?.length) {
-      return this.api._interceptSetState(
-        settable,
-        (newSettable: Settable<State>) => this.store.setState(newSettable)
-      )
-    }
+  public setState = (settable: Settable<State>, meta?: any) => {
+    const val = this.api?.setStateInterceptors?.length
+      ? this.api._interceptSetState(settable, (newSettable: Settable<State>) =>
+          this.store.setState(newSettable, meta)
+        )
+      : this.store.setState(settable, meta)
 
-    return this.store.setState(settable)
+    this.ecosystem._scheduler.flush()
+    return val
   }
 
   // handle detaching this atom instance from the global store and all destruction stuff

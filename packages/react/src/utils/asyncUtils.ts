@@ -8,20 +8,20 @@ import {
 import { AsyncState, AsyncStatus } from '../types'
 
 const createActor = createActorFactory('@zedux/react/asyncMachine')
-export const cancel = createActor('cancel')
-export const load = createActor('load')
-export const loadSuccess = createActor<any>('loadSuccess')
-export const loadError = createActor<Error>('loadError')
-export const reset = createActor('reset')
+const cancel = createActor('cancel')
+const load = createActor('load')
+const loadSuccess = createActor<any>('loadSuccess')
+const loadError = createActor<Error>('loadError')
+const reset = createActor('reset')
 
-export const [errorState, idleState, loadingState, successState] = states(
+const [errorState, idleState, loadingState, successState] = states(
   AsyncStatus.Error,
   AsyncStatus.Idle,
   AsyncStatus.Loading,
   AsyncStatus.Success
 )
 
-export const asyncMachine = createMachine<AsyncStatus>(
+const asyncMachine = createMachine<AsyncStatus>(
   idleState.on(load, loadingState),
   loadingState
     .on(loadSuccess, successState)
@@ -76,4 +76,16 @@ const createReducer = <T>() => (
   return newState
 }
 
-export const createAsyncMachineStore = <T>() => createStore(createReducer<T>())
+const createAsyncStore = <T>() => createStore(createReducer<T>())
+
+export const asyncUtils = {
+  actions: {
+    cancel,
+    load,
+    loadSuccess,
+    loadError,
+    reset,
+  },
+  createAsyncStore,
+  states: AsyncStatus,
+}
