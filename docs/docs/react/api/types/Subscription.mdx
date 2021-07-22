@@ -1,0 +1,26 @@
+---
+id: Subscription
+title: Subscription
+---
+
+The object returned from [`Store#subscribe()`](../classes/Store#subscribe).
+
+## Definition
+
+```ts
+interface Subscription {
+  unsubscribe(): void
+}
+```
+
+## Methods
+
+Subscription objects have a single method:
+
+### `.unsubscribe`
+
+Removes the subscription. Can be called with no context - e.g. in FP paradigms like:
+
+```ts
+injectEffect(() => myStore.subscribe(subscriber).unsubscribe, [myStore])
+```

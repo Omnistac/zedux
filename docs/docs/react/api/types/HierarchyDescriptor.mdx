@@ -1,0 +1,56 @@
+---
+id: HierarchyDescriptor
+title: HierarchyDescriptor
+---
+
+The type passed to [`createStore()`](../factories/createStore) and to [`Store#use()`](../classes/Store#use).
+
+## Definition
+
+```ts
+type Branch<T = any> = {
+  [K in keyof T]: HierarchyDescriptor<T[K]>
+}
+
+type HierarchyDescriptor<State = any> =
+  | Branch<State>
+  | Store<State>
+  | Reducer<State>
+  | null
+```
+
+A HierarchyDescriptor can be a store, a reducer, or an object containing stores, reducers, or more objects nested indefinitely.
+
+```ts
+import { createStore } from '@zedux/react'
+
+const withStore = createStore(myStore)
+const withReducer = createStore(myReducer)
+const withObject = createStore({
+  storeState: myStore,
+  reducerState: myReducer
+})
+const nested = createStore({
+  a: {
+    b: storeB,
+    c: storeC,
+    d: {
+      e: reducerE,
+      f: storeF
+    }
+  }
+})
+```
+
+Any node in the HierarchyDescriptor can also be set to `null`. This indicates removal when passed to [`Store#use()`](../classes/Store#use).
+
+```ts
+const myStore = createStore({
+  a: storeA,
+  b: storeB,
+})
+
+myStore.use({
+  b: null // remove `b` from myStore
+})
+```
