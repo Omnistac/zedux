@@ -289,17 +289,17 @@ export class Store<State = any> {
   }
 
   /**
-  "Hydrates" the store with the given state.
+    "Hydrates" the store with the given state.
 
-  Dispatches the special HYDRATE action to the store's inspectors
-  and reducers. The HYDRATE action's `payload` property will be
-  set to the new store state, allowing inspectors to pick up on
-  the changes and implement time travel and whatnot.
+    Dispatches the special HYDRATE action to the store's inspectors
+    and reducers. The HYDRATE action's `payload` property will be
+    set to the new store state, allowing inspectors to pick up on
+    the changes and implement time travel and whatnot.
 
-  Throws an Error if called from the reducer layer.
-*/
+    Throws an Error if called from the reducer layer.
+  */
   private _dispatchHydration<State = any>(
-    state: State | RecursivePartial<State>,
+    state: RecursivePartial<State>,
     actionType: string,
     meta?: any
   ) {

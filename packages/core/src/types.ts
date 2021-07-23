@@ -147,7 +147,7 @@ export type Reactable<Payload = any, Type extends string = string> =
   | ActorEmpty<Type>
   | Type
 
-export type RecursivePartial<T> = T extends Record<string, unknown>
+export type RecursivePartial<T> = T extends Record<string, any>
   ? { [P in keyof T]?: RecursivePartial<T[P]> }
   : T
 
