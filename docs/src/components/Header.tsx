@@ -16,6 +16,7 @@ export const StyledHeader = styled.header`
   align-items: center;
   color: #fff;
   display: flex;
+  flex: 1;
   padding: 6rem 0;
   text-align: center;
   position: relative;
@@ -33,6 +34,7 @@ export const StyledHeader = styled.header`
   &::before {
     background: linear-gradient(180deg, var(--color-dark), transparent);
     top: 0;
+    z-index: 1;
   }
 
   &::after {
@@ -61,10 +63,10 @@ export const Header = () => {
         <H1>{siteConfig.title}</H1>
         <Tagline>{siteConfig.tagline}</Tagline>
         <Buttons>
-          <Link to={useBaseUrl('docs/react/walkthrough/quick-start')}>
+          <Link to={useBaseUrl('docs/walkthrough/quick-start')}>
             Quick Start!
           </Link>
-          <Link to={useBaseUrl('docs/react/api/classes/Atom')}>API Docs</Link>
+          <Link to={useBaseUrl('docs/api/classes/Atom')}>API Docs</Link>
         </Buttons>
       </HeaderContent>
     </StyledHeader>

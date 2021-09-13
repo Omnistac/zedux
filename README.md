@@ -139,7 +139,7 @@ store.setState(store.getState() + 1) // sets store state to 1
 store.setState(store.getState() + 1) // sets store state to 2
 ```
 
-Did you see that? Zedux state updates are fully synchronous. The second `getState()` call is able to access the new state. This is possible because Zedux does not have a middleware layer.
+You may have noticed here that Zedux state updates are fully synchronous. The second `getState()` call is able to access the new state after the first `setState()` runs. This is possible because Zedux does not have a middleware layer.
 
 Now, if you're familiar with React's `useState` hook, you'll know there's a better way to update state based on a previous state:
 

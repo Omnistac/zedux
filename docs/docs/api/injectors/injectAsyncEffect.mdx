@@ -1,0 +1,99 @@
+---
+id: injectAsyncEffect
+title: injectAsyncEffect
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+```ts
+import { injectAsyncEffect } from '@zedux/react'
+```
+
+An [injector](../glossary#injector) that runs a promise and creates a store to track the promise's state.
+
+This injector is very similar to [`injectEffect()`](injectEffect), but instead of returning a cleanup function, the effect should return a promise. Since you don't return a cleanup function, a `cleanup` function is passed to the effect that you can call, passing a callback that will be called on cleanup.
+
+The state of the store returned by this injector is patterned after [React Query's query state](https://react-query.tanstack.com/reference/useQuery).
+
+One of the primary uses of this injector is to obtain a stable promise reference that can be passed to [`AtomApi#setPromise()`](../classes/AtomApi#setpromise) to trigger React suspense.
+
+## Example
+
+<LiveEditor resultVar="App">{`
+const suspendingAtom = atom('suspending', () => {
+  const [promise, asyncStore] = injectAsyncEffect(() => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve('Hello, World!')
+      }, 2000)
+    })
+  }, [])\n
+  return api(asyncStore).setPromise(promise)
+})\n
+function Child() {
+  const { data } = useAtomValue(suspendingAtom)\n
+  return <div>The value: {data}</div>
+}\n
+function App() {
+  return (
+    <Suspense fallback={<div>Suspending...</div>}>
+      <Child />
+    </Suspense>
+  )
+}
+`}</LiveEditor>
+
+## Signature
+
+```ts
+injectAsyncEffect(callback, deps?) => [promise, asyncStore]
+```
+
+Returns a tuple of a promise and a store containing the status and data or error info of the promise.
+
+### `callback`
+
+The callback's signature is:
+
+```ts
+cleanup => promise
+```
+
+The callback should return a promise.
+
+#### `cleanup`
+
+A function you can call, passing a function that will be called when this effect is cleaned up. As with `injectEffect`, cleanup happens whenever the `deps` change or when this atom is destroyed.
+
+```ts
+const [promise, asyncStore] = injectAsyncEffect(cleanup => {
+  const controller = new AbortController()
+
+  const usersPromise = fetch('/users', {
+    method: 'get',
+    controller.signal,
+  })
+
+  cleanup(() => controller.abort())
+
+  return usersPromise
+})
+```
+
+If you call `cleanup` asynchronously after the effect has already been cleaned up, the passed function will run immediately.
+
+### `deps`
+
+An array. Optional. If not passed, the effect will rerun every time this atom is reevaluated. Pass an empty array to only run the effect once. If any values are passed to this array, the effect will rerun every time any one of those values changes on a subsequent evaluation.
+
+### `promise`
+
+The first item in the returned tuple. This promise will be resolved the first time one of the callback's promises resolves - e.g. if the effect reruns before the previous promise has resolved, the previous promise will be discarded and `injectAsyncEffect` will switch to listening to the new promise. The first time a promise resolves, this returned promise will be resolved with the result.
+
+This promise is a stable reference - if the effect kicks off again after it's already resolved once, no new promise will be created.
+
+This promise can be passed to [`AtomApi#setpromise()`](../classes/AtomApi#setpromise).
+
+### `asyncStore`
+
+The second item in the returned tuple. See [AsyncStore](../types/AsyncStore).

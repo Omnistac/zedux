@@ -1,0 +1,77 @@
+---
+id: createReducer
+title: createReducer
+---
+
+A factory for creating [reducers](../types/Reducer). These reducers can then be passed to [`createStore()`](createStore) or used directly in React's `useReducer()` hooks.
+
+## Examples
+
+```ts
+import { createActor, createReducer } from '@zedux/react'
+
+const withInitialState = createReducer('initial state')
+const withoutInitialState = createReducer()
+
+const withStringActionTypes = createReducer([]).reduce(
+  'todos/add',
+  (state, newTodo) => [...state, newTodo]
+)
+
+const multipleActions = createReducer([]).reduce(
+  ['todos/reset', 'todos/clear'],
+  () => []
+)
+
+const addTodo = createActor<Todo>('todos/add')
+const removeTodo = createActor<Todo>('todos/add')
+const withActors = createReducer([])
+  .reduce(addTodo, (state, newTodo) => [...state, newTodo])
+  .reduce(removeTodo, (state, id) => state.filter(todo => todo.id !== id))
+
+const clear = createActor('todos/clear')
+const mixed = createReducer([])
+  .reduce(addTodo, (state, newTodo) => [...state, newTodo])
+  .reduce('todos/remove', (state, id) => state.filter(todo => todo.id !== id))
+  .reduce(['todos/reset', clear], () => [])
+```
+
+## Signature
+
+```ts
+type SubReducer<State = any, Payload = any> = (
+  state: State,
+  payload: Payload
+) => State
+
+interface ZeduxReducer<State = any> extends Reducer<State> {
+  reduce<Type extends string = string, Payload = any>(
+    actor: Reactable<Payload, Type> | Reactable<Payload, Type>[], // TODO: allow multiple actions with different payload types
+    reducer: SubReducer<State, Payload>
+  ): ZeduxReducer<State>
+}
+
+createReducer<State = any>(initialState?: State) => ZeduxReducer<State>
+```
+
+A function that accepts an optional initial state and returns a ZeduxReducer object. This object is a reducer function with an attached `.reduce()` method for building out the cases this reducer handles. It can be used anywhere a reducer is required.
+
+### `initialState`
+
+Optional. Can be anything. The initial value of the state controlled by this reducer.
+
+### `reduce`
+
+A function that passes actions along to the passed SubReducer when those actions match the criteria
+
+#### `actor`
+
+A single action type string or actor function created with [`createActor()`](createActor) or a list of strings and/or actors. The SubReducer will be called whenever any of the actions in this list are dispatched.
+
+#### `reducer`
+
+A SubReducer function. SubReducers look like reducers, but instead of receiving the entire action object as the second parameter, they receive only the action's `payload` property.
+
+```ts
+.reduce(myActor, (state, actionPayload) => newState)
+```

@@ -3,10 +3,10 @@ const { resolve } = require('path')
 module.exports = {
   title: 'Zedux',
   tagline: 'Elite State Management for React',
-  url: 'https://bowheart.github.io',
+  url: 'https://Omnistac.github.io',
   baseUrl: '/zedux/',
   favicon: 'img/favicon.ico',
-  organizationName: 'bowheart',
+  organizationName: 'Omnistac',
   projectName: 'zedux',
   stylesheets: [
     'https://fonts.googleapis.com/css2?family=Quicksand&display=swap',
@@ -21,19 +21,13 @@ module.exports = {
       },
       items: [
         {
-          to: 'docs/react/walkthrough/quick-start',
-          activeBasePath: 'docs/react',
-          label: 'React Docs',
+          to: 'docs/walkthrough/quick-start',
+          activeBasePath: 'docs',
+          label: 'Docs',
           position: 'left',
         },
         {
-          to: 'docs/core/getting-started/introduction',
-          activeBasePath: 'docs/core',
-          label: 'Core Docs',
-          position: 'left',
-        },
-        {
-          href: 'https://github.com/bowheart/zedux',
+          href: 'https://github.com/Omnistac/zedux',
           label: 'GitHub',
           position: 'right',
         },
@@ -47,11 +41,7 @@ module.exports = {
           items: [
             {
               label: 'React',
-              to: 'docs/react/walkthrough/quick-start',
-            },
-            {
-              label: 'Core',
-              to: 'docs/core/getting-started/quick-start',
+              to: 'docs/walkthrough/quick-start',
             },
           ],
         },
@@ -88,7 +78,7 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/bowheart/zedux/tree/master/',
+          editUrl: 'https://github.com/Omnistac/zedux/tree/master/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),

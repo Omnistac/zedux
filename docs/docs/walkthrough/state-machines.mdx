@@ -1,0 +1,206 @@
+---
+id: state-machines
+title: State Machines
+---
+
+import { LiveEditor } from '../LiveEditor'
+
+The state machine is one of the most important tools a statesmith can have in his belt. [XState](https://xstate.js.org/) is the current king of the JavaScript state machine world. Zedux is not out to change that, in fact we may build an official XState Zedux integration soon.
+
+However, Zedux does provide a minimal state machine implementation out of the box. Machines are just reducers and interpreters are just stores. Zedux state machines do not cover every use case of state machines. But they should be enough for most situations.
+
+## Creating a machine
+
+To create a state machine, we create any number of states, tie them together in a machine, and rig up a store with that machine.
+
+```ts
+import { createMachine, createState, createStore } from '@zedux/react'
+
+const red = createState('red')
+const yellow = createState('yellow')
+const green = createState('green')
+
+const lightMachine = createMachine(
+  green.on('timer', yellow),
+  yellow.on('timer', red),
+  red.on('timer', green)
+)
+
+const store = createStore(lightMachine) // the machine is just a reducer!
+
+store.getState() // 'green'
+store.dispatch({ type: 'timer' }) // 'yellow'
+store.dispatch({ type: 'timer' }) // 'red'
+```
+
+The first state passed to `createMachine` is the initial state of the machine.
+
+## Using Actors
+
+Actors can be used directly, instead of strings. And strings can be used instead of passing state objects to `state.on()`.
+
+```ts
+import { createActor, createState, createMachine } from '@zedux/react'
+
+const resolve = createActor('resolve')
+const reject = createActor('reject')
+
+const pending = createState('pending')
+
+const promiseMachine = createMachine(
+  pending.on(resolve, 'resolved').on(reject, 'rejected')
+)
+```
+
+## Lots of States
+
+Zedux exports a special `states()` factory that can be used to create several states at once.
+
+```ts
+import { createMachine, states } from '@zedux/react'
+
+const [a, b, c, d] = states('a', 'b', 'c', 'd')
+
+const machine = createMachine(
+  a.on('next', b),
+  b.on('next', c),
+  c.on('next', d),
+  d.on('next', a)
+)
+```
+
+## Side Effects
+
+One of [`when()`](/not-done)'s main features is registering `enter` and `leave` hooks for state machines:
+
+```ts
+when(myStore)
+  .machine(({ activeState }) => activeState) // locate state machine
+  .enters(ActiveState.Inactive, scheduleCleanup) // register onEnter hook
+  .leaves(ActiveState.Inactive, destroy) // register onLeave hook
+  .enters([stateA, stateB], doSomething) // multiple states
+```
+
+If the store contains only a state machine reducer, pass nothing to `.machine()`:
+
+```ts
+const myStore = createStore(machine)
+
+when(myStore).machine().enters(state, invoke)
+```
+
+## Contrived Example
+
+<LiveEditor resultVar="Machine">{`
+const click = createActor('click')
+const timerStart = createActor<ReturnType<typeof setTimeout>>('timerStart')
+const timerEnd = createActor('timerEnd')\n
+const [open, opening, closed, closing] = states(
+  'open',
+  'opening',
+  'closed',
+  'closing'
+)\n
+const doorMachine = createMachine(
+  open.on(click, closing),
+  closing.on(click, opening).on(timerEnd, closed),
+  opening.on(click, closing).on(timerEnd, open),
+  closed.on(click, opening)
+)\n
+const timeoutIdReducer = createReducer(null)
+  .reduce(timerStart, (_, timeoutId) => timeoutId)
+  .reduce(timerEnd, () => null)\n
+const doorMachineAtom = atom('doorMachine', () => {
+  const store = injectStore(() => createStore({
+    machine: doorMachine,
+    timeoutId: timeoutIdReducer
+  }))\n
+  injectEffect(() => {
+    const { subscription } = when(store)
+      .machine(({ machine }) => machine)
+      .enters([closing, opening], ({ store }) => {
+        const timeoutId = setTimeout(() => {
+          store.dispatch(timerEnd())
+        }, 1000)\n
+        store.dispatch(timerStart(timeoutId))
+      })
+      .leaves([open, opening, closed, closing], ({ oldState }) => {
+        if (oldState.timeoutId) {
+          clearTimeout(oldState.timeoutId)
+        }
+      })\n
+    return () => subscription.unsubscribe()
+  }, [])\n
+  return store
+})\n
+function Machine() {
+  const state = useAtomValue(doorMachineAtom)
+  const { dispatch } = useAtomInstance(doorMachineAtom)\n
+  return (
+    <>
+      <div>State: {state.machine}</div>
+      <button onClick={() => dispatch(click())}>Fire Click</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+## `useReducer`
+
+Since state machines are just reducers, they can be used directly in `useReducer()`
+
+export const buttonStyle = {
+  appearance: 'none',
+  border: '1px solid #ccc',
+  cursor: 'pointer',
+  fontSize: '20px',
+  padding: '12px',
+}
+
+export const getStyle = theme => {
+  switch (theme) {
+    case 'light':
+      return { ...buttonStyle, background: '#f7f7f7' }
+    case 'dark':
+      return { ...buttonStyle, background: '#333542', color: '#fff' }
+    case 'classic':
+      return {
+        ...buttonStyle,
+        background: '#fed',
+        borderRadius: '20px',
+        fontStyle: 'italic',
+      }
+  }
+}
+
+<LiveEditor extraScope={{ getStyle }} resultVar="Theme">{`
+const cycle = createActor('cycle')
+const [light, dark, classic] = states('light', 'dark', 'classic')\n
+const machine = createMachine(
+  light.on(cycle, dark),
+  dark.on(cycle, classic),
+  classic.on(cycle, light)
+)\n
+function Theme() {
+  const [theme, dispatch] = useReducer(machine, light.type)\n
+  return (
+    <button
+      onClick={() => dispatch(cycle())}
+      style={getStyle(theme)}
+    >Cycle Theme</button>
+  )
+}
+`}</LiveEditor>
+
+## Recap
+
+- `createState()` creates a state for a state machine.
+- `states()` creates many states at once.
+- `createMachine()` creates a reducer.
+- A machine reducer can be used in stores or in `useReducer`.
+- `when(store).machine().enters(...)` registers an onEnter hook.
+- `when(store).machine().leaves(...)` registers an onLeave hook.
+
+## Next Steps
+
+We have a solid grip on atoms and stores at this point. It's time to look at some more advanced React usage. We'll start with [React context patterns](context).

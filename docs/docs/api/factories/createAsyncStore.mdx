@@ -1,0 +1,99 @@
+---
+id: createAsyncStore
+title: createAsyncStore
+---
+
+```ts
+import { asyncUtils } from '@zedux/react'
+
+asyncUtils.createAsyncStore()
+```
+
+A factory for creating [AsyncStores](../types/AsyncStore). This factory lives on an exported `asyncUtils` namespace, along with the actions and states that can be used to change and inspect the state of async stores.
+
+## Definitions
+
+```ts
+enum AsyncStatus {
+  Error = 'Error',
+  Idle = 'Idle',
+  Loading = 'Loading',
+  Success = 'Success',
+}
+
+interface AsyncUtils {
+  actions: {
+    cancel: Action
+    load: Action
+    loadSuccess: Action<any>
+    loadError: Action<Error>
+    reset: Action
+  }
+  createAsyncStore: () => AsyncStore
+  states: AsyncStatus
+}
+```
+
+## `actions`
+
+The `asyncUtils.actions` property contains many actions that can be used to change the state of the store.
+
+```ts
+const store = asyncUtils.createAsyncStore()
+
+// transition `status` from `Idle` to `Loading`.
+store.dispatch(asyncUtils.actions.load())
+```
+
+### `cancel`
+
+Transitions the async store's `status` state machine from `Loading` to `Idle`. A subscriber can listen for this action and cancel requests.
+
+### `load`
+
+Transitions the async store's `status` state machine from `Idle` to `Loading`.
+
+### `loadSuccess`
+
+Transitions the async store's `status` state machine from `Loading` to `Success`. Sets the store's `data` property to the action's payload.
+
+```ts
+asyncStore.dispatch(asyncUtils.actions.loadSuccess('yay!'))
+asyncStore.getState().data // 'yay!'
+```
+
+### `loadError`
+
+Transitions the async store's `status` state machine from `Loading` to `Error`. Sets the store's `error` property to the action's payload.
+
+```ts
+asyncStore.dispatch(asyncUtils.actions.loadError(new Error(':(')))
+asyncStore.getState().error.message // ':('
+```
+
+### `reset`
+
+Transitions the async store's `status` state machine from `Success` or `Error` to `Idle`.
+
+## `createAsyncStore`
+
+The actual factory. Doesn't take any parameters. Returns an [AsyncStore](../types/AsyncStore).
+
+## `states`
+
+The `asyncUtils.states` property is a reference to the `AsyncStatus` enum. It has the following properties:
+
+- `asyncUtils.states.Error`
+- `asyncUtils.states.Idle`
+- `asyncUtils.states.Loading`
+- `asyncUtils.states.Success`
+
+These can be used to check the state of the `status` machine:
+
+```ts
+const asyncStore = asyncUtils.createAsyncStore()
+
+asyncStore.dispatch(asyncUtils.actions.load())
+
+asyncStore.getState().status === asyncUtils.states.Loading // true
+```

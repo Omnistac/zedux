@@ -1,0 +1,326 @@
+---
+id: creating-atoms
+title: Creating Atoms
+---
+
+import { LiveEditor } from '../LiveEditor'
+
+In the quick start, we learned a few basic ways to create atoms. In this page, we'll create some more advanced atoms using config objects, injectors, stores, and the AtomApi. We'll also discover some specialized types of atoms.
+
+## Atom Config
+
+Many aspects of an atom's behavior can be configured. The `atom()` factory can take a config object as the 3rd parameter.
+
+```ts
+import { atom } from '@zedux/react'
+
+atom('foo', 'initial value', {
+  flags: ['async', 'electron'],
+  maxInstances: 10,
+  ttl: 1000 * 60 * 60,
+})
+```
+
+This config object has many useful properties. We'll look at some of these now. See [`atom()`](../api/factories/atom) for the full rundown.
+
+### TTL
+
+When an atom instance is no longer used, we sometimes want to destroy it - allowing its data to be garbage collected.
+
+By default, standard atoms live forever. But they can be given a `ttl` to configure how long instances should stick around when they're no longer in use.
+
+```ts
+const zombieAtom = atom('zombie', null, {
+  // keep stale zombieAtom instances in memory for 10 minutes:
+  ttl: 1000 * 60 * 10,
+})
+// if anyone uses the instance within 10 minutes, cleanup is cancelled
+```
+
+`ttl` can be set to `0` to clean up instances immediately.
+
+### Max Instances
+
+Complementary to `ttl`, `maxInstances` specifies the largest ideal cache size. If more instances than this "maximum" are created, Zedux will start cleaning them up automatically when they go stale, ignoring `ttl`.
+
+No instances will ever be cleaned up while still in use. For example, say `maxInstances` is 2 and `ttl` is 1 minute:
+
+```ts
+const fooAtom = atom('foo', (id: string) => id, {
+  maxInstances: 2,
+  ttl: 60000,
+})
+```
+
+Now say I end up using 3 instances at once:
+
+```ts
+useAtomValue(fooAtom, ['a'])
+useAtomValue(fooAtom, ['b'])
+useAtomValue(fooAtom, ['c'])
+```
+
+All 3 of those instances can live forever, as long as they're still in use. But as soon as one instance becomes stale, it will be cleaned up immediately - `ttl` will be ignored.
+
+Now there are only 2 instances, which is within the `maxInstances`. The next instance to be cleaned up will respect `ttl`, sticking around for a minute before being destroyed.
+
+Remember that atoms live forever, if no `ttl` is specified. In this case, `maxInstances` can be used to only clean up excess instances, allowing all others to live forever.
+
+## Stores
+
+Every instance of every atom creates a light-weight [Zedux store](../api/classes/Store). Stores manage state and serve as a message bus for running side effects based on dispatched actions or state changes.
+
+Atoms create most stores for you. But you can easily create them manually:
+
+```ts
+import { createStore } from '@zedux/react'
+
+const myStore = createStore()
+```
+
+Stores have lots of cool features that we'll look at in [the stores walkthrough](stores). For now, just remember that every atom instance has an underlying store.
+
+## Injectors
+
+Most atoms will make use of injectors. Injectors allow us to safely manage an atom's side effects, memoization, dependency injection, and lots more. Some injectors return helpful utility functions or help with debugging.
+
+Injectors are inspired by React hooks. Using them should feel similar to using hooks. Like hooks, injectors should only be used at the top level of atom evaluators - outside any if statements or loops.
+
+We'll look at some of the most common injectors here.
+
+### `injectStore`
+
+Creates a store. The returned store is a stable reference; like a React ref, it will not change on subsequent evaluations. This means you can then return the store from the evaluator function
+
+The first parameter can be either the initial state of the store or a function that returns a store.
+
+```ts
+import { atom, injectStore } from '@zedux/react'
+
+const storeAtom = atom('store', () => {
+  const store = injectStore('initial state!')
+
+  return store // Store is a stable reference; we can return it here.
+})
+```
+
+Notice that we returned the store. This is important! Zedux automatically creates a store for every atom instance **unless** you return a store from the evaluator function. This essentially tells Zedux, "Don't create a store for me; I created my own. Use this one."
+
+:::important
+When returning a store from an evaluator, ensure that the exact same store reference is returned every time the atom evaluates - e.g. by using `injectMemo` or `injectStore`.
+:::
+
+`injectStore`'s second parameter is a boolean indicating whether this atom instance should subscribe to this store. Default is false, meaning state updates on that store will not trigger a reevaluation.
+
+```ts
+// this evaluator will run every time this store's state changes:
+const store = injectStore(initialState, true)
+```
+
+Zedux stores can be either zero-config or reducer-driven. Because of this,`injectStore` is the injector equivalent of both `useState` and `useReducer`. You'll probably use it a lot.
+
+### `injectEffect`
+
+The injector equivalent of React's `useEffect`. Runs a deferred side effect every time its dependencies change.
+
+```ts
+const store = injectStore({ status: 'loading', data: null, error: null })
+
+injectEffect(() => {
+  fetch('/api/blog-posts')
+    .then(async data => {
+      store.setState({ status: 'success', data: await res.json() })
+    })
+    .catch(err => {
+      store.setState({ status: 'error', error: err })
+    })
+}, []) // no dependencies; side effect will only run once
+
+return store
+```
+
+Return a cleanup function to cancel side effect execution and destroy resources created during the side effect.
+
+```ts
+const rxjs$ = injectAtomValue(rxjsAtom)
+
+injectEffect(() => {
+  const subscription = rxjs$.subscribe(...)
+
+  return () => subscription.unsubscribe()
+}, [rxjs$])
+```
+
+Every time the `rxjs$` reference changes, the previous effect will be cleaned up and the effect will rerun with the new reference.
+
+### `injectMemo`
+
+The injector equivalent of React's [`useMemo`](https://reactjs.org/docs/hooks-reference.html#usememo). Used to maintain stable references across evaluations and to prevent expensive calculations from re-running unnecessarily.
+
+```ts
+const memoizedValue = injectMemo(() => computeExpensiveValue(a, b), [a, b])
+```
+
+### `injectGet`
+
+Returns a special `get` function that can be used to get atom instance values. `get` works just like `injectAtomValue`, but without any limitations of injectors. It can be used in loops or used asynchronously in a side effect.
+
+```ts
+const sumAtom = atom('sum', (a: number, b: number) => a + b)
+
+const someAtom = atom('some', () => {
+  const get = injectGet()
+  const sum = get(sumAtom, [1, 2]) // 3
+})
+```
+
+When used synchronously during atom evaluation (like we did here), `get` updates the atom instance's dependency graph dynamically. When used asynchronously, `get` will not update the dependency graph; it simply returns the value. (We'll cover ways to asynchronously update an atom instance's dependency graph [later](/not-done))
+
+## Atom Api
+
+Some operations don't fit well into the injector paradigm. Injectors, like hooks, should be composable and usable multiple times throughout an atom evaluator and other injectors. But atoms have a few one-off operations - operations that should only be performed once. For these situations, we use an AtomApi.
+
+To create an AtomApi, we simply wrap the atom instance's state in a call to `api()`:
+
+```ts
+import { api, atom } from '@zedux/react'
+
+const myAtom = atom('my', 'initial state') // before
+const myAtom = atom('my', api('initial state')) // after
+```
+
+This works with stores too:
+
+```ts
+const myAtom = atom('my', () => {
+  const store = injectStore()
+
+  return store // before
+  return api(store) // after
+})
+```
+
+So now then ... what can an AtomApi do?
+
+### Exports
+
+Zedux atoms can export anything via an AtomApi:
+
+<LiveEditor resultVar="App">{`
+const counterAtom = atom('counter', () => {
+  const store = injectStore(0)\n
+  // Expose methods
+  return api(store).setExports({
+    decrement: () => store.setState(state => state - 1),
+    increment: () => store.setState(state => state + 1)
+  })
+})\n
+function App() {
+  const { decrement, increment } = useAtomInstance(counterAtom).exports
+  const value = useAtomValue(counterAtom)\n
+  return (
+    <>
+      <div>Counter: {value}</div>
+      <button onClick={increment}>Increment</button>
+      <button onClick={decrement}>Decremenet</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+:::important
+Exports are constant! This means exported variables should be stable references. Zedux won't update them on subsequent evaluations. In this example, `increment` and `decrement` are not stable references, but they don't reference anything except the store, which is stable.
+:::
+
+### Suspense
+
+Atoms can be used as suspending resources in React. To suspend, we give a stable promise reference to the AtomApi
+
+```ts
+return api(val).setPromise(suspensePromise)
+```
+
+Now you may be asking how one is to acquire a stable promise reference without kicking off side effects in the evaluator body. Or what if one wants to forward promises from dependencies on to React.
+
+We'll cover much more about suspense in [the suspense walkthrough](../walkthrough/suspense) (sorry to leave you in ... suspense 😒).
+
+AtomApis have many more features that we'll cover eventually. Or check out the [AtomApi reference](../api/classes/AtomApi) for all the power.
+
+## Specialized Atoms
+
+Zedux exports a few "specialized" types of atoms. These atoms can be more useful than the default Atoms in certain scenarios.
+
+### Ions
+
+Perhaps the most common atom type. Ions are better suited for selector-type operations. Create them with the `ion` factory:
+
+```ts
+import { ion } from '@zedux/react'
+
+const filteredTodosAtom = ion('filteredTodos', ({ get }, isDone: boolean) =>
+  get(todosAtom).filter(todo => todo.isDone === isDone)
+)
+```
+
+Ions are only slightly different from normal atoms. They receive a special, Zedux-supplied object as their first parameter. Any parameters after that are the actual params of the atom. The atom equivalent of the above ion looks like so:
+
+```ts
+import { atom, injectGet } from '@zedux/react'
+
+const filteredTodosAtom = atom('filteredTodoos', (isDone: boolean) => {
+  const get = injectGet()
+
+  return get(todosAtom).filter(todo => todo.isDone === isDone)
+})
+```
+
+Note that in either example, we could have used `injectAtomValue` instead of `get`.
+
+See [the `ion()` reference](../api/factories/ion) for more info.
+
+### Local Atoms
+
+Atoms are a full replacement for React context. Local atoms are a special type of atom designed for this use case.
+
+Local atoms have their first parameter automatically set to an optional id string. You can pass a string to id these atoms manually. If no string is passed, a new id is generated and a new atom instance created every time you use the atom.
+
+```tsx
+import { AtomInstanceProvider, localAtom, useAtomInstance } from '@zedux/react'
+
+const reactContextAtom = localAtom('reactContext', 'some state')
+
+function Parent() {
+  // allow Zedux to auto-generate an id for this instance:
+  const newInstance = useAtomInstance(reactContextAtom)
+
+  return (
+    <AtomInstanceProvider instance={newInstance}>
+      <Child />
+    </AtomInstanceProvider>
+  )
+}
+
+function Child() {
+  // use the provided instance:
+  const instance = useAtomContext(reactContextAtom)
+  ...
+}
+```
+
+Learn more about local atoms in [the React context walkthrough](/not-done)
+
+## Recap
+
+- `atom()` can take a config object.
+- Atoms can be destroyed using `ttl` and/or `maxInstances`.
+- All atom instances have an underlying store. This store can be created manually.
+- `injectStore` creates a stable store reference.
+- `injectEffect` runs side effects
+- `injectMemo` memoizes values
+- `injectGet` returns a utility function for retrieving atom instance values dynamically.
+- Exports can be attached to an atom via `api(value).setExports({ ... })`
+- Atoms can cause React to suspend by passing a stable promise to `api(value).setPromise(promise)`.
+- Ions specialize in selector-type operations
+- Local Atoms specialize in improving basic React context flows.
+
+Next up we'll cover more ways to [consume atoms](using-atoms).

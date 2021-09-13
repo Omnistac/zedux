@@ -1,0 +1,99 @@
+---
+id: useAtomConsumer
+title: useAtomConsumer
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+```ts
+import { useAtomConsumer } from '@zedux/react'
+```
+
+A React hook that accepts an [atom](../classes/Atom) and returns an [instance](../classes/AtomInstance) of that atom that has been provided over React context via [`<AtomInstanceProvider>`](../components/AtomInstanceProvider).
+
+If no instance has been provided, this hook will return an empty object. Pass default params as the second argument to tell Zedux to create an atom instance if one wasn't provided. Pass `true` as the second argument to tell Zedux to throw an error if you forgot to provide an instance.
+
+This hook will not register a graph dependency of any kind on the provided instance. You can create a graph dependency by passing the consumed atom instance to various hooks:
+
+- To register a [dynamic dependency](../glossary#dynamic-graph-dependency) (causing this component to rerender when the atom instance's state updates), pass the consumed atom instance to [`useAtomValue`](useAtomValue), [`useAtomState`](useAtomState), or [`useAtomSelector`](useAtomSelector).
+
+- To register a [static dependency](../glossary#static-graph-dependency), pass the consumed atom instance to [`useAtomInstance`](useAtomInstance). There should never be any need to do this, as the providing parent component should be doing this already.
+
+:::note
+This is one of the few hooks that does not have an injector equivalent (there is no such thing as `injectAtomConsumer`). This is because this hook's functionality is very specific to React. There is no equivalent in the atoms universe.
+:::
+
+## Example
+
+<LiveEditor resultVar="Parent">{`
+const secondsAtom = atom('seconds', () => {
+  const store = injectStore(0)\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => store.setState(val => val + 1),
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return store
+})\n
+function Child() {
+  const instance = useAtomConsumer(secondsAtom)
+  const state = useAtomValue(instance)\n
+  return <div>Child Seconds: {state}</div>
+}\n
+function Parent() {
+  const instance = useAtomInstance(secondsAtom)\n
+  return (
+    <AtomInstanceProvider instance={instance}>
+      <Child />
+    </AtomInstanceProvider>
+  )
+}
+`}</LiveEditor>
+
+Miscellaneous:
+
+```ts
+const instance = useAtomInstance(myAtom)
+
+const defaulted = useAtomInstance(myAtom, ['param 1', 'param 2'])
+
+// if the atom doesn't take params, pass an empty array for the default params:
+const defaultedNoParams = useAtomInstance(myAtom, [])
+
+// passing `true` makes Zedux throw an error if no instance was provided:
+const guaranteed = useAtomInstance(myAtom, true)
+```
+
+## Signature
+
+```ts
+useAtomInstance(atom, defaultParams?) => AtomInstance
+```
+
+Uses the passed [atom](../classes/Atom) to find the nearest instance of that atom that has been provided over React context via [`<AtomInstanceProvider>`](../components/AtomInstanceProvider).
+
+If no atom instance was provided, returns an empty object. If defaultParams were passed, creates an atom instance using the passed atom and default params and returns the new instance.
+
+### Overloads
+
+```ts
+useAtomInstance(atom, throwIfNotProvided?) => AtomInstance
+```
+
+If no atom instance was provided and `throwIfNotProvided` is true, this overload throws an error. This is the recommended overload in most situations. Fail fast!
+
+### `atom`
+
+Required. The [atom](../classes/Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
+
+### `params`
+
+Optional. An array of default parameters that Zedux will use to create an instance if none was provided. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
+
+If the atom doesn't take parameters, pass an empty array to tell Zedux to create a default instance.
+
+### `throwIfNotProvided`
+
+Optional. A boolean. If true, Zedux will throw an error if you forgot to provide an atom instance above this component in the component tree.

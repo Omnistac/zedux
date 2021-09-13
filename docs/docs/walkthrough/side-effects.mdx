@@ -1,0 +1,280 @@
+---
+id: side-effects
+title: Side Effects
+---
+
+import { LiveEditor } from '../LiveEditor'
+
+Zedux stores do not have middleware. Read more on that in the [Redux comparison](../about/redux-comparison). Basic side effects like logging and state persistence can be done by hooking into a store's side effects layer.
+
+In general, side effects should be colocated with the state that triggers them and that they act upon. This is exactly what we do in React thanks to hooks. In Zedux, we can use injectors:
+
+## `injectEffect()`
+
+Your primary weapon for running side effects in atoms. This works just like React's [`useEffect()`](https://reactjs.org/docs/hooks-reference.html#useeffect).
+
+<LiveEditor resultVar="Alert">{`
+const alertAtom = atom('alert', () => {
+  const store = injectStore(0, true) // true subscribes to the store\n
+  injectEffect(() => {
+    const state = store.getState()\n
+    if (state === 0) return\n
+    alert('Hey! You changed the state to ' + state)
+  }, [store.getState()])\n
+  return store // remember to return the store
+})\n
+function Alert() {
+  const [, setState] = useAtomState(alertAtom)\n
+  return (
+    <button onClick={() => setState(state => state + 1)}>Show Alert</button>
+  )
+}
+`}</LiveEditor>
+
+## Effects Subscribers
+
+Stores can be given an effects subscriber:
+
+```ts
+function App() {
+  const { store } = useAtomInstance(myAtom)
+
+  useEffect(() => {
+    const subscription = store.subscribe({
+      effects: ({ action, newState, oldState }) => {
+        console.log('running effect', { action, newState, oldState })
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [store])
+  ...
+}
+```
+
+See the full effect subscriber definition [here](/not-done). Effects subscribers are simple and powerful. But you shouldn't need to rig them up manually. Zedux exposes a high-level API that does this for you:
+
+## WhenBuilder
+
+`when()` is a declarative and simple way to hook into stores. It has several methods for tying into certain events and status updates in stores.
+
+### `.receivesAction()`
+
+Calls an effect handler every time the store receives an action.
+
+```ts
+import { useAtomInstance, when } from '@zedux/react'
+
+function App() {
+  const { store } = useAtomInstance(myAtom)
+
+  useEffect(() => {
+    // highlight-next-line
+    const { subscription } = when(store).receivesAction(
+      ({ action, newState, oldState }) => {
+        console.log('store received action', { action, newState, oldState })
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [store])
+  ...
+}
+```
+
+`.receivesAction()` can be given a specific actor or action type:
+
+```ts
+import { createActor, when } from '@zedux/react'
+
+const login = createActor('login')
+when(myStore).receivesAction(login, doStuffOnLogin)
+```
+
+In this way, stores can easily be consumed as streams of actions.
+
+#### `.setState()`
+
+When `store.setState()` is called, Zedux translates that into a dispatch of the special `HYDRATE` action. To listen to only this action, import the `actionTypes` object and use the `.HYDRATE` property:
+
+```ts
+import { actionTypes, when } from '@zedux/react'
+
+when(store).receivesAction(actionTypes.HYDRATE, handleSetState)
+```
+
+### `.stateChanges()`
+
+Calls an effect handler every time the store's state changes in response to an action (which includes every time `.setState()` is called).
+
+```ts
+when(myStore).stateChanges(({ action, newState, oldState }) => {
+  console.log('store state changed', { action, newState, oldState })
+})
+```
+
+### `.stateMatches()`
+
+Calls an effect handler every time the store's state updates to match the passed predicate. Does not call the handler if the previous state also matched the predicate.
+
+```ts
+const counterStore = createStore(null, 0)
+
+when(counterStore).stateMatches(
+  num => num > 1,
+  ({ newState, oldState }) => {
+    console.log('triggered!', { newState, oldState })
+  }
+)
+
+counterStore.setState(1)
+counterStore.setState(2) // triggered! { newState: 2, oldState: 1 }
+counterStore.setState(3)
+counterStore.setState(0)
+counterStore.setState(4) // triggered! { newState: 4, oldState: 0 }
+```
+
+To perform a side effect on every action or every state change while the predicate is matched, regardless of previous state, use `.receivesAction()` or `.stateChanges()` with a normal if statement:
+
+```ts
+when(counterStore).receivesAction(({ newState, oldState }) => {
+  if (newState > 1) {
+    console.log('triggered!', { newState, oldState })
+  }
+})
+
+counterStore.setState(1)
+counterStore.setState(2) // triggered! { newState: 2, oldState: 1 }
+counterStore.setState(3) // triggered! { newState: 3, oldState: 2 }
+counterStore.setState(0)
+counterStore.setState(4) // triggered! { newState: 4, oldState: 0 }
+```
+
+### Chaining
+
+Multiple handlers can be chained together.
+
+```ts
+when(myStore).receivesAction(logAction).stateChanges(persistStateChange)
+
+// Or
+const whenMyStore = when(myStore)
+
+whenMyStore.receivesAction(logAction)
+whenMyStore.stateChanges(persistStateChange)
+```
+
+### Cleanup
+
+As with all subscriptions, it's important to clean up effects subscribers when their context is destroyed (e.g. the component is unmounted or the atom instance is destroyed).
+
+`when()` builders have a `subscription` property, which is a reference to the store subscription created by the `when()` call. Remember to call `subscription.unsubscribe()` in `useEffect` and `injectEffect`:
+
+<LiveEditor resultVar="Button">{`
+const triggerAlert = createActor('triggerAlert')\n
+const buttonPressAtom = atom('buttonPress', () => {
+  const store = injectStore()\n
+  injectEffect(() => {
+    const { subscription } = when(store).receivesAction(
+      triggerAlert,
+      () => alert('consider it done')
+    )\n
+    return () => subscription.unsubscribe()
+  }, [store])\n
+  return store
+})\n
+function Button() {
+  const { dispatch } = useAtomInstance(buttonPressAtom)\n
+  return (
+    <button onClick={() => dispatch(triggerAlert())}>Do It</button>
+  )
+}
+`}</LiveEditor>
+
+For the full API, see [`when()`](/not-done).
+
+## A Note On Store Actions
+
+Zedux' store composition model works by making actions themselves composable objects called ActionChains. The ActionChain contains needed metadata for Zedux to perform its store composition magic. ActionChains consist of any number of "meta nodes" with the wrapped action being the last node in the chain.
+
+We'll go over the specifics of Zedux' store composition model in [the store composition guide](/not-done). For now you just need to know that, depending on your store setup, you may see these ActionChain objects as the `action` property in your effects handlers. Zedux doesn't unwrap the action because sometimes you will need to observe the metadata the action is wrapped in.
+
+If you don't care about the metadata, you can get the wrapped action with `removeAllMeta`
+
+```ts
+import { removeAllMeta, when } from '@zedux/react'
+
+when(store).receivesAction(({ action }) => {
+  const unwrappedAction = removeAllMeta(action)
+
+  switch (unwrappedAction.type) { ... }
+})
+
+store.subscribe((newState, oldState, actionChain) => {
+  const action = removeAllMeta(actionChain)
+})
+```
+
+## Observables
+
+Zedux stores are a type of observable. However, Zedux doesn't have any built-in helpers (currently) for integrating with observable libraries such as [RxJS](https://github.com/ReactiveX/rxjs). But Zedux' extreme flexibility makes working with observables easy.
+
+For example, any atom's value can be an observable:
+
+```ts
+import { atom } from '@zedux/react'
+import { of } from 'rxjs'
+
+const observableValue = atom('observableValue', of('hello, world'))
+```
+
+This can be useful for taking advantage of Zedux' caching abilities to share observable references.
+
+You can export an observable from any atom:
+
+```ts
+import { api, atom, injectMemo } from '@zedux/react'
+import { from } from 'rxjs'
+
+const usersStreamAtom = atom('usersStream', () => {
+  const users$ = injectMemo(() => from(streamUsers()), [])
+
+  return api().setExports({
+    users$,
+  })
+})
+```
+
+Handling observable subscriptions is easy with `injectEffect()`:
+
+```ts
+import { atom, injectAtomValue, injectEffect, injectStore } from '@zedux/react'
+
+const userAtom = atom('user', () => {
+  const user$ = injectAtomValue(userStreamAtom)
+  const store = injectStore(null)
+
+  injectEffect(() => {
+    const subscription = user$.subscribe(val => store.setState(val))
+
+    return () => subscription.unsubscribe()
+  }, [user$])
+
+  return store
+})
+```
+
+## Recap
+
+- `injectEffect()` is your main tool for binding side effects to an atom.
+- `when(store).receivesAction()` runs a side effect on every action.
+- `when(store).stateChanges()` runs a side effect on every state change.
+- `when(store).stateMatches()` runs a side effect when the store's new state passes the predicate function, but the old state did not.
+- `when(store).machine().enters()` runs a side effect when a state machine in the store enters a state.
+- `when(store).machine().leaves()` runs a side effect when a state machine in the store leaves a state.
+- `when(store).subscription.unsubscribe()` cleans up the subscription.
+- Zedux' flexible paradigm allows you to use any tools for managing asynchrony or any kind of side effects, such as RxJS streams or JavaScript generators.
+
+## Next Steps
+
+We've learned a lot about stores at this point. It's about time we take a closer look at one of their most useful features - [state machines](state-machines).

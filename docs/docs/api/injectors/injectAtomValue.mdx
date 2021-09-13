@@ -1,0 +1,77 @@
+---
+id: injectAtomValue
+title: injectAtomValue
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+```ts
+import { injectAtomValue } from '@zedux/react'
+```
+
+An [injector](../glossary#injector) that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning the value.
+
+The atom instance that uses this injector will reevaluate whenever the resolved atom instance's state changes.
+
+## Example
+
+<LiveEditor resultVar="Seconds">{`
+const secondsAtom = atom('seconds', () => {
+  const store = injectStore(0)\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => store.setState(val => val + 1),
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return store
+})\n
+const timesFiveAtom = atom('timesFive', () => {
+  const seconds = injectAtomValue(secondsAtom)\n
+  return seconds * 5
+})\n
+function Seconds() {
+  const state = useAtomValue(timesFiveAtom)\n
+  return <div>Seconds Times Five: {state}</div>
+}
+`}</LiveEditor>
+
+Miscellaneous:
+
+```ts
+const currentState = injectAtomValue(myAtom)
+
+const withParams = injectAtomValue(myAtom, ['param 1', 'param 2'])
+
+// passing an atom instance registers a dynamic dependency on that instance
+const withInstance = injectAtomValue(instance)
+```
+
+## Signature
+
+```ts
+injectAtomValue(atom, params?) => state
+```
+
+Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns the resolved atom instance's current state.
+
+### Overloads
+
+```ts
+injectAtomValue(instance) => state
+```
+
+### `atom`
+
+Required. The [atom](../classes/Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
+
+### `params`
+
+Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
+
+TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
+
+### `instance`
+
+Required (in this overload). An [atom instance](../classes/AtomInstance). Will register a dynamic dependency on the passed instance and return the instance's current value.

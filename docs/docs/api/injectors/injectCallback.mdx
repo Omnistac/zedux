@@ -1,0 +1,62 @@
+---
+id: injectCallback
+title: injectCallback
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+```ts
+import { injectCallback } from '@zedux/react'
+```
+
+An [injector](../glossary#injector) that memoizes a function. Really just a shorthand for [`injectMemo()`](injectMemo) where the memoized value itself is a function. The returned function reference will only change when the passed dependencies change.
+
+Can be useful when exporting functions from an atom to ensure that you're only exporting stable references.
+
+<LiveEditor resultVar="Seconds">{`
+const counterAtom = atom('counter', () => {
+  const store = injectStore(0)\n
+  const add = injectCallback(
+    (amount: number) => store.setState(state => state + amount),
+    [] // no deps - the callback reference will never change
+  )\n
+  return api(store).setExports({ add })
+})\n
+function Seconds() {
+  const state = useAtomValue(counterAtom)
+  const { add } = useAtomInstance(counterAtom).exports\n
+  return (
+    <>
+      <div>Current Count: {state}</div>
+      <button onClick={() => add(1)}>Add 1</button>
+      <button onClick={() => add(5)}>Add 5</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+Miscellaneous:
+
+```ts
+import { injectCallback, injectMemo } from '@zedux/react'
+
+// These are equivalent:
+const add = injectCallback((a: number, b: number) => a + b, [])
+const add = injectMemo(() => (a: number, b: number) => a + b, [])
+
+const withDeps = injectCallback(fn, [depA, depB])
+```
+
+## Signature
+
+```ts
+injectCallback(callback, deps?) => callback
+```
+
+### `callback`
+
+Required. A function. If the `deps` haven't changed since the previous evaluation, this function will be ignored. Otherwise, `injectCallback` will return this function itself.
+
+### `deps`
+
+Optional (but you should probably pass it). An array of values that will cause the memoized function to be swapped out for the current one when they change.

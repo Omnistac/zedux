@@ -130,6 +130,15 @@ export interface MachineHooksBuilder<State = any> {
   ): MachineHooksBuilder<State>
 }
 
+export interface MachineState<Type extends string = string> {
+  transitions: Record<string, string>
+  type: Type
+}
+
+export type MachineStateRepresentation<Type extends string = string> =
+  | MachineState<Type>
+  | Type
+
 export type NextSubscriber<State = any> = (
   newState: State,
   prevState: State | undefined,
@@ -161,15 +170,6 @@ export type Selector<State = any, Derivation = any> = (
 ) => Derivation
 
 export type Settable<State = any> = ((state: State) => State) | State
-
-export interface MachineState<Type extends string = string> {
-  transitions: Record<string, string>
-  type: Type
-}
-
-export type MachineStateRepresentation<Type extends string = string> =
-  | MachineState<Type>
-  | Type
 
 export type SideEffectHandler<State = any> = (
   effectData: EffectData<State>

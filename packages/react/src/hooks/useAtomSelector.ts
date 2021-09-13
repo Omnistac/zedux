@@ -38,7 +38,7 @@ const useAtomInstanceSelector = <
     )
 
     return unregister
-  }, [])
+  }, [instance])
 
   return state
 }

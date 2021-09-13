@@ -1,0 +1,192 @@
+---
+id: Store
+title: Store
+---
+
+The class returned from [the `createStore()` factory](../factories/createStore). The store is the basic unit of state management.
+
+In Zedux, unlike Redux, the store is a class. A Zedux app will typically create many stores. It's therefore necessary that stores be as light as possible. With classes, we can take advantage of prototype method reuse, making each store use far less memory.
+
+All atom state is held in stores. Whether you create one yourself using [`injectStore()`](../injectors/injectStore) or let Zedux create one for you, every atom instance has a store.
+
+## Creation
+
+Create using `createStore()`.
+
+```ts
+import { createStore } from '@zedux/react'
+
+const store = createStore()
+const withReducer = createStore(rootReducer)
+const withInitialState = createStore(null, initialState)
+const withBoth = createStore(rootReducer, initialState)
+const splittingReducers = createStore({
+  a: reducerA,
+  b: reducerB
+})
+const childStores = createStore({
+  a: storeA,
+  b: storeB
+})
+const mixed = createStore({
+  a: reducerA,
+  b: storeB
+})
+```
+
+### In Atoms
+
+In an atom evaluator, stores should almost always be stable references. The easiest way to ensure this is by using [`injectStore()`](../injectors/injectStore).
+
+```ts
+import { atom, injectStore } from '@zedux/react'
+
+const testAtom = atom('test', () => {
+  const store = injectStore(initialState)
+
+  return store // remember to return the store
+})
+```
+
+You'll often deal with multiple stores in a single atom. Take advantage of inline state updates and store composition:
+
+```ts
+const testAtom = atom('test', () => {
+  const storeFromInjector = injectCustomThing()
+  const localStore = injectStore()
+
+  // state can be set inline during atom evaluation:
+  storeFromInjector.setState(newState)
+
+  // compose stores together to get a single store you can return:
+  const combinedStore = injectStore(
+    () => createStore({
+      otherState: storeFromInjector,
+      state: localStore
+    })
+  )
+
+  return combinedStore
+})
+```
+
+## To Be Continued...
+
+See [the stores walkthrough](../../walkthrough/stores) for a better high-level picture of stores.
+
+## Definition
+
+```ts
+class Store<State = any> {
+  
+  public use(newHierarchy: HierarchyDescriptor<State>): Store<State>
+}
+```
+
+## Methods
+
+Stores expose the following methods:
+
+### `.dispatch`
+
+```ts
+public dispatch(action: Dispatchable): State
+```
+
+Dispatches an action to the store. This method is actually a bound function property, so you can call it with no context e.g. after dereferencing it like:
+
+```ts
+const { dispatch } = myStore
+```
+
+Returns the new state of the store.
+
+| Param | Type | Required | Description |
+| --- | --- | --- | --- |
+| `action` | Dispatchable - either an [ActionChain](../types/ActionChain) or a normal [Action object](../types/Action) | Yes | The action to dispatch to the store. Will be passed to all the store's reducers. Will also be wrapped in the [INHERIT meta type](../constants/metaTypes#inherit) and passed to any child stores. |
+
+### `.getState`
+
+```ts
+public getState(): State
+```
+
+Returns the current state of the store.
+
+### `.setState`
+
+```ts
+public setState(settable: Settable<State>, meta?: any): State
+```
+
+Sets the store's state. This method is actually a bound function property, so you can call it with no context e.g. after dereferencing it like:
+
+```ts
+const { setState } = myStore
+```
+
+Returns the new state of the store.
+
+| Param | Type | Required | Description |
+| --- | --- | --- | --- |
+| `settable` | [Settable](../types/Settable) - either the new state or a function that accepts the current state and returns the new state | Yes | The new state of the store. Will be translated into a special HYDRATE pseudo-action and dispatched to the store's reducers. Any relevant pieces of state will also be set on child stores |
+| `meta` | any | No (no default) | Will be set as the `meta` property of the created HYDRATE pseudo-action. Set to [`metaTypes.SKIP_EVALUATION`](../constants/metaTypes#skip_evaluation) |
+
+### `.setStateDeep`
+
+```ts
+public setStateDeep(settable: Settable<RecursivePartial<State>>, meta?: any): State
+```
+
+Deeply merges an object into the current state of the store. Returns the new state of the store. Note that there is no way to remove state with this method. Use `.setState` for that.
+
+| Param | Type | Required | Description |
+| --- | --- | --- | --- |
+| `settable` | [Settable](../types/Settable) - either a partial state object or a function that accepts the current state and returns a partial state object | Yes | The new state of the store. Will be translated into a special HYDRATE pseudo-action and dispatched to the store's reducers. Any relevant pieces of state will also be set on child stores |
+| `meta` | any | No (no default) | Will be set as the `meta` property of the created HYDRATE pseudo-action. Set to [`metaTypes.SKIP_EVALUATION`](../constants/metaTypes#skip_evaluation) to prevent the atom instance that created this store from evaluating. |
+
+### `.subscribe`
+
+```ts
+public subscribe(subscriber: Subscriber<State>): Subscription
+```
+
+Registers a [subscriber](../types/Subscriber).
+
+Returns a [Subscription object](../types/Subscription).
+
+| Param | Type | Required | Description |
+| --- | --- | --- | --- |
+| `subscriber` | [Subscriber](../types/Subscriber) - either a function that will be called every time the state updates or an object with `next`, `error`, and/or `effects` keys | Yes | The function(s) that will be called when certain events happen in the store. If a single function is passed, it will be called every time the store's state changes. An object can also be passed to register multiple different types of subscribers. |
+
+### `.use`
+
+```ts
+public use(newHierarchy: HierarchyDescriptor<State>): Store<State>
+```
+
+The code-splitting wizard of the Zedux realm. `.use` changes the store's hierarchy on the fly. Use it to add or remove child stores and reducers.
+
+The first parameter to [`createStore()`](../factories/createStore) is a [HierarchyDescriptor](../types/HierarchyDescriptor) which describes the structure of the store. `.use()` also accepts a HierarchyDescriptor to dynamically modify the hierarchy at any time:
+
+```ts
+const myStore = createStore(rootReducer)
+myStore.use(anotherStore) // completely replace the store's state
+myStore.use({ // completely replace the store's state
+  a: storeA,
+  b: storeB
+})
+myStore.use({ // merge this hierarchy into the previous hierarchy
+  b: null, // remove `b` from the store
+  c: { // add `c` and its nested nodes to the store
+    d: reducerD
+  }
+})
+myStore.use(null) // wipe everything
+```
+
+Returns the store for chaining.
+
+| Param | Type | Required | Description |
+| --- | --- | --- | --- |
+| `newDescriptor` | [HierarchyDescriptor](../types/HierarchyDescriptor) - A store, a reducer, `null`, or an object hierarchy containing those | Yes | This param describes the hierarchy update. The new hierarchy will be deeply merged into the existing hierarchy. Passing `null` for any node (including the root) removes everything below that point in the tree. |

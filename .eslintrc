@@ -8,7 +8,7 @@
   ],
   "overrides": [
     {
-      "files": "test/**/*.js",
+      "files": "test/**/*.tsx?",
       "env": {
         "jest": true
       }

@@ -1,0 +1,50 @@
+---
+id: react-query-comparison
+title: React Query Comparison
+---
+
+While Zedux doesn't (yet!) handle query fetching, refetching, or special query types, Zedux is currently patterned after React Query more than any other library (yes, more than Redux or Recoil). React Query's cache management is unparalleled. So Zedux' atomic model borrows a lot of ideas from it.
+
+However, the purpose of Zedux is very different from React Query. React Query is designed around promises - managing their state, side effects, and result caches. Zedux is designed to manage both application state (a la Redux/Recoil) and cached server data. Zedux isn't limited to promises.
+
+## Queries
+
+Structurally, Zedux [atoms](../api/classes/Atom) are very similar to React Query [queries](https://react-query.tanstack.com/guides/queries).
+
+- For destroying stale instances: Atoms have [`ttl`](../api/classes/Atom#ttl). Queries have `cacheTime`.
+- For suspense: Atoms have [`.setPromise()`](../api/classes/AtomApi#setpromise). Queries have `suspense`.
+- Queries track promise state by default. Atoms have [`injectAsyncEffect()`](../api/injectors/injectAsyncEffect) for tracking promise state.
+
+## QueryClient
+
+Zedux [ecosystems](../api/classes/Ecosystem) are patterned after React Query's [QueryClient](https://react-query.tanstack.com/reference/QueryClient). They both create autonomous environments for managing queries or atoms that can be used outside React and are especially useful for testing.
+
+## Stream Support
+
+Zedux atoms are designed to support any asynchronous architecture. This means that (for now) Zedux doesn't provide any promise-specific helpers like React Query's `onSuccess`, `refetchOnWindowFocus`, `retryDelay`, etc. The upside is, atoms aren't restricted to using promises.
+
+```ts
+import { atom, injectAtomValue, injectEffect, injectStore } from '@zedux/react'
+import { io } from 'socket.io-client'
+
+const socketAtom = atom('socket', () => io())
+
+const messagesAtom = atom('messages', () => {
+  const socket = injectAtomValue(socketAtom)
+  const store = injectStore([])
+
+  injectEffect(() => {
+    const handler = message => {
+      store.setState(messages => [...messages, message])
+    }
+
+    socket.on('message', handler)
+
+    return () => socket.off('message', handler)
+  }, [socket])
+
+  return store
+})
+```
+
+This is more flexible, but does require more boilerplate. Most functionality can be abstracted, of course. We'll probably provide a `@zedux/react/query` package someday that provides a full suite of tools for handling promises.

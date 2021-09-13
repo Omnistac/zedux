@@ -1,0 +1,70 @@
+---
+id: injectMemo
+title: injectMemo
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+```ts
+import { injectMemo } from '@zedux/react'
+```
+
+An [injector](../glossary#injector) that memoizes a value. You control whether the value changes on subsequent evaluations.
+
+## Example
+
+<LiveEditor resultVar="Seconds">{`
+const secondsAtom = atom('seconds', () => {
+  const store = injectStore(0)\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => store.setState(val => val + 1),
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return store
+})\n
+const everyFifthAtom = atom('everyFifth', () => {
+  const seconds = injectAtomValue(secondsAtom)\n
+  return injectMemo(() => seconds, [Math.floor(seconds / 5)])
+})\n
+function Seconds() {
+  const seconds = useAtomValue(secondsAtom)
+  const everyFifth = useAtomValue(everyFifthAtom)\n
+  return (
+    <>
+      <div>Seconds: {seconds}</div>
+      <div>Every Fifth Second: {everyFifth}</div>
+    </>
+  )
+}
+`}</LiveEditor>
+
+Miscellaneous:
+
+```ts
+const constantVal = injectMemo(() => getExpensiveVal(), [])
+
+const changesWhenDepsChange = injectMemo(getExpensiveVal, [depA, depB])
+
+const changesEveryTimeButJustWhy = injectMemo(getExpensiveVal)
+```
+
+## Signature
+
+```ts
+injectMemo(factory, deps?)
+```
+
+Returns the result of `factory`.
+
+### `factory`
+
+A function that returns the memoized value. This function will only be called when the atom is created and whenever any passed `deps` change.
+
+This is a good place to run expensive calculations that you don't want to run on every atom instance evaluation. It can also be used to ensure references are stable across evaluations. But, depending on the use case, [`injectStore`](injectStore), [`injectRef`](injectRef), or [`injectCallback`](injectCallback) may be a better choice.
+
+### `deps`
+
+Optional (but you should probably pass it). An array of values that will cause the `factory` function to rerun and calculate a new value every time they change.

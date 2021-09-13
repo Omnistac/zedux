@@ -1,0 +1,249 @@
+---
+id: quick-start
+title: Quick Start
+---
+
+import { LiveEditor } from '../LiveEditor'
+
+Zedux is a state management tool for React.
+
+Its React architecture is atomic - similar to [Recoil](https://recoiljs.org/) and [Jotai](https://github.com/pmndrs/jotai).
+
+State is held in stores - similar to [Redux](https://redux.js.org/).
+
+## Installation
+
+```bash
+yarn add @zedux/react
+```
+
+## Meet the Atoms
+
+```ts
+import { atom } from '@zedux/react'
+
+const greetingAtom = atom('greeting', 'Hello, world!')
+```
+
+This is an atom. We gave it a key, `greeting`, and an initial value, `Hello, world!`.
+
+When the atom is used, it creates a store to hold its state. We can use hooks to access and update the state of the store:
+
+```tsx
+import { useAtomState } from '@zedux/react'
+
+function Greet() {
+  const [greeting, setGreeting] = useAtomState(greetingAtom)
+  ...
+}
+```
+
+### Setting State
+
+`useAtomState()` is very similar to React's `useState()` hook. But instead of passing the initial state, we defined it when we created the atom.
+
+In our example, we can use `setGreeting` to update the state of the atom:
+
+<LiveEditor resultVar="Greeting">{`
+const greetingAtom = atom('greeting', 'Hello, world!')\n
+function GreetingPreview() {
+  const [greeting] = useAtomState(greetingAtom)
+  
+  return <div>The greeting: {greeting}</div>
+}\n
+function EditGreeting() {
+  const [greeting, setGreeting] = useAtomState(greetingAtom)\n
+  return (
+    <input
+      onChange={({ target }) => setGreeting(target.value)}
+      value={greeting}
+    />
+  )
+}\n
+const Greeting = () => (
+  <>
+    <GreetingPreview />
+    <EditGreeting />
+  </>
+)
+`}</LiveEditor>
+
+:::tip
+These live playgrounds have every React and Zedux export in scope.
+:::
+
+Notice that the `greetingAtom`'s state is shared between both components. This state reuse is one of the main features of atoms.
+
+### Atom Evaluators
+
+The second parameter to `atom` can be a factory function. These factories are called "evaluators". The evaluator's job is to create and return the atom's value:
+
+```ts
+const helloAtom = atom('hello', () => 'world')
+```
+
+Evaluators have many use cases (and this simple example is not one of them). We'll look at a few right now.
+
+### Dependency Injection
+
+Atoms can use other atoms. To use another atom, we "inject" it in the evaluator function:
+
+```ts
+import { atom, injectAtomState } from '@zedux/react'
+
+const textAtom = atom('text', 'World')
+
+const loudGreetingAtom = atom('loudGreeting', () => {
+  const [text] = injectAtomState(textAtom)
+
+  return `HELLO, ${text.toUpperCase()}`
+})
+```
+
+Here we used an "injector" - `injectAtomState` - to create a dependency on `textAtom`.
+
+`injectAtomState()` is just like `useAtomState()`, but is used in atoms instead of components. This is a common theme with injectors:
+
+### Injectors Are Like Hooks
+
+Writing an atom should feel like writing a React component. Zedux exports injectors like `injectEffect` and `injectMemo` that behave like React's `useEffect` and `useMemo`.
+
+There are many advantages to this approach:
+
+- Atoms are reactive by default. Just like React components, they reevaluate when their state updates.
+
+- Atoms have a small learning curve if you know hooks.
+
+- Injectors are composable, just like hooks. Abstracting common logic is easy 'cause it's just JavaScript.
+
+```tsx
+import { atom, injectMemo } from '@zedux/react'
+
+const initialPriceAtom = atom('initialPrice', () => {
+  // Let's say this atom's state changes frequently:
+  const [stockPrice] = injectAtomState(stockPriceAtom)
+  const initialPrice = injectMemo(() => stockPrice, [])
+
+  return initialPrice
+})
+```
+
+In this example, `initialPriceAtom` will be reevaluated every time `stockPriceAtom`'s state changes. But the `initialPrice` it returns won't change, thanks to `injectMemo()`. Therefore components and atoms that use `initialPriceAtom` won't reevaluate.
+
+:::important
+Injectors have the same caveats as hooks too! E.g. don't put injectors in if statements or use them outside atom evaluators.
+:::
+
+:::tip
+In general, the simple rule is: Replace the word "use" with "inject" inside atoms. Custom injectors you make should also start with "inject".
+:::
+
+### Atom Instances
+
+Let's take a step back.
+
+When we pass an evaluator function to `atom()`, that function doesn't run right away. Zedux waits until the atom is used by a component or another atom. When the atom is used for the first time, Zedux creates an "atom instance" and calls the evaluator to produce the instance's initial value.
+
+You can think of atoms like classes, but you never instantiate the class yourself - Zedux does it for you.
+
+```tsx
+function Greeting() {
+  const [greeting] = useAtomState(greetingAtom)
+  ...
+}
+
+const SomeGreetings = () => (
+  <>
+    <Greeting />
+    <Greeting />
+  </>
+)
+```
+
+Here, the first `<Greeting />` renders and Zedux creates an instance of `greetingAtom`. The next `<Greeting />` then renders and reuses that same instance.
+
+Usually this just works and you don't have to worry about it. But sometimes you'll need to create multiple instances of an atom. To make Zedux create more instances, we use params.
+
+### Params
+
+We can pass parameters to atom hooks/injectors:
+
+```ts
+// This atom accepts a single `id` param
+const userDataAtom = atom('userData', (id: string) => {
+  // a hypothetical injector for simplicity (sends the request and tracks state):
+  return injectFetch(`/users/${id}`)
+})
+
+function UserOverview() {
+  const { data } = useAtomState(userDataAtom, ['joe'])
+  ...
+}
+```
+
+Here `userDataAtom` takes one parameter, `id`. When the `UserOverview` component uses `userDataAtom`, Zedux creates an instance of `userDataAtom` with `joe` as the id.
+
+If we use `userDataAtom` multiple times with different `id`s, Zedux will create different atom instances:
+
+```tsx
+function UserOverview() {
+  const [joeData] = useAtomState(userDataAtom, ['joe'])
+  const [bobData] = useAtomState(userDataAtom, ['bob'])
+  ...
+}
+```
+
+This example creates two instances of `userDataAtom` - one that fetches the `joe` user and one that fetches `bob`. Each of these instances controls its own, distinct state.
+
+:::important
+Atom parameters must be serializable. Zedux converts them to a single string that uniquely identifies each atom instance. You shouldn't need params much, but when you do need them, make them as small as possible.
+:::
+
+## Recap
+
+- Atoms are behavior containers. They can be used in React with hooks.
+
+- Atoms can be injected into other atoms using "injectors".
+
+- Injectors are like hooks. Evaluators are like function components that return state instead of UI.
+
+- Atom instances are created by passing different params and reused by passing the same params.
+
+Let's finish off the quick start with a good old todos playground:
+
+<LiveEditor resultVar="Todos">{`
+const todosAtom = atom('todos', () => [
+  { text: 'Go', isDone: true },
+  { text: 'Fight', isDone: true },
+  { text: 'Win', isDone: false }
+])\n
+const filteredTodosAtom = atom('filteredTodos', (isDone: boolean) => {
+  const [todos] = injectAtomState(todosAtom)\n
+  return todos
+    .filter(todo => todo.isDone === isDone)
+    .map(({ text }) => text)
+})\n
+// These 2 components pass different params to filteredTodosAtom
+function FinishedTodos() {
+  const [todos] = useAtomState(filteredTodosAtom, [true])\n
+  return <div>Finished Todos: {todos.join\`, \`}</div>
+}\n
+function UnfinishedTodos() {
+  const [todos] = useAtomState(filteredTodosAtom, [false])\n
+  return <div>Unfinished Todos: {todos}</div>
+}\n
+const Todos = () => (
+  <>
+    <FinishedTodos />
+    <UnfinishedTodos />
+  </>
+)
+`}</LiveEditor>
+
+## Next Steps
+
+At this point you should know more than enough to use Zedux effectively. But there is a lot more to discover.
+
+The rest of this walkthrough will cover every major feature, starting with the most generally useful ones. Feel free to jump around. You can also play with the [examples](/not-done), skip ahead to the [API Docs](/not-done), or read some [boring stuff I wrote](../about/introduction).
+
+Next, we'll cover more ways to [create atoms](creating-atoms).

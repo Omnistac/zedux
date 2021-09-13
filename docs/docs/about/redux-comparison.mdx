@@ -1,0 +1,276 @@
+---
+id: redux-comparison
+title: Redux Comparison
+---
+
+Zedux is more comparable to [Redux Toolkit](https://redux-toolkit.js.org/) (RTK) than raw Redux, so that's what we'll compare against.
+
+As its name suggests, Zedux originated from Redux. It actually started off as Redux middleware in early 2017. Zedux is now a comprehensive suite of state management tools that has several things in common with Redux Toolkit and lots of other features.
+
+The Z in Zedux is for Zero config. One of the main features of Zedux is its zero config stores. This feature alone makes Zedux feel very different from Redux.
+
+```ts
+const store = createStore() // no config required!
+store.setState('my state')
+```
+
+In this comparison, we won't use Zedux' React or atomic APIs. Zedux' React usage is vastly different from Redux', using Recoil-esque atoms to structure and control stores.
+
+## TL;DR
+
+- Both Redux and Zedux stores can be given reducers to drive state creation and updates.
+- Zedux has zero config stores.
+- State should not be mutated.
+- RTK wraps reducers in immer producers. Zedux does not (we may implement this someday. Not for now).
+- Both have similar reducer splitting APIs
+- Both have similar action creator and reducer creation APIs
+- In both, actions and reducers have a many-to-many relationship.
+- In both, dispatched actions can be observed, saved, and replayed for a time travel debugging experience.
+- RTK uses `createSlice()` to create state slices. Zedux uses store composition 🤯.
+- Redux apps typically have one store. Zedux apps typically create many stores.
+- Both have similar state hydration APIs
+- Redux uses middleware to manage side effects. Zedux uses effects subscribers.
+- Redux uses middleware for plugins. Zedux doesn't offer a dedicated plugin system at the store level (plugins will be at the ecosystem level. 🚧 This feature is under construction).
+- In both, stores are observables (streams) of state
+- In Zedux, stores are also observables of actions.
+- In Zedux, store dispatches are completely synchronous.
+
+## Comparables
+
+Many concepts are similar in both Zedux and Redux.
+
+### Reducers
+
+RTK - all stores use a reducer.
+
+```ts
+import { configureStore } from '@reduxjs/toolkit'
+
+const store = configureStore({
+  reducer: rootReducer
+})
+```
+
+Zedux - stores _can_ be given a reducer.
+
+```ts
+import { createStore } from '@zedux/react'
+
+const store = createStore(rootReducer)
+```
+
+But this is optional in Zedux.
+
+```ts
+const zeroConfigStore = createStore()
+```
+
+Due to their simplicity, zero config stores are extremely common in Zedux.
+
+### Reducer Splitting
+
+RTK - use `configureStore()` and `combineReducers()`.
+
+```ts
+import { combineReducers, configureStore } from '@reduxjs/toolkit'
+
+const store = configureStore({
+  reducer: {
+    a: reducerA,
+    b: combineReducers({
+      c: reducerC,
+      d: reducerD
+    })
+  }
+})
+```
+
+Zedux - use `createStore()`.
+
+```ts
+import { createStore } from '@zedux/react'
+
+const store = createStore({
+  a: reducerA,
+  b: {
+    c: reducerC,
+    d: reducerD
+  }
+})
+```
+
+The concept is almost the same in both. Zedux' `createStore` is a bit more high-level, handling nested objects.
+
+### Actions and Reducers
+
+RTK - use `createAction()` and `createReducer()`. RTK also uses immer so you can "mutate" state.
+
+```ts
+import { createAction, createReducer } from '@reduxjs/toolkit'
+
+const increment = createAction('counter/increment')
+const decrement = createAction('counter/decrement')
+const incrementByAmount = createAction<number>('counter/incrementByAmount')
+
+const initialState = { value: 0 }
+
+const counterReducer = createReducer(initialState, (builder) => {
+  builder
+    .addCase(increment, state => {
+      state.value++
+    })
+    .addCase(decrement, state => {
+      state.value--
+    })
+    .addCase(incrementByAmount, (state, action) => {
+      state.value += action.payload
+    })
+})
+```
+
+Zedux - use `createActor()` and `createReducer()`. No immer (for now).
+
+```ts
+import { createActor, createReducer } from '@zedux/react'
+
+const increment = createActor('counter/increment')
+const decrement = createActor('counter/decrement')
+const incrementByAmount = createActor<number>('counter/incrementByAmount')
+
+const initialState = { value: 0 }
+
+const counterReducer = createReducer(initialState)
+  .reduce(increment, state => state.value + 1)
+  .reduce(decrement, state => state.value - 1)
+  .reduce(incrementByAmount, (state, action) => state.value + action.payload)
+```
+
+Zedux also exports a `createActorFactory()` factory that we could have used to auto-attach the `counter/` namespace to these action creators.
+
+### State Slices
+
+RTK - use `createSlice()`.
+
+```ts
+import { configureStore, createSlice } from '@reduxjs/toolkit'
+
+const counterSlice = createSlice({
+  name: 'counter',
+  initialState: { value: 0 },
+  reducers: {
+    increment(state) {
+      state.value++
+    },
+    decrement(state) {
+      state.value--
+    },
+  },
+})
+
+const store = configureStore({
+  reducer: {
+    counter: counterSlice.reducer
+  }
+})
+
+store.dispatch(counterSlice.actions.increment())
+store.dispatch(counterSlice.actions.decrement())
+```
+
+Zedux - use nested stores.
+
+```ts
+import { createStore } from '@zedux/react'
+
+const counterStore = createStore(null, { value: 0 })
+
+const increment = () => counterStore.setStateDeep(
+  ({ value }) => ({ value: value + 1 })
+)
+const decrement = () => counterStore.setStateDeep(
+  ({ value }) => ({ value: value + 1 })
+)
+
+const store = createStore({
+  counter: counterStore
+})
+
+increment()
+decrement()
+```
+
+### Hydrating
+
+RTK - pass `preloadedState` to `configureStore()`.
+
+```ts
+import { configureStore } from '@reduxjs/toolkit'
+
+const store = configureStore({
+  preloadedState: myData,
+  reducer: {}
+})
+```
+
+Zedux - pass as the second param to `createStore()`.
+
+```ts
+import { createStore } from '@zedux/react'
+
+const store = createStore(null, myData)
+```
+
+### Side Effects
+
+RTK - use middleware.
+
+```ts
+import { configureStore } from '@reduxjs/toolkit'
+
+const logger = store => next => action => {
+  const oldState = store.getState()
+  next(action)
+  const newState = store.getState()
+
+  console.log('store state updated', { newState, oldState })
+}
+
+const store = configureStore({
+  middleware: [logger],
+  reducer: rootReducer,
+})
+```
+
+(note that this middleware depends on other middleware and store enhancers not disrupting the synchronous state update).
+
+Zedux - use effects subscribers.
+
+```ts
+import { createStore } from '@zedux/react'
+
+const store = createStore()
+
+store.subscribe({
+  effects: ({ newState, oldState }) => {
+    console.log('store state updated', { newState, oldState })
+  }
+})
+```
+
+(This is a very Zedux-favored example. Not all side effects flows are simpler in Zedux).
+
+## No Middleware
+
+Yep. It isn't necessary. Side effects like logging or running sagas or observables can all be effectively handled by Zedux' effects subscribers. Batching and canceling actions may not be possible, but those never were necessary at the store level - they can be handled just fine outside the store.
+
+In Redux, middleware can also be useful for adding plugins. Zedux has atoms, which can encapsulate the state, side effects, and exports of the store. A plugin system at the store level isn't very necessary.
+
+Some operations are easier without middleware and some are harder. Those should more or less balance out.
+
+Read more about [effects subscribers here](../api/types/Subscriber#effects).
+
+## Other Features
+
+Zedux and Redux don't overlap perfectly. They each have some unique features. We won't go into RTK's here, but check out [their docs](https://redux-toolkit.js.org/).
+
+Zedux has many features not mentioned here. Most of these revolve around the [Recoil-esque atomic model](recoil-comparison) and [React Query-esque cache management](react-query-comparison). Check out those comparisons for more info. Or check out the [walkthrough](../walkthrough/quick-start) for a better picture of what Zedux is all about.

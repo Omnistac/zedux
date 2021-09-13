@@ -1,0 +1,330 @@
+---
+id: Ecosystem
+title: Ecosystem
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+The ecosystem is an isolated atom environment. It creates a scheduler for running atom-related tasks and a graph that manages atom dependencies.
+
+This class defines many methods for creating, destroying, and inspecting atom instances and the graph they form.
+
+Ecosystems can be used completely outside of React. This can be helpful for testing atoms.
+
+## Creation
+
+Create ecosystems with [the `ecosystem` factory](../factories/ecosystem).
+
+```ts
+import { ecosystem } from '@zedux/react'
+
+const rootEcosystem = ecosystem({ id: 'root' })
+```
+
+## Providing
+
+Ecosystems can be provided over React context via [`<EcosystemProvider>`](../components/EcosystemProvider).
+
+```tsx
+function App() {
+  return (
+    <EcosystemProvider ecosystem={rootEcosystem}>
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+## Modifying Overrides
+
+The ability to swap out atom implementations on the fly is one of Zedux' superpowers. Use [`.addOverrides`](#addoverrides), [`.removeOverrides`](#removeoverrides), or [`.setOverrides`](#setoverrides).
+
+<LiveEditor resultVar="Swapper">{`
+const one = atom('common-key', () => 'Numero Uno')
+const two = atom('common-key', () => 'I am the best')
+const three = atom('common-key', () => 'Two is not the best')\n
+function Swapper() {
+  const ecosystem = useEcosystem()
+  const state = useAtomValue(one)\n
+  return (
+    <>
+      <div>Current State: {state}</div>
+      <button onClick={() => ecosystem.setOverrides([one])}>Use One</button>
+      <button onClick={() => ecosystem.setOverrides([two])}>Use Two</button>
+      <button onClick={() => ecosystem.setOverrides([three])}>Use Three</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+## Properties
+
+All properties are readonly!
+
+### `.context`
+
+An object. May be undefined. A reference to the `context` object passed to [the `ecosystem()` factory](../factories/ecosystem) (if any) or the latest [`.reset()`](#reset) call. This object should be constant until the ecosystem is reset via `.reset()`.
+
+This object is passed to [the `preload` function](../types/EcosystemConfig#preload). If `.reset()` changes the context, the new context will be passed to `preload` as part of the reset.
+
+### `.defaultForwardPromises`
+
+A boolean. May be undefined. Set this via the [EcosystemConfig option](../types/EcosystemConfig#defaultforwardpromises) passed to [the `ecosystem()` factory](../factories/ecosystem).
+
+This value will be used as the default [`forwardPromises` config value](Atom#forwardpromises) for all atoms used in this ecosystem that don't set their own. If set to `true`, all atoms used in this ecosystem will default to forwarding promises. If not set or if set to `false`, atoms will not forward promises by default.
+
+Setting an atom's [`forwardPromises` option](Atom#forwardpromises) will override this default.
+
+### `.defaultTtl`
+
+A number. Default `-1` (which means atom instances never die). Set this via the [EcosystemConfig option](../types/EcosystemConfig#defaultttl) passed to [the `ecosystem()` factory](../factories/ecosystem).
+
+This value will be used as the default [`ttl` config value](Atom#ttl) for all atoms used in this ecosystem that don't set their own.
+
+- Set to `0` to make all atom instances in this ecosystem die by default as soon as they go stale.
+- Set to any positive integer to make atoms live in a stale state for that many milliseconds before being cleaned up.
+
+### `.ecosystemId`
+
+A string. The id of the ecosystem. Zedux will generate a simple, incrementing id for the ecosystem if one isn't supplied to `ecosystem()`. It is always recommended to set your own id.
+
+### `.flags`
+
+An array of strings. These work in conjunction with [atom flags](Atom#flags) to raise warnings when unsafe atoms are not overridden in certain environments.
+
+If an atom has a flag that is not present in this array, Zedux will log a warning.
+
+Flag checking is off by default - simply don't pass a flags array to `ecosystem()` and Zedux will ignore all flags. To turn it on, but with no flags, pass an empty array.
+
+```ts
+ecosystem() // flag checking disabled. Zedux will ignore all atom flags.
+ecosystem({ flags: [] }) // flag checking enabled! All flags will log warnings
+ecosystem({ flags: ['a'] }) // all atom flags except 'a' will log a warning
+```
+
+Which atoms, which flags, and which environments, is all up to you. You may want to flag atoms that run side effects you don't want to run in tests. Or you may want to flag atoms that use APIs that only work in the browser or in electron or any other environment.
+
+### `.overrides`
+
+An array of [atom](Atom) objects. Atoms in this list will override any atoms with the same key used in this ecosystem.
+
+Set this list via the [EcosystemConfig](../types/EcosystemConfig#overrides) passed to the `ecosystem()` factory or via [`.setOverrides()`](#setoverrides).
+
+See [the Dependency Injection walkthrough](../../walkthrough/dependency-injection) for more info.
+
+## Methods
+
+The ecosystem class has the following public methods:
+
+### `.addOverrides`
+
+Adds new overrides to the current list of overrides and/or swaps out currently-overridden atoms with different implementations. All existing instances of atoms in the passed list will be force-destroyed, allowing their dependents to recreate them.
+
+#### Signature
+
+```ts
+.addOverrides(overrides) => void
+```
+
+#### `overrides`
+
+Required. An array of [atoms](Atom).
+
+### `.destroy`
+
+Destroys all atom instances in the ecosystem, cleans up the ecosystem itself (e.g. by removing all currently scheduled tasks), and removes it from the [zeduxGlobalStore](../constants/zeduxGlobalStore).
+
+#### Signature
+
+```ts
+.destroy(force?) => void
+```
+
+#### `force`
+
+Optional. A boolean. Default: `false`. If true, will destroy the ecosystem even if it's currently being provided over React context (via `<EcosystemProvider>`).
+
+### `.findInstances`
+
+Returns a list of instances that match the given atom.
+
+#### Example
+
+```ts
+const myAtom = atom('my', (param: string) => param)
+
+myEcosystem.getInstance(myAtom, ['a'])
+myEcosystem.getInstance(myAtom, ['b'])
+
+myEcosystem.findInstances(myAtom)
+// [<AtomInstance with params ['a']>, <AtomInstance with params ['b']>]
+myEcosystem.findInstances('my')
+// [<AtomInstance with params ['a']>, <AtomInstance with params ['b']>]
+```
+
+#### Signature
+
+```ts
+.findInstances(atom)
+```
+
+#### Overloads
+
+```ts
+.findInstances(key)
+```
+
+#### `atom`
+
+Required. An atom, all instances of which will be returned.
+
+#### `key`
+
+Required (in this overload). A string. Instances whose [atom's `key`](Atom#key) match this string will be returned.
+
+### `.get`
+
+Returns the current state of an atom instance. Creates the atom instance if it doesn't exist yet. The atom instance to use will be resolved based on the passed atom and params.
+
+#### Signature
+
+```ts
+.get(atom, params?) => value
+```
+
+#### Overloads
+
+```ts
+.get(instance) => value
+```
+
+#### `atom`
+
+Required. The [atom](Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
+
+#### `params`
+
+Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
+
+TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
+
+#### `instance`
+
+Required. An atom instance whose value we're getting. This overload is just an alias for [`instance.store.getState()`](AtomInstance#store).
+
+#### Example
+
+```ts
+const currentValue = rootEcosystem.get(myAtom)
+const withParams = rootEcosystem.get(paramsAtom, ['param 1', 'param 2'])
+```
+
+### `.getInstance`
+
+Returns an atom instance. Creates the atom instance if it doesn't exist yet. The atom instance to use will be resolved based on the passed atom and params.
+
+#### Signature
+
+```ts
+.getInstance(atom, params?) => value
+```
+
+#### `atom`
+
+Required. The [atom](Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
+
+#### `params`
+
+Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
+
+TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
+
+#### Example
+
+```ts
+const instance = rootEcosystem.getInstance(myAtom)
+const withParams = rootEcosystem.getInstance(paramsAtom, ['param 1', 'param 2'])
+
+instance.store.getState()
+instance.setState('new state')
+```
+
+### `.inspectInstanceValues`
+
+Returns an object mapping the [keyHash](AtomInstance#keyhash) of all atom instances in the ecosystem to their current values.
+
+#### Signature
+
+```ts
+.inspectInstanceValues(atom?) => object
+```
+
+#### Overloads
+
+```ts
+.inspectInstanceValues(searchKey?) => object
+```
+
+#### `atom`
+
+Optional. An atom object to filter results by. Only instances of the atom will included in the result.
+
+#### `searchKey`
+
+Optional. A string to filter results by. Only atom instances whose [atom's key](Atom#key) or whose own [keyHash](AtomInstance#keyhash) match the searchKey will be included in the result.
+
+### `.reset`
+
+The preferred way to clear an Ecosystem's state. Calling `.reset` will call [`.wipe()`](#wipe) but will also rerun [the `preload` function](../types/EcosystemConfig#preloadd).
+
+#### Signature
+
+```ts
+.reset(newContext?) => void
+```
+
+#### `newContext`
+
+Optional. An object. The new context to set on this ecosystem. If not passed, the existing context will be reused. This object will be passed to `preload()` as the second parameter.
+
+```ts
+const myEcosystem = ecosystem({
+  context: { someField: 'some val' },
+  id: 'my',
+  preload: (es, context) => console.log('the context:', context),
+})
+// the context: { someField: 'some val' }
+
+myEcosystem.reset({ someField: 'new val' })
+// the context: { someField: 'new val' }
+```
+
+### `.removeOverrides`
+
+Removes atoms from the ecosystem's list of overrides. All instances of atoms in the passed list will be force-destroyed, allowing their dependencies to recreate them using the no-longer-overridden implementations.
+
+#### Signature
+
+```ts
+.removeOverrides(overrides) => void
+```
+
+#### `overrides`
+
+Required. An array of [atoms](Atom) and/or string keys.
+
+### `.setOverrides`
+
+Replaces the ecosystem's list of overridden atoms with the passed overrides. All instances of atoms in either the new or old lists will be force-destroyed, allowing their dependencies to recreate them.
+
+To selectively update only certain atoms in the list, use [`.addOverrides`](#addoverrides) or [`.removeOverrides`](#removeoverrides).
+
+#### Signature
+
+```ts
+.setOverrides(newOverrides) => void
+```
+
+#### `newOverrides`
+
+Required. An array of [atoms](Atom). Will be set as the new [`.overrides`](#overrides) property.

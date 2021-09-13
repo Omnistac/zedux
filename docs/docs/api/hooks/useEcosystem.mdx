@@ -1,0 +1,63 @@
+---
+id: useEcosystem
+title: useEcosystem
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+```ts
+import { useEcosystem } from '@zedux/react'
+```
+
+A React hook that returns a reference to the nearest [ecosystem](../classes/Ecosystem) that's been provided over React context via [`<EcosystemProvider>`](../components/EcosystemProvider). If no ecosystem has been provided, Zedux will return the global ecosystem. If the global ecosystem hasn't been created yet, Zedux will create it.
+
+See [the ecosystems walkthrough](../../walkthrough/ecosystems) for more info about when Zedux uses which ecosystem.
+
+## Examples
+
+<LiveEditor resultVar="Seconds">{`
+const secondsAtom = atom('seconds', () => {
+  const store = injectStore(0)\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => store.setState(val => val + 1),
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return store
+})\n
+function Seconds() {
+  const ecosystem = useEcosystem()
+  const instance = ecosystem.getInstance(secondsAtom)
+  const state = useAtomValue(instance)\n
+  return <div>Seconds: {state}</div>
+}
+`}</LiveEditor>
+
+Global and custom ecosystems:
+
+```tsx
+function Child() {
+  const ecosystem = useEcosystem() // { id: 'root', ... }
+  ...
+}
+
+function App() {
+  const ecosystem = useEcosystem() // { id: 'global' ... }
+
+  return (
+    <EcosystemProvider id="root">
+      <Child />
+    </EcosystemProvider>
+  )
+}
+```
+
+## Signature
+
+```ts
+useEcosystem() => Ecosystem
+```
+
+Returns an [ecosytem object](../classes/Ecosystem).
