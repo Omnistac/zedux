@@ -1,9 +1,20 @@
 import { Selector } from '@zedux/core'
-import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
+import {
+  AtomInstanceStateType,
+  AtomParamsType,
+  AtomSelector,
+  AtomStateType,
+} from '../types'
 import { useAtomInstance } from './useAtomInstance'
-import { useEffect, useRef, useState } from 'react'
-import { GraphEdgeSignal } from '../utils'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { GraphEdgeSignal, haveDepsChanged } from '../utils'
 import { AtomBase, AtomInstanceBase } from '../classes'
+import { useEcosystem } from './useEcosystem'
+
+interface Dep {
+  instance: AtomInstanceBase<any, any, any>
+  isStatic: boolean
+}
 
 const useAtomInstanceSelector = <
   AI extends AtomInstanceBase<any, any, any>,
@@ -13,14 +24,20 @@ const useAtomInstanceSelector = <
   selector: (state: AtomInstanceStateType<AI>) => D
 ) => {
   const [state, setState] = useState(() => selector(instance.store.getState()))
-  const [, forceRender] = useState<any>()
+  const [force, forceRender] = useState<any>()
   const selectorRef = useRef(selector)
   selectorRef.current = selector
+  const cleanupRef = useRef<() => void>()
 
-  useEffect(() => {
+  useMemo(() => {
+    if (cleanupRef.current) {
+      cleanupRef.current()
+      cleanupRef.current = undefined
+    }
+
     let lastResult: D
 
-    const unregister = instance.ecosystem._graph.registerExternalDependent(
+    cleanupRef.current = instance.ecosystem._graph.registerExternalDependent(
       instance,
       (signal, val: AtomInstanceStateType<AI>) => {
         if (signal === GraphEdgeSignal.Destroyed) {
@@ -33,14 +50,122 @@ const useAtomInstanceSelector = <
 
         setState((lastResult = newResult))
       },
-      'useAtomInstanceSelector',
+      'useAtomSelector',
       false
     )
+  }, [force, instance])
 
-    return unregister
-  }, [instance])
+  useLayoutEffect(() => () => cleanupRef.current?.(), [])
 
   return state
+}
+
+const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
+  const ecosystem = useEcosystem()
+  const [, forceRender] = useState<any>()
+  const prevDeps = useRef<{ cleanup: () => void; dep: Dep }[]>([])
+  const prevResult = useRef<T>()
+  const selectorRef = useRef<typeof selector>() // don't populate initially
+  const forceRunSelector = useRef(false)
+
+  const runSelector = () => {
+    const deps: Dep[] = []
+    let isExecuting = true
+
+    const get = <AI extends AtomInstanceBase<any, any, any>>(
+      atomOrInstance: AtomBase<any, any, AI> | AI,
+      params?: any[]
+    ) => {
+      const instance =
+        atomOrInstance instanceof AtomInstanceBase
+          ? atomOrInstance
+          : ecosystem.getInstance(atomOrInstance, params as any[])
+
+      if (isExecuting) deps.push({ instance, isStatic: false })
+
+      return instance.store.getState()
+    }
+
+    const getInstance = <AI extends AtomInstanceBase<any, any, any>>(
+      atomOrInstance: AtomBase<any, any, AI> | AI,
+      params?: any[]
+    ) => {
+      const instance = ecosystem.getInstance(
+        atomOrInstance as AtomBase<any, any, AI>,
+        params as any[]
+      )
+
+      if (isExecuting) deps.push({ instance, isStatic: true })
+
+      return instance.store.getState()
+    }
+
+    const selectorResult = selector({ ecosystem, get, getInstance })
+    isExecuting = false
+
+    if (!haveDepsChanged(prevDeps.current, deps)) return selectorResult
+
+    // clean up any deps that are gone now
+    prevDeps.current.forEach(prevDep => {
+      if (deps.includes(prevDep.dep)) return
+
+      prevDep.cleanup()
+    })
+
+    const newDeps: typeof prevDeps.current = []
+
+    // register new deps
+    deps.forEach(dep => {
+      const index = prevDeps.current.findIndex(
+        prevDep => prevDep.dep.instance === dep.instance
+      )
+      if (index !== -1) {
+        newDeps.push(prevDeps.current[index])
+        return
+      }
+
+      const cleanup = ecosystem._graph.registerExternalDependent(
+        dep.instance,
+        () => {
+          // force rerender for both Updated and Destroyed signals. We're not
+          // rerendering only on result change 'cause it would be more
+          // difficult to make `injectAtomSelector` do the same
+          forceRender({})
+
+          forceRunSelector.current = true
+        },
+        'useAtomSelector',
+        false
+      )
+
+      newDeps.push({ cleanup, dep })
+    })
+
+    prevDeps.current = newDeps
+    forceRunSelector.current = false
+
+    return selectorResult
+  }
+
+  const result =
+    selector !== selectorRef.current || forceRunSelector.current
+      ? runSelector()
+      : prevResult.current
+
+  prevResult.current = result
+  selectorRef.current = selector
+
+  // Final cleanup on unmount
+  useLayoutEffect(
+    () => () => {
+      prevDeps.current.forEach(dep => {
+        dep.cleanup()
+      })
+    },
+    []
+  )
+
+  return result
 }
 
 export const useAtomSelector: {
@@ -59,22 +184,29 @@ export const useAtomSelector: {
     instance: AI,
     selector: Selector<AtomInstanceStateType<AI>, D>
   ): D
+
+  <T>(selector: AtomSelector<T>): T
 } = <A extends AtomBase<any, [...any], any>, D = any>(
-  atom: A,
+  atom: A | AtomInstanceBase<any, [...any], any> | AtomSelector<any>,
   paramsArg?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
   selectorArg?: Selector<AtomStateType<A>, D>
 ): D => {
+  if (typeof atom === 'function') {
+    // yes, this breaks the rules of hooks
+    return useStandaloneSelector(atom)
+  }
+
   const params = selectorArg
     ? (paramsArg as AtomParamsType<A>)
     : (([] as unknown) as AtomParamsType<A>)
 
   const selector = selectorArg || (paramsArg as Selector<AtomStateType<A>, D>)
 
-  const instance = useAtomInstance(atom, params, false) as AtomInstanceBase<
-    AtomStateType<A>,
-    [...any],
-    any
-  >
+  const instance = useAtomInstance(
+    atom as A,
+    params,
+    false
+  ) as AtomInstanceBase<AtomStateType<A>, [...any], any>
 
   return useAtomInstanceSelector(instance, selector)
 }

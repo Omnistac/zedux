@@ -7,7 +7,7 @@
     "build": "docusaurus build",
     "serve": "docusaurus serve",
     "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy",
+    "deploy": "USE_SSH=true docusaurus deploy",
     "watch:react": "cd ../packages/react && yarn dev"
   },
   "dependencies": {

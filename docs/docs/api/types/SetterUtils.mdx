@@ -1,6 +1,6 @@
 ---
-id: IonSetUtils
-title: IonSetUtils
+id: SetterUtils
+title: SetterUtils
 ---
 
 The object Zedux passes as the first parameter to [ion setters](../factories/ion#set).
@@ -8,7 +8,7 @@ The object Zedux passes as the first parameter to [ion setters](../factories/ion
 ## Definition
 
 ```ts
-interface IonSetUtils<
+interface SetterUtils<
   State,
   Params extends any[],
   Exports extends Record<string, any>
@@ -22,9 +22,7 @@ interface IonSetUtils<
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  get<I extends AtomInstance>(
-    instance: I
-  ): AtomInstanceStateType<I>
+  get<I extends AtomInstance>(instance: I): AtomInstanceStateType<I>
 
   getInstance<A extends Atom<any, []>>(atom: A): AtomInstanceType<A>
 

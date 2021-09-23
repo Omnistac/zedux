@@ -1,6 +1,6 @@
 ---
-id: IonGetUtils
-title: IonGetUtils
+id: GetterUtils
+title: GetterUtils
 ---
 
 The object Zedux passes as the first parameter to [ion getters](../factories/ion#get).
@@ -8,7 +8,7 @@ The object Zedux passes as the first parameter to [ion getters](../factories/ion
 ## Definition
 
 ```ts
-interface IonGetUtils {
+interface GetterUtils {
   ecosystem: Ecosystem
 
   get<A extends Atom<any, []>>(atom: A): AtomStateType<A>
@@ -18,9 +18,7 @@ interface IonGetUtils {
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  get<I extends AtomInstance>(
-    instance: I
-  ): AtomInstanceStateType<I>
+  get<I extends AtomInstance>(instance: I): AtomInstanceStateType<I>
 
   getInstance<A extends Atom<any, []>>(atom: A): AtomInstanceType<A>
 
@@ -28,6 +26,8 @@ interface IonGetUtils {
     atom: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A>
+
+  getInstance<I extends AtomInstance>(instance: I): I
 }
 ```
 
@@ -40,9 +40,9 @@ A reference to the [ecosystem](../classes/Ecosystem) this ion instance was creat
 A function that returns the current state of an atom instance. You can pass either an instance directly or an atom and its params (if any).
 
 ```ts
-({ get }) => get(otherAtom)
-({ get }) => get(otherAtom, ['param 1', 'param 2'])
-({ get }) => get(anInstance)
+get(otherAtom)
+get(otherAtom, ['param 1', 'param 2'])
+get(anInstance)
 ```
 
 When called synchronously during instance evaluation, `get` registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance.
@@ -54,8 +54,9 @@ When called asynchronously (e.g. in an [`injectEffect`](../injectors/injectEffec
 A function that returns an atom instance. Pass an atom and its params (if any)
 
 ```ts
-({ getInstance }) => getInstance(otherAtom)
-({ getInstance }) => getInstance(otherAtom, ['param 1', 'param 2'])
+getInstance(otherAtom)
+getInstance(otherAtom, ['param 1', 'param 2'])
+getInstance(anInstance)
 ```
 
 When called synchronously during instance evaluation, `getInstance` registers a [static graph dependency](../glossary#static-graph-dependency) on the resolved atom instance.

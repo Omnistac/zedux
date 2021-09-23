@@ -1,9 +1,11 @@
+import { Selector } from '@zedux/core'
 import { createContext } from 'react'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
   AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
+  AtomSelector,
   AtomStateType,
   EcosystemConfig,
 } from '../types'
@@ -155,10 +157,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     params: AtomParamsType<A>
   ): AtomInstanceType<A>
 
+  public getInstance<AI extends AtomInstanceBase<any, [...any], any>>(
+    instance: AI
+  ): AI
+
   public getInstance<A extends AtomBase<any, [...any], any>>(
-    atom: A,
+    atom: A | AtomInstanceBase<any, [...any], any>,
     params?: AtomParamsType<A>
   ) {
+    if (atom instanceof AtomInstanceBase) {
+      return atom
+    }
+
     const defaultedParams = (params || []) as AtomParamsType<A>
     const keyHash = atom.getKeyHash(defaultedParams)
 
@@ -225,6 +235,51 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     if (newContext) this.context = newContext
 
     this._preload?.(this, newContext || (this.context as Context))
+  }
+
+  public select<A extends AtomBase<any, [], any>, D>(
+    atom: A,
+    selector: Selector<AtomStateType<A>, D>
+  ): D
+
+  public select<A extends AtomBase<any, [...any], any>, D>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): D
+
+  public select<AI extends AtomInstanceBase<any, [], any>, D>(instance: AI): D
+
+  public select<D>(atomSelector: AtomSelector<D>): D
+
+  public select<A extends AtomBase<any, [...any], any>, D = any>(
+    atomOrInstance: A | AtomInstanceBase<any, any, any> | AtomSelector,
+    paramsArg?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
+    selectorArg?: Selector<AtomStateType<A>, D>
+  ) {
+    if (typeof atomOrInstance === 'function') {
+      return atomOrInstance({
+        ecosystem: this,
+        get: this.get.bind(this),
+        getInstance: this.getInstance.bind(this),
+      })
+    }
+
+    const instance =
+      atomOrInstance instanceof AtomInstanceBase
+        ? atomOrInstance
+        : this.getInstance(
+            atomOrInstance,
+            Array.isArray(paramsArg)
+              ? paramsArg
+              : (([] as unknown) as AtomParamsType<A>)
+          )
+
+    const selector =
+      typeof paramsArg === 'function'
+        ? paramsArg
+        : (selectorArg as Selector<AtomStateType<A>, D>)
+
+    return selector(instance.store.getState())
   }
 
   public setOverrides(newOverrides: AtomBase<any, any, any>[]) {

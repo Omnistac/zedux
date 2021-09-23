@@ -1,9 +1,15 @@
 import { Selector } from '@zedux/core'
-import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
+import {
+  AtomInstanceStateType,
+  AtomParamsType,
+  AtomSelector,
+  AtomStateType,
+} from '../types'
 import { injectAtomInstance } from './injectAtomInstance'
 import { InjectorType, SelectorInjectorDescriptor, split } from '../utils'
 import { injectEcosystem } from './injectEcosystem'
 import { Atom, AtomInstance, AtomInstanceBase } from '../classes'
+import { diContext } from '../utils/csContexts'
 
 const injectAtomInstanceSelector = <
   AI extends AtomInstanceBase<any, any, any>,
@@ -97,6 +103,16 @@ const injectAtomInstanceSelector = <
   return selectorResult
 }
 
+const injectStandaloneSelector = <T>(selector: AtomSelector<T>) => {
+  const { instance } = diContext.consume()
+
+  return selector({
+    ecosystem: instance.ecosystem,
+    get: instance._get.bind(instance),
+    getInstance: instance._getInstance.bind(instance),
+  })
+}
+
 export const injectAtomSelector: {
   <A extends Atom<any, [], any>, D = any>(
     atom: A,
@@ -113,11 +129,18 @@ export const injectAtomSelector: {
     instance: AI,
     selector: Selector<AtomInstanceStateType<AI>, D>
   ): D
+
+  <T>(selector: AtomSelector<T>): T
 } = <A extends Atom<any, [...any], any>, D = any>(
-  atom: A,
-  paramsArg: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
+  atom: A | AtomInstance<any, [...any], any> | AtomSelector<any>,
+  paramsArg?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
   selectorArg?: Selector<AtomStateType<A>, D>
 ): D => {
+  if (typeof atom === 'function') {
+    // yes, this breaks the rules of injectors
+    return injectStandaloneSelector(atom)
+  }
+
   const params = selectorArg
     ? (paramsArg as AtomParamsType<A>)
     : (([] as unknown) as AtomParamsType<A>)
@@ -125,7 +148,7 @@ export const injectAtomSelector: {
   const selector = selectorArg || (paramsArg as Selector<AtomStateType<A>, D>)
 
   const instance = injectAtomInstance(
-    atom,
+    atom as A,
     params,
     'injectAtomSelector',
     false

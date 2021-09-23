@@ -7,7 +7,7 @@ import {
   injectGet,
   injectGetInstance,
 } from '@zedux/react/injectors'
-import { AtomConfig, IonGet, IonSet, IonSetUtils } from '@zedux/react/types'
+import { AtomConfig, IonGet, IonSet, SetterUtils } from '@zedux/react/types'
 import { diContext } from '@zedux/react/utils/csContexts'
 import { AtomInstance } from '../AtomInstance'
 
@@ -36,7 +36,7 @@ export class Ion<
 
       if (set) {
         ionApi.addSetStateInterceptor(settable => {
-          const innerSet: IonSetUtils<State, Params, Exports>['set'] = (
+          const innerSet: SetterUtils<State, Params, Exports>['set'] = (
             atom: Atom<any, [...any], any>,
             paramsIn: any[],
             settableIn?: Settable
