@@ -103,11 +103,17 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
     const selectorResult = selector({ ecosystem, get, getInstance })
     isExecuting = false
 
-    if (!haveDepsChanged(prevDeps.current, deps)) return selectorResult
-
     // clean up any deps that are gone now
     prevDeps.current.forEach(prevDep => {
-      if (deps.includes(prevDep.dep)) return
+      if (
+        deps.some(
+          dep =>
+            dep.instance === prevDep.dep.instance &&
+            dep.isStatic === prevDep.dep.isStatic
+        )
+      ) {
+        return
+      }
 
       prevDep.cleanup()
     })
@@ -117,7 +123,9 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
     // register new deps
     deps.forEach(dep => {
       const index = prevDeps.current.findIndex(
-        prevDep => prevDep.dep.instance === dep.instance
+        prevDep =>
+          prevDep.dep.instance === dep.instance &&
+          prevDep.dep.isStatic === dep.isStatic
       )
       if (index !== -1) {
         newDeps.push(prevDeps.current[index])
