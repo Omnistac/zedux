@@ -208,7 +208,7 @@ export class Graph {
     Object.entries(node.dependents).forEach(
       ([dependentKey, dependentEdges]) => {
         dependentEdges.forEach(dependentEdge => {
-          // static deps don't update and if edge.cleanup exists, this edge has
+          // static deps don't update and if edge.task exists, this edge has
           // already been scheduled
           if (dependentEdge.isStatic || dependentEdge.task) return
 
@@ -237,6 +237,7 @@ export class Graph {
             )
           }
 
+          // schedule external dependents
           const task = () => {
             dependentEdge.task = undefined
             dependentEdge.callback?.(
@@ -251,8 +252,8 @@ export class Graph {
             type: JobType.UpdateExternalDependent,
           })
 
-          dependentEdge.task = () =>
-            this.ecosystem._scheduler.unscheduleJob(task)
+          // mutate the edge; give it the scheduled task so it can be cleaned up
+          dependentEdge.task = task
         })
       }
     )
