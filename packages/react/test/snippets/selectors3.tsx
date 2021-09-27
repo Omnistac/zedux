@@ -1,29 +1,22 @@
-import {
-  atom,
-  AtomInstanceProvider,
-  AtomInstanceType,
-  injectAtomSelector,
-  injectEffect,
-  injectStore,
-  useAtomConsumer,
-  useAtomInstance,
-  useAtomSelector,
-  useAtomState,
-  useAtomValue,
-  GetterUtils,
-} from '@zedux/react'
-import { ion } from '@zedux/react/factories/ion'
-import React, { useState } from 'react'
+import { atom, useAtomSelector, useAtomState, GetterUtils } from '@zedux/react'
+import React from 'react'
 
 const atomA = atom('a', () => ({ num: 1 }))
 const atomB = atom('b', () => ({ num: 2 }))
 
-const selector = ({ get }: GetterUtils) => {
-  return get(atomA).num + get(atomB).num
+const selector = ({ get, getInstance }: GetterUtils) => {
+  const result = (get(atomA).num + get(atomB).num) / 2
+  console.log('running selector...', result)
+
+  // this getInstance shouldn't ruin the above get's dynamicity
+  getInstance(atomA)
+
+  return Math.floor(result)
 }
 
 function Child() {
   const val = useAtomSelector(selector)
+  console.log('child rendering...', val)
 
   return (
     <div>
@@ -37,7 +30,9 @@ function Controls() {
 
   return (
     <>
-      <button onClick={() => setA({ num: 2 })}>Set to 2</button>
+      <button onClick={() => setA(val => ({ num: val.num + 1 }))}>
+        Increment
+      </button>
     </>
   )
 }

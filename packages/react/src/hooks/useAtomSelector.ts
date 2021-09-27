@@ -7,7 +7,7 @@ import {
 } from '../types'
 import { useAtomInstance } from './useAtomInstance'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { GraphEdgeSignal, haveDepsChanged } from '../utils'
+import { GraphEdgeSignal } from '../utils'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import { useEcosystem } from './useEcosystem'
 
@@ -66,10 +66,9 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
   const prevDeps = useRef<{ cleanup: () => void; dep: Dep }[]>([])
   const prevResult = useRef<T>()
   const selectorRef = useRef<typeof selector>() // don't populate initially
-  const forceRunSelector = useRef(false)
 
   const runSelector = () => {
-    const deps: Dep[] = []
+    const deps: Record<string, Dep> = {}
     let isExecuting = true
 
     const get = <AI extends AtomInstanceBase<any, any, any>>(
@@ -81,7 +80,7 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
           ? atomOrInstance
           : ecosystem.getInstance(atomOrInstance, params as any[])
 
-      if (isExecuting) deps.push({ instance, isStatic: false })
+      if (isExecuting) deps[instance.keyHash] = { instance, isStatic: false }
 
       return instance.store.getState()
     }
@@ -95,7 +94,10 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
         params as any[]
       )
 
-      if (isExecuting) deps.push({ instance, isStatic: true })
+      // don't override any dynamic deps on the same instance
+      if (isExecuting && !deps[instance.keyHash]) {
+        deps[instance.keyHash] = { instance, isStatic: true }
+      }
 
       return instance.store.getState()
     }
@@ -106,11 +108,7 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
     // clean up any deps that are gone now
     prevDeps.current.forEach(prevDep => {
       if (
-        deps.some(
-          dep =>
-            dep.instance === prevDep.dep.instance &&
-            dep.isStatic === prevDep.dep.isStatic
-        )
+        deps[prevDep.dep.instance.keyHash]?.isStatic === prevDep.dep.isStatic
       ) {
         return
       }
@@ -121,7 +119,7 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
     const newDeps: typeof prevDeps.current = []
 
     // register new deps
-    deps.forEach(dep => {
+    Object.values(deps).forEach(dep => {
       const index = prevDeps.current.findIndex(
         prevDep =>
           prevDep.dep.instance === dep.instance &&
@@ -134,13 +132,19 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
 
       const cleanup = ecosystem._graph.registerExternalDependent(
         dep.instance,
-        () => {
-          // force rerender for both Updated and Destroyed signals. We're not
-          // rerendering only on result change 'cause it would be more
-          // difficult to make `injectAtomSelector` do the same
-          forceRender({})
+        signal => {
+          if (signal === GraphEdgeSignal.Destroyed) {
+            forceRender({})
+            return
+          }
 
-          forceRunSelector.current = true
+          // only forceRender if the selector result changes
+          const newResult = runSelector()
+
+          if (newResult === prevResult.current) return
+
+          forceRender({})
+          prevResult.current = newResult
         },
         'useAtomSelector',
         false
@@ -150,15 +154,12 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
     })
 
     prevDeps.current = newDeps
-    forceRunSelector.current = false
 
     return selectorResult
   }
 
   const result =
-    selector !== selectorRef.current || forceRunSelector.current
-      ? runSelector()
-      : prevResult.current
+    selector === selectorRef.current ? prevResult.current : runSelector()
 
   prevResult.current = result
   selectorRef.current = selector
