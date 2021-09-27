@@ -79,7 +79,7 @@ export type AtomParamsType<
   AtomType extends AtomBase<any, any, any>
 > = AtomType extends AtomBase<any, infer T, any> ? T : never
 
-export type AtomSelector<T = any> = (utils: GetterUtils) => T
+export type AtomSelector<T = any> = (utils: AtomGetters) => T
 
 export type AtomStateType<
   AtomType extends AtomBase<any, any, any>
@@ -125,7 +125,7 @@ export interface EcosystemConfig<
 
 export type EffectCallback = () => void | Destructor
 
-export interface GetterUtils {
+export interface AtomGetters {
   ecosystem: Ecosystem
   get: Ecosystem['get']
   getInstance: Ecosystem['getInstance']
@@ -140,7 +140,7 @@ export type IonGet<
   Params extends any[],
   Exports extends Record<string, any>
 > = (
-  utils: GetterUtils,
+  utils: AtomGetters,
   ...params: Params
 ) => AtomValue<State> | AtomApi<State, Exports>
 
@@ -149,7 +149,7 @@ export type IonSet<
   Params extends any[],
   Exports extends Record<string, any>
 > = (
-  utils: SetterUtils<State, Params, Exports>,
+  utils: AtomSetters<State, Params, Exports>,
   settable: Settable<State>
 ) => State | void
 
@@ -328,7 +328,7 @@ export type SetStateInterceptor<State = any> = (
   next: (settable: Settable<State>) => State
 ) => State
 
-export interface SetterUtils<
+export interface AtomSetters<
   State,
   Params extends any[],
   Exports extends Record<string, any>

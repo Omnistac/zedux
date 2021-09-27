@@ -1,10 +1,10 @@
-import { atom, useAtomSelector, useAtomState, GetterUtils } from '@zedux/react'
+import { atom, useAtomSelector, useAtomState, AtomGetters } from '@zedux/react'
 import React from 'react'
 
 const atomA = atom('a', () => ({ num: 1 }))
 const atomB = atom('b', () => ({ num: 2 }))
 
-const selector = ({ get, getInstance }: GetterUtils) => {
+const selector = ({ get, getInstance }: AtomGetters) => {
   const result = (get(atomA).num + get(atomB).num) / 2
   console.log('running selector...', result)
 

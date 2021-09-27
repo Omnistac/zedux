@@ -11,9 +11,9 @@ Ions extend the Atom class and provide just a little extra functionality and uti
 
 Unlike atoms, ions must be given an evaluator function. That's the whole point! We call ion evaluators "getters". Ions can also be given a "setter".
 
-An ion getter is really just an evaluator that receives a special [GetterUtils object](../types/GetterUtils) as its first parameter.
+An ion getter is really just an evaluator that receives a special [AtomGetters object](../types/AtomGetters) as its first parameter.
 
-An ion setter is similar to a [SetStateInterceptor](../types/SetStateInterceptor). But it receives a special [SetterUtils object](../types/SetterUtils) as its first parameter and the value passed to [`instance.setState()`](AtomInstance#setstate) as its second parameter. Unlike SetStateInterceptors, ion setters do not need to return the new state.
+An ion setter is similar to a [SetStateInterceptor](../types/SetStateInterceptor). But it receives a special [AtomSetters object](../types/AtomSetters) as its first parameter and the value passed to [`instance.setState()`](AtomInstance#setstate) as its second parameter. Unlike SetStateInterceptors, ion setters do not need to return the new state.
 
 ## Creation
 

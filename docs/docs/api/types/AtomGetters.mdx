@@ -1,6 +1,6 @@
 ---
-id: GetterUtils
-title: GetterUtils
+id: AtomGetters
+title: AtomGetters
 ---
 
 The object Zedux passes as the first parameter to [ion getters](../factories/ion#get).
@@ -8,7 +8,7 @@ The object Zedux passes as the first parameter to [ion getters](../factories/ion
 ## Definition
 
 ```ts
-interface GetterUtils {
+interface AtomGetters {
   ecosystem: Ecosystem
 
   get<A extends Atom<any, []>>(atom: A): AtomStateType<A>

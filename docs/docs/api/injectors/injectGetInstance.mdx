@@ -15,7 +15,7 @@ When called synchronously during atom evaluation, this function will register a 
 
 When called asynchronously, `getInstance` is really just an alias for `ecosystem.getInstance()`. It doesn't register any graph dependencies; it simply returns the resolved atom instance.
 
-[Ions](../classes/Ion) use this injector internally to provide the `getInstance` function as part of their [GetterUtils](../types/GetterUtils) and [SetterUtils](../types/SetterUtils) objects.
+[Ions](../classes/Ion) use this injector internally to provide the `getInstance` function as part of their [AtomGetters](../types/AtomGetters) and [AtomSetters](../types/AtomSetters) objects.
 
 ## Examples
 
