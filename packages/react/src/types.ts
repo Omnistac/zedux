@@ -87,6 +87,11 @@ export type AtomStateType<
   ? T
   : never
 
+export type AtomTuple<A extends AtomBase<any, any, any>> = [
+  A,
+  ...(A extends AtomBase<any, [], any> ? [] : [AtomParamsType<A>])
+]
+
 export type AtomValue<State = any> = State | Store<State>
 
 export type AtomValueOrFactory<
