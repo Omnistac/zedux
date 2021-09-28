@@ -16,6 +16,8 @@ export enum ActiveState {
   Initializing = 'Initializing',
 }
 
+export type AnyAtom = StandardAtomBase<any, any, any>
+
 export type AsyncEffectCallback<T = any> = (
   cleanup: (destructor: Destructor) => void
 ) => Promise<T> | void
@@ -53,6 +55,12 @@ export type AtomExportsType<
   AtomType extends StandardAtomBase<any, any, any>
 > = AtomType extends StandardAtomBase<any, any, infer T> ? T : never
 
+export interface AtomGetters {
+  ecosystem: Ecosystem
+  get: Ecosystem['get']
+  getInstance: Ecosystem['getInstance']
+}
+
 export type AtomInstanceAtomType<
   AtomInstanceType extends AtomInstanceBase<any, any, any>
 > = AtomInstanceType extends AtomInstanceBase<any, any, infer T> ? T : never
@@ -80,6 +88,28 @@ export type AtomParamsType<
 > = AtomType extends AtomBase<any, infer T, any> ? T : never
 
 export type AtomSelector<T = any> = (utils: AtomGetters) => T
+
+export interface AtomSetters<
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>
+> {
+  ecosystem: Ecosystem
+  get: Ecosystem['get']
+  getInstance: Ecosystem['getInstance']
+  instance: AtomInstance<State, Params, Exports>
+
+  set<A extends AtomBase<any, [], any>>(
+    atom: A,
+    settable: Settable<AtomStateType<A>>
+  ): AtomStateType<A>
+
+  set<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>,
+    settable: Settable<AtomStateType<A>>
+  ): AtomStateType<A>
+}
 
 export type AtomStateType<
   AtomType extends AtomBase<any, any, any>
@@ -124,12 +154,6 @@ export interface EcosystemConfig<
 }
 
 export type EffectCallback = () => void | Destructor
-
-export interface AtomGetters {
-  ecosystem: Ecosystem
-  get: Ecosystem['get']
-  getInstance: Ecosystem['getInstance']
-}
 
 export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   ? <D = any>(selector: (state: State) => D) => D
@@ -327,28 +351,6 @@ export type SetStateInterceptor<State = any> = (
   settable: Settable<State>,
   next: (settable: Settable<State>) => State
 ) => State
-
-export interface AtomSetters<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>
-> {
-  ecosystem: Ecosystem
-  get: Ecosystem['get']
-  getInstance: Ecosystem['getInstance']
-  instance: AtomInstance<State, Params, Exports>
-
-  set<A extends AtomBase<any, [], any>>(
-    atom: A,
-    settable: Settable<AtomStateType<A>>
-  ): AtomStateType<A>
-
-  set<A extends AtomBase<any, [...any], any>>(
-    atom: A,
-    params: AtomParamsType<A>,
-    settable: Settable<AtomStateType<A>>
-  ): AtomStateType<A>
-}
 
 export enum StateType {
   Store,

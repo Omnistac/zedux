@@ -143,8 +143,8 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
 
           if (newResult === prevResult.current) return
 
-          forceRender({})
           prevResult.current = newResult
+          forceRender({})
         },
         'useAtomSelector',
         false
