@@ -2,6 +2,7 @@ import { Selector } from '@zedux/core'
 import { createContext } from 'react'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
+  AnyAtomInstanceBase,
   AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
@@ -9,7 +10,7 @@ import {
   AtomStateType,
   EcosystemConfig,
 } from '../types'
-import { generateAppId } from '../utils'
+import { generateAppId, is } from '../utils'
 import { AtomInstance } from './AtomInstance'
 import { Atom } from './atoms/Atom'
 import { AtomBase } from './atoms/AtomBase'
@@ -136,12 +137,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     atom: A | AtomInstanceBase<any, [...any], any>,
     params?: AtomParamsType<A>
   ) {
-    if (atom instanceof AtomInstanceBase) {
-      return atom.store.getState()
+    if (is(atom, AtomInstanceBase)) {
+      return (atom as AnyAtomInstanceBase).store.getState()
     }
 
     const instance = this.getInstance(
-      atom,
+      atom as A,
       params as AtomParamsType<A>
     ) as AtomInstanceBase<any, any, any>
 
@@ -165,19 +166,19 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     atom: A | AtomInstanceBase<any, [...any], any>,
     params?: AtomParamsType<A>
   ) {
-    if (atom instanceof AtomInstanceBase) {
+    if (is(atom, AtomInstanceBase)) {
       return atom
     }
 
     const defaultedParams = (params || []) as AtomParamsType<A>
-    const keyHash = atom.getKeyHash(defaultedParams)
+    const keyHash = (atom as A).getKeyHash(defaultedParams)
 
     // try to find an existing instance
     const existingInstance = this._instances[keyHash]
     if (existingInstance) return existingInstance
 
     // create a new instance
-    const resolvedAtom = this.resolveAtom(atom)
+    const resolvedAtom = this.resolveAtom(atom as A)
     this._graph.addNode(keyHash)
 
     const newInstance = resolvedAtom._createInstance(
@@ -277,10 +278,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
         ? paramsOrSelector
         : (selector as Selector<AtomStateType<A>, D>)
 
-    const instance =
-      atomOrInstanceOrSelector instanceof AtomInstanceBase
-        ? atomOrInstanceOrSelector
-        : this.getInstance(atomOrInstanceOrSelector, params)
+    const instance = this.getInstance(atomOrInstanceOrSelector as A, params)
 
     return resolvedSelector(instance.store.getState())
   }

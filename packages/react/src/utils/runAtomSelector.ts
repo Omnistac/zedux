@@ -1,5 +1,5 @@
 import { Dep, EvaluationReason, GraphEdgeDynamicity } from './types'
-import { AtomInstanceBase, Ecosystem } from '../classes'
+import { Ecosystem } from '../classes'
 import {
   AnyAtomBase,
   AnyAtomInstanceBase,
@@ -25,10 +25,10 @@ export const runAtomSelector = <T = any>(
     atomOrInstance: A | AnyAtomInstanceBase,
     params?: AtomParamsType<A>
   ) => {
-    const instance =
-      atomOrInstance instanceof AtomInstanceBase
-        ? atomOrInstance
-        : ecosystem.getInstance(atomOrInstance, params as AtomParamsType<A>)
+    const instance = ecosystem.getInstance(
+      atomOrInstance as A,
+      params as AtomParamsType<A>
+    )
 
     if (isExecuting) {
       deps[instance.keyHash] = {

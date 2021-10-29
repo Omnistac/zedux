@@ -5,8 +5,11 @@ import {
   DispatchInterceptor,
   SetStateInterceptor,
 } from '@zedux/react/types'
+import { is } from '@zedux/react/utils/general'
 
 export class AtomApi<State, Exports extends Record<string, any>> {
+  public static $$typeof = Symbol.for('@@react/zedux/AtomApi')
+
   public dispatchInterceptors?: DispatchInterceptor<State>[]
   public exports?: Exports
   public promise?: Promise<any>
@@ -15,15 +18,16 @@ export class AtomApi<State, Exports extends Record<string, any>> {
   public value: AtomValue<State>
 
   constructor(value: AtomValue<State> | AtomApi<State, Exports>) {
-    if (value instanceof AtomApi) {
-      this.dispatchInterceptors = value.dispatchInterceptors
-      this.exports = value.exports
-      this.setStateInterceptors = value.setStateInterceptors
-      this.promise = value.promise
-      this.ttl = value.ttl
-      this.value = value.value
+    if (is(value, AtomApi)) {
+      const asAtomApi = value as AtomApi<State, Exports>
+      this.dispatchInterceptors = asAtomApi.dispatchInterceptors
+      this.exports = asAtomApi.exports
+      this.setStateInterceptors = asAtomApi.setStateInterceptors
+      this.promise = asAtomApi.promise
+      this.ttl = asAtomApi.ttl
+      this.value = asAtomApi.value
     } else {
-      this.value = value
+      this.value = value as AtomValue<State>
     }
   }
 

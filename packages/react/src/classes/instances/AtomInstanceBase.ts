@@ -20,6 +20,7 @@ export abstract class AtomInstanceBase<
   Params extends any[],
   AtomType extends AtomBase<State, Params, any>
 > {
+  public static $$typeof = Symbol.for('@@react/zedux/AtomInstanceBase')
   public abstract atom: AtomType
   public abstract ecosystem: Ecosystem
   public abstract keyHash: string

@@ -28,6 +28,7 @@ import {
   GraphEdgeInfo,
   InjectorDescriptor,
   InjectorType,
+  is,
   JobType,
 } from '@zedux/react/utils'
 import { diContext } from '@zedux/react/utils/csContexts'
@@ -237,13 +238,14 @@ export class AtomInstance<
   public _evaluate() {
     const { _value } = this.atom
 
-    if (_value instanceof AtomApi) {
-      this.api = _value
-      return _value.value
+    if (is(_value, AtomApi)) {
+      const asAtomApi = _value as AtomApi<State, Exports>
+      this.api = asAtomApi
+      return asAtomApi.value
     }
 
     if (typeof _value !== 'function') {
-      return _value
+      return _value as AtomValue<State>
     }
 
     try {
@@ -251,20 +253,20 @@ export class AtomInstance<
         ...params: Params
       ) => AtomValue<State> | AtomApi<State, Exports>)(...this.params)
 
-      if (val instanceof AtomApi) {
-        this.api = val
+      if (is(val, AtomApi)) {
+        this.api = val as AtomApi<State, Exports>
 
         // Exports can only be set on initial evaluation
         if (this._activeState === ActiveState.Initializing) {
-          this.exports = val.exports as Exports
+          this.exports = this.api.exports as Exports
 
-          if (val.promise) this._setPromise(val.promise)
+          if (this.api.promise) this._setPromise(this.api.promise)
         }
 
-        return val.value
+        return this.api.value
       }
 
-      return val
+      return val as AtomValue<State>
     } catch (err) {
       console.error(
         `Zedux - Error while instantiating atom "${this.atom.key}" with params:`,
@@ -292,13 +294,10 @@ export class AtomInstance<
   ) {
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
-    const instance: AtomInstanceBase<any, any, any> =
-      atomOrInstance instanceof AtomInstanceBase
-        ? atomOrInstance
-        : this.ecosystem.getInstance(
-            atomOrInstance,
-            params as AtomParamsType<A>
-          )
+    const instance = this.ecosystem.getInstance(
+      atomOrInstance as A,
+      params as AtomParamsType<A>
+    )
 
     // when called outside evaluation, instance._get() is just an alias
     // for ecosystem.getInstance().store.getState()
@@ -343,13 +342,10 @@ export class AtomInstance<
   ): AtomInstanceType<A> {
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
-    const instance =
-      atomOrInstance instanceof AtomInstanceBase
-        ? atomOrInstance
-        : this.ecosystem.getInstance(
-            atomOrInstance,
-            params as AtomParamsType<A>
-          )
+    const instance = this.ecosystem.getInstance(
+      atomOrInstance as A,
+      params as AtomParamsType<A>
+    )
 
     // when called outside evaluation, instance._getInstance() is just an alias
     // for ecosystem.getInstance()
@@ -536,7 +532,7 @@ export class AtomInstance<
 
     const params = Array.isArray(paramsOrSelector)
       ? paramsOrSelector
-      : (([] as unknown) as AtomParamsType<A>)
+      : undefined
 
     const resolvedSelector =
       typeof paramsOrSelector === 'function'
@@ -545,10 +541,10 @@ export class AtomInstance<
 
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
-    const instance =
-      atomOrInstanceOrSelector instanceof AtomInstanceBase
-        ? atomOrInstanceOrSelector
-        : this.ecosystem.getInstance(atomOrInstanceOrSelector, params)
+    const instance = this.ecosystem.getInstance(
+      atomOrInstanceOrSelector as A,
+      params as AtomParamsType<A>
+    )
 
     // when called outside evaluation, instance._select() is just an alias for
     // ecosystem.select()

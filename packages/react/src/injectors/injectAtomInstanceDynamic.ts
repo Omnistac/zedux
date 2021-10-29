@@ -1,11 +1,12 @@
 import { AtomBase, AtomInstanceBase } from '../classes'
-import { AtomInstanceType, AtomParamsType } from '../types'
+import { AnyAtomInstanceBase, AtomInstanceType, AtomParamsType } from '../types'
 import {
-  split,
   AtomDynamicInjectorDescriptor,
-  InjectorType,
-  haveDepsChanged,
   GraphEdgeDynamicity,
+  haveDepsChanged,
+  InjectorType,
+  is,
+  split,
 } from '../utils'
 import { injectGetInstance } from './injectGetInstance'
 
@@ -52,7 +53,7 @@ export const injectAtomInstanceDynamic: {
     operation?: string
   ): AI
 } = <A extends AtomBase<any, [...any], any>>(
-  atom: A,
+  atom: A | AnyAtomInstanceBase,
   params?: AtomParamsType<A>,
   operation = defaultOperation
 ) => {
@@ -64,7 +65,7 @@ export const injectAtomInstanceDynamic: {
     defaultOperation, // yeah, not the passed operation
     InjectorType.AtomDynamic,
     () => {
-      const instance = getInstance(atom, params as AtomParamsType<A>, [
+      const instance = getInstance(atom as A, params as AtomParamsType<A>, [
         GraphEdgeDynamicity.Dynamic,
         operation,
       ])
@@ -75,7 +76,9 @@ export const injectAtomInstanceDynamic: {
       }
     },
     prevDescriptor => {
-      const resolvedAtom = atom instanceof AtomInstanceBase ? atom.atom : atom
+      const resolvedAtom = is(atom, AtomInstanceBase)
+        ? (atom as AnyAtomInstanceBase).atom
+        : atom
       const atomHasChanged =
         resolvedAtom.internalId !== prevDescriptor.instance.atom.internalId
 
@@ -86,7 +89,7 @@ export const injectAtomInstanceDynamic: {
       )
 
       // make sure the dependency gets registered for this evaluation
-      const instance = getInstance(atom, params as AtomParamsType<A>, [
+      const instance = getInstance(atom as A, params as AtomParamsType<A>, [
         GraphEdgeDynamicity.Dynamic,
         operation,
       ])

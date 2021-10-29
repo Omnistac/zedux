@@ -1,13 +1,8 @@
 import { isPlainObject } from '@zedux/core/utils/general'
 import { DiContext, InjectorDescriptor, InjectorType } from './types'
 import { diContext } from './csContexts'
-import {
-  ActiveState,
-  AnyAtomBase,
-  AtomInstanceType,
-  AtomParamsType,
-} from '../types'
-import { AtomInstance, AtomInstanceBase, Ecosystem } from '../classes'
+import { ActiveState, AnyAtomBase, AtomParamsType } from '../types'
+import { AtomInstanceBase, Ecosystem } from '../classes'
 
 let idCounter = 0
 
@@ -25,7 +20,7 @@ export const generateNodeId = () => `no-${generateId()}`
 
 export const hashParams = (params: any): string =>
   JSON.stringify(params, (_, param) => {
-    if (param instanceof AtomInstance) return param.keyHash
+    if (is(param, AtomInstanceBase)) return param.keyHash
     if (!isPlainObject(param)) return param
 
     return Object.keys(param)
@@ -53,17 +48,33 @@ export const haveDepsChanged = (
   )
 }
 
+/**
+ * is() - Checks if a value is an instance of a class
+ *
+ * We can't use instanceof 'cause that breaks across realms - e.g. when an atom
+ * instance is shared between a parent and child window, that instance's object
+ * reference will be different in both windows (since each window creates its
+ * own copy of Zedux).
+ *
+ * The classToCheck should have a static $$typeof property whose value is a
+ * symbol created with Symbol.for() (sharing the symbol reference across realms)
+ *
+ * @param val anything - the thing we're checking
+ * @param classToCheck a class with a static $$typeof property
+ * @returns boolean - whether val is an instanceof classToCheck
+ */
+export const is = (val: any, classToCheck: { $$typeof: symbol }) =>
+  val?.constructor?.$$typeof === classToCheck.$$typeof
+
 export const resolveInstance = <A extends AnyAtomBase>(
   ecosystem: Ecosystem,
   atom: A | AtomInstanceBase<any, [...any], any>,
   stableParams?: AtomParamsType<A>
 ) => {
-  const atomInstance = (atom instanceof AtomInstanceBase
-    ? atom
-    : ecosystem.getInstance(
-        atom,
-        stableParams as AtomParamsType<A>
-      )) as AtomInstanceType<A>
+  const atomInstance = ecosystem.getInstance(
+    atom as A,
+    stableParams as AtomParamsType<A>
+  )
 
   return atomInstance
 }

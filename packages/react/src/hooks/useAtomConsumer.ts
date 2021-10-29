@@ -1,5 +1,6 @@
 import { useContext } from 'react'
-import { AtomInstance, StandardAtomBase } from '../classes'
+import { AtomInstanceBase, StandardAtomBase } from '../classes'
+import { is } from '../utils'
 import { AtomInstanceType, AtomParamsType } from '../types'
 import { useEcosystem } from './useEcosystem'
 
@@ -24,7 +25,7 @@ export const useAtomConsumer: {
   const ecosystem = useEcosystem()
   const instance = useContext(atom.getReactContext())
 
-  if (!defaultParams || instance instanceof AtomInstance) {
+  if (!defaultParams || is(instance, AtomInstanceBase)) {
     return instance as AtomInstanceType<A>
   }
 
