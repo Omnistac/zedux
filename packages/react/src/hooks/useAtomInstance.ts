@@ -1,7 +1,7 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
 import { AtomInstanceType, AtomParamsType, PromiseStatus } from '../types'
-import { GraphEdgeSignal } from '../utils'
+import { GraphEdgeSignal, resolveInstance } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useStableReference } from './useStableReference'
 
@@ -28,63 +28,45 @@ export const useAtomInstance: {
 
   <A extends AtomBase<any, [...any], any>>(
     atom: A,
-    params: AtomParamsType<A>,
-    shouldRegisterDependency?: boolean
+    params: AtomParamsType<A>
   ): AtomInstanceType<A>
 
-  <AI extends AtomInstance<any, [...any], any>>(
-    instance: AI,
-    params?: [],
-    shouldRegisterDependency?: boolean
-  ): AI
+  <AI extends AtomInstance<any, [...any], any>>(instance: AI, params?: []): AI
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
-  params?: AtomParamsType<A>,
-  shouldRegisterDependency = true
+  params?: AtomParamsType<A>
 ) => {
-  const [force, forceRender] = useState<any>()
   const ecosystem = useEcosystem()
   const stableParams = useStableReference(params)
-  const cleanupRef = useRef<() => void>()
+  const [instance, setInstance] = useState<any>(() =>
+    resolveInstance(ecosystem, atom, stableParams)
+  )
 
-  const atomInstance = useMemo(() => {
-    if (cleanupRef.current) {
-      cleanupRef.current()
-      cleanupRef.current = undefined
+  // Suspense!
+  if (instance.promise) {
+    if (instance._promiseStatus === PromiseStatus.Pending) {
+      throw instance.promise
+    } else if (instance._promiseStatus === PromiseStatus.Rejected) {
+      throw instance._promiseError
     }
+  }
 
-    const instance = (atom instanceof AtomInstanceBase
-      ? atom
-      : ecosystem.getInstance(
-          atom,
-          stableParams as AtomParamsType<A>
-        )) as AtomInstanceType<A>
+  useLayoutEffect(() => {
+    const currentInstance = resolveInstance(ecosystem, atom, stableParams)
 
-    if (instance.promise) {
-      if (instance._promiseStatus === PromiseStatus.Pending) {
-        throw instance.promise
-      } else if (instance._promiseStatus === PromiseStatus.Rejected) {
-        throw instance._promiseError
-      }
-    }
+    if (currentInstance !== instance) setInstance(currentInstance)
 
-    if (!shouldRegisterDependency) return instance
-
-    cleanupRef.current = ecosystem._graph.registerExternalDependent(
-      instance,
+    return ecosystem._graph.registerExternalDependent(
+      currentInstance,
       signal => {
         if (signal === GraphEdgeSignal.Destroyed) {
-          forceRender({})
+          setInstance(resolveInstance(ecosystem, atom, stableParams))
         }
       },
       'useAtomInstance',
       true
     )
+  }, [atom, ecosystem, stableParams]) // not instance
 
-    return instance
-  }, [atom, ecosystem, force, shouldRegisterDependency, stableParams])
-
-  useLayoutEffect(() => () => cleanupRef.current?.(), [])
-
-  return atomInstance
+  return instance
 }

@@ -1,8 +1,13 @@
 import { isPlainObject } from '@zedux/core/utils/general'
 import { DiContext, InjectorDescriptor, InjectorType } from './types'
 import { diContext } from './csContexts'
-import { ActiveState } from '../types'
-import { AtomInstance } from '../classes'
+import {
+  ActiveState,
+  AnyAtomBase,
+  AtomInstanceType,
+  AtomParamsType,
+} from '../types'
+import { AtomInstance, AtomInstanceBase, Ecosystem } from '../classes'
 
 let idCounter = 0
 
@@ -46,6 +51,21 @@ export const haveDepsChanged = (
     prevDeps.length !== nextDeps.length ||
     prevDeps.some((dep, i) => nextDeps[i] !== dep)
   )
+}
+
+export const resolveInstance = <A extends AnyAtomBase>(
+  ecosystem: Ecosystem,
+  atom: A | AtomInstanceBase<any, [...any], any>,
+  stableParams?: AtomParamsType<A>
+) => {
+  const atomInstance = (atom instanceof AtomInstanceBase
+    ? atom
+    : ecosystem.getInstance(
+        atom,
+        stableParams as AtomParamsType<A>
+      )) as AtomInstanceType<A>
+
+  return atomInstance
 }
 
 export const split = <T extends InjectorDescriptor>(

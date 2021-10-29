@@ -1,4 +1,5 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
+import { AtomInstanceParamsType, AtomInstanceStateType } from '..'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import {
   AtomInstanceType,
@@ -6,7 +7,7 @@ import {
   AtomStateType,
   PromiseStatus,
 } from '../types'
-import { GraphEdgeSignal } from '../utils'
+import { GraphEdgeSignal, resolveInstance } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useStableReference } from './useStableReference'
 
@@ -35,59 +36,66 @@ export const useAtomInstanceDynamic: {
 
   <A extends AtomBase<any, [...any], any>>(
     atom: A,
-    params: AtomParamsType<A>
+    params: AtomParamsType<A>,
+    operation?: string,
+    shouldUpdate?: (state: AtomStateType<A>) => boolean
   ): AtomInstanceType<A>
 
-  <AI extends AtomInstanceBase<any, [...any], any>>(instance: AI): AI
+  <AI extends AtomInstanceBase<any, [...any], any>>(
+    instance: AI,
+    params?: AtomInstanceParamsType<AI>,
+    operation?: string,
+    shouldUpdate?: (state: AtomInstanceStateType<AI>) => boolean
+  ): AI
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
-  params?: AtomParamsType<A>
+  params?: AtomParamsType<A>,
+  operation = 'useAtomInstanceDynamic',
+  shouldUpdate?: (state: AtomStateType<A>) => boolean
 ) => {
-  const [, setReactState] = useState<AtomStateType<A>>()
-  const [force, forceRender] = useState<any>()
   const ecosystem = useEcosystem()
   const stableParams = useStableReference(params)
-  const cleanupRef = useRef<() => void>()
+  const [instance, setInstance] = useState(() =>
+    resolveInstance(ecosystem, atom, stableParams)
+  )
+  const [state, setReactState] = useState(() => instance.store.getState())
 
-  const atomInstance = useMemo(() => {
-    if (cleanupRef.current) {
-      cleanupRef.current()
-      cleanupRef.current = undefined
+  // Suspense!
+  if (instance.promise) {
+    if (instance._promiseStatus === PromiseStatus.Pending) {
+      throw instance.promise
+    } else if (instance._promiseStatus === PromiseStatus.Rejected) {
+      throw instance._promiseError
     }
+  }
 
-    const instance = (atom instanceof AtomInstanceBase
-      ? atom
-      : ecosystem.getInstance(
-          atom,
-          stableParams as AtomParamsType<A>
-        )) as AtomInstanceType<A>
+  useLayoutEffect(() => {
+    const currentInstance = resolveInstance(ecosystem, atom, stableParams)
+    const currentState = currentInstance.store.getState()
 
-    if (instance.promise) {
-      if (instance._promiseStatus === PromiseStatus.Pending) {
-        throw instance.promise
-      } else if (instance._promiseStatus === PromiseStatus.Rejected) {
-        throw instance._promiseError
-      }
-    }
+    if (currentInstance !== instance) setInstance(currentInstance)
 
-    cleanupRef.current = ecosystem._graph.registerExternalDependent(
-      instance,
+    // handle any state updates we missed between render and this effect running
+    // also handle the case where the instance has changed (e.g. different
+    // params were passed)
+    if (currentState !== state) setReactState(currentState)
+
+    return ecosystem._graph.registerExternalDependent(
+      currentInstance,
       (signal, val: AtomStateType<A>) => {
         if (signal === GraphEdgeSignal.Destroyed) {
-          forceRender({})
+          setInstance(resolveInstance(ecosystem, atom, stableParams))
           return
         }
 
+        if (shouldUpdate && !shouldUpdate?.(val)) return
+
         setReactState(val)
       },
-      'useAtomInstanceDynamic',
+      operation,
       false
     )
+  }, [atom, ecosystem, stableParams]) // not instance or state
 
-    return instance
-  }, [atom, ecosystem, force, stableParams])
-
-  useLayoutEffect(() => () => cleanupRef.current?.(), [])
-
-  return atomInstance
+  return instance
 }

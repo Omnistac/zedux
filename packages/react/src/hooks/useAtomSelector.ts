@@ -1,63 +1,18 @@
 import { Selector } from '@zedux/core'
 import {
-  AnyAtomInstanceBase,
   AtomInstanceStateType,
   AtomParamsType,
   AtomSelector,
   AtomStateType,
 } from '../types'
-import { useAtomInstance } from './useAtomInstance'
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Dep, GraphEdgeSignal } from '../utils'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { Dep } from '../utils'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import { useEcosystem } from './useEcosystem'
 import { runAtomSelector } from '../utils/runAtomSelector'
+import { useAtomInstanceDynamic } from '.'
 
 const OPERATION = 'useAtomSelector'
-
-const useAtomInstanceSelector = <
-  AI extends AnyAtomInstanceBase,
-  D extends any = any
->(
-  instance: AI,
-  selector: (state: AtomInstanceStateType<AI>) => D
-) => {
-  const [state, setState] = useState(() => selector(instance.store.getState()))
-  const [force, forceRender] = useState<any>()
-  const selectorRef = useRef(selector)
-  selectorRef.current = selector
-  const cleanupRef = useRef<() => void>()
-
-  useMemo(() => {
-    if (cleanupRef.current) {
-      cleanupRef.current()
-      cleanupRef.current = undefined
-    }
-
-    let lastResult: D
-
-    cleanupRef.current = instance.ecosystem._graph.registerExternalDependent(
-      instance,
-      (signal, val: AtomInstanceStateType<AI>) => {
-        if (signal === GraphEdgeSignal.Destroyed) {
-          forceRender({})
-          return
-        }
-
-        const newResult = selectorRef.current(val)
-        if (newResult === lastResult) return
-
-        setState((lastResult = newResult))
-      },
-      OPERATION,
-      false
-    )
-  }, [force, instance])
-
-  useLayoutEffect(() => () => cleanupRef.current?.(), [])
-
-  return state
-}
 
 const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
   const ecosystem = useEcosystem()
@@ -127,12 +82,20 @@ export const useAtomSelector: {
     : (([] as unknown) as AtomParamsType<A>)
 
   const selector = selectorArg || (paramsArg as Selector<AtomStateType<A>, D>)
+  const instance = useAtomInstanceDynamic(atom as A, params, OPERATION, val => {
+    const newResult = selectorRef.current(val)
+    if (newResult === prevResultRef.current) return false
 
-  const instance = useAtomInstance(
-    atom as A,
-    params,
-    false
-  ) as AtomInstanceBase<AtomStateType<A>, [...any], any>
+    prevResultRef.current = newResult
+    return true
+  }) as AtomInstanceBase<AtomStateType<A>, [...any], any>
 
-  return useAtomInstanceSelector(instance, selector)
+  const selectorRef = useRef(selector)
+  const prevResultRef = useRef(
+    useState(() => selector(instance.store.getState()))[0]
+  )
+
+  selectorRef.current = selector
+
+  return prevResultRef.current
 }
