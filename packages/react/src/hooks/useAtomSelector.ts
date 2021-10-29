@@ -1,5 +1,6 @@
 import { Selector } from '@zedux/core'
 import {
+  AnyAtomInstanceBase,
   AtomInstanceStateType,
   AtomParamsType,
   AtomSelector,
@@ -7,17 +8,15 @@ import {
 } from '../types'
 import { useAtomInstance } from './useAtomInstance'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { GraphEdgeSignal } from '../utils'
+import { Dep, GraphEdgeSignal } from '../utils'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import { useEcosystem } from './useEcosystem'
+import { runAtomSelector } from '../utils/runAtomSelector'
 
-interface Dep {
-  instance: AtomInstanceBase<any, any, any>
-  isStatic: boolean
-}
+const OPERATION = 'useAtomSelector'
 
 const useAtomInstanceSelector = <
-  AI extends AtomInstanceBase<any, any, any>,
+  AI extends AnyAtomInstanceBase,
   D extends any = any
 >(
   instance: AI,
@@ -50,7 +49,7 @@ const useAtomInstanceSelector = <
 
         setState((lastResult = newResult))
       },
-      'useAtomSelector',
+      OPERATION,
       false
     )
   }, [force, instance])
@@ -63,103 +62,21 @@ const useAtomInstanceSelector = <
 const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
   const ecosystem = useEcosystem()
   const [, forceRender] = useState<any>()
-  const prevDeps = useRef<{ cleanup: () => void; dep: Dep }[]>([])
+  const prevDeps = useRef<Record<string, Dep>>({})
   const prevResult = useRef<T>()
   const selectorRef = useRef<typeof selector>() // don't populate initially
 
-  const runSelector = () => {
-    const deps: Record<string, Dep> = {}
-    let isExecuting = true
-
-    const get = <AI extends AtomInstanceBase<any, any, any>>(
-      atomOrInstance: AtomBase<any, any, AI> | AI,
-      params?: any[]
-    ) => {
-      const instance =
-        atomOrInstance instanceof AtomInstanceBase
-          ? atomOrInstance
-          : ecosystem.getInstance(atomOrInstance, params as any[])
-
-      if (isExecuting) deps[instance.keyHash] = { instance, isStatic: false }
-
-      return instance.store.getState()
-    }
-
-    const getInstance = <AI extends AtomInstanceBase<any, any, any>>(
-      atomOrInstance: AtomBase<any, any, AI> | AI,
-      params?: any[]
-    ) => {
-      const instance = ecosystem.getInstance(
-        atomOrInstance as AtomBase<any, any, AI>,
-        params as any[]
-      )
-
-      // don't override any dynamic deps on the same instance
-      if (isExecuting && !deps[instance.keyHash]) {
-        deps[instance.keyHash] = { instance, isStatic: true }
-      }
-
-      return instance.store.getState()
-    }
-
-    const selectorResult = selector({ ecosystem, get, getInstance })
-    isExecuting = false
-
-    // clean up any deps that are gone now
-    prevDeps.current.forEach(prevDep => {
-      if (
-        deps[prevDep.dep.instance.keyHash]?.isStatic === prevDep.dep.isStatic
-      ) {
-        return
-      }
-
-      prevDep.cleanup()
-    })
-
-    const newDeps: typeof prevDeps.current = []
-
-    // register new deps
-    Object.values(deps).forEach(dep => {
-      const index = prevDeps.current.findIndex(
-        prevDep =>
-          prevDep.dep.instance === dep.instance &&
-          prevDep.dep.isStatic === dep.isStatic
-      )
-      if (index !== -1) {
-        newDeps.push(prevDeps.current[index])
-        return
-      }
-
-      const cleanup = ecosystem._graph.registerExternalDependent(
-        dep.instance,
-        signal => {
-          if (signal === GraphEdgeSignal.Destroyed) {
-            forceRender({})
-            return
-          }
-
-          // only forceRender if the selector result changes
-          const newResult = runSelector()
-
-          if (newResult === prevResult.current) return
-
-          prevResult.current = newResult
-          forceRender({})
-        },
-        'useAtomSelector',
-        false
-      )
-
-      newDeps.push({ cleanup, dep })
-    })
-
-    prevDeps.current = newDeps
-
-    return selectorResult
-  }
-
   const result =
-    selector === selectorRef.current ? prevResult.current : runSelector()
+    selector === selectorRef.current
+      ? prevResult.current
+      : runAtomSelector(
+          selector,
+          ecosystem,
+          prevDeps,
+          prevResult,
+          () => forceRender({}),
+          OPERATION
+        )
 
   prevResult.current = result
   selectorRef.current = selector
@@ -167,8 +84,8 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
   // Final cleanup on unmount
   useLayoutEffect(
     () => () => {
-      prevDeps.current.forEach(dep => {
-        dep.cleanup()
+      Object.values(prevDeps.current).forEach(dep => {
+        dep.cleanup?.()
       })
     },
     []

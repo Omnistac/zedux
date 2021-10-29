@@ -2,6 +2,7 @@ import {
   ActionChain,
   metaTypes,
   Observable,
+  Selector,
   Settable,
   Subscription,
 } from '@zedux/core'
@@ -10,12 +11,15 @@ import {
   AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
+  AtomSelector,
   AtomStateType,
   AtomValue,
   PromiseStatus,
+  Ref,
   StateType,
 } from '@zedux/react/types'
 import {
+  Dep,
   DependentEdge,
   EvaluationReason,
   EvaluationTargetType,
@@ -34,6 +38,9 @@ import { AtomApi } from './AtomApi'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { StandardAtomBase } from './atoms/StandardAtomBase'
 import { AtomBase } from './atoms/AtomBase'
+import { runAtomSelector } from '../utils/runAtomSelector'
+
+const SELECT_OPERATION = 'select'
 
 const getStateType = (val: any) => {
   if (isZeduxStore(val)) return StateType.Store
@@ -86,7 +93,21 @@ export class AtomInstance<
   public _promiseStatus?: PromiseStatus
   public _stateType?: StateType
 
+  private _cachedAtomSelectors?: Map<
+    AtomSelector,
+    {
+      prevDeps: Ref<Record<string, Dep>>
+      prevResult: Ref<any>
+    }
+  >
   private _getKeyHashes?: Record<string, DependentEdge>
+  private _nextCachedAtomSelectors?: Map<
+    AtomSelector,
+    {
+      prevDeps: Ref<Record<string, Dep>>
+      prevResult: Ref<any>
+    }
+  >
   private _nextGetKeyHashes?: Record<string, GraphEdgeInfo>
   private _subscription?: Subscription
 
@@ -174,6 +195,17 @@ export class AtomInstance<
     })
     nonEffectInjectors.forEach(injector => {
       injector.cleanup?.()
+    })
+
+    // Clean up cached AtomSelectors - normal selectors don't have anything to
+    // clean up since their cached value should be garbage collected when the
+    // _cachedSelectors map goes out of scope
+    this._cachedAtomSelectors?.forEach(selector => {
+      if (!selector.prevDeps) return
+
+      Object.values(selector.prevDeps.current).forEach(dep => {
+        dep.cleanup?.()
+      })
     })
 
     if (this._getKeyHashes) {
@@ -268,23 +300,23 @@ export class AtomInstance<
             params as AtomParamsType<A>
           )
 
+    // when called outside evaluation, instance._get() is just an alias
+    // for ecosystem.getInstance().store.getState()
+    if (!this._isEvaluating) return instance.store.getState()
+
     // if get is called during evaluation, track the loaded instances so we can
     // add graph dependencies for them
-    if (this._isEvaluating) {
-      if (!this._nextGetKeyHashes) {
-        this._nextGetKeyHashes = {}
-      }
-
-      // we could add more flags on this enum to indicate whether we created the
-      // instance in this call
-      this._nextGetKeyHashes[instance.keyHash] = [
-        GraphEdgeDynamicity.Dynamic,
-        'get',
-      ]
+    if (!this._nextGetKeyHashes) {
+      this._nextGetKeyHashes = {}
     }
 
-    // otherwise, instance._get() is just an alias for
-    // ecosystem.getInstance().store.getState()
+    // we could add more flags on this enum to indicate whether we created the
+    // instance in this call
+    this._nextGetKeyHashes[instance.keyHash] = [
+      GraphEdgeDynamicity.Dynamic,
+      'get',
+    ]
+
     return instance.store.getState()
   }
 
@@ -305,39 +337,47 @@ export class AtomInstance<
   ): AI
 
   public _getInstance<A extends Atom<any, [...any], any>>(
-    atom: A | AtomInstanceBase<any, any, any>,
+    atomOrInstance: A | AtomInstanceType<A>,
     params?: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A> {
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
     const instance =
-      atom instanceof AtomInstanceBase
-        ? atom
-        : this.ecosystem.getInstance(atom, params as AtomParamsType<A>)
+      atomOrInstance instanceof AtomInstanceBase
+        ? atomOrInstance
+        : this.ecosystem.getInstance(
+            atomOrInstance,
+            params as AtomParamsType<A>
+          )
+
+    // when called outside evaluation, instance._getInstance() is just an alias
+    // for ecosystem.getInstance()
+    if (!this._isEvaluating) return instance
 
     // if getInstance is called during evaluation, track the loaded instances so
     // we can add graph dependencies for them
-    if (this._isEvaluating) {
-      if (!this._nextGetKeyHashes) {
-        this._nextGetKeyHashes = {}
-      }
 
-      // if we've already registered a dynamic edge, don't make it static
-      if (
-        this._nextGetKeyHashes[instance.keyHash]?.[0] !==
-        GraphEdgeDynamicity.Dynamic
-      ) {
-        // we could add more flags on this enum to indicate whether we created the
-        // instance in this call
-        this._nextGetKeyHashes[instance.keyHash] = edgeInfo || [
-          GraphEdgeDynamicity.Static,
-          'getInstance',
-        ]
-      }
+    // if we've already registered a dynamic edge, don't make it static
+    const existingDynamicity = this._nextGetKeyHashes?.[instance.keyHash]?.[0]
+    if (
+      existingDynamicity &&
+      existingDynamicity !== GraphEdgeDynamicity.Static
+    ) {
+      return instance
     }
 
-    // otherwise, instance._getInstance() is just an alias for ecosystem.getInstance()
+    if (!this._nextGetKeyHashes) {
+      this._nextGetKeyHashes = {}
+    }
+
+    // we could add more flags on this enum to indicate whether we created the
+    // instance in this call
+    this._nextGetKeyHashes[instance.keyHash] = edgeInfo || [
+      GraphEdgeDynamicity.Static,
+      'getInstance',
+    ]
+
     return instance as AtomInstanceType<A>
   }
 
@@ -413,6 +453,162 @@ export class AtomInstance<
       task: this.evaluationTask,
       type: JobType.EvaluateAtom,
     })
+  }
+
+  public _select<A extends AtomBase<any, [], any>, D>(
+    atom: A,
+    selector: Selector<AtomStateType<A>, D>
+  ): AtomStateType<A>
+
+  public _select<A extends AtomBase<any, [...any], any>, D>(
+    atom: A,
+    params: AtomParamsType<A>,
+    selector: Selector<AtomStateType<A>, D>
+  ): AtomStateType<A>
+
+  public _select<I extends AtomInstanceBase<any, [...any], any>, D>(
+    instance: I,
+    selector: Selector<AtomInstanceStateType<I>, D>
+  ): AtomInstanceStateType<I>
+
+  public _select<T>(atomSelector: AtomSelector<T>): T
+
+  public _select<A extends Atom<any, [...any], any>, D>(
+    atomOrInstanceOrSelector: A | AtomInstanceType<A> | AtomSelector,
+    paramsOrSelector?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
+    selector?: Selector<AtomStateType<A>>
+  ) {
+    // AtomSelectors are remembered across evaluations by reference.
+    // Other selectors are remembered by [atomInstance, fnRef] tuple.
+    if (typeof atomOrInstanceOrSelector === 'function') {
+      if (!this._nextCachedAtomSelectors) {
+        this._nextCachedAtomSelectors = new Map()
+      }
+
+      // look in the current run's cache first (in case we've already copied the
+      // old cache object over or already created one for this exact selector
+      // this run), then the previous run
+      let cache = this._nextCachedAtomSelectors.get(atomOrInstanceOrSelector)
+
+      if (cache) {
+        return cache.prevResult
+      }
+
+      cache = this._cachedAtomSelectors?.get(atomOrInstanceOrSelector)
+
+      // reuse the old cache object - no need to rerun the selector since the
+      // old cache object's prevResult ref is already updated if the selector
+      // result changed
+      if (cache) {
+        this._nextCachedAtomSelectors.set(atomOrInstanceOrSelector, cache)
+        return cache.prevResult
+      }
+
+      cache = {
+        prevDeps: { current: {} },
+        prevResult: { current: undefined },
+      }
+
+      this._nextCachedAtomSelectors.set(atomOrInstanceOrSelector, cache)
+
+      const cachedPrevResult = cache.prevResult.current
+      const result = runAtomSelector(
+        atomOrInstanceOrSelector,
+        this.ecosystem,
+        cache.prevDeps,
+        cache.prevResult,
+        reasons =>
+          this._scheduleEvaluation({
+            newState: cache?.prevResult.current, // runAtomSelector updates this ref before calling this callback
+            oldState: cachedPrevResult,
+            operation: SELECT_OPERATION,
+            reasons,
+            targetType: EvaluationTargetType.Injector,
+            type: EvaluationType.StateChanged,
+          }),
+        SELECT_OPERATION
+      )
+
+      cache.prevResult.current = result
+
+      return result
+    }
+
+    const params = Array.isArray(paramsOrSelector)
+      ? paramsOrSelector
+      : (([] as unknown) as AtomParamsType<A>)
+
+    const resolvedSelector =
+      typeof paramsOrSelector === 'function'
+        ? paramsOrSelector
+        : (selector as Selector<AtomStateType<A>>)
+
+    // TODO: check if the instance exists so we know if we create it here so we
+    // can destroy it if the evaluate call errors (to prevent that memory leak)
+    const instance =
+      atomOrInstanceOrSelector instanceof AtomInstanceBase
+        ? atomOrInstanceOrSelector
+        : this.ecosystem.getInstance(atomOrInstanceOrSelector, params)
+
+    // when called outside evaluation, instance._select() is just an alias for
+    // ecosystem.select()
+    if (!this._isEvaluating) return resolvedSelector(instance.store.getState())
+
+    // if we've already registered a dynamic edge, don't make it restricted
+    const existingEdge = this._nextGetKeyHashes?.[instance.keyHash]
+    if (existingEdge && existingEdge[0] === GraphEdgeDynamicity.Dynamic) {
+      return resolvedSelector(instance.store.getState())
+    }
+
+    // look in the current run's cache first (in case we've already copied the
+    // old cache object over or already created one for this exact selector
+    // this run), then the previous run
+    let cache = existingEdge?.[2]?.get(resolvedSelector)
+
+    if (cache) {
+      return cache.prevResult
+    }
+
+    // if select is called during evaluation, track the loaded instances so we
+    // can add graph dependencies for them
+    if (!this._nextGetKeyHashes) {
+      this._nextGetKeyHashes = {}
+    }
+
+    if (!this._nextGetKeyHashes[instance.keyHash]) {
+      // we could add more flags on this enum to indicate whether we created the
+      // instance in this call
+      this._nextGetKeyHashes[instance.keyHash] = [
+        GraphEdgeDynamicity.RestrictedDynamic,
+        'select',
+        new Map(),
+      ]
+    }
+
+    // reuse the old cache object - no need to rerun the selector since the old
+    // cache object's prevResult ref is already updated (via the shouldUpdate
+    // function below) if the selector result changed
+    cache = this._getKeyHashes?.[instance.keyHash]?.cache?.get(resolvedSelector)
+
+    if (!cache) {
+      const shouldUpdate = (state: AtomStateType<A>) => {
+        const newResult = resolvedSelector(state)
+
+        if (!cache || newResult === cache.prevResult) return newResult
+
+        cache.prevResult = newResult
+        return true
+      }
+
+      cache = {
+        prevResult: resolvedSelector(instance.store.getState()),
+        shouldUpdate,
+      }
+    }
+
+    this._nextGetKeyHashes[instance.keyHash][2]?.set(resolvedSelector, cache)
+
+    return cache.prevResult
   }
 
   // create small, memory-efficient bound function properties we can pass around
@@ -556,7 +752,6 @@ export class AtomInstance<
 
       Object.keys(next).forEach(dependencyKey => {
         const nextEdge = next[dependencyKey]
-        const isStatic = nextEdge[0] === GraphEdgeDynamicity.Static
         const existingEdge = curr?.[dependencyKey]
 
         if (existingEdge) {
@@ -568,8 +763,17 @@ export class AtomInstance<
           this.keyHash,
           dependencyKey,
           nextEdge[1],
-          isStatic
+          nextEdge[0] === GraphEdgeDynamicity.Static,
+          false,
+          nextEdge[0] === GraphEdgeDynamicity.RestrictedDynamic
+            ? state =>
+                [...(nextEdge[2]?.values() || [])].some(cache =>
+                  cache.shouldUpdate(state)
+                )
+            : undefined
         )
+
+        if (nextEdge[2]) edge.cache = nextEdge[2]
 
         nextGetKeyHashes[dependencyKey] = edge
       })

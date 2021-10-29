@@ -252,34 +252,37 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   public select<D>(atomSelector: AtomSelector<D>): D
 
   public select<A extends AtomBase<any, [...any], any>, D = any>(
-    atomOrInstance: A | AtomInstanceBase<any, any, any> | AtomSelector,
-    paramsArg?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
-    selectorArg?: Selector<AtomStateType<A>, D>
+    atomOrInstanceOrSelector:
+      | A
+      | AtomInstanceBase<any, any, any>
+      | AtomSelector,
+    paramsOrSelector?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
+    selector?: Selector<AtomStateType<A>, D>
   ) {
-    if (typeof atomOrInstance === 'function') {
-      return atomOrInstance({
+    if (typeof atomOrInstanceOrSelector === 'function') {
+      return atomOrInstanceOrSelector({
         ecosystem: this,
         get: this.get.bind(this),
         getInstance: this.getInstance.bind(this),
+        select: this.select.bind(this),
       })
     }
 
+    const params = Array.isArray(paramsOrSelector)
+      ? paramsOrSelector
+      : (([] as unknown) as AtomParamsType<A>)
+
+    const resolvedSelector =
+      typeof paramsOrSelector === 'function'
+        ? paramsOrSelector
+        : (selector as Selector<AtomStateType<A>, D>)
+
     const instance =
-      atomOrInstance instanceof AtomInstanceBase
-        ? atomOrInstance
-        : this.getInstance(
-            atomOrInstance,
-            Array.isArray(paramsArg)
-              ? paramsArg
-              : (([] as unknown) as AtomParamsType<A>)
-          )
+      atomOrInstanceOrSelector instanceof AtomInstanceBase
+        ? atomOrInstanceOrSelector
+        : this.getInstance(atomOrInstanceOrSelector, params)
 
-    const selector =
-      typeof paramsArg === 'function'
-        ? paramsArg
-        : (selectorArg as Selector<AtomStateType<A>, D>)
-
-    return selector(instance.store.getState())
+    return resolvedSelector(instance.store.getState())
   }
 
   public setOverrides(newOverrides: AtomBase<any, any, any>[]) {

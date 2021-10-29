@@ -5,20 +5,22 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/0459ebf8444c36752eac/maintainability)](https://codeclimate.com/github/bowheart/zedux/maintainability)
 [![npm](https://img.shields.io/npm/v/zedux.svg)](https://www.npmjs.com/package/zedux)
 
-Overpowered State Management for JavaScript.
+Elite State Management for JavaScript.
 
 ## Feature list of awesomeness
 
 - Composable stores
-- Built-in side effects model
+- Atomic architecture
 - Zero configuration
+- State machines
+- Cache management
+- Built-in side effects model
 - Reducer-driven state updates
 - Action creator utilities
 - Reducer creation utility
-- State machines
 - Action streams
 - Code splitting
-- Memoized selectors
+- Memoization
 
 ## Installation
 
@@ -197,7 +199,7 @@ import { createStore } from 'zedux'
 
 const childStore = creatStore().hydrate('child state!')
 const parentStore = createStore({
-  child: childStore
+  child: childStore,
 })
 
 parentStore.getState()

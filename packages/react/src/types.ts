@@ -17,6 +17,9 @@ export enum ActiveState {
 }
 
 export type AnyAtom = StandardAtomBase<any, any, any>
+export type AnyAtomBase = AtomBase<any, any, any>
+export type AnyAtomInstance = AtomInstance<any, any, any>
+export type AnyAtomInstanceBase = AtomInstanceBase<any, any, any>
 
 export type AsyncEffectCallback<T = any> = (
   cleanup: (destructor: Destructor) => void
@@ -59,6 +62,7 @@ export interface AtomGetters {
   ecosystem: Ecosystem
   get: Ecosystem['get']
   getInstance: Ecosystem['getInstance']
+  select: Ecosystem['select']
 }
 
 export type AtomInstanceAtomType<
@@ -78,7 +82,7 @@ export type AtomInstanceStateType<
 > = AtomInstanceType extends AtomInstanceBase<infer T, any, any> ? T : never
 
 export type AtomInstanceType<
-  AtomType extends AtomBase<any, any, any>
+  AtomType extends AtomBase<any, any, AtomInstanceBase<any, any, any>>
 > = AtomType extends AtomBase<any, any, infer T> ? T : never
 
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
@@ -87,7 +91,7 @@ export type AtomParamsType<
   AtomType extends AtomBase<any, any, any>
 > = AtomType extends AtomBase<any, infer T, any> ? T : never
 
-export type AtomSelector<T = any> = (utils: AtomGetters) => T
+export type AtomSelector<T = any> = (getters: AtomGetters) => T
 
 export interface AtomSetters<
   State,
@@ -164,7 +168,7 @@ export type IonGet<
   Params extends any[],
   Exports extends Record<string, any>
 > = (
-  utils: AtomGetters,
+  getters: AtomGetters,
   ...params: Params
 ) => AtomValue<State> | AtomApi<State, Exports>
 
@@ -173,7 +177,7 @@ export type IonSet<
   Params extends any[],
   Exports extends Record<string, any>
 > = (
-  utils: AtomSetters<State, Params, Exports>,
+  setters: AtomSetters<State, Params, Exports>,
   settable: Settable<State>
 ) => State | void
 
@@ -340,6 +344,8 @@ export enum PromiseStatus {
   Resolved,
   Rejected,
 }
+
+export type Ref<T = any> = MutableRefObject<T>
 
 export interface RefObject<T = any> {
   readonly current: T | null

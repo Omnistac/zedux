@@ -9,14 +9,12 @@ import { LiveEditor } from '../../LiveEditor'
 import { injectWhy } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that tells you why an atom instance reevaluated. This injector is ignored on the first evaluation.
-
-A function passed to `injectWhy` will be called with the full list of [EvaluationReasons](../types/EvaluationReason). `injectWhy` will also return this list.
+An [injector](../glossary#injector) that tells you why an atom instance reevaluated. This injector is ignored on the first evaluation - it returns an empty array. On subsequent evaluations, this injector returns the full list of [EvaluationReasons](../types/EvaluationReason) detailing why this atom reevaluated.
 
 These reasons can be nested indefinitely. They can tell you abut a store state change many atoms deep in the dependency tree of this atom instance.
 
 :::important
-We will _probably_ only make `injectWhy` usable in dev builds, as tracking evaluation reasons has some overhead. In prod, it will be a no-op that always returns an empty array.
+We will _maybe_ only make `injectWhy` usable in dev builds, as tracking evaluation reasons has some overhead. In prod, it will be a no-op that always returns an empty array.
 
 This change is not definite. We need to actually calculate the overhead and determine if the utility `injectWhy` provides may be needed in prod.
 

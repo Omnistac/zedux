@@ -2,14 +2,13 @@ import { atom, useAtomSelector, useAtomState, AtomGetters } from '@zedux/react'
 import React from 'react'
 
 const atomA = atom('a', () => ({ num: 1, otherNum: 11 }))
-const atomB = atom('b', () => ({ num: 2 }))
+const atomB = atom('b', () => ({ num: 2, otherNum: 22 }))
 
-const selector = ({ get, getInstance }: AtomGetters) => {
-  const result = (get(atomA).num + get(atomB).num) / 2
+const selector = ({ select }: AtomGetters) => {
+  const result =
+    (select(atomA, val => val.num) + select(({ get }) => get(atomB).otherNum)) /
+    2
   console.log('running selector...', result)
-
-  // this getInstance shouldn't ruin the above get's dynamicity
-  getInstance(atomA)
 
   return Math.floor(result)
 }
@@ -35,7 +34,7 @@ function Controls() {
           setA(val => ({ num: val.num + 1, otherNum: val.otherNum }))
         }
       >
-        Increment
+        Increment Num
       </button>
       <button
         onClick={() =>

@@ -1,5 +1,5 @@
 import { AsyncStore, MutableRefObject, RefObject } from '@zedux/react/types'
-import { ActionChain, Store, Subscription } from '@zedux/core'
+import { ActionChain, Selector, Store, Subscription } from '@zedux/core'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 
 export interface AsyncEffectInjectorDescriptor<T>
@@ -39,14 +39,27 @@ export interface CallStackContextInstance<T = any> {
   value: T
 }
 
+export interface Dep<T = any> {
+  cleanup?: () => void
+  instance: AtomInstanceBase<T, any, any>
+  dynamicity: GraphEdgeDynamicity
+  memoizedVal?: any
+  shouldUpdate?: (newState: T) => boolean
+}
+
 export interface DependentEdge {
-  callback?: (signal: GraphEdgeSignal, val?: any) => any
-  task?: () => void
+  cache?: SelectorCache // selectors cache some data on this edge object
+  callback?: (
+    signal: GraphEdgeSignal,
+    val?: any,
+    reasons?: EvaluationReason[]
+  ) => any
   isAsync?: boolean
   isExternal?: boolean
   isStatic?: boolean
   operation: string
   shouldUpdate?: (state: any) => boolean
+  task?: () => void
 }
 
 export interface DepsInjectorDescriptor extends InjectorDescriptor {
@@ -107,11 +120,16 @@ export interface EvaluateAtomJob extends JobBase {
 }
 
 export enum GraphEdgeDynamicity {
-  Dynamic = 1,
-  Static = 2,
+  Static = 1,
+  RestrictedDynamic = 2, // for selectors
+  Dynamic = 3,
 }
 
-export type GraphEdgeInfo = [GraphEdgeDynamicity, string]
+export type GraphEdgeInfo = [
+  GraphEdgeDynamicity,
+  string,
+  SelectorCache? // used for selectors (RestrictedDynamic edges)
+]
 
 export enum GraphEdgeSignal {
   Destroyed = 'Destroyed',
@@ -164,6 +182,11 @@ export interface RefInjectorDescriptor<T = any> extends InjectorDescriptor {
 export interface RunEffectJob extends JobBase {
   type: JobType.RunEffect
 }
+
+export type SelectorCache = Map<
+  Selector,
+  { prevResult: any; shouldUpdate: (state: any) => boolean }
+>
 
 export interface SelectorInjectorDescriptor<State = any, D = any>
   extends InjectorDescriptor {

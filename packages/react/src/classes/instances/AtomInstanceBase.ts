@@ -3,6 +3,7 @@ import {
   AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
+  AtomSelector,
   AtomStateType,
 } from '@zedux/react/types'
 import {
@@ -12,7 +13,7 @@ import {
 } from '@zedux/react/utils'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
-import { Store } from '@zedux/core'
+import { Selector, Store } from '@zedux/core'
 
 export abstract class AtomInstanceBase<
   State,
@@ -32,6 +33,7 @@ export abstract class AtomInstanceBase<
   public abstract _get<A extends AtomBase<any, [], any>>(
     atom: A
   ): AtomStateType<A>
+
   public abstract _get<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
@@ -61,4 +63,22 @@ export abstract class AtomInstanceBase<
     reason: EvaluationReason,
     flagScore?: number
   ): void
+
+  public abstract _select<A extends AtomBase<any, [], any>, D>(
+    atom: A,
+    selector: Selector<AtomStateType<A>, D>
+  ): AtomStateType<A>
+
+  public abstract _select<A extends AtomBase<any, [...any], any>, D>(
+    atom: A,
+    params: AtomParamsType<A>,
+    selector: Selector<AtomStateType<A>, D>
+  ): AtomStateType<A>
+
+  public abstract _select<I extends AtomInstanceBase<any, [...any], any>, D>(
+    instance: I,
+    selector: Selector<AtomInstanceStateType<I>, D>
+  ): AtomInstanceStateType<I>
+
+  public abstract _select<T>(atomSelector: AtomSelector<T>): T
 }

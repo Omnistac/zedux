@@ -7,6 +7,7 @@ import {
   injectGet,
   injectGetInstance,
 } from '@zedux/react/injectors'
+import { injectSelect } from '@zedux/react/injectors/injectSelect'
 import { AtomConfig, IonGet, IonSet, AtomSetters } from '@zedux/react/types'
 import { diContext } from '@zedux/react/utils/csContexts'
 import { AtomInstance } from '../AtomInstance'
@@ -29,8 +30,12 @@ export class Ion<
       const ecosystem = injectEcosystem()
       const innerGet = injectGet()
       const getInstance = injectGetInstance()
+      const select = injectSelect()
       const { instance } = diContext.consume()
-      const val = get({ ecosystem, get: innerGet, getInstance }, ...params)
+      const val = get(
+        { ecosystem, get: innerGet, getInstance, select },
+        ...params
+      )
 
       const ionApi = api(val)
 

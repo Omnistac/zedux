@@ -6,10 +6,22 @@ import {
   AtomStateType,
 } from '../types'
 import { injectAtomInstance } from './injectAtomInstance'
-import { InjectorType, SelectorInjectorDescriptor, split } from '../utils'
+import {
+  Dep,
+  EvaluationTargetType,
+  EvaluationType,
+  InjectorType,
+  SelectorInjectorDescriptor,
+  split,
+} from '../utils'
 import { injectEcosystem } from './injectEcosystem'
 import { Atom, AtomInstance, AtomInstanceBase } from '../classes'
 import { diContext } from '../utils/csContexts'
+import { runAtomSelector } from '../utils/runAtomSelector'
+import { injectEffect } from './injectEffect'
+import { injectRef } from './injectRef'
+
+const OPERATION = 'injectAtomSelector'
 
 const injectAtomInstanceSelector = <
   AI extends AtomInstanceBase<any, any, any>,
@@ -105,12 +117,45 @@ const injectAtomInstanceSelector = <
 
 const injectStandaloneSelector = <T>(selector: AtomSelector<T>) => {
   const { instance } = diContext.consume()
+  const prevDeps = injectRef<Record<string, Dep>>({})
+  const prevResult = injectRef<T>()
+  const selectorRef = injectRef<typeof selector>() // don't populate initially
 
-  return selector({
-    ecosystem: instance.ecosystem,
-    get: instance._get.bind(instance),
-    getInstance: instance._getInstance.bind(instance),
-  })
+  const cachedPrevResult = prevResult.current
+  const result =
+    selector === selectorRef.current
+      ? prevResult.current
+      : runAtomSelector(
+          selector,
+          instance.ecosystem,
+          prevDeps,
+          prevResult,
+          reasons =>
+            instance._scheduleEvaluation({
+              newState: prevResult.current, // runAtomSelector updates this ref before calling this callback
+              oldState: cachedPrevResult,
+              operation: OPERATION,
+              reasons,
+              targetType: EvaluationTargetType.Injector,
+              type: EvaluationType.StateChanged,
+            }),
+          OPERATION
+        )
+
+  prevResult.current = result
+  selectorRef.current = selector
+
+  // Final cleanup on unmount
+  injectEffect(
+    () => () => {
+      Object.values(prevDeps.current).forEach(dep => {
+        dep.cleanup?.()
+      })
+    },
+    []
+  )
+
+  return result
 }
 
 export const injectAtomSelector: {

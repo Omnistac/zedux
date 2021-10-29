@@ -12,6 +12,14 @@ import { Ecosystem } from './Ecosystem'
 import { AtomInstance } from './AtomInstance'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 
+/**
+ * The flag score determines job priority in the scheduler. Scores range from
+ * 0-7. Lower score = higher prio. Examples:
+ *
+ * 0 = synchronous-internal-dynamic
+ * 3 = asynchronous-external-dynamic
+ * 7 = asynchronous-external-static
+ */
 const getFlagScore = (dependentEdge: DependentEdge) => {
   let score = 0
 
@@ -34,10 +42,15 @@ export class Graph {
     operation: string,
     isStatic: boolean,
     isAsync = false,
-    shouldUpdate?: (state: State) => boolean
+    shouldUpdate?: (state: State) => boolean // used for selectors
   ) {
     const dependency = this.nodes[dependencyKey]
-    const newEdge = { isAsync, isStatic, operation, shouldUpdate }
+    const newEdge: DependentEdge = {
+      isAsync,
+      isStatic,
+      operation,
+      shouldUpdate,
+    }
 
     this.nodes[dependentKey].dependencies[dependencyKey] = true
 
@@ -68,7 +81,7 @@ export class Graph {
 
   public registerExternalDependent<State>(
     dependency: AtomInstanceBase<State, any[], any>,
-    callback: (signal: GraphEdgeSignal, newState: State) => any,
+    callback: DependentEdge['callback'],
     operation: string,
     isStatic: boolean,
     isAsync = false
@@ -242,7 +255,8 @@ export class Graph {
             dependentEdge.task = undefined
             dependentEdge.callback?.(
               GraphEdgeSignal.Updated,
-              instance.store.getState() // don't use the snapshotted newState above
+              instance.store.getState(), // don't use the snapshotted newState above
+              reasons
             )
           }
 
