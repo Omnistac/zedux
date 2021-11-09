@@ -16,21 +16,24 @@ export class LocalAtom<
     super(key, value, { ttl: 0, ...config })
   }
 
-  public getKeyHash(params: Params) {
+  public getKeyHash(params?: Params) {
     // If a string is passed as the first param, it's the id of the local atom.
     // An existing hash can be recreated.
-    if (typeof params[0] === 'string') return super.getKeyHash(params)
+    if (params && typeof params[0] === 'string') return super.getKeyHash(params)
 
     // Otherwise, every time a local atom is got, we create a new hash.
     return super.getKeyHash(([
       generateLocalId(),
-      ...params.slice(1),
+      ...(params || []).slice(1),
     ] as unknown) as Params)
   }
 
   public override(newValue: AtomValueOrFactory<State, Params, Exports>) {
     return localAtom(this.key, newValue, {
       flags: this.flags,
+      forwardPromises: this.forwardPromises,
+      maxInstances: this.maxInstances,
+      ttl: this.ttl,
     })
   }
 }

@@ -73,7 +73,7 @@ export interface DiContext {
 
 export interface EcosystemGraphNode {
   dependencies: Record<string, true>
-  dependents: Record<string, DependentEdge[]>
+  dependents: Record<string, DependentEdge>
   weight: number
 }
 

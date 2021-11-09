@@ -1,13 +1,12 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import Layout from '@theme/Layout'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
-import useBaseUrl from '@docusaurus/useBaseUrl'
 import { Features, FeatureImage } from '../css/index.styles'
 import { Header } from '../components/Header'
 
 const features = [
   {
-    title: <>Easy to Use!!</>,
+    title: 'Easy to Use!!',
     imageUrl: 'img/undraw_docusaurus_mountain.svg',
     description: (
       <>
@@ -17,7 +16,7 @@ const features = [
     ),
   },
   {
-    title: <>Focus on What Matters</>,
+    title: 'Focus on What Matters',
     imageUrl: 'img/undraw_docusaurus_tree.svg',
     description: (
       <>
@@ -27,7 +26,7 @@ const features = [
     ),
   },
   {
-    title: <>Powered by React</>,
+    title: 'Powered by React',
     imageUrl: 'img/undraw_docusaurus_react.svg',
     description: (
       <>
@@ -38,8 +37,18 @@ const features = [
   },
 ].filter(() => false)
 
-function Feature({ imageUrl, title, description }) {
-  const imgUrl = useBaseUrl(imageUrl)
+function Feature({
+  imageUrl,
+  title,
+  description,
+}: {
+  imageUrl: string
+  title: string
+  description: ReactElement
+}) {
+  const { baseUrl } = useDocusaurusContext().siteConfig
+  const imgUrl = `${baseUrl}${imageUrl}`
+
   return (
     <div className="col col--4">
       {imgUrl && (
@@ -55,7 +64,6 @@ function Feature({ imageUrl, title, description }) {
 
 function Home() {
   const { siteConfig } = useDocusaurusContext()
-  const textureUrl = useBaseUrl('img/bg-texture.png')
 
   return (
     <Layout

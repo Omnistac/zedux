@@ -1,9 +1,8 @@
 import { useLayoutEffect, useState } from 'react'
 import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
 import { AtomInstanceType, AtomParamsType, PromiseStatus } from '../types'
-import { GraphEdgeSignal, resolveInstance } from '../utils'
+import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
-import { useStableReference } from './useStableReference'
 
 /**
  * useAtomInstance
@@ -16,9 +15,9 @@ import { useStableReference } from './useStableReference'
  * components that use this hook will not rerender when this atom instance's
  * state changes.
  *
- * Pass false as the 3rd param to prevent this graph dependency from being
- * registered. Useful when you need to control the graph dependency manually.
- * `useAtomSelector` does this internally.
+ * If the params are large, serializing them every render can cause some
+ * overhead. This can be alleviated by memoizing the params array yourself
+ * before passing it to useAtomInstance
  *
  * @param atom The atom to instantiate or reuse an instantiation of
  * @param params The params for generating the instance's key.
@@ -37,10 +36,11 @@ export const useAtomInstance: {
   params?: AtomParamsType<A>
 ) => {
   const ecosystem = useEcosystem()
-  const stableParams = useStableReference(params)
-  const [instance, setInstance] = useState<any>(() =>
-    resolveInstance(ecosystem, atom, stableParams)
-  )
+  const [, forceRender] = useState<any>()
+
+  // it should be fine for this to run every render. It's possible to change
+  // approaches if it is too heavy sometimes. But don't memoize this call:
+  const instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
 
   // Suspense!
   if (instance.promise) {
@@ -52,21 +52,17 @@ export const useAtomInstance: {
   }
 
   useLayoutEffect(() => {
-    const currentInstance = resolveInstance(ecosystem, atom, stableParams)
-
-    if (currentInstance !== instance) setInstance(currentInstance)
-
     return ecosystem._graph.registerExternalDependent(
-      currentInstance,
+      instance,
       signal => {
         if (signal === GraphEdgeSignal.Destroyed) {
-          setInstance(resolveInstance(ecosystem, atom, stableParams))
+          forceRender({})
         }
       },
       'useAtomInstance',
       true
     )
-  }, [atom, ecosystem, stableParams]) // not instance
+  }, [ecosystem, instance]) // not storedInstance
 
   return instance
 }

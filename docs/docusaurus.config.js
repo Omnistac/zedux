@@ -1,23 +1,47 @@
 const { resolve } = require('path')
 
+// @ts-check
+
+/** @type {import('@docusaurus/types').PluginModule} */
+const PathsPlugin = (context, options) => {
+  return {
+    name: 'zedux-paths-plugin',
+    configureWebpack: (config, isServer, utls) => {
+      return {
+        resolve: {
+          alias: {
+            '@zedux/core': resolve('../packages/core/src'),
+            '@zedux/react': resolve('../packages/react/src'),
+            react: resolve('node_modules/react'),
+            'react-dom': resolve('node_modules/react-dom'),
+          },
+        },
+      }
+    },
+  }
+}
+
+/** @type {import('@docusaurus/types').Config} */
 module.exports = {
   title: 'Zedux',
   tagline: 'Elite State Management for React',
-  url: 'https://Omnistac.github.io',
+  url: 'https://omnistac.github.io',
   baseUrl: '/zedux/',
   favicon: 'img/favicon.ico',
   organizationName: 'Omnistac',
   projectName: 'zedux',
+  deploymentBranch: 'gh-pages',
   stylesheets: [
     'https://fonts.googleapis.com/css2?family=Quicksand&display=swap',
   ],
   scripts: ['https://unpkg.com/typescript@latest/lib/typescriptServices.js'],
+  /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
   themeConfig: {
     navbar: {
       title: 'Zedux',
       logo: {
         alt: 'Zedux Logo',
-        src: 'img/logo.png',
+        src: '../img/logo.png',
       },
       items: [
         {
@@ -71,7 +95,7 @@ module.exports = {
       copyright: `Copyright © 2017-${new Date().getFullYear()} Joshua Claunch. Built with Docusaurus.`,
     },
   },
-  plugins: [resolve('./docusaurus.plugin')],
+  plugins: [PathsPlugin],
   presets: [
     [
       '@docusaurus/preset-classic',

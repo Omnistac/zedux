@@ -52,13 +52,9 @@ export class Graph {
       shouldUpdate,
     }
 
+    // draw graph edge between dependent and dependency
     this.nodes[dependentKey].dependencies[dependencyKey] = true
-
-    if (dependency.dependents[dependentKey]) {
-      dependency.dependents[dependentKey].push(newEdge)
-    } else {
-      dependency.dependents[dependentKey] = [newEdge]
-    }
+    dependency.dependents[dependentKey] = newEdge
 
     this.unscheduleDestruction(dependencyKey)
 
@@ -84,7 +80,8 @@ export class Graph {
     callback: DependentEdge['callback'],
     operation: string,
     isStatic: boolean,
-    isAsync = false
+    isAsync = false,
+    id = generateNodeId()
   ) {
     const nodeKey = dependency.keyHash
     const node = this.nodes[nodeKey]
@@ -98,7 +95,6 @@ export class Graph {
 
     // would be nice if React provided a way to know that multiple hooks were
     // part of the same component
-    const id = generateNodeId()
     const newEdge: DependentEdge = {
       callback,
       isAsync,
@@ -107,7 +103,7 @@ export class Graph {
       operation,
     }
 
-    node.dependents[id] = [newEdge]
+    node.dependents[id] = newEdge
 
     this.unscheduleDestruction(nodeKey)
 
@@ -116,45 +112,43 @@ export class Graph {
         this.ecosystem._scheduler.unscheduleJob(newEdge.task)
       }
 
-      // this is fine; external dependents can't register multiple edges on the
-      // same dependent id:
       delete node.dependents[id]
       this.scheduleInstanceDestruction(dependency.keyHash)
     }
   }
 
+  public removeDependencies(dependentKey: string) {
+    const edges = this.nodes[dependentKey].dependencies
+
+    if (!edges) return
+
+    Object.keys(edges).forEach(dependencyKey => {
+      this.removeDependency(dependentKey, dependencyKey)
+    })
+  }
+
   // Should only be used internally
-  public removeDependency(
-    dependentKey: string,
-    dependencyKey: string,
-    dependentEdge: DependentEdge
-  ) {
+  public removeDependency(dependentKey: string, dependencyKey: string) {
     const dependency = this.nodes[dependencyKey]
-    const dependentEdges = dependency?.dependents[dependentKey]
 
-    // if this edge has multiple dependent edges, unregister one of them
-    if (dependentEdges?.length > 1) {
-      const index = dependentEdges.indexOf(dependentEdge)
-
-      // shouldn't happen:
-      if (index !== -1) {
-        dependentEdges.splice(index, 1)
-      }
-
-      return
-    }
-
+    // erase graph edge between dependent and dependency
     delete this.nodes[dependentKey].dependencies[dependencyKey]
 
-    if (!dependency) return // dependency has already been cleaned up; nothing more to do
+    // TODO: This check should be completely unnecessary. Why would the
+    // dependent still have an edge to this dependency if this dependency has
+    // been cleaned up? Kill this check with amazing tests.
+    if (!dependency) return
 
-    // since this was the last dependentEdge on this edge, delete the array
+    const dependentEdge = dependency.dependents[dependentKey]
     delete dependency.dependents[dependentKey]
 
     // static dependencies don't change a node's weight
     if (!dependentEdge.isStatic) {
       this.recalculateWeight(dependentKey, -dependency.weight)
     }
+
+    // TODO: is there a way to clean up any currently-scheduled jobs created by
+    // this edge?
 
     this.scheduleInstanceDestruction(dependencyKey)
   }
@@ -165,43 +159,40 @@ export class Graph {
 
     if (!node) return // already removed
 
-    // We don't need to remove this dependent from its dependencies here - each
-    // dependency will have handled itself when its injector was cleaned up,
-    // which happens before this function is called as part of the instance
-    // destruction process
+    // We don't need to remove this dependent from its dependencies here - the
+    // atom instance will have removed all its deps before calling this function
+    // as part of the instance destruction process
 
     // Remove this dependency from all its dependents and recalculate all weights recursively
     Object.keys(node.dependents).forEach(dependentKey => {
-      const dependentEdges = node.dependents[dependentKey]
-      dependentEdges.forEach(dependentEdge => {
-        const flagScore = getFlagScore(dependentEdge)
+      const dependentEdge = node.dependents[dependentKey]
+      const flagScore = getFlagScore(dependentEdge)
 
-        if (dependentEdge.isExternal) {
-          this.ecosystem._scheduler.scheduleJob({
-            flagScore,
-            task: () => dependentEdge.callback?.(GraphEdgeSignal.Destroyed),
-            type: JobType.UpdateExternalDependent,
-          })
+      if (dependentEdge.isExternal) {
+        this.ecosystem._scheduler.scheduleJob({
+          flagScore,
+          task: () => dependentEdge.callback?.(GraphEdgeSignal.Destroyed),
+          type: JobType.UpdateExternalDependent,
+        })
 
-          return
-        }
+        return
+      }
 
-        if (!dependentEdge.isStatic) {
-          this.recalculateWeight(dependentKey, -node.weight)
-        }
+      if (!dependentEdge.isStatic) {
+        this.recalculateWeight(dependentKey, -node.weight)
+      }
 
-        delete this.nodes[dependentKey].dependencies[nodeKey]
+      delete this.nodes[dependentKey].dependencies[nodeKey]
 
-        this.ecosystem._instances[dependentKey]._scheduleEvaluation(
-          {
-            operation: dependentEdge.operation,
-            targetKey: nodeKey,
-            targetType: EvaluationTargetType.Atom,
-            type: EvaluationType.InstanceDestroyed,
-          },
-          flagScore
-        )
-      })
+      this.ecosystem._instances[dependentKey]._scheduleEvaluation(
+        {
+          operation: dependentEdge.operation,
+          targetKey: nodeKey,
+          targetType: EvaluationTargetType.Atom,
+          type: EvaluationType.InstanceDestroyed,
+        },
+        flagScore
+      )
     })
 
     delete this.nodes[nodeKey]
@@ -218,59 +209,55 @@ export class Graph {
     const instance = this.ecosystem._instances[nodeKey]
     const node = this.nodes[nodeKey]
 
-    Object.entries(node.dependents).forEach(
-      ([dependentKey, dependentEdges]) => {
-        dependentEdges.forEach(dependentEdge => {
-          // static deps don't update and if edge.task exists, this edge has
-          // already been scheduled
-          if (dependentEdge.isStatic || dependentEdge.task) return
+    Object.entries(node.dependents).forEach(([dependentKey, dependentEdge]) => {
+      // static deps don't update and if edge.task exists, this edge has
+      // already been scheduled
+      if (dependentEdge.isStatic || dependentEdge.task) return
 
-          const flagScore = getFlagScore(dependentEdge)
+      const flagScore = getFlagScore(dependentEdge)
 
-          // let internal dependents (other atoms) schedule themselves
-          if (!dependentEdge.isExternal) {
-            if (
-              dependentEdge.shouldUpdate &&
-              !dependentEdge.shouldUpdate(newState)
-            ) {
-              return
-            }
+      // let internal dependents (other atoms) schedule their own jobs
+      if (!dependentEdge.isExternal) {
+        if (
+          dependentEdge.shouldUpdate &&
+          !dependentEdge.shouldUpdate(newState)
+        ) {
+          return
+        }
 
-            return this.ecosystem._instances[dependentKey]._scheduleEvaluation(
-              {
-                newState,
-                oldState,
-                operation: dependentEdge.operation,
-                reasons,
-                targetKey: nodeKey,
-                targetType: EvaluationTargetType.Atom,
-                type: EvaluationType.StateChanged,
-              },
-              flagScore
-            )
-          }
-
-          // schedule external dependents
-          const task = () => {
-            dependentEdge.task = undefined
-            dependentEdge.callback?.(
-              GraphEdgeSignal.Updated,
-              instance.store.getState(), // don't use the snapshotted newState above
-              reasons
-            )
-          }
-
-          this.ecosystem._scheduler.scheduleJob({
-            flagScore,
-            task,
-            type: JobType.UpdateExternalDependent,
-          })
-
-          // mutate the edge; give it the scheduled task so it can be cleaned up
-          dependentEdge.task = task
-        })
+        return this.ecosystem._instances[dependentKey]._scheduleEvaluation(
+          {
+            newState,
+            oldState,
+            operation: dependentEdge.operation,
+            reasons,
+            targetKey: nodeKey,
+            targetType: EvaluationTargetType.Atom,
+            type: EvaluationType.StateChanged,
+          },
+          flagScore
+        )
       }
-    )
+
+      // schedule external dependents
+      const task = () => {
+        dependentEdge.task = undefined
+        dependentEdge.callback?.(
+          GraphEdgeSignal.Updated,
+          instance.store.getState(), // don't use the snapshotted newState above
+          reasons
+        )
+      }
+
+      this.ecosystem._scheduler.scheduleJob({
+        flagScore,
+        task,
+        type: JobType.UpdateExternalDependent,
+      })
+
+      // mutate the edge; give it the scheduled task so it can be cleaned up
+      dependentEdge.task = task
+    })
   }
 
   private recalculateWeight(nodeKey: string, weightDiff: number) {

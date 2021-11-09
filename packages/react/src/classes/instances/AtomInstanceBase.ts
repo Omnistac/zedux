@@ -68,18 +68,18 @@ export abstract class AtomInstanceBase<
   public abstract _select<A extends AtomBase<any, [], any>, D>(
     atom: A,
     selector: Selector<AtomStateType<A>, D>
-  ): AtomStateType<A>
+  ): D
 
   public abstract _select<A extends AtomBase<any, [...any], any>, D>(
     atom: A,
     params: AtomParamsType<A>,
     selector: Selector<AtomStateType<A>, D>
-  ): AtomStateType<A>
+  ): D
 
   public abstract _select<I extends AtomInstanceBase<any, [...any], any>, D>(
     instance: I,
     selector: Selector<AtomInstanceStateType<I>, D>
-  ): AtomInstanceStateType<I>
+  ): D
 
   public abstract _select<T>(atomSelector: AtomSelector<T>): T
 }

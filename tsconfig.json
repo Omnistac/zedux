@@ -16,6 +16,7 @@
     "noImplicitAny": true,
     "outDir": "./dist",
     "paths": {
+      "@test/*": ["test/*"],
       "@zedux/core": ["./packages/core/src"],
       "@zedux/core/*": ["./packages/core/src/*"],
       "@zedux/core-test": ["./packages/core/test"],
@@ -23,8 +24,7 @@
       "@zedux/react": ["./packages/react/src"],
       "@zedux/react/*": ["./packages/react/src/*"],
       "@zedux/react-test": ["./packages/react/test"],
-      "@zedux/react-test/*": ["./packages/react/test/*"],
-      "@test/*": ["test/*"]
+      "@zedux/react-test/*": ["./packages/react/test/*"]
     },
     "resolveJsonModule": true,
     "sourceMap": true,

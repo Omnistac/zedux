@@ -145,13 +145,48 @@ function Apps() {
 }
 `}</LiveEditor>
 
+## Using the Ecosystem
+
+The ecosystem object itself has many useful methods. You can use these to inspect the dependency graph, get the current state of all atoms, set atom overrides, and a lot more. We'll cover most of these as we go through the rest of the walkthrough. See the [Ecosystem class API doc](../api/classes/Ecosystem) for all the goodness.
+
+### Getting It
+
+Every component below an `<EcosystemProvider>` in the tree can access the ecosystem via [`useEcosystem()`](../api/hooks/useEcosystem).
+
+```tsx
+import { EcosystemProvider, useEcosystem } from '@zedux/react'
+
+function Child() {
+  const ecosystem = useEcosystem()
+}
+
+function App() {
+  return (
+    <EcosystemProvider id="main">
+      <Child />
+    </EcosystemProvider>
+  )
+}
+```
+
+All atom instances created in an ecosystem can access the ecosystem via [`injectEcosystem()`](../api/injectors/injectEcosystem).
+
+```ts
+import { atom, injectEcosystem } from '@zedux/react'
+
+const myAtom = atom('my', () => {
+  const ecosystem = injectEcosystem()
+})
+```
+
 ## Recap
 
 - All atoms live in atom ecosystems.
 - Atom instances can only be reused in the ecosystem they were created in.
-- There are global and custom ecosystems.
+- There is a default ("global") ecosystem, but you can create your own.
 - Most apps will use the "Single Ecosystem Approach" - rendering a single `<EcosystemProvider>`.
-- Ecosystems can be configured with various options passed to the `ecosystem()` factory.
+- Ecosystems can be configured with various options passed to the `ecosystem()` factory or as props to `<EcosystemProvider>`.
+- The current ecosystem can be retrieved with `useEcosystem()` in components and `injectEcosystem()` in atoms.
 
 ## Next Steps
 

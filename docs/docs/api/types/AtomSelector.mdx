@@ -1,0 +1,127 @@
+---
+id: AtomSelector
+title: AtomSelector
+---
+
+A function that receives an [AtomGetters](AtomGetters) object as its first parameter. It can take any number of other parameters and can return anything. It can use the AtomGetters to get atom values and run other AtomSelectors.
+
+This is the most basic tool for deriving state in Zedux. The [selectors walkthrough](../../walkthrough/selectors) teaches the basics of AtomSelectors. This page will only cover a few things the walkthrough doesn't.
+
+AtomSelectors define a blueprint for pulling data from atoms. Similar to [reselect selectors](https://github.com/reduxjs/reselect#api), they don't do anything until someone calls them. You "call" them by passing them to various functions:
+
+- [`useAtomSelector()`](../hooks/useAtomSelector)
+- [`injectAtomSelector()`](../injectors/injectAtomSelector)
+- [`ecosystem.select()`](../classes/Ecosystem#select)
+- The `select` function of other AtomSelectors (composition!)
+
+You can also call them directly, passing an AtomGetters object, but you shouldn't need to.
+
+:::tip
+Use AtomSelectors for:
+
+- Dynamically registering graph edges in components
+- Getting part of an atom instance's state
+- Simple calculations that don't need memoization
+
+:::
+
+## Definition
+
+```ts
+type AtomSelector<T = any> = (getters: AtomGetters, ...args: any[]) => T
+```
+
+## Examples
+
+AtomSelectors are extremely flexible. They can be used and composed in many ways.
+
+```ts
+// basic derivation
+const finishedTodos = ({ get }) => get(todosAtom).filter(todo => todo.isDone)
+const uninishedTodos = ({ get }) => get(todosAtom).filter(todo => !todo.isDone)
+
+// composition using select()
+const separatedTodos = ({ select }) => {
+  const finished = select(finishedTodos)
+  const unfinished = select(unfinishedTodos)
+
+  return { finished, unfinished }
+}
+
+// passing params
+const getTodos = ({ select }, isDone) => {
+  const todos = select(isDone ? finishedTodos : unfinishedTodos)
+}
+
+const separatedTodos = getters => {
+  const finished = getTodos(getters, true)
+  const unfinished = getTodos(getters, false)
+
+  return { finished, unfinished }
+}
+
+// in useAtomSelector()
+const todos = useAtomSelector(finishedTodos)
+
+// in injectAtomSelector()
+const todos = injectAtomSelector(finishedTodos)
+
+// in ecosystem.select()
+const todos = ecosystem.select(finishedTodos)
+
+// directly in ion body (not recommended)
+const exampleIon = ion('example', getters => {
+  const todos = finishedTodos(getters)
+})
+```
+
+## When Not to Use
+
+AtomSelectors aren't atoms. As such, you can't use [injectors](../glossary#injector) in them. [Ions](../classes/Ion) (or other atoms) should be preferred when you need:
+
+- To memoize anything - use an atom with [`injectMemo()`](../injectors/injectMemo)
+- To create and update a new store - use an atom with [`injectStore()`](../injectors/injectStore)
+- To run side effects based on state updates - use an atom with [`injectEffect()`](../injectors/injectEffect)
+
+### Converting AtomSelectors
+
+AtomSelectors are simple and have little overhead, hence it's usually desirable to try an AtomSelector first for most tasks. However, sometimes you'll find out later that an AtomSelector needs functionality only atoms have.
+
+Since AtomSelectors are so similar to ions, it's easy to convert an AtomSelector to an ion or a hook or injector.
+
+```ts
+// before:
+const getSortedList = ({ get }: AtomGetters) => [...get(listAtom)].sort()
+
+// after (as ion):
+const sortedList = ion('sortedList', ({ get }) => {
+  const list = get(listAtom)
+  return injectMemo(() => [...list].sort(), [list]) // now we can memoize!
+})
+
+// after (as injector):
+const injectTruthy = ({ get }: AtomGetters) => {
+  const list = get(listAtom)
+  return injectMemo(() => [...list].sort(), [list])
+}
+```
+
+If refactoring the AtomSelector is too much work or too tedious or risky, you can also create an ion that simply wraps the existing AtomSelector:
+
+```ts
+// before
+const getSortedList = ({ get }: AtomGetters) => [...get(listAtom)].sort()
+
+// (before usage):
+const sortedList = useAtomSelector(getSortedList)
+
+// after
+const getSortedListImpl = ({ get }: AtomGetters) => [...get(listAtom)].sort()
+
+const getSortedList = ion('getSortedList', ({ select }) =>
+  select(getSortedListImpl)
+)
+
+// (after usage):
+const sortedList = useAtomValue(getSortedList)
+```

@@ -65,14 +65,12 @@ describe('graph', () => {
     const div = await findByTestId('sum')
     expect(div).toHaveTextContent('3')
 
-    const expectedEdges = [
-      {
-        isAsync: false,
-        isStatic: false,
-        operation: 'get',
-        shouldUpdate: undefined,
-      },
-    ]
+    const expectedEdges = {
+      isAsync: false,
+      isStatic: false,
+      operation: 'get',
+      shouldUpdate: undefined,
+    }
 
     expect(testEcosystem._graph.nodes.atom1.dependents).toEqual({
       atom4: expectedEdges,
@@ -146,28 +144,24 @@ describe('graph', () => {
       atom1: {
         dependencies: {},
         dependents: {
-          ion1: [
-            {
-              isAsync: false,
-              isStatic: true,
-              operation: 'getInstance',
-              shouldUpdate: undefined,
-            },
-          ],
+          ion1: {
+            isAsync: false,
+            isStatic: true,
+            operation: 'getInstance',
+            shouldUpdate: undefined,
+          },
         },
         weight: 1,
       },
       atom2: {
         dependencies: {},
         dependents: {
-          ion1: [
-            {
-              isAsync: false,
-              isStatic: true,
-              operation: 'getInstance',
-              shouldUpdate: undefined,
-            },
-          ],
+          ion1: {
+            isAsync: false,
+            isStatic: true,
+            operation: 'getInstance',
+            shouldUpdate: undefined,
+          },
         },
         weight: 1,
       },
@@ -208,28 +202,24 @@ describe('graph', () => {
       a: {
         dependencies: {},
         dependents: {
-          d: [
-            {
-              isAsync: false,
-              isStatic: false,
-              operation: 'injectAtomValue',
-              shouldUpdate: undefined,
-            },
-          ],
+          d: {
+            isAsync: false,
+            isStatic: false,
+            operation: 'injectAtomValue',
+            shouldUpdate: undefined,
+          },
         },
         weight: 1,
       },
       'b-["b"]': {
         dependencies: {},
         dependents: {
-          d: [
-            {
-              isAsync: false,
-              isStatic: false,
-              operation: 'get',
-              shouldUpdate: undefined,
-            },
-          ],
+          d: {
+            isAsync: false,
+            isStatic: false,
+            operation: 'get',
+            shouldUpdate: undefined,
+          },
         },
         weight: 1,
       },
@@ -251,14 +241,12 @@ describe('graph', () => {
       a: {
         dependencies: {},
         dependents: {
-          d: [
-            {
-              isAsync: false,
-              isStatic: false,
-              operation: 'injectAtomValue',
-              shouldUpdate: undefined,
-            },
-          ],
+          d: {
+            isAsync: false,
+            isStatic: false,
+            operation: 'injectAtomValue',
+            shouldUpdate: undefined,
+          },
         },
         weight: 1,
       },
@@ -270,14 +258,12 @@ describe('graph', () => {
       c: {
         dependencies: {},
         dependents: {
-          d: [
-            {
-              isAsync: false,
-              isStatic: false,
-              operation: 'get',
-              shouldUpdate: undefined,
-            },
-          ],
+          d: {
+            isAsync: false,
+            isStatic: false,
+            operation: 'get',
+            shouldUpdate: undefined,
+          },
         },
         weight: 1,
       },

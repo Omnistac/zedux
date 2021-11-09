@@ -55,7 +55,7 @@ export interface AtomConfig {
 }
 
 export type AtomExportsType<
-  AtomType extends StandardAtomBase<any, any, any>
+  AtomType extends AnyAtom
 > = AtomType extends StandardAtomBase<any, any, infer T> ? T : never
 
 export interface AtomGetters {
@@ -88,10 +88,10 @@ export type AtomInstanceType<
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
 
 export type AtomParamsType<
-  AtomType extends AtomBase<any, any, any>
+  AtomType extends AnyAtomBase
 > = AtomType extends AtomBase<any, infer T, any> ? T : never
 
-export type AtomSelector<T = any> = (getters: AtomGetters) => T
+export type AtomSelector<T = any> = (getters: AtomGetters, ...args: any[]) => T
 
 export interface AtomSetters<
   State,
@@ -116,12 +116,12 @@ export interface AtomSetters<
 }
 
 export type AtomStateType<
-  AtomType extends AtomBase<any, any, any>
+  AtomType extends AnyAtomBase
 > = AtomType extends AtomBase<infer T, any, AtomInstanceBase<infer T, any, any>>
   ? T
   : never
 
-export type AtomTuple<A extends AtomBase<any, any, any>> = [
+export type AtomTuple<A extends AnyAtomBase> = [
   A,
   ...(A extends AtomBase<any, [], any> ? [] : [AtomParamsType<A>])
 ]

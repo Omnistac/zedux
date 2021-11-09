@@ -1,5 +1,6 @@
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
 import useBaseUrl from '@docusaurus/useBaseUrl'
+import textureUrl from '@site/static/img/bg-texture.png'
 import React from 'react'
 import styled from 'styled-components'
 
@@ -54,7 +55,6 @@ export const StyledHeader = styled.header`
 
 export const Header = () => {
   const { siteConfig } = useDocusaurusContext()
-  const textureUrl = useBaseUrl('img/bg-texture.png')
 
   return (
     <StyledHeader>

@@ -1,7 +1,15 @@
-import useBaseUrl from '@docusaurus/useBaseUrl'
+import bgUrl from '@site/static/img/bg-texture.png'
+import icon from '@site/static/img/zedux-icon.png'
 import usePrismTheme from '@theme/hooks/usePrismTheme'
 import Highlight, { Prism } from 'prism-react-renderer'
-import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import Editor from 'react-simple-code-editor'
 import styled, { keyframes } from 'styled-components'
 import * as ReactZedux from '../../packages/react/dist/es/react/src'
@@ -118,6 +126,8 @@ const ResultView = styled.div`
 `
 
 const Wrapper = styled.section`
+  box-shadow: 10px 10px 7px rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
   color: #fff;
   margin: 2rem 0;
 `
@@ -207,82 +217,62 @@ export const LiveEditor: FC<{
   extraScope?: string | Record<string, any>
   resultVar?: string
 }> = ({ children, extraScope, resultVar = 'Result' }) => {
+  const lastLoggedErrorTimeRef = useRef<number | undefined>()
   const isMountedRef = useRef(true)
   const initialCodeRef = useRef((children as string).trim())
-  const [force, forceRender] = useState<any>()
   const [tsCode, setTsCode] = useState((children as string).trim())
   const [result, setResult] = useState('')
-  const bgUrl = useBaseUrl('img/bg-texture.png')
   theme = usePrismTheme()
 
   const ecosystemId = useMemo(() => `editor-ecosystem-${idCounter++}`, [])
 
-  const debouncedSetter = useMemo(() => {
-    const data = {
-      latestForce: null,
-      latestVal: null,
-      originalForce: null,
-      originalVal: null,
-      timeoutId: null,
-    }
-
-    return (newVal: string, passedForce: any) => {
-      data.latestVal = newVal
-      data.latestForce = passedForce
-      if (data.timeoutId) return
-
-      const run = () => {
-        // already ran on the leading edge
-        if (
-          data.originalVal === data.latestVal &&
-          data.originalForce === data.latestForce
+  const runCode = useCallback(
+    (val: string) => {
+      try {
+        const extraScopeStr = typeof extraScope === 'string' ? extraScope : ''
+        const jsCode = (window as any)?.ts.transpile(
+          `${extraScopeStr}; ${val}`,
+          {
+            jsx: 'react',
+          }
         )
+
+        if (!jsCode) return
+
+        Zedux.getEcosystem(ecosystemId).wipe()
+        const evalResult = evalCode(
+          ecosystemId,
+          jsCode,
+          resultVar,
+          typeof extraScope === 'string' ? undefined : extraScope
+        )
+        lastLoggedErrorTimeRef.current = undefined
+        if (isMountedRef.current) setResult(evalResult)
+      } catch (err) {
+        if (isMountedRef.current) setResult(err.message)
+
+        if (
+          lastLoggedErrorTimeRef.current &&
+          Date.now() - lastLoggedErrorTimeRef.current < 5000 // only log errors once every 5 seconds
+        ) {
           return
-
-        try {
-          Zedux.getEcosystem(ecosystemId).wipe()
-
-          const extraScopeStr = typeof extraScope === 'string' ? extraScope : ''
-          const jsCode = (window as any)?.ts.transpile(
-            `${extraScopeStr}; ${data.latestVal}`,
-            {
-              jsx: 'react',
-            }
-          )
-
-          if (!jsCode) return
-
-          const evalResult = evalCode(
-            ecosystemId,
-            jsCode,
-            resultVar,
-            typeof extraScope === 'string' ? undefined : extraScope
-          )
-          if (isMountedRef.current) setResult(evalResult)
-        } catch (err) {
-          if (isMountedRef.current) setResult(err.message)
-          console.error('Live Editor error:', err)
         }
+
+        console.error('Live Editor error:', err)
+        lastLoggedErrorTimeRef.current = Date.now()
       }
+    },
+    [ecosystemId, resultVar]
+  )
 
-      run() // run on the leading edge of the timeout
-      data.originalVal = newVal
-      data.originalForce = passedForce
-
-      data.timeoutId = setTimeout(() => {
-        run()
-
-        data.timeoutId = null
-      }, 500)
-    }
-  }, [ecosystemId])
-
+  // run initial code on mount (or if runCode changes - shouldn't happen)
   useEffect(() => {
-    debouncedSetter(tsCode, force)
-  }, [force, resultVar, tsCode])
+    runCode(tsCode)
+  }, [runCode])
 
   useEffect(
     () => () => {
+      Zedux.getEcosystem(ecosystemId).destroy(true)
       isMountedRef.current = false
     },
     []
@@ -291,14 +281,17 @@ export const LiveEditor: FC<{
   return (
     <Wrapper>
       <Header url={bgUrl}>
-        <Img src={useBaseUrl('img/zedux-icon.png')} /> Live Editor
+        <Img src={icon} /> Live Editor
       </Header>
       <EditorWrapper>
         <Editor
           value={tsCode}
           padding={10}
           highlight={Highlighter}
-          onValueChange={setTsCode}
+          onValueChange={val => {
+            setTsCode(val)
+            runCode(val)
+          }}
           style={{
             fontFamily: 'monospace',
             fontSize: '15px',
@@ -311,13 +304,12 @@ export const LiveEditor: FC<{
         />
       </EditorWrapper>
       <ResultTextWrapper url={bgUrl}>
-        <Img src={useBaseUrl('img/zedux-icon.png')} />{' '}
-        <ResultText>Live Result:</ResultText>{' '}
+        <Img src={icon} /> <ResultText>Live Result:</ResultText>{' '}
         <Button
           onClick={() => {
-            console.log('Zedux Exports:', Zedux)
-            console.log('React Exports:', React)
-            if (extraScope) console.log('Extra Scope:', extraScope)
+            console.info('Zedux Exports:', Zedux)
+            console.info('React Exports:', React)
+            if (extraScope) console.info('Extra Scope:', extraScope)
           }}
           shouldHide
         >
@@ -325,10 +317,10 @@ export const LiveEditor: FC<{
         </Button>
         <Button
           onClick={() => {
-            const es = Zedux.zeduxGlobalStore.getState().ecosystems[ecosystemId]
+            const es = Zedux.getEcosystem(ecosystemId)
 
-            console.log('Ecosystem:', es)
-            console.log('Current State:', es.inspectInstanceValues())
+            console.info('Ecosystem:', es)
+            console.info('Current State:', es.inspectInstanceValues())
           }}
           shouldHide
         >
@@ -337,7 +329,7 @@ export const LiveEditor: FC<{
         <Button
           onClick={() => {
             setTsCode(initialCodeRef.current)
-            forceRender({})
+            runCode(initialCodeRef.current)
           }}
         >
           Reset

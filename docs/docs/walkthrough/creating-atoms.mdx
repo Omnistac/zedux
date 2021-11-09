@@ -5,7 +5,18 @@ title: Creating Atoms
 
 import { LiveEditor } from '../LiveEditor'
 
-In the quick start, we learned a few basic ways to create atoms. In this page, we'll create some more advanced atoms using config objects, injectors, stores, and the AtomApi. We'll also discover some specialized types of atoms.
+Atoms are extremely flexible and have many uses.
+
+:::tip you will learn
+How to:
+
+- Configure atoms
+- Use stores to give an atom control over its own state
+- Use injectors to fine-tune an atom's behavior
+- Export values from an atom
+- Make atoms trigger React suspense
+
+:::
 
 ## Atom Config
 
@@ -117,7 +128,9 @@ When returning a store from an evaluator, ensure that the exact same store refer
 const store = injectStore(initialState, true)
 ```
 
+:::tip
 Zedux stores can be either zero-config or reducer-driven. Because of this,`injectStore` is the injector equivalent of both `useState` and `useReducer`. You'll probably use it a lot.
+:::
 
 ### `injectEffect`
 
@@ -222,7 +235,7 @@ function App() {
     <>
       <div>Counter: {value}</div>
       <button onClick={increment}>Increment</button>
-      <button onClick={decrement}>Decremenet</button>
+      <button onClick={decrement}>Decrement</button>
     </>
   )
 }
@@ -285,7 +298,12 @@ Atoms are a full replacement for React context. Local atoms are a special type o
 Local atoms have their first parameter automatically set to an optional id string. You can pass a string to id these atoms manually. If no string is passed, a new id is generated and a new atom instance created every time you use the atom.
 
 ```tsx
-import { AtomInstanceProvider, localAtom, useAtomInstance } from '@zedux/react'
+import {
+  AtomInstanceProvider,
+  localAtom,
+  useAtomConsumer,
+  useAtomInstance
+} from '@zedux/react'
 
 const reactContextAtom = localAtom('reactContext', 'some state')
 
@@ -302,7 +320,7 @@ function Parent() {
 
 function Child() {
   // use the provided instance:
-  const instance = useAtomContext(reactContextAtom)
+  const instance = useAtomConsumer(reactContextAtom)
   ...
 }
 ```
@@ -313,11 +331,8 @@ Learn more about local atoms in [the React context walkthrough](/not-done)
 
 - `atom()` can take a config object.
 - Atoms can be destroyed using `ttl` and/or `maxInstances`.
-- All atom instances have an underlying store. This store can be created manually.
-- `injectStore` creates a stable store reference.
-- `injectEffect` runs side effects
-- `injectMemo` memoizes values
-- `injectGet` returns a utility function for retrieving atom instance values dynamically.
+- All atom instances have an underlying store. You can create this store yourself or let Zedux create it for you.
+- Injectors give you control over an atom's behavior - e.g. they can run side effects or memoize values.
 - Exports can be attached to an atom via `api(value).setExports({ ... })`
 - Atoms can cause React to suspend by passing a stable promise to `api(value).setPromise(promise)`.
 - Ions specialize in selector-type operations

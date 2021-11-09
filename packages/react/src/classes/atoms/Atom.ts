@@ -53,7 +53,7 @@ export class Atom<
   }
 
   public getKeyHash(params?: Params) {
-    const base = `${this.key}`
+    const base = this.key
 
     if (!params?.length) return base
 

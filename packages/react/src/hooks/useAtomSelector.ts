@@ -6,7 +6,7 @@ import {
   AtomStateType,
 } from '../types'
 import { useLayoutEffect, useRef, useState } from 'react'
-import { Dep } from '../utils'
+import { Dep, generateAtomSelectorId } from '../utils'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import { useEcosystem } from './useEcosystem'
 import { runAtomSelector } from '../utils/runAtomSelector'
@@ -20,6 +20,12 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
   const prevDeps = useRef<Record<string, Dep>>({})
   const prevResult = useRef<T>()
   const selectorRef = useRef<typeof selector>() // don't populate initially
+  const idRef = useRef<string>()
+
+  // doesn't matter if fibers/suspense mess this id up - it's just for some
+  // consistency when inspecting dependencies created by this selector in
+  // development
+  if (!idRef.current) idRef.current = generateAtomSelectorId()
 
   const result =
     selector === selectorRef.current
@@ -30,7 +36,8 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
           prevDeps,
           prevResult,
           () => forceRender({}),
-          OPERATION
+          OPERATION,
+          idRef.current
         )
 
   prevResult.current = result

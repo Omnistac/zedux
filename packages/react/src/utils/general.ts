@@ -1,8 +1,8 @@
 import { isPlainObject } from '@zedux/core/utils/general'
 import { DiContext, InjectorDescriptor, InjectorType } from './types'
 import { diContext } from './csContexts'
-import { ActiveState, AnyAtomBase, AtomParamsType } from '../types'
-import { AtomInstanceBase, Ecosystem } from '../classes'
+import { ActiveState } from '../types'
+import { AtomInstanceBase } from '../classes'
 
 let idCounter = 0
 
@@ -13,12 +13,13 @@ const generateId = () => {
 
 export const EMPTY_CONTEXT = {}
 
-export const generateAppId = () => `ecosystem-${generateId()}`
+export const generateAtomSelectorId = () => `select-${generateId()}`
+export const generateEcosystemId = () => `ecosystem-${generateId()}`
 export const generateImplementationId = () => `im-${generateId()}`
 export const generateLocalId = () => `lo-${generateId()}`
 export const generateNodeId = () => `no-${generateId()}`
 
-export const hashParams = (params: any): string =>
+export const hashParams = (params: any[]): string =>
   JSON.stringify(params, (_, param) => {
     if (is(param, AtomInstanceBase)) return param.keyHash
     if (!isPlainObject(param)) return param
@@ -65,19 +66,6 @@ export const haveDepsChanged = (
  */
 export const is = (val: any, classToCheck: { $$typeof: symbol }) =>
   val?.constructor?.$$typeof === classToCheck.$$typeof
-
-export const resolveInstance = <A extends AnyAtomBase>(
-  ecosystem: Ecosystem,
-  atom: A | AtomInstanceBase<any, [...any], any>,
-  stableParams?: AtomParamsType<A>
-) => {
-  const atomInstance = ecosystem.getInstance(
-    atom as A,
-    stableParams as AtomParamsType<A>
-  )
-
-  return atomInstance
-}
 
 export const split = <T extends InjectorDescriptor>(
   operation: string,

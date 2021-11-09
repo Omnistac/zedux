@@ -313,6 +313,28 @@ Removes atoms from the ecosystem's list of overrides. All instances of atoms in 
 
 Required. An array of [atoms](Atom) and/or string keys.
 
+### `.select`
+
+Runs an [AtomSelector](../types/AtomSelector) statically (without creating any dependencies). Returns the result. Will create any atom instances used in the AtomSelector that haven't been created yet.
+
+#### Signature
+
+```ts
+.select(atomSelector, ...args) => result
+```
+
+#### `atomSelector`
+
+The [AtomSelector](../types/AtomSelector) to run.
+
+#### `args`
+
+The extra arguments to pass to the AtomSelector (besides the first AtomGetters arg, which Zedux passes for you). In TypeScript, all of the AtomSelector's required arguments are required here.
+
+#### `result`
+
+Whatever the AtomSelector returns.
+
 ### `.setOverrides`
 
 Replaces the ecosystem's list of overridden atoms with the passed overrides. All instances of atoms in either the new or old lists will be force-destroyed, allowing their dependencies to recreate them.

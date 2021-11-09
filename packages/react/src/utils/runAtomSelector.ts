@@ -10,13 +10,17 @@ import {
 } from '../types'
 import { Selector } from '@zedux/core'
 
+const defaultShouldCauseUpdate = (a: any, b: any) => a !== b
+
 export const runAtomSelector = <T = any>(
   selector: AtomSelector<T>,
   ecosystem: Ecosystem,
   prevDeps: Ref<Record<string, Dep>>,
   prevResult: Ref<T>,
   evaluate: (reasons?: EvaluationReason[]) => void,
-  operation: string
+  operation: string,
+  id: string,
+  shouldCauseUpdate = defaultShouldCauseUpdate
 ) => {
   const deps: Record<string, Dep> = {}
   let isExecuting = true
@@ -116,7 +120,14 @@ export const runAtomSelector = <T = any>(
 
   // clean up any deps that are gone now
   Object.values(prevDeps.current).forEach(prevDep => {
-    if (deps[prevDep.instance.keyHash]?.dynamicity === prevDep.dynamicity) {
+    const dep = deps[prevDep.instance.keyHash]
+
+    // don't cleanup if nothing's changed; we'll copy the old dep to the new
+    // deps. Check for instance ref match in case of instance force-destruction
+    if (
+      dep.instance === prevDep.instance &&
+      dep?.dynamicity === prevDep.dynamicity
+    ) {
       return
     }
 
@@ -129,8 +140,8 @@ export const runAtomSelector = <T = any>(
   Object.values(deps).forEach(dep => {
     const prevDep = prevDeps.current[dep.instance.keyHash]
 
-    // check for instance ref match in case of instance force-destruction (hmm
-    // TODO: this may need to happen in more places)
+    // don't create a new edge if nothing's changed; copy the old dep to the new
+    // deps. Check for instance ref match in case of instance force-destruction
     if (
       prevDep?.instance === dep.instance &&
       prevDep?.dynamicity === dep.dynamicity
@@ -148,25 +159,32 @@ export const runAtomSelector = <T = any>(
 
         if (!needsUpdate) return
 
-        // Don't need to specifically handle GraphEdgeSignal.Destroyed -
-        // re-running the selector will re-create the instance if needed.
+        // TODO: on GraphEdgeSignal.Destroyed, we need to defer (schedule a
+        // job?) to run the rest of this function - re-running the selector will
+        // re-create the destroyed instance and that needs to not happen
+        // synchronously (well it can, but only after the currently-happening
+        // atom instance destruction is over).
         const newResult = runAtomSelector(
           selector,
           ecosystem,
           prevDeps,
           prevResult,
           evaluate,
-          operation
+          operation,
+          id,
+          shouldCauseUpdate
         )
 
         // Only evaluate if the selector result changes
-        if (newResult === prevResult.current) return
+        if (!shouldCauseUpdate(newResult, prevResult.current)) return
 
         prevResult.current = newResult
         evaluate(reasons)
       },
       operation,
-      dep.dynamicity === GraphEdgeDynamicity.Static
+      dep.dynamicity === GraphEdgeDynamicity.Static,
+      false,
+      id
     )
 
     newDeps[dep.instance.keyHash] = dep

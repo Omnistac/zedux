@@ -3,6 +3,8 @@ id: AtomInstance
 title: AtomInstance
 ---
 
+import { LiveEditor } from '../../LiveEditor'
+
 All standard "atom instances" are actually instances of this class. [Ions](Ion), [Standard Atoms](Atom), and [Local Atoms](LocalAtom) all create instances of this class.
 
 ## Creation
@@ -85,7 +87,10 @@ A string representing the stable, unique key of this atom instance in the ecosys
 
 ```ts
 useAtomInstance(atom('a', null)).keyHash // 'a'
-useAtomInstance(atom('b', (param: string) => param), ['c']).keyHash // 'b-["c"]'
+useAtomInstance(
+  atom('b', (param: string) => param),
+  ['c']
+).keyHash // 'b-["c"]'
 ```
 
 ### `.params`

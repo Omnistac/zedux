@@ -16,11 +16,11 @@ export const useAtomConsumer: {
 
   <A extends StandardAtomBase<any, [...any], any>>(
     atom: A,
-    throwIfNotProvided: boolean
+    throwIfNotProvided: true
   ): AtomInstanceType<A>
 } = <A extends StandardAtomBase<any, [...any], any>>(
   atom: A,
-  defaultParams?: AtomParamsType<A> | boolean
+  defaultParams?: AtomParamsType<A> | true
 ) => {
   const ecosystem = useEcosystem()
   const instance = useContext(atom.getReactContext())

@@ -7,9 +7,8 @@ import {
   AtomStateType,
   PromiseStatus,
 } from '../types'
-import { GraphEdgeSignal, resolveInstance } from '../utils'
+import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
-import { useStableReference } from './useStableReference'
 
 /**
  * useAtomInstanceDynamic
@@ -54,10 +53,11 @@ export const useAtomInstanceDynamic: {
   shouldUpdate?: (state: AtomStateType<A>) => boolean
 ) => {
   const ecosystem = useEcosystem()
-  const stableParams = useStableReference(params)
-  const [instance, setInstance] = useState(() =>
-    resolveInstance(ecosystem, atom, stableParams)
-  )
+  const [, forceRender] = useState<any>()
+
+  // it should be fine for this to run every render. It's possible to change
+  // approaches if it is too heavy sometimes. But don't memoize this call:
+  const instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
   const [state, setReactState] = useState(() => instance.store.getState())
 
   // Suspense!
@@ -69,11 +69,10 @@ export const useAtomInstanceDynamic: {
     }
   }
 
+  // TODO: guard against ecosystem/instance changing over and over, causing
+  // this effect to set React state over and over
   useLayoutEffect(() => {
-    const currentInstance = resolveInstance(ecosystem, atom, stableParams)
-    const currentState = currentInstance.store.getState()
-
-    if (currentInstance !== instance) setInstance(currentInstance)
+    const currentState = instance.store.getState()
 
     // handle any state updates we missed between render and this effect running
     // also handle the case where the instance has changed (e.g. different
@@ -81,10 +80,10 @@ export const useAtomInstanceDynamic: {
     if (currentState !== state) setReactState(currentState)
 
     return ecosystem._graph.registerExternalDependent(
-      currentInstance,
+      instance,
       (signal, val: AtomStateType<A>) => {
         if (signal === GraphEdgeSignal.Destroyed) {
-          setInstance(resolveInstance(ecosystem, atom, stableParams))
+          forceRender({})
           return
         }
 
@@ -95,7 +94,7 @@ export const useAtomInstanceDynamic: {
       operation,
       false
     )
-  }, [atom, ecosystem, stableParams]) // not instance or state
+  }, [ecosystem, instance]) // not state
 
   return instance
 }

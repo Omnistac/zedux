@@ -50,6 +50,16 @@ An action created by Zedux to represent a state change. The key to time travel d
 
 Zedux translates all of these state updating operations into "pseudo-actions" - action objects with metadata containing all the info needed to reproduce the state change.
 
+### Restricted Dynamic Graph Dependency
+
+When one [graph node](#graph-node) depends on another, Zedux draws an edge between those two nodes in its internal graph algorithm.
+
+A "restricted dynamic" dependency is really just a [dynamic dependency](#dynamic-graph-dependency) that will only trigger updates in the dependent node when the dependency node's state updates and some other condition is met. This is used for selectors.
+
+If the dependent is a React component, it will rerender when the dependency atom instance's state changes and the selector's result changes.
+
+If the dependent is another atom instance, it will reevaluate when the dependency atom instance's state changes and the selector's result changes.
+
 ### Static Graph Dependency
 
 When one [graph node](#graph-node) depends on another, Zedux draws an edge between those two nodes in its internal graph algorithm.

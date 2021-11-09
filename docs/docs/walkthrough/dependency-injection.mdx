@@ -5,7 +5,16 @@ title: Dependency Injection
 
 import { LiveEditor } from '../LiveEditor'
 
-React creates a perfect environment for Inversion of Control. Yet this amazing principle is often massively underused. Zedux aims to help bring Dependency Injection (DI) to the forefront of React workflows.
+React creates a perfect environment for Inversion of Control. Yet this amazing technique is underused. Zedux aims to help bring Dependency Injection (DI) to the forefront of React workflows.
+
+:::tip you will learn
+How to:
+
+- "Inject" atoms in other atoms to create a dependency graph
+- Create an overridden version of an atom
+- Swap out atoms and their overrides
+
+:::
 
 There are 2 parts to DI:
 
@@ -17,63 +26,73 @@ There are 2 parts to DI:
 Any atom can be injected into any other atom.
 
 ```ts
-const configAtom = atom('config', { apiUrl: 'example.com/api' })
+import { atom, injectAtomValue } from '@zedux/react'
 
-const localStorageAtom = atom('localStorage', { ...localStorage })
+const atomA = atom('a', 'a')
+const atomB = atom('b', () => {
+  const a = injectAtomValue(atomA)
 
-const authAtom = ion('auth', ({ get }) => {
-  const { apiUrl } = get(configAtom)
-  const storage = get(localStorageAtom)
-
-  return injectFetch(`${apiUrl}/auth`, storage.jwt)
-})
-
-const axiosAtom = ion('axios', ({ get }) => {
-  const apiUrl = injectAtomSelector(configAtom, config => config.apiUrl)
-  const { data } = get(authAtom)
-
-  if (!data?.token) return null
-
-  return axios.create({
-    baseURL: apiUrl,
-    headers: {
-      Authorization: `Bearer ${data.token}`,
-    },
-  })
-})
-
-const userAtom = ion('user', ({ get }) => {
-  const axios = get(axiosAtom)
-  const store = injectStore()
-
-  injectEffect(() => {
-    if (!axios) return
-
-    axios.get(`/user`).then(({ data }) => store.setState(data))
-  }, [axios])
-
-  return store
+  return a + 'b' // 'ab'
 })
 ```
 
-Here we used [ion's `get`](../api/types/AtomGetters#get) to dynamically inject dependencies. We can also use any number of injectors, such as [`injectAtomValue()`](../api/injectors/injectAtomValue) or [`injectAtomInstance()`](../api/injectors/injectAtomInstance).
+### AtomGetters
+
+The word "inject" helps you know that there is Dependency Injection going on. But we can also "inject" dependencies using [AtomGetters](../api/types/AtomGetters) like [ion's `get`](../api/types/AtomGetters#get):
 
 ```ts
-const authAtom = atom('auth', () => {
-  const { apiUrl } = injectAtomValue(configAtom)
-  const storage = injectAtomValue(localStorageAtom)
+import { atom, ion } from '@zedux/react'
 
-  return injectFetch(`${apiUrl}/auth`, storage.jwt)
+const usersAtom = atom('users', ['Joe', 'Sally', 'Jim', 'Ruth'])
+
+const sortedUsersAtom = ion('sortedUsers', ({ get }) => {
+  return [...get(usersAtom)].sort()
 })
 ```
 
-But these have the caveats of being injectors - they can only be used at the top level of the atom evaluator function.
+`get` here is doing the exact same thing as `injectAtomValue`. All AtomGetters have injector equivalents, but AtomGetters are more dynamic.
+
+:::tip
+Since `get` and the other AtomGetters aren't injectors, they can be used in if statements, loops, and even asynchronously. When used asynchronously, they don't create dependencies.
+:::
+
+```ts
+const myIon = ion('my', ({ get }) => {
+  // this `get` creates a dependency - this ion will update when atom1 changes
+  const dynamicValue = get(atom1)
+
+  injectEffect(() => {
+    // this `get` doesn't create any dependency
+    const staticValue = get(atom2)
+  }, [])
+})
+```
+
+The AtomGetters are:
+
+- `get` - returns the value of an atom instance. Registers a [dynamic dependency](../api/glossary#dynamic-graph-dependency) when called synchronously during atom evaluation. Injector equivalent: `injectAtomValue`.
+
+- `getInstance` - returns an atom instance. Registers a [static dependency](../api/glossary#static-graph-dependency) when called synchronously during atom evaluation. Injector equivalent: `injectAtomInstance`.
+
+- `select` - returns the selection result. Can register both kinds of dependencies. We'll cover these next in the [selectors walkthrough](selectors). Injector equivalent: `injectAtomSelector`
+
+- `ecosystem` - a reference to the current [ecosystem](../api/classes/Ecosystem). Ecosystems have `get`, `getInstance`, and `select` methods. These never register dependencies.
+
+Use `ecosystem`'s methods to get static values without creating dependencies during atom evaluation.
+
+```ts
+const myIon = ion('my', ({ ecosystem, get }) => {
+  // creates a dependency
+  const dynamicValue = get(atom1, ['some', 'params'])
+
+  // gets a static snapshot of atom2's current state
+  const staticValue = ecosystem.get(atom2, ['param'])
+})
+```
 
 ### Instances as Params
 
 As a general rule, all [atom params](../api/classes/AtomInstance#params) must be serializable. There is one exception: You can pass an atom instance to another atom instance. This is another form of "Dependency Injection".
-
-This is possible because all atom instances already have a unique, serialized [`keyHash`](../api/classes/AtomInstance#keyhash) that will simply be appended to the receiving atom's `keyHash`.
 
 <LiveEditor resultVar="Shout">{`
 const normalAtom = atom('normal', "I'm just a little, black rain cloud")\n
@@ -92,6 +111,8 @@ function Shout() {
 `}</LiveEditor>
 
 When an atom instance receives another atom instance via params, it doesn't create any kind of dependency on that instance. This is usually fine: Whoever passed the instance is probably already registering their own dependency on the instance they're passing.
+
+In this example, we passed the instance to `injectAtomValue` to create a dynamic dependency on the instance.
 
 See [AtomInstance#params](../api/classes/AtomInstance#params) for more info.
 
@@ -148,7 +169,7 @@ const testAtom = atom('test', 'some state')
 const testAtomOverride = atom('test', 'overridden state!', { ttl: 0 })
 ```
 
-The nice thing about `.override()` for TS users is that it will tell you if the override doesn't match the overridden atom's type in any way.
+The nice thing about `.override()` for TS users is that it will tell you if the override doesn't match the overridden atom's type.
 
 ### Using
 
@@ -245,6 +266,11 @@ function App() {
 
 ## Recap
 
+- Atoms can be "injected" into other atoms with various injectors and the AtomGetters.
+- Instances can be passed as params to other atoms.
+- Atom overrides can be created with `myAtom.override(newVal)`.
+- Atoms can be overridden by setting the ecosystem's overrides.
+
 ## Next Steps
 
-Now that we've mastered the art of the atom, it's time to step into the low-levels and learn about [stores](stores).
+Let's kick Dependency Injection into high gear with [selectors](selectors).

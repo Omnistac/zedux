@@ -10,7 +10,7 @@ import {
   AtomStateType,
   EcosystemConfig,
 } from '../types'
-import { generateAppId, is } from '../utils'
+import { generateEcosystemId, is } from '../utils'
 import { AtomInstance } from './AtomInstance'
 import { Atom } from './atoms/Atom'
 import { AtomBase } from './atoms/AtomBase'
@@ -62,7 +62,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
       )
     }
 
-    this.ecosystemId = id || generateAppId()
+    this.ecosystemId = id || generateEcosystemId()
 
     if (overrides) {
       this.setOverrides(overrides)
@@ -170,8 +170,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
       return atom
     }
 
-    const defaultedParams = (params || []) as AtomParamsType<A>
-    const keyHash = (atom as A).getKeyHash(defaultedParams)
+    const keyHash = (atom as A).getKeyHash(params)
 
     // try to find an existing instance
     const existingInstance = this._instances[keyHash]
@@ -184,7 +183,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     const newInstance = resolvedAtom._createInstance(
       this,
       keyHash,
-      defaultedParams
+      (params || []) as AtomParamsType<A>
     )
     this._instances[keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
 
@@ -238,6 +237,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     this._preload?.(this, newContext || (this.context as Context))
   }
 
+  public select<D>(atomSelector: AtomSelector<D>): D
+
   public select<A extends AtomBase<any, [], any>, D>(
     atom: A,
     selector: Selector<AtomStateType<A>, D>
@@ -249,8 +250,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   ): D
 
   public select<AI extends AtomInstanceBase<any, [], any>, D>(instance: AI): D
-
-  public select<D>(atomSelector: AtomSelector<D>): D
 
   public select<A extends AtomBase<any, [...any], any>, D = any>(
     atomOrInstanceOrSelector:
@@ -310,8 +309,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   }
 
   public wipe() {
-    // TODO: Delete nodes in an optimal order (starting with leaf nodes - nodes
-    // with no internal dependents).
+    // TODO: Delete nodes in an optimal order, starting with nodes with no
+    // internal dependents. This is different from highest-weighted nodes since
+    // static dependents don't affect weight. This should make sure no internal
+    // nodes schedule unnecessary reevaaluations to recreate force-destroyed
+    // instances
     Object.values(this._instances).forEach(instance => {
       instance._destroy(true)
     })
