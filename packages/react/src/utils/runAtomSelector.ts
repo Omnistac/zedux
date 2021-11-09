@@ -3,25 +3,66 @@ import { Ecosystem } from '../classes'
 import {
   AnyAtomBase,
   AnyAtomInstanceBase,
+  AtomGetters,
   AtomParamsType,
   AtomSelector,
+  AtomSelectorConfig,
+  AtomSelectorOrConfig,
   AtomStateType,
   Ref,
 } from '../types'
 import { Selector } from '@zedux/core'
 
-const defaultShouldCauseUpdate = (a: any, b: any) => a !== b
+const defaultArgsAreEqual = (newArgs: any[], prevArgs: any[]) =>
+  newArgs.length === prevArgs.length &&
+  newArgs.every((val, i) => val === prevArgs[i])
 
-export const runAtomSelector = <T = any>(
-  selector: AtomSelector<T>,
+const defaultResultsAreEqual = (a: any, b: any) => a === b
+
+export const runAtomSelector = <T = any, Args extends any[] = []>(
+  selectorOrConfig: AtomSelectorOrConfig<T, Args>,
+  args: Args,
   ecosystem: Ecosystem,
+  prevArgs: Ref<Args | undefined>,
   prevDeps: Ref<Record<string, Dep>>,
-  prevResult: Ref<T>,
+  prevResult: Ref<T | undefined>,
+  prevSelector: Ref<AtomSelector<T, Args> | undefined>,
   evaluate: (reasons?: EvaluationReason[]) => void,
   operation: string,
   id: string,
-  shouldCauseUpdate = defaultShouldCauseUpdate
+  tryToShortCircuit: boolean
 ) => {
+  const config = (selectorOrConfig as unknown) as AtomSelectorConfig<T, Args>
+  const selector =
+    typeof selectorOrConfig === 'function'
+      ? selectorOrConfig
+      : selectorOrConfig.selector
+
+  const resultsAreEqual = config.resultsAreEqual || defaultResultsAreEqual
+
+  // only try short-circuiting if this isn't the first run
+  if (tryToShortCircuit) {
+    // short-circuit if user supplied argsAreEqual and args are the same
+    if (config.argsAreEqual) {
+      if (config.argsAreEqual(args, prevArgs.current as Args)) {
+        return prevResult.current as T
+      }
+    } else {
+      // user didn't supply argsAreEqual: Short-circuit if args and prevSelector
+      // are the same
+      if (
+        defaultArgsAreEqual(args, prevArgs.current as Args) &&
+        selector === prevSelector.current
+      ) {
+        return prevResult.current as T
+      }
+    }
+  }
+
+  // we couldn't short-circuit. Update refs
+  prevArgs.current = args
+  prevSelector.current = selector
+
   const deps: Record<string, Dep> = {}
   let isExecuting = true
 
@@ -65,12 +106,27 @@ export const runAtomSelector = <T = any>(
   }
 
   const select = <A extends AnyAtomBase, D>(
-    atomOrInstanceOrSelector: A | AnyAtomInstanceBase | AtomSelector<D>,
+    atomOrInstanceOrSelector: A | AnyAtomInstanceBase | AtomSelectorOrConfig<D>,
     paramsOrSelector?: AtomParamsType<A>[] | Selector<AtomStateType<A>, D>,
-    selector?: Selector<AtomStateType<A>, D>
+    selector?: Selector<AtomStateType<A>, D>,
+    ...rest: any[]
   ) => {
-    if (typeof atomOrInstanceOrSelector === 'function') {
-      return (atomOrInstanceOrSelector as AtomSelector<D>)(getters)
+    if (
+      typeof atomOrInstanceOrSelector === 'function' ||
+      'selector' in atomOrInstanceOrSelector
+    ) {
+      // we throw away any atom selector config in nested selects
+      const resolvedSelector =
+        typeof atomOrInstanceOrSelector === 'function'
+          ? atomOrInstanceOrSelector
+          : atomOrInstanceOrSelector.selector
+
+      return (resolvedSelector as any)(
+        getters,
+        paramsOrSelector,
+        selector,
+        ...rest
+      )
     }
 
     const params = Array.isArray(paramsOrSelector)
@@ -114,8 +170,8 @@ export const runAtomSelector = <T = any>(
     return result
   }
 
-  const getters = { ecosystem, get, getInstance, select }
-  const selectorResult = selector(getters)
+  const getters: AtomGetters = { ecosystem, get, getInstance, select }
+  const selectorResult = selector(getters, ...args)
   isExecuting = false
 
   // clean up any deps that are gone now
@@ -165,18 +221,21 @@ export const runAtomSelector = <T = any>(
         // synchronously (well it can, but only after the currently-happening
         // atom instance destruction is over).
         const newResult = runAtomSelector(
-          selector,
+          selectorOrConfig,
+          prevArgs.current as Args,
           ecosystem,
+          prevArgs,
           prevDeps,
           prevResult,
+          prevSelector,
           evaluate,
           operation,
           id,
-          shouldCauseUpdate
+          false // short-circuit not possible if a dep changed
         )
 
         // Only evaluate if the selector result changes
-        if (!shouldCauseUpdate(newResult, prevResult.current)) return
+        if (resultsAreEqual(newResult, prevResult.current as T)) return
 
         prevResult.current = newResult
         evaluate(reasons)

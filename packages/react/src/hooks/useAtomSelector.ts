@@ -3,6 +3,7 @@ import {
   AtomInstanceStateType,
   AtomParamsType,
   AtomSelector,
+  AtomSelectorOrConfig,
   AtomStateType,
 } from '../types'
 import { useLayoutEffect, useRef, useState } from 'react'
@@ -14,12 +15,16 @@ import { useAtomInstanceDynamic } from '.'
 
 const OPERATION = 'useAtomSelector'
 
-const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
+const useStandaloneSelector = <T, Args extends any[]>(
+  selector: AtomSelectorOrConfig<T, Args>,
+  args: Args
+) => {
   const ecosystem = useEcosystem()
   const [, forceRender] = useState<any>()
+  const prevArgs = useRef<Args>() // don't populate initially
   const prevDeps = useRef<Record<string, Dep>>({})
   const prevResult = useRef<T>()
-  const selectorRef = useRef<typeof selector>() // don't populate initially
+  const prevSelector = useRef<AtomSelector<T, Args>>() // don't populate initially
   const idRef = useRef<string>()
 
   // doesn't matter if fibers/suspense mess this id up - it's just for some
@@ -27,21 +32,21 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
   // development
   if (!idRef.current) idRef.current = generateAtomSelectorId()
 
-  const result =
-    selector === selectorRef.current
-      ? prevResult.current
-      : runAtomSelector(
-          selector,
-          ecosystem,
-          prevDeps,
-          prevResult,
-          () => forceRender({}),
-          OPERATION,
-          idRef.current
-        )
+  const result = runAtomSelector<T, Args>(
+    selector,
+    args,
+    ecosystem,
+    prevArgs,
+    prevDeps,
+    prevResult,
+    prevSelector,
+    () => forceRender({}),
+    OPERATION,
+    idRef.current,
+    !!prevArgs.current
+  )
 
   prevResult.current = result
-  selectorRef.current = selector
 
   // Final cleanup on unmount
   useLayoutEffect(
@@ -57,6 +62,11 @@ const useStandaloneSelector = <T>(selector: AtomSelector<T>) => {
 }
 
 export const useAtomSelector: {
+  <T, Args extends any[]>(
+    selector: AtomSelectorOrConfig<T, Args>,
+    ...args: Args
+  ): T
+
   <A extends AtomBase<any, [], any>, D = any>(
     atom: A,
     selector: Selector<AtomStateType<A>, D>
@@ -72,16 +82,18 @@ export const useAtomSelector: {
     instance: AI,
     selector: Selector<AtomInstanceStateType<AI>, D>
   ): D
-
-  <T>(selector: AtomSelector<T>): T
 } = <A extends AtomBase<any, [...any], any>, D = any>(
-  atom: A | AtomInstanceBase<any, [...any], any> | AtomSelector<any>,
+  atom:
+    | A
+    | AtomInstanceBase<any, [...any], any>
+    | AtomSelectorOrConfig<any, any>,
   paramsArg?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
-  selectorArg?: Selector<AtomStateType<A>, D>
+  selectorArg?: Selector<AtomStateType<A>, D>,
+  ...rest: any[]
 ): D => {
-  if (typeof atom === 'function') {
+  if (typeof atom === 'function' || 'selector' in atom) {
     // yes, this breaks the rules of hooks
-    return useStandaloneSelector(atom)
+    return useStandaloneSelector(atom, [paramsArg, selectorArg, ...rest])
   }
 
   const params = selectorArg

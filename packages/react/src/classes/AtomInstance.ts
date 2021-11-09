@@ -11,6 +11,7 @@ import {
   AtomInstanceType,
   AtomParamsType,
   AtomSelector,
+  AtomSelectorOrConfig,
   AtomStateType,
   AtomValue,
   PromiseStatus,
@@ -42,6 +43,7 @@ import { runAtomSelector } from '../utils/runAtomSelector'
 
 interface AtomSelectorCache {
   id: string
+  prevArgs: Ref<any[] | undefined>
   prevDeps: Ref<Record<string, Dep>>
   prevResult: Ref<any>
 }
@@ -417,13 +419,27 @@ export class AtomInstance<
   }
 
   public _select<A extends Atom<any, [...any], any>, D>(
-    atomOrInstanceOrSelector: A | AtomInstanceType<A> | AtomSelector,
-    paramsOrSelector?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
-    selector?: Selector<AtomStateType<A>>
+    atomOrInstanceOrSelector:
+      | A
+      | AtomInstanceType<A>
+      | AtomSelectorOrConfig<D, any>,
+    paramsOrSelector?: AtomParamsType<A> | Selector<any, D>,
+    selector?: Selector<AtomStateType<A>>,
+    ...rest: any[]
   ): D {
     // AtomSelectors are remembered across evaluations by reference.
     // Other selectors are remembered by [atomInstance, fnRef] tuple.
-    if (typeof atomOrInstanceOrSelector === 'function') {
+    if (
+      typeof atomOrInstanceOrSelector === 'function' ||
+      'selector' in atomOrInstanceOrSelector
+    ) {
+      const resolvedSelector =
+        typeof atomOrInstanceOrSelector === 'function'
+          ? atomOrInstanceOrSelector
+          : atomOrInstanceOrSelector.selector
+
+      const args = [paramsOrSelector, selector, ...rest]
+
       if (!this._atomSelectorsToCache) {
         this._atomSelectorsToCache = new Map()
       }
@@ -431,29 +447,27 @@ export class AtomInstance<
       // look in the current run's cache first (in case we've already copied the
       // old cache object over or already created one for this exact selector
       // this run), then the previous run
-      let cache = this._atomSelectorsToCache.get(atomOrInstanceOrSelector)
+      let cache = this._atomSelectorsToCache.get(resolvedSelector)
 
-      if (cache) {
-        return cache.prevResult.current
+      if (!cache) {
+        cache = this._atomSelectorCache?.get(resolvedSelector)
+
+        if (cache) {
+          this._atomSelectorsToCache.set(resolvedSelector, cache)
+        }
       }
 
-      cache = this._atomSelectorCache?.get(atomOrInstanceOrSelector)
-
-      // reuse the old cache object - no need to rerun the selector since the
-      // old cache object's prevResult ref is already updated if the selector
-      // result changed
-      if (cache) {
-        this._atomSelectorsToCache.set(atomOrInstanceOrSelector, cache)
-        return cache.prevResult.current
+      if (!cache) {
+        // no cache has been created for this AtomSelector yet
+        cache = {
+          id: `${this.keyHash}-${generateAtomSelectorId()}`,
+          prevArgs: { current: undefined },
+          prevDeps: { current: {} },
+          prevResult: { current: undefined },
+        }
       }
 
-      cache = {
-        id: `${this.keyHash}-${generateAtomSelectorId()}`,
-        prevDeps: { current: {} },
-        prevResult: { current: undefined },
-      }
-
-      this._atomSelectorsToCache.set(atomOrInstanceOrSelector, cache)
+      this._atomSelectorsToCache.set(resolvedSelector, cache)
 
       // have to update this value since this code never runs again as long as
       // the AtomSelector is cached
@@ -461,9 +475,12 @@ export class AtomInstance<
 
       const result = runAtomSelector(
         atomOrInstanceOrSelector,
+        args,
         this.ecosystem,
+        cache.prevArgs,
         cache.prevDeps,
         cache.prevResult,
+        { current: resolvedSelector },
         reasons => {
           this._scheduleEvaluation({
             newState: cache?.prevResult.current, // runAtomSelector updates this ref before calling this callback
@@ -477,7 +494,8 @@ export class AtomInstance<
           cachedPrevResult = cache?.prevResult.current
         },
         SELECT_OPERATION,
-        cache.id
+        cache.id,
+        !!cache.prevArgs.current // allow run to short-circuit if this isn't the first run
       )
 
       cache.prevResult.current = result

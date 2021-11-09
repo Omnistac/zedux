@@ -3,7 +3,7 @@ import {
   AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
-  AtomSelector,
+  AtomSelectorOrConfig,
   AtomStateType,
 } from '@zedux/react/types'
 import {
@@ -65,6 +65,11 @@ export abstract class AtomInstanceBase<
     flagScore?: number
   ): void
 
+  public abstract _select<T, Args extends any[]>(
+    atomSelector: AtomSelectorOrConfig<T, Args>,
+    ...args: Args
+  ): T
+
   public abstract _select<A extends AtomBase<any, [], any>, D>(
     atom: A,
     selector: Selector<AtomStateType<A>, D>
@@ -80,6 +85,4 @@ export abstract class AtomInstanceBase<
     instance: I,
     selector: Selector<AtomInstanceStateType<I>, D>
   ): D
-
-  public abstract _select<T>(atomSelector: AtomSelector<T>): T
 }

@@ -1,14 +1,15 @@
 import { Selector } from '@zedux/core'
-import {
-  AtomInstanceStateType,
-  AtomParamsType,
-  AtomSelector,
-  AtomStateType,
-} from '../types'
+import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
 import { Atom, AtomInstance } from '../classes'
 import { diContext } from '../utils/csContexts'
+import { AtomSelectorOrConfig } from '..'
 
 export const injectAtomSelector: {
+  <T, Args extends any[]>(
+    selector: AtomSelectorOrConfig<T, Args>,
+    ...args: Args
+  ): T
+
   <A extends Atom<any, [], any>, D = any>(
     atom: A,
     selector: Selector<AtomStateType<A>, D>
@@ -24,18 +25,18 @@ export const injectAtomSelector: {
     instance: AI,
     selector: Selector<AtomInstanceStateType<AI>, D>
   ): D
-
-  <T>(selector: AtomSelector<T>): T
 } = <A extends Atom<any, [...any], any>, D = any>(
-  atom: A | AtomInstance<any, [...any], any> | AtomSelector<D>,
+  atom: A | AtomInstance<any, [...any], any> | AtomSelectorOrConfig<D>,
   paramsArg?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
-  selectorArg?: Selector<AtomStateType<A>, D>
+  selectorArg?: Selector<AtomStateType<A>, D>,
+  ...rest: any[]
 ): D => {
   const { instance } = diContext.consume()
 
   return instance._select(
     atom as A,
     paramsArg as AtomParamsType<A>,
-    selectorArg as Selector<AtomStateType<A>, D>
+    selectorArg as Selector<AtomStateType<A>, D>,
+    ...(rest as [])
   )
 }

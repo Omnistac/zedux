@@ -91,7 +91,20 @@ export type AtomParamsType<
   AtomType extends AnyAtomBase
 > = AtomType extends AtomBase<any, infer T, any> ? T : never
 
-export type AtomSelector<T = any> = (getters: AtomGetters, ...args: any[]) => T
+export type AtomSelector<T = any, Args extends any[] = []> = (
+  getters: AtomGetters,
+  ...args: Args
+) => T
+
+export interface AtomSelectorConfig<T = any, Args extends any[] = []> {
+  argsAreEqual?: (newArgs: Args, oldArgs: Args) => boolean
+  resultsAreEqual?: (newResult: T, oldResult: T) => boolean
+  selector: AtomSelector<T, Args>
+}
+
+export type AtomSelectorOrConfig<T = any, Args extends any[] = []> =
+  | AtomSelector<T, Args>
+  | AtomSelectorConfig<T, Args>
 
 export interface AtomSetters<
   State,

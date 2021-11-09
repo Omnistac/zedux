@@ -1,12 +1,12 @@
 import { Selector } from '@zedux/core'
 import { createContext } from 'react'
+import { AtomSelectorOrConfig } from '..'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
   AnyAtomInstanceBase,
   AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
-  AtomSelector,
   AtomStateType,
   EcosystemConfig,
 } from '../types'
@@ -237,7 +237,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     this._preload?.(this, newContext || (this.context as Context))
   }
 
-  public select<D>(atomSelector: AtomSelector<D>): D
+  public select<T, Args extends any[]>(
+    atomSelector: AtomSelectorOrConfig<T, Args>,
+    ...args: Args
+  ): T
 
   public select<A extends AtomBase<any, [], any>, D>(
     atom: A,
@@ -255,17 +258,31 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     atomOrInstanceOrSelector:
       | A
       | AtomInstanceBase<any, any, any>
-      | AtomSelector,
+      | AtomSelectorOrConfig<D, any>,
     paramsOrSelector?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
-    selector?: Selector<AtomStateType<A>, D>
+    selector?: Selector<AtomStateType<A>, D>,
+    ...rest: any[]
   ) {
-    if (typeof atomOrInstanceOrSelector === 'function') {
-      return atomOrInstanceOrSelector({
-        ecosystem: this,
-        get: this.get.bind(this),
-        getInstance: this.getInstance.bind(this),
-        select: this.select.bind(this),
-      })
+    if (
+      typeof atomOrInstanceOrSelector === 'function' ||
+      'selector' in atomOrInstanceOrSelector
+    ) {
+      const resolvedSelector =
+        typeof atomOrInstanceOrSelector === 'function'
+          ? atomOrInstanceOrSelector
+          : atomOrInstanceOrSelector.selector
+
+      return resolvedSelector(
+        {
+          ecosystem: this,
+          get: this.get.bind(this),
+          getInstance: this.getInstance.bind(this),
+          select: this.select.bind(this),
+        },
+        paramsOrSelector,
+        selector,
+        ...rest
+      )
     }
 
     const params = Array.isArray(paramsOrSelector)

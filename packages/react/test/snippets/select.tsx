@@ -1,20 +1,40 @@
-import { atom, useAtomSelector, useAtomState, AtomGetters } from '@zedux/react'
+import {
+  atom,
+  useAtomState,
+  AtomGetters,
+  ion,
+  useAtomValue,
+  useAtomInstance,
+} from '@zedux/react'
 import React from 'react'
 
 const atomA = atom('a', () => ({ num: 1, otherNum: 11 }))
 const atomB = atom('b', () => ({ num: 2, otherNum: 22 }))
 
-const selector = ({ select }: AtomGetters) => {
+const selector = ({ select }: AtomGetters, tag: string) => {
   const result =
     (select(atomA, val => val.num) + select(({ get }) => get(atomB).otherNum)) /
     2
-  console.log('running selector...', result)
+  console.log('running selector...', tag, result)
 
   return Math.floor(result)
 }
 
+const selectorWrapper = ({ select }: AtomGetters, tag: string) =>
+  select(({ select }) => select(({ select }) => select(selector, tag)))
+
+const ion1 = ion('1', ({ select }) =>
+  select(
+    {
+      resultsAreEqual: (newResult, oldResult) => newResult - 5 < oldResult,
+      selector: selectorWrapper,
+    },
+    Math.round(Math.random()) ? 'a' : 'b'
+  )
+)
+
 function Child() {
-  const val = useAtomSelector(selector)
+  const val = useAtomValue(ion1)
   console.log('child rendering...', val)
 
   return (
@@ -25,6 +45,7 @@ function Child() {
 }
 
 function Controls() {
+  const { invalidate } = useAtomInstance(ion1)
   const [, setA] = useAtomState(atomA)
 
   return (
@@ -43,6 +64,7 @@ function Controls() {
       >
         Increment Other Num
       </button>
+      <button onClick={invalidate}>Invalidate Ion</button>
     </>
   )
 }

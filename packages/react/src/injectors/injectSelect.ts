@@ -16,9 +16,9 @@ import { diContext } from '../utils/csContexts'
 export const injectSelect = () => {
   const { instance } = diContext.consume()
 
-  const select: typeof instance._select = (
+  const select: typeof instance._select = ((
     ...args: Parameters<typeof instance._select>
-  ) => instance._select(...args)
+  ) => instance._select(...args)) as any
 
   return select
 }
