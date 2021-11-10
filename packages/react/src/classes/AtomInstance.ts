@@ -557,18 +557,16 @@ export class AtomInstance<
       ]
     }
 
-    // reuse the old cache object - no need to rerun the selector since the old
-    // cache object's prevResult ref is already updated (via the shouldUpdate
-    // function below) if the selector result changed
+    // reuse the old cache object
     cache = this.ecosystem._graph.nodes?.[instance.keyHash]?.dependents[
       this.keyHash
-    ].cache?.get(resolvedSelector)
+    ]?.cache?.get(resolvedSelector)
 
     if (!cache) {
       const shouldUpdate = (state: AtomStateType<A>) => {
         const newResult = resolvedSelector(state)
 
-        if (!cache || newResult === cache.prevResult) return newResult
+        if (!cache || newResult === cache.prevResult) return false
 
         cache.prevResult = newResult
         return true
