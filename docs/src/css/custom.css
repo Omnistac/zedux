@@ -61,13 +61,13 @@ html[data-theme='dark'] {
   stroke: var(--color-dark);
 }
 
-.codeBlockContainer_node_modules-\@docusaurus-theme-classic-lib-next-theme-CodeBlock-styles-module {
-  box-shadow: 5px 5px rgb(9, 54, 112, 0.4);
-}
-
 .main-wrapper {
   display: flex;
   flex-flow: column nowrap;
+}
+
+.markdown > [class^='codeBlockContainer'] {
+  box-shadow: 5px 5px rgb(9, 54, 112, 0.4);
 }
 
 .menu__link {
@@ -197,24 +197,6 @@ html[data-theme='dark'] {
 .prism-code
   > .codeBlockLines_node_modules-\@docusaurus-theme-classic-lib-next-theme-CodeBlock-styles-module {
   font-size: 13.6px;
-}
-
-.playgroundHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground-.playgroundEditorHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground- {
-  background: #fff;
-  border-radius: 10px 10px 0 0;
-  letter-spacing: 0.6px;
-  padding: 0.3rem 0.75rem;
-}
-
-.playgroundHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground-.playgroundEditorHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground-::before {
-  content: '';
-  background: url('/img/logo.png') 0 0 no-repeat;
-  background-size: contain;
-  display: inline-block;
-  height: 24px;
-  margin-right: 14px;
-  vertical-align: middle;
-  width: 24px;
 }
 
 button.copyButton_node_modules-\@docusaurus-theme-classic-src-theme-CodeBlock- {

@@ -185,8 +185,8 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
       // don't cleanup if nothing's changed; we'll copy the old dep to the new
       // deps. Check for instance ref match in case of instance force-destruction
       if (
-        dep.instance === prevDep.instance &&
-        dep?.dynamicity === prevDep.dynamicity
+        dep?.instance === prevDep.instance &&
+        dep.dynamicity === prevDep.dynamicity
       ) {
         return
       }
@@ -204,7 +204,7 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
       // deps. Check for instance ref match in case of instance force-destruction
       if (
         prevDep?.instance === dep.instance &&
-        prevDep?.dynamicity === dep.dynamicity
+        prevDep.dynamicity === dep.dynamicity
       ) {
         newDeps[dep.instance.keyHash] = prevDep
         return

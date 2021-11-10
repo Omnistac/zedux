@@ -35,13 +35,14 @@ module.exports = {
     'https://fonts.googleapis.com/css2?family=Quicksand&display=swap',
   ],
   scripts: ['https://unpkg.com/typescript@latest/lib/typescriptServices.js'],
+  trailingSlash: false,
   /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
   themeConfig: {
     navbar: {
       title: 'Zedux',
       logo: {
         alt: 'Zedux Logo',
-        src: '../img/logo.png',
+        src: 'img/logo.png',
       },
       items: [
         {
