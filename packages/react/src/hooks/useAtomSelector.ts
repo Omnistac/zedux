@@ -32,6 +32,7 @@ const useStandaloneSelector = <T, Args extends any[]>(
   // development
   if (!idRef.current) idRef.current = generateAtomSelectorId()
 
+  let effect: undefined | (() => void) = undefined
   const result = runAtomSelector<T, Args>(
     selector,
     args,
@@ -44,8 +45,16 @@ const useStandaloneSelector = <T, Args extends any[]>(
     OPERATION,
     idRef.current,
     !!prevArgs.current,
-    useEffect
+    updateDeps => {
+      // during render, we don't want to create any deps outside an effect.
+      // After render, just update the deps immediately
+      if (!effect) effect = updateDeps
+      else updateDeps()
+    }
   )
+
+  // run this effect every render
+  useEffect(effect || (() => {}))
 
   prevResult.current = result
 
