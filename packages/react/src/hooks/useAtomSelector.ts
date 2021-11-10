@@ -6,7 +6,7 @@ import {
   AtomSelectorOrConfig,
   AtomStateType,
 } from '../types'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Dep, generateAtomSelectorId } from '../utils'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import { useEcosystem } from './useEcosystem'
@@ -43,7 +43,8 @@ const useStandaloneSelector = <T, Args extends any[]>(
     () => forceRender({}),
     OPERATION,
     idRef.current,
-    !!prevArgs.current
+    !!prevArgs.current,
+    useEffect
   )
 
   prevResult.current = result

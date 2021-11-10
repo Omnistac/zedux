@@ -29,7 +29,10 @@ interface AtomGetters {
 
   getInstance<I extends AtomInstance>(instance: I): I
 
-  select<D>(atomSelector: AtomSelector<D>): D
+  select<T, Args extends any[]>(
+    atomSelector: AtomSelectorOrConfig<T, Args>,
+    ...args: Args
+  ): T
 
   select<A extends AtomBase<any, [], any>, D>(
     atom: A,

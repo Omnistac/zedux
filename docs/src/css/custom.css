@@ -29,10 +29,16 @@ html[data-theme='dark'] {
 
 .admonition {
   margin-bottom: 2em;
+  border: none;
+  box-shadow: 5px 5px var(--ifm-alert-border-color);
 }
 
 .admonition-important {
   box-shadow: 5px 5px rgba(255, 100, 100, 0.4);
+}
+
+.admonition-note {
+  box-shadow: 5px 5px rgba(0, 205, 255, 0.4);
 }
 
 .admonition-tip {
@@ -55,8 +61,8 @@ html[data-theme='dark'] {
   stroke: var(--color-dark);
 }
 
-.codeBlock_node_modules-\@docusaurus-theme-classic-src-theme-CodeBlock- {
-  border-radius: var(--ifm-global-radius);
+.codeBlockContainer_node_modules-\@docusaurus-theme-classic-lib-next-theme-CodeBlock-styles-module {
+  box-shadow: 5px 5px rgb(9, 54, 112, 0.4);
 }
 
 .main-wrapper {
@@ -189,8 +195,8 @@ html[data-theme='dark'] {
 }
 
 .prism-code
-  > .codeBlockLines_node_modules-\@docusaurus-theme-classic-lib-next-theme-CodeBlock- {
-  font-size: 13.5px;
+  > .codeBlockLines_node_modules-\@docusaurus-theme-classic-lib-next-theme-CodeBlock-styles-module {
+  font-size: 13.6px;
 }
 
 .playgroundHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground-.playgroundEditorHeader_node_modules-\@docusaurus-theme-live-codeblock-src-theme-Playground- {

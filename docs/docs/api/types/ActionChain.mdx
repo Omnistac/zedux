@@ -18,11 +18,7 @@ ActionChains are **not** sent to [reducers](Reducer). Zedux unwraps the ActionCh
 ## Definition
 
 ```ts
-interface ActionMeta<
-  Payload = any,
-  Type extends string = string,
-  Data = any
-> {
+interface ActionMeta<Payload = any, Type extends string = string, Data = any> {
   metaType: string
   metaData?: Data
   payload: ActionChain<Payload, Type>
@@ -38,15 +34,15 @@ type ActionChain<Payload = any, Type extends string = string> =
 ```ts
 const justAnAction: ActionChain = {
   type: 'todos/add',
-  payload: { text: 'be awesome' }
+  payload: { text: 'be awesome' },
 }
 
 const fromParent: ActionChain = {
   metaType: '@@zedux/inherit',
   payload: {
     type: 'todos/add',
-    payload: { text: 'be awesome' }
-  }
+    payload: { text: 'be awesome' },
+  },
 }
 
 const fromChild: ActionChain = {
@@ -54,9 +50,9 @@ const fromChild: ActionChain = {
   metaData: ['a', 'b'],
   payload: {
     type: 'todos/add',
-    payload: { text: 'be awesome' }
-  }
+    payload: { text: 'be awesome' },
+  },
 }
 ```
 
-See [Zedux' `metaTypes`](/not-done).
+See [Zedux' `metaTypes`](../constants/metaTypes).

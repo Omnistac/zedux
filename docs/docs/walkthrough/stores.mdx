@@ -48,9 +48,7 @@ These high-level APIs are optional. You can of course use old-school switch stat
 Updating the state of reducer-driven stores is usually done with `.dispatch()`. Just like Redux. Zedux actions must have a string `type` property and can have optional `payload` and `meta` properties.
 
 ```ts
-store.dispatch(
-  addTodo({ id: 1, isDone: false, text: 'Be Awesome' })
-)
+store.dispatch(addTodo({ id: 1, isDone: false, text: 'Be Awesome' }))
 
 store.getState()
 // [{ id: 1, isDone: false, text: 'Be Awesome' }]
@@ -92,9 +90,9 @@ Passing an object ("branch") containing multiple reducers will automatically cre
 const complexStore = createStore({
   entities: {
     posts: postsReducer,
-    users: usersReducer
+    users: usersReducer,
   },
-  forms: formsStore
+  forms: formsStore,
 })
 
 complexStore.getState()
@@ -149,7 +147,7 @@ const toNotDosStore = createStore(null, [])
 // `.use()` to update its hierarchy
 rootStore.use({
   todos: todosStore,
-  toNotDos: toNotDosStore
+  toNotDos: toNotDosStore,
 })
 
 toNotDos.setState(state => [...state, 'be layzee'])
@@ -200,7 +198,7 @@ These subscribers will be called if a dispatched action ever raises an error.
 
 ```ts
 myStore.subscribe({
-  error: err => console.log('caught error!', err)
+  error: err => console.log('caught error!', err),
 })
 ```
 
@@ -228,7 +226,11 @@ myStore.subscribe({
 
 ## Stores in Atoms
 
-Atoms create their own stores by default every time an instance is created. However, sometimes the atom needs access to the instance's store during evaluation. Zedux provides several injectors that can be used to create a store in an evaluator.
+Atoms create their own stores by default every time an instance is created. However, sometimes you need access to the instance's store during evaluation. Zedux provides several injectors that can be used to create a store in an evaluator.
+
+:::important
+When you create your own store, make sure you return it from the evaluator function. This tells Zedux to use the store you created instead of creating a default one.
+:::
 
 ### `injectStore`
 
@@ -251,10 +253,12 @@ const store = injectStore(() => createStore({ a: storeA, b: storeB }))
 #### Mixing stores and reducers
 
 ```ts
-const store = injectStore(() => createStore({
-  a: myStore,
-  b: myReducer
-}))
+const store = injectStore(() =>
+  createStore({
+    a: myStore,
+    b: myReducer,
+  })
+)
 ```
 
 ### Setting state during evaluation
@@ -281,7 +285,7 @@ Turns out, this is also fine! `injectStore` detects if the store's state is upda
 ```ts
 const store = injectStore('initial state', true)
 
-// store's state hasn't been updated yet! 
+// store's state hasn't been updated yet!
 injectEffect(someSideEffect, [store.getState()])
 
 // won't trigger the above effect (which is fine if that's what we want)
@@ -330,10 +334,12 @@ An atom can create a store composed of the stores of other atoms.
 ```ts
 const instanceA = injectAtomInstance(atomA)
 const instanceB = injectAtomInstance(atomB)
-const store = injectStore(() => createStore({
-  a: instanceA.store,
-  b: instanceB.store
-}))
+const store = injectStore(() =>
+  createStore({
+    a: instanceA.store,
+    b: instanceB.store,
+  })
+)
 ```
 
 Use this approach sparingly, as this bypasses Zedux' internal graph algorithm. For simple use cases, this should be fine. Eventually, the work-in-progress molecules feature will be the recommended way to compose stores together from multiple atom instances.

@@ -51,9 +51,11 @@ export class Scheduler {
   }
 
   public wipe() {
-    // allow external jobs to proceed
+    // allow external jobs to proceed. Note: AtomSelectors run as an
+    // "UpdateExternalDependent" job, but with a lower flagScore (-2 - not actually
+    // external). Filter those out too.
     this.scheduledJobs = this.scheduledJobs.filter(
-      job => job.type === JobType.UpdateExternalDependent
+      job => job.type === JobType.UpdateExternalDependent && job.flagScore >= 2
     )
   }
 

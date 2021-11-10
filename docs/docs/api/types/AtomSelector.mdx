@@ -3,6 +3,8 @@ id: AtomSelector
 title: AtomSelector
 ---
 
+import { LiveEditor } from '../../LiveEditor'
+
 A function that receives an [AtomGetters](AtomGetters) object as its first parameter. It can take any number of other parameters and can return anything. It can use the AtomGetters to get atom values and run other AtomSelectors.
 
 This is the most basic tool for deriving state in Zedux. The [selectors walkthrough](../../walkthrough/selectors) teaches the basics of AtomSelectors. This page will only cover a few things the walkthrough doesn't.
@@ -14,7 +16,7 @@ AtomSelectors define a blueprint for pulling data from atoms. Similar to [resele
 - [`ecosystem.select()`](../classes/Ecosystem#select)
 - The `select` function of other AtomSelectors (composition!)
 
-You can also call them directly, passing an AtomGetters object, but you shouldn't need to.
+You can also call them directly, passing an AtomGetters object. There is [one situation](#generic-atomselectors) where this can be necessary
 
 :::tip
 Use AtomSelectors for:
@@ -28,7 +30,20 @@ Use AtomSelectors for:
 ## Definition
 
 ```ts
-type AtomSelector<T = any> = (getters: AtomGetters, ...args: any[]) => T
+type AtomSelector<T = any, Args extends any[] = []> = (
+  getters: AtomGetters,
+  ...args: Args
+) => T
+
+interface AtomSelectorConfig<T = any, Args extends any[] = []> {
+  argsAreEqual?: (newArgs: Args, oldArgs: Args) => boolean
+  resultsAreEqual?: (newResult: T, oldResult: T) => boolean
+  selector: AtomSelector<T, Args>
+}
+
+type AtomSelectorOrConfig<T = any, Args extends any[] = []> =
+  | AtomSelector<T, Args>
+  | AtomSelectorConfig<T, Args>
 ```
 
 ## Examples
@@ -53,25 +68,48 @@ const getTodos = ({ select }, isDone) => {
   const todos = select(isDone ? finishedTodos : unfinishedTodos)
 }
 
-const separatedTodos = getters => {
-  const finished = getTodos(getters, true)
-  const unfinished = getTodos(getters, false)
+const separatedTodosWithParams = ({ select }) => {
+  const finished = select(getTodos, true)
+  const unfinished = select(getTodos, false)
 
   return { finished, unfinished }
 }
 
 // in useAtomSelector()
-const todos = useAtomSelector(finishedTodos)
+const withHook = useAtomSelector(finishedTodos)
 
 // in injectAtomSelector()
-const todos = injectAtomSelector(finishedTodos)
+const withInjector = injectAtomSelector(finishedTodos)
 
 // in ecosystem.select()
-const todos = ecosystem.select(finishedTodos)
+const staticViaEcosystem = ecosystem.select(finishedTodos)
 
 // directly in ion body (not recommended)
 const exampleIon = ion('example', getters => {
   const todos = finishedTodos(getters)
+})
+
+// only run selector once
+const stateSnapshot = useAtomSelector({
+  // argsAreEqual isn't called on the first run
+  argsAreEqual: () => true,
+  selector: mySelector,
+})
+
+// only run the selector if the new args don't deep match the old args
+const limitedRuns = useAtomSelector(
+  {
+    areArgsEqual: (newArgs, oldArgs) => _.isEqual(newArgs, oldArgs),
+    selector: mySelector,
+  },
+  arg1,
+  arg2
+)
+
+// only trigger updates if the new result doesn't deep match the old result
+const limitedUpdates = useAtomSelector({
+  areResultsEqual: (newResult, oldResult) => _.isEqual(newResult, oldResult),
+  selector: mySelector,
 })
 ```
 
@@ -125,3 +163,56 @@ const getSortedList = ion('getSortedList', ({ select }) =>
 // (after usage):
 const sortedList = useAtomValue(getSortedList)
 ```
+
+## Generic AtomSelectors
+
+In TypeScript, AtomSelectors that take a generic may need to be called directly to get correct type inference.
+
+```ts
+// with this AtomSelector:
+const addExtraData = <T>({ get }: AtomGetters, list: T[]) => {
+  return list.map(item => ({
+    ...item,
+    extraData: get(extraDataAtom)[item.id],
+  }))
+}
+
+// it would be nice if you could:
+const withExtraData = useAtomSelector(addExtraData, list)
+
+// but you probably need to:
+const withExtraData = useAtomSelector(getters => addExtraData(getters, list))
+```
+
+## AtomSelectorConfig
+
+Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig object. This object has a required `selector` field and optional `argsAreEqual` and `resultsAreEqual` fields.
+
+- `selector` - The AtomSelector whose args and result we're configuring.
+
+- `argsAreEqual` - A function that accepts two parameters - the new args and old args - and should return a boolean. If this function returns true, Zedux will not run the AtomSelector again. This function is not called on the first run.
+
+- `resultsAreEqual` - A function that accepts two parameters - the new result and old result - and should return a boolean. If this function returns true, Zedux will not trigger a component rerender (when used from `useAtomSelector`) or an atom reevaluation (when used from `injectAtomSelector` or ion's `select`). This function is not called after the first run.
+
+:::note
+AtomSelectorConfig options (other than `selector`) are ignored when passed to `ecosystem.select()` and nested `select()` calls. They're accepted overloads for interop convenience.
+:::
+
+<LiveEditor resultVar="CountBy5">{`
+const counterAtom = atom('counter', 0)\n
+function CountBy5() {
+  const { setState } = useAtomInstance(counterAtom)
+  const counter = useAtomSelector({
+    resultsAreEqual: newCount => newCount % 5,
+    selector: ({ get }) => get(counterAtom)
+  })\n
+  return (
+    <>
+      <div>Value: {counter}</div>
+      <button onClick={() => setState(state => state + 1)}>
+        Increment (click me 5 times)
+      </button>
+    </>
+  )
+}
+`}</LiveEditor>

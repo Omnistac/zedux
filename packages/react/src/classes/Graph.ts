@@ -7,6 +7,7 @@ import {
   generateNodeId,
   GraphEdgeSignal,
   JobType,
+  UpdateExternalDependentJob,
 } from '../utils'
 import { Ecosystem } from './Ecosystem'
 import { AtomInstance } from './AtomInstance'
@@ -81,6 +82,7 @@ export class Graph {
     operation: string,
     isStatic: boolean,
     isAsync = false,
+    isAtomSelector = false,
     id = generateNodeId()
   ) {
     const nodeKey = dependency.keyHash
@@ -98,6 +100,7 @@ export class Graph {
     const newEdge: DependentEdge = {
       callback,
       isAsync,
+      isAtomSelector,
       isExternal: true,
       isStatic,
       operation,
@@ -169,12 +172,21 @@ export class Graph {
       const flagScore = getFlagScore(dependentEdge)
 
       if (dependentEdge.isExternal) {
-        this.ecosystem._scheduler.scheduleJob({
+        const job: UpdateExternalDependentJob = {
           flagScore,
           task: () => dependentEdge.callback?.(GraphEdgeSignal.Destroyed),
           type: JobType.UpdateExternalDependent,
-        })
+        }
 
+        // AtomSelectors register "external" dependencies, but they aren't
+        // actually external. Run them before external tasks and make sure they
+        // get filtered out on scheduler wipe by lowering their flagScore by 2
+        // (2 means external)
+        if (dependentEdge.isAtomSelector) {
+          job.flagScore -= 2
+        }
+
+        this.ecosystem._scheduler.scheduleJob(job)
         return
       }
 

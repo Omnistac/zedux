@@ -55,6 +55,7 @@ export interface DependentEdge {
     reasons?: EvaluationReason[]
   ) => any
   isAsync?: boolean
+  isAtomSelector?: boolean
   isExternal?: boolean
   isStatic?: boolean
   operation: string

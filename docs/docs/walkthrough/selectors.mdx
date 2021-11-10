@@ -276,9 +276,13 @@ function MyComponent() {
 
 Thanks to some [`useAtomSelector()`](../api/hooks/useAtomSelector) magic, AtomSelectors give components the same dynamic capabilities as atoms!
 
-## Limiting AtomSelector Runs
+## Using AtomSelectors
 
-Zedux uses reference equality to check if an AtomSelector changed. Consider this code:
+AtomSelectors have some special superpowers that let you control how often they run and whether they trigger rerenders
+
+### Limiting Runs
+
+Zedux runs AtomSelectors every time its reference changes on a subsequent render or evaluation. Consider this code:
 
 ```ts
 function MyComponent() {
@@ -333,6 +337,44 @@ function MyComponent() {
 
 Now our AtomSelector will only run exactly as often as it needs to.
 
+### Configuring
+
+We can also use special [AtomSelectorConfig](../api/types/AtomSelector#atomselectorconfig) objects to control when Zedux reruns an AtomSelector and whether the new result has "changed" and should cause a rerender.
+
+Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig object.
+
+```ts
+// this selector will only rerun when the `userId` we pass it changes - even
+// though the selector reference changes. And it will only cause this component
+// to rerender when the returned user's `name` is different.
+const { name } = useAtomSelector(
+  {
+    argsAreEqual: ([newId], [oldId]) => newId === oldId,
+    resultsAreEqual: (newUser, oldUser) => newUser.name === oldUser.name,
+    selector: ({ get }, id: string) => get(usersAtom)[id],
+  },
+  userId
+)
+```
+
+### Passing Arguments
+
+AtomSelectors take the AtomGetters object as their first argument, but they can also take any number of additional arguments. These can be passed as the rest params of `useAtomSelector`, `injectAtomSelector`, `ecosystem.select`, and `select`.
+
+```ts
+// with this AtomSelector:
+const getUser = ({ select }: AtomGetters, id: string) =>
+  select(getUsersById)[id]
+
+// we can pass the `id` param via:
+useAtomSelector(getUser, id) // in components
+injectAtomSelector(getUser, id) // in atoms
+ecosystem.select(getUser, id) // anywhere
+select(getUser, id) // in ions or other AtomSelectors
+```
+
+### Configuring AtomSelectors
+
 ## `select`
 
 The special `select` function is one of the [AtomGetters](../api/types/AtomGetters) passed to AtomSelectors and ions. This function is the most dynamic way to run AtomSelectors.
@@ -373,10 +415,11 @@ const getUsersById = ({ get }: AtomGetters) =>
   get(usersAtom).reduce((map, user) => ({ ...map, [user.id]: user }), {})\n
 const getUser = ({ select }: AtomGetters, id: string) =>
   select(getUsersById)[id]\n
+// Hi! just commenting here to break up the monotony. Have a great day!
 const getCurrentUser = ({ get, select }: AtomGetters) =>
   select(getUser, get(currentUserIdAtom))\n
 const getCurrentUserName = ({ select }: AtomGetters) =>
-  select(getCurrentUser).name\n
+  select(getCurrentUser)?.name\n
 function Username() {
   const currentUserName = useAtomSelector(getCurrentUserName)\n
   return <div>Hello, {currentUserName}</div>
@@ -386,6 +429,13 @@ function Username() {
 ## Static Selection
 
 AtomSelectors have a special superpower: They can be analyzed statically outside React (i.e. anywhere). Simply pass an AtomSelector to [`ecosystem.select()`](../api/classes/Ecosystem#select):
+
+```ts
+// run myAtomSelector outside React or atoms or anything:
+const val = ecosystem.select(myAtomSelector)
+```
+
+You can use this to purposefully prevent dependencies from being registered:
 
 ```ts
 // toggling this atom's value changes maybeDynamicAtom's dynamicity

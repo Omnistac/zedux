@@ -27,8 +27,7 @@ Zedux exports various hooks for accessing and updating atom values.
 import { useAtomInstance, useAtomState } from '@zedux/react'
 
 function MyComponent() {
-  const [state, setState] = useAtomState(myFirstAtom)
-  const instance = useAtomInstance(myFirstAtom)
+  const [state] = useAtomState(myFirstAtom)
 
   return <div>A message from the universe: {state}</div>
 }
@@ -58,7 +57,7 @@ function Seconds() {
 }
 `}</LiveEditor>
 
-See [the injectors walkthrough](/not-done)
+See [the creating atoms walkthrough](../walkthrough/creating-atoms#injectors)
 
 ### EcosystemProvider
 
@@ -323,7 +322,7 @@ function BigTable() {
 }
 ```
 
-See [the side effects walkthrough](/not-done).
+See [the side effects walkthrough](../walkthrough/side-effects).
 
 ## Caching
 
@@ -444,7 +443,7 @@ function UserProfile({ id }) {
 }
 ```
 
-See [`query()`](/not-done), [`asyncMachine`](/not-done), and [the side effects walkthrough](../walkthrough/side-effects).
+See [`query()`](/not-done) and [the side effects walkthrough](../walkthrough/side-effects).
 
 ### Mutations
 

@@ -240,13 +240,16 @@ export const LiveEditor: FC<{
         if (!jsCode) return
 
         Zedux.getEcosystem(ecosystemId).wipe()
+
         const evalResult = evalCode(
           ecosystemId,
           jsCode,
           resultVar,
           typeof extraScope === 'string' ? undefined : extraScope
         )
+
         lastLoggedErrorTimeRef.current = undefined
+
         if (isMountedRef.current) setResult(evalResult)
       } catch (err) {
         if (isMountedRef.current) setResult(err.message)

@@ -29,7 +29,7 @@ machineStore.dispatch(myActor())
 const composedStore = createStore({
   zeroConfig: zeroConfigStore,
   reducerStore: reducerStore,
-  machineStore: machineStore
+  machineStore: machineStore,
 })
 
 const bigComposedStore = createStore({
@@ -39,9 +39,9 @@ const bigComposedStore = createStore({
     d: reducerD,
     e: storeE,
     f: {
-      g: storeG
-    }
-  }
+      g: storeG,
+    },
+  },
 })
 ```
 
@@ -61,7 +61,7 @@ If an initialState is also passed, Zedux will set that as the state before calli
 
 ### `initialState`
 
-The initial state of the store. Stores can hold anything. If using the [zero-config pattern](/not-done), pass `null` as the initialHierarchy.
+The initial state of the store. Stores can hold anything. If using the [zero-config pattern](../../walkthrough/stores#zero-config), pass `null` as the initialHierarchy.
 
 ```ts
 const zeroConfigStore = createStore(null, 'initial state')
