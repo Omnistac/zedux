@@ -164,6 +164,7 @@ export interface EcosystemConfig<
   defaultForwardPromises?: boolean
   defaultTtl?: number
   destroyOnUnmount?: boolean
+  ghostTtlMs?: number
   flags?: string[]
   id?: string
   overrides?: AtomBase<any, any[], any>[]

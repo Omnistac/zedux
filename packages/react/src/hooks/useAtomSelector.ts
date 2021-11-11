@@ -6,7 +6,7 @@ import {
   AtomSelectorOrConfig,
   AtomStateType,
 } from '../types'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Dep, generateAtomSelectorId } from '../utils'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import { useEcosystem } from './useEcosystem'
@@ -26,6 +26,8 @@ const useStandaloneSelector = <T, Args extends any[]>(
   const prevResult = useRef<T>()
   const prevSelector = useRef<AtomSelector<T, Args>>() // don't populate initially
   const idRef = useRef<string>()
+  const hasEffectRun = useRef(false)
+  hasEffectRun.current = false
 
   // doesn't matter if fibers/suspense mess this id up - it's just for some
   // consistency when inspecting dependencies created by this selector in
@@ -45,16 +47,19 @@ const useStandaloneSelector = <T, Args extends any[]>(
     OPERATION,
     idRef.current,
     !!prevArgs.current,
-    updateDeps => {
+    materializeDeps => {
       // during render, we don't want to create any deps outside an effect.
       // After render, just update the deps immediately
-      if (!effect) effect = updateDeps
-      else updateDeps()
+      if (!hasEffectRun.current) effect = materializeDeps
+      else materializeDeps()
     }
   )
 
   // run this effect every render
-  useEffect(effect || (() => {}))
+  useLayoutEffect(() => {
+    hasEffectRun.current = true
+    effect?.()
+  })
 
   prevResult.current = result
 

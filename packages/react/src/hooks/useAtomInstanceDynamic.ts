@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { AtomInstanceParamsType, AtomInstanceStateType } from '..'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import {
@@ -69,6 +69,26 @@ export const useAtomInstanceDynamic: {
     }
   }
 
+  const ghostSubscription = useMemo(
+    () =>
+      ecosystem._graph.registerGhostDependent(
+        instance,
+        (signal, val: AtomStateType<A>) => {
+          if (signal === GraphEdgeSignal.Destroyed) {
+            forceRender({})
+            return
+          }
+
+          if (shouldUpdate && !shouldUpdate?.(val)) return
+
+          setReactState(val)
+        },
+        operation,
+        false
+      ),
+    [instance]
+  )
+
   // TODO: guard against ecosystem/instance changing over and over, causing
   // this effect to set React state over and over
   useLayoutEffect(() => {
@@ -79,22 +99,8 @@ export const useAtomInstanceDynamic: {
     // params were passed)
     if (currentState !== state) setReactState(currentState)
 
-    return ecosystem._graph.registerExternalDependent(
-      instance,
-      (signal, val: AtomStateType<A>) => {
-        if (signal === GraphEdgeSignal.Destroyed) {
-          forceRender({})
-          return
-        }
-
-        if (shouldUpdate && !shouldUpdate?.(val)) return
-
-        setReactState(val)
-      },
-      operation,
-      false
-    )
-  }, [ecosystem, instance]) // not state
+    return ghostSubscription.materialize()
+  }, [ghostSubscription, instance]) // not state
 
   return instance
 }

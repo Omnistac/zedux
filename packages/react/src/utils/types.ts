@@ -43,6 +43,7 @@ export interface Dep<T = any> {
   cleanup?: () => void
   instance: AtomInstanceBase<T, any, any>
   dynamicity: GraphEdgeDynamicity
+  materialize?: () => void
   memoizedVal?: any
   shouldUpdate?: (newState: T) => boolean
 }
@@ -54,9 +55,11 @@ export interface DependentEdge {
     val?: any,
     reasons?: EvaluationReason[]
   ) => any
+  createdAt: number
   isAsync?: boolean
   isAtomSelector?: boolean
   isExternal?: boolean
+  isGhost?: boolean
   isStatic?: boolean
   operation: string
   shouldUpdate?: (state: any) => boolean

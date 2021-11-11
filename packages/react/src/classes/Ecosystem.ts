@@ -36,6 +36,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   public context?: Context
   public defaultForwardPromises?: boolean
   public defaultTtl?: number
+  public ghostTtlMs: number
   public ecosystemId: string
   public flags?: string[] = []
   public overrides: Record<string, AtomBase<any, any[], any>> = {}
@@ -46,6 +47,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     defaultForwardPromises,
     defaultTtl,
     destroyOnUnmount,
+    ghostTtlMs,
     flags,
     id,
     overrides,
@@ -75,6 +77,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     this.context = context
     this.defaultForwardPromises = defaultForwardPromises
     this.defaultTtl = defaultTtl ?? -1
+    this.ghostTtlMs = ghostTtlMs ?? 2000
     this._destroyOnUnmount = !!destroyOnUnmount
     this._preload = preload
 

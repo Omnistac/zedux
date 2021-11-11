@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
 import { AtomInstanceType, AtomParamsType, PromiseStatus } from '../types'
 import { GraphEdgeSignal } from '../utils'
@@ -51,18 +51,24 @@ export const useAtomInstance: {
     }
   }
 
+  const ghostSubscription = useMemo(
+    () =>
+      ecosystem._graph.registerGhostDependent(
+        instance,
+        signal => {
+          if (signal === GraphEdgeSignal.Destroyed) {
+            forceRender({})
+          }
+        },
+        'useAtomInstance',
+        true
+      ),
+    [instance]
+  )
+
   useLayoutEffect(() => {
-    return ecosystem._graph.registerExternalDependent(
-      instance,
-      signal => {
-        if (signal === GraphEdgeSignal.Destroyed) {
-          forceRender({})
-        }
-      },
-      'useAtomInstance',
-      true
-    )
-  }, [ecosystem, instance]) // not storedInstance
+    return ghostSubscription.materialize()
+  }, [ghostSubscription])
 
   return instance
 }

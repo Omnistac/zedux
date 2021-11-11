@@ -5,12 +5,15 @@ import {
   UpdateExternalDependentJob,
 } from '../utils'
 import { Ecosystem } from './Ecosystem'
+import { Ghost } from './Ghost'
 
 export class Scheduler {
   // private _runStartTime?: number
+  private scheduledGhosts: Map<Ghost, true> = new Map()
   private scheduledJobs: Job[] = []
+  private _ghostCleanupTimeoutId?: ReturnType<typeof setTimeout>
+  private _jobTimeoutId?: ReturnType<typeof setTimeout>
   private _isRunning?: boolean
-  private _timeoutId?: ReturnType<typeof setTimeout>
 
   constructor(private readonly ecosystem: Ecosystem) {}
 
@@ -21,9 +24,20 @@ export class Scheduler {
    */
   public flush() {
     if (this._isRunning) return // already flushing
-    if (this._timeoutId) clearTimeout(this._timeoutId)
+    if (this._jobTimeoutId) clearTimeout(this._jobTimeoutId)
 
     this.runJobs()
+  }
+
+  public scheduleGhostCleanup(ghost: Ghost) {
+    this.scheduledGhosts.set(ghost, true)
+
+    if (this._ghostCleanupTimeoutId) return
+
+    this._ghostCleanupTimeoutId = setTimeout(() => {
+      this._ghostCleanupTimeoutId = undefined
+      this.cleanupGhosts()
+    }, this.ecosystem.ghostTtlMs * 2) // ghosts can live for up to twice their ttl
   }
 
   public scheduleJob(newJob: Job) {
@@ -39,11 +53,12 @@ export class Scheduler {
 
     // we just pushed the first job onto the queue
     if (shouldSetTimeout) {
-      this._timeoutId = setTimeout(() => {
-        this._timeoutId = undefined
-        this.runJobs()
-      })
+      this.setTimeout()
     }
+  }
+
+  public unscheduleGhostCleanup(ghost: Ghost) {
+    this.scheduledGhosts.delete(ghost)
   }
 
   public unscheduleJob(task: () => void) {
@@ -57,6 +72,27 @@ export class Scheduler {
     this.scheduledJobs = this.scheduledJobs.filter(
       job => job.type === JobType.UpdateExternalDependent && job.flagScore >= 2
     )
+  }
+
+  private cleanupGhosts() {
+    const now = Date.now()
+
+    this.scheduledGhosts.forEach((_, ghost) => {
+      if (ghost.edge.createdAt + this.ecosystem.ghostTtlMs > now) {
+        return
+      }
+
+      ghost.destroy()
+      this.scheduledGhosts.delete(ghost)
+    })
+
+    // schedule another timeout if there are still ghosts to clean up
+    if (!this.scheduledGhosts.size) return
+
+    this._ghostCleanupTimeoutId = setTimeout(() => {
+      this._ghostCleanupTimeoutId = undefined
+      this.cleanupGhosts()
+    }, this.ecosystem.ghostTtlMs) // not * 2 like the original timeout
   }
 
   // An O(log n) replacement for this.scheduledJobs.findIndex()
@@ -145,5 +181,12 @@ export class Scheduler {
       // }
     }
     this._isRunning = false
+  }
+
+  private setTimeout() {
+    this._jobTimeoutId = setTimeout(() => {
+      this._jobTimeoutId = undefined
+      this.runJobs()
+    })
   }
 }

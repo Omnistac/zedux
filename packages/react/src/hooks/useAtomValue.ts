@@ -19,7 +19,8 @@ export const useAtomValue: {
 ) => {
   const instance = useAtomInstanceDynamic(
     atom,
-    params as AtomParamsType<A>
+    params as AtomParamsType<A>,
+    'useAtomValue'
   ) as AtomInstanceBase<AtomStateType<A>, [...any], any>
 
   return instance.store.getState()

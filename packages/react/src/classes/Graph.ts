@@ -12,6 +12,7 @@ import {
 import { Ecosystem } from './Ecosystem'
 import { AtomInstance } from './AtomInstance'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
+import { Ghost } from './Ghost'
 
 /**
  * The flag score determines job priority in the scheduler. Scores range from
@@ -47,6 +48,7 @@ export class Graph {
   ) {
     const dependency = this.nodes[dependencyKey]
     const newEdge: DependentEdge = {
+      createdAt: Date.now(),
       isAsync,
       isStatic,
       operation,
@@ -76,7 +78,7 @@ export class Graph {
     }
   }
 
-  public registerExternalDependent<State>(
+  public registerGhostDependent<State>(
     dependency: AtomInstanceBase<State, any[], any>,
     callback: DependentEdge['callback'],
     operation: string,
@@ -88,36 +90,34 @@ export class Graph {
     const nodeKey = dependency.keyHash
     const node = this.nodes[nodeKey]
 
-    if (!node) {
-      console.warn(
-        'Zedux - tried registering external dependent after its dependency was destroyed. This may indicate a memory leak in your application'
-      )
-      return () => {}
-    }
-
     // would be nice if React provided a way to know that multiple hooks were
     // part of the same component
     const newEdge: DependentEdge = {
       callback,
+      createdAt: Date.now(),
       isAsync,
       isAtomSelector,
       isExternal: true,
+      isGhost: true,
       isStatic,
       operation,
     }
 
     node.dependents[id] = newEdge
-
     this.unscheduleDestruction(nodeKey)
 
-    return () => {
+    const ghost = new Ghost(this.ecosystem, newEdge, () => {
       if (newEdge.task) {
         this.ecosystem._scheduler.unscheduleJob(newEdge.task)
       }
 
       delete node.dependents[id]
       this.scheduleInstanceDestruction(dependency.keyHash)
-    }
+    })
+
+    this.ecosystem._scheduler.scheduleGhostCleanup(ghost)
+
+    return ghost
   }
 
   public removeDependencies(dependentKey: string) {

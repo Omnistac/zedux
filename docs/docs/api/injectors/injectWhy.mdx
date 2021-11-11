@@ -54,8 +54,8 @@ If an atom's state is set multiple times synchronously, Zedux will batch those u
 <LiveEditor resultVar="Reasons">{`
 const reasonsAtom = atom('reasons', () => {
   const store = injectStore(0, true) // subscribe to this store\n
-  const reasons = injectWhy()\n
-  const sawFive = reasons.some(reason => reason.newState === 5)
+  const reasons = injectWhy()
+  const sawFive = reasons.some(reason => reason.newState === 5)\n
   injectEffect(() => {
     if (sawFive) alert('hah! I saw that 5 in there!')
   }, [sawFive])\n

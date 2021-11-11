@@ -66,6 +66,7 @@ describe('graph', () => {
     expect(div).toHaveTextContent('3')
 
     const expectedEdges = {
+      createdAt: expect.any(Number),
       isAsync: false,
       isStatic: false,
       operation: 'get',
@@ -145,6 +146,7 @@ describe('graph', () => {
         dependencies: {},
         dependents: {
           ion1: {
+            createdAt: expect.any(Number),
             isAsync: false,
             isStatic: true,
             operation: 'getInstance',
@@ -157,6 +159,7 @@ describe('graph', () => {
         dependencies: {},
         dependents: {
           ion1: {
+            createdAt: expect.any(Number),
             isAsync: false,
             isStatic: true,
             operation: 'getInstance',
@@ -203,6 +206,7 @@ describe('graph', () => {
         dependencies: {},
         dependents: {
           d: {
+            createdAt: expect.any(Number),
             isAsync: false,
             isStatic: false,
             operation: 'injectAtomValue',
@@ -215,6 +219,7 @@ describe('graph', () => {
         dependencies: {},
         dependents: {
           d: {
+            createdAt: expect.any(Number),
             isAsync: false,
             isStatic: false,
             operation: 'get',
@@ -242,6 +247,7 @@ describe('graph', () => {
         dependencies: {},
         dependents: {
           d: {
+            createdAt: expect.any(Number),
             isAsync: false,
             isStatic: false,
             operation: 'injectAtomValue',
@@ -259,6 +265,7 @@ describe('graph', () => {
         dependencies: {},
         dependents: {
           d: {
+            createdAt: expect.any(Number),
             isAsync: false,
             isStatic: false,
             operation: 'get',
