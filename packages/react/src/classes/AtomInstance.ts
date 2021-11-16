@@ -33,7 +33,6 @@ import {
   JobType,
 } from '@zedux/react/utils'
 import { diContext } from '@zedux/react/utils/csContexts'
-import { Atom } from './atoms/Atom'
 import { Ecosystem } from './Ecosystem'
 import { createStore, isZeduxStore, Store } from '@zedux/core'
 import { AtomApi } from './AtomApi'
@@ -123,7 +122,7 @@ export class AtomInstance<
 
   constructor(
     public readonly ecosystem: Ecosystem,
-    public readonly atom: Atom<State, Params, Exports>,
+    public readonly atom: StandardAtomBase<State, Params, Exports>,
     public readonly keyHash: string,
     public readonly params: Params
   ) {
@@ -141,6 +140,9 @@ export class AtomInstance<
         newState,
         oldState
       )
+
+      // run the scheduler synchronously after any atom instance state update
+      this.ecosystem._scheduler.flush()
     })
 
     if (!this.promise && this._shouldForwardPromise()) this._forwardPromises()
@@ -170,7 +172,6 @@ export class AtomInstance<
         )
       : this.store.setState(settable, meta)
 
-    this.ecosystem._scheduler.flush()
     return val
   }
 
@@ -298,7 +299,7 @@ export class AtomInstance<
     return instance.store.getState()
   }
 
-  public _getInstance<A extends Atom<any, [...any], any>>(
+  public _getInstance<A extends StandardAtomBase<any, [...any], any>>(
     atomOrInstance: A | AtomInstanceType<A>,
     params?: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
@@ -418,7 +419,7 @@ export class AtomInstance<
     })
   }
 
-  public _select<A extends Atom<any, [...any], any>, D>(
+  public _select<A extends StandardAtomBase<any, [...any], any>, D>(
     atomOrInstanceOrSelector:
       | A
       | AtomInstanceType<A>

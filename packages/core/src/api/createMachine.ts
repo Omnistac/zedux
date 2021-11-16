@@ -28,10 +28,12 @@ export const createMachine = <State extends string = string>(
   // tracks directed edges between states
   const stateTransitionMap: StateTransitionMap<State> = {}
 
-  states.forEach(state => {
-    assertIsValidState(state)
-    ;(stateTransitionMap as any)[state.type] = state.transitions
-  })
+  if (DEV) {
+    states.forEach(state => {
+      assertIsValidState(state)
+      ;(stateTransitionMap as any)[state.type] = state.transitions
+    })
+  }
 
   /**
     The reducer.

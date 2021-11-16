@@ -1,5 +1,4 @@
-import { ActionChain, Settable, Store } from '@zedux/core'
-import { Observable } from 'rxjs'
+import { ActionChain, Observable, Settable, Store } from '@zedux/core'
 import {
   AtomBase,
   AtomInstance,

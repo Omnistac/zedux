@@ -159,11 +159,14 @@ export const when = <State = any>(store: Store<State>) => {
       return whenBuilder
     }
 
-    assertAreFunctions([sideEffect], 'whenBuilder.receivesEffect()')
+    if (DEV) {
+      assertAreFunctions([sideEffect], 'whenBuilder.receivesEffect()')
+    }
 
     const reactable = reactableOrEffectHandler as Reactable
-    const actionType = extractActionType('whenBuilder.receivesAction()')(
-      reactable
+    const actionType = extractActionType(
+      reactable,
+      'whenBuilder.receivesAction()'
     )
 
     if (!actionHandlers[actionType]) {
@@ -185,7 +188,9 @@ export const when = <State = any>(store: Store<State>) => {
     predicate: (state?: State) => boolean,
     sideEffect: SideEffectHandler<State>
   ) => {
-    assertAreFunctions([predicate, sideEffect], 'whenBuilder.stateMatches()')
+    if (DEV) {
+      assertAreFunctions([predicate, sideEffect], 'whenBuilder.stateMatches()')
+    }
 
     stateMatchHandlers.push({ predicate, sideEffect })
 

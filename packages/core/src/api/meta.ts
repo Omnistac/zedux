@@ -1,4 +1,4 @@
-import { assert } from '../utils/errors'
+import { detailedTypeof, noop } from '../utils/general'
 import {
   Action,
   ActionChain,
@@ -8,14 +8,17 @@ import {
   EffectMeta,
 } from '../types'
 
-const assertActionExists = (actionOrEffect: ActionChain | EffectChain) => {
-  assert(
-    !!actionOrEffect,
-    'Invalid meta chain. The last node in the chain must be either ' +
-      'a valid action object with a non-empty "type" property ' +
-      'or an effect with a non-empty "effectType" property'
-  )
-}
+const assertActionExists = DEV
+  ? (actionOrEffect: ActionChain | EffectChain) => {
+      if (actionOrEffect) return
+
+      throw new Error(
+        `Zedux error - Invalid meta chain. The last node in the chain must be either a valid action object with a non-empty "type" property or an effect with a non-empty "effectType" property. Received ${detailedTypeof(
+          actionOrEffect
+        )}`
+      )
+    }
+  : noop
 
 const getNewRoot = <T extends ActionChain | EffectChain>(
   currentNode: T,
@@ -65,7 +68,9 @@ export const getMetaData = (
 
     actionOrEffect = actionOrEffect.payload
 
-    assertActionExists(actionOrEffect)
+    if (DEV) {
+      assertActionExists(actionOrEffect)
+    }
   }
 }
 
@@ -82,7 +87,9 @@ export const hasMeta = (
 
     actionOrEffect = actionOrEffect.payload
 
-    assertActionExists(actionOrEffect)
+    if (DEV) {
+      assertActionExists(actionOrEffect)
+    }
   }
 
   return false
@@ -99,7 +106,9 @@ export const removeAllMeta: {
   while (actionOrEffect.hasOwnProperty('metaType')) {
     actionOrEffect = actionOrEffect.payload
 
-    assertActionExists(actionOrEffect)
+    if (DEV) {
+      assertActionExists(actionOrEffect)
+    }
   }
 
   return actionOrEffect

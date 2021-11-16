@@ -363,7 +363,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
         flag => !this.flags?.includes(flag)
       )
 
-      if (badFlag) {
+      if (DEV && badFlag) {
         console.error(
           `Zedux - encountered unsafe atom "${atom.key}" with flag "${badFlag}". This atom should be overridden in the current environment.`
         )

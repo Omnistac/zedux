@@ -186,7 +186,7 @@ describe('Store.getState()', () => {
     }
 
     expect(() => store.use(reducer)).toThrowError(
-      /cannot be called within a reducer/i
+      /cannot be called in a reducer/i
     )
   })
 
@@ -222,7 +222,7 @@ describe('Store.setState()', () => {
     }
 
     expect(() => store.dispatch(action)).toThrowError(
-      /cannot be called within a reducer/i
+      /cannot be called in a reducer/i
     )
   })
 

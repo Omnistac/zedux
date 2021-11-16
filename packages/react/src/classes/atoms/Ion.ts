@@ -1,22 +1,24 @@
 import { Settable } from '@zedux/core'
-import { Atom } from '@zedux/react/classes/atoms/Atom'
+import { StandardAtomBase } from '@zedux/react/classes/atoms/StandardAtomBase'
 import { api } from '@zedux/react/factories/api'
 import { ion } from '@zedux/react/factories/ion'
 import {
   injectEcosystem,
   injectGet,
   injectGetInstance,
+  injectSelect,
 } from '@zedux/react/injectors'
-import { injectSelect } from '@zedux/react/injectors/injectSelect'
 import { AtomConfig, IonGet, IonSet, AtomSetters } from '@zedux/react/types'
+import { hashParams } from '@zedux/react/utils'
 import { diContext } from '@zedux/react/utils/csContexts'
 import { AtomInstance } from '../AtomInstance'
+import { Ecosystem } from '../Ecosystem'
 
 export class Ion<
   State,
   Params extends any[],
   Exports extends Record<string, any>
-> extends Atom<State, Params, Exports> {
+> extends StandardAtomBase<State, Params, Exports> {
   private _get: IonGet<State, Params, Exports>
   private _set?: IonSet<State, Params, Exports>
 
@@ -42,7 +44,7 @@ export class Ion<
       if (set) {
         ionApi.addSetStateInterceptor(settable => {
           const innerSet: AtomSetters<State, Params, Exports>['set'] = (
-            atom: Atom<any, [...any], any>,
+            atom: StandardAtomBase<any, [...any], any>,
             paramsIn: any[],
             settableIn?: Settable
           ) => {
@@ -79,8 +81,27 @@ export class Ion<
     this._set = set
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+  public _createInstance(
+    ecosystem: Ecosystem,
+    keyHash: string,
+    params: Params
+  ): AtomInstance<State, Params, Exports> {
+    return new AtomInstance<State, Params, Exports>(
+      ecosystem,
+      this,
+      keyHash,
+      params
+    )
+  }
+
+  public getKeyHash(params?: Params) {
+    const base = this.key
+
+    if (!params?.length) return base
+
+    return `${base}-${hashParams(params)}`
+  }
+
   public override(
     newGet?: IonGet<State, Params, Exports>,
     newSet?: IonSet<State, Params, Exports>

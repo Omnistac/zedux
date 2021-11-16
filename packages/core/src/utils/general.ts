@@ -4,6 +4,19 @@ export const NO_PROTOTYPE = 'prototype-less object'
 export const NULL = 'null'
 export const PLAIN_OBJECT = 'object'
 
+/**
+  Determines which kind of object an "object" is.
+
+  Objects can be prototype-less, complex, or plain.
+*/
+function getDetailedObjectType(value: any) {
+  const prototype = Object.getPrototypeOf(value)
+
+  if (!prototype) return NO_PROTOTYPE
+
+  return Object.getPrototypeOf(prototype) ? COMPLEX_OBJECT : PLAIN_OBJECT
+}
+
 export enum HierarchyType {
   Branch,
   Null,
@@ -65,15 +78,4 @@ export function isZeduxStore(value: any) {
   return value?.constructor?.$$typeof === STORE_IDENTIFIER
 }
 
-/**
-  Determines which kind of object an "object" is.
-
-  Objects can be prototype-less, complex, or plain.
-*/
-function getDetailedObjectType(value: any) {
-  const prototype = Object.getPrototypeOf(value)
-
-  if (!prototype) return NO_PROTOTYPE
-
-  return Object.getPrototypeOf(prototype) ? COMPLEX_OBJECT : PLAIN_OBJECT
-}
+export const noop = () => {}

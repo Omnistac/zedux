@@ -13,7 +13,7 @@ export const createState = <Type extends string = string>(stateType: Type) => {
   const is = (str: string) => str === stateType
 
   const on = (actor: Reactable, targetState: MachineStateRepresentation) => {
-    const actionType = extractActionType(method)(actor)
+    const actionType = extractActionType(actor, method)
 
     transitions[actionType] = extractStateType(targetState)
 

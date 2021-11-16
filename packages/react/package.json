@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "build-storybook": "build-storybook",
-    "build:es": "ttsc --outDir dist/es -p tsconfig.es.json",
+    "build:es": "ttsc --outDir dist/es -p tsconfig.es.json && find dist/es -type f -exec sed -i '' 's/DEV/process.env.NODE_ENV !== \"production\"/g' {} \\;",
     "build:umd:min": "cross-env NODE_ENV=production webpack",
     "build:umd": "cross-env NODE_ENV=development webpack",
     "build": "yarn build:es && yarn build:umd && yarn build:umd:min",

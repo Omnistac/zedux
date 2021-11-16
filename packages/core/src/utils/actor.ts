@@ -1,15 +1,26 @@
 import { Reactable, MachineStateRepresentation } from '../types'
-import { assertIsValidActor, assertIsValidState } from './errors'
+import { assertIsValidState } from './errors'
 
 /**
   Pulls the string action type out of an actor or returns
   a given string action type as-is.
 */
-export const extractActionType = (method: string) => (actor: Reactable) => {
+export const extractActionType = (actor: any, method: string) => {
   // The "actor" may be a literal action type string
   if (typeof actor === 'string') return actor
 
-  assertIsValidActor(actor, method)
+  if (DEV) {
+    if (typeof actor !== 'function' || typeof actor.type !== 'string') {
+      const type =
+        typeof actor === 'function'
+          ? `function with invalid "type" property - ${typeof actor.type}`
+          : typeof actor
+
+      throw new TypeError(
+        `Zedux Error - ${method} - Actor must be either a string or a function with a "type" property. Received ${type}`
+      )
+    }
+  }
 
   return actor.type
 }
@@ -19,12 +30,14 @@ export const extractActionType = (method: string) => (actor: Reactable) => {
   actors and string action types.
 */
 export const extractActionTypes = (actors: Reactable[], method: string) =>
-  actors.map(extractActionType(method))
+  actors.map(actor => extractActionType(actor, method))
 
 export const extractStateType = (state: MachineStateRepresentation) => {
   if (typeof state === 'string') return state
 
-  assertIsValidState(state)
+  if (DEV) {
+    assertIsValidState(state)
+  }
 
   return state.type
 }

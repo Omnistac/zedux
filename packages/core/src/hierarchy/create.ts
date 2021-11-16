@@ -2,8 +2,12 @@ import { actionTypes, metaTypes } from '../api/constants'
 import { Store } from '../api/createStore'
 import { addMeta } from '../api/meta'
 import { Action, Branch, HierarchyDescriptor, Reducer } from '../types'
-import { assertIsNullHierarchyDescriptorNode } from '../utils/errors'
-import { HierarchyType, isPlainObject, isZeduxStore } from '../utils/general'
+import {
+  detailedTypeof,
+  HierarchyType,
+  isPlainObject,
+  isZeduxStore,
+} from '../utils/general'
 import { DiffNode, DiffTree, RegisterSubStore } from '../utils/types'
 
 /**
@@ -70,7 +74,13 @@ export function getHierarchyType(descriptor: HierarchyDescriptor) {
 
   if (isPlainObject(descriptor)) return HierarchyType.Branch
 
-  assertIsNullHierarchyDescriptorNode(descriptor)
+  if (DEV && descriptor != null) {
+    throw new TypeError(
+      `Zedux Error - store.use() - Hierarchy descriptor nodes must be reducers, stores, or plain objects. Received ${detailedTypeof(
+        descriptor
+      )}`
+    )
+  }
 
   return HierarchyType.Null
 }

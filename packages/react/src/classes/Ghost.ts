@@ -25,9 +25,11 @@ export class Ghost {
   materialize() {
     // do nothing if ghost has been destroyed
     if (this.isDestroyed) {
-      console.warn(
-        "Zedux - tried materializing ghost dependency after it was destroyed. This probably means a React fiber took a long time to commit. Consider increasing the ecosystem's ghostTtlMs"
-      )
+      if (DEV) {
+        console.warn(
+          "Zedux - tried materializing ghost dependency after it was destroyed. This probably means a React fiber took a long time to commit. Consider increasing the ecosystem's ghostTtlMs"
+        )
+      }
 
       return
     }

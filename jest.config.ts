@@ -1,9 +1,10 @@
 import { Config } from '@jest/types'
+import { RawCompilerOptions } from 'ts-jest/dist/tsconfig-raw'
 import { pathsToModuleNameMapper } from 'ts-jest/utils'
 import { compilerOptions } from './tsconfig.json'
 
-const jestCompilerOptions = {
-  ...compilerOptions,
+const jestCompilerOptions: RawCompilerOptions = {
+  ...(compilerOptions as any),
   lib: [...compilerOptions.lib, 'DOM'],
 }
 
@@ -11,7 +12,7 @@ const config: Config.InitialOptions = {
   collectCoverage: true,
   collectCoverageFrom: ['**/src/**'],
   globals: {
-    'process.env.NODE_ENV': 'development',
+    DEV: true,
     'ts-jest': {
       tsconfig: jestCompilerOptions,
     },

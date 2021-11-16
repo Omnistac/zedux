@@ -1,8 +1,11 @@
 import { resolve } from 'path'
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
+import { DefinePlugin } from 'webpack'
+
+const DEV = process.env.NODE_ENV === 'development'
 
 export default {
-  devtool: 'source-map',
+  devtool: DEV ? 'inline-source-map' : 'source-map',
   entry: './src/index.ts',
   externals: {
     react: 'React',
@@ -25,13 +28,14 @@ export default {
     ],
   },
   output: {
-    filename:
-      process.env.NODE_ENV === 'development'
-        ? 'react-zedux.js'
-        : 'react-zedux.min.js',
+    filename: DEV ? 'react-zedux.js' : 'react-zedux.min.js',
     path: resolve('dist'),
   },
-  plugins: [],
+  plugins: [
+    new DefinePlugin({
+      DEV: JSON.stringify(DEV),
+    }),
+  ],
   resolve: {
     extensions: ['.ts', '.tsx'],
     plugins: [

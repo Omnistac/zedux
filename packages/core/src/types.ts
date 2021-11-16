@@ -78,7 +78,7 @@ export type EffectCreator<State = any> = (
 export interface EffectData<State = any> {
   action?: ActionChain
   effect?: EffectChain
-  error?: Error
+  error?: unknown
   newState: State
   oldState?: State
   store: Store<State>
@@ -96,7 +96,7 @@ export type EffectsSubscriber<State = any> = (
   effectData: EffectData<State>
 ) => any
 
-export type ErrorSubscriber = (error: Error) => any
+export type ErrorSubscriber = (error: unknown) => any
 
 export interface HierarchyConfig<T = any> {
   clone: (node: T) => T

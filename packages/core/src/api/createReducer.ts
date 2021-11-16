@@ -27,7 +27,7 @@ export const createReducer = <State = any>(initialState?: State) => {
     const method = 'ZeduxReducer.reduce()'
     const actionTypes = Array.isArray(actor)
       ? extractActionTypes(actor, method)
-      : [extractActionType(method)(actor)]
+      : [extractActionType(actor, method)]
 
     mapActionTypesToReducer(actionToReducersMap, actionTypes, subReducer)
 

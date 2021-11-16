@@ -259,7 +259,7 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
   })
 
   materializer(() => {
-    Object.values(prevDeps.current).forEach(dep => {
+    Object.values(newDeps).forEach(dep => {
       dep.materialize?.()
     })
   })

@@ -18,13 +18,11 @@ import {
   SubscriberObject,
 } from '../types'
 import {
-  assert,
-  assertIsPlainObject,
-  assertIsValidAction,
-  getError,
-  invalidAccess,
-} from '../utils/errors'
-import { INTERNAL_SUBSCRIBER_ID, STORE_IDENTIFIER } from '../utils/general'
+  detailedTypeof,
+  INTERNAL_SUBSCRIBER_ID,
+  isPlainObject,
+  STORE_IDENTIFIER,
+} from '../utils/general'
 import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
 import { DiffNode } from '../utils/types'
 import { actionTypes, metaTypes } from './constants'
@@ -95,8 +93,10 @@ export class Store<State = any> {
     Do not mutate the returned value.
   */
   public getState() {
-    if (this._isDispatching) {
-      throw new Error(invalidAccess('store.getState()'))
+    if (DEV && this._isDispatching) {
+      throw new Error(
+        'Zedux Error - store.getState() cannot be called in a reducer'
+      )
     }
 
     return this._currentState
@@ -166,28 +166,33 @@ export class Store<State = any> {
     const subscriberObj =
       typeof subscriber === 'function' ? { next: subscriber } : subscriber
 
-    if (subscriberObj.next) {
-      assert(
-        typeof subscriberObj.next === 'function',
-        getError('subscriberNext'),
-        subscriberObj.next
-      )
-    }
+    if (DEV) {
+      if (subscriberObj.next && typeof subscriberObj.next !== 'function') {
+        throw new TypeError(
+          `Zedux error - store.subscribe() expects either a function or an object with a "next" property whose value is a function. Received: ${detailedTypeof(
+            subscriberObj.next
+          )}`
+        )
+      }
 
-    if (subscriberObj.error) {
-      assert(
-        typeof subscriberObj.error === 'function',
-        getError('subscriberError'),
-        subscriberObj.error
-      )
-    }
+      if (subscriberObj.error && typeof subscriberObj.error !== 'function') {
+        throw new TypeError(
+          `Zedux error - store.subscribe() - subscriber.error must be a function. Received: ${detailedTypeof(
+            subscriberObj.error
+          )}`
+        )
+      }
 
-    if (subscriberObj.effects) {
-      assert(
-        typeof subscriberObj.effects === 'function',
-        getError('subscriberEffects'),
-        subscriberObj.effects
-      )
+      if (
+        subscriberObj.effects &&
+        typeof subscriberObj.effects !== 'function'
+      ) {
+        throw new TypeError(
+          `Zedux error - store.subscribe() - subscriber.effects must be a function. Received: ${detailedTypeof(
+            subscriberObj.effects
+          )}`
+        )
+      }
     }
 
     // as any - this "id" field is hidden from the outside world
@@ -237,14 +242,19 @@ export class Store<State = any> {
   }
 
   private _dispatch(action: Dispatchable) {
-    if (typeof action === 'function') {
-      throw new TypeError(`
-      Zedux Error - store.dispatch() - Thunks are not currently supported.
-      Only normal action objects can be passed to store.dispatch().
-      Inducers should be passed to store.setState()`)
+    if (DEV && typeof action === 'function') {
+      throw new TypeError(
+        'Zedux Error - store.dispatch() - Thunks are not currently supported. Only normal action objects can be passed to store.dispatch(). Inducers should be passed to store.setState()'
+      )
     }
 
-    assertIsPlainObject(action, 'Action')
+    if (DEV && !isPlainObject(action)) {
+      throw new TypeError(
+        `Zedux Error - store.dispatch() - Action must be a plain object. Received ${detailedTypeof(
+          action
+        )}`
+      )
+    }
 
     const delegateResult = delegate(this._currentDiffTree, action)
 
@@ -262,13 +272,15 @@ export class Store<State = any> {
     unwrappedAction: Action,
     rootState: State
   ) {
-    if (this._isDispatching) {
-      throw new Error(invalidAccess('dispatch(), hydrate(), setState()'))
+    if (DEV && this._isDispatching) {
+      throw new Error(
+        'Zedux Error - dispatch(), setState(), and setStateDeep() cannot be called in a reducer'
+      )
     }
 
     this._isDispatching = true
 
-    let error: Error | undefined
+    let error: unknown
     let newState = rootState
 
     try {
@@ -363,7 +375,7 @@ export class Store<State = any> {
     newState: State,
     action?: ActionChain,
     effect?: EffectChain,
-    error?: Error
+    error?: unknown
   ) {
     const oldState = this._currentState
 
@@ -452,7 +464,13 @@ export class Store<State = any> {
   private _routeAction(action: ActionChain) {
     const unwrappedAction = removeAllMeta(action)
 
-    assertIsValidAction(unwrappedAction)
+    if (DEV && typeof unwrappedAction.type !== 'string') {
+      throw new TypeError(
+        `Zedux Error - store.dispatch() - Action must have a string "type" property. Received ${detailedTypeof(
+          unwrappedAction.type
+        )}`
+      )
+    }
 
     if (unwrappedAction.type === actionTypes.HYDRATE) {
       return this._dispatchHydration(

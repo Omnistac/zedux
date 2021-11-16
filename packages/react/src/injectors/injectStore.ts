@@ -37,6 +37,9 @@ const doSubscribe = <State>(
         targetType: EvaluationTargetType.Injector,
         type: EvaluationType.StateChanged,
       })
+
+      // run the scheduler synchronously after any store update
+      instance.ecosystem._scheduler.flush()
     },
   })
 
@@ -102,12 +105,14 @@ export const injectStore = <State = any>(
 
       if (prevShouldSubscribe === shouldSubscribe) return prevInjector
 
+      // we were subscribed, now we're not
       if (!shouldSubscribe) {
         prevInjector.cleanup?.()
         prevInjector.cleanup = undefined
         return prevInjector
       }
 
+      // we weren't subscribed, now we are
       const subscription = doSubscribe(instance, prevInjector.store)
       prevInjector.cleanup = () => subscription.unsubscribe()
 
