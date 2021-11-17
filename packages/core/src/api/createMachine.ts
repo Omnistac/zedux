@@ -18,9 +18,7 @@ export const createMachine = <State extends string = string>(
   ...states: MachineState<State>[]
 ) => {
   if (!states.length) {
-    throw new Error(
-      'Zedux Error - createMachine() - At least one state is required'
-    )
+    throw new Error('Zedux: createMachine() - At least one state is required')
   }
 
   // can maybe add stricter types around the initialState

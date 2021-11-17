@@ -6,7 +6,7 @@ import { DiffNode, StoreNode } from '../utils/types'
 
 export const getErrorMessage = DEV
   ? (subStorePath: string[]) =>
-      `Zedux Error - store.dispatch() - Invalid Delegation - Current store hierarchy does not contain a sub-store at path: ${subStorePath.join(
+      `Zedux: store.dispatch() - Invalid Delegation - Current store hierarchy does not contain a sub-store at path: ${subStorePath.join(
         ' -> '
       )}`
   : () => ''

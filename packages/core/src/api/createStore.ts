@@ -95,9 +95,7 @@ export class Store<State = any> {
   */
   public getState() {
     if (DEV && this._isDispatching) {
-      throw new Error(
-        'Zedux Error - store.getState() cannot be called in a reducer'
-      )
+      throw new Error('Zedux: store.getState() cannot be called in a reducer')
     }
 
     return this._currentState
@@ -170,7 +168,7 @@ export class Store<State = any> {
     if (DEV) {
       if (subscriberObj.next && typeof subscriberObj.next !== 'function') {
         throw new TypeError(
-          `Zedux error - store.subscribe() expects either a function or an object with a "next" property whose value is a function. Received: ${detailedTypeof(
+          `Zedux: store.subscribe() expects either a function or an object with a "next" property whose value is a function. Received: ${detailedTypeof(
             subscriberObj.next
           )}`
         )
@@ -178,7 +176,7 @@ export class Store<State = any> {
 
       if (subscriberObj.error && typeof subscriberObj.error !== 'function') {
         throw new TypeError(
-          `Zedux error - store.subscribe() - subscriber.error must be a function. Received: ${detailedTypeof(
+          `Zedux: store.subscribe() - subscriber.error must be a function. Received: ${detailedTypeof(
             subscriberObj.error
           )}`
         )
@@ -189,7 +187,7 @@ export class Store<State = any> {
         typeof subscriberObj.effects !== 'function'
       ) {
         throw new TypeError(
-          `Zedux error - store.subscribe() - subscriber.effects must be a function. Received: ${detailedTypeof(
+          `Zedux: store.subscribe() - subscriber.effects must be a function. Received: ${detailedTypeof(
             subscriberObj.effects
           )}`
         )
@@ -245,13 +243,13 @@ export class Store<State = any> {
   private _dispatch(action: Dispatchable) {
     if (DEV && typeof action === 'function') {
       throw new TypeError(
-        'Zedux Error - store.dispatch() - Thunks are not currently supported. Only normal action objects can be passed to store.dispatch(). Inducers should be passed to store.setState()'
+        'Zedux: store.dispatch() - Thunks are not currently supported. Only normal action objects can be passed to store.dispatch(). Inducers should be passed to store.setState()'
       )
     }
 
     if (DEV && !isPlainObject(action)) {
       throw new TypeError(
-        `Zedux Error - store.dispatch() - Action must be a plain object. Received ${detailedTypeof(
+        `Zedux: store.dispatch() - Action must be a plain object. Received ${detailedTypeof(
           action
         )}`
       )
@@ -275,7 +273,7 @@ export class Store<State = any> {
   ) {
     if (DEV && this._isDispatching) {
       throw new Error(
-        'Zedux Error - dispatch(), setState(), and setStateDeep() cannot be called in a reducer'
+        'Zedux: dispatch(), setState(), and setStateDeep() cannot be called in a reducer'
       )
     }
 
@@ -467,7 +465,7 @@ export class Store<State = any> {
 
     if (DEV && typeof unwrappedAction.type !== 'string') {
       throw new TypeError(
-        `Zedux Error - store.dispatch() - Action must have a string "type" property. Received ${detailedTypeof(
+        `Zedux: store.dispatch() - Action must have a string "type" property. Received ${detailedTypeof(
           unwrappedAction.type
         )}`
       )

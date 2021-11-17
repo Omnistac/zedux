@@ -13,7 +13,7 @@ const assertActionExists = DEV
       if (actionOrEffect) return
 
       throw new Error(
-        `Zedux error - Invalid meta chain. The last node in the chain must be either a valid action object with a non-empty "type" property or an effect with a non-empty "effectType" property. Received ${detailedTypeof(
+        `Zedux: Invalid meta chain. The last node in the chain must be either a valid action object with a non-empty "type" property or an effect with a non-empty "effectType" property. Received ${detailedTypeof(
           actionOrEffect
         )}`
       )

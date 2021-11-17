@@ -77,7 +77,7 @@ export function getHierarchyType(descriptor: HierarchyDescriptor) {
 
   if (DEV && descriptor != null) {
     throw new TypeError(
-      `Zedux Error - store.use() - Hierarchy descriptor nodes must be reducers, stores, or plain objects. Received ${detailedTypeof(
+      `Zedux: store.use() - Hierarchy descriptor nodes must be reducers, stores, or plain objects. Received ${detailedTypeof(
         descriptor
       )}`
     )

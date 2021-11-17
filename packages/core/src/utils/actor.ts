@@ -17,7 +17,7 @@ export const extractActionType = (actor: any, method: string) => {
         : typeof actor
 
     throw new TypeError(
-      `Zedux Error - ${method} - Actor must be either a string or a function with a "type" property. Received ${type}`
+      `Zedux: ${method} - Actor must be either a string or a function with a "type" property. Received ${type}`
     )
   }
 
