@@ -262,7 +262,7 @@ export class AtomInstance<
       return val as AtomValue<State>
     } catch (err) {
       console.error(
-        `Zedux - Error while instantiating atom "${this.atom.key}" with params:`,
+        `Zedux: Error while instantiating atom "${this.atom.key}" with params:`,
         this.params,
         err
       )
@@ -628,13 +628,13 @@ export class AtomInstance<
 
     if (newStateType !== this._stateType) {
       throw new Error(
-        `Zedux Error - atom factory for atom "${this.atom.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
+        `Zedux: atom factory for atom "${this.atom.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
       )
     }
 
     if (newStateType === StateType.Store && newFactoryResult !== this.store) {
       throw new Error(
-        `Zedux Error - atom factory for atom "${this.atom.key}" returned a different store. Did you mean to use \`injectState()\`, \`injectStore()\`, or \`injectMemo()\`?`
+        `Zedux: atom factory for atom "${this.atom.key}" returned a different store. Did you mean to use \`injectState()\`, \`injectStore()\`, or \`injectMemo()\`?`
       )
     }
 

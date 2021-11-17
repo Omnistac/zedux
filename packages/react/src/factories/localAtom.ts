@@ -30,7 +30,7 @@ export const localAtom: {
   config?: AtomConfig
 ) => {
   if (!key) {
-    throw new TypeError('Zedux - All atoms must have a key')
+    throw new TypeError('Zedux: All atoms must have a key')
   }
 
   return new LocalAtom<State, Params, Exports>(key, value, config)

@@ -28,7 +28,7 @@ export class Ghost {
     if (this.isDestroyed) {
       if (DEV) {
         console.warn(
-          "Zedux - tried materializing ghost dependency after it was destroyed. This probably means a React fiber took a long time to commit. Consider increasing the ecosystem's ghostTtlMs"
+          "Zedux: Tried materializing ghost dependency after it was destroyed. This probably means a React fiber took a long time to commit. Consider increasing the ecosystem's ghostTtlMs"
         )
       }
 

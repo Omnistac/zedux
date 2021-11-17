@@ -22,7 +22,7 @@
 //     const mutate = atom.value()
 
 //     if (typeof mutate !== 'function') {
-//       throw new TypeError('Zedux - Mutation factory must return a function')
+//       throw new TypeError('Zedux: Mutation factory must return a function')
 //     }
 
 //     mutateRef = mutate

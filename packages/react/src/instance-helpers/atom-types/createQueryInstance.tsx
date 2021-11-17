@@ -15,7 +15,7 @@
 //     const run = atom.value(...params)
 
 //     if (typeof run !== 'function') {
-//       throw new TypeError('Zedux - Query factory must return a function')
+//       throw new TypeError('Zedux: Query factory must return a function')
 //     }
 
 //     // TODO: Not this. Make query's `run` and mutation's `mutate` part of their stores.

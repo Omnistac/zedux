@@ -9,9 +9,7 @@ export const createCallStackContext = <T = any>() => {
     )
 
     if (!instance && throwError) {
-      throw new Error(
-        'Zedux - Injectors can only be used in instance factories'
-      )
+      throw new Error('Zedux: Injectors can only be used in instance factories')
     }
 
     return instance?.value || null

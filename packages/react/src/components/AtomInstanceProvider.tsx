@@ -7,7 +7,7 @@ export const AtomInstanceProvider: FC<
 > = ({ children, instance, instances }) => {
   if (!instance && !instances) {
     throw new Error(
-      'Zedux - AtomInstanceProvider requires either an `instance` or `instances` prop'
+      'Zedux: AtomInstanceProvider requires either an `instance` or `instances` prop'
     )
   }
 

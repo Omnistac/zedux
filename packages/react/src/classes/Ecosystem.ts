@@ -56,12 +56,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   }: EcosystemConfig<Context>) {
     if (flags && !Array.isArray(flags)) {
       throw new TypeError(
-        "Zedux Error - The Ecosystem's `flags` property must be an array of strings"
+        "Zedux: The Ecosystem's `flags` property must be an array of strings"
       )
     }
     if (overrides && !Array.isArray(overrides)) {
       throw new TypeError(
-        "Zedux Error - The Ecosystem's `overrides` property must be an array of Atom objects"
+        "Zedux: The Ecosystem's `overrides` property must be an array of Atom objects"
       )
     }
 

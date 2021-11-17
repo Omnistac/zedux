@@ -11,7 +11,7 @@ export const atom = <
   config?: AtomConfig
 ) => {
   if (!key) {
-    throw new TypeError('Zedux - All atoms must have a key')
+    throw new TypeError('Zedux: All atoms must have a key')
   }
 
   return new Atom<State, Params, Exports>(key, value, config)
