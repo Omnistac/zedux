@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "build-storybook": "build-storybook",
-    "build:es": "ttsc --outDir dist/es -p tsconfig.es.json && find dist/es -type f -exec sed -i '' 's/DEV/process.env.NODE_ENV !== \"production\"/g' {} \\;",
+    "build:es": "ttsc --outDir dist/es -p tsconfig.es.json",
     "build:umd:min": "cross-env NODE_ENV=production webpack",
     "build:umd": "cross-env NODE_ENV=development webpack",
     "build": "yarn build:es && yarn build:umd && yarn build:umd:min",
@@ -66,7 +66,6 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-icons": "^4.1.0",
-    "styled-components": "^5.2.1",
     "ttypescript": "^1.5.12",
     "typescript-transform-paths": "^2.2.3"
   },

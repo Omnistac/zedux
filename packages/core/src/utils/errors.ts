@@ -1,5 +1,5 @@
 import { MachineState } from '../types'
-import { detailedTypeof, noop } from './general'
+import { detailedTypeof, DEV, noop } from './general'
 
 export const assertAreFunctions = DEV
   ? (args: any[], method: string) => {

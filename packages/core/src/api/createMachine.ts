@@ -1,5 +1,6 @@
 import { Action, MachineState, Reducer } from '../types'
 import { assertIsValidState } from '../utils/errors'
+import { DEV } from '../utils/general'
 
 interface StateTransitionMap<State> {
   [key: string]: {

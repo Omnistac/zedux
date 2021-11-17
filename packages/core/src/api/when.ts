@@ -8,6 +8,7 @@ import {
 } from '../types'
 import { extractActionType, extractStateType } from '../utils/actor'
 import { assertAreFunctions } from '../utils/errors'
+import { DEV } from '../utils/general'
 import { Store } from './createStore'
 import { removeAllMeta } from './meta'
 

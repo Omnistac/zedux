@@ -31,11 +31,7 @@ export default {
     filename: DEV ? 'react-zedux.js' : 'react-zedux.min.js',
     path: resolve('dist'),
   },
-  plugins: [
-    new DefinePlugin({
-      DEV: JSON.stringify(DEV),
-    }),
-  ],
+  plugins: [new DefinePlugin({})],
   resolve: {
     extensions: ['.ts', '.tsx'],
     plugins: [

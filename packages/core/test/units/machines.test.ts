@@ -15,7 +15,7 @@ describe('machines', () => {
   test('the first state is the initial state of the machine', () => {
     const machine = createMachine(a, b)
 
-    expect(machine(undefined, advance())).toBe(a.type)
+    expect(machine(undefined, doNothing())).toBe(a.type)
   })
 
   test('transitions to a valid next state', () => {

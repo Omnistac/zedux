@@ -67,7 +67,7 @@
   "dependencies": {},
   "private": true,
   "resolutions": {
-    "@types/tapable": "^1.0.0"
+    "@types/tapable": "1.0.0"
   },
   "workspaces": [
     "packages/*"

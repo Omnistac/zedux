@@ -17,6 +17,8 @@ function getDetailedObjectType(value: any) {
   return Object.getPrototypeOf(prototype) ? COMPLEX_OBJECT : PLAIN_OBJECT
 }
 
+export const DEV = true
+
 export enum HierarchyType {
   Branch,
   Null,

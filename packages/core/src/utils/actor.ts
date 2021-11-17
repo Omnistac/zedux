@@ -1,5 +1,6 @@
 import { Reactable, MachineStateRepresentation } from '../types'
 import { assertIsValidState } from './errors'
+import { DEV } from './general'
 
 /**
   Pulls the string action type out of an actor or returns
@@ -9,17 +10,15 @@ export const extractActionType = (actor: any, method: string) => {
   // The "actor" may be a literal action type string
   if (typeof actor === 'string') return actor
 
-  if (DEV) {
-    if (typeof actor !== 'function' || typeof actor.type !== 'string') {
-      const type =
-        typeof actor === 'function'
-          ? `function with invalid "type" property - ${typeof actor.type}`
-          : typeof actor
+  if (DEV && (typeof actor !== 'function' || typeof actor.type !== 'string')) {
+    const type =
+      typeof actor === 'function'
+        ? `function with invalid "type" property - ${typeof actor.type}`
+        : typeof actor
 
-      throw new TypeError(
-        `Zedux Error - ${method} - Actor must be either a string or a function with a "type" property. Received ${type}`
-      )
-    }
+    throw new TypeError(
+      `Zedux Error - ${method} - Actor must be either a string or a function with a "type" property. Received ${type}`
+    )
   }
 
   return actor.type

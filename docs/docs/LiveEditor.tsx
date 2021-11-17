@@ -12,6 +12,7 @@ import React, {
 } from 'react'
 import Editor from 'react-simple-code-editor'
 import styled, { keyframes } from 'styled-components'
+import * as Devtools from '../../packages/react/dist/es/react/src/devtools'
 import * as ReactZedux from '../../packages/react/dist/es/react/src'
 import * as Redux from 'redux'
 
@@ -283,6 +284,7 @@ export const LiveEditor: FC<{
 
   return (
     <Wrapper>
+      <Devtools.StateHub />
       <Header url={bgUrl}>
         <Img src={icon} /> Live Editor
       </Header>
