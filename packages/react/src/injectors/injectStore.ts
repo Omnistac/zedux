@@ -1,12 +1,7 @@
 import { createStore, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes'
-import {
-  EvaluationType,
-  EvaluationTargetType,
-  split,
-  StoreInjectorDescriptor,
-  InjectorType,
-} from '../utils'
+import { EvaluationType, EvaluationTargetType } from '../types'
+import { split, StoreInjectorDescriptor, InjectorType } from '../utils'
 
 const doSubscribe = <State>(
   instance: AtomInstanceBase<any, [...any], any>,

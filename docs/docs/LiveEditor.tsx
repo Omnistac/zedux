@@ -15,6 +15,7 @@ import styled, { keyframes } from 'styled-components'
 import * as Devtools from '../../packages/react/dist/es/react/src/devtools'
 import * as ReactZedux from '../../packages/react/dist/es/react/src'
 import * as Redux from 'redux'
+import { EcosystemProvider } from '../../packages/react/dist/es/react/src'
 
 const Zedux = { ...ReactZedux } // resolves all the getters
 
@@ -147,7 +148,7 @@ const evalCode = (
   extraScope?: Record<string, any>
 ) => {
   const resultStr = `var ${resultVarName}; ${code}; var _$_$res = typeof ${resultVarName} === 'function' ? React.createElement(${resultVarName}) : ${resultVarName};`
-  const wrapped = `${resultStr} return React.createElement(EcosystemProvider, { children: _$_$res, id: '${ecosystemId}' })`
+  const wrapped = `${resultStr} return _$_$res`
 
   const extraScopeKeys = extraScope ? [...Object.keys(extraScope)] : []
   const keys = extraScope ? [...scopeKeys, ...extraScopeKeys] : scopeKeys
@@ -283,66 +284,68 @@ export const LiveEditor: FC<{
   )
 
   return (
-    <Wrapper>
-      <Devtools.StateHub />
-      <Header url={bgUrl}>
-        <Img src={icon} /> Live Editor
-      </Header>
-      <EditorWrapper>
-        <Editor
-          value={tsCode}
-          padding={10}
-          highlight={Highlighter}
-          onValueChange={val => {
-            setTsCode(val)
-            runCode(val)
-          }}
-          style={{
-            fontFamily: 'monospace',
-            fontSize: '15px',
-            letterSpacing: '-0.05px',
-            lineHeight: '1.4',
-            minWidth: '738px',
-            whiteSpace: 'pre',
-            ...theme.plain,
-          }}
-        />
-      </EditorWrapper>
-      <ResultTextWrapper url={bgUrl}>
-        <Img src={icon} /> <ResultText>Live Result:</ResultText>{' '}
-        <Button
-          onClick={() => {
-            console.info('Zedux Exports:', Zedux)
-            console.info('React Exports:', React)
-            if (extraScope) console.info('Extra Scope:', extraScope)
-          }}
-          shouldHide
-        >
-          Log Scope
-        </Button>
-        <Button
-          onClick={() => {
-            const es = Zedux.getEcosystem(ecosystemId)
+    <EcosystemProvider id={ecosystemId}>
+      <Wrapper>
+        <Devtools.StateHub />
+        <Header url={bgUrl}>
+          <Img src={icon} /> Live Editor
+        </Header>
+        <EditorWrapper>
+          <Editor
+            value={tsCode}
+            padding={10}
+            highlight={Highlighter}
+            onValueChange={val => {
+              setTsCode(val)
+              runCode(val)
+            }}
+            style={{
+              fontFamily: 'monospace',
+              fontSize: '15px',
+              letterSpacing: '-0.05px',
+              lineHeight: '1.4',
+              minWidth: '738px',
+              whiteSpace: 'pre',
+              ...theme.plain,
+            }}
+          />
+        </EditorWrapper>
+        <ResultTextWrapper url={bgUrl}>
+          <Img src={icon} /> <ResultText>Live Result:</ResultText>{' '}
+          <Button
+            onClick={() => {
+              console.info('Zedux Exports:', Zedux)
+              console.info('React Exports:', React)
+              if (extraScope) console.info('Extra Scope:', extraScope)
+            }}
+            shouldHide
+          >
+            Log Scope
+          </Button>
+          <Button
+            onClick={() => {
+              const es = Zedux.getEcosystem(ecosystemId)
 
-            console.info('Ecosystem:', es)
-            console.info('Current State:', es.inspectInstanceValues())
-          }}
-          shouldHide
-        >
-          Log State
-        </Button>
-        <Button
-          onClick={() => {
-            setTsCode(initialCodeRef.current)
-            runCode(initialCodeRef.current)
-          }}
-        >
-          Reset
-        </Button>
-      </ResultTextWrapper>
-      <ResultView>
-        <ErrorBoundary>{result}</ErrorBoundary>
-      </ResultView>
-    </Wrapper>
+              console.info('Ecosystem:', es)
+              console.info('Current State:', es.inspectInstanceValues())
+            }}
+            shouldHide
+          >
+            Log State
+          </Button>
+          <Button
+            onClick={() => {
+              setTsCode(initialCodeRef.current)
+              runCode(initialCodeRef.current)
+            }}
+          >
+            Reset
+          </Button>
+        </ResultTextWrapper>
+        <ResultView>
+          <ErrorBoundary>{result}</ErrorBoundary>
+        </ResultView>
+      </Wrapper>
+    </EcosystemProvider>
   )
 }

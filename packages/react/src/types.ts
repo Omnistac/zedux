@@ -1,4 +1,4 @@
-import { ActionChain, Observable, Settable, Store } from '@zedux/core'
+import { ActionChain, Observable, Selector, Settable, Store } from '@zedux/core'
 import {
   AtomBase,
   AtomInstance,
@@ -149,6 +149,24 @@ export type AtomValueOrFactory<
   | AtomApi<State, Exports>
   | ((...params: Params) => AtomValue<State> | AtomApi<State, Exports>)
 
+export interface DependentEdge {
+  cache?: SelectorCache // selectors cache some data on this edge object
+  callback?: (
+    signal: GraphEdgeSignal,
+    val?: any,
+    reasons?: EvaluationReason[]
+  ) => any
+  createdAt: number
+  isAsync?: boolean
+  isAtomSelector?: boolean
+  isExternal?: boolean
+  isGhost?: boolean
+  isStatic?: boolean
+  operation: string
+  shouldUpdate?: (state: any) => boolean
+  task?: () => void
+}
+
 export type Destructor = () => void
 
 export type DispatchInterceptor<State = any> = (
@@ -167,10 +185,43 @@ export interface EcosystemConfig<
   flags?: string[]
   id?: string
   overrides?: AtomBase<any, any[], any>[]
-  preload?: (ecosystem: Ecosystem, context: Context) => void
+  preload?: (
+    ecosystem: Ecosystem<Context>,
+    context: Context
+  ) => (() => void) | void
 }
 
 export type EffectCallback = () => void | Destructor
+
+export interface EvaluationReason<State = any> {
+  action?: ActionChain
+  newState?: State
+  oldState?: State
+  operation: string // e.g. a method like "injectValue"
+  targetType: EvaluationTargetType
+  targetKey?: string // e.g. an atom like "myAtom"
+  targetParams?: any
+  reasons?: EvaluationReason[]
+  type: EvaluationType
+}
+
+export enum EvaluationTargetType {
+  Atom = 'Atom',
+  External = 'External',
+  Injector = 'Injector',
+  Store = 'Store',
+}
+
+export enum EvaluationType {
+  CacheInvalidated = 'cache invalidated',
+  InstanceDestroyed = 'atom instance destroyed',
+  StateChanged = 'state changed',
+}
+
+export enum GraphEdgeSignal {
+  Destroyed = 'Destroyed',
+  Updated = 'Updated',
+}
 
 export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   ? <D = any>(selector: (state: State) => D) => D
@@ -366,6 +417,11 @@ export interface RefObject<T = any> {
 
 export type Scheduler = number // | Observable<any> | (store: Store<T>) => Observable<any> - not implementing observable ttl for now
 
+export type SelectorCache = Map<
+  Selector,
+  { prevResult: any; shouldUpdate: (state: any) => boolean }
+>
+
 export type SetStateInterceptor<State = any> = (
   settable: Settable<State>,
   next: (settable: Settable<State>) => State
@@ -374,4 +430,19 @@ export type SetStateInterceptor<State = any> = (
 export enum StateType {
   Store,
   Value,
+}
+
+export interface ZeduxPlugin {
+  onEdgeCreated?: (edge: DependentEdge) => void
+  onEdgeRemoved?: (edge: DependentEdge) => void
+  onGhostEdgeCreated?: (edge: DependentEdge) => void
+  onGhostEdgeRemoved?: (edge: DependentEdge) => void
+  onInstanceCreated?: (instance: AnyAtomInstance) => void
+  onInstanceUpdated?: (instance: AnyAtomInstance) => void
+  onInstanceDestroyed?: (instance: AnyAtomInstance) => void
+  onInstanceActiveStateChanged?: (
+    instance: AnyAtomInstance,
+    prevState?: ActiveState
+  ) => void
+  onEcosystemWipe?: (ecosystem: Ecosystem) => void
 }

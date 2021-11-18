@@ -1,11 +1,13 @@
 import {
   DependentEdge,
-  EcosystemGraphNode,
   EvaluationReason,
   EvaluationTargetType,
   EvaluationType,
-  generateNodeId,
   GraphEdgeSignal,
+} from '../types'
+import {
+  EcosystemGraphNode,
+  generateNodeId,
   JobType,
   UpdateExternalDependentJob,
 } from '../utils'

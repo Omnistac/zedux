@@ -1,5 +1,5 @@
 import { DEV } from '@zedux/core/utils/general'
-import { DependentEdge } from '../utils'
+import { DependentEdge } from '../types'
 import { Ecosystem } from './Ecosystem'
 
 export class Ghost {

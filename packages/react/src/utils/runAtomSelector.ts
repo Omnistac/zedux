@@ -1,4 +1,4 @@
-import { Dep, EvaluationReason, GraphEdgeDynamicity } from './types'
+import { Dep, GraphEdgeDynamicity } from './types'
 import { Ecosystem } from '../classes'
 import {
   AnyAtomBase,
@@ -9,6 +9,7 @@ import {
   AtomSelectorConfig,
   AtomSelectorOrConfig,
   AtomStateType,
+  EvaluationReason,
   Ref,
 } from '../types'
 import { Selector } from '@zedux/core'

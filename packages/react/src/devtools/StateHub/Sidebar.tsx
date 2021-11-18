@@ -3,20 +3,20 @@ import React from 'react'
 import { BiNetworkChart } from 'react-icons/bi'
 import { FiGlobe } from 'react-icons/fi'
 import { GiAtom } from 'react-icons/gi'
-import styled, { css } from 'styled-components'
-import { Route, routeAtom } from './atoms/route'
-import { randomColor } from './styles'
+import styled, { css } from './simple-styled-components'
+import { Route, stateHub } from './atoms/stateHub'
+import { colors } from './styles'
 
-const Aside = styled.aside`
-  background: rgba(255, 255, 255, 0.04);
+const Aside = styled('aside')`
+  background: ${colors.alphas.white[0]};
   grid-row: span 2;
   width: 3em;
 `
 
 const iconStyles = css`
-  color: ${randomColor()};
+  color: ${colors.main};
   font-size: 2em;
-  text-shadow: 6px 6px 4px rgba(255, 255, 255, 0.1);
+  text-shadow: 6px 6px 4px ${colors.alphas.white[2]};
 `
 
 const IconAtom = styled(GiAtom)`
@@ -29,9 +29,8 @@ const IconWorld = styled(FiGlobe)`
   ${iconStyles}
 `
 
-const IconButton = styled.button<{ isActive?: boolean }>`
-  background: ${({ isActive }) =>
-    isActive ? 'rgba(255, 255, 255, 0.15)' : 'none'};
+const IconButton = styled('button')<{ isActive?: boolean }>`
+  background: ${({ isActive }) => (isActive ? colors.alphas.white[2] : 'none')};
   border: none;
   cursor: pointer;
   font-size: inherit;
@@ -44,13 +43,14 @@ const IconButton = styled.button<{ isActive?: boolean }>`
     !isActive &&
     css`
       &:hover {
-        background: rgba(255, 255, 255, 0.07);
+        background: ${colors.alphas.white[1]};
       }
     `}
 `
 
 export const Sidebar = () => {
-  const [route, setRoute] = useAtomState(routeAtom)
+  const [{ route }, setState] = useAtomState(stateHub)
+  const setRoute = (route: Route) => setState(state => ({ ...state, route }))
 
   return (
     <Aside>

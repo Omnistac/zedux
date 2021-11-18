@@ -1,5 +1,11 @@
-import { AsyncStore, MutableRefObject, RefObject } from '@zedux/react/types'
-import { ActionChain, Selector, Store, Subscription } from '@zedux/core'
+import {
+  AsyncStore,
+  DependentEdge,
+  MutableRefObject,
+  RefObject,
+  SelectorCache,
+} from '@zedux/react/types'
+import { Store, Subscription } from '@zedux/core'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 
 export interface AsyncEffectInjectorDescriptor<T>
@@ -48,24 +54,6 @@ export interface Dep<T = any> {
   shouldUpdate?: (newState: T) => boolean
 }
 
-export interface DependentEdge {
-  cache?: SelectorCache // selectors cache some data on this edge object
-  callback?: (
-    signal: GraphEdgeSignal,
-    val?: any,
-    reasons?: EvaluationReason[]
-  ) => any
-  createdAt: number
-  isAsync?: boolean
-  isAtomSelector?: boolean
-  isExternal?: boolean
-  isGhost?: boolean
-  isStatic?: boolean
-  operation: string
-  shouldUpdate?: (state: any) => boolean
-  task?: () => void
-}
-
 export interface DepsInjectorDescriptor extends InjectorDescriptor {
   deps?: any[]
 }
@@ -83,31 +71,6 @@ export interface EcosystemGraphNode {
 
 export interface EffectInjectorDescriptor extends DepsInjectorDescriptor {
   type: InjectorType.Effect
-}
-
-export interface EvaluationReason<State = any> {
-  action?: ActionChain
-  newState?: State
-  oldState?: State
-  operation: string // e.g. a method like "injectValue"
-  targetType: EvaluationTargetType
-  targetKey?: string // e.g. an atom like "myAtom"
-  targetParams?: any
-  reasons?: EvaluationReason[]
-  type: EvaluationType
-}
-
-export enum EvaluationTargetType {
-  Atom = 'Atom',
-  External = 'External',
-  Injector = 'Injector',
-  Store = 'Store',
-}
-
-export enum EvaluationType {
-  CacheInvalidated = 'cache invalidated',
-  InstanceDestroyed = 'atom instance destroyed',
-  StateChanged = 'state changed',
 }
 
 export interface ExportsInjectorDescriptor<
@@ -134,11 +97,6 @@ export type GraphEdgeInfo = [
   string,
   SelectorCache? // used for selectors (RestrictedDynamic edges)
 ]
-
-export enum GraphEdgeSignal {
-  Destroyed = 'Destroyed',
-  Updated = 'Updated',
-}
 
 export interface InjectorDescriptor {
   cleanup?: () => void
@@ -186,11 +144,6 @@ export interface RefInjectorDescriptor<T = any> extends InjectorDescriptor {
 export interface RunEffectJob extends JobBase {
   type: JobType.RunEffect
 }
-
-export type SelectorCache = Map<
-  Selector,
-  { prevResult: any; shouldUpdate: (state: any) => boolean }
->
 
 export interface SelectorInjectorDescriptor<State = any, D = any>
   extends InjectorDescriptor {

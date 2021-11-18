@@ -1,15 +1,17 @@
 import { Selector } from '@zedux/core'
 import { DEV } from '@zedux/core/utils/general'
 import { createContext } from 'react'
-import { AtomSelectorOrConfig } from '..'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
+  AnyAtomInstance,
   AnyAtomInstanceBase,
   AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
+  AtomSelectorOrConfig,
   AtomStateType,
   EcosystemConfig,
+  ZeduxPlugin,
 } from '../types'
 import { generateEcosystemId, is } from '../utils'
 import { AtomInstance } from './AtomInstance'
@@ -28,20 +30,23 @@ const mapOverrides = (overrides: AtomBase<any, any, any>[]) =>
 export const ecosystemContext = createContext('global')
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any> {
+  public _destroyOnUnmount = false
   public _graph: Graph = new Graph(this)
   public _instances: Record<string, AtomInstance<any, any[], any>> = {}
-  public _destroyOnUnmount = false
-  public _preload?: (ecosystem: this, context: Context) => void
+  public _preload: EcosystemConfig['preload']
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
   public context?: Context
   public defaultForwardPromises?: boolean
   public defaultTtl?: number
-  public ghostTtlMs: number
   public ecosystemId: string
   public flags?: string[] = []
+  public ghostTtlMs: number
+  public mods?: Partial<ZeduxPlugin>
   public overrides: Record<string, AtomBase<any, any[], any>> = {}
+  private cleanup?: () => void
   private isInitialized = false
+  private plugins: ZeduxPlugin[] = []
 
   constructor({
     context,
@@ -215,6 +220,40 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     return hash
   }
 
+  /**
+   * Atom instances can be shared across ecosystems by explicitly passing an
+   * instance created in another ecosystem to this method. The instance will
+   * behave normally in both ecosystems, except that the clone won't copy any of
+   * the clonee's promise data.
+   *
+   * The instance will not be cleaned up before it's unregistered from this
+   * ecosystem. The clone will not be cleaned up.
+   */
+  public registerExternalAtomInstance(instance: AnyAtomInstance) {
+    const newInstance = instance.clone(this, true)
+    const ghost = instance.ecosystem._graph.registerGhostDependent(
+      instance,
+      undefined,
+      'registerExternalAtomInstance',
+      true, // the clone subscribes to the clonee's store directly
+      false,
+      false,
+      newInstance.keyHash
+    )
+
+    this._graph.addNode(newInstance.keyHash)
+    this._instances[newInstance.keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
+
+    ghost.materialize()
+  }
+
+  public registerPlugin(plugin: ZeduxPlugin) {
+    if (this.plugins.includes(plugin)) return
+
+    this.plugins.push(plugin)
+    this.recalculateMods()
+  }
+
   public removeOverrides(overrides: (Atom<any, any, any> | string)[]) {
     this.overrides = mapOverrides(
       Object.values(this.overrides).filter(atom =>
@@ -236,9 +275,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   public reset(newContext?: Context) {
     this.wipe()
 
-    if (newContext) this.context = newContext
+    if (typeof newContext !== 'undefined') this.context = newContext
 
-    this._preload?.(this, newContext || (this.context as Context))
+    this.cleanup =
+      this._preload?.(this, newContext || (this.context as Context)) ||
+      undefined
   }
 
   public select<T, Args extends any[]>(
@@ -329,7 +370,32 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     })
   }
 
+  /**
+   * Unregister an external atom instance registered in this ecosystem via
+   * `.registerExternalAtomInstance()`.
+   *
+   * The external atom instance won't be destroyed unless it is unregistered
+   * here or the clone in this ecosystem is destroyed manually or implicitly
+   * when this ecosystem is wiped
+   */
+  public unregisterExternalAtomInstance(instance: AnyAtomInstance) {
+    this._instances[`${instance.keyHash}-clone`]?._destroy(true)
+  }
+
+  /**
+   * Unregister a plugin registered in this ecosystem via `.registerPlugin()`
+   */
+  public unregisterPlugin(plugin: ZeduxPlugin) {
+    if (!this.plugins.includes(plugin)) return
+
+    this.plugins.splice(this.plugins.indexOf(plugin), 1)
+    this.recalculateMods()
+  }
+
   public wipe() {
+    // call cleanup function first so it can configure the ecosystem for cleanup e.g. by removing external instances so they this ecosystem doesn't destroy them
+    this.cleanup?.()
+
     // TODO: Delete nodes in an optimal order, starting with nodes with no
     // internal dependents. This is different from highest-weighted nodes since
     // static dependents don't affect weight. This should make sure no internal
@@ -350,6 +416,40 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     this._graph.removeNode(keyHash)
 
     delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
+  }
+
+  private recalculateMods() {
+    const pluginFns: {
+      [K in keyof ZeduxPlugin]: NonNullable<ZeduxPlugin[K]>[]
+    } = {
+      onEcosystemWipe: [],
+      onEdgeCreated: [],
+      onEdgeRemoved: [],
+      onGhostEdgeCreated: [],
+      onGhostEdgeRemoved: [],
+      onInstanceActiveStateChanged: [],
+      onInstanceCreated: [],
+      onInstanceDestroyed: [],
+      onInstanceUpdated: [],
+    }
+
+    this.plugins.forEach(plugin => {
+      Object.keys(plugin).forEach(key => {
+        if (key in pluginFns) {
+          pluginFns[key as keyof ZeduxPlugin]?.push(
+            plugin[key as keyof ZeduxPlugin] as any
+          )
+        }
+      })
+    })
+
+    this.mods = Object.entries(pluginFns).reduce((mods, [key, fns]) => {
+      if (!fns?.length) return mods
+
+      mods[key as keyof ZeduxPlugin] = (...args: any) =>
+        fns?.forEach((fn: any) => fn(...args))
+      return mods
+    }, {} as Partial<ZeduxPlugin>)
   }
 
   private resolveAtom<AtomType extends AtomBase<any, any[], any>>(

@@ -1,11 +1,12 @@
-import { useAtomInstance, useAtomValue } from '@zedux/react'
+import { useAtomState } from '@zedux/react'
 import React from 'react'
-import styled from 'styled-components'
-import { positionAtom } from '../atoms/position'
-import { whiteAlphas } from '../styles'
-import { GridNum } from '../types'
+import { stateHub } from '../atoms/stateHub'
+import styled from '../simple-styled-components'
+import { colors } from '../styles'
+import { GridNum, GridProps, Pos } from '../types'
+import { getGridColumn, getGridRow } from '../utils/position'
 
-const positionMap: Record<string, [GridNum, GridNum]> = {
+const positionMap: Record<Pos, [GridNum, GridNum]> = {
   topLeft: [0, 0],
   top: [0, 1],
   topRight: [0, 2],
@@ -25,43 +26,67 @@ const Grid = styled.div`
 
 const PositionControl = styled.input`
   appearance: none;
-  background: ${whiteAlphas[0]};
+  background: ${colors.alphas.white[0]};
   border: none;
   border-radius: 0;
   cursor: pointer;
   font-size: inherit;
+  grid-column: 1 / span 3;
+  grid-row: 1 / span 3;
   margin: 0;
   outline: none;
   padding: 0;
-  width: 1em;
+  width: 100%;
 
   &:hover {
-    background: ${whiteAlphas[1]};
+    background: ${colors.alphas.white[2]};
   }
 
   &:checked {
-    background: ${whiteAlphas[2]};
+    background: ${colors.alphas.main[3]};
   }
 `
 
-const Position = ({ position }: { position: keyof typeof positionMap }) => {
-  const { col, row } = useAtomValue(positionAtom)
-  const { setCol, setRow } = useAtomInstance(positionAtom).exports
+const PositionWrapper = styled.div<GridProps>`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 1em;
+
+  &::before {
+    background: ${colors.alphas.white[4]};
+    content: '';
+    grid-column: ${getGridColumn};
+    grid-row: ${getGridRow};
+  }
+`
+
+const Position = ({ position }: { position: Pos }) => {
+  const [
+    {
+      position: { col, row },
+    },
+    setState,
+  ] = useAtomState(stateHub)
   const [mappedRow, mappedCol] = positionMap[position]
   const isChecked = mappedRow === row && mappedCol === col
 
   return (
-    <PositionControl
-      checked={isChecked}
-      name="zedux-state-hub-select-position"
-      onChange={({ currentTarget }) => {
-        if (!currentTarget.checked) return
+    <PositionWrapper col={mappedCol} row={mappedRow}>
+      <PositionControl
+        checked={isChecked}
+        name="zedux-state-hub-select-position"
+        onChange={({ currentTarget }) => {
+          if (!currentTarget.checked) return console.log('returning!')
 
-        setCol(mappedCol)
-        setRow(mappedRow)
-      }}
-      type="radio"
-    />
+          setState(state => ({
+            ...state,
+            position: { ...state.position, col: mappedCol, row: mappedRow },
+          }))
+        }}
+        type="radio"
+      />
+    </PositionWrapper>
   )
 }
 
@@ -69,7 +94,7 @@ export const PositionControls = () => {
   return (
     <Grid>
       {Object.keys(positionMap).map(position => (
-        <Position key={position} position={position} />
+        <Position key={position} position={position as Pos} />
       ))}
     </Grid>
   )

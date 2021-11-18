@@ -1,7 +1,11 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
 import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
-import { AtomInstanceType, AtomParamsType, PromiseStatus } from '../types'
-import { GraphEdgeSignal } from '../utils'
+import {
+  AtomInstanceType,
+  AtomParamsType,
+  GraphEdgeSignal,
+  PromiseStatus,
+} from '../types'
 import { useEcosystem } from './useEcosystem'
 
 /**

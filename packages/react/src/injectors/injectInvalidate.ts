@@ -1,4 +1,4 @@
-import { EvaluationTargetType, EvaluationType } from '../utils'
+import { EvaluationTargetType, EvaluationType } from '../types'
 import { diContext } from '../utils/csContexts'
 
 export const injectInvalidate = () => {

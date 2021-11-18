@@ -5,9 +5,9 @@ import {
   AtomInstanceType,
   AtomParamsType,
   AtomStateType,
+  GraphEdgeSignal,
   PromiseStatus,
 } from '../types'
-import { GraphEdgeSignal } from '../utils'
 import { useEcosystem } from './useEcosystem'
 
 /**

@@ -5,12 +5,9 @@ import {
   AtomParamsType,
   AtomSelectorOrConfig,
   AtomStateType,
-} from '@zedux/react/types'
-import {
   EvaluationReason,
-  GraphEdgeInfo,
-  InjectorDescriptor,
-} from '@zedux/react/utils'
+} from '@zedux/react/types'
+import { GraphEdgeInfo, InjectorDescriptor } from '@zedux/react/utils'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { Selector, Store } from '@zedux/core'

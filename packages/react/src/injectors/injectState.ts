@@ -1,11 +1,7 @@
 import { createStore, Settable } from '@zedux/core'
+import { EvaluationType, EvaluationTargetType } from '../types'
 import { split } from '../utils'
-import {
-  EvaluationType,
-  EvaluationTargetType,
-  InjectorType,
-  StateInjectorDescriptor,
-} from '../utils/types'
+import { InjectorType, StateInjectorDescriptor } from '../utils/types'
 
 export const injectState = <State = any>(initialState?: Settable<State>) => {
   const { store } = split<StateInjectorDescriptor<State>>(
