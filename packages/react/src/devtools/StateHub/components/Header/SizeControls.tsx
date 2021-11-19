@@ -1,10 +1,10 @@
 import { useAtomState, useAtomValue } from '@zedux/react'
 import React from 'react'
-import styled from '../simple-styled-components'
-import { GridProps, Size } from '../types'
-import { colors } from '../styles'
-import { getIsTall, getIsWide } from '../utils/position'
-import { stateHub, StateHubState } from '../atoms/stateHub'
+import styled from '../../simple-styled-components'
+import { GridProps, Size } from '../../types'
+import { colors } from '../../styles'
+import { getIsTall, getIsWide } from '../../utils/position'
+import { stateHub, StateHubState } from '../../atoms/stateHub'
 
 const getHeight = (props: StateHubState['position']) => {
   const isTall = getIsTall(props)
@@ -72,9 +72,7 @@ const SizeWrapper = ({ size }: { size: Size }) => {
       checked={isChecked}
       col={col}
       name="zedux-state-hub-select-size"
-      onChange={({ currentTarget }) => {
-        if (!currentTarget.checked) return
-
+      onChange={() => {
         setState(state => ({ ...state, position: { ...state.position, size } }))
       }}
       row={row}

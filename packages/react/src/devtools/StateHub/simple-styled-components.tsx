@@ -241,6 +241,8 @@ const createStyleManager = () => {
   return styleManager
 }
 
+const reactProps = { children: true, key: true, ref: true }
+
 const stylesContext = createContext(createStyleManager())
 
 const resolveTemplate = <Props extends Record<string, any>>(
@@ -289,7 +291,28 @@ const styled: StyledFactory = (<C extends Styleable>(Wrapped: C) => {
         return newClassName
       }, [...Object.values(props)])
 
-      return (<Wrapped {...props} className={className} />) as any
+      const filteredProps =
+        typeof window !== 'undefined' && typeof Wrapped === 'string'
+          ? Object.keys(props)
+              .filter(prop => {
+                if (reactProps[prop as keyof typeof reactProps]) return true
+
+                const el =
+                  window[
+                    `HTML${(Wrapped as string)[0].toUpperCase()}${(Wrapped as string).slice(
+                      1
+                    )}Element` as any
+                  ]
+
+                return prop.toLowerCase() in (el as any)?.prototype
+              })
+              .reduce((newProps, key) => {
+                newProps[key] = props[key]
+                return newProps
+              }, {} as Record<string, any>)
+          : props
+
+      return (<Wrapped {...filteredProps} className={className} />) as any
     }
 
     Component.displayName = `styled(${

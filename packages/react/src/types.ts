@@ -444,5 +444,5 @@ export interface ZeduxPlugin {
     instance: AnyAtomInstance,
     prevState?: ActiveState
   ) => void
-  onEcosystemWipe?: (ecosystem: Ecosystem) => void
+  onEcosystemWiped?: (ecosystem: Ecosystem) => void
 }

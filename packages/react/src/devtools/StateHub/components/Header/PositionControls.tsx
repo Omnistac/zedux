@@ -1,10 +1,10 @@
 import { useAtomState } from '@zedux/react'
 import React from 'react'
-import { stateHub } from '../atoms/stateHub'
-import styled from '../simple-styled-components'
-import { colors } from '../styles'
-import { GridNum, GridProps, Pos } from '../types'
-import { getGridColumn, getGridRow } from '../utils/position'
+import { stateHub } from '../../atoms/stateHub'
+import styled from '../../simple-styled-components'
+import { colors } from '../../styles'
+import { GridNum, GridProps, Pos } from '../../types'
+import { getGridColumn, getGridRow } from '../../utils/position'
 
 const positionMap: Record<Pos, [GridNum, GridNum]> = {
   topLeft: [0, 0],
@@ -76,9 +76,7 @@ const Position = ({ position }: { position: Pos }) => {
       <PositionControl
         checked={isChecked}
         name="zedux-state-hub-select-position"
-        onChange={({ currentTarget }) => {
-          if (!currentTarget.checked) return console.log('returning!')
-
+        onChange={() => {
           setState(state => ({
             ...state,
             position: { ...state.position, col: mappedCol, row: mappedRow },

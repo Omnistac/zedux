@@ -3,9 +3,9 @@ import React from 'react'
 import { BiNetworkChart } from 'react-icons/bi'
 import { FiGlobe } from 'react-icons/fi'
 import { GiAtom } from 'react-icons/gi'
-import styled, { css } from './simple-styled-components'
-import { Route, stateHub } from './atoms/stateHub'
-import { colors } from './styles'
+import styled, { css } from '../simple-styled-components'
+import { Route, stateHub } from '../atoms/stateHub'
+import { colors } from '../styles'
 
 const Aside = styled('aside')`
   background: ${colors.alphas.white[0]};
@@ -57,18 +57,21 @@ export const Sidebar = () => {
       <IconButton
         isActive={route === Route.Dashboard}
         onClick={() => setRoute(Route.Dashboard)}
+        title="Dashboard"
       >
         <IconWorld />
       </IconButton>
       <IconButton
         isActive={route === Route.Monitor}
         onClick={() => setRoute(Route.Monitor)}
+        title="Monitor"
       >
         <IconAtom />
       </IconButton>
       <IconButton
         isActive={route === Route.Inspect}
         onClick={() => setRoute(Route.Inspect)}
+        title="Inspect"
       >
         <IconMolecule />
       </IconButton>

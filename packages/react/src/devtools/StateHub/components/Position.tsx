@@ -1,14 +1,14 @@
 import { useAtomValue } from '@zedux/react'
 import React, { FC } from 'react'
-import { stateHub } from './atoms/stateHub'
-import styled from './simple-styled-components'
-import { colors, white } from './styles'
-import { GridNum, Size } from './types'
-import { getGridColumn, getGridRow, getTemplate } from './utils/position'
+import { stateHub } from '../atoms/stateHub'
+import styled from '../simple-styled-components'
+import { colors } from '../styles'
+import { GridNum, Size } from '../types'
+import { getGridColumn, getGridRow, getTemplate } from '../utils/position'
 
 const Positionee = styled.div<{ col: GridNum; row: GridNum }>`
   background: ${colors.bgs[0]};
-  color: ${white};
+  color: ${colors.white};
   display: grid;
   grid-template-columns: 3em 1fr;
   grid-template-rows: 3em 1fr;

@@ -1,5 +1,5 @@
 import React from 'react'
-import styled from '../simple-styled-components'
+import styled from '../../simple-styled-components'
 import { EcosystemSelector } from './EcosystemSelector'
 import { PositionControls } from './PositionControls'
 import { SizeControls } from './SizeControls'

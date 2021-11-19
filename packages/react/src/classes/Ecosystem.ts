@@ -3,7 +3,6 @@ import { DEV } from '@zedux/core/utils/general'
 import { createContext } from 'react'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
-  AnyAtomInstance,
   AnyAtomInstanceBase,
   AtomInstanceStateType,
   AtomInstanceType,
@@ -220,33 +219,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     return hash
   }
 
-  /**
-   * Atom instances can be shared across ecosystems by explicitly passing an
-   * instance created in another ecosystem to this method. The instance will
-   * behave normally in both ecosystems, except that the clone won't copy any of
-   * the clonee's promise data.
-   *
-   * The instance will not be cleaned up before it's unregistered from this
-   * ecosystem. The clone will not be cleaned up.
-   */
-  public registerExternalAtomInstance(instance: AnyAtomInstance) {
-    const newInstance = instance.clone(this, true)
-    const ghost = instance.ecosystem._graph.registerGhostDependent(
-      instance,
-      undefined,
-      'registerExternalAtomInstance',
-      true, // the clone subscribes to the clonee's store directly
-      false,
-      false,
-      newInstance.keyHash
-    )
-
-    this._graph.addNode(newInstance.keyHash)
-    this._instances[newInstance.keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
-
-    ghost.materialize()
-  }
-
   public registerPlugin(plugin: ZeduxPlugin) {
     if (this.plugins.includes(plugin)) return
 
@@ -371,18 +343,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   }
 
   /**
-   * Unregister an external atom instance registered in this ecosystem via
-   * `.registerExternalAtomInstance()`.
-   *
-   * The external atom instance won't be destroyed unless it is unregistered
-   * here or the clone in this ecosystem is destroyed manually or implicitly
-   * when this ecosystem is wiped
-   */
-  public unregisterExternalAtomInstance(instance: AnyAtomInstance) {
-    this._instances[`${instance.keyHash}-clone`]?._destroy(true)
-  }
-
-  /**
    * Unregister a plugin registered in this ecosystem via `.registerPlugin()`
    */
   public unregisterPlugin(plugin: ZeduxPlugin) {
@@ -422,7 +382,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     const pluginFns: {
       [K in keyof ZeduxPlugin]: NonNullable<ZeduxPlugin[K]>[]
     } = {
-      onEcosystemWipe: [],
+      onEcosystemWiped: [],
       onEdgeCreated: [],
       onEdgeRemoved: [],
       onGhostEdgeCreated: [],

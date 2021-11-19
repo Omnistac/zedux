@@ -124,20 +124,12 @@ export class AtomInstance<
     public readonly ecosystem: Ecosystem,
     public readonly atom: StandardAtomBase<State, Params, Exports>,
     public readonly keyHash: string,
-    public readonly params: Params,
-    clonee?: AtomInstance<State, Params, Exports>
+    public readonly params: Params
   ) {
     super()
-    if (!clonee) {
-      const factoryResult = this._doEvaluate()
+    const factoryResult = this._doEvaluate()
 
-      ;[this._stateType, this.store] = getStateStore(factoryResult)
-    } else {
-      this._stateType = clonee._stateType
-      this.api = clonee.api
-      this.exports = clonee.exports
-      this.store = clonee.store
-    }
+    ;[this._stateType, this.store] = getStateStore(factoryResult)
 
     this._subscription = this.store.subscribe((newState, oldState, action) => {
       if (action.meta === metaTypes.SKIP_EVALUATION) return
@@ -160,25 +152,6 @@ export class AtomInstance<
     this._promiseStatus = (this as any)._promiseStatus ?? PromiseStatus.Resolved
 
     this._activeState = ActiveState.Active
-  }
-
-  /**
-   * Create a new atom instance with the same properties as this one. Pass
-   * `newEcosystem` to register the new instance in a different ecosystem. Pass
-   * `deep` true to copy all properties of the current instance to the clone
-   * except promise data.
-   */
-  public clone(
-    newEcosystem = this.ecosystem,
-    deep?: boolean
-  ): AtomInstance<State, Params, Exports> {
-    return new AtomInstance(
-      newEcosystem,
-      this.atom,
-      `${this.keyHash}-clone`,
-      this.params,
-      deep ? this : undefined
-    )
   }
 
   public dispatch = (action: ActionChain) => {
