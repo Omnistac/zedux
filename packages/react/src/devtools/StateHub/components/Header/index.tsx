@@ -1,11 +1,17 @@
+import { useAtomSelector, useAtomValue } from '@zedux/react'
 import React from 'react'
-import styled from '../../simple-styled-components'
+import { rect } from '../../atoms/rect'
+import { stateHub } from '../../atoms/stateHub'
+import styled from '@zedux/react/ssc'
+import { RectType } from '../../types'
 import { EcosystemSelector } from './EcosystemSelector'
 import { PositionControls } from './PositionControls'
 import { SizeControls } from './SizeControls'
+import { HistoryControls } from './HistoryControls'
 
 const StyledHeader = styled.header`
   align-items: stretch;
+  box-shadow: 0 1px ${({ theme }) => theme.colors.primary};
   display: flex;
   flex-flow: row nowrap;
 `
@@ -20,9 +26,16 @@ const Text = styled.span`
 `
 
 export const Header = () => {
+  const route = useAtomSelector(({ get }) => get(stateHub).route)
+  const { width } = useAtomValue(rect)
+
   return (
     <StyledHeader>
-      <Text>Zedux State Hub</Text>
+      <HistoryControls />
+      <Text>
+        {width > RectType.Sm ? 'Zedux State Hub - ' : ''}
+        {route}
+      </Text>
       <EcosystemSelector />
       <SizeControls />
       <PositionControls />

@@ -1,17 +1,17 @@
-import { useAtomValue } from '@zedux/react'
-import React, { FC } from 'react'
+import { useAtomInstance, useAtomSelector, useAtomValue } from '@zedux/react'
+import React, { FC, useLayoutEffect } from 'react'
+import { rect } from '../atoms/rect'
 import { stateHub } from '../atoms/stateHub'
-import styled from '../simple-styled-components'
-import { colors } from '../styles'
+import styled from '@zedux/react/ssc'
 import { GridNum, Size } from '../types'
 import { getGridColumn, getGridRow, getTemplate } from '../utils/position'
 
 const Positionee = styled.div<{ col: GridNum; row: GridNum }>`
-  background: ${colors.bgs[0]};
-  color: ${colors.white};
+  background: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.white};
   display: grid;
-  grid-template-columns: 3em 1fr;
-  grid-template-rows: 3em 1fr;
+  grid-template-columns: 3em minmax(0, 1fr);
+  grid-template-rows: 3em minmax(0, 1fr);
   grid-column: ${getGridColumn};
   grid-row: ${getGridRow};
   pointer-events: all;
@@ -20,22 +20,66 @@ const Positionee = styled.div<{ col: GridNum; row: GridNum }>`
 const Positioner = styled.div<{ col: GridNum; row: GridNum; size: Size }>`
   ${props => getTemplate(props.row, props.col, props.size)}
   display: grid;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: ${({ size }) => size + 10}px;
   height: 100%;
+  line-height: 1.3;
   pointer-events: none;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   z-index: 1000000;
+
+  & *::-webkit-scrollbar {
+    height: 0.8em;
+    width: 0.8em;
+  }
+
+  & *::-webkit-scrollbar-track {
+    background: ${({ theme }) => theme.colors.alphas.white[1]};
+  }
+
+  & *::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.colors.alphas.secondary[3]};
+  }
 `
 
 export const Position: FC = ({ children }) => {
-  const { col, row, size } = useAtomValue(stateHub).position
+  const position = useAtomSelector(({ get }) => get(stateHub).position)
+  const { positioneeRef, recalculate } = useAtomInstance(rect).exports
+  const stateHubInstance = useAtomInstance(stateHub)
+
+  const {
+    isOpen,
+    position: { col, row, size },
+  } = useAtomValue(stateHub)
+
+  useLayoutEffect(() => {
+    const keydownListener = (event: KeyboardEvent) => {
+      if (!event.ctrlKey || event.key !== ' ') return
+
+      stateHubInstance.store.setStateDeep(state => ({
+        isOpen: !state.isOpen,
+      }))
+    }
+
+    document.addEventListener('keydown', keydownListener, { capture: true })
+    window.addEventListener('resize', recalculate)
+
+    return () => {
+      document.removeEventListener('keydown', keydownListener)
+      window.removeEventListener('resize', recalculate)
+    }
+  }, [])
+
+  useLayoutEffect(recalculate, [position])
+
+  if (!isOpen) return null
 
   return (
     <Positioner col={col} row={row} size={size}>
-      <Positionee col={col} row={row}>
+      <Positionee col={col} ref={positioneeRef} row={row}>
         {children}
       </Positionee>
     </Positioner>

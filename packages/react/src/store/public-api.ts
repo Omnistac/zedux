@@ -1,10 +1,10 @@
-import { ecosystem } from '../factories/ecosystem'
+import { Ecosystem } from '../classes'
 import { globalStore, wipe as wipeAction } from './'
 
-export const getEcosystem = (id: string) => {
+export const getEcosystem = (id: string): Ecosystem | undefined => {
   const existingEcosystem = globalStore.getState().ecosystems[id]
 
-  return existingEcosystem || ecosystem({ id })
+  return existingEcosystem
 }
 
 export const wipe = () => {

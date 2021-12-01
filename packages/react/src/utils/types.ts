@@ -1,5 +1,6 @@
 import {
   AsyncStore,
+  Cleanup,
   DependentEdge,
   MutableRefObject,
   RefObject,
@@ -10,7 +11,7 @@ import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 
 export interface AsyncEffectInjectorDescriptor<T>
   extends DepsInjectorDescriptor {
-  cleanupTask?: () => void
+  cleanupTask?: Cleanup
   asyncStore: AsyncStore<T>
   promise: Promise<T>
   rejectRef?: (err: any) => void
@@ -46,7 +47,7 @@ export interface CallStackContextInstance<T = any> {
 }
 
 export interface Dep<T = any> {
-  cleanup?: () => void
+  cleanup?: Cleanup
   instance: AtomInstanceBase<T, any, any>
   dynamicity: GraphEdgeDynamicity
   materialize?: () => void

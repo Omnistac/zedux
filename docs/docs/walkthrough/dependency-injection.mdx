@@ -127,10 +127,10 @@ Zedux provides several methods to inspect and manipulate this graph.
 When we "inject an atom", what we're really doing is instructing Zedux to create an edge on the graph. There are 8 different types of edges, based on these 3 edge flags:
 
 - isExternal - whether the graph edge is between two atom instances or between an atom instance and something outside of Zedux - usually a React component.
-- isAsync - async edges are edges created and cleaned up manually, usually in a useEffect hook or injectEffect injector. There currently aren't any APIs to create these edges. We're working on it.
+- isExplicit - explicit edges are edges created and cleaned up manually, usually in a useEffect hook or injectEffect injector. There currently aren't any APIs to create these edges. We're working on it.
 - isStatic - whether the dependent should be notified of updates to the dependency's state (causing a dependent atom instance to reevaluate or a dependent component to rerender).
 
-Ignoring `isAsync`, since there are no ways to create those edges currently, the 4 edge types you'll encounter are `external-static`, `external-dynamic`, `internal-static`, and `internal-dynamic`. There are many hooks and injectors for creating these 4 edge types:
+Ignoring `isExplicit`, since there are no ways to create those edges currently, the 4 edge types you'll encounter are `external-static`, `external-dynamic`, `internal-static`, and `internal-dynamic`. There are many hooks and injectors for creating these 4 edge types:
 
 - `injectAtomValue` - creates an `internal-dynamic` edge.
 - `injectAtomState` - creates an `internal-dynamic` edge.

@@ -5,6 +5,7 @@ import {
   AtomSelector,
   AtomSelectorOrConfig,
   AtomStateType,
+  MaybeCleanup,
 } from '../types'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Dep, generateAtomSelectorId } from '../utils'
@@ -34,7 +35,7 @@ const useStandaloneSelector = <T, Args extends any[]>(
   // development
   if (!idRef.current) idRef.current = generateAtomSelectorId()
 
-  let effect: undefined | (() => void) = undefined
+  let effect: MaybeCleanup = undefined
   const result = runAtomSelector<T, Args>(
     selector,
     args,
@@ -58,7 +59,7 @@ const useStandaloneSelector = <T, Args extends any[]>(
   // run this effect every render
   useLayoutEffect(() => {
     hasEffectRun.current = true
-    effect?.()
+    if (effect) effect()
   })
 
   prevResult.current = result

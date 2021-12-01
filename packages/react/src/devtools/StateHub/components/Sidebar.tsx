@@ -1,36 +1,34 @@
 import { useAtomState } from '@zedux/react'
 import React from 'react'
-import { BiNetworkChart } from 'react-icons/bi'
-import { FiGlobe } from 'react-icons/fi'
-import { GiAtom } from 'react-icons/gi'
-import styled, { css } from '../simple-styled-components'
-import { Route, stateHub } from '../atoms/stateHub'
-import { colors } from '../styles'
+import { AiOutlineApartment } from 'react-icons/ai'
+import { BsGearFill } from 'react-icons/bs'
+import { IoMdList } from 'react-icons/io'
+import styled, { css } from '@zedux/react/ssc'
+import { stateHub } from '../atoms/stateHub'
+import { IconAtom, iconStyles, IconWorld } from '../styles'
+import { Route } from '../types'
 
 const Aside = styled('aside')`
-  background: ${colors.alphas.white[0]};
+  align-content: start;
+  background: ${({ theme }) => theme.colors.alphas.white[0]};
+  display: grid;
   grid-row: span 2;
   width: 3em;
 `
 
-const iconStyles = css`
-  color: ${colors.main};
-  font-size: 2em;
-  text-shadow: 6px 6px 4px ${colors.alphas.white[2]};
-`
-
-const IconAtom = styled(GiAtom)`
+const IconGear = styled(BsGearFill)`
   ${iconStyles}
 `
-const IconMolecule = styled(BiNetworkChart)`
+const IconGraph = styled(AiOutlineApartment)`
   ${iconStyles}
 `
-const IconWorld = styled(FiGlobe)`
+const IconList = styled(IoMdList)`
   ${iconStyles}
 `
 
 const IconButton = styled('button')<{ isActive?: boolean }>`
-  background: ${({ isActive }) => (isActive ? colors.alphas.white[2] : 'none')};
+  background: ${({ isActive, theme }) =>
+    isActive ? theme.colors.alphas.white[2] : 'none'};
   border: none;
   cursor: pointer;
   font-size: inherit;
@@ -43,7 +41,7 @@ const IconButton = styled('button')<{ isActive?: boolean }>`
     !isActive &&
     css`
       &:hover {
-        background: ${colors.alphas.white[1]};
+        background: ${({ theme }) => theme.colors.alphas.white[1]};
       }
     `}
 `
@@ -62,18 +60,32 @@ export const Sidebar = () => {
         <IconWorld />
       </IconButton>
       <IconButton
-        isActive={route === Route.Monitor}
-        onClick={() => setRoute(Route.Monitor)}
-        title="Monitor"
+        isActive={route === Route.Atoms}
+        onClick={() => setRoute(Route.Atoms)}
+        title="Atoms"
       >
         <IconAtom />
       </IconButton>
       <IconButton
-        isActive={route === Route.Inspect}
-        onClick={() => setRoute(Route.Inspect)}
-        title="Inspect"
+        isActive={route === Route.Log}
+        onClick={() => setRoute(Route.Log)}
+        title="Log"
       >
-        <IconMolecule />
+        <IconList />
+      </IconButton>
+      <IconButton
+        isActive={route === Route.Graph}
+        onClick={() => setRoute(Route.Graph)}
+        title="Graph"
+      >
+        <IconGraph />
+      </IconButton>
+      <IconButton
+        isActive={route === Route.Settings}
+        onClick={() => setRoute(Route.Settings)}
+        title="Settings"
+      >
+        <IconGear />
       </IconButton>
     </Aside>
   )

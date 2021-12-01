@@ -5,12 +5,15 @@ import {
   AtomParamsType,
   AtomSelectorOrConfig,
   AtomStateType,
+  DependentEdge,
   EvaluationReason,
 } from '@zedux/react/types'
 import { GraphEdgeInfo, InjectorDescriptor } from '@zedux/react/utils'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { Selector, Store } from '@zedux/core'
+import { Ghost } from '../Ghost'
+import { ZeduxPlugin } from '../ZeduxPlugin'
 
 export abstract class AtomInstanceBase<
   State,
@@ -82,4 +85,36 @@ export abstract class AtomInstanceBase<
     instance: I,
     selector: Selector<AtomInstanceStateType<I>, D>
   ): D
+
+  public addDependent(
+    operation: string,
+    callback?: DependentEdge['callback']
+  ): Ghost {
+    const ghost = this.ecosystem._graph.registerGhostDependent(
+      this,
+      callback,
+      operation,
+      false,
+      true
+    )
+
+    ghost.materialize()
+
+    return ghost
+  }
+
+  public setActiveState(newActiveState: ActiveState) {
+    const oldActiveState = this._activeState
+    this._activeState = ActiveState.Active
+
+    if (this.ecosystem.mods.instanceActiveStateChanged) {
+      this.ecosystem.modsMessageBus.dispatch(
+        ZeduxPlugin.actions.instanceActiveStateChanged({
+          instance: this,
+          newActiveState,
+          oldActiveState,
+        })
+      )
+    }
+  }
 }

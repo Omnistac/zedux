@@ -3,8 +3,7 @@ import React, { useState } from 'react'
 import { BsChevronExpand } from 'react-icons/bs'
 import { ecosystems } from '../../atoms/ecosystems'
 import { stateHub } from '../../atoms/stateHub'
-import styled, { css } from '../../simple-styled-components'
-import { colors } from '../../styles'
+import styled, { css } from '@zedux/react/ssc'
 
 const Backdrop = styled.div`
   position: absolute;
@@ -17,9 +16,9 @@ const Backdrop = styled.div`
 const Control = styled.button`
   align-items: center;
   appearance: none;
-  background: ${colors.alphas.main[1]};
+  background: ${({ theme }) => theme.colors.alphas.primary[1]};
   border: none;
-  color: ${colors.white};
+  color: ${({ theme }) => theme.colors.white};
   cursor: pointer;
   display: flex;
   flex-flow: row nowrap;
@@ -27,17 +26,18 @@ const Control = styled.button`
   grid-column: 1;
   grid-row: 1;
   height: 100%;
+  max-width: 13em;
   padding: 0 0.5em;
 
   &:hover {
-    background: ${colors.alphas.main[2]};
+    background: ${({ theme }) => theme.colors.alphas.primary[2]};
   }
 `
 
 const Item = styled.button<{ isActive: boolean }>`
   appearance: none;
   border: none;
-  color: ${colors.white};
+  color: ${({ theme }) => theme.colors.white};
   cursor: pointer;
   display: block;
   font-size: inherit;
@@ -48,19 +48,19 @@ const Item = styled.button<{ isActive: boolean }>`
   ${({ isActive }) =>
     isActive
       ? css`
-          background: ${colors.alphas.main[4]};
+          background: ${({ theme }) => theme.colors.alphas.primary[4]};
         `
       : css`
-          background: transparent;
+          background: ${({ theme }) => theme.colors.alphas.primary[1]};
 
           &:hover {
-            background: ${colors.alphas.main[2]};
+            background: ${({ theme }) => theme.colors.alphas.primary[2]};
           }
         `}
 `
 
 const List = styled('ul')`
-  background: ${colors.alphas.main[1]};
+  background: ${({ theme }) => theme.colors.background};
   grid-column: 1;
   grid-row: 1;
   list-style: none;
@@ -80,19 +80,19 @@ const Wrapper = styled.div`
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
-  width: 11em;
+  width: 13em;
 `
 
 export const EcosystemSelector = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [{ ecosystem }, setState] = useAtomState(stateHub)
+  const [{ ecosystemId }, setState] = useAtomState(stateHub)
   const ecosystemIds = useAtomValue(ecosystems)
 
   return (
     <Wrapper>
       {!isOpen ? (
         <Control onClick={() => setIsOpen(true)}>
-          <Text title={ecosystem}>{ecosystem}</Text>
+          <Text title={ecosystemId}>{ecosystemId}</Text>
           <BsChevronExpand />
         </Control>
       ) : (
@@ -100,10 +100,14 @@ export const EcosystemSelector = () => {
           <Backdrop onClick={() => setIsOpen(false)} />
           {ecosystemIds.map(id => (
             <Item
-              isActive={id === ecosystem}
+              isActive={id === ecosystemId}
               key={id}
               onClick={() => {
-                setState(state => ({ ...state, ecosystem: id }))
+                setState(state =>
+                  id === state.ecosystemId
+                    ? state
+                    : { ...state, ecosystemId: id }
+                )
                 setIsOpen(false)
               }}
             >

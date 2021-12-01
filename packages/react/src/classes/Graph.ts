@@ -15,21 +15,22 @@ import { Ecosystem } from './Ecosystem'
 import { AtomInstance } from './AtomInstance'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Ghost } from './Ghost'
+import { ZeduxPlugin } from '.'
 
 /**
  * The flag score determines job priority in the scheduler. Scores range from
  * 0-7. Lower score = higher prio. Examples:
  *
- * 0 = synchronous-internal-dynamic
- * 3 = asynchronous-external-dynamic
- * 7 = asynchronous-external-static
+ * 0 = implicit-internal-dynamic
+ * 3 = explicit-external-dynamic
+ * 7 = explicit-external-static
  */
 const getFlagScore = (dependentEdge: DependentEdge) => {
   let score = 0
 
   if (dependentEdge.isStatic) score += 4
   if (dependentEdge.isExternal) score += 2
-  if (dependentEdge.isAsync) score += 1
+  if (dependentEdge.isExplicit) score += 1
 
   return score
 }
@@ -45,13 +46,13 @@ export class Graph {
     dependencyKey: string,
     operation: string,
     isStatic: boolean,
-    isAsync = false,
+    isExplicit = false,
     shouldUpdate?: (state: State) => boolean // used for selectors
   ) {
     const dependency = this.nodes[dependencyKey]
     const newEdge: DependentEdge = {
       createdAt: Date.now(),
-      isAsync,
+      isExplicit,
       isStatic,
       operation,
       shouldUpdate,
@@ -65,6 +66,16 @@ export class Graph {
 
     // static dependencies don't change a node's weight
     if (!isStatic) this.recalculateWeight(dependentKey, dependency.weight)
+
+    if (this.ecosystem.mods.edgeCreated) {
+      this.ecosystem.modsMessageBus.dispatch(
+        ZeduxPlugin.actions.edgeCreated({
+          dependency: this.ecosystem._instances[dependencyKey],
+          dependent: this.ecosystem._instances[dependentKey] || dependentKey, // unfortunate but not changing for now
+          edge: newEdge,
+        })
+      )
+    }
 
     return newEdge
   }
@@ -85,19 +96,17 @@ export class Graph {
     callback: DependentEdge['callback'],
     operation: string,
     isStatic: boolean,
-    isAsync = false,
+    isExplicit = false,
     isAtomSelector = false,
     id = generateNodeId()
   ) {
     const nodeKey = dependency.keyHash
     const node = this.nodes[nodeKey]
 
-    // would be nice if React provided a way to know that multiple hooks were
-    // part of the same component
     const newEdge: DependentEdge = {
       callback,
       createdAt: Date.now(),
-      isAsync,
+      isExplicit,
       isAtomSelector,
       isExternal: true,
       isGhost: true,
@@ -105,19 +114,37 @@ export class Graph {
       operation,
     }
 
+    // would be nice if React provided a way to know that multiple hooks were
+    // part of the same component
     node.dependents[id] = newEdge
     this.unscheduleDestruction(nodeKey)
 
-    const ghost = new Ghost(this.ecosystem, newEdge, () => {
+    const ghost = new Ghost(this.ecosystem, dependency, id, newEdge, () => {
       if (newEdge.task) {
         this.ecosystem._scheduler.unscheduleJob(newEdge.task)
       }
 
       delete node.dependents[id]
       this.scheduleInstanceDestruction(dependency.keyHash)
+
+      if (this.ecosystem.mods.edgeRemoved) {
+        this.ecosystem.modsMessageBus.dispatch(
+          ZeduxPlugin.actions.edgeRemoved({
+            dependency,
+            edge: newEdge,
+            dependent: id,
+          })
+        )
+      }
     })
 
     this.ecosystem._scheduler.scheduleGhostCleanup(ghost)
+
+    if (this.ecosystem.mods.ghostEdgeCreated) {
+      this.ecosystem.modsMessageBus.dispatch(
+        ZeduxPlugin.actions.ghostEdgeCreated({ ghost })
+      )
+    }
 
     return ghost
   }
@@ -154,6 +181,16 @@ export class Graph {
 
     // TODO: is there a way to clean up any currently-scheduled jobs created by
     // this edge?
+
+    if (this.ecosystem.mods.edgeRemoved) {
+      this.ecosystem.modsMessageBus.dispatch(
+        ZeduxPlugin.actions.edgeRemoved({
+          dependency: this.ecosystem._instances[dependencyKey],
+          dependent: this.ecosystem._instances[dependentKey],
+          edge: dependentEdge,
+        })
+      )
+    }
 
     this.scheduleInstanceDestruction(dependencyKey)
   }

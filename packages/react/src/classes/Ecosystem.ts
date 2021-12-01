@@ -1,8 +1,10 @@
-import { Selector } from '@zedux/core'
+import { createStore, Selector } from '@zedux/core'
 import { DEV } from '@zedux/core/utils/general'
 import { createContext } from 'react'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
+  AnyAtomBase,
+  AnyAtomInstance,
   AnyAtomInstanceBase,
   AtomInstanceStateType,
   AtomInstanceType,
@@ -10,15 +12,21 @@ import {
   AtomSelectorOrConfig,
   AtomStateType,
   EcosystemConfig,
-  ZeduxPlugin,
+  Cleanup,
+  MaybeCleanup,
 } from '../types'
 import { generateEcosystemId, is } from '../utils'
-import { AtomInstance } from './AtomInstance'
 import { Atom } from './atoms/Atom'
 import { AtomBase } from './atoms/AtomBase'
 import { Graph } from './Graph'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
+import { Mod, ZeduxPlugin } from './ZeduxPlugin'
+
+const defaultMods = Object.keys(ZeduxPlugin.actions).reduce((map, mod) => {
+  map[mod as Mod] = 0
+  return map
+}, {} as Record<Mod, number>)
 
 const mapOverrides = (overrides: AtomBase<any, any, any>[]) =>
   overrides.reduce((map, atom) => {
@@ -31,7 +39,7 @@ export const ecosystemContext = createContext('global')
 export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   public _destroyOnUnmount = false
   public _graph: Graph = new Graph(this)
-  public _instances: Record<string, AtomInstance<any, any[], any>> = {}
+  public _instances: Record<string, AnyAtomInstance> = {}
   public _preload: EcosystemConfig['preload']
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
@@ -41,11 +49,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   public ecosystemId: string
   public flags?: string[] = []
   public ghostTtlMs: number
-  public mods?: Partial<ZeduxPlugin>
-  public overrides: Record<string, AtomBase<any, any[], any>> = {}
-  private cleanup?: () => void
+  public modsMessageBus = createStore() // use an empty store as a message bus
+  public mods: Record<Mod, number> = { ...defaultMods }
+  public overrides: Record<string, AnyAtomBase> = {}
+  private cleanup?: MaybeCleanup
   private isInitialized = false
-  private plugins: ZeduxPlugin[] = []
+  private plugins: { plugin: ZeduxPlugin; cleanup: Cleanup }[] = []
 
   constructor({
     context,
@@ -91,7 +100,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     globalStore.dispatch(addEcosystem(this))
 
     this.isInitialized = true
-    preload?.(this, context as Context)
+    this.cleanup = preload?.(this, context as Context)
   }
 
   public addOverrides(overrides: Atom<any, any, any>[]) {
@@ -106,14 +115,32 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     })
   }
 
+  /**
+   * Destroy this ecosystem - destroy all this ecosystem's atom instances,
+   * remove and clean up all plugins, and remove this ecosystem from the
+   * zeduxGlobalStore.
+   *
+   * Destruction will bail out by default if this ecosystem is still being
+   * provided via an <EcosystemProvider>. Pass `true` as the first parameter to
+   * force destruction anyway.
+   */
   public destroy(force?: boolean) {
     if (!force && this._refCount > 0) return
 
-    // Check if this ecosystem has been destroyed manually already
+    this.wipe()
+
+    // Check if this ecosystem has been destroyed already
     const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
     if (!ecosystem) return
 
-    this.wipe()
+    if (this.mods.ecosystemDestroyed) {
+      this.modsMessageBus.dispatch(
+        ZeduxPlugin.actions.ecosystemDestroyed({ ecosystem: this })
+      )
+    }
+
+    this.plugins.forEach(({ cleanup }) => cleanup())
+    this.plugins = []
 
     globalStore.dispatch(
       removeEcosystem({
@@ -219,11 +246,32 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     return hash
   }
 
+  /**
+   * Add a ZeduxPlugin to this ecosystem. This ecosystem will subscribe to the
+   * plugin's modStore, whose state can be changed to reactively update the mods
+   * of this ecosystem.
+   *
+   * This method will also call the passed plugin's `.registerEcosystem` method,
+   * allowing the plugin to subscribe to this ecosystem's modsMessageBus
+   *
+   * The plugin will remain part of this ecosystem until it is unregistered or
+   * this ecosystem is destroyed. `.wipe()` and `.reset()` don't remove plugins.
+   */
   public registerPlugin(plugin: ZeduxPlugin) {
-    if (this.plugins.includes(plugin)) return
+    if (this.plugins.some(descriptor => descriptor.plugin === plugin)) return
 
-    this.plugins.push(plugin)
-    this.recalculateMods()
+    const subscription = plugin.modsStore.subscribe((newState, oldState) => {
+      this.recalculateMods(newState, oldState)
+    })
+    const cleanupRegistration = plugin.registerEcosystem(this)
+
+    const cleanup = () => {
+      subscription.unsubscribe()
+      if (cleanupRegistration) cleanupRegistration()
+    }
+
+    this.plugins.push({ plugin, cleanup })
+    this.recalculateMods(plugin.modsStore.getState())
   }
 
   public removeOverrides(overrides: (Atom<any, any, any> | string)[]) {
@@ -249,9 +297,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
 
     if (typeof newContext !== 'undefined') this.context = newContext
 
-    this.cleanup =
-      this._preload?.(this, newContext || (this.context as Context)) ||
-      undefined
+    this.cleanup = this._preload?.(
+      this,
+      newContext || (this.context as Context)
+    )
   }
 
   public select<T, Args extends any[]>(
@@ -346,15 +395,29 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
    * Unregister a plugin registered in this ecosystem via `.registerPlugin()`
    */
   public unregisterPlugin(plugin: ZeduxPlugin) {
-    if (!this.plugins.includes(plugin)) return
+    const index = this.plugins.findIndex(
+      descriptor => descriptor.plugin === plugin
+    )
+    if (index === -1) return
 
-    this.plugins.splice(this.plugins.indexOf(plugin), 1)
-    this.recalculateMods()
+    this.plugins[index].cleanup()
+    this.plugins.splice(index, 1)
+    this.recalculateMods(undefined, plugin.modsStore.getState())
   }
 
+  /**
+   * Destroy all atom instances in this ecosystem. Also run the cleanup function
+   * returned from the onReady callback (if any). Does not remove plugins or
+   * re-run the onReady callback.
+   *
+   * Important! This method is mostly for internal use. You won't typically want
+   * to call this method. Prefer `.reset()` which re-runs the onReady callback
+   * after wiping the ecosystem, allowing onReady to re-initialize the ecosystem
+   * and preload any necessary atom instances.
+   */
   public wipe() {
-    // call cleanup function first so it can configure the ecosystem for cleanup e.g. by removing external instances so they this ecosystem doesn't destroy them
-    this.cleanup?.()
+    // call cleanup function first so it can configure the ecosystem for cleanup
+    if (this.cleanup) this.cleanup()
 
     // TODO: Delete nodes in an optimal order, starting with nodes with no
     // internal dependents. This is different from highest-weighted nodes since
@@ -367,6 +430,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
 
     this._scheduler.wipe()
     this._scheduler.flush()
+
+    if (this.mods.ecosystemWiped) {
+      this.modsMessageBus.dispatch(
+        ZeduxPlugin.actions.ecosystemWiped({ ecosystem: this })
+      )
+    }
   }
 
   // Should only be used internally
@@ -378,43 +447,24 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
   }
 
-  private recalculateMods() {
-    const pluginFns: {
-      [K in keyof ZeduxPlugin]: NonNullable<ZeduxPlugin[K]>[]
-    } = {
-      onEcosystemWiped: [],
-      onEdgeCreated: [],
-      onEdgeRemoved: [],
-      onGhostEdgeCreated: [],
-      onGhostEdgeRemoved: [],
-      onInstanceActiveStateChanged: [],
-      onInstanceCreated: [],
-      onInstanceDestroyed: [],
-      onInstanceUpdated: [],
+  private recalculateMods(
+    newState?: Record<Mod, boolean>,
+    oldState?: Record<Mod, boolean>
+  ) {
+    if (oldState) {
+      Object.entries(oldState).forEach(([key, isModded]) => {
+        if (isModded) this.mods[key as Mod]-- // fun fact, undefined-- is fine
+      })
     }
 
-    this.plugins.forEach(plugin => {
-      Object.keys(plugin).forEach(key => {
-        if (key in pluginFns) {
-          pluginFns[key as keyof ZeduxPlugin]?.push(
-            plugin[key as keyof ZeduxPlugin] as any
-          )
-        }
+    if (newState) {
+      Object.entries(newState).forEach(([key, isModded]) => {
+        if (isModded) this.mods[key as Mod]++
       })
-    })
-
-    this.mods = Object.entries(pluginFns).reduce((mods, [key, fns]) => {
-      if (!fns?.length) return mods
-
-      mods[key as keyof ZeduxPlugin] = (...args: any) =>
-        fns?.forEach((fn: any) => fn(...args))
-      return mods
-    }, {} as Partial<ZeduxPlugin>)
+    }
   }
 
-  private resolveAtom<AtomType extends AtomBase<any, any[], any>>(
-    atom: AtomType
-  ) {
+  private resolveAtom<AtomType extends AnyAtomBase>(atom: AtomType) {
     const override = this.overrides?.[atom.key]
     const maybeOverriddenAtom = (override || atom) as AtomType
 

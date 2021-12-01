@@ -1,4 +1,4 @@
-import { createStore, Store } from '@zedux/core'
+import { createStore, metaTypes, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes'
 import { EvaluationType, EvaluationTargetType } from '../types'
 import { split, StoreInjectorDescriptor, InjectorType } from '../utils'
@@ -13,7 +13,13 @@ const doSubscribe = <State>(
       // during evaluation. TODO: Create an ecosystem-level flag to turn on
       // warning logging for state-updates-during-evaluation, since this may be
       // considered an anti-pattern.
-      if (newState === oldState || instance._isEvaluating) return
+      if (
+        newState === oldState ||
+        instance._isEvaluating ||
+        action?.meta === metaTypes.SKIP_EVALUATION
+      ) {
+        return
+      }
 
       instance._scheduleEvaluation({
         newState,

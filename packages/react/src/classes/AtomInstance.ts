@@ -2,6 +2,7 @@ import {
   ActionChain,
   metaTypes,
   Observable,
+  removeAllMeta,
   Selector,
   Settable,
   Subscription,
@@ -14,6 +15,7 @@ import {
   AtomSelectorOrConfig,
   AtomStateType,
   AtomValue,
+  Cleanup,
   DependentEdge,
   EvaluationReason,
   EvaluationTargetType,
@@ -39,6 +41,7 @@ import { AtomApi } from './AtomApi'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { StandardAtomBase } from './atoms/StandardAtomBase'
 import { runAtomSelector } from '../utils/runAtomSelector'
+import { ZeduxPlugin } from './ZeduxPlugin'
 
 interface AtomSelectorCache {
   id: string
@@ -107,7 +110,7 @@ export class AtomInstance<
   public store: Store<State>
 
   public _activeState = ActiveState.Initializing
-  public _cancelDestruction?: () => void
+  public _cancelDestruction?: Cleanup
   public _evaluationReasons: EvaluationReason[] = [] // TODO: Maybe make this undefined in prod and don't use
   public _injectors?: InjectorDescriptor[]
   public _isEvaluating = false
@@ -132,14 +135,31 @@ export class AtomInstance<
     ;[this._stateType, this.store] = getStateStore(factoryResult)
 
     this._subscription = this.store.subscribe((newState, oldState, action) => {
-      if (action.meta === metaTypes.SKIP_EVALUATION) return
-
       ecosystem._graph.scheduleDependents(
         keyHash,
         this._evaluationReasons,
         newState,
         oldState
       )
+
+      // Set the action's meta field to `metaTypes.SKIP_EVALUATION` to prevent
+      // plugins from receiving it. The Zedux StateHub has to do this to prevent
+      // infinite state update loops when inspecting the state of the StateHub
+      // itself.
+      if (
+        this.ecosystem.mods.instanceStateChanged &&
+        removeAllMeta(action).meta !== metaTypes.SKIP_EVALUATION
+      ) {
+        this.ecosystem.modsMessageBus.dispatch(
+          ZeduxPlugin.actions.instanceStateChanged({
+            action,
+            instance: this,
+            newState,
+            oldState,
+            reasons: this._evaluationReasons,
+          })
+        )
+      }
 
       // run the scheduler synchronously after any atom instance state update
       this.ecosystem._scheduler.flush()
@@ -151,7 +171,7 @@ export class AtomInstance<
     this.exports = (this as any).exports || undefined
     this._promiseStatus = (this as any)._promiseStatus ?? PromiseStatus.Resolved
 
-    this._activeState = ActiveState.Active
+    this.setActiveState(ActiveState.Active)
   }
 
   public dispatch = (action: ActionChain) => {
@@ -193,9 +213,6 @@ export class AtomInstance<
       return
     }
 
-    // TODO: dispatch an action over stateStore for this mutation
-    this._activeState = ActiveState.Destroyed
-
     if (this._evaluationReasons.length) {
       this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
     }
@@ -221,6 +238,8 @@ export class AtomInstance<
 
     this._subscription?.unsubscribe()
     this.ecosystem._destroyAtomInstance(this.keyHash)
+
+    this.setActiveState(ActiveState.Destroyed)
   }
 
   /**
@@ -351,10 +370,10 @@ export class AtomInstance<
    * timeout to destroy this atom instance.
    */
   public _scheduleDestruction() {
-    // the atom is already be scheduled for destruction or destroyed
+    // the atom is already scheduled for destruction or destroyed
     if (this._activeState !== ActiveState.Active) return
 
-    this._activeState = ActiveState.Stale
+    this.setActiveState(ActiveState.Stale)
     const { maxInstances } = this.atom
 
     if (maxInstances != null) {

@@ -12,10 +12,14 @@ import React, {
 } from 'react'
 import Editor from 'react-simple-code-editor'
 import styled, { keyframes } from 'styled-components'
-import * as Devtools from '../../packages/react/dist/es/react/src/devtools'
+import { StateHub } from '../../packages/react/dist/es/react/src/devtools'
 import * as ReactZedux from '../../packages/react/dist/es/react/src'
 import * as Redux from 'redux'
 import { EcosystemProvider } from '../../packages/react/dist/es/react/src'
+
+import('react').then(react => {
+  ;(window as any).React = react
+})
 
 const Zedux = { ...ReactZedux } // resolves all the getters
 
@@ -241,7 +245,10 @@ export const LiveEditor: FC<{
 
         if (!jsCode) return
 
-        Zedux.getEcosystem(ecosystemId).wipe()
+        const ecosystem = Zedux.getEcosystem(ecosystemId)
+        if (Object.keys(ecosystem?._instances || {}).length) {
+          ecosystem?.wipe()
+        }
 
         const evalResult = evalCode(
           ecosystemId,
@@ -285,8 +292,8 @@ export const LiveEditor: FC<{
 
   return (
     <EcosystemProvider id={ecosystemId}>
+      <StateHub />
       <Wrapper>
-        <Devtools.StateHub />
         <Header url={bgUrl}>
           <Img src={icon} /> Live Editor
         </Header>

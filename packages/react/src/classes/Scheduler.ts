@@ -6,6 +6,7 @@ import {
 } from '../utils'
 import { Ecosystem } from './Ecosystem'
 import { Ghost } from './Ghost'
+import { ZeduxPlugin } from './ZeduxPlugin'
 
 export class Scheduler {
   // private _runStartTime?: number
@@ -84,6 +85,12 @@ export class Scheduler {
 
       ghost.destroy()
       this.scheduledGhosts.delete(ghost)
+
+      if (this.ecosystem.mods.ghostEdgeDestroyed) {
+        this.ecosystem.modsMessageBus.dispatch(
+          ZeduxPlugin.actions.ghostEdgeDestroyed({ ghost })
+        )
+      }
     })
 
     // schedule another timeout if there are still ghosts to clean up

@@ -1,4 +1,19 @@
-import { EvaluationReason } from '@zedux/react'
+import { ActorActionType } from '@zedux/core'
+import { ActiveState, AnyAtomInstance, Mod, ZeduxPlugin } from '@zedux/react'
+
+export interface AtomInstanceSnapshot {
+  activeState: ActiveState
+  instance: AnyAtomInstance
+  state: any
+}
+
+export enum GlobalFilter {
+  Atom = 'Atom',
+  AtomFlags = 'AtomFlags',
+  AtomInstance = 'AtomInstance',
+  AtomInstanceActiveState = 'AtomInstanceActiveState',
+  AtomInstanceKeyHash = 'AtomInstanceKeyHash',
+}
 
 export type GridNum = 0 | 1 | 2
 
@@ -7,23 +22,17 @@ export interface GridProps {
   row: GridNum
 }
 
-export interface MonitorLogEvent {
-  reasons?: EvaluationReason[]
-  timestamp: number
-  type: MonitorLogEventType
+export enum Importance {
+  High,
+  Medium,
+  Low,
+  Dirt,
 }
 
-export enum MonitorLogEventType {
-  AtomInstanceUpdated = 'Atom Instance Updated',
-  EdgeCreated = 'Graph Edge Created (Ghost Edge Materialized)',
-  EdgeRemoved = 'Graph Edge Removed',
-  GhostEdgeCreated = 'Graph Ghost Edge Created',
-  GhostEdgeremoved = 'Graph Ghost Edge Removed (Without Materializing)',
-  InstanceCreated = 'Atom Instance Created',
-  InstanceUpdated = 'Atom Instance Updated',
-  InstanceDestroyed = 'Atom Instance Destroyed',
-  InstanceActiveStateChanged = 'Atom Instance Active State Changed',
-  EcosystemWiped = 'Ecosystem Wiped',
+export interface LogEvent<T extends Mod = Mod> {
+  action: ActorActionType<ZeduxPlugin['constructor']['actions'][T]>
+  id: string
+  timestamp: number
 }
 
 export type Pos =
@@ -36,5 +45,21 @@ export type Pos =
   | 'bottomLeft'
   | 'bottom'
   | 'bottomRight'
+
+export enum RectType {
+  Xs,
+  Sm,
+  Md,
+  Lg,
+  Xl,
+}
+
+export enum Route {
+  Atoms = 'Atoms',
+  Dashboard = 'Dashboard',
+  Graph = 'Graph',
+  Log = 'Log',
+  Settings = 'Settings',
+}
 
 export type Size = 0 | 1 | 2 | 3 | 4 | 5

@@ -16,12 +16,16 @@ export enum ActiveState {
 }
 
 export type AnyAtom = StandardAtomBase<any, any, any>
-export type AnyAtomBase = AtomBase<any, any, any>
+export type AnyAtomBase = AtomBase<any, any, AtomInstanceBase<any, any, any>>
 export type AnyAtomInstance = AtomInstance<any, any, any>
-export type AnyAtomInstanceBase = AtomInstanceBase<any, any, any>
+export type AnyAtomInstanceBase = AtomInstanceBase<
+  any,
+  any,
+  AtomBase<any, any, any>
+>
 
 export type AsyncEffectCallback<T = any> = (
-  cleanup: (destructor: Destructor) => void
+  cleanup: (fn: Cleanup) => void
 ) => Promise<T> | void
 
 export interface AsyncState<T> {
@@ -149,6 +153,8 @@ export type AtomValueOrFactory<
   | AtomApi<State, Exports>
   | ((...params: Params) => AtomValue<State> | AtomApi<State, Exports>)
 
+export type Cleanup = () => void
+
 export interface DependentEdge {
   cache?: SelectorCache // selectors cache some data on this edge object
   callback?: (
@@ -157,7 +163,7 @@ export interface DependentEdge {
     reasons?: EvaluationReason[]
   ) => any
   createdAt: number
-  isAsync?: boolean
+  isExplicit?: boolean
   isAtomSelector?: boolean
   isExternal?: boolean
   isGhost?: boolean
@@ -166,8 +172,6 @@ export interface DependentEdge {
   shouldUpdate?: (state: any) => boolean
   task?: () => void
 }
-
-export type Destructor = () => void
 
 export type DispatchInterceptor<State = any> = (
   action: ActionChain,
@@ -185,13 +189,10 @@ export interface EcosystemConfig<
   flags?: string[]
   id?: string
   overrides?: AtomBase<any, any[], any>[]
-  preload?: (
-    ecosystem: Ecosystem<Context>,
-    context: Context
-  ) => (() => void) | void
+  preload?: (ecosystem: Ecosystem<Context>, context: Context) => MaybeCleanup
 }
 
-export type EffectCallback = () => void | Destructor
+export type EffectCallback = () => MaybeCleanup
 
 export interface EvaluationReason<State = any> {
   action?: ActionChain
@@ -399,6 +400,8 @@ export type IonSet<
 //   store: AsyncStore<State>
 // }
 
+export type MaybeCleanup = Cleanup | void
+
 export interface MutableRefObject<T = any> {
   current: T
 }
@@ -430,19 +433,4 @@ export type SetStateInterceptor<State = any> = (
 export enum StateType {
   Store,
   Value,
-}
-
-export interface ZeduxPlugin {
-  onEdgeCreated?: (edge: DependentEdge) => void
-  onEdgeRemoved?: (edge: DependentEdge) => void
-  onGhostEdgeCreated?: (edge: DependentEdge) => void
-  onGhostEdgeRemoved?: (edge: DependentEdge) => void
-  onInstanceCreated?: (instance: AnyAtomInstance) => void
-  onInstanceUpdated?: (instance: AnyAtomInstance) => void
-  onInstanceDestroyed?: (instance: AnyAtomInstance) => void
-  onInstanceActiveStateChanged?: (
-    instance: AnyAtomInstance,
-    prevState?: ActiveState
-  ) => void
-  onEcosystemWiped?: (ecosystem: Ecosystem) => void
 }

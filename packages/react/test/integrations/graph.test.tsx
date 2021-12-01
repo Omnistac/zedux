@@ -67,7 +67,7 @@ describe('graph', () => {
 
     const expectedEdges = {
       createdAt: expect.any(Number),
-      isAsync: false,
+      isExplicit: false,
       isStatic: false,
       operation: 'get',
       shouldUpdate: undefined,
@@ -147,7 +147,7 @@ describe('graph', () => {
         dependents: {
           ion1: {
             createdAt: expect.any(Number),
-            isAsync: false,
+            isExplicit: false,
             isStatic: true,
             operation: 'getInstance',
             shouldUpdate: undefined,
@@ -160,7 +160,7 @@ describe('graph', () => {
         dependents: {
           ion1: {
             createdAt: expect.any(Number),
-            isAsync: false,
+            isExplicit: false,
             isStatic: true,
             operation: 'getInstance',
             shouldUpdate: undefined,
@@ -207,7 +207,7 @@ describe('graph', () => {
         dependents: {
           d: {
             createdAt: expect.any(Number),
-            isAsync: false,
+            isExplicit: false,
             isStatic: false,
             operation: 'injectAtomValue',
             shouldUpdate: undefined,
@@ -220,7 +220,7 @@ describe('graph', () => {
         dependents: {
           d: {
             createdAt: expect.any(Number),
-            isAsync: false,
+            isExplicit: false,
             isStatic: false,
             operation: 'get',
             shouldUpdate: undefined,
@@ -248,7 +248,7 @@ describe('graph', () => {
         dependents: {
           d: {
             createdAt: expect.any(Number),
-            isAsync: false,
+            isExplicit: false,
             isStatic: false,
             operation: 'injectAtomValue',
             shouldUpdate: undefined,
@@ -266,7 +266,7 @@ describe('graph', () => {
         dependents: {
           d: {
             createdAt: expect.any(Number),
-            isAsync: false,
+            isExplicit: false,
             isStatic: false,
             operation: 'get',
             shouldUpdate: undefined,

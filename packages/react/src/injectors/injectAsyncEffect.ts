@@ -1,4 +1,4 @@
-import { AsyncEffectCallback, Destructor } from '../types'
+import { AsyncEffectCallback, Cleanup } from '../types'
 import {
   AsyncEffectInjectorDescriptor,
   haveDepsChanged,
@@ -13,7 +13,7 @@ const getTask = <T>(
   callback: AsyncEffectCallback,
   descriptor: AsyncEffectInjectorDescriptor<T>
 ) => {
-  const destructors: Destructor[] = []
+  const cleanupFns: Cleanup[] = []
   let isCleanedUp = false
 
   const task = () => {
@@ -22,7 +22,7 @@ const getTask = <T>(
     const promise = callback(destructor => {
       if (isCleanedUp) return destructor()
 
-      destructors.push(destructor)
+      cleanupFns.push(destructor)
     })
 
     if (promise && typeof promise.then === 'function') {
@@ -46,7 +46,7 @@ const getTask = <T>(
     // the task is running now; no need to unschedule it. Overwrite the
     // descriptor's cleanupTask function
     descriptor.cleanupTask = () => {
-      destructors.forEach(destructor => destructor())
+      cleanupFns.forEach(destructor => destructor())
 
       isCleanedUp = true
       descriptor.cleanupTask = undefined

@@ -122,7 +122,7 @@ export class Store<State = any> {
     around easily.
   */
   public setState = (settable: Settable<State>, meta?: any) =>
-    this._setState(settable as Settable<RecursivePartial<State>>, meta)
+    this._setState(settable as Settable<RecursivePartial<State>, State>, meta)
 
   /**
     Applies a partial state update to the store.
@@ -148,7 +148,10 @@ export class Store<State = any> {
     Unlike setState, setStateDeep is not bound. You must call it with context -
     e.g. by using dot-notation: `store.setStateDeep(...)`
   */
-  public setStateDeep(settable: Settable<RecursivePartial<State>>, meta?: any) {
+  public setStateDeep(
+    settable: Settable<RecursivePartial<State>, State>,
+    meta?: any
+  ) {
     return this._setState(settable, meta, true)
   }
 
@@ -491,7 +494,7 @@ export class Store<State = any> {
   }
 
   private _setState(
-    settable: Settable<RecursivePartial<State>>,
+    settable: Settable<RecursivePartial<State>, State>,
     meta?: any,
     deep = false
   ) {

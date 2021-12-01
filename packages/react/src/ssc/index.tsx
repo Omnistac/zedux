@@ -1,7 +1,9 @@
 import React, {
+  ComponentPropsWithRef,
   ComponentType,
   createContext,
   FC,
+  forwardRef,
   PropsWithChildren,
   useContext,
   useMemo,
@@ -21,26 +23,35 @@ interface Group {
   selectors?: string[]
 }
 
-type IntrinsicProps<C extends Styleable> = C extends keyof JSX.IntrinsicElements
-  ? JSX.IntrinsicElements[C]
-  : Record<string, never>
+type Styleable = keyof JSX.IntrinsicElements | ComponentType<StylerProps>
 
-type Styleable = keyof JSX.IntrinsicElements | ComponentType<StyledProps>
-
-type Styled<C extends Styleable> = <Props extends Record<string, any>>(
+type Styled<C extends Styleable> = <
+  Props extends Record<string, any> = StylerProps
+>(
   templateArr: TemplateStringsArray,
-  ...args: StyledArgs<Props>[]
-) => FC<Props & IntrinsicProps<C>>
+  ...args: StyledArgs<Props & ComponentPropsWithRef<C> & StyledProps>[]
+) => FC<Props & ComponentPropsWithRef<C>> & {
+  componentClassName: string
+}
 
 type StyledArgs<Props extends Record<string, any>> =
   | ((props: Props) => StyledArgs<Props>)
+  | { componentClassName: string }
   | string
   | false
   | null
   | undefined
   | number
 
-type StyledProps = PropsWithChildren<{ className: string }>
+type StyledProps = PropsWithChildren<{
+  className?: string
+  theme: DefaultTheme
+}>
+
+type StylerProps = PropsWithChildren<{
+  className?: string
+  theme?: DefaultTheme
+}>
 
 type StyledFactory = {
   <C extends Styleable>(Wrapped: C): Styled<C>
@@ -63,7 +74,7 @@ class Parser {
   private mode = Mode.Root
   public groups: Group[] = [{ props: [] }]
 
-  constructor(private str: string) {
+  constructor(private str: string, private placeholder: string) {
     let next: string
     while ((next = this.str[this.pos++])) {
       if (next === '/') {
@@ -82,10 +93,21 @@ class Parser {
 
   group(next: string) {
     if (/['"`]/.test(next)) {
-      return (this.currentGroupSelectors[0] += this.readString(next))
+      return (this.currentGroupSelectors[
+        this.currentGroupSelectors.length - 1
+      ] += this.readString(next))
+    }
+    if (next === '&') {
+      return (this.currentGroupSelectors[
+        this.currentGroupSelectors.length - 1
+      ] += this.placeholder)
     }
     if (next === ',') return this.currentGroupSelectors.push('')
-    if (next !== '{') return (this.currentGroupSelectors[0] += next)
+    if (next !== '{') {
+      return (this.currentGroupSelectors[
+        this.currentGroupSelectors.length - 1
+      ] += next)
+    }
 
     this.groups.push({
       groupStack: [...this.groupStack],
@@ -126,7 +148,11 @@ class Parser {
       return (this.currentKey = next)
     }
     if (next === '&') {
-      this.currentGroupSelectors = ['']
+      this.currentGroupSelectors = [this.placeholder]
+      return (this.mode = Mode.Group)
+    }
+    if (next === '#' || next === '.' || next === '[') {
+      this.currentGroupSelectors = [next]
       return (this.mode = Mode.Group)
     }
     if (next === '}') return this.groupStack.pop()
@@ -148,6 +174,7 @@ const createStyleManager = () => {
   const id = btoa(Math.random().toString()).slice(3, 9)
   let idCounter = 0
   const generateClassName = () => `s${id}${idCounter++}`
+  const replaceStr = `REPLACEWITHCLASS${id}`
 
   const styleTag = document.createElement('style')
   styleTag.dataset.ssc = 'active'
@@ -160,26 +187,33 @@ const createStyleManager = () => {
     const styles = Object.values(cachedClassNames)
       .map(({ className, groups }) =>
         groups
-          .map(({ groupStack = [], props, selectors = [] }) => {
+          .map(({ groupStack = [], props, selectors = [`.${className}`] }) => {
             const propsStr = props
               .map(([key, val]) => `${key}:${val}`)
               .join(';')
 
-            const fullyQualifiedSelectors = groupStack.reduce(
-              (qualifiedSelectors, groupIndex) => {
-                const moreQualifiedSelectors: string[] = []
-                const groupSelectors = groups[groupIndex].selectors || []
-                const allSelectors = [...groupSelectors, ...selectors]
+            const stackSelectors = groupStack.map(
+              index => groups[index].selectors || [`.${className}`]
+            )
+            stackSelectors.push(selectors)
+            const fullyQualifiedSelectors = stackSelectors.reduce(
+              (parentSelectors, groupSelectors) => {
+                if (!parentSelectors.length) return groupSelectors
 
-                allSelectors.forEach(selector => {
-                  qualifiedSelectors.forEach(parentSelector => {
-                    moreQualifiedSelectors.push(`${parentSelector}${selector}`)
-                  })
-                })
-
-                return moreQualifiedSelectors
+                return parentSelectors.reduce(
+                  (combinedSelectors, parentSelector) => {
+                    combinedSelectors.push(
+                      ...groupSelectors.map(
+                        selector =>
+                          `${selector.replace(replaceStr, parentSelector)}`
+                      )
+                    )
+                    return combinedSelectors
+                  },
+                  [] as string[]
+                )
               },
-              [`.${className}`]
+              [] as string[]
             )
 
             return fullyQualifiedSelectors
@@ -205,8 +239,8 @@ const createStyleManager = () => {
       let cache = cachedClassNames[rawStr]
       let hasChanges = false
 
+      if (cache) cache.refCount++
       if (oldCache && oldCache !== cache) {
-        if (cache) cache.refCount++
         oldCache.refCount--
 
         if (oldCache.refCount === 0) {
@@ -220,10 +254,11 @@ const createStyleManager = () => {
         return [cache.className, rawStr]
       }
 
-      const { groups } = new Parser(rawStr)
+      const className = generateClassName()
+      const { groups } = new Parser(rawStr, replaceStr)
 
       cache = {
-        className: generateClassName(),
+        className,
         groups,
         refCount: 1,
       }
@@ -241,9 +276,29 @@ const createStyleManager = () => {
   return styleManager
 }
 
-const reactProps = { children: true, key: true, ref: true }
-
+let globalIdCounter = 0
+const specialProps = { children: 1, htmlFor: 1, key: 1, ref: 1, theme: 1 }
 const stylesContext = createContext(createStyleManager())
+
+const filterProps = (Wrapped: any, props: Record<string, any>) => {
+  if (typeof window === 'undefined' || typeof Wrapped !== 'string') return props
+
+  return Object.keys(props)
+    .filter(prop => {
+      if (specialProps[prop as keyof typeof specialProps]) return true
+
+      const el =
+        window[
+          `HTML${Wrapped[0].toUpperCase()}${Wrapped.slice(1)}Element` as any
+        ] || window[`HTML${Wrapped.toUpperCase()}Element` as any]
+
+      return !el || prop.toLowerCase() in (el as any).prototype
+    })
+    .reduce((newProps, key) => {
+      newProps[key] = props[key]
+      return newProps
+    }, {} as Record<string, any>)
+}
 
 const resolveTemplate = <Props extends Record<string, any>>(
   templateArr: TemplateStringsArray,
@@ -256,70 +311,77 @@ const resolveTemplate = <Props extends Record<string, any>>(
 
       let arg = args[i - 1]
 
-      while (typeof arg === 'function') {
-        arg = arg(props)
+      while (typeof arg === 'function' || (arg as any)?.componentClassName) {
+        arg = (arg as any).componentClassName
+          ? `.${(arg as any).componentClassName}`
+          : (arg as any)(props)
       }
 
       return `${arg || arg === 0 ? arg : ''}${str}`
     })
     .join('')
 
-export const css = <Props extends Record<string, any>>(
-  templateArr: TemplateStringsArray,
-  ...args: StyledArgs<Props>[]
-) => (props: Props) => resolveTemplate(templateArr, args, props)
-
-const styled: StyledFactory = (<C extends Styleable>(Wrapped: C) => {
+const styled: StyledFactory = ((Wrapped: any) => {
   if (typeof Wrapped === 'string' && Wrapped in styled) {
-    return styled[(Wrapped as unknown) as keyof typeof styled]
+    return styled[Wrapped as keyof typeof styled]
   }
 
   const newStyled = (templateArr: any, ...args: any) => {
-    const Component: any = (props: any) => {
+    const Component: any = forwardRef((props: any, ref: any) => {
       const { getClassName } = useContext(stylesContext)
       const prevRawStr = useRef<string>()
+      const prevProps = useRef<any>(props)
+      const theme = useContext(ThemeContext)
 
-      const className = useMemo(() => {
+      const stableProps = useMemo(() => {
+        if (
+          Object.entries(props).every(
+            ([key, val]) => prevProps.current[key] === val
+          )
+        ) {
+          return prevProps.current
+        }
+
+        prevProps.current = props
+        return props
+      }, [props])
+
+      const ownClassName = useMemo(() => {
         const [newClassName, rawStr] = getClassName(
           templateArr,
           args,
-          props,
+          { theme, ...props },
           prevRawStr.current
         )
         prevRawStr.current = rawStr
 
         return newClassName
-      }, [...Object.values(props)])
+      }, [stableProps, theme])
 
-      const filteredProps =
-        typeof window !== 'undefined' && typeof Wrapped === 'string'
-          ? Object.keys(props)
-              .filter(prop => {
-                if (reactProps[prop as keyof typeof reactProps]) return true
+      const filteredProps = filterProps(Wrapped, props)
 
-                const el =
-                  window[
-                    `HTML${(Wrapped as string)[0].toUpperCase()}${(Wrapped as string).slice(
-                      1
-                    )}Element` as any
-                  ]
+      const classNames = [
+        Component.componentClassName,
+        ownClassName,
+        props.className,
+      ].filter(Boolean)
 
-                return prop.toLowerCase() in (el as any)?.prototype
-              })
-              .reduce((newProps, key) => {
-                newProps[key] = props[key]
-                return newProps
-              }, {} as Record<string, any>)
-          : props
+      return (
+        <Wrapped
+          {...filteredProps}
+          className={classNames.join(' ')}
+          ref={ref}
+        />
+      ) as any
+    })
 
-      return (<Wrapped {...filteredProps} className={className} />) as any
-    }
-
-    Component.displayName = `styled(${
+    const wrappedName =
       typeof Wrapped === 'string'
         ? Wrapped
-        : (Wrapped as any).displayName || (Wrapped as any).name
-    })`
+        : (Wrapped as any).displayName || (Wrapped as any).name || 'unknown'
+
+    Component.displayName = `styled-${wrappedName}` // lol parens breaks vscode syntax highlighting
+    Component.componentClassName = `${wrappedName}${globalIdCounter++}`
 
     return Component
   }
@@ -340,4 +402,21 @@ styled.main = styled('main')
 styled.section = styled('section')
 styled.span = styled('span')
 
+const ThemeContext = createContext<DefaultTheme>({} as DefaultTheme)
+
 export default styled
+
+export const css = <Props extends Record<string, any>>(
+  templateArr: TemplateStringsArray,
+  ...args: StyledArgs<Props & StyledProps>[]
+) => (props: Props & StyledProps) => resolveTemplate(templateArr, args, props)
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface DefaultTheme {}
+
+export const ThemeProvider: FC<{ theme: DefaultTheme }> = ({
+  children,
+  theme,
+}) => <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
+
+export const useTheme = () => useContext(ThemeContext)

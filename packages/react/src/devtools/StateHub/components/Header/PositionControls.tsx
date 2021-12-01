@@ -1,8 +1,7 @@
 import { useAtomState } from '@zedux/react'
 import React from 'react'
 import { stateHub } from '../../atoms/stateHub'
-import styled from '../../simple-styled-components'
-import { colors } from '../../styles'
+import styled from '@zedux/react/ssc'
 import { GridNum, GridProps, Pos } from '../../types'
 import { getGridColumn, getGridRow } from '../../utils/position'
 
@@ -26,7 +25,7 @@ const Grid = styled.div`
 
 const PositionControl = styled.input`
   appearance: none;
-  background: ${colors.alphas.white[0]};
+  background: ${({ theme }) => theme.colors.alphas.white[1]};
   border: none;
   border-radius: 0;
   cursor: pointer;
@@ -39,11 +38,11 @@ const PositionControl = styled.input`
   width: 100%;
 
   &:hover {
-    background: ${colors.alphas.white[2]};
+    background: ${({ theme }) => theme.colors.alphas.white[2]};
   }
 
   &:checked {
-    background: ${colors.alphas.main[3]};
+    background: ${({ theme }) => theme.colors.alphas.primary[3]};
   }
 `
 
@@ -54,7 +53,7 @@ const PositionWrapper = styled.div<GridProps>`
   width: 1em;
 
   &::before {
-    background: ${colors.alphas.white[4]};
+    background: ${({ theme }) => theme.colors.alphas.white[4]};
     content: '';
     grid-column: ${getGridColumn};
     grid-row: ${getGridRow};

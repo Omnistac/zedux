@@ -43,7 +43,23 @@ export interface ActionMeta<
   type?: undefined // to make this type compatible with Action type
 }
 
+export type ActionMetaType<A extends Action> = A extends Action<
+  any,
+  any,
+  infer T
+>
+  ? T
+  : never
+
+export type ActionPayloadType<A extends Action> = A extends Action<infer T>
+  ? T
+  : never
+
 export type ActionType = string
+
+export type ActionTypeType<A extends Action> = A extends Action<any, infer T>
+  ? T
+  : never
 
 export type Actor<Payload = any, Type extends string = string> = {
   type: Type
@@ -52,6 +68,18 @@ export type Actor<Payload = any, Type extends string = string> = {
 export type ActorEmpty<Type extends string = string> = {
   type: Type
 } & ActionCreatorEmpty<Type>
+
+export type ActorPayloadType<A extends Actor> = A extends Actor<infer T>
+  ? T
+  : never
+
+export type ActorActionType<A extends Actor> = A extends Actor<infer P, infer T>
+  ? { payload: P; type: T }
+  : never
+
+export type ActorTypeType<A extends Actor> = A extends Actor<any, infer T>
+  ? T
+  : never
 
 export type Branch<T = any> = {
   [K in keyof T]: HierarchyDescriptor<T[K]>
@@ -169,7 +197,9 @@ export type Selector<State = any, Derivation = any> = (
   state: State
 ) => Derivation
 
-export type Settable<State = any> = ((state: State) => State) | State
+export type Settable<State = any, StateIn = State> =
+  | ((state: StateIn) => State)
+  | State
 
 export type SideEffectHandler<State = any> = (
   effectData: EffectData<State>

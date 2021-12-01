@@ -1,5 +1,8 @@
 import { GridNum, GridProps, Size } from '../types'
-import { css } from '../simple-styled-components'
+import { css } from '@zedux/react/ssc'
+
+const minHeight = 244
+const minWidth = 324
 
 const sizeMap: Record<Size, number> = {
   0: 0.8,
@@ -36,8 +39,13 @@ export const getTemplate = (row: GridNum, col: GridNum, size: Size) => {
   const isWide = size === 5 ? false : getIsWide({ col, row })
   const mappedSize = sizeMap[size]
 
-  cols[col] = isTall ? `${mappedSize - 0.4}fr` : `${mappedSize}fr`
-  rows[row] = isWide ? `${mappedSize - 0.4}fr` : `${mappedSize}fr`
+  cols[col] = isTall
+    ? `minmax(${minWidth}px, ${mappedSize - 0.4}fr)`
+    : `minmax(${minWidth}px, ${mappedSize}fr)`
+
+  rows[row] = isWide
+    ? `minmax(${minHeight}px, ${mappedSize - 0.4}fr)`
+    : `minmax(${minHeight}px, ${mappedSize}fr)`
 
   return css`
     grid-template-columns: ${cols.join(' ')};
