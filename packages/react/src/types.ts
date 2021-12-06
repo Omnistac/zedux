@@ -189,7 +189,10 @@ export interface EcosystemConfig<
   flags?: string[]
   id?: string
   overrides?: AtomBase<any, any[], any>[]
-  preload?: (ecosystem: Ecosystem<Context>, context: Context) => MaybeCleanup
+  preload?: (
+    ecosystem: Ecosystem<Context>,
+    prevContext?: Context
+  ) => MaybeCleanup
 }
 
 export type EffectCallback = () => MaybeCleanup

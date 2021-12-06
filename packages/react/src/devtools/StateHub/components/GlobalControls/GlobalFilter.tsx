@@ -177,7 +177,7 @@ const AtomInstanceKeyHashFilter = () => {
   )
 }
 
-export const filterMap = {
+export const globalFilterMap = {
   [GlobalFilter.Atom]: AtomFilter,
   [GlobalFilter.AtomFlags]: AtomFlagsFilter,
   [GlobalFilter.AtomInstance]: AtomInstanceFilter,

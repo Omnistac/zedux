@@ -283,9 +283,9 @@ describe('ecosystem', () => {
   test('preload', () => {
     const atomA = atom('a', (param: string) => param)
 
-    const preload = jest.fn((es: Ecosystem, { val }: { val: string }) => {
-      es.get(atomA, [val])
-      es.get(atomA, [`${val}a`])
+    const preload = jest.fn((es: Ecosystem<{ val: string }>) => {
+      es.get(atomA, [es.context.val])
+      es.get(atomA, [`${es.context.val}a`])
     })
 
     const es = ecosystem({ context: { val: 'a' }, id: 'preload', preload })

@@ -1,6 +1,6 @@
 import { useAtomSelector, useAtomValue, useEcosystem } from '@zedux/react'
 import React, { useMemo } from 'react'
-import { Controls } from '../GlobalControls'
+import { Controls } from './Controls'
 import { Details } from './Details'
 import {
   getAtomFilter,
@@ -100,12 +100,11 @@ export const Atoms = () => {
               }
               key={instance.keyHash}
               onClick={() => {
-                ecosystem.getInstance(stateHub).store.setStateDeep(state => ({
-                  selectedAtomInstanceKeyHash:
-                    state.selectedAtomInstanceKeyHash === instance.keyHash
-                      ? undefined
-                      : instance.keyHash,
-                }))
+                ecosystem
+                  .getInstance(stateHub)
+                  .exports.setSelectedAtomInstance(keyHash =>
+                    keyHash === instance.keyHash ? undefined : instance.keyHash
+                  )
               }}
               preview={
                 <>
@@ -127,4 +126,6 @@ actions to add:
 - toggle logging
 - toggle atom filter
 - toggle atom instance filter
+- force destroy
+- log graph
 */

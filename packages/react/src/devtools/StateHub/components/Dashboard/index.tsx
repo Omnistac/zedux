@@ -1,6 +1,10 @@
 import { useAtomSelector } from '@zedux/react'
 import React from 'react'
-import { getCurrentEcosystemWrapper } from '../../atoms/ecosystemWrapper'
+import {
+  getCurrentEcosystemWrapper,
+  getNumEvents,
+  getNumUpdates,
+} from '../../atoms/ecosystemWrapper'
 import styled from '@zedux/react/ssc'
 
 const BigNumber = styled.span`
@@ -38,6 +42,8 @@ export const Dashboard = () => {
   const instances = useAtomSelector(
     ({ select }) => select(getCurrentEcosystemWrapper).instances
   )
+  const numEvents = useAtomSelector(getNumEvents)
+  const numUpdates = useAtomSelector(getNumUpdates)
 
   return (
     <Grid>
@@ -46,8 +52,12 @@ export const Dashboard = () => {
         <Text>Atom Instances</Text>
       </Cell>
       <Cell>
-        <BigNumber>{Object.keys(instances).length}</BigNumber>
+        <BigNumber>{numUpdates}</BigNumber>
         <Text>Total Updates</Text>
+      </Cell>
+      <Cell>
+        <BigNumber>{numEvents}</BigNumber>
+        <Text>Total Events</Text>
       </Cell>
     </Grid>
   )

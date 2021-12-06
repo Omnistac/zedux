@@ -8,7 +8,7 @@ const PathsPlugin = (context, options) => {
     name: 'zedux-paths-plugin',
     configureWebpack: (config, isServer, utls) => {
       return {
-        devtool: 'inline-source-map',
+        devtool: 'eval-source-map',
         resolve: {
           alias: {
             '@zedux/core': resolve('../packages/core/src'),

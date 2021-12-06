@@ -14,8 +14,9 @@ import {
   ModPayloadMap,
 } from '@zedux/react'
 import { LogEvent } from '../../types'
+import { logGroup } from '../../utils/logging'
 import { destroyedEcosystemWrapper } from '../destroyedEcosystemWrapper'
-import { stateHub } from '../stateHub'
+import { getLoggingMode, getLogLimit, stateHub } from '../stateHub'
 import { toasts } from '../toasts'
 
 const handlers: {
@@ -70,13 +71,47 @@ const handlers: {
       instances: { ...wrappedEcosystem._instances },
     })
   },
-  instanceStateChanged: ({ ownInstance }) => {
+  instanceStateChanged: ({
+    ownInstance,
+    payload,
+    stateHubEcosystem,
+    wrappedEcosystem,
+  }) => {
     ownInstance.store.setStateDeep(
       state => ({
         numUpdates: state.numUpdates + 1,
       }),
       metaTypes.SKIP_EVALUATION
     )
+
+    const loggingMode = stateHubEcosystem.select(
+      getLoggingMode,
+      payload.instance.keyHash,
+      wrappedEcosystem.ecosystemId
+    )
+
+    if (typeof loggingMode === 'undefined') return
+
+    const [collapsed, detailed] = loggingMode.split('-')
+    const isCollapsed = collapsed === 'collapsed'
+    const isDetailed = detailed === 'detailed'
+
+    if (isCollapsed) {
+      if (isDetailed) {
+        // TODO
+        return
+      }
+
+      // TODO
+      return
+    }
+
+    if (isDetailed) {
+      // TODO
+      return
+    }
+
+    logGroup(`⚛️ State Changed "${payload.instance.keyHash}"`, payload)
   },
 }
 
@@ -104,31 +139,40 @@ export const ecosystemWrapper = atom(
     const store = injectStore<{
       instances: Ecosystem['_instances']
       log: LogEvent[]
+      numEvents: number
       numUpdates: number
       timeRegistered: number
     }>({
       instances: getEcosystem(ecosystemId)?._instances || {},
       log: [],
+      numEvents: 0,
       numUpdates: 0,
       timeRegistered: Date.now(),
     })
 
-    const log = (action: ModAction) => {
-      const event = {
-        action,
-        id: `${ecosystemId}-${idCounter++}-${rand}`,
-        timestamp: Date.now(),
-      }
+    const clearLog = () => store.setStateDeep({ log: [] })
 
-      store.setState(
-        state => ({
-          ...state,
-          log: [event, ...state.log],
-        }),
-        // this setState call would trigger an infinite state update loop
-        // without this meta type:
-        metaTypes.SKIP_EVALUATION
-      )
+    const log = (action: ModAction) => {
+      const limit = stateHubEcosystem.select(getLogLimit, ecosystemId)
+
+      if (limit) {
+        const event = {
+          action,
+          id: `${ecosystemId}-${idCounter++}-${rand}`,
+          timestamp: Date.now(),
+        }
+
+        store.setState(
+          state => ({
+            ...state,
+            log: [event, ...state.log].slice(0, limit),
+            numEvents: state.numEvents + 1,
+          }),
+          // this setState call would trigger an infinite state update loop
+          // without this meta type:
+          metaTypes.SKIP_EVALUATION
+        )
+      }
 
       const wrappedEcosystem = getEcosystem(ecosystemId)
       if (!wrappedEcosystem) return
@@ -169,6 +213,7 @@ export const ecosystemWrapper = atom(
     }
 
     return api(store).setExports({
+      clearLog,
       getEcosystem: () => getEcosystem(ecosystemId),
       log,
       subscribeTo,

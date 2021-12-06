@@ -21,9 +21,7 @@ export const Event: FC<
         <IconButton
           onClick={() =>
             logGroup(
-              'Event',
-              'Type:',
-              event.action.type,
+              `"${event.action.type}" Event`,
               'Payload:',
               event.action.payload
             )
@@ -34,10 +32,11 @@ export const Event: FC<
       }
       isActive={event.id === selectedLogEventId}
       onClick={() =>
-        ecosystem.getInstance(stateHub).store.setStateDeep(state => ({
-          selectedLogEventId:
-            state.selectedLogEventId === event.id ? undefined : event.id,
-        }))
+        ecosystem
+          .getInstance(stateHub)
+          .exports.setSelectedLogEvent(id =>
+            id === event.id ? undefined : event.id
+          )
       }
     />
   )

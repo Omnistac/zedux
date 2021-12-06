@@ -78,7 +78,7 @@ export const injectAtomInstanceDynamic: {
     prevDescriptor => {
       const resolvedAtom = is(atom, AtomInstanceBase)
         ? (atom as AnyAtomInstanceBase).atom
-        : atom
+        : (atom as A)
       const atomHasChanged =
         resolvedAtom.internalId !== prevDescriptor.instance.atom.internalId
 

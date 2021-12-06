@@ -1,12 +1,32 @@
 import React from 'react'
-import { GiAtom as AtomIcon } from 'react-icons/gi'
+import { AiOutlineApartment } from 'react-icons/ai'
+import { BsChevronExpand, BsGearFill } from 'react-icons/bs'
+import { GiAtom } from 'react-icons/gi'
+import { GrClear, GrCycle } from 'react-icons/gr'
+import { FaFlag, FaTimes } from 'react-icons/fa'
+import { FiGlobe } from 'react-icons/fi'
+import { IoMdKey, IoMdList } from 'react-icons/io'
+import { IconType } from 'react-icons/lib'
 
-export { AtomIcon }
-export { GrCycle as CycleIcon } from 'react-icons/gr'
-export { FaFlag as FlagIcon } from 'react-icons/fa'
-export { FiGlobe as WorldIcon } from 'react-icons/fi'
-export { IoMdKey as KeyIcon } from 'react-icons/io'
-export { FaTimes as XIcon } from 'react-icons/fa'
+const wrap = (Icon: IconType) => {
+  const WrappedIcon = ({ className }: { className?: string }) => (
+    <Icon className={className} />
+  )
+
+  return WrappedIcon
+}
+
+export const AtomIcon = wrap(GiAtom)
+export const ClearIcon = wrap(GrClear)
+export const CycleIcon = wrap(GrCycle)
+export const ExpandIcon = wrap(BsChevronExpand)
+export const FlagIcon = wrap(FaFlag)
+export const GearIcon = wrap(BsGearFill)
+export const GraphIcon = wrap(AiOutlineApartment)
+export const KeyIcon = wrap(IoMdKey)
+export const ListIcon = wrap(IoMdList)
+export const XIcon = wrap(FaTimes)
+export const WorldIcon = wrap(FiGlobe)
 
 export const AtomInstanceIcon = ({ className }: { className?: string }) => {
   return (
@@ -50,6 +70,23 @@ export const AtomInstanceIcon = ({ className }: { className?: string }) => {
         strokeWidth="20"
         style={{ filter: Array(5).fill('drop-shadow(0 0 4px #000)').join(' ') }}
       />
+    </svg>
+  )
+}
+
+export const EdgeIcon = ({ className }: { className?: string }) => {
+  return (
+    <svg className={className} height="1em" viewBox="0 0 240 240" width="1em">
+      <circle cx="200" cy="40" r="40" fill="currentColor" />
+      <line
+        x1="40"
+        x2="200"
+        y1="200"
+        y2="40"
+        stroke="currentColor"
+        strokeWidth="30"
+      />
+      <circle cx="40" cy="200" r="40" fill="currentColor" />
     </svg>
   )
 }
@@ -114,6 +151,71 @@ export const LogIcon = ({ className }: { className?: string }) => {
         strokeWidth="30"
       />
       <polygon points="170 100 240 160 170 220" fill="currentColor" />
+    </svg>
+  )
+}
+
+export const RemoveItemIcon = ({ className }: { className?: string }) => {
+  const id = 'test'
+
+  return (
+    <svg className={className} height="1em" viewBox="0 0 240 240" width="1em">
+      <line
+        x1="0"
+        x2="240"
+        y1="15"
+        y2="15"
+        stroke="currentColor"
+        strokeWidth="30"
+      />
+      <line
+        x1="0"
+        x2="240"
+        y1="85"
+        y2="85"
+        stroke="currentColor"
+        strokeWidth="30"
+      />
+      <filter filterUnits="userSpaceOnUse" id={id}>
+        <feComponentTransfer>
+          <feFuncA slope="0.4" type="linear" />
+        </feComponentTransfer>
+      </filter>
+      <g>
+        <line
+          x1="10"
+          x2="70"
+          y1="125"
+          y2="185"
+          stroke="currentColor"
+          strokeWidth="20"
+        />
+        <line
+          x1="10"
+          x2="70"
+          y1="185"
+          y2="125"
+          stroke="currentColor"
+          strokeWidth="20"
+        />
+      </g>
+      <line
+        x1="80"
+        x2="240"
+        y1="155"
+        y2="155"
+        stroke="currentColor"
+        strokeWidth="30"
+        filter={`url('#${id}')`}
+      />
+      <line
+        x1="0"
+        x2="240"
+        y1="225"
+        y2="225"
+        stroke="currentColor"
+        strokeWidth="30"
+      />
     </svg>
   )
 }

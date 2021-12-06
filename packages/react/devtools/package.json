@@ -1,0 +1,6 @@
+{
+  "internal": true,
+  "main": "./index.js",
+  "module": "./index.js",
+  "types": "../dist/es/react/src/devtools/index.d.ts"
+}

@@ -1,6 +1,6 @@
-import { useAtomValue } from '@zedux/react'
+import { useAtomSelector } from '@zedux/react'
 import React from 'react'
-import { stateHub } from '../atoms/stateHub'
+import { getRoute } from '../atoms/stateHub'
 import styled from '@zedux/react/ssc'
 import { Atoms } from './Atoms'
 import { Dashboard } from './Dashboard'
@@ -26,7 +26,7 @@ const StyledMain = styled.main`
 `
 
 export const Main = () => {
-  const { route } = useAtomValue(stateHub)
+  const route = useAtomSelector(getRoute)
 
   const RouteComponent = routeMap[route]
 

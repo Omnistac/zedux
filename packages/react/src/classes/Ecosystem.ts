@@ -40,10 +40,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   public _destroyOnUnmount = false
   public _graph: Graph = new Graph(this)
   public _instances: Record<string, AnyAtomInstance> = {}
-  public _preload: EcosystemConfig['preload']
+  public _preload: EcosystemConfig<Context>['preload']
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
-  public context?: Context
+  public context: Context
   public defaultForwardPromises?: boolean
   public defaultTtl?: number
   public ecosystemId: string
@@ -88,7 +88,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
       this.flags = flags
     }
 
-    this.context = context
+    this.context = context as Context
     this.defaultForwardPromises = defaultForwardPromises
     this.defaultTtl = defaultTtl ?? -1
     this.ghostTtlMs = ghostTtlMs ?? 2000
@@ -100,7 +100,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     globalStore.dispatch(addEcosystem(this))
 
     this.isInitialized = true
-    this.cleanup = preload?.(this, context as Context)
+    this.cleanup = preload?.(this)
   }
 
   public addOverrides(overrides: Atom<any, any, any>[]) {
@@ -157,6 +157,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     )
   }
 
+  /**
+   * Get an atom instance value. Create the atom instance if it doesn't exist
+   * yet. Don't register any graph dependencies.
+   */
   public get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
 
   public get<A extends AtomBase<any, [...any], any>>(
@@ -184,6 +188,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     return instance.store.getState()
   }
 
+  /**
+   * Get an atom instance. Create the atom instance if it doesn't exist yet.
+   * Don't register any graph dependencies.
+   */
   public getInstance<A extends AtomBase<any, [], any>>(
     atom: A
   ): AtomInstanceType<A>
@@ -295,12 +303,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   public reset(newContext?: Context) {
     this.wipe()
 
+    const prevContext = this.context
     if (typeof newContext !== 'undefined') this.context = newContext
 
-    this.cleanup = this._preload?.(
-      this,
-      newContext || (this.context as Context)
-    )
+    this.cleanup = this._preload?.(this, prevContext)
   }
 
   public select<T, Args extends any[]>(
@@ -406,14 +412,62 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
   }
 
   /**
+   * Get an atom instance value. Don't create the atom instance if it doesn't
+   * exist. Don't register any graph dependencies.
+   */
+  public weakGet<A extends AtomBase<any, [], any>>(
+    atom: A
+  ): AtomStateType<A> | undefined
+
+  public weakGet<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomStateType<A> | undefined
+
+  public weakGet<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params?: AtomParamsType<A>
+  ) {
+    const instance = this.weakGetInstance(
+      atom as A,
+      params as AtomParamsType<A>
+    ) as AtomInstanceBase<any, any, any>
+
+    return instance?.store.getState()
+  }
+
+  /**
+   * Get an atom instance. Don't create the atom instance if it doesn't exist.
+   * Don't register any graph dependencies.
+   */
+  public weakGetInstance<A extends AtomBase<any, [], any>>(
+    atom: A
+  ): AtomInstanceType<A> | undefined
+
+  public weakGetInstance<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomInstanceType<A> | undefined
+
+  public weakGetInstance<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params?: AtomParamsType<A>
+  ) {
+    const keyHash = (atom as A).getKeyHash(params)
+
+    // try to find an existing instance
+    return this._instances[keyHash]
+  }
+
+  /**
    * Destroy all atom instances in this ecosystem. Also run the cleanup function
-   * returned from the onReady callback (if any). Does not remove plugins or
-   * re-run the onReady callback.
+   * returned from the onReady callback (if any). Don't remove plugins or re-run
+   * the onReady callback.
    *
    * Important! This method is mostly for internal use. You won't typically want
    * to call this method. Prefer `.reset()` which re-runs the onReady callback
    * after wiping the ecosystem, allowing onReady to re-initialize the ecosystem
-   * and preload any necessary atom instances.
+   * - preloading atoms, registering plugins, configuring context, etc
    */
   public wipe() {
     // call cleanup function first so it can configure the ecosystem for cleanup

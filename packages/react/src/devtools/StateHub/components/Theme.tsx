@@ -1,44 +1,48 @@
 import { useAtomSelector, useAtomValue } from '@zedux/react'
 import { DefaultTheme, ThemeProvider } from '@zedux/react/ssc'
-import React, { FC } from 'react'
+import React, { FC, useMemo } from 'react'
 import { rect } from '../atoms/rect'
-import { stateHub } from '../atoms/stateHub'
-import { alphas, hexToAlpha } from '../styles'
+import { getColors } from '../atoms/stateHub'
+import { alphas, bgs, fgs, hexToAlpha } from '../styles'
 
-const bgs = ['#0c1f30', '#0a142e', '#240e15', '#261709', '#0c2823', '#222222']
-const fgs = ['#ffd6b9', '#ffb9d6', '#d6ffb9', '#d6b9ff', '#b9ffd6', '#b9d6ff']
-let seed = Math.floor(Math.random() * fgs.length)
-const randomColor = () => fgs[seed++ % fgs.length]
-const primary = randomColor()
-const secondary = randomColor()
 const white = '#f7f7f7'
 
 export const Theme: FC = ({ children }) => {
-  const colors = useAtomSelector(({ get }) => get(stateHub).colors)
+  const colors = useAtomSelector(getColors)
   const { height, width } = useAtomValue(rect)
 
-  const theme: DefaultTheme = {
-    colors: {
-      alphas: {
-        primary: alphas.map(alpha =>
-          hexToAlpha(colors.primary || primary, alpha)
-        ),
-        secondary: alphas.map(alpha =>
-          hexToAlpha(colors.secondary || secondary, alpha)
-        ),
-        white: alphas.map(alpha => hexToAlpha(white, alpha)),
+  const theme: DefaultTheme = useMemo(
+    () => ({
+      colors: {
+        alphas: {
+          primary: alphas.map(alpha => hexToAlpha(colors.primary, alpha)),
+          secondary: alphas.map(alpha => hexToAlpha(colors.secondary, alpha)),
+          white: alphas.map(alpha => hexToAlpha(white, alpha)),
+        },
+        bgs,
+        fgs,
+        white,
+        ...colors,
       },
-      background: bgs[0],
-      bgs,
-      fgs,
-      primary,
-      secondary,
-      white,
-      ...colors,
-    },
-    height,
-    width,
-  }
+      fonts: {
+        monospace:
+          "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+      },
+      height,
+      width,
+    }),
+    [colors, height, width]
+  )
 
-  return <ThemeProvider theme={theme}>{children}</ThemeProvider>
+  return (
+    <ThemeProvider
+      root={
+        document.querySelector('[data-zedux="StateHub"]')?.shadowRoot ||
+        undefined
+      }
+      theme={theme}
+    >
+      {children}
+    </ThemeProvider>
+  )
 }

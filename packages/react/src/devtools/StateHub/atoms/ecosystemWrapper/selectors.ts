@@ -6,6 +6,7 @@ import {
   ion,
   Mod,
 } from '@zedux/react'
+import { stateHubEcosystemId } from '../../stateHubEcosystem'
 import { AtomInstanceSnapshot } from '../../types'
 import { destroyedEcosystemWrapper } from '../destroyedEcosystemWrapper'
 import { stateHub } from '../stateHub'
@@ -98,6 +99,12 @@ export const ecosystemAtomInstance = ion(
     return injectReactiveState<AtomInstanceSnapshot | undefined>(
       getters,
       (ecosystem, oldSnapshot) => {
+        // the stateHub would get in an infinite setState loop if inspecting its
+        // own atoms were reactive
+        if (ecosystem?.ecosystemId === stateHubEcosystemId && oldSnapshot) {
+          return oldSnapshot
+        }
+
         const instance = ecosystem?._instances[keyHash]
         if (!instance) return oldSnapshot
 
@@ -149,3 +156,12 @@ export const getCurrentEcosystemWrapperInstance = ({
 
   return getInstance(ecosystemWrapper, [currentEcosystemId])
 }
+
+export const getLogLength = ({ select }: AtomGetters) =>
+  select(getCurrentEcosystemWrapper).log.length
+
+export const getNumEvents = ({ select }: AtomGetters) =>
+  select(getCurrentEcosystemWrapper).numEvents
+
+export const getNumUpdates = ({ select }: AtomGetters) =>
+  select(getCurrentEcosystemWrapper).numUpdates

@@ -16,6 +16,9 @@ declare module '@zedux/react/ssc' {
       secondary: string
       white: string
     }
+    fonts: {
+      monospace: string
+    }
     height: RectType
     width: RectType
   }

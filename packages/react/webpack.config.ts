@@ -5,7 +5,7 @@ import { DefinePlugin } from 'webpack'
 const DEV = process.env.NODE_ENV === 'development'
 
 export default {
-  devtool: DEV ? 'inline-source-map' : 'source-map',
+  devtool: DEV ? 'eval-source-map' : 'source-map',
   entry: './src/index.ts',
   externals: {
     react: 'React',

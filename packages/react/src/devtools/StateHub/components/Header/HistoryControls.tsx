@@ -8,15 +8,14 @@ import { getStateHubHistoryInstance } from '../../atoms/history'
 const BackIcon = styled(BsChevronLeft)``
 
 const Button = styled.button`
-  align-items: center;
   appearance: none;
   background: none;
   border: none;
   color: ${({ theme }) => theme.colors.primary};
   cursor: pointer;
   display: grid;
-  justify-content: center;
   padding: 0;
+  place-items: center;
 
   &:disabled {
     color: ${({ theme }) => theme.colors.alphas.primary[4]};

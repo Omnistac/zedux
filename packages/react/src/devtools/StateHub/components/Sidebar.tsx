@@ -1,41 +1,30 @@
-import { useAtomState } from '@zedux/react'
+import { useAtomInstance, useAtomSelector } from '@zedux/react'
 import React from 'react'
-import { AiOutlineApartment } from 'react-icons/ai'
-import { BsGearFill } from 'react-icons/bs'
-import { IoMdList } from 'react-icons/io'
 import styled, { css } from '@zedux/react/ssc'
-import { stateHub } from '../atoms/stateHub'
-import { IconAtom, iconStyles, IconWorld } from '../styles'
+import { getRoute, stateHub } from '../atoms/stateHub'
+import { IconAtom, IconGear, IconGraph, IconList, IconWorld } from '../styles'
 import { Route } from '../types'
 
 const Aside = styled('aside')`
   align-content: start;
   background: ${({ theme }) => theme.colors.alphas.white[0]};
   display: grid;
+  grid-auto-rows: 3em;
   grid-row: span 2;
   width: 3em;
 `
 
-const IconGear = styled(BsGearFill)`
-  ${iconStyles}
-`
-const IconGraph = styled(AiOutlineApartment)`
-  ${iconStyles}
-`
-const IconList = styled(IoMdList)`
-  ${iconStyles}
-`
-
-const IconButton = styled('button')<{ isActive?: boolean }>`
+const IconButton = styled.button<{ isActive?: boolean }>`
   background: ${({ isActive, theme }) =>
     isActive ? theme.colors.alphas.white[2] : 'none'};
   border: none;
   cursor: pointer;
-  font-size: inherit;
-  height: 3em;
+  display: grid;
+  font-size: 1.7em;
   outline: none;
+  padding: 0;
+  place-items: center;
   position: relative;
-  width: 3em;
 
   ${({ isActive }) =>
     !isActive &&
@@ -47,8 +36,8 @@ const IconButton = styled('button')<{ isActive?: boolean }>`
 `
 
 export const Sidebar = () => {
-  const [{ route }, setState] = useAtomState(stateHub)
-  const setRoute = (route: Route) => setState(state => ({ ...state, route }))
+  const route = useAtomSelector(getRoute)
+  const { setRoute } = useAtomInstance(stateHub).exports
 
   return (
     <Aside>
@@ -73,13 +62,13 @@ export const Sidebar = () => {
       >
         <IconList />
       </IconButton>
-      <IconButton
+      {/* <IconButton
         isActive={route === Route.Graph}
         onClick={() => setRoute(Route.Graph)}
         title="Graph"
       >
         <IconGraph />
-      </IconButton>
+      </IconButton> */}
       <IconButton
         isActive={route === Route.Settings}
         onClick={() => setRoute(Route.Settings)}

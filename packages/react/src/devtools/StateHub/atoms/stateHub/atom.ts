@@ -1,32 +1,63 @@
-import { ActiveState, api, atom, injectEffect, injectStore } from '@zedux/react'
-import { GlobalFilter, GridNum, Route, Size } from '../../types'
+import {
+  ActiveState,
+  api,
+  atom,
+  injectEffect,
+  injectStore,
+  Mod,
+} from '@zedux/react'
+import { GlobalFilter, GridNum, LogFilter, Route, Size } from '../../types'
 
-export interface Filters {
-  [GlobalFilter.Atom]?: string[]
-  [GlobalFilter.AtomFlags]?: string[]
-  [GlobalFilter.AtomInstance]?: string[]
-  [GlobalFilter.AtomInstanceActiveState]?: ActiveState[]
-  [GlobalFilter.AtomInstanceKeyHash]?: string[]
-}
+export type LoggingMode =
+  | 'collapsed-minimal'
+  | 'collapsed-detailed'
+  | 'expanded-minimal'
+  | 'expanded-detailed'
 
-export interface StateHubState {
-  colors: {
+export interface StateHubEcosystemConfig {
+  colors?: {
     background?: string
     primary?: string
     secondary?: string
   }
+  filters?: {
+    [GlobalFilter.Atom]?: string[]
+    [GlobalFilter.AtomFlags]?: string[]
+    [GlobalFilter.AtomInstance]?: string[]
+    [GlobalFilter.AtomInstanceActiveState]?: ActiveState[]
+    [GlobalFilter.AtomInstanceKeyHash]?: string[]
+  }
+  instanceConfig?: Record<string, StateHubEcosystemInstanceConfig | undefined>
+  logFilters?: {
+    [LogFilter.EdgeType]?: {
+      isExplicit?: boolean
+      isExternal?: boolean
+      isStatic?: boolean
+    }
+    [LogFilter.EventType]?: Mod[]
+  }
+  logLimit?: number
+  route?: Route
+  selectedAtomInstanceKeyHash?: string
+  selectedLogEventId?: string
+}
+
+export interface StateHubEcosystemInstanceConfig {
+  loggingMode?: LoggingMode
+  timeTravelMode?: 'actions' | 'state'
+}
+
+export interface StateHubState {
+  ecosystemConfig: Record<string, StateHubEcosystemConfig | undefined>
   ecosystemId: string
-  filters: Record<string, Filters>
   isOpen: boolean
   isPersistingToLocalStorage: boolean
+  isWatchingStateHub: boolean
   position: {
     col: GridNum
     row: GridNum
     size: Size
   }
-  route: Route
-  selectedAtomInstanceKeyHash?: string
-  selectedLogEventId?: string
 }
 
 const getLocalStorageState = () => {
@@ -46,17 +77,16 @@ const getLocalStorageState = () => {
 }
 
 const initialState: StateHubState = {
-  colors: {},
+  ecosystemConfig: {},
   ecosystemId: 'global',
-  filters: {},
   isOpen: false,
   isPersistingToLocalStorage: true,
+  isWatchingStateHub: false,
   position: {
     col: 1,
     row: 1,
     size: 4,
   },
-  route: Route.Dashboard,
 }
 
 const localStorageKey = '@@zedux/StateHub/settings'
@@ -79,7 +109,10 @@ export const stateHub = atom('stateHub', () => {
       if (!oldState?.isPersistingToLocalStorage) return
 
       // we were persisting but now we're not. Delete saved stuff
-      localStorage.removeItem(localStorageKey)
+      localStorage.setItem(
+        localStorageKey,
+        JSON.stringify({ isPersistingToLocalStorage: false })
+      )
     })
 
     return () => subscription.unsubscribe()
@@ -107,14 +140,96 @@ export const stateHub = atom('stateHub', () => {
         ...state,
       }),
 
+    setColors: (colors: Partial<StateHubEcosystemConfig['colors']>) => {
+      store.setStateDeep(state => ({
+        ecosystemConfig: {
+          [state.ecosystemId]: { colors },
+        },
+      }))
+    },
+
     setFilter: <K extends GlobalFilter>(
       key: K,
-      getVal: (state: Filters[K]) => Filters[K]
+      getVal: (
+        state: NonNullable<StateHubEcosystemConfig['filters']>[K]
+      ) => NonNullable<StateHubEcosystemConfig['filters']>[K]
     ) => {
       store.setStateDeep(state => ({
-        filters: {
+        ecosystemConfig: {
           [state.ecosystemId]: {
-            [key]: getVal(state.filters[state.ecosystemId]?.[key]),
+            filters: {
+              [key]: getVal(
+                state.ecosystemConfig[state.ecosystemId]?.filters?.[key]
+              ),
+            },
+          },
+        },
+      }))
+    },
+
+    setLoggingMode: (keyHash: string, loggingMode?: LoggingMode) => {
+      store.setStateDeep(state => ({
+        ecosystemConfig: {
+          [state.ecosystemId]: {
+            instanceConfig: {
+              [keyHash]: {
+                loggingMode,
+              },
+            },
+          },
+        },
+      }))
+    },
+
+    setLogFilter: <K extends LogFilter>(
+      key: K,
+      getVal: (
+        state: NonNullable<StateHubEcosystemConfig['logFilters']>[K]
+      ) => NonNullable<StateHubEcosystemConfig['logFilters']>[K]
+    ) => {
+      store.setStateDeep(state => ({
+        ecosystemConfig: {
+          [state.ecosystemId]: {
+            logFilters: {
+              [key]: getVal(
+                state.ecosystemConfig[state.ecosystemId]?.logFilters?.[key]
+              ),
+            },
+          },
+        },
+      }))
+    },
+
+    setRoute: (route?: Route) => {
+      store.setStateDeep(state => ({
+        ecosystemConfig: {
+          [state.ecosystemId]: { route },
+        },
+      }))
+    },
+
+    setSelectedAtomInstance: (
+      getKeyHash?: (state?: string) => string | undefined
+    ) => {
+      store.setStateDeep(state => ({
+        ecosystemConfig: {
+          [state.ecosystemId]: {
+            selectedAtomInstanceKeyHash: getKeyHash?.(
+              state.ecosystemConfig[state.ecosystemId]
+                ?.selectedAtomInstanceKeyHash
+            ),
+          },
+        },
+      }))
+    },
+
+    setSelectedLogEvent: (getId?: (state?: string) => string | undefined) => {
+      store.setStateDeep(state => ({
+        ecosystemConfig: {
+          [state.ecosystemId]: {
+            selectedLogEventId: getId?.(
+              state.ecosystemConfig[state.ecosystemId]?.selectedLogEventId
+            ),
           },
         },
       }))

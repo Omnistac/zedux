@@ -8,9 +8,10 @@
   "publishConfig": {
     "registry": "https://omnistac.jfrog.io/omnistac/api/npm/npm-local/"
   },
-  "typings": "./dist/es/react/src/index.d.ts",
+  "types": "./dist/es/react/src/index.d.ts",
   "sideEffects": false,
   "files": [
+    "devtools",
     "dist"
   ],
   "scripts": {
@@ -64,9 +65,9 @@
       "default": "./dist/es/react/src/index.js"
     },
     "./devtools": {
-      "import": "./dist/es/react/src/devtools/index.js",
-      "require": "./dist/es/react/src/devtools/index.js",
-      "default": "./dist/es/react/src/devtools/index.js"
+      "import": "./devtools",
+      "require": "./devtools",
+      "default": "./devtools"
     }
   },
   "homepage": "https://github.com/Omnistac/zedux#readme",

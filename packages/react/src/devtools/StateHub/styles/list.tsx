@@ -11,9 +11,9 @@ const importanceColorMap = {
 
 const Actions = styled.div`
   display: grid;
-  grid-auto-columns: 2em;
+  font-size: 1.2em;
+  grid-auto-columns: 1.7em;
   grid-auto-flow: column;
-  flex-flow: row nowrap;
 `
 
 const ListItemWrapper = styled('li')<{ isActive: boolean }>`

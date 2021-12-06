@@ -29,6 +29,7 @@ const Description = styled.span`
 const List = styled('ul')`
   list-style: none;
   margin: 0;
+  max-width: 35em;
   padding: 0;
   pointer-events: none;
   position: absolute;
@@ -40,6 +41,7 @@ const List = styled('ul')`
 
 const Title = styled('h4')`
   font-size: 1.1em;
+  font-weight: normal;
   margin: 0;
 `
 

@@ -1,7 +1,7 @@
 import { useAtomInstance, useAtomSelector, useAtomValue } from '@zedux/react'
 import React, { FC, useLayoutEffect } from 'react'
 import { rect } from '../atoms/rect'
-import { stateHub } from '../atoms/stateHub'
+import { getIsOpen, getPosition, stateHub } from '../atoms/stateHub'
 import styled from '@zedux/react/ssc'
 import { GridNum, Size } from '../types'
 import { getGridColumn, getGridRow, getTemplate } from '../utils/position'
@@ -46,14 +46,11 @@ const Positioner = styled.div<{ col: GridNum; row: GridNum; size: Size }>`
 `
 
 export const Position: FC = ({ children }) => {
-  const position = useAtomSelector(({ get }) => get(stateHub).position)
+  const position = useAtomSelector(getPosition)
+  const isOpen = useAtomSelector(getIsOpen)
   const { positioneeRef, recalculate } = useAtomInstance(rect).exports
   const stateHubInstance = useAtomInstance(stateHub)
-
-  const {
-    isOpen,
-    position: { col, row, size },
-  } = useAtomValue(stateHub)
+  const { col, row, size } = position
 
   useLayoutEffect(() => {
     const keydownListener = (event: KeyboardEvent) => {
@@ -73,7 +70,9 @@ export const Position: FC = ({ children }) => {
     }
   }, [])
 
-  useLayoutEffect(recalculate, [position])
+  useLayoutEffect(() => {
+    if (isOpen) recalculate()
+  }, [isOpen, position])
 
   if (!isOpen) return null
 

@@ -6,13 +6,13 @@ import {
 } from '@zedux/react'
 import styled from '@zedux/react/ssc'
 import React, { FC } from 'react'
-import { FaTimes } from 'react-icons/fa'
 import { stateHub } from '../../../atoms/stateHub'
 import {
   Code,
   DetailsGridWrapper,
   EdgeBadges,
   IconButton,
+  XIcon,
 } from '../../../styles'
 import { LogEvent, Route } from '../../../types'
 import { SettingsLink } from '../../SettingsLink'
@@ -26,9 +26,7 @@ const DetailsGrid: FC = ({ children }) => {
         <span>Event Details</span>
         <IconButton
           onClick={() =>
-            ecosystem
-              .getInstance(stateHub)
-              .store.setStateDeep({ selectedLogEventId: undefined })
+            ecosystem.getInstance(stateHub).exports.setSelectedLogEvent()
           }
         >
           <IconX />
@@ -55,10 +53,14 @@ const EdgeDetails: FC<{
       <div>
         <span>Dependency: </span>
         <SettingsLink
-          to={{
-            route: Route.Atoms,
-            selectedAtomInstanceKeyHash: dependency.keyHash,
-          }}
+          to={state => ({
+            ecosystemConfig: {
+              [state.ecosystemId]: {
+                route: Route.Atoms,
+                selectedAtomInstanceKeyHash: dependency.keyHash,
+              },
+            },
+          })}
         >
           {dependency.keyHash}
         </SettingsLink>
@@ -69,10 +71,14 @@ const EdgeDetails: FC<{
           <Code>{dependent}</Code>
         ) : (
           <SettingsLink
-            to={{
-              route: Route.Atoms,
-              selectedAtomInstanceKeyHash: dependent.keyHash,
-            }}
+            to={state => ({
+              ecosystemConfig: {
+                [state.ecosystemId]: {
+                  route: Route.Atoms,
+                  selectedAtomInstanceKeyHash: dependent.keyHash,
+                },
+              },
+            })}
           >
             {dependent.keyHash}
           </SettingsLink>
@@ -91,10 +97,11 @@ const H4 = styled('h4')`
   display: grid;
   grid-template-columns: 1fr auto;
   font-size: 1.2em;
+  font-weight: normal;
   margin: 0;
 `
 
-const IconX = styled(FaTimes)`
+const IconX = styled(XIcon)`
   color: ${({ theme }) => theme.colors.primary};
   height: 1.4em;
   width: 1.4em;
@@ -207,10 +214,14 @@ const InstanceActiveStateChanged: FC<{
       <div>
         <span>Atom Instance: </span>
         <SettingsLink
-          to={{
-            route: Route.Atoms,
-            selectedAtomInstanceKeyHash: instance.keyHash,
-          }}
+          to={state => ({
+            ecosystemConfig: {
+              [state.ecosystemId]: {
+                route: Route.Atoms,
+                selectedAtomInstanceKeyHash: instance.keyHash,
+              },
+            },
+          })}
         >
           {instance.keyHash}
         </SettingsLink>
@@ -240,10 +251,14 @@ const InstanceStateChanged: FC<{ event: LogEvent<'instanceStateChanged'> }> = ({
       <div>
         <span>Atom Instance: </span>
         <SettingsLink
-          to={{
-            route: Route.Atoms,
-            selectedAtomInstanceKeyHash: instance.keyHash,
-          }}
+          to={state => ({
+            ecosystemConfig: {
+              [state.ecosystemId]: {
+                route: Route.Atoms,
+                selectedAtomInstanceKeyHash: instance.keyHash,
+              },
+            },
+          })}
         >
           {instance.keyHash}
         </SettingsLink>

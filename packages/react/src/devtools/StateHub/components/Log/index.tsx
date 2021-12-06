@@ -1,8 +1,12 @@
-import { AnyAtomInstanceBase, useAtomSelector } from '@zedux/react'
+import {
+  AnyAtomInstanceBase,
+  DependentEdge,
+  useAtomSelector,
+} from '@zedux/react'
 import React, { useEffect, useMemo, useState } from 'react'
 import { getCurrentEcosystemWrapperInstance } from '../../atoms/ecosystemWrapper'
 import { eventMap } from './Event'
-import { Controls } from '../GlobalControls'
+import { Controls } from './Controls'
 import { Details } from './Details'
 import {
   getAtomFilter,
@@ -12,6 +16,8 @@ import {
   getAtomInstanceKeyHashFilter,
   getSelectedLogEvent,
   selectedLogEventIdContext,
+  getLogEdgeTypeFilter,
+  getLogEventTypeFilter,
 } from '../../atoms/stateHub'
 import { ListScreenList, ListScreen, SplitScreen } from '../../styles'
 
@@ -29,6 +35,8 @@ export const Log = () => {
   const atomInstanceKeyHashFilter = useAtomSelector(
     getAtomInstanceKeyHashFilter
   )
+  const edgeTypeFilter = useAtomSelector(getLogEdgeTypeFilter)
+  const eventTypeFilter = useAtomSelector(getLogEventTypeFilter)
 
   useEffect(() => {
     let isCurrent = true
@@ -57,9 +65,28 @@ export const Log = () => {
       !atomFlagsFilter?.length &&
       !atomInstanceActiveStateFilter?.length &&
       !atomInstanceFilter?.length &&
-      !atomInstanceKeyHashFilter?.length
+      !atomInstanceKeyHashFilter?.length &&
+      !Object.values(edgeTypeFilter).filter(val => typeof val !== 'undefined')
+        .length &&
+      !eventTypeFilter?.length
     ) {
       return log
+    }
+
+    const edgePasses = (edge: DependentEdge) => {
+      const { isExplicit, isExternal, isStatic } = edgeTypeFilter
+
+      if (typeof isExplicit !== 'undefined' && edge.isExplicit !== isExplicit) {
+        return false
+      }
+      if (typeof isExternal !== 'undefined' && edge.isExternal !== isExternal) {
+        return false
+      }
+      if (typeof isStatic !== 'undefined' && edge.isStatic !== isStatic) {
+        return false
+      }
+
+      return true
     }
 
     const instancePasses = (instance: AnyAtomInstanceBase) => {
@@ -90,19 +117,28 @@ export const Log = () => {
     }
 
     return log.filter(event => {
+      if (
+        eventTypeFilter?.length &&
+        !eventTypeFilter.includes(event.action.type)
+      ) {
+        return false
+      }
+
       switch (event.action.type) {
         case 'edgeCreated':
         case 'edgeRemoved': {
-          const { dependency, dependent } = event.action.payload
+          const { dependency, dependent, edge } = event.action.payload
+
           return (
-            instancePasses(dependency) ||
-            (typeof dependent !== 'string' && instancePasses(dependent))
+            edgePasses(edge) &&
+            (instancePasses(dependency) ||
+              (typeof dependent !== 'string' && instancePasses(dependent)))
           )
         }
         case 'ghostEdgeCreated':
         case 'ghostEdgeDestroyed': {
-          const { dependency } = event.action.payload.ghost
-          return instancePasses(dependency)
+          const { ghost } = event.action.payload
+          return edgePasses(ghost.edge) && instancePasses(ghost.dependency)
         }
         case 'instanceActiveStateChanged':
         case 'instanceStateChanged': {
@@ -119,6 +155,8 @@ export const Log = () => {
     atomInstanceFilter,
     atomInstanceActiveStateFilter,
     atomInstanceKeyHashFilter,
+    edgeTypeFilter,
+    eventTypeFilter,
     log,
   ])
 

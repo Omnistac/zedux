@@ -1,6 +1,6 @@
 import { Mod } from '@zedux/react'
 import React, { FC } from 'react'
-import { EdgeBadges, PreviewText, Title } from '../../styles'
+import { PreviewText, Title } from '../../styles'
 import { Importance, LogEvent } from '../../types'
 import { Event } from './styles'
 
@@ -49,7 +49,7 @@ const EcosystemWiped: FC<{ event: LogEvent<'ecosystemWiped'> }> = ({
 }
 
 const EdgeCreated: FC<{ event: LogEvent<'edgeCreated'> }> = ({ event }) => {
-  const { dependency, dependent, edge } = event.action.payload
+  const { dependency, dependent } = event.action.payload
 
   return (
     <Event
@@ -58,9 +58,6 @@ const EdgeCreated: FC<{ event: LogEvent<'edgeCreated'> }> = ({ event }) => {
       preview={
         <>
           <Title>Edge Created</Title>
-          <div>
-            <EdgeBadges edge={edge} />
-          </div>
           <PreviewText>
             {typeof dependent === 'string' ? dependent : dependent.keyHash} &gt;{' '}
             {dependency.keyHash}
@@ -72,7 +69,7 @@ const EdgeCreated: FC<{ event: LogEvent<'edgeCreated'> }> = ({ event }) => {
 }
 
 const EdgeRemoved: FC<{ event: LogEvent<'edgeRemoved'> }> = ({ event }) => {
-  const { dependency, dependent, edge } = event.action.payload
+  const { dependency, dependent } = event.action.payload
 
   return (
     <Event
@@ -81,9 +78,6 @@ const EdgeRemoved: FC<{ event: LogEvent<'edgeRemoved'> }> = ({ event }) => {
       preview={
         <>
           <Title>Edge Removed</Title>
-          <div>
-            <EdgeBadges edge={edge} />
-          </div>
           <PreviewText>
             {typeof dependent === 'string' ? dependent : dependent.keyHash} &gt;{' '}
             {dependency.keyHash}
@@ -107,9 +101,6 @@ const GhostEdgeCreated: FC<{ event: LogEvent<'ghostEdgeCreated'> }> = ({
       preview={
         <>
           <Title>Ghost Edge Created</Title>
-          <div>
-            <EdgeBadges edge={ghost.edge} />
-          </div>
           <PreviewText>
             {dependent} &gt; {dependency.keyHash}
           </PreviewText>
@@ -132,9 +123,6 @@ const GhostEdgeDestroyed: FC<{ event: LogEvent<'ghostEdgeDestroyed'> }> = ({
       preview={
         <>
           <Title>Ghost Edge Destroyed Before Materializing</Title>
-          <div>
-            <EdgeBadges edge={ghost.edge} />
-          </div>
           <PreviewText>
             {dependent} &gt; {dependency.keyHash}
           </PreviewText>

@@ -170,14 +170,16 @@ class Parser {
   }
 }
 
-const createStyleManager = () => {
-  const id = btoa(Math.random().toString()).slice(3, 9)
+const createStyleManager = (
+  root: Pick<Element, 'appendChild'> = typeof window === 'undefined'
+    ? { appendChild: n => n }
+    : document.head
+) => {
   let idCounter = 0
+  let styleTag: HTMLStyleElement
+  const id = btoa(Math.random().toString()).slice(3, 9)
   const generateClassName = () => `s${id}${idCounter++}`
   const replaceStr = `REPLACEWITHCLASS${id}`
-
-  const styleTag = document.createElement('style')
-  styleTag.dataset.ssc = 'active'
   const cachedClassNames: Record<
     string,
     { className: string; groups: Group[]; refCount: number }
@@ -224,61 +226,65 @@ const createStyleManager = () => {
       )
       .join('\n')
 
+    if (!styleTag) {
+      styleTag = document.createElement('style')
+      styleTag.dataset.ssc = 'active'
+
+      if (typeof window !== 'undefined') {
+        root.appendChild(styleTag)
+      }
+    }
+
     styleTag.innerHTML = styles
   }
 
-  const styleManager = {
-    getClassName: <Props extends Record<string, any>>(
-      templateArr: TemplateStringsArray,
-      args: StyledArgs<Props>[],
-      props: Props,
-      oldRawStr?: string
-    ) => {
-      const rawStr = resolveTemplate(templateArr, args, props)
-      const oldCache = oldRawStr && cachedClassNames[oldRawStr]
-      let cache = cachedClassNames[rawStr]
-      let hasChanges = false
+  return <Props extends Record<string, any>>(
+    templateArr: TemplateStringsArray,
+    args: StyledArgs<Props>[],
+    props: Props,
+    oldRawStr?: string
+  ) => {
+    const rawStr = resolveTemplate(templateArr, args, props)
+    const oldCache = oldRawStr && cachedClassNames[oldRawStr]
+    let cache = cachedClassNames[rawStr]
+    let hasChanges = false
 
-      if (cache) cache.refCount++
-      if (oldCache && oldCache !== cache) {
-        oldCache.refCount--
+    if (cache) cache.refCount++
+    if (oldCache && oldCache !== cache) {
+      oldCache.refCount--
 
-        if (oldCache.refCount === 0) {
-          delete cachedClassNames[oldRawStr as any]
-          hasChanges = true
-        }
+      if (oldCache.refCount === 0) {
+        delete cachedClassNames[oldRawStr as any]
+        hasChanges = true
       }
+    }
 
-      if (cache) {
-        if (hasChanges) renderStyles()
-        return [cache.className, rawStr]
-      }
-
-      const className = generateClassName()
-      const { groups } = new Parser(rawStr, replaceStr)
-
-      cache = {
-        className,
-        groups,
-        refCount: 1,
-      }
-      cachedClassNames[rawStr] = cache
-
-      renderStyles()
+    if (cache) {
+      if (hasChanges) renderStyles()
       return [cache.className, rawStr]
-    },
-  }
+    }
 
-  if (typeof window !== 'undefined') {
-    document.head.appendChild(styleTag)
-  }
+    const className = generateClassName()
+    const { groups } = new Parser(rawStr, replaceStr)
 
-  return styleManager
+    cache = {
+      className,
+      groups,
+      refCount: 1,
+    }
+    cachedClassNames[rawStr] = cache
+
+    renderStyles()
+    return [cache.className, rawStr]
+  }
 }
 
 let globalIdCounter = 0
 const specialProps = { children: 1, htmlFor: 1, key: 1, ref: 1, theme: 1 }
-const stylesContext = createContext(createStyleManager())
+const styleManagerContext = createContext({
+  getClassName: createStyleManager(),
+  theme: {} as DefaultTheme,
+})
 
 const filterProps = (Wrapped: any, props: Record<string, any>) => {
   if (typeof window === 'undefined' || typeof Wrapped !== 'string') return props
@@ -328,10 +334,9 @@ const styled: StyledFactory = ((Wrapped: any) => {
 
   const newStyled = (templateArr: any, ...args: any) => {
     const Component: any = forwardRef((props: any, ref: any) => {
-      const { getClassName } = useContext(stylesContext)
       const prevRawStr = useRef<string>()
       const prevProps = useRef<any>(props)
-      const theme = useContext(ThemeContext)
+      const { getClassName, theme } = useContext(styleManagerContext)
 
       const stableProps = useMemo(() => {
         if (
@@ -402,8 +407,6 @@ styled.main = styled('main')
 styled.section = styled('section')
 styled.span = styled('span')
 
-const ThemeContext = createContext<DefaultTheme>({} as DefaultTheme)
-
 export default styled
 
 export const css = <Props extends Record<string, any>>(
@@ -414,9 +417,18 @@ export const css = <Props extends Record<string, any>>(
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface DefaultTheme {}
 
-export const ThemeProvider: FC<{ theme: DefaultTheme }> = ({
-  children,
-  theme,
-}) => <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
+export const ThemeProvider: FC<{
+  root?: Pick<Element, 'appendChild'>
+  theme: DefaultTheme
+}> = ({ children, root, theme }) => {
+  const getClassName = useMemo(() => createStyleManager(root), [root])
+  const value = useMemo(() => ({ getClassName, theme }), [getClassName, theme])
 
-export const useTheme = () => useContext(ThemeContext)
+  return (
+    <styleManagerContext.Provider value={value}>
+      {children}
+    </styleManagerContext.Provider>
+  )
+}
+
+export const useTheme = () => useContext(styleManagerContext).theme

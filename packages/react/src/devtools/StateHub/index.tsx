@@ -1,4 +1,4 @@
-import { EcosystemProvider, useEcosystem } from '@zedux/react'
+import { AtomInstanceType, EcosystemProvider, useEcosystem } from '@zedux/react'
 import React, { useEffect } from 'react'
 import { render } from 'react-dom'
 import { stateHub } from './atoms/stateHub'
@@ -31,8 +31,17 @@ const App = () => {
  *
  * This atom instance lives in the StateHub ecosystem, so don't pass the
  * instance to any hooks, injectors, or AtomGetters in your own ecosystem.
+ *
+ * In prod this will return undefined so check that it exists before using:
+ *
+ * ```ts
+ * import { getStateHub } from '@zedux/react/devtools'
+ *
+ * getStateHub()?.exports.setRoute('Dashboard')
+ * ```
  */
-export const getStateHub = () => getStateHubEcosystem().getInstance(stateHub)
+export const getStateHub = (): AtomInstanceType<typeof stateHub> | undefined =>
+  getStateHubEcosystem().getInstance(stateHub)
 
 /**
  * The StateHub component. The actual StateHub lives in its own React app.
@@ -79,9 +88,10 @@ export const StateHub = ({ defaultIsOpen }: { defaultIsOpen?: boolean }) => {
       }))
     }
 
-    const root = document.createElement('div')
-    root.dataset.zedux = 'StateHub'
-    document.body.insertBefore(root, document.body.firstElementChild)
+    const host = document.createElement('div')
+    host.dataset.zedux = 'StateHub'
+    document.body.insertBefore(host, document.body.firstElementChild)
+    const root = host.attachShadow({ mode: 'open' })
 
     render(<App />, root)
   }, [])

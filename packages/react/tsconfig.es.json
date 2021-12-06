@@ -11,5 +11,5 @@
     ]
   },
   "extends": "./tsconfig.json",
-  "include": ["./src", "../core/src"]
+  "include": ["./devtools", "./src", "../core/src"]
 }

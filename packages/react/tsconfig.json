@@ -4,5 +4,5 @@
     "lib": ["DOM", "ES2020"],
     "outDir": "./dist"
   },
-  "include": ["./examples", "./src", "./test", "../core/src"]
+  "include": ["./devtools", "./examples", "./src", "./test", "../core/src"]
 }

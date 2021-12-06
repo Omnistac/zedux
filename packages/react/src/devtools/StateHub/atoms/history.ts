@@ -8,12 +8,13 @@ import {
   injectRef,
   injectStore,
 } from '@zedux/react'
+import { Route } from '../types'
 import { stateHub, StateHubState } from './stateHub'
 
 export interface HistoryMod<State, SerializedState> {
   isEqual: (newState: SerializedState, oldState: SerializedState) => boolean
   isPartial: boolean
-  parse: (serializedState: SerializedState) => State
+  parse: (serializedState: SerializedState) => Partial<State>
   serialize: (state: State) => SerializedState
 }
 
@@ -88,33 +89,47 @@ export const history = atom('history', (instance: AnyAtomInstance) => {
     forward: () => goTo(store.getState().pointer + 1),
     goTo,
     hasMod: () => !!modRef.current,
-    setMod: (mod: HistoryMod<any, any>) => {
+    setMod: <State, SerializedState>(
+      mod: HistoryMod<State, SerializedState>
+    ) => {
       modRef.current = mod
       store.setStateDeep({ stack: [mod.serialize(instance.store.getState())] })
     },
   })
 })
 
-type StateHubHistoryState = Pick<StateHubState, 'ecosystemId' | 'route'>
+interface StateHubHistoryState {
+  ecosystemConfig: {
+    [key: string]:
+      | {
+          route?: Route
+        }
+      | undefined
+  }
+  ecosystemId: string
+}
 
 export const getStateHubHistoryInstance = ({ getInstance }: AtomGetters) => {
   const stateHubInstance = getInstance(stateHub)
   const historyInstance = getInstance(history, [stateHubInstance])
 
   if (!historyInstance.exports.hasMod()) {
-    historyInstance.exports.setMod({
-      isEqual: (
-        newState: StateHubHistoryState,
-        oldState: StateHubHistoryState
-      ) =>
-        newState.ecosystemId === oldState.ecosystemId &&
-        newState.route === oldState.route,
+    historyInstance.exports.setMod<StateHubState, StateHubHistoryState>({
+      isEqual: (newState, oldState) =>
+        newState.ecosystemConfig[newState.ecosystemId]?.route ===
+          oldState.ecosystemConfig[oldState.ecosystemId]?.route &&
+        newState.ecosystemId === oldState.ecosystemId,
       isPartial: true,
       parse: state => state,
-      serialize: (state: StateHubState) => {
-        const { ecosystemId, route } = state
+      serialize: state => {
+        const { ecosystemConfig, ecosystemId } = state
 
-        return { ecosystemId, route }
+        return {
+          ecosystemConfig: {
+            [ecosystemId]: { route: ecosystemConfig[ecosystemId]?.route },
+          },
+          ecosystemId,
+        }
       },
     })
   }

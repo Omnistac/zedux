@@ -1,7 +1,7 @@
 import { useAtomSelector, useAtomValue } from '@zedux/react'
 import React from 'react'
 import { rect } from '../../atoms/rect'
-import { stateHub } from '../../atoms/stateHub'
+import { getRoute } from '../../atoms/stateHub'
 import styled from '@zedux/react/ssc'
 import { RectType } from '../../types'
 import { EcosystemSelector } from './EcosystemSelector'
@@ -26,7 +26,7 @@ const Text = styled.span`
 `
 
 export const Header = () => {
-  const route = useAtomSelector(({ get }) => get(stateHub).route)
+  const route = useAtomSelector(getRoute)
   const { width } = useAtomValue(rect)
 
   return (

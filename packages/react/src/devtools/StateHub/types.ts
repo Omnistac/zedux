@@ -23,7 +23,7 @@ export interface GridProps {
 }
 
 export enum Importance {
-  High,
+  High = 1,
   Medium,
   Low,
   Dirt,
@@ -33,6 +33,11 @@ export interface LogEvent<T extends Mod = Mod> {
   action: ActorActionType<ZeduxPlugin['constructor']['actions'][T]>
   id: string
   timestamp: number
+}
+
+export enum LogFilter {
+  EdgeType = 'EdgeType',
+  EventType = 'EventType',
 }
 
 export type Pos =

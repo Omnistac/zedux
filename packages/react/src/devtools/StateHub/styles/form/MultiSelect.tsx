@@ -1,69 +1,13 @@
-import React, {
-  ComponentProps,
-  FC,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
 import styled, { css } from '@zedux/react/ssc'
-import { XIcon } from './icons-raw'
-
-export const Input = styled.input`
-  background: ${({ theme }) => theme.colors.alphas.white[1]};
-  border: none;
-  border-bottom: 3px solid ${({ theme }) => theme.colors.alphas.secondary[3]};
-  border-radius: 0;
-  color: ${({ theme }) => theme.colors.white};
-  font-size: inherit;
-  grid-column: 1;
-  grid-row: 1;
-  outline: none;
-  padding: 1em 0.5em 0.5em;
-
-  &:focus {
-    background: ${({ theme }) => theme.colors.alphas.white[2]};
-  }
-`
-
-const InputLabel = styled('label')`
-  background: ${({ theme }) => theme.colors.secondary};
-  border-radius: 4px;
-  color: #777;
-  cursor: pointer;
-  font-size: 0.8em;
-  left: 1em;
-  padding: 1px 3px;
-  position: absolute;
-  text-transform: uppercase;
-  transform: translateY(-50%);
-`
-
-const InputWithLabelWrapper = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-`
-
-let idCounter = 0
-
-export const InputWithLabel: FC<
-  { label: string } & ComponentProps<typeof Input>
-> = ({ label, ...props }) => {
-  const inputId = `${label}-${idCounter++}`
-
-  return (
-    <InputWithLabelWrapper>
-      <InputLabel htmlFor={inputId}>{label}</InputLabel>
-      <Input id={inputId} {...props} />
-    </InputWithLabelWrapper>
-  )
-}
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { XIcon } from '../icons-raw'
 
 const MultiSelectControl = styled.div`
+  align-items: flex-end;
   border-bottom: 3px solid ${({ theme }) => theme.colors.alphas.secondary[3]};
   display: flex;
   flex-flow: row wrap;
+  min-height: 2.7em;
   padding: 0.3em 0;
 `
 
@@ -100,7 +44,9 @@ const MultiSelectOption = styled.div<{
   isDisabled?: boolean
   isHighlighted?: boolean
 }>`
-  font-family: monospace;
+  background: ${({ isHighlighted, theme }) =>
+    isHighlighted ? theme.colors.alphas.white[2] : 'transparent'};
+  font-family: ${({ theme }) => theme.fonts.monospace};
   font-size: 0.9em;
   letter-spacing: -0.3px;
   padding: 0.5em;
@@ -118,12 +64,6 @@ const MultiSelectOption = styled.div<{
             background: ${({ theme }) => theme.colors.alphas.white[1]};
           }
         `}
-
-  ${({ isHighlighted }) =>
-    isHighlighted &&
-    css`
-      background: ${({ theme }) => theme.colors.alphas.white[1]};
-    `}
 `
 
 const MultiSelectSelection = styled.div`
@@ -134,7 +74,7 @@ const MultiSelectSelection = styled.div`
   column-gap: 0.2em;
   cursor: pointer;
   display: grid;
-  font-family: monospace;
+  font-family: ${({ theme }) => theme.fonts.monospace};
   font-size: 0.9em;
   grid-template-columns: auto auto;
   letter-spacing: -0.3px;
@@ -208,7 +148,7 @@ export const MultiSelect = ({
         event.preventDefault()
 
         if (options && realHighlightedIndex !== -1) {
-          onSelect(options[orderedOptions[realHighlightedIndex]])
+          onSelect(orderedOptions[realHighlightedIndex])
           setHighlightedIndex(-1)
           return
         }
