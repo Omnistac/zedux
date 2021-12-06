@@ -1,5 +1,6 @@
 import styled, { css } from '@zedux/react/ssc'
 import React, { ReactElement, useMemo, useRef, useState } from 'react'
+import { RectType } from '../../types'
 import { ExpandIcon } from '../icons-raw'
 
 const SelectControl = styled.button`
@@ -43,6 +44,9 @@ const SelectOption = styled('li')<{
       : theme.colors.alphas.primary[1]};
   color: ${({ theme }) => theme.colors.white};
   cursor: pointer;
+  max-height: ${({ theme }) =>
+    theme.height < RectType.Md ? 15 : theme.height < RectType.Lg ? 20 : 25}em;
+  overflow: auto;
   padding: 0.5em;
   text-align: center;
 
@@ -56,10 +60,11 @@ const SelectOption = styled('li')<{
     `}
 `
 
-const SelectOptionList = styled('ul')`
+const SelectList = styled('ul')`
   background: ${({ theme }) => theme.colors.background};
   box-shadow: 0 0 8px 3px rgba(0, 0, 0, 0.6);
   display: grid;
+  filter: hue-rotate(25deg);
   left: 0;
   list-style: none;
   margin: 0;
@@ -181,7 +186,7 @@ export const Select = ({
         <ExpandIcon />
       </SelectControl>
       {isOpen && (
-        <SelectOptionList>
+        <SelectList>
           {orderedOptions.map((id, index) => (
             <SelectOption
               isActive={id === selected}
@@ -193,7 +198,7 @@ export const Select = ({
               {options[id]}
             </SelectOption>
           ))}
-        </SelectOptionList>
+        </SelectList>
       )}
     </SelectWrapper>
   )

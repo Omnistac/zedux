@@ -26,6 +26,7 @@ const Faded = styled.span`
 `
 
 const Grid = styled.div`
+  box-sizing: border-box;
   column-gap: 0.5em;
   display: grid;
   grid-template-columns: auto auto auto auto;

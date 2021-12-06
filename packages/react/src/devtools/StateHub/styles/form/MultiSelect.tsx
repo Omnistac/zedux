@@ -1,10 +1,12 @@
 import styled, { css } from '@zedux/react/ssc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { RectType } from '../../types'
 import { XIcon } from '../icons-raw'
 
 const MultiSelectControl = styled.div`
   align-items: flex-end;
   border-bottom: 3px solid ${({ theme }) => theme.colors.alphas.secondary[3]};
+  box-sizing: border-box;
   display: flex;
   flex-flow: row wrap;
   min-height: 2.7em;
@@ -30,17 +32,24 @@ const MultiSelectInput = styled.input`
   padding: 0.3em;
 `
 
-const MultiSelectList = styled.div`
+const MultiSelectList = styled('ul')`
   background: ${({ theme }) => theme.colors.background};
   box-shadow: 0 0 8px 3px rgba(0, 0, 0, 0.6);
   display: grid;
+  filter: hue-rotate(25deg);
+  list-style: none;
+  margin: 0;
+  max-height: ${({ theme }) =>
+    theme.height < RectType.Md ? 15 : theme.height < RectType.Lg ? 20 : 25}em;
+  overflow: auto;
+  padding: 0;
   position: absolute;
   top: 100%;
   width: 100%;
   z-index: 1;
 `
 
-const MultiSelectOption = styled.div<{
+const MultiSelectOption = styled('li')<{
   isDisabled?: boolean
   isHighlighted?: boolean
 }>`

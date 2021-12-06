@@ -75,10 +75,9 @@ export const Details: FC<{ snapshot?: AtomInstanceSnapshot }> = ({
 
   const displayedSnapshot = snapshot || prevSnapshot.current
   const { setLoggingMode } = useAtomInstance(stateHub).exports
-  const loggingMode = useAtomSelector(({ select }) =>
-    displayedSnapshot
-      ? select(getLoggingMode, displayedSnapshot.instance.keyHash)
-      : false
+  const loggingMode = useAtomSelector(
+    getLoggingMode,
+    displayedSnapshot?.instance.keyHash
   )
 
   return (

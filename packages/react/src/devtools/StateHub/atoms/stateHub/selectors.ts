@@ -53,9 +53,10 @@ export const getFlags: AtomSelectorConfig<
 
 export const getLoggingMode = (
   { get }: AtomGetters,
-  keyHash: string,
+  keyHash?: string,
   ecosystemId = get(stateHub).ecosystemId
 ) =>
+  keyHash &&
   get(stateHub).ecosystemConfig[ecosystemId]?.instanceConfig?.[keyHash]
     ?.loggingMode
 

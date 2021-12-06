@@ -47,8 +47,7 @@ In our example, we can use `setGreeting` to update the state of the atom:
 <LiveEditor resultVar="Greeting">{`
 const greetingAtom = atom('greeting', 'Hello, world!')\n
 function GreetingPreview() {
-  const [greeting] = useAtomState(greetingAtom)
-  
+  const [greeting] = useAtomState(greetingAtom)\n
   return <div>The greeting: {greeting}</div>
 }\n
 function EditGreeting() {

@@ -46,7 +46,7 @@ export const getStateHub = (): AtomInstanceType<typeof stateHub> | undefined =>
 /**
  * The StateHub component. The actual StateHub lives in its own React app.
  * Unmounting this component won't unmount the StateHub. It is only created once
- * - rendering multiple <StateHub />s in your app(s) will have no effect.
+ * - rendering multiple StateHubs in your app(s) will have no effect.
  *
  * The StateHub ecosystem registers its plugin in all ecosystems when it loads.
  * This means you can render the <StateHub /> as the very first thing in an
