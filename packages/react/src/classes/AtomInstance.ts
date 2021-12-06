@@ -213,6 +213,8 @@ export class AtomInstance<
       return
     }
 
+    this.setActiveState(ActiveState.Destroyed)
+
     if (this._evaluationReasons.length) {
       this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
     }
@@ -238,8 +240,6 @@ export class AtomInstance<
 
     this._subscription?.unsubscribe()
     this.ecosystem._destroyAtomInstance(this.keyHash)
-
-    this.setActiveState(ActiveState.Destroyed)
   }
 
   /**
