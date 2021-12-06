@@ -105,7 +105,7 @@ export abstract class AtomInstanceBase<
 
   public setActiveState(newActiveState: ActiveState) {
     const oldActiveState = this._activeState
-    this._activeState = ActiveState.Active
+    this._activeState = newActiveState
 
     if (this.ecosystem.mods.instanceActiveStateChanged) {
       this.ecosystem.modsMessageBus.dispatch(
