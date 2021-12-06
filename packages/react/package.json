@@ -1,7 +1,7 @@
 {
   "name": "@zedux/react",
   "version": "0.3.20",
-  "description": "Elite state management for React",
+  "description": "A Molecular State Engine for React",
   "main": "./dist/es/react/src/index.js",
   "module": "./dist/es/react/src/index.js",
   "es2015": "./dist/es/react/src/index.js",

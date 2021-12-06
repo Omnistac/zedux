@@ -17,7 +17,7 @@ function NotDone() {
   return (
     <Layout
       title={`${siteConfig.title} - ${siteConfig.tagline}`}
-      description="Zedux is an elite state management tool for React"
+      description="Zedux is a molecular state engine for React"
     >
       <Main>
         <h1>Yikes!</h1>

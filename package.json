@@ -1,7 +1,7 @@
 {
   "name": "zedux",
   "version": "1.0.1",
-  "description": "Elite state management for React",
+  "description": "A Molecular State Engine for React",
   "scripts": {
     "docs:dev": "cd docs && yarn start",
     "examples": "cd examples && yarn start",

@@ -25,7 +25,7 @@ const PathsPlugin = (context, options) => {
 /** @type {import('@docusaurus/types').Config} */
 module.exports = {
   title: 'Zedux',
-  tagline: 'Elite State Management for React',
+  tagline: 'A Molecular State Engine for React',
   url: 'https://omnistac.github.io',
   baseUrl: '/zedux/',
   favicon: 'img/favicon.ico',

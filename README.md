@@ -5,7 +5,7 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/0459ebf8444c36752eac/maintainability)](https://codeclimate.com/github/bowheart/zedux/maintainability)
 [![npm](https://img.shields.io/npm/v/zedux.svg)](https://www.npmjs.com/package/zedux)
 
-Elite State Management for JavaScript.
+A Molecular State Engine for React.
 
 ## Feature list of awesomeness
 
@@ -15,9 +15,6 @@ Elite State Management for JavaScript.
 - State machines
 - Cache management
 - Built-in side effects model
-- Reducer-driven state updates
-- Action creator utilities
-- Reducer creation utility
 - Action streams
 - Code splitting
 - Memoization
