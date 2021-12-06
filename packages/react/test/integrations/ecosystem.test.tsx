@@ -303,6 +303,9 @@ describe('ecosystem', () => {
     })
 
     expect(preload).toHaveBeenCalledTimes(2)
-    expect(preload).toHaveBeenLastCalledWith(expect.any(Object), { val: 'aa' })
+    expect(preload).toHaveBeenLastCalledWith(
+      expect.objectContaining({ context: { val: 'aa' } }),
+      { val: 'a' }
+    )
   })
 })
