@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zedux Dev</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.ts"></script>
+    <script type="module">
+      import { atom, useAtomState } from './src/index'
+      import { createElement } from 'react'
+      import { render } from 'react-dom'
+
+      const greetingAtom = atom('greeting', 'Hello, World!')
+
+      const App = () => {
+        const [state, setState] = useAtomState(greetingAtom)
+
+        return createElement('div', null,
+          createElement('p', null, state),
+          createElement('input', {
+            onChange: event => setState(event.currentTarget.value),
+            value: state
+          })
+        )
+      }
+
+      render(createElement(App), document.getElementById('root'))
+    </script>
+  </body>
+</html>

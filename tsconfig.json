@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "allowJs": false,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "declaration": true,
@@ -9,9 +8,9 @@
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "jsx": "react",
-    "lib": ["ES2020"],
-    "module": "commonjs",
+    "jsx": "react-jsx",
+    "lib": ["esnext"],
+    "module": "esnext",
     "moduleResolution": "node",
     "noImplicitAny": true,
     "outDir": "./dist",
@@ -29,7 +28,7 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,
-    "target": "es5"
+    "target": "es2015"
   },
   "include": ["./packages"]
 }

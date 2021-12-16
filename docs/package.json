@@ -3,12 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "yarn watch:react & docusaurus start",
+    "start": "docusaurus start",
     "build": "docusaurus build",
     "serve": "docusaurus serve",
     "swizzle": "docusaurus swizzle",
-    "deploy": "USE_SSH=true docusaurus deploy",
-    "watch:react": "cd ../packages/react && yarn dev"
+    "deploy": "USE_SSH=true docusaurus deploy"
   },
   "dependencies": {
     "@docusaurus/core": "^2.0.0-beta.9",

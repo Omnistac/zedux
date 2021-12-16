@@ -205,7 +205,7 @@ describe('registrations', () => {
 
       store.subscribe({ error: errorSubscriber })
 
-      let error: Error | undefined = undefined
+      let error: unknown = undefined
       try {
         store.dispatch({ type: 'b' })
       } catch (err) {
@@ -233,7 +233,7 @@ describe('registrations', () => {
       child.subscribe({ error: childErrorSubscriber })
       parent.subscribe({ error: parentErrorSubscriber })
 
-      let error: Error | undefined = undefined
+      let error: unknown = undefined
       try {
         parent.dispatch({ type: 'c' })
       } catch (err) {

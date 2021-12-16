@@ -2,20 +2,12 @@ import bgUrl from '@site/static/img/bg-texture.png'
 import icon from '@site/static/img/zedux-icon.png'
 import usePrismTheme from '@theme/hooks/usePrismTheme'
 import Highlight, { Prism } from 'prism-react-renderer'
-import React, {
-  FC,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react'
 import Editor from 'react-simple-code-editor'
 import styled, { keyframes } from 'styled-components'
-import { StateHub } from '../../packages/react/dist/es/react/src/devtools'
-import * as ReactZedux from '../../packages/react/dist/es/react/src'
+import { StateHub } from '../../packages/react/src/devtools'
+import * as ReactZedux from '../../packages/react/src'
 import * as Redux from 'redux'
-import { EcosystemProvider } from '../../packages/react/dist/es/react/src'
 
 import('react').then(react => {
   ;(window as any).React = react
@@ -288,7 +280,7 @@ export const LiveEditor: FC<{
   )
 
   return (
-    <EcosystemProvider id={ecosystemId}>
+    <ReactZedux.EcosystemProvider id={ecosystemId}>
       <StateHub />
       <Wrapper>
         <Header url={bgUrl}>
@@ -350,6 +342,6 @@ export const LiveEditor: FC<{
           <ErrorBoundary>{result}</ErrorBoundary>
         </ResultView>
       </Wrapper>
-    </EcosystemProvider>
+    </ReactZedux.EcosystemProvider>
   )
 }

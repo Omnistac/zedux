@@ -1,7 +1,8 @@
-_book
+.cache
+.DS_Store
+.npmrc
+.rpt2_cache
+*.local
 coverage
 dist
 node_modules
-.npmrc
-.cache
-.rpt2_cache

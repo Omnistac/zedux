@@ -1,6 +1,6 @@
 {
   "internal": true,
-  "main": "../../dist/es/react/src/devtools/index.js",
-  "module": "../../dist/es/react/src/devtools/index.js",
-  "types": "../../dist/es/react/src/devtools/index.d.ts"
+  "main": "../../dist/react/devtools/zedux-react-devtools.umd.js",
+  "module": "../../dist/react/devtools/zedux-react-devtools.es.js",
+  "types": "../../dist/react/src/devtools/index.d.ts"
 }

@@ -2,13 +2,12 @@
   "name": "@zedux/react",
   "version": "0.3.20",
   "description": "A Molecular State Engine for React",
-  "main": "./dist/es/react/src/index.js",
-  "module": "./dist/es/react/src/index.js",
-  "es2015": "./dist/es/react/src/index.js",
+  "main": "./dist/react/zedux-react.umd.js",
+  "module": "./dist/react/zedux-react.es.js",
   "publishConfig": {
     "registry": "https://omnistac.jfrog.io/omnistac/api/npm/npm-local/"
   },
-  "types": "./dist/es/react/src/index.d.ts",
+  "types": "./dist/react/src/index.d.ts",
   "sideEffects": false,
   "files": [
     "devtools",
@@ -16,12 +15,10 @@
   ],
   "scripts": {
     "build-storybook": "build-storybook",
-    "build:es": "ttsc --outDir dist/es -p tsconfig.es.json",
-    "build:umd:min": "cross-env NODE_ENV=production webpack",
-    "build:umd": "cross-env NODE_ENV=development webpack",
-    "build": "rm -rf dist && yarn build:es && yarn build:umd && yarn build:umd:min",
-    "dev": "yarn build:es -- --watch",
+    "build": "rimraf dist && tsc && vite build && PACKAGE=devtools vite build",
+    "dev": "vite",
     "prepublishOnly": "yarn build",
+    "preview": "vite preview",
     "storybook": "start-storybook -p 6006",
     "test": "cd ../.. && yarn test packages/react"
   },
@@ -60,29 +57,25 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/es/react/src/index.js",
-      "require": "./dist/es/react/src/index.js",
-      "default": "./dist/es/react/src/index.js"
+      "import": "./dist/react/zedux-react.es.js",
+      "require": "./dist/react/zedux-react.umd.js",
+      "default": "./dist/react/zedux-react.umd.js"
     },
     "./devtools": {
-      "import": "./devtools",
-      "require": "./devtools",
-      "default": "./devtools"
+      "import": "./dist/react/devtools/zedux-react-devtools.es.js",
+      "require": "./dist/react/devtools/zedux-react-devtools.umd.js",
+      "default": "./dist/react/devtools/zedux-react-devtools.umd.js"
     }
   },
   "homepage": "https://github.com/Omnistac/zedux#readme",
   "devDependencies": {
-    "@testing-library/jest-dom": "^5.11.9",
-    "@testing-library/react": "^11.2.5",
     "@types/react-dom": "^17.0.11",
-    "@types/styled-components": "^5.1.7",
-    "core-js": "3",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
-    "ttypescript": "^1.5.12",
-    "typescript-transform-paths": "^2.2.3"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
   },
   "dependencies": {
+    "@testing-library/jest-dom": "^5.16.1",
+    "@testing-library/react": "^12.1.2",
     "react-icons": "^4.3.1"
   },
   "peerDependencies": {

@@ -1,5 +1,5 @@
 import { Config } from '@jest/types'
-import { RawCompilerOptions } from 'ts-jest/dist/tsconfig-raw'
+import { RawCompilerOptions } from 'ts-jest'
 import { pathsToModuleNameMapper } from 'ts-jest/utils'
 import { compilerOptions } from './tsconfig.json'
 
@@ -28,6 +28,7 @@ const config: Config.InitialOptions = {
     '<rootDir>/packages/react/test',
   ],
   setupFilesAfterEnv: ['./jest.setup.ts'],
+  testEnvironment: 'jsdom',
   testRegex: '/test/.*\\.test\\.tsx?$',
 }
 
