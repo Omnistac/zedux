@@ -19,7 +19,7 @@ When called asynchronously, `get` is really just an alias for `ecosystem.get()`.
 
 ## Examples
 
-<LiveEditor resultVar="Seconds">{`
+<LiveEditor ecosystemId="injectGet/example" resultVar="Seconds">{`
 const secondsAtom = atom('seconds', (startingNumber: number) => {
   const store = injectStore(startingNumber)\n
   injectEffect(() => {

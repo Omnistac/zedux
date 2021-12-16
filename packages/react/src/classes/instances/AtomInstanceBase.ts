@@ -27,6 +27,7 @@ export abstract class AtomInstanceBase<
   public abstract store: Store<State>
 
   public abstract _activeState: ActiveState
+  public abstract _createdAt: number
   public abstract _evaluationReasons: EvaluationReason[]
   public abstract _injectors?: InjectorDescriptor[]
   public abstract _isEvaluating: boolean

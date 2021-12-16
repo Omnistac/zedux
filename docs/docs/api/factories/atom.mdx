@@ -14,7 +14,7 @@ Where it all starts. `atom()` is a factory for creating normal, everyday atoms. 
 
 ## Example
 
-<LiveEditor resultVar="App">{`
+<LiveEditor ecosystemId="atom/example" resultVar="App">{`
 const simpleAtom = atom('simple', 'super simple state stuffs')\n
 const complexAtom = atom('complex', () => {
   const store = injectStore({ date: new Date() })\n

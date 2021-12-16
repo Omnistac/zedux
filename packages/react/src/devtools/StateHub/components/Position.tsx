@@ -1,4 +1,4 @@
-import { useAtomInstance, useAtomSelector, useAtomValue } from '@zedux/react'
+import { useAtomInstance, useAtomSelector } from '@zedux/react'
 import React, { FC, useLayoutEffect } from 'react'
 import { rect } from '../atoms/rect'
 import { getIsOpen, getPosition, stateHub } from '../atoms/stateHub'

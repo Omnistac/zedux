@@ -1,7 +1,7 @@
 import styled, { css } from '@zedux/react/ssc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { RectType } from '../../types'
-import { XIcon } from '../icons-raw'
+import { rawIcons } from '../icons-raw'
 
 const MultiSelectControl = styled.div`
   align-items: flex-end;
@@ -13,7 +13,7 @@ const MultiSelectControl = styled.div`
   padding: 0.3em 0;
 `
 
-const MultiSelectForm = styled('form')`
+const MultiSelectForm = styled.form`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
@@ -32,7 +32,7 @@ const MultiSelectInput = styled.input`
   padding: 0.3em;
 `
 
-const MultiSelectList = styled('ul')`
+const MultiSelectList = styled.ul`
   background: ${({ theme }) => theme.colors.background};
   box-shadow: 0 0 8px 3px rgba(0, 0, 0, 0.6);
   display: grid;
@@ -49,7 +49,7 @@ const MultiSelectList = styled('ul')`
   z-index: 1;
 `
 
-const MultiSelectOption = styled('li')<{
+const MultiSelectOption = styled.li<{
   isDisabled?: boolean
   isHighlighted?: boolean
 }>`
@@ -171,11 +171,12 @@ export const MultiSelect = ({
       <MultiSelectControl>
         {selected.map(id => (
           <MultiSelectSelection key={id} onClick={() => onDeselect(id)}>
-            <XIcon />
+            <rawIcons.X />
             <span>{(options && options[id]) || id}</span>
           </MultiSelectSelection>
         ))}
         <MultiSelectInput
+          autoFocus={!selected.length}
           onBlur={() => {
             if (!isBlurCanceled.current && isRendered.current) setIsOpen(false)
           }}

@@ -8,10 +8,8 @@ import {
   DetailsGridWrapper,
   DetailsScreen,
   IconButton,
-  IconList,
-  IconLog,
-  IconX,
   Pre,
+  styledIcons,
 } from '../../styles'
 import {
   AtomInstanceSnapshot,
@@ -94,7 +92,7 @@ export const Details: FC<{ snapshot?: AtomInstanceSnapshot }> = ({
               }
               padding={0.5}
             >
-              <IconX size={1.3} />
+              <styledIcons.X size={1.3} />
             </IconButton>
           </HeaderGrid>
           <div>
@@ -111,8 +109,8 @@ export const Details: FC<{ snapshot?: AtomInstanceSnapshot }> = ({
               }
               padding={0.7}
             >
+              <styledIcons.Log />
               <span>Log State</span>
-              <IconLog />
             </IconButton>
             <SettingsButton
               hasBg
@@ -130,8 +128,8 @@ export const Details: FC<{ snapshot?: AtomInstanceSnapshot }> = ({
               })}
               padding={0.7}
             >
+              <styledIcons.List />
               <span>Monitor</span>
-              <IconList />
             </SettingsButton>
             <Checkbox
               isChecked={typeof loggingMode !== 'undefined'}

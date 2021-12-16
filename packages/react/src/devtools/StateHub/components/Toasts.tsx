@@ -1,6 +1,6 @@
 import { useAtomInstance, useAtomValue } from '@zedux/react'
 import React from 'react'
-import { IoMdClose } from 'react-icons/io'
+import { rawIcons } from '../styles'
 import { Toast, toasts as toastsAtom } from '../atoms/toasts'
 import styled from '@zedux/react/ssc'
 
@@ -16,7 +16,7 @@ const toastBgs = {
   warningLight: '#ffffd0',
 }
 
-const CloseIcon = styled(IoMdClose)`
+const CloseIcon = styled(rawIcons.X)`
   font-size: 1.3em;
   transform: rotate(0);
   transition: transform 0.1s;
@@ -26,7 +26,7 @@ const Description = styled.span`
   grid-column: span 2;
 `
 
-const List = styled('ul')`
+const List = styled.ul`
   list-style: none;
   margin: 0;
   max-width: 35em;
@@ -39,13 +39,13 @@ const List = styled('ul')`
   z-index: 2;
 `
 
-const Title = styled('h4')`
+const Title = styled.h4`
   font-size: 1.1em;
   font-weight: normal;
   margin: 0;
 `
 
-const ToastWrapper = styled('li')<{ type: Toast['type'] }>`
+const ToastWrapper = styled.li<{ type: Toast['type'] }>`
   background: ${({ type }) => toastBgs[type]};
   box-shadow: 5px 5px
     ${({ type }) => toastBgs[`${type}Dark` as keyof typeof toastBgs]};

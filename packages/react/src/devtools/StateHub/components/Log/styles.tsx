@@ -1,7 +1,7 @@
 import { useEcosystem } from '@zedux/react'
 import React, { ComponentProps, FC, useContext } from 'react'
 import { stateHub } from '../../atoms/stateHub'
-import { IconButton, IconLog, ListScreenItem } from '../../styles'
+import { IconButton, ListScreenItem, styledIcons } from '../../styles'
 import { LogEvent } from '../../types'
 import { selectedLogEventIdContext } from '../../atoms/stateHub'
 import { logGroup } from '../../utils/logging'
@@ -27,7 +27,7 @@ export const Event: FC<
             )
           }
         >
-          <IconLog />
+          <styledIcons.Log />
         </IconButton>
       }
       isActive={event.id === selectedLogEventId}

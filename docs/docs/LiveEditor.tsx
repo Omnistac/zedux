@@ -217,20 +217,17 @@ const Highlighter = code => (
   </Highlight>
 )
 
-let idCounter = 0
-
 export const LiveEditor: FC<{
+  ecosystemId: string
   extraScope?: string | Record<string, any>
   resultVar?: string
-}> = ({ children, extraScope, resultVar = 'Result' }) => {
+}> = ({ children, ecosystemId, extraScope, resultVar = 'Result' }) => {
   const lastLoggedErrorTimeRef = useRef<number | undefined>()
   const isMountedRef = useRef(true)
   const initialCodeRef = useRef((children as string).trim())
   const [tsCode, setTsCode] = useState((children as string).trim())
   const [result, setResult] = useState('')
   theme = usePrismTheme()
-
-  const ecosystemId = useMemo(() => `editor-ecosystem-${idCounter++}`, [])
 
   const runCode = useCallback(
     (val: string) => {

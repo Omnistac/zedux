@@ -17,8 +17,8 @@ import {
   SplitScreen,
   ListScreenItem,
   IconButton,
-  IconLog,
   Title,
+  styledIcons,
 } from '../../styles'
 import { ecosystemAtomInstances } from '../../atoms/ecosystemWrapper'
 import { logAtomInstance } from '../../utils/logging'
@@ -92,7 +92,7 @@ export const Atoms = () => {
                     logAtomInstance(instance, instance.store.getState())
                   }
                 >
-                  <IconLog />
+                  <styledIcons.Log />
                 </IconButton>
               }
               isActive={

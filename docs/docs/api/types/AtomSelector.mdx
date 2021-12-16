@@ -198,7 +198,7 @@ Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig 
 AtomSelectorConfig options (other than `selector`) are ignored when passed to `ecosystem.select()` and nested `select()` calls. They're accepted overloads for interop convenience.
 :::
 
-<LiveEditor resultVar="CountBy5">{`
+<LiveEditor ecosystemId="AtomSelector/example" resultVar="CountBy5">{`
 const counterAtom = atom('counter', 0)\n
 function CountBy5() {
   const { setState } = useAtomInstance(counterAtom)

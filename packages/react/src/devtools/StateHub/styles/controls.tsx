@@ -33,7 +33,6 @@ export const ControlButton: FC<
 export const ControlGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto;
   row-gap: 0.5em;
 `
 

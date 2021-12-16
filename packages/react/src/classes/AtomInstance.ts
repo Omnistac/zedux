@@ -111,6 +111,7 @@ export class AtomInstance<
 
   public _activeState = ActiveState.Initializing
   public _cancelDestruction?: Cleanup
+  public _createdAt = Date.now()
   public _evaluationReasons: EvaluationReason[] = [] // TODO: Maybe make this undefined in prod and don't use
   public _injectors?: InjectorDescriptor[]
   public _isEvaluating = false

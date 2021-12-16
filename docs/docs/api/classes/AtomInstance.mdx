@@ -120,7 +120,7 @@ useAtomInstance(myAtom, ['b', 'a'])
 
 The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`get`](../injectors/injectGet) or any dynamic injector to register a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the passed atom instance.
 
-<LiveEditor resultVar="Shout">{`
+<LiveEditor ecosystemId="AtomInstance/shout" resultVar="Shout">{`
 const normalAtom = atom('normal', "I'm just a little, black rain cloud")\n
 const shoutingAtom = atom(
   'shouting',
@@ -190,7 +190,7 @@ Required. An [action](../types/Action) or [action chain](../types/ActionChain) o
 
 A bound function property. Forces a reevaluation of the atom instance.
 
-<LiveEditor resultVar="Coin">{`
+<LiveEditor ecosystemId="AtomInstance/invalidate" resultVar="Coin">{`
 const coinTossAtom = atom('coinToss', () => Math.random() < 0.5)\n
 function Coin() {
   const isHeads = useAtomValue(coinTossAtom)

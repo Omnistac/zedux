@@ -58,7 +58,7 @@ Fortunately Zedux ships with a high-level injector for creating promises whose e
 - Rather than returning a cleanup function, cleanup functions can be passed to a received `cleanup` param.
 - It returns a tuple consisting of a promise and a special [async store](../api/types/AsyncStore).
 
-<LiveEditor resultVar="App">{`
+<LiveEditor ecosystemId="suspense/injectAsyncEffect" resultVar="App">{`
 const asyncAtom = atom('async', () => {
   const [promise, store] = injectAsyncEffect(cleanup => {
     return new Promise(resolve => {

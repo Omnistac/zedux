@@ -3,32 +3,13 @@ import { AiOutlineApartment } from 'react-icons/ai'
 import { BsChevronExpand, BsGearFill } from 'react-icons/bs'
 import { GiAtom } from 'react-icons/gi'
 import { GrClear, GrCycle } from 'react-icons/gr'
-import { FaFlag, FaTimes } from 'react-icons/fa'
+import { FaFlag } from 'react-icons/fa'
 import { FiGlobe } from 'react-icons/fi'
 import { IoMdKey, IoMdList } from 'react-icons/io'
+import { MdClear } from 'react-icons/md'
 import { IconType } from 'react-icons/lib'
 
-const wrap = (Icon: IconType) => {
-  const WrappedIcon = ({ className }: { className?: string }) => (
-    <Icon className={className} />
-  )
-
-  return WrappedIcon
-}
-
-export const AtomIcon = wrap(GiAtom)
-export const ClearIcon = wrap(GrClear)
-export const CycleIcon = wrap(GrCycle)
-export const ExpandIcon = wrap(BsChevronExpand)
-export const FlagIcon = wrap(FaFlag)
-export const GearIcon = wrap(BsGearFill)
-export const GraphIcon = wrap(AiOutlineApartment)
-export const KeyIcon = wrap(IoMdKey)
-export const ListIcon = wrap(IoMdList)
-export const XIcon = wrap(FaTimes)
-export const WorldIcon = wrap(FiGlobe)
-
-export const AtomInstanceIcon = ({ className }: { className?: string }) => {
+const AtomInstanceIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} height="1em" viewBox="0 0 240 240" width="1em">
       <ellipse
@@ -74,7 +55,7 @@ export const AtomInstanceIcon = ({ className }: { className?: string }) => {
   )
 }
 
-export const EdgeIcon = ({ className }: { className?: string }) => {
+const EdgeIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} height="1em" viewBox="0 0 240 240" width="1em">
       <circle cx="200" cy="40" r="40" fill="currentColor" />
@@ -91,7 +72,7 @@ export const EdgeIcon = ({ className }: { className?: string }) => {
   )
 }
 
-export const FilterIcon = ({ className }: { className?: string }) => {
+const FilterIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} height="1em" viewBox="0 0 240 240" width="1em">
       <line
@@ -122,7 +103,7 @@ export const FilterIcon = ({ className }: { className?: string }) => {
   )
 }
 
-export const LogIcon = ({ className }: { className?: string }) => {
+const LogIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} height="1em" viewBox="0 0 240 240" width="1em">
       <circle
@@ -155,7 +136,7 @@ export const LogIcon = ({ className }: { className?: string }) => {
   )
 }
 
-export const RemoveItemIcon = ({ className }: { className?: string }) => {
+const RemoveItemIcon = ({ className }: { className?: string }) => {
   const id = 'test'
 
   return (
@@ -218,4 +199,40 @@ export const RemoveItemIcon = ({ className }: { className?: string }) => {
       />
     </svg>
   )
+}
+
+const wrap = <R extends Record<string, IconType>>(icons: R) => {
+  // just mutate just 'cause...
+  Object.entries(icons).forEach(([key, Icon]) => {
+    const WrappedIcon = ({ className }: { className?: string }) => (
+      <Icon className={className} />
+    )
+
+    icons[key as keyof R] = WrappedIcon as any
+  })
+
+  return icons
+}
+
+const wrappedIcons = wrap({
+  Atom: GiAtom,
+  Clear: GrClear,
+  Cycle: GrCycle,
+  Expand: BsChevronExpand,
+  Flag: FaFlag,
+  Gear: BsGearFill,
+  Graph: AiOutlineApartment,
+  Key: IoMdKey,
+  List: IoMdList,
+  X: MdClear,
+  World: FiGlobe,
+})
+
+export const rawIcons = {
+  ...wrappedIcons,
+  AtomInstance: AtomInstanceIcon,
+  Edge: EdgeIcon,
+  Filter: FilterIcon,
+  Log: LogIcon,
+  RemoveItem: RemoveItemIcon,
 }

@@ -15,7 +15,7 @@ The atom instance that uses this injector will reevaluate whenever the resolved 
 
 ## Example
 
-<LiveEditor resultVar="Seconds">{`
+<LiveEditor ecosystemId="injectAtomState/example" resultVar="Seconds">{`
 const secondsAtom = atom('seconds', () => {
   const store = injectStore(0)\n
   injectEffect(() => {

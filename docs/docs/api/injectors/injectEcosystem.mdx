@@ -19,7 +19,7 @@ This should be viewed as an escape hatch. There shouldn't be many use cases for 
 
 ## Example
 
-<LiveEditor resultVar="Seconds">{`
+<LiveEditor ecosystemId="injectEcosystem/example" resultVar="Seconds">{`
 const secondsAtom = atom('seconds', () => {
   const store = injectStore(0)\n
   injectEffect(() => {

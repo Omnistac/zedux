@@ -13,7 +13,7 @@ In general, side effects should be colocated with the state that triggers them a
 
 Your primary weapon for running side effects in atoms. This works just like React's [`useEffect()`](https://reactjs.org/docs/hooks-reference.html#useeffect).
 
-<LiveEditor resultVar="Alert">{`
+<LiveEditor ecosystemId="side-effects/injectEffect" resultVar="Alert">{`
 const alertAtom = atom('alert', () => {
   const store = injectStore(0, true) // true subscribes to the store\n
   injectEffect(() => {
@@ -170,7 +170,7 @@ As with all subscriptions, it's important to clean up effects subscribers when t
 
 `when()` builders have a `subscription` property, which is a reference to the store subscription created by the `when()` call. Remember to call `subscription.unsubscribe()` in `useEffect` and `injectEffect`:
 
-<LiveEditor resultVar="Button">{`
+<LiveEditor ecosystemId="side-effects/cleanup" resultVar="Button">{`
 const triggerAlert = createActor('triggerAlert')\n
 const buttonPressAtom = atom('buttonPress', () => {
   const store = injectStore()\n

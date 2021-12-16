@@ -51,7 +51,7 @@ export const Badge = styled.span<{
   white-space: nowrap;
 `
 
-export const Code = styled('code')`
+export const Code = styled.code`
   background: ${({ theme }) => theme.colors.alphas.white[0]};
   color: ${({ theme }) => theme.colors.white};
   font-family: ${({ theme }) => theme.fonts.monospace};
@@ -93,6 +93,10 @@ export const EdgeBadges: FC<{ edge: DependentEdge }> = ({ edge }) => {
   )
 }
 
+export const GridStretch = styled.div`
+  display: grid;
+`
+
 export const ListScreen = styled.div`
   display: grid;
   flex: 1;
@@ -100,7 +104,7 @@ export const ListScreen = styled.div`
   padding: 0.5em;
 `
 
-export const Pre = styled('pre')`
+export const Pre = styled.pre`
   background: ${({ theme }) => theme.colors.alphas.white[1]};
   font-family: ${({ theme }) => theme.fonts.monospace};
   margin: 0;

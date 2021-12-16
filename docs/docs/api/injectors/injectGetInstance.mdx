@@ -19,7 +19,7 @@ When called asynchronously, `getInstance` is really just an alias for `ecosystem
 
 ## Examples
 
-<LiveEditor resultVar="Seconds">{`
+<LiveEditor ecosystemId="injectGetInstance/example" resultVar="Seconds">{`
 const secondsAtom = atom('seconds', (startingNumber: number) => {
   const store = injectStore(startingNumber)\n
   injectEffect(() => {

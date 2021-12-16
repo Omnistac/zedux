@@ -15,7 +15,7 @@ In general, try to avoid impure, mutation-oriented, or generally non-reactive pa
 
 ## Examples
 
-<LiveEditor resultVar="Coin">{`
+<LiveEditor ecosystemId="injectInvalidate/example" resultVar="Coin">{`
 const coinTossAtom = atom('coinToss', () => {
   const isHeads = Math.random() < 0.5
   const invalidate = injectInvalidate()\n

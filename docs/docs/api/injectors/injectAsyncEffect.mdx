@@ -19,7 +19,7 @@ One of the primary uses of this injector is to obtain a stable promise reference
 
 ## Example
 
-<LiveEditor resultVar="App">{`
+<LiveEditor ecosystemId="injectAsyncEffect/example" resultVar="App">{`
 const suspendingAtom = atom('suspending', () => {
   const [promise, asyncStore] = injectAsyncEffect(() => {
     return new Promise(resolve => {

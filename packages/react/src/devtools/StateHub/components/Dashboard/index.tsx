@@ -16,7 +16,6 @@ const Cell = styled.div`
   align-content: center;
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: auto auto;
   justify-items: center;
 `
 
@@ -32,7 +31,7 @@ const Number = styled.span`
   font-size: 2.5em;
 `
 
-const Text = styled('h3')`
+const Text = styled.span`
   font-size: 1.2em;
   margin: 0;
   white-space: nowrap;

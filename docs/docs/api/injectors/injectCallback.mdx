@@ -13,7 +13,7 @@ An [injector](../glossary#injector) that memoizes a function. Really just a shor
 
 Can be useful when exporting functions from an atom to ensure that you're only exporting stable references.
 
-<LiveEditor resultVar="Seconds">{`
+<LiveEditor ecosystemId="injectCallback/example" resultVar="Seconds">{`
 const counterAtom = atom('counter', () => {
   const store = injectStore(0)\n
   const add = injectCallback(

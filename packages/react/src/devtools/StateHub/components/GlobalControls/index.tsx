@@ -8,16 +8,10 @@ import {
   getAtomInstanceKeyHashFilter,
 } from '../../atoms/stateHub'
 import {
-  IconAtom,
-  IconAtomInstance,
-  IconFilter,
-  IconFlag,
-  IconCycle,
-  IconKey,
-  IconWorld,
   DoubleIcon,
   ControlGroup,
   ControlButton,
+  styledIcons,
 } from '../../styles'
 import { GlobalFilter } from '../../types'
 
@@ -39,7 +33,11 @@ export const GlobalControls: FC<{
 
   return (
     <ControlGroup>
-      <DoubleIcon iconOne={IconWorld} iconTwo={IconFilter} inverted />
+      <DoubleIcon
+        iconOne={styledIcons.World}
+        iconTwo={styledIcons.Filter}
+        inverted
+      />
       <ControlButton
         isActive={selectedFilter === GlobalFilter.Atom}
         numSelected={atomFilter?.length}
@@ -49,7 +47,7 @@ export const GlobalControls: FC<{
           )
         }
       >
-        <IconAtom />
+        <styledIcons.Atom />
       </ControlButton>
       <ControlButton
         isActive={selectedFilter === GlobalFilter.AtomInstance}
@@ -62,7 +60,7 @@ export const GlobalControls: FC<{
           )
         }
       >
-        <IconAtomInstance />
+        <styledIcons.AtomInstance />
       </ControlButton>
       <ControlButton
         isActive={selectedFilter === GlobalFilter.AtomInstanceKeyHash}
@@ -75,7 +73,7 @@ export const GlobalControls: FC<{
           )
         }
       >
-        <IconKey />
+        <styledIcons.Key />
       </ControlButton>
       <ControlButton
         isActive={selectedFilter === GlobalFilter.AtomFlags}
@@ -88,7 +86,7 @@ export const GlobalControls: FC<{
           )
         }
       >
-        <IconFlag />
+        <styledIcons.Flag />
       </ControlButton>
       <ControlButton
         isActive={selectedFilter === GlobalFilter.AtomInstanceActiveState}
@@ -101,7 +99,7 @@ export const GlobalControls: FC<{
           )
         }
       >
-        <IconCycle />
+        <styledIcons.Cycle />
       </ControlButton>
     </ControlGroup>
   )

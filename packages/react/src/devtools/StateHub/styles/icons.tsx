@@ -1,23 +1,6 @@
-import styled, { css } from '@zedux/react/ssc'
+import styled, { css, StylerProps } from '@zedux/react/ssc'
 import React, { ComponentType, FC } from 'react'
-import {
-  AtomIcon,
-  AtomInstanceIcon,
-  ClearIcon,
-  CycleIcon,
-  EdgeIcon,
-  ExpandIcon,
-  FilterIcon,
-  FlagIcon,
-  GearIcon,
-  GraphIcon,
-  KeyIcon,
-  ListIcon,
-  LogIcon,
-  RemoveItemIcon,
-  WorldIcon,
-  XIcon,
-} from './icons-raw'
+import { rawIcons } from './icons-raw'
 
 const DoubleIconGrid = styled.span<{ inverted?: boolean }>`
   background: ${({ inverted, theme }) =>
@@ -79,13 +62,21 @@ export const IconButton = styled.button<{ hasBg?: boolean; padding?: number }>`
   cursor: pointer;
   display: grid;
   font-size: inherit;
+  grid-auto-columns: minmax(0, auto);
   grid-auto-flow: column;
   justify-content: center;
+  overflow: hidden;
   padding: ${({ padding = 0 }) => padding}em;
+  white-space: nowrap;
 
   &:hover {
     background: ${({ hasBg, theme }) =>
       theme.colors.alphas.white[hasBg ? 2 : 1]};
+  }
+
+  & > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `
 
@@ -97,76 +88,22 @@ const iconStyles = css<{ inverted?: boolean; size?: number }>`
     css`
       font-size: ${size}em;
     `}
-`
-
-export const IconAtom = styled(AtomIcon)`
-  ${iconStyles}
-`
-
-export const IconAtomInstance = styled(AtomInstanceIcon)`
-  ${iconStyles}
-`
-
-export const IconClear = styled(ClearIcon)`
-  ${iconStyles}
 
   & > path {
-    stroke: ${({ theme }) => theme.colors.primary};
+    stroke: ${({ inverted, theme }) =>
+      inverted ? theme.colors.background : theme.colors.primary};
   }
 `
 
-export const IconCycle = styled(CycleIcon)`
-  ${iconStyles}
-
-  & > path {
-    stroke: ${({ theme }) => theme.colors.primary};
-  }
-`
-
-export const IconEdge = styled(EdgeIcon)`
-  ${iconStyles}
-`
-
-export const IconExpand = styled(ExpandIcon)`
-  ${iconStyles}
-`
-
-export const IconFilter = styled(FilterIcon)`
-  ${iconStyles}
-`
-
-export const IconFlag = styled(FlagIcon)`
-  ${iconStyles}
-`
-
-export const IconGear = styled(GearIcon)`
-  ${iconStyles}
-`
-
-export const IconGraph = styled(GraphIcon)`
-  ${iconStyles}
-`
-
-export const IconKey = styled(KeyIcon)`
-  ${iconStyles}
-`
-
-export const IconList = styled(ListIcon)`
-  ${iconStyles}
-`
-
-export const IconLog = styled(LogIcon)`
-  ${iconStyles}
-`
-
-export const IconRemoveItem = styled(RemoveItemIcon)`
-  ${iconStyles}
-`
-
-export const IconWorld = styled(WorldIcon)`
-  ${iconStyles}
-`
-
-export const IconX = styled(XIcon)`
-  ${iconStyles}
-`
+export const styledIcons = Object.entries(rawIcons).reduce(
+  (obj, [key, Icon]) => {
+    obj[key as keyof typeof rawIcons] = styled(Icon)`
+      ${iconStyles}
+    ` as any
+    return obj
+  },
+  {} as Record<
+    keyof typeof rawIcons,
+    FC<StylerProps & { inverted?: boolean; size?: number }>
+  >
+)

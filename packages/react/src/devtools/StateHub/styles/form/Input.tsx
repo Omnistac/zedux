@@ -19,7 +19,7 @@ export const Input = styled.input`
   }
 `
 
-const InputLabel = styled('label')`
+const InputLabel = styled.label`
   background: ${({ theme }) => theme.colors.secondary};
   border-radius: 4px;
   color: #777;

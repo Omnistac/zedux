@@ -15,7 +15,7 @@ The returned Ref object has a `.current` property that is set initially to the p
 
 ## Examples
 
-<LiveEditor resultVar="Seconds">{`
+<LiveEditor ecosystemId="injectRef/example" resultVar="Seconds">{`
 const secondsAtom = atom('seconds', () => {
   const ref = injectRef(0)\n
   injectEffect(() => {

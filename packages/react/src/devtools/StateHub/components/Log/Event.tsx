@@ -1,6 +1,6 @@
 import { Mod } from '@zedux/react'
 import React, { FC } from 'react'
-import { PreviewText, Title } from '../../styles'
+import { Code, PreviewText, Title } from '../../styles'
 import { Importance, LogEvent } from '../../types'
 import { Event } from './styles'
 
@@ -17,7 +17,7 @@ const EcosystemDestroyed: FC<{ event: LogEvent<'ecosystemDestroyed'> }> = ({
         <>
           <Title>Ecosystem Destroyed</Title>
           <PreviewText>
-            The current ecosystem &quot;{ecosystem.ecosystemId}&quot; was
+            The current ecosystem <Code>{ecosystem.ecosystemId}</Code> was
             destroyed
           </PreviewText>
         </>
@@ -39,8 +39,8 @@ const EcosystemWiped: FC<{ event: LogEvent<'ecosystemWiped'> }> = ({
         <>
           <Title>Ecosystem Wiped</Title>
           <PreviewText>
-            All atom instances in the current ecosystem &quot;
-            {ecosystem.ecosystemId}&quot; were destroyed
+            All atom instances in the current ecosystem{' '}
+            <Code>{ecosystem.ecosystemId}</Code> were destroyed
           </PreviewText>
         </>
       }

@@ -94,7 +94,7 @@ const myIon = ion('my', ({ ecosystem, get }) => {
 
 As a general rule, all [atom params](../api/classes/AtomInstance#params) must be serializable. There is one exception: You can pass an atom instance to another atom instance. This is another form of "Dependency Injection".
 
-<LiveEditor resultVar="Shout">{`
+<LiveEditor ecosystemId="dependency-injection/shout" resultVar="Shout">{`
 const normalAtom = atom('normal', "I'm just a little, black rain cloud")\n
 const shoutingAtom = atom(
   'shouting',
@@ -202,7 +202,10 @@ const userAtom = ion('user', ({ get }) => {
 
 Atom implementations can be swapped out dynamically using [`ecosystem.setOverrides()`](../api/classes/Ecosystem#setoverrides). This is an extremely powerful feature of Zedux' DI model.
 
-<LiveEditor resultVar="Swapper">{`
+<LiveEditor
+  ecosystemId="dependency-injection/setOverrides"
+  resultVar="Swapper"
+>{`
 const one = atom('common-key', () => 'Numero Uno')
 const two = atom('common-key', () => 'I am the best')
 const three = atom('common-key', () => 'Two is not the best')\n
@@ -222,7 +225,10 @@ function Swapper() {
 
 Use [`ecosystem.addOverrides()`](../api/classes/Ecosystem#addoverrides) and [`ecosystem.removeOverrides()`](../api/classes/Ecosystem#removeoverrides) to selectively update only certain overrides.
 
-<LiveEditor resultVar="Overrider">{`
+<LiveEditor
+  ecosystemId="dependency-injection/addOverrides"
+  resultVar="Overrider"
+>{`
 const original = atom('common-key', () => 'Pick Me')
 const override = atom('common-key', () => 'No, Me')\n
 function Overrider() {
@@ -242,10 +248,9 @@ function Overrider() {
 
 ## Simple Example
 
-<LiveEditor resultVar="App">{`
+<LiveEditor ecosystemId="dependency-injection/simple" resultVar="App">{`
 const textAtom = atom('text', 'the text!')
 const betterTextAtom = textAtom.override('better text!')\n
-const betterEcosystem = ecosystem({ overrides: [betterTextAtom] })\n
 function Child() {
   const text = useAtomValue(textAtom)\n
   return <div>{text}</div>
@@ -253,10 +258,10 @@ function Child() {
 function App() {
   return (
     <>
-      <EcosystemProvider>
+      <EcosystemProvider id="a">
         <Child />
       </EcosystemProvider>
-      <EcosystemProvider ecosystem={betterEcosystem}>
+      <EcosystemProvider id="b" overrides={[betterTextAtom]}>
         <Child />
       </EcosystemProvider>
     </>

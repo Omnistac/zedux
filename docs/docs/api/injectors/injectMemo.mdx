@@ -13,7 +13,7 @@ An [injector](../glossary#injector) that memoizes a value. You control whether t
 
 ## Example
 
-<LiveEditor resultVar="Seconds">{`
+<LiveEditor ecosystemId="injectMemo/example" resultVar="Seconds">{`
 const secondsAtom = atom('seconds', () => {
   const store = injectStore(0)\n
   injectEffect(() => {

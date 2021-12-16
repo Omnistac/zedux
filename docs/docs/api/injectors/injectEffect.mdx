@@ -13,7 +13,7 @@ An [injector](../glossary#injector) that attaches a side effect to an atom insta
 
 ## Examples
 
-<LiveEditor resultVar="Seconds">{`
+<LiveEditor ecosystemId="injectEffect/example" resultVar="Seconds">{`
 const secondsAtom = atom('seconds', () => {
   const store = injectStore(0)\n
   injectEffect(() => {

@@ -23,18 +23,20 @@ interface Group {
   selectors?: string[]
 }
 
-type Styleable = keyof JSX.IntrinsicElements | ComponentType<StylerProps>
+export type Styleable = keyof JSX.IntrinsicElements | ComponentType<StylerProps>
 
-type Styled<C extends Styleable> = <
+export type Styled<C extends Styleable> = <
   Props extends Record<string, any> = StylerProps
 >(
   templateArr: TemplateStringsArray,
   ...args: StyledArgs<Props & ComponentPropsWithRef<C> & StyledProps>[]
-) => FC<Props & ComponentPropsWithRef<C>> & {
+) => StyledComponent<Props & ComponentPropsWithRef<C>>
+
+export type StyledComponent<Props extends Record<string, any>> = FC<Props> & {
   componentClassName: string
 }
 
-type StyledArgs<Props extends Record<string, any>> =
+export type StyledArgs<Props extends Record<string, any>> =
   | ((props: Props) => StyledArgs<Props>)
   | { componentClassName: string }
   | string
@@ -43,26 +45,20 @@ type StyledArgs<Props extends Record<string, any>> =
   | undefined
   | number
 
-type StyledProps = PropsWithChildren<{
+export type StyledProps = PropsWithChildren<{
   className?: string
   theme: DefaultTheme
 }>
 
-type StylerProps = PropsWithChildren<{
+export type StylerProps = PropsWithChildren<{
   className?: string
   theme?: DefaultTheme
 }>
 
 type StyledFactory = {
   <C extends Styleable>(Wrapped: C): Styled<C>
-  aside: Styled<'aside'>
-  button: Styled<'button'>
-  div: Styled<'div'>
-  header: Styled<'header'>
-  input: Styled<'input'>
-  main: Styled<'main'>
-  section: Styled<'section'>
-  span: Styled<'span'>
+} & {
+  [K in keyof JSX.IntrinsicElements]: Styled<K>
 }
 
 class Parser {
@@ -292,6 +288,7 @@ const filterProps = (Wrapped: any, props: Record<string, any>) => {
   return Object.keys(props)
     .filter(prop => {
       if (specialProps[prop as keyof typeof specialProps]) return true
+      if (prop[0] === '$') return false
 
       const el =
         window[
@@ -328,10 +325,6 @@ const resolveTemplate = <Props extends Record<string, any>>(
     .join('')
 
 const styled: StyledFactory = ((Wrapped: any) => {
-  if (typeof Wrapped === 'string' && Wrapped in styled) {
-    return styled[Wrapped as keyof typeof styled]
-  }
-
   const newStyled = (templateArr: any, ...args: any) => {
     const Component: any = forwardRef((props: any, ref: any) => {
       const prevRawStr = useRef<string>()
@@ -391,23 +384,20 @@ const styled: StyledFactory = ((Wrapped: any) => {
     return Component
   }
 
-  if (typeof Wrapped === 'string') {
-    styled[Wrapped as keyof typeof styled] = newStyled as any
-  }
-
   return newStyled
 }) as StyledFactory
 
-styled.aside = styled('aside')
-styled.button = styled('button')
-styled.div = styled('div')
-styled.header = styled('header')
-styled.input = styled('input')
-styled.main = styled('main')
-styled.section = styled('section')
-styled.span = styled('span')
+export default new Proxy(styled, {
+  get: (styled, prop) => {
+    if (prop in styled) {
+      return styled[prop as keyof typeof styled]
+    }
 
-export default styled
+    const StyledComponent = styled(prop as keyof JSX.IntrinsicElements)
+    styled[prop as keyof typeof styled] = StyledComponent
+    return StyledComponent
+  },
+})
 
 export const css = <Props extends Record<string, any>>(
   templateArr: TemplateStringsArray,

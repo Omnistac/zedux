@@ -19,7 +19,7 @@ You can also pass an atom instance directly to register a static graph dependenc
 
 ## Examples
 
-<LiveEditor resultVar="Seconds">{`
+<LiveEditor ecosystemId="useAtomInstance/example" resultVar="Seconds">{`
 const secondsAtom = atom('seconds', () => {
   const store = injectStore(0)\n
   injectEffect(() => {

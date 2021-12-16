@@ -44,7 +44,7 @@ function Greet() {
 
 In our example, we can use `setGreeting` to update the state of the atom:
 
-<LiveEditor resultVar="Greeting">{`
+<LiveEditor ecosystemId="quick-start/setting-state" resultVar="Greeting">{`
 const greetingAtom = atom('greeting', 'Hello, world!')\n
 function GreetingPreview() {
   const [greeting] = useAtomState(greetingAtom)\n
@@ -210,7 +210,7 @@ Atom parameters must be serializable. Zedux converts them to a single string tha
 
 Let's finish off the quick start with a good old todos playground:
 
-<LiveEditor resultVar="Todos">{`
+<LiveEditor ecosystemId="quick-start/todos" resultVar="Todos">{`
 const todosAtom = atom('todos', () => [
   { text: 'Go', isDone: true },
   { text: 'Fight', isDone: true },
@@ -237,6 +237,25 @@ const Todos = () => (
     <UnfinishedTodos />
   </>
 )
+`}</LiveEditor>
+
+<LiveEditor ecosystemId="big-graph" resultVar="Num">{`
+const test = atom('test', num => {
+  const get = injectGet()
+  const store = injectStore(false, true)\n
+  if (num < 47 && store.getState()) {
+    get(test, [num + 1])\n
+    if (!(num % 3)) get(test, [55])
+  }\n
+  injectEffect(() => {
+    setTimeout(() => store.setState(true), 50)
+  }, [])\n
+  return num
+})\n
+const Num = () => {
+  const val = useAtomValue(test, [0])
+  return val
+}
 `}</LiveEditor>
 
 ## Next Steps

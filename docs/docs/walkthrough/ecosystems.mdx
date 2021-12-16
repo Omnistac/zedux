@@ -118,7 +118,7 @@ In the quick start, we learned that atom instances can be reused by passing the 
 
 In the following example, the `counterAtom` doesn't take any params. But since it's used in two different ecosystems, two different instances are created.
 
-<LiveEditor resultVar="Apps">{`
+<LiveEditor ecosystemId="ecosystems/instances" resultVar="Apps">{`
 const counterAtom = atom('counter', 0)\n
 function Counter() {
   const [state, setState] = useAtomState(counterAtom)\n

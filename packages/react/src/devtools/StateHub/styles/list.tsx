@@ -16,7 +16,7 @@ const Actions = styled.div`
   grid-auto-flow: column;
 `
 
-const ListItemWrapper = styled('li')<{ isActive: boolean }>`
+const ListItemWrapper = styled.li<{ isActive: boolean }>`
   display: grid;
   display: grid;
   font-size: 0.9em;
@@ -76,7 +76,7 @@ export const ListScreenItem: FC<{
   )
 }
 
-export const ListScreenList = styled('ul')`
+export const ListScreenList = styled.ul`
   display: flex;
   flex-flow: column nowrap;
   grid-column: 1;

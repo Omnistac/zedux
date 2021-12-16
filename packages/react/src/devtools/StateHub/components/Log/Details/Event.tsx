@@ -11,27 +11,45 @@ import {
   Code,
   DetailsGridWrapper,
   EdgeBadges,
+  GridStretch,
   IconButton,
-  XIcon,
+  rawIcons,
+  styledIcons,
 } from '../../../styles'
 import { LogEvent, Route } from '../../../types'
-import { SettingsLink } from '../../SettingsLink'
+import { ActiveStateGraphic } from '../../ActiveStateGraphic'
+import { SettingsButton, SettingsLink } from '../../SettingsLink'
 
-const DetailsGrid: FC = ({ children }) => {
+const StyledX = styled(rawIcons.X)`
+  color: ${({ theme }) => theme.colors.primary};
+  height: 1.4em;
+  width: 1.4em;
+`
+
+const Title = styled.div`
+  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  font-size: 1.1em;
+  font-weight: normal;
+  margin: 0;
+`
+
+const DetailsGrid: FC<{ text: string }> = ({ children, text }) => {
   const ecosystem = useEcosystem()
 
   return (
     <DetailsGridWrapper>
-      <H4>
-        <span>Event Details</span>
+      <Title>
+        <span>{text}</span>
         <IconButton
           onClick={() =>
             ecosystem.getInstance(stateHub).exports.setSelectedLogEvent()
           }
         >
-          <IconX />
+          <StyledX />
         </IconButton>
-      </H4>
+      </Title>
       {children}
     </DetailsGridWrapper>
   )
@@ -92,34 +110,16 @@ const EdgeDetails: FC<{
   )
 }
 
-const H4 = styled('h4')`
-  align-items: center;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  font-size: 1.2em;
-  font-weight: normal;
-  margin: 0;
-`
-
-const IconX = styled(XIcon)`
-  color: ${({ theme }) => theme.colors.primary};
-  height: 1.4em;
-  width: 1.4em;
-`
-
 const EcosystemDestroyed: FC<{ event: LogEvent<'ecosystemDestroyed'> }> = ({
   event,
 }) => {
   const { ecosystem } = event.action.payload
 
   return (
-    <DetailsGrid>
-      <div>Ecosystem Destroyed</div>
+    <DetailsGrid text="Ecosystem Destroyed">
       <div>
-        The current ecosystem &quot;{ecosystem.ecosystemId}&quot; was destroyed.
-        All its instances are gone. Finished. Destruido. And the ecosystem has
-        been removed from Zedux&apos; internal store. And um yep that&apos;s all
-        I got. Um. How you doin&apos;?
+        The current ecosystem <Code>{ecosystem.ecosystemId}</Code> was
+        destroyed. All its instances and plugins have been cleaned up.
       </div>
     </DetailsGrid>
   )
@@ -131,11 +131,10 @@ const EcosystemWiped: FC<{ event: LogEvent<'ecosystemWiped'> }> = ({
   const { ecosystem } = event.action.payload
 
   return (
-    <DetailsGrid>
-      <div>Ecosystem Wiped</div>
+    <DetailsGrid text="Ecosystem Wiped">
       <div>
-        All atom instances in the current ecosystem &quot;
-        {ecosystem.ecosystemId}&quot; were destroyed
+        All atom instances in the current ecosystem{' '}
+        <Code>{ecosystem.ecosystemId}</Code> were destroyed
       </div>
     </DetailsGrid>
   )
@@ -145,8 +144,7 @@ const EdgeCreated: FC<{ event: LogEvent<'edgeCreated'> }> = ({ event }) => {
   const { dependency, dependent, edge } = event.action.payload
 
   return (
-    <DetailsGrid>
-      <div>Edge Created</div>
+    <DetailsGrid text="Edge Created">
       <EdgeDetails dependency={dependency} dependent={dependent} edge={edge} />
     </DetailsGrid>
   )
@@ -156,8 +154,7 @@ const EdgeRemoved: FC<{ event: LogEvent<'edgeRemoved'> }> = ({ event }) => {
   const { dependency, dependent, edge } = event.action.payload
 
   return (
-    <DetailsGrid>
-      <div>Edge Removed</div>
+    <DetailsGrid text="Edge Removed">
       <EdgeDetails dependency={dependency} dependent={dependent} edge={edge} />
     </DetailsGrid>
   )
@@ -170,8 +167,7 @@ const GhostEdgeCreated: FC<{ event: LogEvent<'ghostEdgeCreated'> }> = ({
   const { dependency, dependent } = ghost
 
   return (
-    <DetailsGrid>
-      <div>Ghost Edge Created</div>
+    <DetailsGrid text="Ghost Edge Created">
       <EdgeDetails
         dependency={dependency}
         dependent={dependent}
@@ -188,8 +184,7 @@ const GhostEdgeDestroyed: FC<{ event: LogEvent<'ghostEdgeDestroyed'> }> = ({
   const { dependency, dependent } = ghost
 
   return (
-    <DetailsGrid>
-      <div>Ghost Edge Destroyed</div>
+    <DetailsGrid text="Ghost Edge Destroyed">
       <div>
         This ghost edge was destroyed without materializing. This usually means
         a React fiber took a long time to commit its changes. Consider
@@ -209,11 +204,10 @@ const InstanceActiveStateChanged: FC<{
 }> = ({ event }) => {
   const { instance, newActiveState, oldActiveState } = event.action.payload
   return (
-    <DetailsGrid>
-      <div>Atom Instance Active State Changed</div>
-      <div>
-        <span>Atom Instance: </span>
-        <SettingsLink
+    <DetailsGrid text="Atom Instance Active State Changed">
+      <GridStretch>
+        <SettingsButton
+          padding={1}
           to={state => ({
             ecosystemConfig: {
               [state.ecosystemId]: {
@@ -223,19 +217,11 @@ const InstanceActiveStateChanged: FC<{
             },
           })}
         >
-          {instance.keyHash}
-        </SettingsLink>
-      </div>
-      <div>
-        <span>
-          Previous ActiveState: <Code>{oldActiveState}</Code>
-        </span>
-      </div>
-      <div>
-        <span>
-          New ActiveState: <Code>{newActiveState}</Code>
-        </span>
-      </div>
+          <styledIcons.Atom />
+          <span>{instance.keyHash}</span>
+        </SettingsButton>
+      </GridStretch>
+      <ActiveStateGraphic prevState={oldActiveState} state={newActiveState} />
     </DetailsGrid>
   )
 }
@@ -246,8 +232,7 @@ const InstanceStateChanged: FC<{ event: LogEvent<'instanceStateChanged'> }> = ({
   const { instance } = event.action.payload
 
   return (
-    <DetailsGrid>
-      <div>Atom Instance State Changed</div>
+    <DetailsGrid text="Atom Instance State Changed">
       <div>
         <span>Atom Instance: </span>
         <SettingsLink

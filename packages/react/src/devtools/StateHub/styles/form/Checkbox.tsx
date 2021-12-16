@@ -1,7 +1,7 @@
 import styled from '@zedux/react/ssc'
 import React, { FC, ReactElement } from 'react'
 
-const Label = styled('label')<{ isChecked?: boolean }>`
+const Label = styled.label<{ isChecked?: boolean }>`
   align-items: center;
   background: ${({ isChecked, theme }) =>
     isChecked ? theme.colors.alphas.primary[3] : theme.colors.alphas.white[1]};

@@ -11,7 +11,7 @@ The important philosophy here is that Zedux uses [React context for Dependency I
 
 ## Simple Example
 
-<LiveEditor resultVar="Parent">{`
+<LiveEditor ecosystemId="context/simple" resultVar="Parent">{`
 const providedAtom = atom('provided', 'the state!')\n
 function Child() {
   const instance = useAtomConsumer(providedAtom)
@@ -193,7 +193,11 @@ export const popupStyle = {
   right: '20px',
 }
 
-<LiveEditor extraScope={{ popupStyle }} resultVar="Popups">{`
+<LiveEditor
+  ecosystemId="context/popup"
+  extraScope={{ popupStyle }}
+  resultVar="Popups"
+>{`
 const popupAtom = localAtom('popup', () => ({ isOpen: false }))\n
 function Popup() {
   const [{ isOpen }, setVal] = useAtomState(useAtomConsumer(popupAtom, []))

@@ -39,7 +39,7 @@ See [the using atoms walkthrough](../walkthrough/using-atoms).
 
 Injectors are like hooks for atoms.
 
-<LiveEditor resultVar="Seconds">{`
+<LiveEditor ecosystemId="overview/injectors" resultVar="Seconds">{`
 const secondsAtom = atom('seconds', () => {
   const store = injectStore(0)\n
   injectEffect(() => {
@@ -230,7 +230,7 @@ See [the Dependency Injection walkthrough](../walkthrough/dependency-injection).
 
 An atom's value can be a store.
 
-<LiveEditor resultVar="BigComponent">{`
+<LiveEditor ecosystemId="overview/stores" resultVar="BigComponent">{`
 const goBig = createActor('goBig')\n
 const bigAtom = atom('big', () => {
   const store = injectStore()\n

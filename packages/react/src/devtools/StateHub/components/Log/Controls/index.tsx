@@ -11,13 +11,9 @@ import {
   ControlGroup,
   ControlSelected,
   DoubleIcon,
-  IconFilter,
-  IconList,
   ControlButton,
-  IconEdge,
-  IconRemoveItem,
   IconButton,
-  IconClear,
+  styledIcons,
 } from '../../../styles'
 import { GlobalFilter, LogFilter } from '../../../types'
 import { GlobalControls } from '../../GlobalControls'
@@ -45,7 +41,11 @@ export const Controls = () => {
           setSelectedFilter={setSelectedFilter}
         />
         <ControlGroup>
-          <DoubleIcon iconOne={IconList} iconTwo={IconFilter} inverted />
+          <DoubleIcon
+            iconOne={styledIcons.List}
+            iconTwo={styledIcons.Filter}
+            inverted
+          />
           <ControlButton
             isActive={selectedFilter === LogFilter.EdgeType}
             numSelected={
@@ -59,7 +59,7 @@ export const Controls = () => {
               )
             }
           >
-            <IconEdge />
+            <styledIcons.Edge />
           </ControlButton>
           <ControlButton
             isActive={selectedFilter === LogFilter.EventType}
@@ -70,12 +70,12 @@ export const Controls = () => {
               )
             }
           >
-            <IconRemoveItem />
+            <styledIcons.RemoveItem />
           </ControlButton>
         </ControlGroup>
         <Count />
         <IconButton onClick={() => clearLog()} padding={0.5}>
-          <IconClear />
+          <styledIcons.Clear />
         </IconButton>
       </ControlList>
       {FilterComponent && (

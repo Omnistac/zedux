@@ -17,7 +17,10 @@ All these hooks have complementary injectors. When the injected atom instance's 
 
 Returns a portion or derivation of the state of an atom instance's store. Also ensures that the component only reevaluates when the selector's result changes. Similar to Redux' [`useSelector()`](https://react-redux.js.org/api/hooks#useselector).
 
-<LiveEditor resultVar="SelectorSerendipity">{`
+<LiveEditor
+  ecosystemId="using-atoms/useAtomSelector"
+  resultVar="SelectorSerendipity"
+>{`
 const countersAtom = atom('counters', () => ({
   a: 0,
   b: 0
@@ -281,7 +284,7 @@ These exports are constant - they are set the first time an atom instance evalua
 
 Call this to force the atom instance to reevaluate. Outside of testing, there shouldn't be a need for this. Unless you know what you're doing, avoid impure or mutation-oriented patterns that require you to manually invalidate atom instances.
 
-<LiveEditor resultVar="RandomNum">{`
+<LiveEditor ecosystemId="using-atoms/invalidate" resultVar="RandomNum">{`
 const randomNumAtom = atom('randomNum', () => Math.floor(Math.random() * 100))\n
 function RandomNum() {
   const instance = useAtomInstance(randomNumAtom)

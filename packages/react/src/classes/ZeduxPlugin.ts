@@ -72,8 +72,8 @@ export class ZeduxPlugin {
     instanceActiveStateChanged: createActor<
       {
         instance: AnyAtomInstanceBase
-        newActiveState?: ActiveState
-        oldActiveState?: ActiveState
+        newActiveState: ActiveState
+        oldActiveState: ActiveState
       },
       'instanceActiveStateChanged'
     >('instanceActiveStateChanged'),

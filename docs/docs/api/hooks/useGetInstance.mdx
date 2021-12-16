@@ -17,7 +17,7 @@ Unlike the `getInstance` function returned from [`injectGetInstance()`](../injec
 
 ## Examples
 
-<LiveEditor resultVar="App">{`
+<LiveEditor ecosystemId="useGetInstance/example" resultVar="App">{`
 const secondsAtom = atom('seconds', (startingNumber: number) => {
   const store = injectStore(startingNumber)\n
   injectEffect(() => {

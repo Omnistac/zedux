@@ -2,10 +2,10 @@ import { useAtomInstance, useAtomSelector } from '@zedux/react'
 import React from 'react'
 import styled, { css } from '@zedux/react/ssc'
 import { getRoute, stateHub } from '../atoms/stateHub'
-import { IconAtom, IconGear, IconGraph, IconList, IconWorld } from '../styles'
+import { styledIcons } from '../styles'
 import { Route } from '../types'
 
-const Aside = styled('aside')`
+const Aside = styled.aside`
   align-content: start;
   background: ${({ theme }) => theme.colors.alphas.white[0]};
   display: grid;
@@ -46,35 +46,35 @@ export const Sidebar = () => {
         onClick={() => setRoute(Route.Dashboard)}
         title="Dashboard"
       >
-        <IconWorld />
+        <styledIcons.World />
       </IconButton>
       <IconButton
         isActive={route === Route.Atoms}
         onClick={() => setRoute(Route.Atoms)}
         title="Atoms"
       >
-        <IconAtom />
+        <styledIcons.Atom />
       </IconButton>
       <IconButton
         isActive={route === Route.Log}
         onClick={() => setRoute(Route.Log)}
         title="Log"
       >
-        <IconList />
+        <styledIcons.List />
       </IconButton>
-      {/* <IconButton
+      <IconButton
         isActive={route === Route.Graph}
         onClick={() => setRoute(Route.Graph)}
         title="Graph"
       >
-        <IconGraph />
-      </IconButton> */}
+        <styledIcons.Graph />
+      </IconButton>
       <IconButton
         isActive={route === Route.Settings}
         onClick={() => setRoute(Route.Settings)}
         title="Settings"
       >
-        <IconGear />
+        <styledIcons.Gear />
       </IconButton>
     </Aside>
   )

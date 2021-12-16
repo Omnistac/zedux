@@ -1,7 +1,7 @@
 import styled, { css } from '@zedux/react/ssc'
 import React, { ReactElement, useMemo, useRef, useState } from 'react'
 import { RectType } from '../../types'
-import { ExpandIcon } from '../icons-raw'
+import { rawIcons } from '../icons-raw'
 
 const SelectControl = styled.button`
   align-items: center;
@@ -32,7 +32,7 @@ const SelectControlText = styled.span`
   white-space: nowrap;
 `
 
-const SelectOption = styled('li')<{
+const SelectOption = styled.li<{
   isActive: boolean
   isHighlighted: boolean
 }>`
@@ -60,7 +60,7 @@ const SelectOption = styled('li')<{
     `}
 `
 
-const SelectList = styled('ul')`
+const SelectList = styled.ul`
   background: ${({ theme }) => theme.colors.background};
   box-shadow: 0 0 8px 3px rgba(0, 0, 0, 0.6);
   display: grid;
@@ -183,7 +183,7 @@ export const Select = ({
         <SelectControlText title={selected}>
           {options[selected] || selected}
         </SelectControlText>
-        <ExpandIcon />
+        <rawIcons.Expand />
       </SelectControl>
       {isOpen && (
         <SelectList>

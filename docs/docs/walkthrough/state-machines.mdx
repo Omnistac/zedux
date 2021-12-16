@@ -91,7 +91,7 @@ when(myStore).machine().enters(state, invoke)
 
 ## Contrived Example
 
-<LiveEditor resultVar="Machine">{`
+<LiveEditor ecosystemId="state-machines/door" resultVar="Machine">{`
 const click = createActor('click')
 const timerStart = createActor<ReturnType<typeof setTimeout>>('timerStart')
 const timerEnd = createActor('timerEnd')\n
@@ -173,7 +173,11 @@ export const getStyle = theme => {
   }
 }
 
-<LiveEditor extraScope={{ getStyle }} resultVar="Theme">{`
+<LiveEditor
+  ecosystemId="state-machines/theme"
+  extraScope={{ getStyle }}
+  resultVar="Theme"
+>{`
 const cycle = createActor('cycle')
 const [light, dark, classic] = states('light', 'dark', 'classic')\n
 const machine = createMachine(
