@@ -102,7 +102,6 @@ export enum InjectorType {
   Memo = 'Memo',
   Ref = 'Ref',
   Selector = 'Selector',
-  State = 'State',
   Store = 'Store',
   Value = 'Value',
   Why = 'Why',
@@ -141,12 +140,6 @@ export interface SelectorInjectorDescriptor<State = any, D = any>
   selector: (state: State) => D
   selectorResult: D
   type: InjectorType.Selector
-}
-
-export interface StateInjectorDescriptor<State = any>
-  extends InjectorDescriptor {
-  store: Store<State>
-  type: InjectorType.State
 }
 
 export interface StoreInjectorDescriptor<State = any>

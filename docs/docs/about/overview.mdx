@@ -618,13 +618,13 @@ Zedux ships with several Dev X features out of the box. And more can be installe
 Why Did This UpDaTe??!!
 
 ```tsx
-import { atom, injectState, injectStore, injectWhy } from '@zedux/react'
+import { injectStore, injectWhy, ion } from '@zedux/react'
 
-const crazyAtom = atom('crazy', () => {
+const crazyAtom = ion('crazy', ({ get, select }) => {
   // say we have an atom that injects several state sources
-  const [state, setState] = injectState()
   const store = injectStore()
-  const other = addTenAtom.injectValue()
+  const other = get(otherAtom)
+  const derivation = select(someSelector)
 
   // with such atoms it can be difficult to tell why state keeps updating
   // injectWhy FTW!

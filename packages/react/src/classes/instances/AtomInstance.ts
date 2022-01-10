@@ -662,7 +662,7 @@ export class AtomInstance<
 
     if (newStateType === StateType.Store && newFactoryResult !== this.store) {
       throw new Error(
-        `Zedux: atom factory for atom "${this.atom.key}" returned a different store. Did you mean to use \`injectState()\`, \`injectStore()\`, or \`injectMemo()\`?`
+        `Zedux: atom factory for atom "${this.atom.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
       )
     }
 
