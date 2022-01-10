@@ -75,13 +75,6 @@ export interface EffectInjectorDescriptor extends DepsInjectorDescriptor {
   type: InjectorType.Effect
 }
 
-export interface ExportsInjectorDescriptor<
-  Exports extends Record<string, () => any> = Record<string, () => any>
-> extends InjectorDescriptor {
-  exports: Exports
-  type: InjectorType.Exports
-}
-
 export interface EvaluateAtomJob extends JobBase {
   flagScore: number
   keyHash: string
@@ -98,7 +91,6 @@ export enum InjectorType {
   Atom = 'Atom',
   AtomDynamic = 'AtomDynamic',
   Effect = 'Effect',
-  Exports = 'Exports',
   Memo = 'Memo',
   Ref = 'Ref',
   Selector = 'Selector',
