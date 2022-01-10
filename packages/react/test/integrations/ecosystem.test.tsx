@@ -2,7 +2,7 @@ import { render } from '@testing-library/react'
 import {
   atom,
   Ecosystem,
-  ecosystem,
+  createEcosystem,
   EcosystemProvider,
   injectAtomValue,
   injectStore,
@@ -12,7 +12,7 @@ import {
 } from '@zedux/react'
 import React from 'react'
 
-const testEcosystem = ecosystem({ id: 'test' })
+const testEcosystem = createEcosystem({ id: 'test' })
 
 afterEach(() => {
   testEcosystem.wipe()
@@ -143,7 +143,7 @@ describe('ecosystem', () => {
       theEcosystem.getInstance(atom1)
     }
 
-    const preloadedEcosystem = ecosystem({ preload })
+    const preloadedEcosystem = createEcosystem({ preload })
 
     expect(evaluations).toEqual(['1'])
     expect(preloadedEcosystem._instances).toEqual({
@@ -170,7 +170,10 @@ describe('ecosystem', () => {
     const overrideB = atomB.override(() => 'bb')
     const overrideC = atomC.override(() => 'cc')
 
-    const es = ecosystem({ id: 'overrides', overrides: [overrideA, overrideB] })
+    const es = createEcosystem({
+      id: 'overrides',
+      overrides: [overrideA, overrideB],
+    })
     es.getInstance(atomA)
     es.getInstance(atomB)
     es.getInstance(atomC)
@@ -261,7 +264,7 @@ describe('ecosystem', () => {
     const atomA = atom('a', (param: string) => param)
     const atomB = atom('b', () => 'b')
 
-    const es = ecosystem({ id: 'findInstances' })
+    const es = createEcosystem({ id: 'findInstances' })
 
     es.getInstance(atomA, ['a'])
     es.getInstance(atomA, ['aa'])
@@ -288,7 +291,11 @@ describe('ecosystem', () => {
       es.get(atomA, [`${es.context.val}a`])
     })
 
-    const es = ecosystem({ context: { val: 'a' }, id: 'preload', preload })
+    const es = createEcosystem({
+      context: { val: 'a' },
+      id: 'preload',
+      preload,
+    })
 
     expect(es._instances).toEqual({
       'a-["a"]': expect.any(Object),

@@ -43,19 +43,19 @@ This is similar to Recoil's [`RecoilRoot`](https://recoiljs.org/docs/api-referen
 Rendering an EcosystemProvider without passing an ecosystem prop creates a new ecosystem. When such an EcosystemProvider is unmounted, the ecosystem and all atom instances in it are destroyed.
 
 :::note
-Nesting EcosystemProviders currently has no special functionality. Rendering an EcosystemProvider inside another EcosystemProvider will create a new, completely isolated ecosystem.
+Nesting EcosystemProviders currently has no special functionality. Rendering an EcosystemProvider inside another EcosystemProvider will create a new, completely isolated ecosystem environment.
 :::
 
 Most apps will want to use custom ecosystems.
 
-#### `ecosystem()`
+#### `createEcosystem()`
 
-For even more control, you can can create an ecosystem using the exported `ecosystem()` factory.
+For even more control, you can can create an ecosystem using the exported `createEcosystem()` factory.
 
 ```tsx
-import { EcosystemProvider, ecosystem } from '@zedux/react'
+import { EcosystemProvider, createEcosystem } from '@zedux/react'
 
-const rootEcosystem = ecosystem({ id: 'root' })
+const rootEcosystem = createEcosystem({ id: 'root' })
 
 function App() {
   return (
@@ -70,7 +70,7 @@ Ecosystems created this way can be controlled outside React. This means you can 
 
 ## Configuring Ecosystems
 
-Ecosystems created manually (via the `ecosystem()` factory) can take configuration options.
+Ecosystems created manually (via the `createEcosystem()` factory) can take configuration options.
 
 ### `overrides`
 
@@ -80,7 +80,7 @@ A list of atoms that will override any atoms with matching keys used in this eco
 
 A function that will run immediately - as soon as the ecosystem is created. Used to bootstrap the initial state of the app, kick off initial side effects, set up state hydration, and other startup-y things.
 
-See [the `ecosystem()` API](../api/factories/ecosystem) for more info.
+See [the `Ecosystem` API](../api/classes/Ecosystem#preload) for more info.
 
 ## Ecosystem Design Patterns
 
@@ -147,7 +147,7 @@ function Apps() {
 
 ## Using the Ecosystem
 
-The ecosystem object itself has many useful methods. You can use these to inspect the dependency graph, get the current state of all atoms, set atom overrides, and a lot more. We'll cover most of these as we go through the rest of the walkthrough. See the [Ecosystem class API doc](../api/classes/Ecosystem) for all the goodness.
+The ecosystem object itself has many useful methods. You can use these to inspect the dependency graph, get the current state of all atoms, set atom overrides, and a lot more. We'll cover most of these as we go through the rest of the walkthrough. See the [`Ecosystem` class API doc](../api/classes/Ecosystem) for all the goodness.
 
 ### Getting It
 
@@ -185,7 +185,7 @@ const myAtom = atom('my', () => {
 - Atom instances can only be reused in the ecosystem they were created in.
 - There is a default ("global") ecosystem, but you can create your own.
 - Most apps will use the "Single Ecosystem Approach" - rendering a single `<EcosystemProvider>`.
-- Ecosystems can be configured with various options passed to the `ecosystem()` factory or as props to `<EcosystemProvider>`.
+- Ecosystems can be configured with various options passed to the `createEcosystem()` factory or as props to `<EcosystemProvider>`.
 - The current ecosystem can be retrieved with `useEcosystem()` in components and `injectAtomGetters()` in atoms.
 
 ## Next Steps

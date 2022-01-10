@@ -3,7 +3,7 @@ id: EcosystemConfig
 title: EcosystemConfig
 ---
 
-The config object passed to [the `ecosystem()` factory](../factories/ecosystem).
+The config object passed to [the `createEcosystem()` factory](../factories/createEcosystem).
 
 ## Definition
 
@@ -14,7 +14,7 @@ interface EcosystemConfig<Context extends Record<string, any> = any> {
   flags?: string[]
   id?: string
   overrides?: Atom[]
-  preload?: (ecosystem: Ecosystem, context: Context) => void
+  preload?: (ecosystem: Ecosystem, prevContext?: Context) => void
 }
 ```
 
@@ -47,7 +47,7 @@ A function. Will be called as soon as the ecosystem has initialized. Can be used
 Signature:
 
 ```ts
-(ecosystem, context) => void
+(ecosystem, prevContext?) => void
 ```
 
-Receives the freshly initialized or reset ecosystem and the context object (if one was passed) as parameters.
+Receives the freshly initialized or reset ecosystem. On reset also receives the previous context object as the second parameter.

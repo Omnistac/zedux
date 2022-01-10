@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useMemo, useRef } from 'react'
 import { Ecosystem, ecosystemContext } from '../classes'
-import { ecosystem } from '../factories/ecosystem'
+import { createEcosystem } from '../factories/createEcosystem'
 import { useStableReference } from '../hooks/useStableReference'
 import { addEcosystem, globalStore } from '../store'
 import { EcosystemConfig } from '../types'
@@ -29,10 +29,10 @@ export const EcosystemProvider: FC<
   overrides,
   preload,
 }) => {
-  const es = useMemo(() => {
+  const ecosystem = useMemo(() => {
     const resolvedEcosystem =
       passedEcosystem ||
-      ecosystem({
+      createEcosystem({
         context,
         defaultForwardPromises,
         defaultTtl,
@@ -59,17 +59,17 @@ export const EcosystemProvider: FC<
   useEffect(() => {
     if (isFirstRenderRef.current || !stableOverrides) return
 
-    es.setOverrides(stableOverrides)
+    ecosystem.setOverrides(stableOverrides)
   }, [stableOverrides]) // don't pass ecosystem; just get snapshot when this changes
 
   useEffect(() => {
-    es._refCount += 1
+    ecosystem._refCount += 1
 
     return () => {
-      es._refCount -= 1
-      if (!es._destroyOnUnmount) return
+      ecosystem._refCount -= 1
+      if (!ecosystem._destroyOnUnmount) return
 
-      es.destroy()
+      ecosystem.destroy()
     }
   }, [])
 
@@ -79,7 +79,7 @@ export const EcosystemProvider: FC<
   }, [])
 
   return (
-    <ecosystemContext.Provider value={es.ecosystemId}>
+    <ecosystemContext.Provider value={ecosystem.ecosystemId}>
       {children}
     </ecosystemContext.Provider>
   )

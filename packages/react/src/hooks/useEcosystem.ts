@@ -1,9 +1,9 @@
 import { useContext } from 'react'
-import { ecosystem } from '..'
-import { ecosystemContext } from '../classes'
+import { createEcosystem } from '../factories/createEcosystem'
+import { ecosystemContext } from '../classes/Ecosystem'
 import { getEcosystem } from '../store/public-api'
 
 export const useEcosystem = () => {
   const ecosystemId = useContext(ecosystemContext)
-  return getEcosystem(ecosystemId) || ecosystem({ id: ecosystemId })
+  return getEcosystem(ecosystemId) || createEcosystem({ id: ecosystemId })
 }

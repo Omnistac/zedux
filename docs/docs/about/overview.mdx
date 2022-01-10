@@ -78,9 +78,9 @@ function App() {
 An ecosystem can also be created and used completely outside of React.
 
 ```ts
-import { ecosystem } from '@zedux/react'
+import { createEcosystem } from '@zedux/react'
 
-const rootEcosystem = ecosystem({ id: 'root' })
+const rootEcosystem = createEcosystem({ id: 'root' })
 
 const myAtomInstance = rootEcosystem.getInstance(myAtom, ['a param'])
 ```

@@ -1,0 +1,43 @@
+---
+id: createEcosystem
+title: createEcosystem
+---
+
+```ts
+import { createEcosystem } from '@zedux/react'
+```
+
+Creates an [atom ecosystem](../classes/Ecosystem).
+
+## Examples
+
+```ts
+import { createEcosystem } from '@zedux/react'
+
+const rootEcosystem = createEcosystem({ id: 'root' })
+
+const withOverrides = createEcosystem({
+  id: 'withOverrides',
+  overrides: [atomA, atomB],
+})
+
+const withPreloadFn = createEcosystem({
+  id: 'withPreloadFn',
+  preload: ecosystem => {
+    // `preload` is passed a reference to the ecosystem
+    ecosystem.getInstance(myAtom) // preload myAtom
+  },
+})
+```
+
+## Signature
+
+```ts
+createEcosystem(config?) => Ecosystem
+```
+
+### `config`
+
+Optional. An [EcosystemConfig object](../types/EcosystemConfig).
+
+All config fields are optional. But it is recommended to at least pass an id.

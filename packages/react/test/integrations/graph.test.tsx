@@ -4,7 +4,7 @@ import {
   api,
   atom,
   createStore,
-  ecosystem,
+  createEcosystem,
   EcosystemProvider,
   injectAtomGetters,
   injectAtomValue,
@@ -42,7 +42,7 @@ describe('graph', () => {
   test('injectAtomGetters', async () => {
     jest.useFakeTimers()
 
-    const testEcosystem = ecosystem({ id: 'test1' })
+    const testEcosystem = createEcosystem({ id: 'test1' })
 
     function Test() {
       const { sum } = useAtomValue(atom4)
@@ -114,7 +114,7 @@ describe('graph', () => {
   })
 
   test('getInstance(atom) returns the instance', () => {
-    const testEcosystem = ecosystem({ id: 'test2' })
+    const testEcosystem = createEcosystem({ id: 'test2' })
     const evaluations: number[] = []
 
     const ion1 = ion(
@@ -197,7 +197,7 @@ describe('graph', () => {
       return a + b
     })
 
-    const es = ecosystem({ id: 'reevaluation' })
+    const es = createEcosystem({ id: 'reevaluation' })
 
     const instance = es.getInstance(atomD)
 

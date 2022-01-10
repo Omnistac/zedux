@@ -13,17 +13,17 @@ Ecosystems can be used completely outside of React. This can be helpful for test
 
 ## Creation
 
-Create ecosystems with [the `ecosystem` factory](../factories/ecosystem).
+Create ecosystems with [the `createEcosystem` factory](../factories/createEcosystem).
 
 ```ts
-import { ecosystem } from '@zedux/react'
+import { createEcosystem } from '@zedux/react'
 
-const rootEcosystem = ecosystem({ id: 'root' })
+const rootEcosystem = createEcosystem({ id: 'root' })
 ```
 
 ## Providing
 
-Ecosystems can be provided over React context via [`<EcosystemProvider>`](../components/EcosystemProvider).
+Ecosystems can take control of all atom usages in a React component tree by wrapping the tree in [`<EcosystemProvider>`](../components/EcosystemProvider).
 
 ```tsx
 function App() {
@@ -63,13 +63,13 @@ All properties are readonly!
 
 ### `.context`
 
-An object. May be undefined. A reference to the `context` object passed to [the `ecosystem()` factory](../factories/ecosystem) (if any) or the latest [`.reset()`](#reset) call. This object should be constant until the ecosystem is reset via `.reset()`.
+An object. May be undefined. A reference to the `context` object passed to [the `createEcosystem()` factory](../factories/createEcosystem) (if any) or the latest [`.reset()`](#reset) call. This object should be constant until the ecosystem is reset via `.reset()`.
 
-This object is passed to [the `preload` function](../types/EcosystemConfig#preload). If `.reset()` changes the context, the new context will be passed to `preload` as part of the reset.
+When `.reset()` is called, the previous context (if any) will be passed as the second parameter to [the `preload` function](../types/EcosystemConfig#preload) as part of the reset.
 
 ### `.defaultForwardPromises`
 
-A boolean. May be undefined. Set this via the [EcosystemConfig option](../types/EcosystemConfig#defaultforwardpromises) passed to [the `ecosystem()` factory](../factories/ecosystem).
+A boolean. May be undefined. Set this via the [EcosystemConfig option](../types/EcosystemConfig#defaultforwardpromises) passed to [the `createEcosystem()` factory](../factories/createEcosystem).
 
 This value will be used as the default [`forwardPromises` config value](Atom#forwardpromises) for all atoms used in this ecosystem that don't set their own. If set to `true`, all atoms used in this ecosystem will default to forwarding promises. If not set or if set to `false`, atoms will not forward promises by default.
 
@@ -77,7 +77,7 @@ Setting an atom's [`forwardPromises` option](Atom#forwardpromises) will override
 
 ### `.defaultTtl`
 
-A number. Default `-1` (which means atom instances never die). Set this via the [EcosystemConfig option](../types/EcosystemConfig#defaultttl) passed to [the `ecosystem()` factory](../factories/ecosystem).
+A number. Default `-1` (which means atom instances never die). Set this via the [EcosystemConfig option](../types/EcosystemConfig#defaultttl) passed to [the `createEcosystem()` factory](../factories/createEcosystem).
 
 This value will be used as the default [`ttl` config value](Atom#ttl) for all atoms used in this ecosystem that don't set their own.
 
@@ -86,7 +86,7 @@ This value will be used as the default [`ttl` config value](Atom#ttl) for all at
 
 ### `.ecosystemId`
 
-A string. The id of the ecosystem. Zedux will generate a simple, incrementing id for the ecosystem if one isn't supplied to `ecosystem()`. It is always recommended to set your own id.
+A string. The id of the ecosystem. Zedux will generate a simple, incrementing id for the ecosystem if one isn't supplied to `createEcosystem()`. It is always recommended to set your own id.
 
 ### `.flags`
 
@@ -94,12 +94,12 @@ An array of strings. These work in conjunction with [atom flags](Atom#flags) to 
 
 If an atom has a flag that is not present in this array, Zedux will log a warning.
 
-Flag checking is off by default - simply don't pass a flags array to `ecosystem()` and Zedux will ignore all flags. To turn it on, but with no flags, pass an empty array.
+Flag checking is off by default - simply don't pass a flags array to `createEcosystem()` and Zedux will ignore all flags. To turn it on, but with no flags, pass an empty array.
 
 ```ts
-ecosystem() // flag checking disabled. Zedux will ignore all atom flags.
-ecosystem({ flags: [] }) // flag checking enabled! All flags will log warnings
-ecosystem({ flags: ['a'] }) // all atom flags except 'a' will log a warning
+createEcosystem() // flag checking disabled. Zedux will ignore all atom flags.
+createEcosystem({ flags: [] }) // flag checking enabled! All flags will log warnings
+createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
 ```
 
 Which atoms, which flags, and which environments, is all up to you. You may want to flag atoms that run side effects you don't want to run in tests. Or you may want to flag atoms that use APIs that only work in the browser or in electron or any other environment.
@@ -108,7 +108,7 @@ Which atoms, which flags, and which environments, is all up to you. You may want
 
 An array of [atom](Atom) objects. Atoms in this list will override any atoms with the same key used in this ecosystem.
 
-Set this list via the [EcosystemConfig](../types/EcosystemConfig#overrides) passed to the `ecosystem()` factory or via [`.setOverrides()`](#setoverrides).
+Set this list via the [EcosystemConfig](../types/EcosystemConfig#overrides) passed to the `createEcosystem()` factory or via [`.setOverrides()`](#setoverrides).
 
 See [the Dependency Injection walkthrough](../../walkthrough/dependency-injection) for more info.
 
@@ -275,7 +275,7 @@ Optional. A string to filter results by. Only atom instances whose [atom's key](
 
 ### `.reset`
 
-The preferred way to clear an Ecosystem's state. Calling `.reset` will call [`.wipe()`](#wipe) but will also rerun [the `preload` function](../types/EcosystemConfig#preloadd).
+The preferred way to clear an ecosystem's state. Calling `.reset` will call [`.wipe()`](#wipe) but will also rerun [the `preload` function](../types/EcosystemConfig#preloadd).
 
 #### Signature
 
@@ -285,18 +285,19 @@ The preferred way to clear an Ecosystem's state. Calling `.reset` will call [`.w
 
 #### `newContext`
 
-Optional. An object. The new context to set on this ecosystem. If not passed, the existing context will be reused. This object will be passed to `preload()` as the second parameter.
+Optional. An object. The new context to set on this ecosystem. If not passed, the existing context will be reused. The ecosystem's `context` property will be set to this before `preload()` is called. The previous context will be passed to `preload()` as the second parameter.
 
 ```ts
-const myEcosystem = ecosystem({
+const myEcosystem = createEcosystem({
   context: { someField: 'some val' },
   id: 'my',
-  preload: (es, context) => console.log('the context:', context),
+  preload: (ecosystem, prevContext) =>
+    console.log('old context:', prevContext, 'new context:', ecosystem.context),
 })
-// the context: { someField: 'some val' }
+// old context: undefined new context: { someField: 'some val' }
 
 myEcosystem.reset({ someField: 'new val' })
-// the context: { someField: 'new val' }
+// old context: { someField: 'some val' } new context: { someField: 'new val' }
 ```
 
 ### `.removeOverrides`

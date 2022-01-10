@@ -14,9 +14,9 @@ A component that provides an [ecosystem](../classes/Ecosystem). The provided eco
 Passing an ecosystem:
 
 ```tsx
-import { EcosystemProvider, ecosystem } from '@zedux/react'
+import { EcosystemProvider, createEcosystem } from '@zedux/react'
 
-const rootEcosystem = ecosystem({ id: 'root', overrides: [someAtom] })
+const rootEcosystem = createEcosystem({ id: 'root', overrides: [someAtom] })
 
 function App() {
   return (
@@ -39,7 +39,7 @@ function App() {
 }
 ```
 
-Consuming the ecosystem happens automatically every time you use any of Zedux' hooks in any child component.
+Consuming the ecosystem happens automatically every time you use any Zedux hooks in any child component.
 
 ## Props
 

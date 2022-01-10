@@ -1,7 +1,7 @@
 import { act, fireEvent, render } from '@testing-library/react'
 import {
   atom,
-  ecosystem,
+  createEcosystem,
   EcosystemProvider,
   injectAtomValue,
   injectEffect,
@@ -10,7 +10,7 @@ import {
 } from '@zedux/react'
 import React, { useState } from 'react'
 
-const testEcosystem = ecosystem({ id: 'test' })
+const testEcosystem = createEcosystem({ id: 'test' })
 
 afterEach(() => {
   testEcosystem.wipe()
@@ -24,7 +24,7 @@ describe('maxInstances', () => {
 
       return a + 'b'
     })
-    const es = ecosystem({ id: 'maxInstances' })
+    const es = createEcosystem({ id: 'maxInstances' })
 
     const instanceB = es.getInstance(atomB)
 
@@ -54,7 +54,7 @@ describe('maxInstances', () => {
 
       return a + 'b'
     })
-    const es = ecosystem({ id: 'maxInstances' })
+    const es = createEcosystem({ id: 'maxInstances' })
 
     const instance1 = es.getInstance(atomB, ['a'])
     const instance2 = es.getInstance(atomB, ['aa'])

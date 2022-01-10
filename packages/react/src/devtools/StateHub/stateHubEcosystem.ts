@@ -1,5 +1,5 @@
 import {
-  ecosystem,
+  createEcosystem,
   Ecosystem,
   getEcosystem,
   zeduxGlobalStore,
@@ -42,7 +42,7 @@ export const getStateHubEcosystem = () => {
   const existingEcosystem = getEcosystem(stateHubEcosystemId)
   if (existingEcosystem) return existingEcosystem
 
-  return ecosystem({
+  return createEcosystem({
     context: {} as { plugin?: ZeduxPlugin },
     id: stateHubEcosystemId,
     preload: (stateHubEcosystem, prevContext) => {

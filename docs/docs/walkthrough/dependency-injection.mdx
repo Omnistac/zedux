@@ -82,7 +82,7 @@ Use `ecosystem`'s methods to get static values without creating dependencies dur
 
 ```ts
 const myIon = ion('my', ({ ecosystem, get }) => {
-  // creates a dependency
+  // creates a dependency on atom1
   const dynamicValue = get(atom1, ['some', 'params'])
 
   // gets a static snapshot of atom2's current state
