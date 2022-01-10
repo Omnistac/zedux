@@ -194,20 +194,21 @@ Instances also expose lots of extra, low-level functionality. We'll cover more o
 
 The injector equivalent of `useAtomInstance` - for use in atoms.
 
-### `useGetInstance`
+### `useEcosystem`
 
-Returns a function that can be used to dynamically create/retrieve atom instances. Often used to preload atoms, especially for kicking off render-as-you-fetch React suspense flows.
+Returns an [ecosystem object](../api/classes/Ecosystem) that can be used to dynamically create/retrieve atom instances. We'll cover ecosystems in-depth [later](ecosystems) but for now: Ecosystems have a `getInstance` method. You can use this to preload atoms, e.g. for kicking off Render-as-You-Fetch React suspense flows.
 
 ```tsx
-import { useGetInstance } from '@zedux/react'
+import { useEcosystem } from '@zedux/react'
 
 function BlogPostThumbnail({ id }: { id: string }) {
-  const lazyLoad = useGetInstance()
+  const ecosystem = useEcosystem()
 
   return (
     <button
       onClick={() => {
-        lazyLoad(blogPostAtom, [id])
+        // lazy load the blogPostAtom (Render-as-You-Fetch)
+        ecosystem.getInstance(blogPostAtom, [id])
       }}
     >
       View Post
@@ -218,17 +219,9 @@ function BlogPostThumbnail({ id }: { id: string }) {
 
 Calling the loader function instantiates the atom, if no instance has been created for the given params yet, and returns the instance.
 
-`useGetInstance` also accepts an optional `atom` param that partially applies the returned `getInstance` function.
-
-```ts
-const getBlogPostInstance = useGetInstance(blogPostAtom)
-...
-const instance = getBlogPostInstance([id])
-```
-
 #### `injectAtomGetters`
 
-The injector equivalent of `useGetInstance` - for use in atoms. Returns an [AtomGetters](../api/types/AtomGetters) object which include a `getInstance` function. The AtomGetters can be used to dynamically register graph dependencies when called during synchronous atom evaluation.
+The injector equivalent of `useEcosystem` - for use in atoms. Returns an [AtomGetters](../api/types/AtomGetters) object which has an `ecosystem` property. Besides `ecosystem`, the other AtomGetters (`get`, `getInstance`, and `select`) can also be used to dynamically register graph dependencies when called during synchronous atom or [AtomSelector](../api/types/AtomSelector) evaluation.
 
 ## Instances
 
@@ -320,7 +313,7 @@ function App() {
 
 - `useAtomInstance` and `useAtomConsumer` can be used together to provide and consume atom instances over React context.
 
-- `useGetInstance` returns a function that can be used to preload or lazy-load atoms.
+- `useEcosystem` returns an ecosystem object whose `getInstance` method can preload or lazy-load atoms.
 
 - Atom instances have `.store`, `.setState`, `.dispatch`, `.exports`, and `.invalidate` properties that can be used directly.
 

@@ -71,7 +71,6 @@ module.exports = {
           'api/hooks/useAtomState',
           'api/hooks/useAtomValue',
           'api/hooks/useEcosystem',
-          'api/hooks/useGetInstance',
         ],
       },
       {

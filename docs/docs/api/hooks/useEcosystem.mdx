@@ -15,7 +15,7 @@ See [the ecosystems walkthrough](../../walkthrough/ecosystems) for more info abo
 
 ## Examples
 
-<LiveEditor ecosystemId="useEcosystem/example" resultVar="Seconds">{`
+<LiveEditor ecosystemId="useEcosystem/simple-example" resultVar="Seconds">{`
 const secondsAtom = atom('seconds', () => {
   const store = injectStore(0)\n
   injectEffect(() => {
@@ -32,6 +32,51 @@ function Seconds() {
   const instance = ecosystem.getInstance(secondsAtom)
   const state = useAtomValue(instance)\n
   return <div>Seconds: {state}</div>
+}
+`}</LiveEditor>
+
+<LiveEditor ecosystemId="useEcosystem/counters-example" resultVar="App">{`
+const secondsAtom = atom('seconds', (startingNumber: number) => {
+  const store = injectStore(startingNumber)\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => store.setState(val => val + 1),
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return store
+})\n
+function First() {
+  const seconds = useAtomValue(secondsAtom, [0])\n
+  return <div>First State: {seconds}</div>
+}\n
+function Second() {
+  const seconds = useAtomValue(secondsAtom, [10])\n
+  return <div>Second State: {seconds}</div>
+}\n
+function App() {
+  const [isStarted, setIsStarted] = useState(false)
+  const [isFirst, setIsFirst] = useState(true)
+  const ecosystem = useEcosystem()\n
+  const start = () => {
+    setIsStarted(true)\n
+    // preload both counters, so they start at the same time:
+    ecosystem.getInstance(secondsAtom, [0])
+    ecosystem.getInstance(secondsAtom, [10])
+  }\n
+  return (
+    <>
+      {!isStarted ? (
+        <button onClick={start}>Start Counting!</button>
+      ) : (
+        <>
+          {isFirst ? <First /> : <Second />}
+          <button onClick={() => setIsFirst(val => !val)}>Toggle View</button>
+        </>
+      )}
+    </>
+  )
 }
 `}</LiveEditor>
 

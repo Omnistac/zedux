@@ -590,15 +590,15 @@ See [the persistence walkthrough](/not-done).
 Atoms (including molecules) can be preloaded to kickstart hydration, alleviate render waterfalls, and bootstrap data from outside Zedux.
 
 ```tsx
-import { EcosystemProvider, useGetInstance } from '@zedux/react'
+import { EcosystemProvider, useEcosystem } from '@zedux/react'
 
 function App() {
-  const loadStorage = useGetInstance(persistenceMolecule)
+  const ecosystem = useEcosystem()
 
   return (
     <EcosystemProvider
       preload={() => {
-        loadStorage()
+        ecosystem.getInstance(persistenceMolecule)
       }}
     >
       <Routes />
