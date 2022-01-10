@@ -3,7 +3,6 @@ import {
   metaTypes,
   Observable,
   removeAllMeta,
-  Selector,
   Settable,
   Subscription,
 } from '@zedux/core'
@@ -14,7 +13,6 @@ import {
   AtomParamsType,
   AtomSelector,
   AtomSelectorOrConfig,
-  AtomStateType,
   AtomValue,
   Cleanup,
   DependentEdge,
@@ -63,7 +61,6 @@ const cleanupAtomSelector = (selectorCache: AtomSelectorCache) => {
 
 const getEdgeDynamicity = (edge: DependentEdge) => {
   if (edge.isStatic) return GraphEdgeDynamicity.Static
-  if (edge.cache) return GraphEdgeDynamicity.RestrictedDynamic
 
   return GraphEdgeDynamicity.Dynamic
 }
@@ -123,7 +120,10 @@ export class AtomInstance<
   public _stateType?: StateType
 
   private _atomSelectorCache?: Map<AtomSelector, AtomSelectorCache>
-  private _atomSelectorsToCache?: Map<AtomSelector, AtomSelectorCache>
+  private _atomSelectorsToCache?: Map<
+    AtomSelector<any, any[]>,
+    AtomSelectorCache
+  >
   private _edgesToAdd?: Record<string, GraphEdgeInfo>
   private _subscription?: Subscription
 
@@ -258,169 +258,72 @@ export class AtomInstance<
     return instance as AtomInstanceType<A>
   }
 
-  public select<A extends StandardAtomBase<any, [...any], any>, D>(
-    atomOrInstanceOrSelector:
-      | A
-      | AtomInstanceType<A>
-      | AtomSelectorOrConfig<D, any>,
-    paramsOrSelector?: AtomParamsType<A> | Selector<any, D>,
-    selector?: Selector<AtomStateType<A>>,
-    ...rest: any[]
-  ): D {
+  public select<T, Args extends any[]>(
+    atomSelector: AtomSelectorOrConfig<T, Args>,
+    ...args: Args
+  ): T {
     // AtomSelectors are remembered across evaluations by reference.
-    // Other selectors are remembered by [atomInstance, fnRef] tuple.
-    if (
-      typeof atomOrInstanceOrSelector === 'function' ||
-      'selector' in atomOrInstanceOrSelector
-    ) {
-      const resolvedSelector =
-        typeof atomOrInstanceOrSelector === 'function'
-          ? atomOrInstanceOrSelector
-          : atomOrInstanceOrSelector.selector
+    const resolvedSelector = (typeof atomSelector === 'function'
+      ? atomSelector
+      : atomSelector.selector) as AtomSelector<T, any[]>
 
-      const args = [paramsOrSelector, selector, ...rest]
-
-      if (!this._atomSelectorsToCache) {
-        this._atomSelectorsToCache = new Map()
-      }
-
-      // look in the current run's cache first (in case we've already copied the
-      // old cache object over or already created one for this exact selector
-      // this run), then the previous run
-      let cache = this._atomSelectorsToCache.get(resolvedSelector)
-
-      if (!cache) {
-        cache = this._atomSelectorCache?.get(resolvedSelector)
-
-        if (cache) {
-          this._atomSelectorsToCache.set(resolvedSelector, cache)
-        }
-      }
-
-      if (!cache) {
-        // no cache has been created for this AtomSelector yet
-        cache = {
-          id: `${this.keyHash}-${generateAtomSelectorId()}`,
-          prevArgs: { current: undefined },
-          prevDeps: { current: {} },
-          prevResult: { current: undefined },
-        }
-      }
-
-      this._atomSelectorsToCache.set(resolvedSelector, cache)
-
-      // have to update this value since this code never runs again as long as
-      // the AtomSelector is cached
-      let cachedPrevResult = cache.prevResult.current
-
-      const result = runAtomSelector(
-        atomOrInstanceOrSelector,
-        args,
-        this.ecosystem,
-        cache.prevArgs,
-        cache.prevDeps,
-        cache.prevResult,
-        { current: resolvedSelector },
-        reasons => {
-          this._scheduleEvaluation({
-            newState: cache?.prevResult.current, // runAtomSelector updates this ref before calling this callback
-            oldState: cachedPrevResult,
-            operation: SELECT_OPERATION,
-            reasons,
-            targetType: EvaluationTargetType.Injector,
-            type: EvaluationType.StateChanged,
-          })
-
-          cachedPrevResult = cache?.prevResult.current
-        },
-        SELECT_OPERATION,
-        cache.id,
-        !!cache.prevArgs.current // allow run to short-circuit if this isn't the first run
-      )
-
-      cache.prevResult.current = result
-
-      return result
-    }
-
-    const params = Array.isArray(paramsOrSelector)
-      ? paramsOrSelector
-      : undefined
-
-    const resolvedSelector =
-      typeof paramsOrSelector === 'function'
-        ? paramsOrSelector
-        : (selector as Selector<AtomStateType<A>>)
-
-    // TODO: check if the instance exists so we know if we create it here so we
-    // can destroy it if the evaluate call errors (to prevent that memory leak)
-    const instance = this.ecosystem.getInstance(
-      atomOrInstanceOrSelector as A,
-      params as AtomParamsType<A>
-    )
-
-    // when called outside evaluation, instance._select() is just an alias for
-    // ecosystem.select()
-    if (!this._isEvaluating) return resolvedSelector(instance.store.getState())
-
-    // if we've already registered a dynamic edge, don't make it restricted
-    const existingEdge = this._edgesToAdd?.[instance.keyHash]
-    if (existingEdge && existingEdge[0] === GraphEdgeDynamicity.Dynamic) {
-      return resolvedSelector(instance.store.getState())
+    if (!this._atomSelectorsToCache) {
+      this._atomSelectorsToCache = new Map()
     }
 
     // look in the current run's cache first (in case we've already copied the
     // old cache object over or already created one for this exact selector
     // this run), then the previous run
-    let cache = existingEdge?.[2]?.get(resolvedSelector)
-
-    if (cache) {
-      return cache.prevResult
-    }
-
-    // if select is called during evaluation, track the loaded instances so we
-    // can add graph dependencies for them
-    if (!this._edgesToAdd) {
-      this._edgesToAdd = {}
-    }
-
-    if (!this._edgesToAdd[instance.keyHash]) {
-      // we could add more flags on this enum to indicate whether we created the
-      // instance in this call. TODO: All logic around RestrictedDynamic could
-      // just die if we removed the [atom, selectorFn], [instance, selectorFn],
-      // and [atom, params, selectorFn] select overloads (AtomSelectors cover
-      // all of them anyway). Sounds amazing.
-      this._edgesToAdd[instance.keyHash] = [
-        GraphEdgeDynamicity.RestrictedDynamic,
-        'select',
-        new Map(),
-      ]
-    }
-
-    // reuse the old cache object
-    cache = this.ecosystem._graph.nodes?.[instance.keyHash]?.dependents[
-      this.keyHash
-    ]?.cache?.get(resolvedSelector)
+    let cache = this._atomSelectorsToCache.get(resolvedSelector)
 
     if (!cache) {
-      const shouldUpdate = (state: AtomStateType<A>) => {
-        const newResult = resolvedSelector(state)
+      cache = this._atomSelectorCache?.get(resolvedSelector)
+    }
 
-        if (!cache || newResult === cache.prevResult) return false
-
-        cache.prevResult = newResult
-        return true
-      }
-
+    if (!cache) {
+      // no cache has been created for this AtomSelector yet
       cache = {
-        prevResult: resolvedSelector(instance.store.getState()),
-        shouldUpdate,
+        id: `${this.keyHash}-${generateAtomSelectorId()}`,
+        prevArgs: { current: undefined },
+        prevDeps: { current: {} },
+        prevResult: { current: undefined },
       }
     }
 
-    this._edgesToAdd[instance.keyHash][2]?.set(resolvedSelector, cache)
+    this._atomSelectorsToCache.set(resolvedSelector, cache)
 
-    return cache.prevResult
+    // have to update this value since this code never runs again as long as
+    // the AtomSelector is cached
+    let cachedPrevResult = cache.prevResult.current
+
+    const result = runAtomSelector<T, Args>(
+      atomSelector,
+      args,
+      this.ecosystem,
+      cache.prevArgs as Ref<Args>,
+      cache.prevDeps,
+      cache.prevResult,
+      { current: resolvedSelector },
+      reasons => {
+        this._scheduleEvaluation({
+          newState: cache?.prevResult.current, // runAtomSelector updates this ref before calling this callback
+          oldState: cachedPrevResult,
+          operation: SELECT_OPERATION,
+          reasons,
+          targetType: EvaluationTargetType.Injector,
+          type: EvaluationType.StateChanged,
+        })
+
+        cachedPrevResult = cache?.prevResult.current
+      },
+      SELECT_OPERATION,
+      cache.id,
+      !!cache.prevArgs.current // allow run to short-circuit if this isn't the first run
+    )
+
+    cache.prevResult.current = result
+
+    return result
   }
 
   public setState = (settable: Settable<State>, meta?: any) => {
@@ -756,21 +659,13 @@ export class AtomInstance<
           return
         }
 
-        const edge = this.ecosystem._graph.addDependency(
+        this.ecosystem._graph.addDependency(
           this.keyHash,
           dependencyKey,
           edgeToAdd[1],
           edgeToAdd[0] === GraphEdgeDynamicity.Static,
-          false,
-          edgeToAdd[0] === GraphEdgeDynamicity.RestrictedDynamic
-            ? state =>
-                [...(edgeToAdd[2]?.values() || [])].some(cache =>
-                  cache.shouldUpdate(state)
-                )
-            : undefined
+          false
         )
-
-        if (edgeToAdd[2]) edge.cache = edgeToAdd[2]
       })
     }
 

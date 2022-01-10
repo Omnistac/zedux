@@ -84,19 +84,14 @@ The third overload (`getInstance(myAtomInstance)`) is mostly just for interop in
 
 ### `select`
 
-A function that returns a derivation of an atom instance's state.
+A function that runs an [AtomSelector](AtomSelector). Also accepts an [AtomSelectorConfig object](AtomSelector#atomselectorconfig) with the AtomSelector as the `selector` property.
 
 ```ts
-select(atomSelector)
-select(anAtom, selectorFn)
-select(anAtom, ['param 1', 'param 2'], selectorFn)
-select(myAtomInstance, selectorFn)
+select(atomSelectorOrConfig, ...args?) => result
 ```
 
-When called synchronously during instance evaluation, `select` registers [restricted dynamic graph dependencies](../glossary/#restricted-dynamic-graph-dependency) on any atom instances it uses.
+When called synchronously during atom instance or AtomSelector evaluation, `select` registers [restricted dynamic graph dependencies](../glossary/#restricted-dynamic-graph-dependency) on any atom instances The passed AtomSelector gets.
 
-If an [AtomSelector](AtomSelector) is passed, `select` will register static dependencies for every `getInstance`, dynamic dependencies for every `get`, and restricted dynamic dependencies for every `select` that it calls (this is recursive!) synchronously.
-
-If an atom or atom instance is passed, the selector will register a single restricted dynamic dependency on the resolved atom instance - with updates "restricted" to only happening when the passed `selectorFn`'s result changes.
+`select` will register static dependencies for every `getInstance`, dynamic dependencies for every `get`, and restricted dynamic dependencies for every `select` that it calls (this is recursive!) synchronously.
 
 When called asynchronously (e.g. in an `injectEffect`), `select` does not register any dependencies; it simply returns the selected value.

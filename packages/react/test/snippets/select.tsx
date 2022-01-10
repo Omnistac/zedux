@@ -13,7 +13,8 @@ const atomB = atom('b', () => ({ num: 2, otherNum: 22 }))
 
 const selector = ({ select }: AtomGetters, tag: string) => {
   const result =
-    (select(atomA, val => val.num) + select(({ get }) => get(atomB).otherNum)) /
+    (select(({ get }) => get(atomA).num) +
+      select(({ get }) => get(atomB).otherNum)) /
     2
   console.log('running selector...', tag, result)
 

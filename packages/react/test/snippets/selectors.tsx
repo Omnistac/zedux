@@ -32,7 +32,7 @@ const paramAtom = atom('param', (param: string) => {
 const testAtom = ion(
   'test',
   ({ ecosystem, get }) => {
-    const val = injectAtomSelector(paramAtom, ['param'], ({ param }) => param)
+    const val = injectAtomSelector(({ get }) => get(paramAtom, ['param']).param)
 
     console.log('rendering stable atom:', { ecosystem, val })
     const other = get(otherAtom)
@@ -52,7 +52,7 @@ const upperCaseAtom = ion(
 )
 
 function UnstableChild() {
-  const val = useAtomSelector(paramAtom, ['param'], ({ counter }) => counter)
+  const val = useAtomSelector(({ get }) => get(paramAtom, ['param']).counter)
 
   return (
     <div>

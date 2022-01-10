@@ -1,4 +1,4 @@
-import { createStore, Selector } from '@zedux/core'
+import { createStore } from '@zedux/core'
 import { DEV } from '@zedux/core/utils/general'
 import { createContext } from 'react'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
@@ -315,70 +315,22 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.cleanup = this._preload?.(this, prevContext)
   }
 
-  select<T, Args extends any[]>(
+  public select<T, Args extends any[]>(
     atomSelector: AtomSelectorOrConfig<T, Args>,
     ...args: Args
-  ): T
-
-  select<A extends AtomBase<any, [], any>, D>(
-    atom: A,
-    selector: Selector<AtomStateType<A>, D>
-  ): D
-
-  select<A extends AtomBase<any, [...any], any>, D>(
-    atom: A,
-    params: AtomParamsType<A>,
-    selector: Selector<AtomStateType<A>, D>
-  ): D
-
-  select<I extends AtomInstanceBase<any, [...any], any>, D>(
-    instance: I,
-    selector: Selector<AtomInstanceStateType<I>, D>
-  ): D
-
-  public select<A extends AtomBase<any, [...any], any>, D = any>(
-    atomOrInstanceOrSelector:
-      | A
-      | AtomInstanceBase<any, any, any>
-      | AtomSelectorOrConfig<D, any>,
-    paramsOrSelector?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
-    selector?: Selector<AtomStateType<A>, D>,
-    ...rest: any[]
-  ): D {
-    if (
-      typeof atomOrInstanceOrSelector === 'function' ||
-      'selector' in atomOrInstanceOrSelector
-    ) {
-      const resolvedSelector =
-        typeof atomOrInstanceOrSelector === 'function'
-          ? atomOrInstanceOrSelector
-          : atomOrInstanceOrSelector.selector
-
-      return resolvedSelector(
-        {
-          ecosystem: this,
-          get: this.get.bind(this),
-          getInstance: this.getInstance.bind(this),
-          select: this.select.bind(this),
-        },
-        paramsOrSelector,
-        selector,
-        ...rest
-      )
-    }
-
-    const params = Array.isArray(paramsOrSelector)
-      ? paramsOrSelector
-      : (([] as unknown) as AtomParamsType<A>)
-
+  ): T {
     const resolvedSelector =
-      typeof paramsOrSelector === 'function'
-        ? paramsOrSelector
-        : (selector as Selector<AtomStateType<A>, D>)
+      typeof atomSelector === 'function' ? atomSelector : atomSelector.selector
 
-    const instance = this.getInstance(atomOrInstanceOrSelector as A, params)
-
-    return resolvedSelector(instance.store.getState())
+    return resolvedSelector(
+      {
+        ecosystem: this,
+        get: this.get.bind(this),
+        getInstance: this.getInstance.bind(this),
+        select: this.select.bind(this),
+      },
+      ...args
+    )
   }
 
   public setOverrides(newOverrides: AtomBase<any, any, any>[]) {

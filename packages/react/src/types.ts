@@ -1,4 +1,4 @@
-import { ActionChain, Observable, Selector, Settable, Store } from '@zedux/core'
+import { ActionChain, Observable, Settable, Store } from '@zedux/core'
 import {
   AtomBase,
   AtomInstance,
@@ -103,8 +103,8 @@ export interface AtomGettersBase {
 
   /**
    * Runs an AtomSelector which receives its own AtomGetters object and can use
-   * those to register its own dynamic and/or static graph edges when called
-   * synchronously during atom or AtomSelector evaluation.
+   * those to register its own dynamic and/or static graph edges (when called
+   * synchronously during atom or AtomSelector evaluation.)
    *
    * ```ts
    * const mySelector = ion('mySelector', ({ select }) => {
@@ -124,22 +124,6 @@ export interface AtomGettersBase {
     atomSelector: AtomSelectorOrConfig<T, Args>,
     ...args: Args
   ): T
-
-  select<A extends AtomBase<any, [], any>, D>(
-    atom: A,
-    selector: Selector<AtomStateType<A>, D>
-  ): D
-
-  select<A extends AtomBase<any, [...any], any>, D>(
-    atom: A,
-    params: AtomParamsType<A>,
-    selector: Selector<AtomStateType<A>, D>
-  ): D
-
-  select<I extends AtomInstanceBase<any, [...any], any>, D>(
-    instance: I,
-    selector: Selector<AtomInstanceStateType<I>, D>
-  ): D
 }
 
 /**
@@ -263,7 +247,6 @@ export type AtomValueOrFactory<
 export type Cleanup = () => void
 
 export interface DependentEdge {
-  cache?: SelectorCache // selectors cache some data on this edge object
   callback?: (
     signal: GraphEdgeSignal,
     val?: any,
@@ -331,15 +314,10 @@ export enum EvaluationType {
 
 export enum GraphEdgeDynamicity {
   Static = 1,
-  RestrictedDynamic = 2, // for selectors
-  Dynamic = 3,
+  Dynamic = 2,
 }
 
-export type GraphEdgeInfo = [
-  GraphEdgeDynamicity,
-  string,
-  SelectorCache? // used for selectors (RestrictedDynamic edges)
-]
+export type GraphEdgeInfo = [GraphEdgeDynamicity, string]
 
 export enum GraphEdgeSignal {
   Destroyed = 'Destroyed',
@@ -541,11 +519,6 @@ export interface RefObject<T = any> {
 }
 
 export type Scheduler = number // | Observable<any> | (store: Store<T>) => Observable<any> - not implementing observable ttl for now
-
-export type SelectorCache = Map<
-  Selector,
-  { prevResult: any; shouldUpdate: (state: any) => boolean }
->
 
 export type SetStateInterceptor<State = any> = (
   settable: Settable<State>,

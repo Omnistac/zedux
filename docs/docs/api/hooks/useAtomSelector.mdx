@@ -9,9 +9,9 @@ import { LiveEditor } from '../../LiveEditor'
 import { useAtomSelector } from '@zedux/react'
 ```
 
-A React hook that accepts an atom, its params, and a selector and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning the selected value.
+A React hook that accepts an [AtomSelector](../types/AtomSelector) and registers graph dependencies on any atom instances the AtomSelector uses. Returns whatever the AtomSelector returns.
 
-The selector will rerun every time the resolved atom instance's state changes. The component that uses this hook will only rerender when the selector result changes.
+The selector will rerun every time the state of any of the dependencies it creates change. The component that uses this hook will only rerender when the selector result changes.
 
 ## Example
 
@@ -21,7 +21,7 @@ const countersAtom = atom('counters', () => {
   return store
 })\n
 function Counters() {
-  const counterA = useAtomSelector(countersAtom, ({ counterA }) => counterA)
+  const counterA = useAtomSelector(({ get }) => get(countersAtom).counterA)
   const instance = useAtomInstance(countersAtom)
   const { setState } = instance
   const rendersRef = useRef(0)
@@ -50,44 +50,39 @@ Miscellaneous:
 
 ```ts
 // only rerender when `someField` changes:
-const selectedVal = useAtomSelector(myAtom, ({ someField }) => someField)
+const selectedVal = useAtomSelector(({ get }) => get(myAtom).someField)
 
-const withParams = useAtomSelector(myAtom, ['a param'], ({ field }) => field)
+const withParams = useAtomSelector(
+  ({ get }) => get(myAtom, ['a param']).someField
+)
 
-const fromInstance = useAtomSelector(instance, val => deriveStuff(val))
+const selectorComposition = useAtomSelector(
+  ({ select }) => `${select(helloSelector)}, ${select(worldSelector)}!`
+)
+
+const staticVal = useAtomSelector(
+  ({ getInstance }) => getInstance(myAtom).store.getState().someField
+)
+
+const staticValUsingEcosystem = useAtomSelector(
+  ({ ecosystem }) => ecosystem.get(myAtom).someField
+)
 ```
 
 ## Signature
 
 ```ts
-useAtomSelector(atom, selector) => derivation
+useAtomSelector(atomSelectorOrConfig, ...args) => result
 ```
 
-Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Calls `selector` with the resolved atom instance's current state. Returns the selector's result.
+### `atomSelectorOrConfig`
 
-### Overloads
+The [AtomSelector](../types/AtomSelector) to run or an [AtomSelectorConfig object](../types/AtomSelector#atomselectorconfig) with the AtomSelector as the `selector` property.
 
-```ts
-useAtomSelector(atom, params, selector) => derivation
-useAtomSelector(instance, selector) => derivation
-```
+### `args`
 
-### `atom`
+The extra arguments to pass to the AtomSelector (besides the first AtomGetters arg, which Zedux passes for you). In TypeScript, all of the AtomSelector's required arguments are required here.
 
-Required. The [atom](../classes/Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
+### `result`
 
-### `selector`
-
-Required. A function that will be passed the current state of the resolved atom instance and can return any value. The selector will be called again every time the atom instance's state changes.
-
-If the selector returns the same value (by reference comparison) on a subsequent state update, the component will not rerender. If the selector returns a different value, the component will rerender.
-
-### `params`
-
-Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
-
-TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
-
-### `instance`
-
-Required (in this overload). An [atom instance](../classes/AtomInstance). Will register a dynamic dependency on the passed instance and run the selector on the instance's value.
+Whatever the AtomSelector returns.

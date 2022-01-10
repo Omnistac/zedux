@@ -1,23 +1,10 @@
-import {
-  atom,
-  AtomInstanceProvider,
-  AtomInstanceType,
-  injectAtomSelector,
-  injectEffect,
-  injectStore,
-  useAtomConsumer,
-  useAtomInstance,
-  useAtomSelector,
-  useAtomState,
-  useAtomValue,
-} from '@zedux/react'
-import { ion } from '@zedux/react/factories/ion'
-import React, { useState } from 'react'
+import { atom, useAtomSelector, useAtomState } from '@zedux/react'
+import React from 'react'
 
 const atomA = atom('a', () => ({ num: 1 } as { num: number | undefined }))
 
 function Child() {
-  const val = useAtomSelector(atomA, ({ num }) => num)
+  const val = useAtomSelector(({ get }) => get(atomA).num)
 
   return (
     <div>

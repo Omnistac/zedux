@@ -1,4 +1,3 @@
-import { Selector } from '@zedux/core'
 import {
   ActiveState,
   AtomGettersBase,
@@ -69,22 +68,6 @@ export abstract class AtomInstanceBase<
     atomSelector: AtomSelectorOrConfig<T, Args>,
     ...args: Args
   ): T
-
-  public abstract select<A extends AtomBase<any, [], any>, D>(
-    atom: A,
-    selector: Selector<AtomStateType<A>, D>
-  ): D
-
-  public abstract select<A extends AtomBase<any, [...any], any>, D>(
-    atom: A,
-    params: AtomParamsType<A>,
-    selector: Selector<AtomStateType<A>, D>
-  ): D
-
-  public abstract select<I extends AtomInstanceBase<any, [...any], any>, D>(
-    instance: I,
-    selector: Selector<AtomInstanceStateType<I>, D>
-  ): D
 
   public abstract _scheduleEvaluation(
     reason: EvaluationReason,

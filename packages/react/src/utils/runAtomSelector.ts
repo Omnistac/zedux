@@ -8,12 +8,10 @@ import {
   AtomSelector,
   AtomSelectorConfig,
   AtomSelectorOrConfig,
-  AtomStateType,
   EvaluationReason,
   GraphEdgeDynamicity,
   Ref,
 } from '../types'
-import { Selector } from '@zedux/core'
 
 const defaultArgsAreEqual = (newArgs: any[], prevArgs: any[]) =>
   newArgs.length === prevArgs.length &&
@@ -110,69 +108,15 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
     return instance
   }
 
-  const select = <A extends AnyAtomBase, D>(
-    atomOrInstanceOrSelector: A | AnyAtomInstanceBase | AtomSelectorOrConfig<D>,
-    paramsOrSelector?: AtomParamsType<A>[] | Selector<AtomStateType<A>, D>,
-    selector?: Selector<AtomStateType<A>, D>,
-    ...rest: any[]
+  const select = <T, Args extends any[]>(
+    atomSelector: AtomSelectorOrConfig<T, Args>,
+    ...args: any[]
   ) => {
-    if (
-      typeof atomOrInstanceOrSelector === 'function' ||
-      'selector' in atomOrInstanceOrSelector
-    ) {
-      // we throw away any atom selector config in nested selects
-      const resolvedSelector =
-        typeof atomOrInstanceOrSelector === 'function'
-          ? atomOrInstanceOrSelector
-          : atomOrInstanceOrSelector.selector
+    // we throw away any atom selector config in nested selects
+    const resolvedSelector =
+      typeof atomSelector === 'function' ? atomSelector : atomSelector.selector
 
-      return (resolvedSelector as any)(
-        getters,
-        paramsOrSelector,
-        selector,
-        ...rest
-      )
-    }
-
-    const params = Array.isArray(paramsOrSelector)
-      ? paramsOrSelector
-      : ([] as AtomParamsType<A>)
-
-    const resolvedSelector: Selector<AtomStateType<A>, D> =
-      typeof paramsOrSelector === 'function'
-        ? paramsOrSelector
-        : (selector as Selector<AtomStateType<A>, D>)
-
-    const instance = ecosystem.getInstance(
-      atomOrInstanceOrSelector as A,
-      params as AtomParamsType<A>
-    )
-
-    const result = resolvedSelector(instance.store.getState())
-
-    // don't override any dynamic deps on this instance
-    if (
-      isExecuting &&
-      deps[instance.keyHash]?.dynamicity !== GraphEdgeDynamicity.Dynamic
-    ) {
-      const newDep: Dep = {
-        instance,
-        dynamicity: GraphEdgeDynamicity.RestrictedDynamic,
-        memoizedVal: result,
-        shouldUpdate: newState => {
-          const newResult = resolvedSelector(newState)
-
-          if (newResult === newDep.memoizedVal) return false
-
-          newDep.memoizedVal = newResult
-          return true
-        },
-      }
-
-      deps[instance.keyHash] = newDep
-    }
-
-    return result
+    return (resolvedSelector as any)(getters, ...args)
   }
 
   const getters: AtomGetters = { ecosystem, get, getInstance, select }
@@ -214,12 +158,6 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
     const ghost = ecosystem._graph.registerGhostDependent(
       dep.instance,
       (signal, newState, reasons) => {
-        const needsUpdate =
-          dep.dynamicity !== GraphEdgeDynamicity.RestrictedDynamic ||
-          dep.shouldUpdate?.(newState)
-
-        if (!needsUpdate) return
-
         // we don't need to defer running this on GraphEdgeSignal.Destroyed
         // 'cause this callback already schedules an UpdateExternalDependent
         // job that will defer execution until after the instance is fully

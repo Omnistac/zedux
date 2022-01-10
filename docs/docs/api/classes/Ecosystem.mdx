@@ -321,12 +321,12 @@ Runs an [AtomSelector](../types/AtomSelector) statically (without creating any d
 #### Signature
 
 ```ts
-.select(atomSelector, ...args) => result
+.select(atomSelectorOrConfig, ...args) => result
 ```
 
-#### `atomSelector`
+#### `atomSelectorOrConfig`
 
-The [AtomSelector](../types/AtomSelector) to run.
+The [AtomSelector](../types/AtomSelector) to run or an [AtomSelectorConfig object](../types/AtomSelector#atomselectorconfig) with the AtomSelector as the `selector` property.
 
 #### `args`
 
