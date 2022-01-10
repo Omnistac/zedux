@@ -7,7 +7,7 @@ import {
   Ecosystem,
   getEcosystem,
   injectAtomInstance,
-  injectEcosystem,
+  injectAtomGetters,
   injectStore,
   Mod,
   ModAction,
@@ -130,7 +130,7 @@ export const ecosystemWrapper = atom(
   'ecosystemWrapper',
   (ecosystemId: string) => {
     const { showToast } = injectAtomInstance(toasts).exports
-    const stateHubEcosystem = injectEcosystem()
+    const stateHubEcosystem = injectAtomGetters().ecosystem
 
     // doesn't matter if this variable is recreated on a subsequent evaluation
     // 'cause the initial evaluation's useEffect captured the initial reference

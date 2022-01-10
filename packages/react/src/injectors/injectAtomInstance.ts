@@ -1,14 +1,17 @@
 import {
   AtomInjectorDescriptor,
-  GraphEdgeDynamicity,
   haveDepsChanged,
   InjectorType,
   is,
   split,
 } from '../utils'
-import { AnyAtomInstanceBase, AtomInstanceType, AtomParamsType } from '../types'
-import { injectGetInstance } from './injectGetInstance'
-import { injectEcosystem } from './injectEcosystem'
+import {
+  AnyAtomInstanceBase,
+  AtomInstanceType,
+  AtomParamsType,
+  GraphEdgeDynamicity,
+} from '../types'
+import { injectAtomGetters } from './injectAtomGetters'
 import { AtomBase, AtomInstanceBase } from '../classes'
 
 /**
@@ -55,8 +58,7 @@ export const injectAtomInstance: {
   operation = 'injectAtomInstance',
   shouldRegisterDependency = true
 ) => {
-  const ecosystem = injectEcosystem()
-  const getInstance = injectGetInstance()
+  const { ecosystem, getInstance } = injectAtomGetters()
 
   const { instance } = split<AtomInjectorDescriptor<AtomInstanceType<A>>>(
     'injectAtomInstance',

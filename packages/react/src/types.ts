@@ -61,11 +61,121 @@ export type AtomExportsType<
   AtomType extends AnyAtom
 > = AtomType extends StandardAtomBase<any, any, infer T> ? T : never
 
-export interface AtomGetters {
+/**
+ * The AtomGettersBase interface. You probably won't want to use this directly.
+ * Use AtomGetters instead.
+ */
+export interface AtomGettersBase {
+  /**
+   * Registers a dynamic graph edge on the resolved atom instance when called
+   * synchronously during atom or AtomSelector evaluation. When called
+   * asynchronously, is just an alias for `ecosystem.get`
+   */
+  get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+
+  get<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomStateType<A>
+
+  get<AI extends AtomInstanceBase<any, [...any], any>>(
+    instance: AI
+  ): AtomInstanceStateType<AI>
+
+  /**
+   * Registers a static graph edge on the resolved atom instance when called
+   * synchronously during atom or AtomSelector evaluation. When called
+   * asynchronously, is just an alias for `ecosystem.getInstance`
+   */
+  getInstance<A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+
+  getInstance<A extends AtomBase<any, [...any], any>>(
+    atom: A,
+    params: AtomParamsType<A>,
+    edgeInfo?: GraphEdgeInfo
+  ): AtomInstanceType<A>
+
+  getInstance<AI extends AtomInstanceBase<any, any, any>>(
+    instance: AI,
+    params?: [],
+    edgeInfo?: GraphEdgeInfo
+  ): AI
+
+  /**
+   * Runs an AtomSelector which receives its own AtomGetters object and can use
+   * those to register its own dynamic and/or static graph edges when called
+   * synchronously during atom or AtomSelector evaluation.
+   *
+   * ```ts
+   * const mySelector = ion('mySelector', ({ select }) => {
+   *   // registers a dynamic dependency on myAtom:
+   *   const dynamicVal = select(({ get }) => get(myAtom))
+   *
+   *   injectEffect(() => {
+   *     // doesn't register anything:
+   *     const staticVal = select(({ get }) => get(myAtom))
+   *   }, []) // no need to pass select as a dep; it's a stable reference
+   * })
+   * ```
+   *
+   * @see AtomSelector
+   */
+  select<T, Args extends any[]>(
+    atomSelector: AtomSelectorOrConfig<T, Args>,
+    ...args: Args
+  ): T
+
+  select<A extends AtomBase<any, [], any>, D>(
+    atom: A,
+    selector: Selector<AtomStateType<A>, D>
+  ): D
+
+  select<A extends AtomBase<any, [...any], any>, D>(
+    atom: A,
+    params: AtomParamsType<A>,
+    selector: Selector<AtomStateType<A>, D>
+  ): D
+
+  select<I extends AtomInstanceBase<any, [...any], any>, D>(
+    instance: I,
+    selector: Selector<AtomInstanceStateType<I>, D>
+  ): D
+}
+
+/**
+ * AtomGetters are used all throughout Zedux. When called synchronously during
+ * atom or AtomSelector evaluation, they register graph edges. When called
+ * asynchronously, they're just aliases for the corresponding ecosystem method.
+ *
+ * ```ts
+ * const mySelector = ion('mySelector', ({ ecosystem, get }) => {
+ *   const dynamicVal = get(myAtom) // registers graph edge
+ *   const staticVal = ecosystem.get(myAtom) // doesn't register anything
+ *
+ *   injectEffect(() => {
+ *     const staticVal2 = get(myAtom) // doesn't register anything
+ *     // const staticVal2 = ecosystem.get(myAtom) // same exact thing
+ *   }, [])
+ * })
+ * ```
+ */
+export interface AtomGetters extends AtomGettersBase {
+  /**
+   * A reference to the ecosystem of the current atom instance or AtomSelector.
+   *
+   * The ecosystem itself has `get`, `getInstance`, and `select` methods which
+   * can be used instead of the other AtomGetters to prevent graph dependencies
+   * from being registered.
+   *
+   * ```ts
+   * // the current component will NOT rerender when myAtom changes:
+   * const staticVal = useAtomSelector(({ ecosystem }) => ecosystem.get(myAtom))
+   *
+   * // the current component will rerender when myAtom changes:
+   * const dynamicVal = useAtomSelector(({ get }) => get(myAtom))
+   * ```
+   */
   ecosystem: Ecosystem
-  get: Ecosystem['get']
-  getInstance: Ecosystem['getInstance']
-  select: Ecosystem['select']
 }
 
 export type AtomInstanceAtomType<
@@ -113,10 +223,7 @@ export interface AtomSetters<
   State,
   Params extends any[],
   Exports extends Record<string, any>
-> {
-  ecosystem: Ecosystem
-  get: Ecosystem['get']
-  getInstance: Ecosystem['getInstance']
+> extends AtomGetters {
   instance: AtomInstance<State, Params, Exports>
 
   set<A extends AtomBase<any, [], any>>(
@@ -221,6 +328,18 @@ export enum EvaluationType {
   InstanceDestroyed = 'atom instance destroyed',
   StateChanged = 'state changed',
 }
+
+export enum GraphEdgeDynamicity {
+  Static = 1,
+  RestrictedDynamic = 2, // for selectors
+  Dynamic = 3,
+}
+
+export type GraphEdgeInfo = [
+  GraphEdgeDynamicity,
+  string,
+  SelectorCache? // used for selectors (RestrictedDynamic edges)
+]
 
 export enum GraphEdgeSignal {
   Destroyed = 'Destroyed',

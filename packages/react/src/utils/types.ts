@@ -2,12 +2,13 @@ import {
   AsyncStore,
   Cleanup,
   DependentEdge,
+  GraphEdgeDynamicity,
   MutableRefObject,
   RefObject,
-  SelectorCache,
 } from '@zedux/react/types'
 import { Store, Subscription } from '@zedux/core'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
+import { AtomInstance } from '../classes/instances/AtomInstance'
 
 export interface AsyncEffectInjectorDescriptor<T>
   extends DepsInjectorDescriptor {
@@ -61,7 +62,7 @@ export interface DepsInjectorDescriptor extends InjectorDescriptor {
 
 export interface DiContext {
   injectors: InjectorDescriptor[]
-  instance: AtomInstanceBase<any, any[], any>
+  instance: AtomInstance<any, any[], any>
 }
 
 export interface EcosystemGraphNode {
@@ -86,18 +87,6 @@ export interface EvaluateAtomJob extends JobBase {
   keyHash: string
   type: JobType.EvaluateAtom
 }
-
-export enum GraphEdgeDynamicity {
-  Static = 1,
-  RestrictedDynamic = 2, // for selectors
-  Dynamic = 3,
-}
-
-export type GraphEdgeInfo = [
-  GraphEdgeDynamicity,
-  string,
-  SelectorCache? // used for selectors (RestrictedDynamic edges)
-]
 
 export interface InjectorDescriptor {
   cleanup?: () => void

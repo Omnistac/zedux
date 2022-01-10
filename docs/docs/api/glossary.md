@@ -34,9 +34,11 @@ Zedux builds an internal graph to manage atom dependencies and propagate updates
 
 Injectors are the "hooks" of Atoms. Zedux exports several injectors.
 
-Some injectors are React-hook equivalents, like [injectEffect](injectors/injectEffect), [injectMemo](injectors/injectMemo), and [injectRef](injectors/injectRef).
+There are 3 basic types of injectors:
 
-Others provide certain utilities or debugging capabilities, such as [injectEcosystem](injectors/injectEcosystem) and [injectWhy](injectors/injectWhy).
+- React-hook equivalents, like [`injectEffect`](injectors/injectEffect), [`injectMemo`](injectors/injectMemo), and [`injectRef`](injectors/injectRef).
+- Dependency injectors, like [`injectAtomValue`](injectors/injectAtomValue) and [`injectAtomInstance`](injectors/injectAtomInstance).
+- Utility or dev X injectors, such as [`injectAtomGetters`](injectors/injectAtomGetters) and [`injectWhy`](injectors/injectWhy).
 
 Injectors should only be used at the top level of [atom evaluator functions](#evaluator). Don't use them in loops or conditional statements.
 

@@ -9,6 +9,7 @@ import {
 } from '@zedux/core'
 import {
   ActiveState,
+  AtomGetters,
   AtomInstanceType,
   AtomParamsType,
   AtomSelector,
@@ -20,6 +21,8 @@ import {
   EvaluationReason,
   EvaluationTargetType,
   EvaluationType,
+  GraphEdgeDynamicity,
+  GraphEdgeInfo,
   PromiseStatus,
   Ref,
   StateType,
@@ -27,21 +30,19 @@ import {
 import {
   Dep,
   generateAtomSelectorId,
-  GraphEdgeDynamicity,
-  GraphEdgeInfo,
   InjectorDescriptor,
   InjectorType,
   is,
   JobType,
 } from '@zedux/react/utils'
 import { diContext } from '@zedux/react/utils/csContexts'
-import { Ecosystem } from './Ecosystem'
+import { Ecosystem } from '../Ecosystem'
 import { createStore, isZeduxStore, Store } from '@zedux/core'
-import { AtomApi } from './AtomApi'
-import { AtomInstanceBase } from './instances/AtomInstanceBase'
-import { StandardAtomBase } from './atoms/StandardAtomBase'
-import { runAtomSelector } from '../utils/runAtomSelector'
-import { ZeduxPlugin } from './ZeduxPlugin'
+import { AtomApi } from '../AtomApi'
+import { AtomInstanceBase } from './AtomInstanceBase'
+import { StandardAtomBase } from '../atoms/StandardAtomBase'
+import { runAtomSelector } from '../../utils/runAtomSelector'
+import { ZeduxPlugin } from '../ZeduxPlugin'
 
 interface AtomSelectorCache {
   id: string
@@ -96,14 +97,16 @@ const getStateStore = <State extends any = any>(
 }
 
 export class AtomInstance<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>
-> extends AtomInstanceBase<
-  State,
-  Params,
-  StandardAtomBase<State, Params, Exports>
-> {
+    State,
+    Params extends any[],
+    Exports extends Record<string, any>
+  >
+  extends AtomInstanceBase<
+    State,
+    Params,
+    StandardAtomBase<State, Params, Exports>
+  >
+  implements AtomGetters {
   public api?: AtomApi<State, Exports>
   public exports: Exports
   public promise?: Promise<any>
@@ -185,118 +188,7 @@ export class AtomInstance<
     return val
   }
 
-  public setState = (settable: Settable<State>, meta?: any) => {
-    const val = this.api?.setStateInterceptors?.length
-      ? this.api._interceptSetState(settable, (newSettable: Settable<State>) =>
-          this.store.setState(newSettable, meta)
-        )
-      : this.store.setState(settable, meta)
-
-    return val
-  }
-
-  /**
-   * Detach this atom instance from the ecosystem and clean up all graph edges
-   * and other subscriptions/effects created by this atom instance.
-   *
-   * Destruction will bail out if this atom instance still has dependents. Pass
-   * `true` to force-destroy the atom instance anyway.
-   */
-  public _destroy(force?: boolean) {
-    if (this._activeState === ActiveState.Destroyed) return
-
-    // If we're not force-destroying, don't destroy if there are dependents
-    if (
-      !force &&
-      Object.keys(this.ecosystem._graph.nodes[this.keyHash]?.dependents || {})
-        .length
-    ) {
-      return
-    }
-
-    this.setActiveState(ActiveState.Destroyed)
-
-    if (this._evaluationReasons.length) {
-      this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
-    }
-
-    // Clean up effect injectors first, then everything else
-    const nonEffectInjectors: InjectorDescriptor[] = []
-    this._injectors?.forEach(injector => {
-      if (injector.type !== InjectorType.Effect) {
-        nonEffectInjectors.push(injector)
-        return
-      }
-      injector.cleanup?.()
-    })
-    nonEffectInjectors.forEach(injector => {
-      injector.cleanup?.()
-    })
-
-    // Clean up cached AtomSelectors - normal selectors don't have anything to
-    // clean up since their cached value should be garbage collected when the
-    // graph edge with its `cache` goes out of scope
-    this._atomSelectorCache?.forEach(cleanupAtomSelector)
-    this.ecosystem._graph.removeDependencies(this.keyHash)
-
-    this._subscription?.unsubscribe()
-    this.ecosystem._destroyAtomInstance(this.keyHash)
-  }
-
-  /**
-   * A standard atom's value can be one of:
-   *
-   * - A raw value
-   * - A Zedux store
-   * - An AtomApi
-   * - A function that returns a raw value
-   * - A function that returns a Zedux store
-   * - A function that returns an AtomApi
-   */
-  public _evaluate() {
-    const { _value } = this.atom
-
-    if (is(_value, AtomApi)) {
-      const asAtomApi = _value as AtomApi<State, Exports>
-      this.api = asAtomApi
-      return asAtomApi.value
-    }
-
-    if (typeof _value !== 'function') {
-      return _value as AtomValue<State>
-    }
-
-    try {
-      const val = (_value as (
-        ...params: Params
-      ) => AtomValue<State> | AtomApi<State, Exports>)(...this.params)
-
-      if (is(val, AtomApi)) {
-        this.api = val as AtomApi<State, Exports>
-
-        // Exports can only be set on initial evaluation
-        if (this._activeState === ActiveState.Initializing) {
-          this.exports = this.api.exports as Exports
-
-          if (this.api.promise) this._setPromise(this.api.promise)
-        }
-
-        return this.api.value
-      }
-
-      return val as AtomValue<State>
-    } catch (err) {
-      console.error(
-        `Zedux: Error while instantiating atom "${this.atom.key}" with params:`,
-        this.params,
-        err
-      )
-
-      throw err
-    }
-  }
-
-  public _get<A extends StandardAtomBase<any, [...any], any>>(
+  public get<A extends StandardAtomBase<any, [...any], any>>(
     atomOrInstance: A | AtomInstanceBase<any, [], any>,
     params?: AtomParamsType<A>
   ): A extends StandardAtomBase<infer T, any, any> ? T : never {
@@ -324,8 +216,8 @@ export class AtomInstance<
     return instance.store.getState()
   }
 
-  public _getInstance<A extends StandardAtomBase<any, [...any], any>>(
-    atomOrInstance: A | AtomInstanceType<A>,
+  public getInstance<A extends StandardAtomBase<any, [...any], any>>(
+    atomOrInstance: A,
     params?: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A> {
@@ -366,85 +258,7 @@ export class AtomInstance<
     return instance as AtomInstanceType<A>
   }
 
-  /**
-   * When a standard atom instance's refCount hits 0 and a ttl is set, we set a
-   * timeout to destroy this atom instance.
-   */
-  public _scheduleDestruction() {
-    // the atom is already scheduled for destruction or destroyed
-    if (this._activeState !== ActiveState.Active) return
-
-    this.setActiveState(ActiveState.Stale)
-    const { maxInstances } = this.atom
-
-    if (maxInstances != null) {
-      if (maxInstances === 0) return this._destroy()
-
-      const currentCount = this.ecosystem.findInstances(this.atom).length
-
-      if (currentCount > maxInstances) return this._destroy()
-    }
-
-    const ttl = this._getTtl()
-    if (ttl == null || ttl === -1) return
-    if (ttl === 0) return this._destroy()
-
-    if (typeof ttl === 'number') {
-      // ttl is > 0; schedule destruction
-      const timeoutId = setTimeout(() => this._destroy(), ttl)
-
-      // TODO: dispatch an action over stateStore for these mutations
-      this._cancelDestruction = () => clearTimeout(timeoutId)
-
-      return
-    }
-
-    if (typeof (ttl as Promise<any>).then === 'function') {
-      let isCanceled = false
-      ;(ttl as Promise<any>).then(() => {
-        if (!isCanceled) this._destroy()
-      })
-
-      this._cancelDestruction = () => {
-        isCanceled = true
-      }
-
-      return
-    }
-
-    // ttl is an observable; destroy as soon as it emits
-    const subscription = (ttl as Observable).subscribe(() => this._destroy())
-
-    this._cancelDestruction = () => subscription.unsubscribe()
-  }
-
-  public _scheduleEvaluation = (reason: EvaluationReason, flagScore = 0) => {
-    // TODO: Any calls in this case probably indicate a memory leak on the
-    // user's part. Notify them. TODO: Can we pause evaluations while
-    // activeState is Stale (and should we just always evaluate once when
-    // waking up a stale atom)?
-    if (this._activeState === ActiveState.Destroyed) return
-
-    if (this._evaluationReasons.length) {
-      this._evaluationReasons.push(reason)
-      return
-    }
-
-    // TODO: maybe we should keep previous evaluation reasons around until the
-    // task runs? Or move _evaluationReasons to _previousEvaluationReasons when
-    // the evaluation task finishes? Just feels odd suddenly overwriting them
-    // here.
-    this._evaluationReasons = [reason]
-
-    this.ecosystem._scheduler.scheduleJob({
-      flagScore,
-      keyHash: this.keyHash,
-      task: this.evaluationTask,
-      type: JobType.EvaluateAtom,
-    })
-  }
-
-  public _select<A extends StandardAtomBase<any, [...any], any>, D>(
+  public select<A extends StandardAtomBase<any, [...any], any>, D>(
     atomOrInstanceOrSelector:
       | A
       | AtomInstanceType<A>
@@ -607,6 +421,195 @@ export class AtomInstance<
     this._edgesToAdd[instance.keyHash][2]?.set(resolvedSelector, cache)
 
     return cache.prevResult
+  }
+
+  public setState = (settable: Settable<State>, meta?: any) => {
+    const val = this.api?.setStateInterceptors?.length
+      ? this.api._interceptSetState(settable, (newSettable: Settable<State>) =>
+          this.store.setState(newSettable, meta)
+        )
+      : this.store.setState(settable, meta)
+
+    return val
+  }
+
+  /**
+   * Detach this atom instance from the ecosystem and clean up all graph edges
+   * and other subscriptions/effects created by this atom instance.
+   *
+   * Destruction will bail out if this atom instance still has dependents. Pass
+   * `true` to force-destroy the atom instance anyway.
+   */
+  public _destroy(force?: boolean) {
+    if (this._activeState === ActiveState.Destroyed) return
+
+    // If we're not force-destroying, don't destroy if there are dependents
+    if (
+      !force &&
+      Object.keys(this.ecosystem._graph.nodes[this.keyHash]?.dependents || {})
+        .length
+    ) {
+      return
+    }
+
+    this.setActiveState(ActiveState.Destroyed)
+
+    if (this._evaluationReasons.length) {
+      this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
+    }
+
+    // Clean up effect injectors first, then everything else
+    const nonEffectInjectors: InjectorDescriptor[] = []
+    this._injectors?.forEach(injector => {
+      if (injector.type !== InjectorType.Effect) {
+        nonEffectInjectors.push(injector)
+        return
+      }
+      injector.cleanup?.()
+    })
+    nonEffectInjectors.forEach(injector => {
+      injector.cleanup?.()
+    })
+
+    // Clean up cached AtomSelectors - normal selectors don't have anything to
+    // clean up since their cached value should be garbage collected when the
+    // graph edge with its `cache` goes out of scope
+    this._atomSelectorCache?.forEach(cleanupAtomSelector)
+    this.ecosystem._graph.removeDependencies(this.keyHash)
+
+    this._subscription?.unsubscribe()
+    this.ecosystem._destroyAtomInstance(this.keyHash)
+  }
+
+  /**
+   * A standard atom's value can be one of:
+   *
+   * - A raw value
+   * - A Zedux store
+   * - An AtomApi
+   * - A function that returns a raw value
+   * - A function that returns a Zedux store
+   * - A function that returns an AtomApi
+   */
+  public _evaluate() {
+    const { _value } = this.atom
+
+    if (is(_value, AtomApi)) {
+      const asAtomApi = _value as AtomApi<State, Exports>
+      this.api = asAtomApi
+      return asAtomApi.value
+    }
+
+    if (typeof _value !== 'function') {
+      return _value as AtomValue<State>
+    }
+
+    try {
+      const val = (_value as (
+        ...params: Params
+      ) => AtomValue<State> | AtomApi<State, Exports>)(...this.params)
+
+      if (is(val, AtomApi)) {
+        this.api = val as AtomApi<State, Exports>
+
+        // Exports can only be set on initial evaluation
+        if (this._activeState === ActiveState.Initializing) {
+          this.exports = this.api.exports as Exports
+
+          if (this.api.promise) this._setPromise(this.api.promise)
+        }
+
+        return this.api.value
+      }
+
+      return val as AtomValue<State>
+    } catch (err) {
+      console.error(
+        `Zedux: Error while instantiating atom "${this.atom.key}" with params:`,
+        this.params,
+        err
+      )
+
+      throw err
+    }
+  }
+
+  /**
+   * When a standard atom instance's refCount hits 0 and a ttl is set, we set a
+   * timeout to destroy this atom instance.
+   */
+  public _scheduleDestruction() {
+    // the atom is already scheduled for destruction or destroyed
+    if (this._activeState !== ActiveState.Active) return
+
+    this.setActiveState(ActiveState.Stale)
+    const { maxInstances } = this.atom
+
+    if (maxInstances != null) {
+      if (maxInstances === 0) return this._destroy()
+
+      const currentCount = this.ecosystem.findInstances(this.atom).length
+
+      if (currentCount > maxInstances) return this._destroy()
+    }
+
+    const ttl = this._getTtl()
+    if (ttl == null || ttl === -1) return
+    if (ttl === 0) return this._destroy()
+
+    if (typeof ttl === 'number') {
+      // ttl is > 0; schedule destruction
+      const timeoutId = setTimeout(() => this._destroy(), ttl)
+
+      // TODO: dispatch an action over stateStore for these mutations
+      this._cancelDestruction = () => clearTimeout(timeoutId)
+
+      return
+    }
+
+    if (typeof (ttl as Promise<any>).then === 'function') {
+      let isCanceled = false
+      ;(ttl as Promise<any>).then(() => {
+        if (!isCanceled) this._destroy()
+      })
+
+      this._cancelDestruction = () => {
+        isCanceled = true
+      }
+
+      return
+    }
+
+    // ttl is an observable; destroy as soon as it emits
+    const subscription = (ttl as Observable).subscribe(() => this._destroy())
+
+    this._cancelDestruction = () => subscription.unsubscribe()
+  }
+
+  public _scheduleEvaluation = (reason: EvaluationReason, flagScore = 0) => {
+    // TODO: Any calls in this case probably indicate a memory leak on the
+    // user's part. Notify them. TODO: Can we pause evaluations while
+    // activeState is Stale (and should we just always evaluate once when
+    // waking up a stale atom)?
+    if (this._activeState === ActiveState.Destroyed) return
+
+    if (this._evaluationReasons.length) {
+      this._evaluationReasons.push(reason)
+      return
+    }
+
+    // TODO: maybe we should keep previous evaluation reasons around until the
+    // task runs? Or move _evaluationReasons to _previousEvaluationReasons when
+    // the evaluation task finishes? Just feels odd suddenly overwriting them
+    // here.
+    this._evaluationReasons = [reason]
+
+    this.ecosystem._scheduler.scheduleJob({
+      flagScore,
+      keyHash: this.keyHash,
+      task: this.evaluationTask,
+      type: JobType.EvaluateAtom,
+    })
   }
 
   // create small, memory-efficient bound function properties we can pass around

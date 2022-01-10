@@ -1,14 +1,18 @@
 import { AtomBase, AtomInstanceBase } from '../classes'
-import { AnyAtomInstanceBase, AtomInstanceType, AtomParamsType } from '../types'
+import {
+  AnyAtomInstanceBase,
+  AtomInstanceType,
+  AtomParamsType,
+  GraphEdgeDynamicity,
+} from '../types'
 import {
   AtomDynamicInjectorDescriptor,
-  GraphEdgeDynamicity,
   haveDepsChanged,
   InjectorType,
   is,
   split,
 } from '../utils'
-import { injectGetInstance } from './injectGetInstance'
+import { injectAtomGetters } from './injectAtomGetters'
 
 const defaultOperation = 'injectAtomInstanceDynamic'
 
@@ -57,7 +61,7 @@ export const injectAtomInstanceDynamic: {
   params?: AtomParamsType<A>,
   operation = defaultOperation
 ) => {
-  const getInstance = injectGetInstance()
+  const { getInstance } = injectAtomGetters()
 
   const { instance } = split<
     AtomDynamicInjectorDescriptor<AtomInstanceType<A>>

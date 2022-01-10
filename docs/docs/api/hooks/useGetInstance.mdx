@@ -13,7 +13,7 @@ A React hook that returns a `getInstance` function. This `getInstance` function 
 
 Use this to lazy-load atom instances. Use `ecosystem.getInstance()` instead to preload atoms in an [EcosystemProvider's `preload` prop](../components/EcosystemProvider#preload).
 
-Unlike the `getInstance` function returned from [`injectGetInstance()`](../injectors/injectGetInstance), this `getInstance` function never registers any graph dependencies.
+Unlike the `getInstance` function returned from [`injectAtomGetters()`](../injectors/injectAtomGetters), this `getInstance` function never registers any graph dependencies.
 
 ## Examples
 
@@ -88,8 +88,6 @@ The returned `getInstance` function's signature is:
 ```ts
 getInstance(atom, params?) => instance
 ```
-
-Note that unlike [`injectGetInstance()`](../injectors/injectGetInstance), there is no overload for passing an atom instance.
 
 ### Overloads
 

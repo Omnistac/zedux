@@ -1,0 +1,119 @@
+---
+id: injectAtomGetters
+title: injectAtomGetters
+---
+
+import { LiveEditor } from '../../LiveEditor'
+
+```ts
+import { injectAtomGetters } from '@zedux/react'
+```
+
+An [injector](../glossary#injector) that returns an [AtomGetters object](../types/AtomGetters) with `ecosystem`, `get`, `getInstance`, and `select` properties. `get`, `getInstance`, and `select` are similar to the corresponding methods on the ecosystem, but they have one extra superpower:
+
+When called synchronously during atom evaluation, `get`, `getInstance`, and `select` will register graph dependencies on resolved atom instances. In this way, `get` is like [`injectAtomValue`](injectAtomValue), `getInstance` is like [`injectAtomInstance`](injectAtomInstance), and `select` is like [`injectAtomSelector`](injectAtomSelector). However, the AtomGetters are not injectors. This means they can be called in loops or if statements or even asynchronously.
+
+When called asynchronously, `get` is really just an alias for `ecosystem.get()`, `getInstance` is an alias for `ecosystem.getInstance()`, and `select` is an alias for `ecosystem.select()`. They don't register any graph dependencies; they simply return the expected values.
+
+[Ions](../classes/Ion) use this injector internally to provide their [AtomGetters](../types/AtomGetters) and [AtomSetters](../types/AtomSetters) objects.
+
+## Examples
+
+<LiveEditor ecosystemId="injectAtomGetters/get-example" resultVar="Seconds">{`
+const secondsAtom = atom('seconds', (startingNumber: number) => {
+  const store = injectStore(startingNumber)\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => store.setState(val => val + 1),
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return store
+})\n
+const sumAtom = atom('sum', (...nums: number[]) => {
+  const { get } = injectAtomGetters()\n
+  // loops are fine!
+  return nums.reduce((sum, num) => sum + get(secondsAtom, [num]), 0)
+})\n
+function Seconds() {
+  const sum = useAtomValue(sumAtom, [1, 10, 100])\n
+  return <div>Sum of 3 counters, starting at 1, 10, and 100: {sum}</div>
+}
+`}</LiveEditor>
+
+<LiveEditor
+  ecosystemId="injectAtomGetters/ecosystem-example"
+  resultVar="Seconds"
+>{`
+const secondsAtom = atom('seconds', () => {
+  const store = injectStore(0)\n
+  injectEffect(() => {
+    const intervalId = setInterval(
+      () => store.setState(val => val + 1),
+      1000
+    )\n
+    return () => clearInterval(intervalId)
+  }, [])\n
+  return store
+})\n
+const lazyAtom = ion('lazy', ({ get }) => {
+  const { ecosystem } = injectAtomGetters()\n
+  // ion's get function would register a dynamic graph dependency here.
+  // Try removing the "ecosystem.":
+  const seconds = ecosystem.get(secondsAtom)\n
+  return seconds
+})\n
+function Seconds() {
+  const lazySeconds = useAtomValue(lazyAtom)
+  const instance = useAtomInstance(lazyAtom)\n
+  return (
+    <>
+      <div>Unchanging Seconds: {lazySeconds}</div>
+      <button onClick={() => instance.invalidate()}>Force Update</button>
+    </>
+  )
+}
+`}</LiveEditor>
+
+Miscellaneous:
+
+```ts
+const { ecosystem, get, getInstance, select } = injectAtomGetters()
+
+const dynamicVal = get(myAtom)
+const staticVal = ecosystem.get(myAtom)
+const instance = getInstance(myAtom)
+const selectedVal = select(myAtomSelector)
+
+const withParams = get(myAtom, ['param 1', 'param 2'])
+const instanceWithParams = getInstance(myAtom, ['param 1', 'param 2'])
+
+// AtomGetters can be used in loops:
+for (const id of ids) {
+  const val = get(myAtom, [id])
+}
+
+// .. any kind of loop
+ids.map(id => get(myAtom, [id]))
+
+// in control flow statements
+const val = useAtomA ? get(atomA) : get(atomB)
+
+// asynchronously:
+injectEffect(() => {
+  const currentVal = get(myAtom)
+}, []) // don't have to pass `get`
+
+// passing an instance to get (also registers a dynamic dependency when called
+// during atom evaluation):
+const fromInstance = get(instance)
+```
+
+## Signature
+
+```ts
+injectAtomGetters() => AtomGetters
+```
+
+The injector itself doesn't take any params. See [../types/AtomGetters] for the definitions of the getters.

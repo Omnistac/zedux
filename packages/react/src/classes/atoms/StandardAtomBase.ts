@@ -1,7 +1,7 @@
 import { AtomConfig, AtomValueOrFactory } from '@zedux/react/types'
 import { EMPTY_CONTEXT, generateImplementationId } from '@zedux/react/utils'
 import { Context, createContext } from 'react'
-import { AtomInstance } from '../AtomInstance'
+import { AtomInstance } from '../instances/AtomInstance'
 import { AtomBase } from './AtomBase'
 
 export abstract class StandardAtomBase<

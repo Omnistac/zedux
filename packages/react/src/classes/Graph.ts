@@ -12,7 +12,7 @@ import {
   UpdateExternalDependentJob,
 } from '../utils'
 import { Ecosystem } from './Ecosystem'
-import { AtomInstance } from './AtomInstance'
+import { AtomInstance } from './instances/AtomInstance'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Ghost } from './Ghost'
 import { ZeduxPlugin } from '.'

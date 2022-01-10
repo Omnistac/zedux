@@ -118,7 +118,7 @@ useAtomInstance(myAtom, ['a', 'b'])
 useAtomInstance(myAtom, ['b', 'a'])
 ```
 
-The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`get`](../injectors/injectGet) or any dynamic injector to register a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the passed atom instance.
+The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`get`](../types/AtomGetters#get), [`injectAtomValue`](../injectors/injectAtomValue), or any other dynamic injector to register a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the passed atom instance.
 
 <LiveEditor ecosystemId="AtomInstance/shout" resultVar="Shout">{`
 const normalAtom = atom('normal', "I'm just a little, black rain cloud")\n
@@ -138,7 +138,7 @@ function Shout() {
 
 ### `.promise`
 
-A promise. May be undefined, if no promise was set on a returned [AtomApi](AtomApi).
+A promise. May be undefined if no promise was set on a returned [AtomApi](AtomApi).
 
 This promise will be used to cause React to suspend whenever this atom instance is used in a component until the promise completes. This promise reference will not change on subsequent evaluations.
 

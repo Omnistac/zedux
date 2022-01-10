@@ -33,7 +33,7 @@ export const injectAtomSelector: {
 ): D => {
   const { instance } = diContext.consume()
 
-  return instance._select(
+  return instance.select(
     atom as A,
     paramsArg as AtomParamsType<A>,
     selectorArg as Selector<AtomStateType<A>, D>,

@@ -1,25 +1,29 @@
+import { Selector } from '@zedux/core'
 import {
   ActiveState,
+  AtomGettersBase,
   AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
   AtomSelectorOrConfig,
   AtomStateType,
+  GraphEdgeInfo,
   DependentEdge,
   EvaluationReason,
 } from '@zedux/react/types'
-import { GraphEdgeInfo, InjectorDescriptor } from '@zedux/react/utils'
+import { InjectorDescriptor } from '@zedux/react/utils'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
-import { Selector, Store } from '@zedux/core'
+import { Store } from '@zedux/core'
 import { Ghost } from '../Ghost'
 import { ZeduxPlugin } from '../ZeduxPlugin'
+import {} from '@zedux/react'
 
 export abstract class AtomInstanceBase<
   State,
   Params extends any[],
   AtomType extends AtomBase<State, Params, any>
-> {
+> implements AtomGettersBase {
   public static $$typeof = Symbol.for('@@react/zedux/AtomInstanceBase')
   public abstract atom: AtomType
   public abstract ecosystem: Ecosystem
@@ -32,60 +36,60 @@ export abstract class AtomInstanceBase<
   public abstract _injectors?: InjectorDescriptor[]
   public abstract _isEvaluating: boolean
 
-  public abstract _get<A extends AtomBase<any, [], any>>(
+  public abstract get<A extends AtomBase<any, [], any>>(
     atom: A
   ): AtomStateType<A>
 
-  public abstract _get<A extends AtomBase<any, [...any], any>>(
+  public abstract get<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  public abstract _get<I extends AtomInstanceBase<any, [...any], any>>(
-    instance: I
-  ): AtomInstanceStateType<I>
+  public abstract get<AI extends AtomInstanceBase<any, [...any], any>>(
+    instance: AI
+  ): AtomInstanceStateType<AI>
 
-  public abstract _getInstance<A extends AtomBase<any, [], any>>(
+  public abstract getInstance<A extends AtomBase<any, [], any>>(
     atom: A
   ): AtomInstanceType<A>
 
-  public abstract _getInstance<A extends AtomBase<any, [...any], any>>(
+  public abstract getInstance<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A>
 
-  public abstract _getInstance<AI extends AtomInstanceBase<any, any, any>>(
+  public abstract getInstance<AI extends AtomInstanceBase<any, any, any>>(
     instance: AI,
     params?: [],
     edgeInfo?: GraphEdgeInfo
   ): AI
 
-  public abstract _scheduleEvaluation(
-    reason: EvaluationReason,
-    flagScore?: number
-  ): void
-
-  public abstract _select<T, Args extends any[]>(
+  public abstract select<T, Args extends any[]>(
     atomSelector: AtomSelectorOrConfig<T, Args>,
     ...args: Args
   ): T
 
-  public abstract _select<A extends AtomBase<any, [], any>, D>(
+  public abstract select<A extends AtomBase<any, [], any>, D>(
     atom: A,
     selector: Selector<AtomStateType<A>, D>
   ): D
 
-  public abstract _select<A extends AtomBase<any, [...any], any>, D>(
+  public abstract select<A extends AtomBase<any, [...any], any>, D>(
     atom: A,
     params: AtomParamsType<A>,
     selector: Selector<AtomStateType<A>, D>
   ): D
 
-  public abstract _select<I extends AtomInstanceBase<any, [...any], any>, D>(
+  public abstract select<I extends AtomInstanceBase<any, [...any], any>, D>(
     instance: I,
     selector: Selector<AtomInstanceStateType<I>, D>
   ): D
+
+  public abstract _scheduleEvaluation(
+    reason: EvaluationReason,
+    flagScore?: number
+  ): void
 
   public addDependent(
     operation: string,

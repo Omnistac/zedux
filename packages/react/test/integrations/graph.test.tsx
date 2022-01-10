@@ -6,8 +6,8 @@ import {
   createStore,
   ecosystem,
   EcosystemProvider,
+  injectAtomGetters,
   injectAtomValue,
-  injectGet,
   injectStore,
   ion,
   useAtomInstance,
@@ -25,7 +25,7 @@ const atom4 = atom('atom4', () => {
   const store = injectStore(() =>
     createStore({ switch: switchStore, sum: sumStore })
   )
-  const get = injectGet()
+  const { get } = injectAtomGetters()
 
   const one = get(atom1)
   const two = switchStore.getState() ? get(atom2) : get(atom3)
@@ -39,7 +39,7 @@ const atom4 = atom('atom4', () => {
 })
 
 describe('graph', () => {
-  test('injectGet', async () => {
+  test('injectAtomGetters', async () => {
     jest.useFakeTimers()
 
     const testEcosystem = ecosystem({ id: 'test1' })

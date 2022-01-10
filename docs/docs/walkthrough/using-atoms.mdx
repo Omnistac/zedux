@@ -226,9 +226,9 @@ const getBlogPostInstance = useGetInstance(blogPostAtom)
 const instance = getBlogPostInstance([id])
 ```
 
-#### `injectGetInstance`
+#### `injectAtomGetters`
 
-The injector equivalent of `useGetInstance` - for use in atoms. This injector will also dynamically register static graph dependencies when called during synchronous atom evaluation.
+The injector equivalent of `useGetInstance` - for use in atoms. Returns an [AtomGetters](../api/types/AtomGetters) object which include a `getInstance` function. The AtomGetters can be used to dynamically register graph dependencies when called during synchronous atom evaluation.
 
 ## Instances
 
@@ -320,7 +320,7 @@ function App() {
 
 - `useAtomInstance` and `useAtomConsumer` can be used together to provide and consume atom instances over React context.
 
-- `useGetInstance` and `injectGetInstance` return a function that can be used to preload or lazy-load atoms.
+- `useGetInstance` returns a function that can be used to preload or lazy-load atoms.
 
 - Atom instances have `.store`, `.setState`, `.dispatch`, `.exports`, and `.invalidate` properties that can be used directly.
 

@@ -2,9 +2,9 @@ import {
   atom,
   ecosystem,
   EcosystemProvider,
+  injectAtomGetters,
   injectAtomValue,
   injectEffect,
-  injectGet,
   injectInvalidate,
   injectStore,
   useAtomValue,
@@ -51,7 +51,7 @@ const atom4 = atom(
   () => {
     const roll = Math.random() > 0.5
     console.log('evaluating atom4', { roll })
-    const get = injectGet()
+    const { get } = injectAtomGetters()
     const invalidate = injectInvalidate()
     const atom3val = get(atom3, ['1'])
     const otherVal = roll ? get(atom1) : get(atom2)

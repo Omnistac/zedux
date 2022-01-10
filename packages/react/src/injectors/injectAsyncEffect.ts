@@ -7,7 +7,7 @@ import {
   split,
 } from '../utils'
 import { asyncUtils } from '../utils/asyncUtils'
-import { injectEcosystem } from './injectEcosystem'
+import { injectAtomGetters } from './injectAtomGetters'
 
 const getTask = <T>(
   callback: AsyncEffectCallback,
@@ -60,7 +60,7 @@ export const injectAsyncEffect = <T>(
   callback: AsyncEffectCallback<T>,
   deps?: any[]
 ) => {
-  const ecosystem = injectEcosystem()
+  const { ecosystem } = injectAtomGetters()
 
   const descriptor = split<AsyncEffectInjectorDescriptor<T>>(
     'injectAsyncEffect',

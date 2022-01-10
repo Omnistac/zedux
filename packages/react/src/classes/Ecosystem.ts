@@ -6,13 +6,15 @@ import {
   AnyAtomBase,
   AnyAtomInstance,
   AnyAtomInstanceBase,
+  AtomGettersBase,
   AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
   AtomSelectorOrConfig,
   AtomStateType,
-  EcosystemConfig,
   Cleanup,
+  EcosystemConfig,
+  GraphEdgeInfo,
   MaybeCleanup,
 } from '../types'
 import { generateEcosystemId, is } from '../utils'
@@ -36,7 +38,8 @@ const mapOverrides = (overrides: AtomBase<any, any, any>[]) =>
 
 export const ecosystemContext = createContext('global')
 
-export class Ecosystem<Context extends Record<string, any> | undefined = any> {
+export class Ecosystem<Context extends Record<string, any> | undefined = any>
+  implements AtomGettersBase {
   public _destroyOnUnmount = false
   public _graph: Graph = new Graph(this)
   public _instances: Record<string, AnyAtomInstance> = {}
@@ -157,21 +160,21 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     )
   }
 
-  /**
-   * Get an atom instance value. Create the atom instance if it doesn't exist
-   * yet. Don't register any graph dependencies.
-   */
-  public get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+  get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
 
-  public get<A extends AtomBase<any, [...any], any>>(
+  get<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  public get<AI extends AtomInstanceBase<any, [...any], any>>(
+  get<AI extends AtomInstanceBase<any, [...any], any>>(
     instance: AI
   ): AtomInstanceStateType<AI>
 
+  /**
+   * Returns an atom instance's value. Creates the atom instance if it doesn't
+   * exist yet. Doesn't register any graph dependencies.
+   */
   public get<A extends AtomBase<any, [...any], any>>(
     atom: A | AtomInstanceBase<any, [...any], any>,
     params?: AtomParamsType<A>
@@ -188,23 +191,26 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     return instance.store.getState()
   }
 
-  /**
-   * Get an atom instance. Create the atom instance if it doesn't exist yet.
-   * Don't register any graph dependencies.
-   */
   public getInstance<A extends AtomBase<any, [], any>>(
     atom: A
   ): AtomInstanceType<A>
 
   public getInstance<A extends AtomBase<any, [...any], any>>(
     atom: A,
-    params: AtomParamsType<A>
+    params: AtomParamsType<A>,
+    edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A>
 
-  public getInstance<AI extends AtomInstanceBase<any, [...any], any>>(
-    instance: AI
+  public getInstance<AI extends AtomInstanceBase<any, any, any>>(
+    instance: AI,
+    params?: [],
+    edgeInfo?: GraphEdgeInfo
   ): AI
 
+  /**
+   * Returns an atom instance. Creates the atom instance if it doesn't exist
+   * yet. Doesn't register any graph dependencies.
+   */
   public getInstance<A extends AtomBase<any, [...any], any>>(
     atom: A | AtomInstanceBase<any, [...any], any>,
     params?: AtomParamsType<A>
@@ -309,22 +315,26 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     this.cleanup = this._preload?.(this, prevContext)
   }
 
-  public select<T, Args extends any[]>(
+  select<T, Args extends any[]>(
     atomSelector: AtomSelectorOrConfig<T, Args>,
     ...args: Args
   ): T
 
-  public select<A extends AtomBase<any, [], any>, D>(
+  select<A extends AtomBase<any, [], any>, D>(
     atom: A,
     selector: Selector<AtomStateType<A>, D>
   ): D
 
-  public select<A extends AtomBase<any, [...any], any>, D>(
+  select<A extends AtomBase<any, [...any], any>, D>(
     atom: A,
-    params: AtomParamsType<A>
+    params: AtomParamsType<A>,
+    selector: Selector<AtomStateType<A>, D>
   ): D
 
-  public select<AI extends AtomInstanceBase<any, [], any>, D>(instance: AI): D
+  select<I extends AtomInstanceBase<any, [...any], any>, D>(
+    instance: I,
+    selector: Selector<AtomInstanceStateType<I>, D>
+  ): D
 
   public select<A extends AtomBase<any, [...any], any>, D = any>(
     atomOrInstanceOrSelector:
@@ -334,7 +344,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any> {
     paramsOrSelector?: AtomParamsType<A> | Selector<AtomStateType<A>, D>,
     selector?: Selector<AtomStateType<A>, D>,
     ...rest: any[]
-  ) {
+  ): D {
     if (
       typeof atomOrInstanceOrSelector === 'function' ||
       'selector' in atomOrInstanceOrSelector

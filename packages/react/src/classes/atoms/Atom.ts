@@ -1,7 +1,7 @@
 import { atom } from '@zedux/react/factories/atom'
 import { AtomValueOrFactory } from '@zedux/react/types'
 import { hashParams } from '@zedux/react/utils'
-import { AtomInstance } from '../AtomInstance'
+import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { StandardAtomBase } from './StandardAtomBase'
 

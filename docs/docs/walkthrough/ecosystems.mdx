@@ -169,13 +169,13 @@ function App() {
 }
 ```
 
-All atom instances created in an ecosystem can access the ecosystem via [`injectEcosystem()`](../api/injectors/injectEcosystem).
+All atom instances created in an ecosystem can access the ecosystem via [`injectAtomGetters()`](../api/injectors/injectAtomGetters).
 
 ```ts
-import { atom, injectEcosystem } from '@zedux/react'
+import { atom, injectAtomGetters } from '@zedux/react'
 
 const myAtom = atom('my', () => {
-  const ecosystem = injectEcosystem()
+  const { ecosystem } = injectAtomGetters()
 })
 ```
 
@@ -186,7 +186,7 @@ const myAtom = atom('my', () => {
 - There is a default ("global") ecosystem, but you can create your own.
 - Most apps will use the "Single Ecosystem Approach" - rendering a single `<EcosystemProvider>`.
 - Ecosystems can be configured with various options passed to the `ecosystem()` factory or as props to `<EcosystemProvider>`.
-- The current ecosystem can be retrieved with `useEcosystem()` in components and `injectEcosystem()` in atoms.
+- The current ecosystem can be retrieved with `useEcosystem()` in components and `injectAtomGetters()` in atoms.
 
 ## Next Steps
 

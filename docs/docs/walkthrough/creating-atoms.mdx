@@ -174,20 +174,20 @@ The injector equivalent of React's [`useMemo`](https://reactjs.org/docs/hooks-re
 const memoizedValue = injectMemo(() => computeExpensiveValue(a, b), [a, b])
 ```
 
-### `injectGet`
+### `injectAtomGetters`
 
-Returns a special `get` function that can be used to get atom instance values. `get` works just like `injectAtomValue`, but without any limitations of injectors. It can be used in loops or used asynchronously in a side effect.
+Returns a special [AtomGetters](../api/types/AtomGetters) object with `ecosystem`, `get`, `getInstance`, and `select` properties. These can be used to get atom instances, atom instance values, and run [AtomSelectors](../api/types/AtomSelector). Unlike injectors, AtomGetters can be used in loops or even asynchronously:
 
 ```ts
 const sumAtom = atom('sum', (a: number, b: number) => a + b)
 
 const someAtom = atom('some', () => {
-  const get = injectGet()
+  const { get } = injectAtomGetters()
   const sum = get(sumAtom, [1, 2]) // 3
 })
 ```
 
-When used synchronously during atom evaluation (like we did here), `get` updates the atom instance's dependency graph dynamically. When used asynchronously, `get` will not update the dependency graph; it simply returns the value. (We'll cover ways to asynchronously update an atom instance's dependency graph [later](/not-done))
+When used synchronously during atom evaluation (like we did here), `get`, `getInstance`, and `select` update the atom instance's dependency graph dynamically. When used asynchronously, AtomGetters will not update the dependency graph; they simply return the value. (We'll cover ways to asynchronously update an atom instance's dependency graph [later](/not-done))
 
 ## Atom Api
 
@@ -255,7 +255,7 @@ return api(val).setPromise(suspensePromise)
 
 Now you may be asking how one is to acquire a stable promise reference without kicking off side effects in the evaluator body. Or what if one wants to forward promises from dependencies on to React.
 
-We'll cover much more about suspense in [the suspense walkthrough](../walkthrough/suspense) (sorry to leave you in ... suspense 😒).
+We'll cover much more about suspense in [the suspense walkthrough](../walkthrough/suspense).
 
 AtomApis have many more features that we'll cover eventually. Or check out the [AtomApi reference](../api/classes/AtomApi) for all the power.
 
@@ -275,19 +275,19 @@ const filteredTodosAtom = ion('filteredTodos', ({ get }, isDone: boolean) =>
 )
 ```
 
-Ions are only slightly different from normal atoms. They receive a special, Zedux-supplied object as their first parameter. Any parameters after that are the actual params of the atom. The atom equivalent of the above ion looks like so:
+Ions are only slightly different from normal atoms. They receive a special, Zedux-supplied [AtomGetters](../api/types/AtomGetters) object as their first parameter. Any parameters after that are the actual params of the atom. You can also get the AtomGetters object in normal (non-ion) atoms:
 
 ```ts
-import { atom, injectGet } from '@zedux/react'
+import { atom, injectAtomGetters } from '@zedux/react'
 
 const filteredTodosAtom = atom('filteredTodoos', (isDone: boolean) => {
-  const get = injectGet()
+  const { get } = injectAtomGetters()
 
   return get(todosAtom).filter(todo => todo.isDone === isDone)
 })
 ```
 
-Note that in either example, we could have used `injectAtomValue` instead of `get`.
+Note that in either of these examples, we could have used `injectAtomValue` instead of `get`. But `get` and all the AtomGetters have some extra spice. See the [AtomGetters doc page](../api/types/AtomGetters) for spiciness.
 
 See [the `ion()` reference](../api/factories/ion) for more info.
 

@@ -57,9 +57,9 @@ A reference to the [ecosystem](../classes/Ecosystem) this AtomSelector or ion in
 A function that returns the current state of an atom instance. You can pass either an instance directly or an atom and its params (if any).
 
 ```ts
-get(otherAtom)
-get(otherAtom, ['param 1', 'param 2'])
-get(anInstance)
+get(myAtom)
+get(myAtom, ['param 1', 'param 2'])
+get(myAtomInstance)
 ```
 
 When called synchronously during instance evaluation, `get` registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance.
@@ -71,14 +71,16 @@ When called asynchronously (e.g. in an [`injectEffect`](../injectors/injectEffec
 A function that returns an atom instance. Pass an atom and its params (if any)
 
 ```ts
-getInstance(otherAtom)
-getInstance(otherAtom, ['param 1', 'param 2'])
-getInstance(anInstance)
+getInstance(myAtom)
+getInstance(myAtom, ['param 1', 'param 2'])
+getInstance(myAtomInstance)
 ```
 
 When called synchronously during instance evaluation, `getInstance` registers a [static graph dependency](../glossary#static-graph-dependency) on the resolved atom instance.
 
 When called asynchronously (e.g. in an `injectEffect`), `getInstance` does not register a dependency; it simply returns the resolved atom instance.
+
+The third overload (`getInstance(myAtomInstance)`) is mostly just for interop in cases where you have a value that may be either an atom or instance (Zedux does this internally). However, it can be useful for purposefully registering a static dependency on an instance when the instance was [passed via params](../classes/AtomInstance#params).
 
 ### `select`
 
@@ -88,7 +90,7 @@ A function that returns a derivation of an atom instance's state.
 select(atomSelector)
 select(anAtom, selectorFn)
 select(anAtom, ['param 1', 'param 2'], selectorFn)
-select(anInstance, selectorFn)
+select(myAtomInstance, selectorFn)
 ```
 
 When called synchronously during instance evaluation, `select` registers [restricted dynamic graph dependencies](../glossary/#restricted-dynamic-graph-dependency) on any atom instances it uses.

@@ -457,7 +457,7 @@ Zedux also has React Query-style mutations:
 import { mutation, useMutation } from '@zedux/react/query'
 
 const updateUserMutation = mutation('updateUser', () => {
-  const API_URL = configAtom.injectSelector(config => config.API_URL)
+  const API_URL = injectAtomSelector(({ get }) => get(configAtom).API_URL)
 
   return async (newUser: User) => {
     const result = await axios.post(`${API_URL}/users`, newUser)
