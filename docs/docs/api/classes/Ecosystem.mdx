@@ -65,7 +65,7 @@ All properties are readonly!
 
 An object. May be undefined. A reference to the `context` object passed to [the `createEcosystem()` factory](../factories/createEcosystem) (if any) or the latest [`.reset()`](#reset) call. This object should be constant until the ecosystem is reset via `.reset()`.
 
-When `.reset()` is called, the previous context (if any) will be passed as the second parameter to [the `preload` function](../types/EcosystemConfig#preload) as part of the reset.
+When `.reset()` is called, the previous context (if any) will be passed as the second parameter to [the `onReady` function](../types/EcosystemConfig#onready) as part of the reset.
 
 ### `.defaultForwardPromises`
 
@@ -275,7 +275,7 @@ Optional. A string to filter results by. Only atom instances whose [atom's key](
 
 ### `.reset`
 
-The preferred way to clear an ecosystem's state. Calling `.reset` will call [`.wipe()`](#wipe) but will also rerun [the `preload` function](../types/EcosystemConfig#preloadd).
+The preferred way to clear an ecosystem's state. Calling `.reset` will call [`.wipe()`](#wipe) but will also rerun [the `onReady` function](../types/EcosystemConfig#onready).
 
 #### Signature
 
@@ -285,13 +285,13 @@ The preferred way to clear an ecosystem's state. Calling `.reset` will call [`.w
 
 #### `newContext`
 
-Optional. An object. The new context to set on this ecosystem. If not passed, the existing context will be reused. The ecosystem's `context` property will be set to this before `preload()` is called. The previous context will be passed to `preload()` as the second parameter.
+Optional. An object. The new context to set on this ecosystem. If not passed, the existing context (if any) will be reused. The ecosystem's `context` property will be set to this before `onReady` is called. The previous context will be passed to `onReady` as the second parameter.
 
 ```ts
 const myEcosystem = createEcosystem({
   context: { someField: 'some val' },
   id: 'my',
-  preload: (ecosystem, prevContext) =>
+  onReady: (ecosystem, prevContext) =>
     console.log('old context:', prevContext, 'new context:', ecosystem.context),
 })
 // old context: undefined new context: { someField: 'some val' }

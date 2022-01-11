@@ -132,32 +132,32 @@ describe('ecosystem', () => {
     expect(evaluations).toEqual([5, 2, 1, 4, 3, 1, 2, 3, 4, 5])
   })
 
-  test('ecosystem reset runs preload function again', () => {
+  test('ecosystem reset runs onReady function again', () => {
     const evaluations: string[] = []
     const atom1 = atom('atom1', () => {
       evaluations.push('1')
       return '1'
     })
 
-    const preload = (theEcosystem: Ecosystem) => {
+    const onReady = (theEcosystem: Ecosystem) => {
       theEcosystem.getInstance(atom1)
     }
 
-    const preloadedEcosystem = createEcosystem({ preload })
+    const ecosystem = createEcosystem({ onReady })
 
     expect(evaluations).toEqual(['1'])
-    expect(preloadedEcosystem._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       atom1: expect.any(Object),
     })
 
-    preloadedEcosystem.reset()
+    ecosystem.reset()
 
     expect(evaluations).toEqual(['1', '1'])
-    expect(preloadedEcosystem._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       atom1: expect.any(Object),
     })
 
-    preloadedEcosystem.destroy(true)
+    ecosystem.destroy(true)
   })
 
   test('setting overrides kills all existing instances for previously- and newly-overridden atoms', () => {
@@ -170,147 +170,147 @@ describe('ecosystem', () => {
     const overrideB = atomB.override(() => 'bb')
     const overrideC = atomC.override(() => 'cc')
 
-    const es = createEcosystem({
+    const ecosystem = createEcosystem({
       id: 'overrides',
       overrides: [overrideA, overrideB],
     })
-    es.getInstance(atomA)
-    es.getInstance(atomB)
-    es.getInstance(atomC)
-    es.getInstance(atomD)
+    ecosystem.getInstance(atomA)
+    ecosystem.getInstance(atomB)
+    ecosystem.getInstance(atomC)
+    ecosystem.getInstance(atomD)
 
-    expect(es._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       a: expect.any(Object),
       b: expect.any(Object),
       c: expect.any(Object),
       d: expect.any(Object),
     })
 
-    expect(es.get(atomA)).toBe('aa')
-    expect(es.get(atomB)).toBe('bb')
-    expect(es.get(atomC)).toBe('c')
-    expect(es.get(atomD)).toBe('d')
+    expect(ecosystem.get(atomA)).toBe('aa')
+    expect(ecosystem.get(atomB)).toBe('bb')
+    expect(ecosystem.get(atomC)).toBe('c')
+    expect(ecosystem.get(atomD)).toBe('d')
 
-    es.setOverrides([overrideB, overrideC])
+    ecosystem.setOverrides([overrideB, overrideC])
 
-    expect(es._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       d: expect.any(Object),
     })
 
-    es.getInstance(atomA)
-    es.getInstance(atomB)
-    es.getInstance(atomC)
+    ecosystem.getInstance(atomA)
+    ecosystem.getInstance(atomB)
+    ecosystem.getInstance(atomC)
 
-    expect(es._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       a: expect.any(Object),
       b: expect.any(Object),
       c: expect.any(Object),
       d: expect.any(Object),
     })
 
-    expect(es.get(atomA)).toBe('a')
-    expect(es.get(atomB)).toBe('bb')
-    expect(es.get(atomC)).toBe('cc')
-    expect(es.get(atomD)).toBe('d')
+    expect(ecosystem.get(atomA)).toBe('a')
+    expect(ecosystem.get(atomB)).toBe('bb')
+    expect(ecosystem.get(atomC)).toBe('cc')
+    expect(ecosystem.get(atomD)).toBe('d')
 
-    es.setOverrides([])
+    ecosystem.setOverrides([])
 
-    expect(es._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       a: expect.any(Object),
       d: expect.any(Object),
     })
 
-    es.getInstance(atomB)
-    es.getInstance(atomC)
+    ecosystem.getInstance(atomB)
+    ecosystem.getInstance(atomC)
 
-    expect(es._instances).toEqual({
-      a: expect.any(Object),
-      b: expect.any(Object),
-      c: expect.any(Object),
-      d: expect.any(Object),
-    })
-
-    expect(es.get(atomA)).toBe('a')
-    expect(es.get(atomB)).toBe('b')
-    expect(es.get(atomC)).toBe('c')
-    expect(es.get(atomD)).toBe('d')
-
-    es.setOverrides([overrideA, overrideB, overrideC])
-
-    expect(es._instances).toEqual({
-      d: expect.any(Object),
-    })
-
-    es.getInstance(atomA)
-    es.getInstance(atomB)
-    es.getInstance(atomC)
-
-    expect(es._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       a: expect.any(Object),
       b: expect.any(Object),
       c: expect.any(Object),
       d: expect.any(Object),
     })
 
-    expect(es.get(atomA)).toBe('aa')
-    expect(es.get(atomB)).toBe('bb')
-    expect(es.get(atomC)).toBe('cc')
-    expect(es.get(atomD)).toBe('d')
+    expect(ecosystem.get(atomA)).toBe('a')
+    expect(ecosystem.get(atomB)).toBe('b')
+    expect(ecosystem.get(atomC)).toBe('c')
+    expect(ecosystem.get(atomD)).toBe('d')
 
-    es.destroy(true)
+    ecosystem.setOverrides([overrideA, overrideB, overrideC])
+
+    expect(ecosystem._instances).toEqual({
+      d: expect.any(Object),
+    })
+
+    ecosystem.getInstance(atomA)
+    ecosystem.getInstance(atomB)
+    ecosystem.getInstance(atomC)
+
+    expect(ecosystem._instances).toEqual({
+      a: expect.any(Object),
+      b: expect.any(Object),
+      c: expect.any(Object),
+      d: expect.any(Object),
+    })
+
+    expect(ecosystem.get(atomA)).toBe('aa')
+    expect(ecosystem.get(atomB)).toBe('bb')
+    expect(ecosystem.get(atomC)).toBe('cc')
+    expect(ecosystem.get(atomD)).toBe('d')
+
+    ecosystem.destroy(true)
   })
 
   test('.findInstances()', () => {
     const atomA = atom('a', (param: string) => param)
     const atomB = atom('b', () => 'b')
 
-    const es = createEcosystem({ id: 'findInstances' })
+    const ecosystem = createEcosystem({ id: 'findInstances' })
 
-    es.getInstance(atomA, ['a'])
-    es.getInstance(atomA, ['aa'])
-    es.getInstance(atomB)
+    ecosystem.getInstance(atomA, ['a'])
+    ecosystem.getInstance(atomA, ['aa'])
+    ecosystem.getInstance(atomB)
 
-    expect(es.findInstances(atomA)).toEqual([
+    expect(ecosystem.findInstances(atomA)).toEqual([
       expect.objectContaining({ params: ['a'] }),
       expect.objectContaining({ params: ['aa'] }),
     ])
 
-    expect(es.findInstances('a')).toEqual([
+    expect(ecosystem.findInstances('a')).toEqual([
       expect.objectContaining({ params: ['a'] }),
       expect.objectContaining({ params: ['aa'] }),
     ])
 
-    es.destroy(true)
+    ecosystem.destroy(true)
   })
 
-  test('preload', () => {
+  test('onReady', () => {
     const atomA = atom('a', (param: string) => param)
 
-    const preload = jest.fn((es: Ecosystem<{ val: string }>) => {
-      es.get(atomA, [es.context.val])
-      es.get(atomA, [`${es.context.val}a`])
+    const onReady = jest.fn((ecosystem: Ecosystem<{ val: string }>) => {
+      ecosystem.get(atomA, [ecosystem.context.val])
+      ecosystem.get(atomA, [`${ecosystem.context.val}a`])
     })
 
-    const es = createEcosystem({
+    const ecosystem = createEcosystem({
       context: { val: 'a' },
-      id: 'preload',
-      preload,
+      id: 'onReady',
+      onReady,
     })
 
-    expect(es._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       'a-["a"]': expect.any(Object),
       'a-["aa"]': expect.any(Object),
     })
 
-    es.reset({ val: 'aa' })
+    ecosystem.reset({ val: 'aa' })
 
-    expect(es._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       'a-["aa"]': expect.any(Object),
       'a-["aaa"]': expect.any(Object),
     })
 
-    expect(preload).toHaveBeenCalledTimes(2)
-    expect(preload).toHaveBeenLastCalledWith(
+    expect(onReady).toHaveBeenCalledTimes(2)
+    expect(onReady).toHaveBeenLastCalledWith(
       expect.objectContaining({ context: { val: 'aa' } }),
       { val: 'a' }
     )

@@ -26,8 +26,8 @@ export const EcosystemProvider: FC<
   ghostTtlMs,
   flags,
   id,
+  onReady,
   overrides,
-  preload,
 }) => {
   const ecosystem = useMemo(() => {
     const resolvedEcosystem =
@@ -40,8 +40,8 @@ export const EcosystemProvider: FC<
         ghostTtlMs,
         flags,
         id,
+        onReady,
         overrides,
-        preload,
       })
 
     // If this ecosystem is shared across windows, it may still need to be added

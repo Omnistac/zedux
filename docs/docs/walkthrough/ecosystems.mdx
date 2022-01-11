@@ -16,7 +16,7 @@ There are 2 types of ecosystems:
 
 There is exactly one global atom ecosystem. You don't need to create it; it is created automatically if you don't create an ecosystem.
 
-Zedux is designed to allow an app to use only the global ecosystem. And for small apps and simple examples, that's fine. However, this approach can only get you so far. The global ecosystem is not configurable. Thus it lacks some advanced features like [dependency injection](dependency-injection) and [preloading](/not-done). The global ecosystem can also be unruly in tests, since it requires manual cleanup.
+Zedux is designed to allow an app to use only the global ecosystem. And for small apps and simple examples, that's fine. However, this approach can only get you so far. The global ecosystem is not configurable. Thus it lacks some advanced features like [dependency injection](dependency-injection) and [preloading](../api/classes/Ecosystem#onready). The global ecosystem can also be unruly in tests, since it requires manual cleanup.
 
 ### Custom
 
@@ -72,15 +72,15 @@ Ecosystems created this way can be controlled outside React. This means you can 
 
 Ecosystems created manually (via the `createEcosystem()` factory) can take configuration options.
 
-### `overrides`
-
-A list of atoms that will override any atoms with matching keys used in this ecosystem. More on this in the [dependency injection walkthrough](dependency-injection).
-
-### `preload`
+### `onReady`
 
 A function that will run immediately - as soon as the ecosystem is created. Used to bootstrap the initial state of the app, kick off initial side effects, set up state hydration, and other startup-y things.
 
-See [the `Ecosystem` API](../api/classes/Ecosystem#preload) for more info.
+See [the `Ecosystem` API](../api/classes/Ecosystem#onready) for more info.
+
+### `overrides`
+
+A list of atoms that will override any atoms with matching keys used in this ecosystem. More on this in the [dependency injection walkthrough](dependency-injection).
 
 ## Ecosystem Design Patterns
 

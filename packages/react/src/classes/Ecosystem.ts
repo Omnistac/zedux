@@ -43,7 +43,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public _destroyOnUnmount = false
   public _graph: Graph = new Graph(this)
   public _instances: Record<string, AnyAtomInstance> = {}
-  public _preload: EcosystemConfig<Context>['preload']
+  public _onReady: EcosystemConfig<Context>['onReady']
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
   public context: Context
@@ -67,8 +67,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     ghostTtlMs,
     flags,
     id,
+    onReady,
     overrides,
-    preload,
   }: EcosystemConfig<Context>) {
     if (flags && !Array.isArray(flags)) {
       throw new TypeError(
@@ -96,14 +96,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.defaultTtl = defaultTtl ?? -1
     this.ghostTtlMs = ghostTtlMs ?? 2000
     this._destroyOnUnmount = !!destroyOnUnmount
-    this._preload = preload
+    this._onReady = onReady
 
     // yep. Dispatch this here. We'll make sure no component can ever be updated
     // synchronously from this call (causing update-during-render react warnings)
     globalStore.dispatch(addEcosystem(this))
 
     this.isInitialized = true
-    this.cleanup = preload?.(this)
+    this.cleanup = onReady?.(this)
   }
 
   public addOverrides(overrides: Atom<any, any, any>[]) {
@@ -312,7 +312,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const prevContext = this.context
     if (typeof newContext !== 'undefined') this.context = newContext
 
-    this.cleanup = this._preload?.(this, prevContext)
+    this.cleanup = this._onReady?.(this, prevContext)
   }
 
   public select<T, Args extends any[]>(

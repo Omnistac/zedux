@@ -593,11 +593,9 @@ Atoms (including molecules) can be preloaded to kickstart hydration, alleviate r
 import { EcosystemProvider, useEcosystem } from '@zedux/react'
 
 function App() {
-  const ecosystem = useEcosystem()
-
   return (
     <EcosystemProvider
-      preload={() => {
+      onReady={ecosystem => {
         ecosystem.getInstance(persistenceMolecule)
       }}
     >

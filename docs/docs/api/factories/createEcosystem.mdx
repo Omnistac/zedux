@@ -21,10 +21,10 @@ const withOverrides = createEcosystem({
   overrides: [atomA, atomB],
 })
 
-const withPreloadFn = createEcosystem({
-  id: 'withPreloadFn',
-  preload: ecosystem => {
-    // `preload` is passed a reference to the ecosystem
+const withOnReadyFn = createEcosystem({
+  id: 'withOnReadyFn',
+  onReady: ecosystem => {
+    // `onReady` is passed a reference to the ecosystem
     ecosystem.getInstance(myAtom) // preload myAtom
   },
 })

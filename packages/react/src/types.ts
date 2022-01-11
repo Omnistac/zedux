@@ -278,11 +278,11 @@ export interface EcosystemConfig<
   ghostTtlMs?: number
   flags?: string[]
   id?: string
-  overrides?: AtomBase<any, any[], any>[]
-  preload?: (
+  onReady?: (
     ecosystem: Ecosystem<Context>,
     prevContext?: Context
   ) => MaybeCleanup
+  overrides?: AtomBase<any, any[], any>[]
 }
 
 export type EffectCallback = () => MaybeCleanup

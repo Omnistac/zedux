@@ -45,7 +45,7 @@ export const getStateHubEcosystem = () => {
   return createEcosystem({
     context: {} as { plugin?: ZeduxPlugin },
     id: stateHubEcosystemId,
-    preload: (stateHubEcosystem, prevContext) => {
+    onReady: (stateHubEcosystem, prevContext) => {
       // preload the stateHub atom instance before registering plugins
       const stateHubInstance = stateHubEcosystem.getInstance(stateHub)
 

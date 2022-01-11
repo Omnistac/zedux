@@ -62,8 +62,13 @@ export const getStateHub = (): AtomInstanceType<typeof stateHub> | undefined =>
  * ```ts
  * import { getStateHub } from '@zedux/react/devtools'
  *
- * const stateHubSettingsInstance = getStateHub() // registers StateHub plugin
- * // then preload your atoms here
+ * const myEcosystem = createEcosystem({
+ *   onReady: () => {
+ *     // register StateHub plugin first!
+ *     const stateHubSettingsInstance = getStateHub()
+ *     // then preload your atoms here...
+ *   }
+ * })
  * ```
  */
 export const StateHub = ({ defaultIsOpen }: { defaultIsOpen?: boolean }) => {
