@@ -41,9 +41,9 @@ export const getColors = ({ get }: AtomGetters) => ({
 export const getFlags: AtomSelectorConfig<
   Pick<StateHubState, 'isPersistingToLocalStorage' | 'isWatchingStateHub'>
 > = {
-  resultsAreEqual: (newResult, oldResult) =>
-    Object.entries(newResult).every(
-      ([key, val]) => val === oldResult[key as keyof typeof oldResult]
+  shouldTriggerUpdate: (newResult, oldResult) =>
+    Object.entries(newResult).some(
+      ([key, val]) => val !== oldResult[key as keyof typeof oldResult]
     ),
   selector: ({ get }) => {
     const { isPersistingToLocalStorage, isWatchingStateHub } = get(stateHub)

@@ -27,7 +27,7 @@ const selectorWrapper = ({ select }: AtomGetters, tag: string) =>
 const ion1 = ion('1', ({ select }) =>
   select(
     {
-      resultsAreEqual: (newResult, oldResult) => newResult - 5 < oldResult,
+      shouldTriggerUpdate: (newResult, oldResult) => newResult > oldResult + 4,
       selector: selectorWrapper,
     },
     Math.round(Math.random()) ? 'a' : 'b'

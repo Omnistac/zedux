@@ -13,11 +13,11 @@ import {
   Ref,
 } from '../types'
 
-const defaultArgsAreEqual = (newArgs: any[], prevArgs: any[]) =>
-  newArgs.length === prevArgs.length &&
-  newArgs.every((val, i) => val === prevArgs[i])
+const defaultShouldRun = (newArgs: any[], prevArgs: any[]) =>
+  newArgs.length !== prevArgs.length ||
+  newArgs.some((val, i) => val !== prevArgs[i])
 
-const defaultResultsAreEqual = (a: any, b: any) => a === b
+const defaultShouldTriggerUpdate = (a: any, b: any) => a !== b
 
 const defaultMaterializer = (materializeDeps: () => void) => materializeDeps()
 
@@ -41,20 +41,21 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
       ? selectorOrConfig
       : selectorOrConfig.selector
 
-  const resultsAreEqual = config.resultsAreEqual || defaultResultsAreEqual
+  const shouldTriggerUpdate =
+    config.shouldTriggerUpdate || defaultShouldTriggerUpdate
 
   // only try short-circuiting if this isn't the first run
   if (tryToShortCircuit) {
-    // short-circuit if user supplied argsAreEqual and args are the same
-    if (config.argsAreEqual) {
-      if (config.argsAreEqual(args, prevArgs.current as Args)) {
+    // short-circuit if user supplied shouldRun and args are the same
+    if (config.shouldRun) {
+      if (!config.shouldRun(args, prevArgs.current as Args)) {
         return prevResult.current as T
       }
     } else {
-      // user didn't supply argsAreEqual: Short-circuit if args and prevSelector
+      // user didn't supply shouldRun: Short-circuit if args and prevSelector
       // are the same
       if (
-        defaultArgsAreEqual(args, prevArgs.current as Args) &&
+        !defaultShouldRun(args, prevArgs.current as Args) &&
         selector === prevSelector.current
       ) {
         return prevResult.current as T
@@ -177,7 +178,7 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
         )
 
         // Only evaluate if the selector result changes
-        if (resultsAreEqual(newResult, prevResult.current as T)) return
+        if (!shouldTriggerUpdate(newResult, prevResult.current as T)) return
 
         prevResult.current = newResult
         evaluate(reasons)

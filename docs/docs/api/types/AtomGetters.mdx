@@ -33,18 +33,6 @@ interface AtomGetters {
     atomSelector: AtomSelectorOrConfig<T, Args>,
     ...args: Args
   ): T
-
-  select<A extends AtomBase<any, [], any>, D>(
-    atom: A,
-    selector: Selector<AtomStateType<A>, D>
-  ): D
-
-  select<A extends AtomBase<any, [...any], any>, D>(
-    atom: A,
-    params: AtomParamsType<A>
-  ): D
-
-  select<AI extends AtomInstanceBase<any, [], any>, D>(instance: AI): D
 }
 ```
 

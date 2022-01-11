@@ -39,27 +39,6 @@ const exampleAtom = atom('example', () => {
 })
 ```
 
-### Basic Selectors
-
-These selectors take the state of a single atom instance and return some derivation of it.
-
-```tsx
-import { atom, useAtomSelector } from '@zedux/react'
-
-const helloAtom = atom('hello', { boring: 'world', exciting: 'World!' })
-
-function Greeting() {
-  // this component will only rerender when helloAtom's `exciting` field changes
-  const val = useAtomSelector(helloAtom, state => state.exciting)
-
-  return <div>Hello, {val}</div>
-}
-```
-
-:::caution
-We may remove basic selectors in a future release since AtomSelectors cover all their use cases without adding any complexity or overhead. A lot of Zedux code can be simplified too if we just stick to AtomSelectors. Try to use AtomSelectors wherever possible.
-:::
-
 ### [AtomSelectors](../api/types/AtomSelector)
 
 AtomSelectors are an extremely flexible selection tool. They're useful to encapsulate and share logic for basic, inexpensive state derivations.
@@ -124,22 +103,7 @@ function MyComponent() {
 
 This is usually fine, but sometimes this can cause lots of unnecessary renders.
 
-A basic selector is perfect here:
-
-```ts
-// highlight-next-line
-import { atom, useAtomSelector } from '@zedux/react'
-
-const objectAtom = atom('object', { a: 1, b: 2 })
-
-function MyComponent() {
-  // now this component only rerenders when `a` changes :)
-  // highlight-next-line
-  const a = useAtomSelector(objectAtom, state => state.a)
-}
-```
-
-We could also use an AtomSelector:
+An AtomSelector is perfect here:
 
 ```ts
 import { atom, useAtomSelector } from '@zedux/react'
@@ -335,7 +299,34 @@ function MyComponent() {
 }
 ```
 
-Now our AtomSelector will only run exactly as often as it needs to.
+Now our AtomSelector will only run exactly as often as it needs to. But there is another way:
+
+### Passing Arguments
+
+AtomSelectors take the AtomGetters object as their first argument, but they can also take any number of additional arguments. These can be passed as the rest params of `useAtomSelector`, `injectAtomSelector`, `ecosystem.select`, and `select` AtomGetters.
+
+Thanks to params, we can move the AtomSelector back outside the component:
+
+```ts
+// highlight-start
+const getOneOrTwo = ({ get }, shouldUse1) => {
+  return shouldUse1 ? get(atom1) : get(atom2)
+}
+// highlight-end
+
+function MyComponent() {
+  const [shouldUse1, setShouldUse1] = useState(true)
+
+  // highlight-next-line
+  const val = useAtomSelector(getOneOrTwo, shouldUse1)
+}
+
+// more examples:
+useAtomSelector(getOneOrTwo, shouldUse1) // in components
+injectAtomSelector(getOneOrTwo, shouldUse1) // in atoms
+ecosystem.select(getOneOrTwo, shouldUse1) // anywhere
+select(getOneOrTwo, shouldUse1) // in ions or other AtomSelectors
+```
 
 ### Configuring
 
@@ -349,28 +340,12 @@ Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig 
 // to rerender when the returned user's `name` is different.
 const { name } = useAtomSelector(
   {
-    argsAreEqual: ([newId], [oldId]) => newId === oldId,
-    resultsAreEqual: (newUser, oldUser) => newUser.name === oldUser.name,
+    shouldRun: ([newId], [oldId]) => newId !== oldId,
+    shouldTriggerUpdate: (newUser, oldUser) => newUser.name !== oldUser.name,
     selector: ({ get }, id: string) => get(usersAtom)[id],
   },
   userId
 )
-```
-
-### Passing Arguments
-
-AtomSelectors take the AtomGetters object as their first argument, but they can also take any number of additional arguments. These can be passed as the rest params of `useAtomSelector`, `injectAtomSelector`, `ecosystem.select`, and `select`.
-
-```ts
-// with this AtomSelector:
-const getUser = ({ select }: AtomGetters, id: string) =>
-  select(getUsersById)[id]
-
-// we can pass the `id` param via:
-useAtomSelector(getUser, id) // in components
-injectAtomSelector(getUser, id) // in atoms
-ecosystem.select(getUser, id) // anywhere
-select(getUser, id) // in ions or other AtomSelectors
 ```
 
 ### Configuring AtomSelectors

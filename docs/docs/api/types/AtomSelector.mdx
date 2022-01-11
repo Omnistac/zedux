@@ -36,8 +36,8 @@ type AtomSelector<T = any, Args extends any[] = []> = (
 ) => T
 
 interface AtomSelectorConfig<T = any, Args extends any[] = []> {
-  argsAreEqual?: (newArgs: Args, oldArgs: Args) => boolean
-  resultsAreEqual?: (newResult: T, oldResult: T) => boolean
+  shouldRun?: (newArgs: Args, oldArgs: Args) => boolean
+  shouldTriggerUpdate?: (newResult: T, oldResult: T) => boolean
   selector: AtomSelector<T, Args>
 }
 
@@ -91,15 +91,15 @@ const exampleIon = ion('example', getters => {
 
 // only run selector once
 const stateSnapshot = useAtomSelector({
-  // argsAreEqual isn't called on the first run
-  argsAreEqual: () => true,
+  // shouldRun isn't called on the first run
+  shouldRun: () => false,
   selector: mySelector,
 })
 
 // only run the selector if the new args don't deep match the old args
 const limitedRuns = useAtomSelector(
   {
-    areArgsEqual: (newArgs, oldArgs) => _.isEqual(newArgs, oldArgs),
+    shouldRun: (newArgs, oldArgs) => !_.isEqual(newArgs, oldArgs),
     selector: mySelector,
   },
   arg1,
@@ -108,7 +108,8 @@ const limitedRuns = useAtomSelector(
 
 // only trigger updates if the new result doesn't deep match the old result
 const limitedUpdates = useAtomSelector({
-  areResultsEqual: (newResult, oldResult) => _.isEqual(newResult, oldResult),
+  shouldTriggerUpdate: (newResult, oldResult) =>
+    !_.isEqual(newResult, oldResult),
   selector: mySelector,
 })
 ```
@@ -186,13 +187,13 @@ const withExtraData = useAtomSelector(getters => addExtraData(getters, list))
 
 ## AtomSelectorConfig
 
-Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig object. This object has a required `selector` field and optional `argsAreEqual` and `resultsAreEqual` fields.
+Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig object. This object has a required `selector` field and optional `shouldRun` and `shouldTriggerUpdate` fields.
 
 - `selector` - The AtomSelector whose args and result we're configuring.
 
-- `argsAreEqual` - A function that accepts two parameters - the new args and old args - and should return a boolean. If this function returns true, Zedux will not run the AtomSelector again. This function is not called on the first run.
+- `shouldRun` - A function that accepts two parameters - the new args and old args - and should return a boolean. If this function returns false, Zedux will not run the AtomSelector again. This function is not called on the first run.
 
-- `resultsAreEqual` - A function that accepts two parameters - the new result and old result - and should return a boolean. If this function returns true, Zedux will not trigger a component rerender (when used from `useAtomSelector`) or an atom reevaluation (when used from `injectAtomSelector` or ion's `select`). This function is not called after the first run.
+- `shouldTriggerUpdate` - A function that accepts two parameters - the new result and old result - and should return a boolean. If this function returns false, Zedux will not trigger a component rerender (when used from `useAtomSelector`) or an atom reevaluation (when used from `injectAtomSelector` or ion's `select`). This function is not called after the first run.
 
 :::note
 AtomSelectorConfig options (other than `selector`) are ignored when passed to `ecosystem.select()` and nested `select()` calls. They're accepted overloads for interop convenience.
@@ -203,7 +204,7 @@ const counterAtom = atom('counter', 0)\n
 function CountBy5() {
   const { setState } = useAtomInstance(counterAtom)
   const counter = useAtomSelector({
-    resultsAreEqual: newCount => newCount % 5,
+    shouldTriggerUpdate: newCount => !(newCount % 5),
     selector: ({ get }) => get(counterAtom)
   })\n
   return (
