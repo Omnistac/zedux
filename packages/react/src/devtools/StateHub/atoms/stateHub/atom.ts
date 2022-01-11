@@ -93,7 +93,7 @@ const localStorageKey = '@@zedux/StateHub/settings'
 
 export const stateHub = atom('stateHub', () => {
   const localStorageState = getLocalStorageState()
-  const store = injectStore(initialState)
+  const store = injectStore(initialState, { shouldSubscribe: false })
 
   // use the Zedux store built-in `setStateDeep` method to deeply merge any
   // saved settings into the default settings

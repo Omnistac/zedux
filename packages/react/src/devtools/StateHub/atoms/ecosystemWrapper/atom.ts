@@ -142,13 +142,16 @@ export const ecosystemWrapper = atom(
       numEvents: number
       numUpdates: number
       timeRegistered: number
-    }>({
-      instances: getEcosystem(ecosystemId)?._instances || {},
-      log: [],
-      numEvents: 0,
-      numUpdates: 0,
-      timeRegistered: Date.now(),
-    })
+    }>(
+      {
+        instances: getEcosystem(ecosystemId)?._instances || {},
+        log: [],
+        numEvents: 0,
+        numUpdates: 0,
+        timeRegistered: Date.now(),
+      },
+      { shouldSubscribe: false }
+    )
 
     const clearLog = () => store.setStateDeep({ log: [] })
 

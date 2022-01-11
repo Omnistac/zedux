@@ -49,24 +49,28 @@ const composedStore = injectStore(() =>
   })
 )
 
-const subscribingStore = injectStore('state', true)
+const nonSubscribingStore = injectStore('state', { shouldSubscribe: false })
 ```
 
 ## Signature
 
 ```ts
-injectStore(initialValue?, shouldSubscribe?) => Store
+injectStore(initialValue?, config?) => Store
 ```
 
 ### Overloads
 
 ```ts
-injectStore(createStore?, shouldSubscribe?) => Store
+injectStore(createStore?, config?) => Store
 ```
 
 ### `initialValue`
 
 Optional. Can be anything but a function. This value will be set as the initial state of the store.
+
+```ts
+injectStore('initial store value!')
+```
 
 To set a function as the value, you must use the [`createStore`](#createstore) overload:
 
@@ -76,14 +80,12 @@ injectStore(() => createStore(null, myFunctionHere))
 
 Typically it isn't recommended to set a function as a store's value. But there are certainly use cases.
 
-### `shouldSubscribe`
+### `config`
 
-Optional. A boolean. Default `false`. Indicates whether the current atom instance should subscribe to this store.
+Optional. An object. Currently only accepts one property:
 
-Why does this default to `false`?? Doesn't that make this fundamentally different from React's `useState` and `useReducer` hooks? It may be a confusing change at first. And we certainly could change the default to `true`.
-
-Atom evaluations are much more predictable than React rerenders. The default is `false` to remind you that you have control! Many atoms won't need to reevaluate when their own store's state changes.
+- `shouldSubscribe` boolean. Default `true`. Indicates whether the current atom instance should subscribe to this store. Pass `false` to prevent this atom instance from reevaluating when the injected store's state changes (use sparingly!).
 
 ### `createStore`
 
-Optional. A function that returns a manually-created store by calling [`createStore()`](../factories/createStore). This function will only be called once - when the atom instance is created.
+Optional. A function that returns a manually-created store by calling [`createStore()`](../factories/createStore). This function will only be called once - when the atom instance is created. You should use this overload when creating a configured store (a reducer-driven store).

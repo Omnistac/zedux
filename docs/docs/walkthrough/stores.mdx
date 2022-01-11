@@ -266,24 +266,18 @@ const store = injectStore(() =>
 You can set a store's state during atom evaluation.
 
 ```ts
-// injectStore doesn't subscribe by default...
 const store = injectStore('initial state')
 const otherVal = injectAtomValue(otherAtom)
-store.setState(deriveStuffFrom(otherVal)) // ...so this is fine
-```
 
-Now you may be thinking, what happens if this atom instance does subscribe to its store? Wouldn't this would cause a reevaluation loop?
-
-```ts
-const store = injectStore('initial state', true) // pass true to subscribe
-const otherVal = injectAtomValue(otherAtom)
 store.setState(deriveStuffFrom(otherVal)) // surely bad! .. Right?
 ```
+
+Wouldn't this would cause a reevaluation loop?
 
 Turns out, this is also fine! `injectStore` detects if the store's state is updated while its atom instance is being evaluated and doesn't trigger a new evaluation. This means, however, that you may need to be conscious of when you set state:
 
 ```ts
-const store = injectStore('initial state', true)
+const store = injectStore('initial state')
 
 // store's state hasn't been updated yet!
 injectEffect(someSideEffect, [store.getState()])
@@ -295,7 +289,7 @@ store.setState(injectSomeDerivation())
 Since `store.setState()` and `store.dispatch()` return the new state, we could rewrite the above example to make use of this:
 
 ```ts
-const store = injectStore('initial state', true)
+const store = injectStore('initial state')
 const newstate = store.setState(injectSomeDerivation()) // update synchronously
 
 // pass this newState as the dep, instead of store.getState()

@@ -242,7 +242,7 @@ const Todos = () => (
 <LiveEditor ecosystemId="big-graph" resultVar="Num">{`
 const test = atom('test', num => {
   const { get } = injectAtomGetters()
-  const store = injectStore(false, true)\n
+  const store = injectStore(false)\n
   if (num < 47 && store.getState()) {
     get(test, [num + 1])\n
     if (!(num % 3)) get(test, [55])

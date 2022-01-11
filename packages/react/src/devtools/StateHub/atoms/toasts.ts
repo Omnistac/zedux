@@ -12,7 +12,7 @@ const interpolation = atom('interpolation', (...args: any) => {
 })
 
 export const toasts = atom('toasts', () => {
-  const store = injectStore<Toast[]>([])
+  const store = injectStore<Toast[]>([], { shouldSubscribe: false })
 
   const setupNextTtl = () => {
     const [toast] = store.getState()

@@ -63,7 +63,7 @@ Returns the result of `factory`.
 
 A function that returns the memoized value. This function will only be called when the atom is created and whenever any passed `deps` change.
 
-This is a good place to run expensive calculations that you don't want to run on every atom instance evaluation. It can also be used to ensure references are stable across evaluations. But, depending on the use case, [`injectStore`](injectStore), [`injectRef`](injectRef), or [`injectCallback`](injectCallback) may be a better choice.
+This is a good place to run expensive calculations that you don't want to run on every atom instance evaluation. It can also be used to ensure references are stable across evaluations. Depending on the use case, [`injectStore`](injectStore), [`injectRef`](injectRef), or [`injectCallback`](injectCallback) may be a better choice.
 
 ### `deps`
 

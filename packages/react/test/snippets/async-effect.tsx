@@ -19,11 +19,13 @@ const asyncAtom = atom('async', () => {
     return val
   }) // no params to re-run every time
 
-  const store = injectStore(() =>
-    createStore({
-      myReducer: () => 2,
-      asyncStuff: asyncStore,
-    })
+  const store = injectStore(
+    () =>
+      createStore({
+        myReducer: () => 2,
+        asyncStuff: asyncStore,
+      }),
+    { shouldSubscribe: false }
   )
 
   return api(store).setPromise(promise)

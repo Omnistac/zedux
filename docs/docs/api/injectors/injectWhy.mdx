@@ -27,7 +27,7 @@ Getting the list of reasons.
 
 <LiveEditor ecosystemId="injectWhy/example" resultVar="Reasons">{`
 const reasonsAtom = atom('reasons', () => {
-  const store = injectStore(0, true) // subscribe to this store\n
+  const store = injectStore(0)\n
   injectEffect(() => {
     const intervalId = setInterval(
       () => store.setState(val => val + 1),
@@ -53,7 +53,7 @@ If an atom's state is set multiple times synchronously, Zedux will batch those u
 
 <LiveEditor resultVar="Reasons">{`
 const reasonsAtom = atom('reasons', () => {
-  const store = injectStore(0, true) // subscribe to this store\n
+  const store = injectStore(0)\n
   const reasons = injectWhy()
   const sawFive = reasons.some(reason => reason.newState === 5)\n
   injectEffect(() => {

@@ -14,10 +14,7 @@ Local atoms are just atoms that have their first param set to an optional string
 ## Example
 
 <LiveEditor ecosystemId="localAtom/example" resultVar="App">{`
-const counterAtom = localAtom('counter', () => {
-  const store = injectStore(0)\n
-  return store
-})\n
+const counterAtom = localAtom('counter', 0)\n
 function App() {
   const [counter1, setCounter1] = useAtomState(counterAtom)
   const [counter2, setCounter2] = useAtomState(counterAtom)\n

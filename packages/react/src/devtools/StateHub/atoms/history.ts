@@ -25,7 +25,10 @@ export interface HistoryMod<State, SerializedState> {
 export const history = atom('history', (instance: AnyAtomInstance) => {
   const isFromHistory = injectRef<boolean>(false)
   const modRef = injectRef<HistoryMod<any, any>>()
-  const store = injectStore({ pointer: 0, stack: [instance.store.getState()] })
+  const store = injectStore(
+    { pointer: 0, stack: [instance.store.getState()] },
+    { shouldSubscribe: false }
+  )
 
   injectEffect(() => {
     const subscription = instance.store.subscribe(newState => {

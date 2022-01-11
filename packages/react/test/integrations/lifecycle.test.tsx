@@ -101,7 +101,7 @@ describe('ttl', () => {
 
     const atom1 = atom('atom1', () => {
       evaluations.push(1)
-      const store = injectStore('1', true)
+      const store = injectStore('1')
 
       return store
     })

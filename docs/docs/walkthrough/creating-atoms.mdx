@@ -121,11 +121,16 @@ Notice that we returned the store. This is important! Zedux automatically create
 When returning a store from an evaluator, ensure that the exact same store reference is returned every time the atom evaluates - e.g. by using `injectMemo` or `injectStore`.
 :::
 
-`injectStore`'s second parameter is a boolean indicating whether this atom instance should subscribe to this store. Default is false, meaning state updates on that store will not trigger a reevaluation.
+`injectStore`'s second parameter is a config object. It can currently take one property - `shouldSubscribe` - a boolean indicating whether this atom instance should subscribe to this store. Default is `true`, meaning state updates on the injected store will trigger a reevaluation of the current atom instance.
 
 ```ts
-// this evaluator will run every time this store's state changes:
-const store = injectStore(initialState, true)
+// every time this store's state changes, this evaluator will rerun:
+const store = injectStore(initialState)
+
+// this store will never cause this evaluator to rerun:
+const nonSubscribingStore = injectStore(initialState, {
+  shouldSubscribe: false,
+})
 ```
 
 :::tip

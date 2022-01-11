@@ -32,7 +32,9 @@ const injectReactiveState = <T>(
   events: Mod[]
 ) => {
   const ecosystemWrapper = select(getCurrentEcosystemWrapperInstance)
-  const store = injectStore(getState(ecosystemWrapper.exports.getEcosystem()))
+  const store = injectStore(getState(ecosystemWrapper.exports.getEcosystem()), {
+    shouldSubscribe: false,
+  })
 
   injectEffect(() => {
     // set atoms again when wrapped ecosystem instance changes and in case some

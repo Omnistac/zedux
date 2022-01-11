@@ -23,7 +23,7 @@ const myLocalAtom = localAtom('myLocal')
 const withParams = localAtom('withParams', (id?: string, other?: number) => {
   const store = injectStore(other)
 
-  return other
+  return store
 })
 
 // You can make the id param required:

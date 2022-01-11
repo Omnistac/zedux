@@ -31,7 +31,7 @@ describe('ecosystem', () => {
 
     const atom1 = atom('atom1', () => {
       evaluate1()
-      const store = injectStore('1', true)
+      const store = injectStore('1')
 
       return store
     })

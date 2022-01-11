@@ -24,7 +24,7 @@ const paramAtom = atom('param', (param: string) => {
     setInterval(() => {
       store.setState(state => ({ ...state, counter: state.counter + 1 }))
     }, 1000)
-  })
+  }, [])
 
   return store
 })

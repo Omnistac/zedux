@@ -17,7 +17,7 @@ export const ecosystems = atom('ecosystems', () => {
     })
 
     return () => subscription.unsubscribe()
-  })
+  }, [])
 
   return store
 })

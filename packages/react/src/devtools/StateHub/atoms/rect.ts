@@ -37,10 +37,13 @@ export const rect = atom('rect', () => {
     })
   }
 
-  const store = injectStore({
-    height: getHeightType(positioneeRef.current?.clientHeight || 0),
-    width: getWidthType(positioneeRef.current?.clientWidth || 0),
-  })
+  const store = injectStore(
+    {
+      height: getHeightType(positioneeRef.current?.clientHeight || 0),
+      width: getWidthType(positioneeRef.current?.clientWidth || 0),
+    },
+    { shouldSubscribe: false }
+  )
 
   return api(store).setExports({
     positioneeRef,

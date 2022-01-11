@@ -33,7 +33,8 @@ api(value?) => AtomApi
 ### Overloads
 
 ```ts
-atom(store?) => AtomApi
+api(store?) => AtomApi
+api(atomApi?) => AtomApi
 ```
 
 ### `value`
@@ -42,7 +43,11 @@ Any raw value. If this AtomApi is returned from an [evaluator function](../gloss
 
 ### `store`
 
-A [Zedux store](../classes/Store). If this AtomApi is returned from an evaluator function, this store will be set as the [atom instance's store](../classes/AtomInstance#store). It should therefore be a stable reference that won't change across reevaluations, e.g. by using [injectStore](../injectors/injectStore).
+A [Zedux store](../classes/Store). If this AtomApi is returned from an evaluator function, this store will be set as the [atom instance's store](../classes/AtomInstance#store). It should therefore be a stable reference that won't change across reevaluations, e.g. by using [`injectStore()`](../injectors/injectStore).
+
+### `atomApi`
+
+Another AtomApi. The returned AtomApi will be a shallow clone of the one passed - all properties will be copied over (exports, the promise, all interceptors).
 
 ## Notes
 

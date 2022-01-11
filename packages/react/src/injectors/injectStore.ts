@@ -59,15 +59,17 @@ const doSubscribe = <State>(
  * Use the latter for maximum flexibility.
  *
  * Subscribes to the store by default, causing the atom to be reevaluated on
- * every state change. This can be changed by passing `false` as the second
- * argument.
+ * every state change. This can be changed by passing `false` as the
+ * shouldSubscribe config option.
+ *
+ * In most cases you won't need to prevent subscribing. But it can be a useful
+ * performance optimization.
  *
  * ```ts
  * import { atom, injectStore } from '@zedux/react'
  *
  * const inputAtom = atom('input', () => {
- *   // initial state: '', shouldSubscribe: false
- *   const store = injectStore('', false)
+ *   const store = injectStore('', { shouldSubscribe: false })
  *
  *   return store
  * })
@@ -75,13 +77,16 @@ const doSubscribe = <State>(
  *
  * @param storeFactory - Either a function that returns a store or the initial
  * state of the store
- * @param shouldSubscribe - Whether to subscribe to the store (default `false`)
+ * @param config - A config object. Currently only accepts one prop:
+ *   - `shouldSubscribe` - Whether to subscribe to the store (default: `true`)
  * @returns Store
  */
 export const injectStore = <State = any>(
   storeFactory?: State | (() => Store<State>),
-  shouldSubscribe = false
+  config?: { shouldSubscribe?: boolean }
 ) => {
+  const shouldSubscribe = config?.shouldSubscribe ?? true
+
   const { store } = split<StoreInjectorDescriptor<State>>(
     'injectStore',
     InjectorType.Store,

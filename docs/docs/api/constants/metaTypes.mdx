@@ -30,7 +30,7 @@ const parentStore = createStore({ child: childStore })
 parentStore.subscribe({
   effects: ({ action }) => {
     console.log('action:', action)
-  }
+  },
 })
 
 childStore.setState('new state')
@@ -56,8 +56,8 @@ const action = {
   metaData: ['child'],
   payload: {
     type: '@@zedux/hydrate',
-    payload: 'different state'
-  }
+    payload: 'different state',
+  },
 }
 
 parentStore.dispatch(action)
@@ -77,7 +77,7 @@ const parentStore = createStore({ child: childStore })
 childStore.subscribe({
   effects: ({ action }) => {
     console.log('action:', action)
-  }
+  },
 })
 
 parentStore.dispatch({ type: 'test' })
@@ -107,7 +107,7 @@ It is not necessary to use this when updating an injected store's state synchron
 
 ```ts
 const testAtom = atom('test', () => {
-  const store = injectStore(initialState, true) // true to subscribe
+  const store = injectStore(initialState)
 
   store.setState(newState) // won't cause an evaluation loop
 })

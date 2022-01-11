@@ -368,7 +368,7 @@ export type IonSet<
  * import { injectAllInstances, injectStore, molecule } from '@zedux/react'
  *
  * const formsMolecule = molecule('forms', () => {
- *   const store = injectStore(null, false)
+ *   const store = injectStore(null)
  *
  *   // inject all instances of these 2 atoms into this molecule:
  *   injectAllInstances([loginFormAtom, registerFormAtom], (atom, instance) => {

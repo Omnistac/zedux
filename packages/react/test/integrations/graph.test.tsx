@@ -20,7 +20,7 @@ const atom2 = atom('atom2', () => 2)
 const atom3 = atom('atom3', () => 3)
 
 const atom4 = atom('atom4', () => {
-  const switchStore = injectStore(true, true)
+  const switchStore = injectStore(true)
   const sumStore = injectStore(0)
   const store = injectStore(() =>
     createStore({ switch: switchStore, sum: sumStore })
@@ -30,7 +30,7 @@ const atom4 = atom('atom4', () => {
   const one = get(atom1)
   const two = switchStore.getState() ? get(atom2) : get(atom3)
 
-  // won't cause a reevaluation loop 'cause we don't subscribe to the store
+  // won't cause a reevaluation loop
   sumStore.setState(one + two)
 
   return api(store).setExports({

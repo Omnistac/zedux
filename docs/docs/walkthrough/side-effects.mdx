@@ -15,7 +15,7 @@ Your primary weapon for running side effects in atoms. This works just like Reac
 
 <LiveEditor ecosystemId="side-effects/injectEffect" resultVar="Alert">{`
 const alertAtom = atom('alert', () => {
-  const store = injectStore(0, true) // true subscribes to the store\n
+  const store = injectStore(0)\n
   injectEffect(() => {
     const state = store.getState()\n
     if (state === 0) return\n
@@ -180,7 +180,7 @@ const buttonPressAtom = atom('buttonPress', () => {
       () => alert('consider it done')
     )\n
     return () => subscription.unsubscribe()
-  }, [store])\n
+  }, [store]) // don't have to pass store since it's a stable reference\n
   return store
 })\n
 function Button() {

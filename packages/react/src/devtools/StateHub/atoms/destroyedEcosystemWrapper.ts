@@ -23,7 +23,7 @@ export const destroyedEcosystemWrapper = atom(
   () => {
     const store = injectStore<
       AtomInstanceType<typeof ecosystemWrapper> | undefined
-    >(undefined, true)
+    >(undefined)
 
     const currentEcosystemId = injectAtomSelector(
       ({ get }) => get(stateHub).ecosystemId
