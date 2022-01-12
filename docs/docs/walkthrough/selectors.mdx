@@ -340,15 +340,31 @@ Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig 
 // to rerender when the returned user's `name` is different.
 const { name } = useAtomSelector(
   {
-    shouldRun: ([newId], [oldId]) => newId !== oldId,
-    shouldTriggerUpdate: (newUser, oldUser) => newUser.name !== oldUser.name,
+    argsComparator: ([newId], [oldId]) => newId === oldId,
+    resultsComparator: (newUser, oldUser) => newUser.name === oldUser.name,
     selector: ({ get }, id: string) => get(usersAtom)[id],
   },
   userId
 )
 ```
 
-### Configuring AtomSelectors
+We can define this config object outside our component for easy reuse:
+
+```ts
+const getUser: AtomSelectorConfig<User, [id: string]> = {
+  argsComparator: ([newId], [oldId]) => newId === oldId,
+  resultsComparator: (newUser, oldUser) => newUser.name === oldUser.name,
+  selector: ({ get }, id) => get(usersAtom)[id],
+}
+
+function MyComponent() {
+  const { name } = useAtomSelector(getUser, userId)
+}
+```
+
+:::tip
+For TypeScript users,
+:::
 
 ## `select`
 
@@ -377,7 +393,7 @@ As an AtomGetter, `select` can be used in if statements and loops to conditional
 
 ### AtomSelector Composition
 
-`select` is the key to composing AtomSelectors.
+`select` is the key to composing AtomSelectors. Any AtomSelector can use its `select` AtomGetter to run other AtomSelectors.
 
 <LiveEditor ecosystemId="selectors/composition" resultVar="Username">{`
 const usersAtom = atom('users', [

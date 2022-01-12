@@ -194,8 +194,8 @@ export type AtomSelector<T = any, Args extends any[] = []> = (
 ) => T
 
 export interface AtomSelectorConfig<T = any, Args extends any[] = []> {
-  shouldRun?: (newArgs: Args, oldArgs: Args) => boolean
-  shouldTriggerUpdate?: (newResult: T, oldResult: T) => boolean
+  argsComparator?: (newArgs: Args, oldArgs: Args) => boolean
+  resultsComparator?: (newResult: T, oldResult: T) => boolean
   selector: AtomSelector<T, Args>
 }
 
