@@ -9,15 +9,14 @@ import {
   GraphEdgeInfo,
   DependentEdge,
   EvaluationReason,
-  Cleanup,
-  EdgeFlag,
-  PromiseStatus,
 } from '@zedux/react/types'
 import { InjectorDescriptor } from '@zedux/react/utils'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { Store } from '@zedux/core'
+import { Ghost } from '../Ghost'
 import { ZeduxPlugin } from '../ZeduxPlugin'
+import {} from '@zedux/react'
 
 export abstract class AtomInstanceBase<
   State,
@@ -25,21 +24,16 @@ export abstract class AtomInstanceBase<
   AtomType extends AtomBase<State, Params, any>
 > implements AtomGettersBase {
   public static $$typeof = Symbol.for('@@react/zedux/AtomInstanceBase')
-  public abstract activeState: ActiveState
   public abstract atom: AtomType
   public abstract ecosystem: Ecosystem
   public abstract keyHash: string
-  public abstract promise?: Promise<any>
   public abstract store: Store<State>
 
+  public abstract _activeState: ActiveState
   public abstract _createdAt: number
-  public abstract _prevEvaluationReasons?: EvaluationReason[]
+  public abstract _prevEvaluationReasons: EvaluationReason[]
   public abstract _injectors?: InjectorDescriptor[]
   public abstract _isEvaluating: boolean
-  public abstract _promiseError?: Error
-  public abstract _promiseStatus?: PromiseStatus
-
-  public abstract destroy(force?: boolean): void
 
   public abstract get<A extends AtomBase<any, [], any>>(
     atom: A
@@ -77,32 +71,29 @@ export abstract class AtomInstanceBase<
 
   public abstract _scheduleEvaluation(
     reason: EvaluationReason,
-    flags?: number,
-    shouldSetTimeout?: boolean
+    flagScore?: number
   ): void
 
-  public addDependent({
-    callback,
-    operation = 'addDependent',
-  }: {
+  public addDependent(
+    operation: string,
     callback?: DependentEdge['callback']
-    operation?: string
-  } = {}): Cleanup {
-    const id = this.ecosystem._idGenerator.generateNodeId()
-    this.ecosystem._graph.addEdge(
-      id,
-      this.keyHash,
+  ): Ghost {
+    const ghost = this.ecosystem._graph.registerGhostDependent(
+      this,
+      callback,
       operation,
-      EdgeFlag.Explicit | EdgeFlag.External,
-      callback
+      false,
+      true
     )
 
-    return () => this.ecosystem._graph.removeEdge(id, this.keyHash)
+    ghost.materialize()
+
+    return ghost
   }
 
   public setActiveState(newActiveState: ActiveState) {
-    const oldActiveState = this.activeState
-    this.activeState = newActiveState
+    const oldActiveState = this._activeState
+    this._activeState = newActiveState
 
     if (this.ecosystem.mods.instanceActiveStateChanged) {
       this.ecosystem.modsMessageBus.dispatch(

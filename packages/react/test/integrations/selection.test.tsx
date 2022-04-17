@@ -20,13 +20,18 @@ describe('selection', () => {
     jest.useFakeTimers()
 
     const selector1 = jest.fn(({ get }: AtomGetters, key: string) => {
+      console.log('here in selector1!!!!!', get(atom1, [key]))
       return get(atom1, [key])
     })
 
-    const selector2 = jest.fn(({ select }: AtomGetters) => {
-      const val = select(selector1, 'a')
-      return val
-    })
+    const selector2 = jest.fn(({ select }: AtomGetters) =>
+      select(
+        {
+          selector: selector1,
+        },
+        'a'
+      )
+    )
 
     function Test() {
       const [, setState] = useState(1)
@@ -47,26 +52,28 @@ describe('selection', () => {
     )
 
     const button = await findByTestId('button')
+    const text = await findByTestId('text')
 
-    expect(selector1).toHaveBeenCalledTimes(2)
-    expect(selector2).toHaveBeenCalledTimes(2)
-    expect((await findByTestId('text')).innerHTML).toBe('a')
+    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector2).toHaveBeenCalledTimes(1)
+    expect(text.innerHTML).toBe('a')
 
     act(() => {
       fireEvent.click(button)
-      jest.runAllTimers()
     })
+
+    jest.runAllTimers()
+
+    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector2).toHaveBeenCalledTimes(1)
+
+    console.log('weak instance:', testEcosystem._instances)
+    testEcosystem.weakGetInstance(atom1, ['a'])?.setState('b')
+
+    jest.runAllTimers()
 
     expect(selector1).toHaveBeenCalledTimes(2)
     expect(selector2).toHaveBeenCalledTimes(2)
-
-    act(() => {
-      testEcosystem.weakGetInstance(atom1, ['a'])?.setState('b')
-      jest.runAllTimers()
-    })
-
-    expect(selector1).toHaveBeenCalledTimes(3)
-    expect(selector2).toHaveBeenCalledTimes(3)
-    expect((await findByTestId('text')).innerHTML).toBe('b')
+    expect(text.innerHTML).toBe('b')
   })
 })
