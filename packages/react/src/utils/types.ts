@@ -1,13 +1,26 @@
 import {
-  AtomSelectorOrConfig,
+  AsyncStore,
+  AtomSelector,
+  Cleanup,
   DependentEdge,
-  EvaluationReason,
+  GraphEdgeDynamicity,
   MutableRefObject,
   RefObject,
 } from '@zedux/react/types'
-import { Store } from '@zedux/core'
+import { Store, Subscription } from '@zedux/core'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 import { AtomInstance } from '../classes/instances/AtomInstance'
+
+export interface AsyncEffectInjectorDescriptor<T>
+  extends DepsInjectorDescriptor {
+  cleanupTask?: Cleanup
+  asyncStore: AsyncStore<T>
+  promise: Promise<T>
+  rejectRef?: (err: any) => void
+  resolveRef?: (val: any) => void
+  subscription: Subscription
+  type: InjectorType.AsyncEffect
+}
 
 export interface AtomInjectorDescriptor<
   InstanceType extends AtomInstanceBase<any, any[], any>
@@ -24,14 +37,17 @@ export interface AtomDynamicInjectorDescriptor<
   type: InjectorType.AtomDynamic
 }
 
-export interface AtomSelectorCache<T = any, Args extends any[] = any[]> {
-  args?: Args
-  cacheKey: string
-  nextEvaluationReasons: EvaluationReason[]
-  prevEvaluationReasons?: EvaluationReason[]
-  result?: T
-  selectorRef: AtomSelectorOrConfig<T, Args>
-  task?: () => void
+export interface AtomSelectorCache<T = any, Args extends any[] = []> {
+  // just doing a single level of children - not tracking deeply-nested graphs
+  // of selectors for now (so doing `cache.children.get(selector).children`
+  // isn't a thing - all children live on the top level)
+  children?: Map<AtomSelector<any, any[]>, AtomSelectorCache<any, any[]>>
+  id?: string
+  prevArgs?: Args
+  prevChildren?: Map<AtomSelector<any, any[]>, AtomSelectorCache<any, any[]>>
+  prevDeps?: Record<string, Dep>
+  prevResult?: T
+  prevSelector?: AtomSelector<T, Args>
 }
 
 export interface CallStackContext<T = any> {
@@ -43,6 +59,15 @@ export interface CallStackContext<T = any> {
 export interface CallStackContextInstance<T = any> {
   context: CallStackContext<T>
   value: T
+}
+
+export interface Dep<T = any> {
+  cleanup?: Cleanup
+  instance: AtomInstanceBase<T, any, any>
+  dynamicity: GraphEdgeDynamicity
+  materialize?: () => void
+  memoizedVal?: any
+  shouldUpdate?: (newState: T) => boolean
 }
 
 export interface DepsInjectorDescriptor extends InjectorDescriptor {
@@ -57,7 +82,6 @@ export interface DiContext {
 export interface EcosystemGraphNode {
   dependencies: Record<string, true>
   dependents: Record<string, DependentEdge>
-  isAtomSelector?: boolean
   weight: number
 }
 
@@ -65,10 +89,10 @@ export interface EffectInjectorDescriptor extends DepsInjectorDescriptor {
   type: InjectorType.Effect
 }
 
-export interface EvaluateNodeJob extends JobBase {
-  flags: number
+export interface EvaluateAtomJob extends JobBase {
+  flagScore: number
   keyHash: string
-  type: JobType.EvaluateNode
+  type: JobType.EvaluateAtom
 }
 
 export interface InjectorDescriptor {
@@ -94,10 +118,10 @@ export interface JobBase {
   type: JobType
 }
 
-export type Job = EvaluateNodeJob | RunEffectJob | UpdateExternalDependentJob
+export type Job = EvaluateAtomJob | RunEffectJob | UpdateExternalDependentJob
 
 export enum JobType {
-  EvaluateNode = 'EvaluateNode',
+  EvaluateAtom = 'EvaluateAtom',
   RunEffect = 'RunEffect',
   UpdateExternalDependent = 'UpdateExternalDependent',
 }
@@ -131,7 +155,7 @@ export interface StoreInjectorDescriptor<State = any>
 }
 
 export interface UpdateExternalDependentJob extends JobBase {
-  flags: number
+  flagScore: number
   type: JobType.UpdateExternalDependent
 }
 

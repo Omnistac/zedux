@@ -1,12 +1,9 @@
 import {
   ActionChain,
-  createStore,
-  isZeduxStore,
   metaTypes,
   Observable,
   removeAllMeta,
   Settable,
-  Store,
   Subscription,
 } from '@zedux/core'
 import {
@@ -14,36 +11,52 @@ import {
   AtomGetters,
   AtomInstanceType,
   AtomParamsType,
+  AtomSelector,
   AtomSelectorOrConfig,
   AtomValue,
   Cleanup,
-  EdgeFlag,
+  DependentEdge,
   EvaluationReason,
   EvaluationTargetType,
   EvaluationType,
+  GraphEdgeDynamicity,
   GraphEdgeInfo,
-  GraphEdgeSignal,
-  PromiseState,
   PromiseStatus,
   StateType,
 } from '@zedux/react/types'
 import {
+  AtomSelectorCache,
+  generateAtomSelectorId,
   InjectorDescriptor,
   InjectorType,
   is,
   JobType,
 } from '@zedux/react/utils'
 import { diContext } from '@zedux/react/utils/csContexts'
-import {
-  getErrorPromiseState,
-  getInitialPromiseState,
-  getSuccessPromiseState,
-} from '@zedux/react/utils/promiseUtils'
 import { Ecosystem } from '../Ecosystem'
+import { createStore, isZeduxStore, Store } from '@zedux/core'
 import { AtomApi } from '../AtomApi'
 import { AtomInstanceBase } from './AtomInstanceBase'
 import { StandardAtomBase } from '../atoms/StandardAtomBase'
+import { runAtomSelector } from '../../utils/runAtomSelector'
 import { ZeduxPlugin } from '../ZeduxPlugin'
+
+const SELECT_OPERATION = 'select'
+
+const cleanupAtomSelector = (selectorCache: AtomSelectorCache<any, any[]>) => {
+  if (!selectorCache.prevDeps || !Object.keys(selectorCache.prevDeps).length)
+    return
+
+  Object.values(selectorCache.prevDeps).forEach(dep => {
+    dep.cleanup?.()
+  })
+}
+
+const getEdgeDynamicity = (edge: DependentEdge) => {
+  if (edge.isStatic) return GraphEdgeDynamicity.Static
+
+  return GraphEdgeDynamicity.Dynamic
+}
 
 const getStateType = (val: any) => {
   if (isZeduxStore(val)) return StateType.Store
@@ -84,27 +97,31 @@ export class AtomInstance<
     StandardAtomBase<State, Params, Exports>
   >
   implements AtomGetters {
-  public activeState = ActiveState.Initializing
   public api?: AtomApi<State, Exports>
   public exports: Exports
   public promise?: Promise<any>
   public store: Store<State>
 
+  public _activeState = ActiveState.Initializing
   public _cancelDestruction?: Cleanup
   public _createdAt = Date.now()
   public _injectors?: InjectorDescriptor[]
   public _isEvaluating = false
-  public _nextEvaluationReasons: EvaluationReason[] = []
-  public _prevEvaluationReasons?: EvaluationReason[]
+  public _prevEvaluationReasons: EvaluationReason[] = []
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
   public _stateType?: StateType
 
-  private _bufferedUpdate?: {
-    newState: State
-    oldState?: State
-    action: ActionChain
-  }
+  private _atomSelectorCache?: Map<
+    AtomSelector<any, any[]>,
+    AtomSelectorCache<any, any[]>
+  >
+  private _atomSelectorsToCache?: Map<
+    AtomSelector<any, any[]>,
+    AtomSelectorCache<any, any[]>
+  >
+  private _edgesToAdd?: Record<string, GraphEdgeInfo>
+  private _nextEvaluationReasons: EvaluationReason[] = []
   private _subscription?: Subscription
 
   constructor(
@@ -119,73 +136,45 @@ export class AtomInstance<
     ;[this._stateType, this.store] = getStateStore(factoryResult)
 
     this._subscription = this.store.subscribe((newState, oldState, action) => {
-      // buffer updates (with cache size of 1) if this instance is currently
-      // evaluating
-      if (this._isEvaluating) {
-        this._bufferedUpdate = { newState, oldState, action }
-        return
+      ecosystem._graph.scheduleDependents(
+        keyHash,
+        this._prevEvaluationReasons,
+        newState,
+        oldState
+      )
+
+      // Set the action's meta field to `metaTypes.SKIP_EVALUATION` to prevent
+      // plugins from receiving it. The Zedux StateHub has to do this to prevent
+      // infinite state update loops when inspecting the state of the StateHub
+      // itself.
+      if (
+        this.ecosystem.mods.instanceStateChanged &&
+        removeAllMeta(action).meta !== metaTypes.SKIP_EVALUATION
+      ) {
+        this.ecosystem.modsMessageBus.dispatch(
+          ZeduxPlugin.actions.instanceStateChanged({
+            action,
+            instance: this,
+            newState,
+            oldState,
+            reasons: this._prevEvaluationReasons,
+          })
+        )
       }
 
-      this._handleStateChange(newState, oldState, action)
+      // run the scheduler synchronously after any atom instance state update
+      this.ecosystem._scheduler.flush()
     })
+
+    if (!this.promise && this._shouldForwardPromise()) this._forwardPromises()
 
     // lol
     this.exports = (this as any).exports || undefined
-    this._promiseStatus = (this as any)._promiseStatus ?? 'success'
+    this._promiseStatus = (this as any)._promiseStatus ?? PromiseStatus.Resolved
 
     this.setActiveState(ActiveState.Active)
   }
 
-  /**
-   * Detach this atom instance from the ecosystem and clean up all graph edges
-   * and other subscriptions/effects created by this atom instance.
-   *
-   * Destruction will bail out if this atom instance still has dependents. Pass
-   * `true` to force-destroy the atom instance anyway.
-   */
-  public destroy(force?: boolean) {
-    if (this.activeState === ActiveState.Destroyed) return
-
-    // If we're not force-destroying, don't destroy if there are dependents
-    if (
-      !force &&
-      Object.keys(this.ecosystem._graph.nodes[this.keyHash]?.dependents || {})
-        .length
-    ) {
-      return
-    }
-
-    this._cancelDestruction?.()
-    this._cancelDestruction = undefined
-
-    this.setActiveState(ActiveState.Destroyed)
-
-    if (this._nextEvaluationReasons.length) {
-      this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
-    }
-
-    // Clean up effect injectors first, then everything else
-    const nonEffectInjectors: InjectorDescriptor[] = []
-    this._injectors?.forEach(injector => {
-      if (injector.type !== InjectorType.Effect) {
-        nonEffectInjectors.push(injector)
-        return
-      }
-      injector.cleanup?.()
-    })
-    nonEffectInjectors.forEach(injector => {
-      injector.cleanup?.()
-    })
-
-    this.ecosystem._graph.removeDependencies(this.keyHash)
-    this._subscription?.unsubscribe()
-    this.ecosystem._destroyAtomInstance(this.keyHash)
-  }
-
-  /**
-   * Call `store.dispatch()` on this atom instance's store. Run any `dispatch`
-   * interceptors from this atom's AtomApi (if any) first.
-   */
   public dispatch = (action: ActionChain) => {
     const val = this.api?.dispatchInterceptors?.length
       ? this.api._interceptDispatch(action, (newAction: ActionChain) =>
@@ -211,9 +200,15 @@ export class AtomInstance<
     // for ecosystem.get()
     if (!this._isEvaluating) return instance.store.getState()
 
-    // if get is called during evaluation, track the required atom instances so
-    // we can add graph edges for them
-    this.ecosystem._graph.addEdge(this.keyHash, instance.keyHash, 'get', 0)
+    // if get is called during evaluation, track the loaded instances so we can
+    // add graph dependencies for them
+    if (!this._edgesToAdd) {
+      this._edgesToAdd = {}
+    }
+
+    // we could add more flags on this enum to indicate whether we created the
+    // instance in this call
+    this._edgesToAdd[instance.keyHash] = [GraphEdgeDynamicity.Dynamic, 'get']
 
     return instance.store.getState()
   }
@@ -234,39 +229,99 @@ export class AtomInstance<
     // for ecosystem.getInstance()
     if (!this._isEvaluating) return instance
 
-    // if getInstance is called during evaluation, track the required atom
-    // instances so we can add graph edges for them
-    this.ecosystem._graph.addEdge(
-      this.keyHash,
-      instance.keyHash,
-      edgeInfo?.[1] || 'getInstance',
-      edgeInfo?.[0] ?? EdgeFlag.Static
-    )
+    // if getInstance is called during evaluation, track the loaded instances so
+    // we can add graph dependencies for them
 
-    return instance
+    // if we've already registered a dynamic edge, don't make it static
+    const existingDynamicity = this._edgesToAdd?.[instance.keyHash]?.[0]
+    if (
+      existingDynamicity &&
+      existingDynamicity !== GraphEdgeDynamicity.Static
+    ) {
+      return instance
+    }
+
+    if (!this._edgesToAdd) {
+      this._edgesToAdd = {}
+    }
+
+    // we could add more flags on this enum to indicate whether we created the
+    // instance in this call
+    this._edgesToAdd[instance.keyHash] = edgeInfo || [
+      GraphEdgeDynamicity.Static,
+      'getInstance',
+    ]
+
+    return instance as AtomInstanceType<A>
   }
 
   public select<T, Args extends any[]>(
-    selectorOrConfig: AtomSelectorOrConfig<T, Args>,
+    atomSelector: AtomSelectorOrConfig<T, Args>,
     ...args: Args
   ): T {
-    // when called outside evaluation, instance.select() is just an alias for
-    // ecosystem.select()
-    if (!this._isEvaluating) {
-      return this.ecosystem.select(selectorOrConfig, ...args)
+    if (!this._isEvaluating) return this.ecosystem.select(atomSelector, ...args)
+
+    // AtomSelectors are remembered across evaluations by reference.
+    const resolvedSelector = (typeof atomSelector === 'function'
+      ? atomSelector
+      : atomSelector.selector) as AtomSelector<T, any[]>
+
+    if (!this._atomSelectorsToCache) {
+      this._atomSelectorsToCache = new Map()
     }
 
-    const cache = this.ecosystem.selectorCache.getCache(selectorOrConfig, args)
+    // look in the current run's cache first (in case we've already copied the
+    // old cache object over or already created one for this exact selector
+    // this run), then the previous run
+    let cache:
+      | AtomSelectorCache<T, any[]>
+      | undefined = this._atomSelectorsToCache.get(resolvedSelector)
 
-    this.ecosystem._graph.addEdge(this.keyHash, cache.cacheKey, 'select', 0)
+    if (!cache) {
+      cache = this._atomSelectorCache?.get(resolvedSelector)
+    }
 
-    return cache.result as T
+    if (!cache) {
+      // no cache has been created for this AtomSelector yet
+      cache = {
+        id: `${this.keyHash}-${generateAtomSelectorId()}`,
+        prevDeps: {},
+        prevSelector: resolvedSelector,
+      }
+    }
+
+    this._atomSelectorsToCache.set(resolvedSelector, cache)
+
+    // have to update this value since this code never runs again as long as
+    // the AtomSelector is cached
+    let cachedPrevResult = cache.prevResult
+
+    const result = runAtomSelector<T, Args>(
+      atomSelector,
+      args,
+      this.ecosystem,
+      cache as AtomSelectorCache<T, Args>,
+      reasons => {
+        this._scheduleEvaluation({
+          newState: cache?.prevResult, // runAtomSelector updates this ref before calling this callback
+          oldState: cachedPrevResult,
+          operation: SELECT_OPERATION,
+          reasons,
+          targetType: EvaluationTargetType.Injector,
+          type: EvaluationType.StateChanged,
+        })
+
+        cachedPrevResult = cache?.prevResult
+      },
+      SELECT_OPERATION,
+      !!cache.prevArgs // allow run to short-circuit if this isn't the first run
+    )
+
+    cache.prevResult = result
+
+    return result
   }
 
-  /**
-   * Call `store.setState()` on this atom instance's store. Run any `setState`
-   * interceptors from this atom's AtomApi (if any) first.
-   */
   public setState = (settable: Settable<State>, meta?: any) => {
     const val = this.api?.setStateInterceptors?.length
       ? this.api._interceptSetState(settable, (newSettable: Settable<State>) =>
@@ -278,42 +333,135 @@ export class AtomInstance<
   }
 
   /**
+   * Detach this atom instance from the ecosystem and clean up all graph edges
+   * and other subscriptions/effects created by this atom instance.
+   *
+   * Destruction will bail out if this atom instance still has dependents. Pass
+   * `true` to force-destroy the atom instance anyway.
+   */
+  public _destroy(force?: boolean) {
+    if (this._activeState === ActiveState.Destroyed) return
+
+    // If we're not force-destroying, don't destroy if there are dependents
+    if (
+      !force &&
+      Object.keys(this.ecosystem._graph.nodes[this.keyHash]?.dependents || {})
+        .length
+    ) {
+      return
+    }
+
+    this.setActiveState(ActiveState.Destroyed)
+
+    if (this._nextEvaluationReasons.length) {
+      this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
+    }
+
+    // Clean up effect injectors first, then everything else
+    const nonEffectInjectors: InjectorDescriptor[] = []
+    this._injectors?.forEach(injector => {
+      if (injector.type !== InjectorType.Effect) {
+        nonEffectInjectors.push(injector)
+        return
+      }
+      injector.cleanup?.()
+    })
+    nonEffectInjectors.forEach(injector => {
+      injector.cleanup?.()
+    })
+
+    // Clean up cached AtomSelectors - normal selectors don't have anything to
+    // clean up since their cached value should be garbage collected when the
+    // graph edge with its `cache` goes out of scope
+    this._atomSelectorCache?.forEach(cleanupAtomSelector)
+    this.ecosystem._graph.removeDependencies(this.keyHash)
+
+    this._subscription?.unsubscribe()
+    this.ecosystem._destroyAtomInstance(this.keyHash)
+  }
+
+  /**
+   * A standard atom's value can be one of:
+   *
+   * - A raw value
+   * - A Zedux store
+   * - An AtomApi
+   * - A function that returns a raw value
+   * - A function that returns a Zedux store
+   * - A function that returns an AtomApi
+   */
+  public _evaluate() {
+    const { _value } = this.atom
+
+    if (is(_value, AtomApi)) {
+      const asAtomApi = _value as AtomApi<State, Exports>
+      this.api = asAtomApi
+      return asAtomApi.value
+    }
+
+    if (typeof _value !== 'function') {
+      return _value as AtomValue<State>
+    }
+
+    try {
+      const val = (_value as (
+        ...params: Params
+      ) => AtomValue<State> | AtomApi<State, Exports>)(...this.params)
+
+      if (is(val, AtomApi)) {
+        this.api = val as AtomApi<State, Exports>
+
+        // Exports can only be set on initial evaluation
+        if (this._activeState === ActiveState.Initializing) {
+          this.exports = this.api.exports as Exports
+
+          if (this.api.promise) this._setPromise(this.api.promise)
+        }
+
+        return this.api.value
+      }
+
+      return val as AtomValue<State>
+    } catch (err) {
+      console.error(
+        `Zedux: Error while instantiating atom "${this.atom.key}" with params:`,
+        this.params,
+        err
+      )
+
+      throw err
+    }
+  }
+
+  /**
    * When a standard atom instance's refCount hits 0 and a ttl is set, we set a
    * timeout to destroy this atom instance.
    */
   public _scheduleDestruction() {
     // the atom is already scheduled for destruction or destroyed
-    if (this.activeState !== ActiveState.Active) return
+    if (this._activeState !== ActiveState.Active) return
 
     this.setActiveState(ActiveState.Stale)
     const { maxInstances } = this.atom
 
     if (maxInstances != null) {
-      if (maxInstances === 0) return this.destroy()
+      if (maxInstances === 0) return this._destroy()
 
-      const currentCount = Object.keys(
-        this.ecosystem.inspectInstances(this.atom)
-      ).length
+      const currentCount = this.ecosystem.findInstances(this.atom).length
 
-      if (currentCount > maxInstances) return this.destroy()
+      if (currentCount > maxInstances) return this._destroy()
     }
 
     const ttl = this._getTtl()
     if (ttl == null || ttl === -1) return
-    if (ttl === 0) return this.destroy()
+    if (ttl === 0) return this._destroy()
 
     if (typeof ttl === 'number') {
       // ttl is > 0; schedule destruction
-      const timeoutId = setTimeout(() => {
-        this._cancelDestruction = undefined
-        this.destroy()
-      }, ttl)
+      const timeoutId = setTimeout(() => this._destroy(), ttl)
 
       // TODO: dispatch an action over stateStore for these mutations
-      this._cancelDestruction = () => {
-        this._cancelDestruction = undefined
-        clearTimeout(timeoutId)
-      }
+      this._cancelDestruction = () => clearTimeout(timeoutId)
 
       return
     }
@@ -321,12 +469,10 @@ export class AtomInstance<
     if (typeof (ttl as Promise<any>).then === 'function') {
       let isCanceled = false
       ;(ttl as Promise<any>).then(() => {
-        this._cancelDestruction = undefined
-        if (!isCanceled) this.destroy()
+        if (!isCanceled) this._destroy()
       })
 
       this._cancelDestruction = () => {
-        this._cancelDestruction = undefined
         isCanceled = true
       }
 
@@ -334,47 +480,32 @@ export class AtomInstance<
     }
 
     // ttl is an observable; destroy as soon as it emits
-    const subscription = (ttl as Observable).subscribe(() => {
-      this._cancelDestruction = undefined
-      this.destroy()
-    })
+    const subscription = (ttl as Observable).subscribe(() => this._destroy())
 
-    this._cancelDestruction = () => {
-      this._cancelDestruction = undefined
-      subscription.unsubscribe()
-    }
+    this._cancelDestruction = () => subscription.unsubscribe()
   }
 
-  public _scheduleEvaluation = (
-    reason: EvaluationReason,
-    flags = 0,
-    shouldSetTimeout?: boolean
-  ) => {
+  public _scheduleEvaluation = (reason: EvaluationReason, flagScore = 0) => {
     // TODO: Any calls in this case probably indicate a memory leak on the
     // user's part. Notify them. TODO: Can we pause evaluations while
     // activeState is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
-    if (this.activeState === ActiveState.Destroyed) return
+    if (this._activeState === ActiveState.Destroyed) return
 
     this._nextEvaluationReasons.push(reason)
 
     if (this._nextEvaluationReasons.length > 1) return // job already scheduled
 
-    this.ecosystem._scheduler.scheduleJob(
-      {
-        flags,
-        keyHash: this.keyHash,
-        task: this.evaluationTask,
-        type: JobType.EvaluateNode,
-      },
-      shouldSetTimeout
-    )
+    this.ecosystem._scheduler.scheduleJob({
+      flagScore,
+      keyHash: this.keyHash,
+      task: this.evaluationTask,
+      type: JobType.EvaluateAtom,
+    })
   }
 
   // create small, memory-efficient bound function properties we can pass around
-  public invalidate = (operation?: string, targetType?: EvaluationTargetType) =>
-    this._invalidate(operation, targetType)
-
+  public invalidate = () => this._invalidate()
   private evaluate = () => this._evaluate()
   private evaluationTask = () => this._evaluationTask()
 
@@ -382,7 +513,6 @@ export class AtomInstance<
     const newInjectors: InjectorDescriptor[] = []
     let newFactoryResult: AtomValue<State>
     this._isEvaluating = true
-    this.ecosystem._graph.bufferUpdates(this.keyHash)
 
     try {
       newFactoryResult = diContext.provide(
@@ -392,91 +522,25 @@ export class AtomInstance<
         },
         this.evaluate
       )
+
+      this._prevEvaluationReasons = this._nextEvaluationReasons
     } catch (err) {
       newInjectors.forEach(injector => {
         injector.cleanup?.()
       })
-
-      this.ecosystem._graph.destroyBuffer()
-
       throw err
     } finally {
       this._isEvaluating = false
 
-      // even if evaluation errored, we need to update dependents if the store's
-      // state changed
-      if (this._bufferedUpdate) {
-        this._handleStateChange(
-          this._bufferedUpdate.newState,
-          this._bufferedUpdate.oldState,
-          this._bufferedUpdate.action
-        )
-        this._bufferedUpdate = undefined
+      if (this._activeState !== ActiveState.Initializing) {
+        this._nextEvaluationReasons = []
       }
-
-      this._prevEvaluationReasons = this._nextEvaluationReasons
-      this._nextEvaluationReasons = []
     }
 
-    this._injectors = newInjectors
-    this.ecosystem._graph.flushUpdates()
+    this._injectors = newInjectors // TODO: dispatch an action over stateStore for this mutation
+    this._updateEdges()
 
     return newFactoryResult
-  }
-
-  /**
-   * A standard atom's value can be one of:
-   *
-   * - A raw value
-   * - A Zedux store
-   * - A function that returns a raw value
-   * - A function that returns a Zedux store
-   * - A function that returns an AtomApi
-   */
-  private _evaluate() {
-    const { _value } = this.atom
-
-    if (typeof _value !== 'function') {
-      return _value
-    }
-
-    try {
-      const val = (_value as (
-        ...params: Params
-      ) => AtomValue<State> | AtomApi<State, Exports>)(...this.params)
-
-      if (!is(val, AtomApi)) return val as AtomValue<State>
-
-      this.api = val as AtomApi<State, Exports>
-
-      // Exports can only be set on initial evaluation
-      if (this.activeState === ActiveState.Initializing) {
-        this.exports = this.api.exports as Exports
-      }
-
-      // if api.value is a promise, we ignore api.promise
-      if (
-        typeof ((this.api.value as unknown) as Promise<any>)?.then ===
-        'function'
-      ) {
-        return this._setPromise(
-          (this.api.value as unknown) as Promise<any>,
-          true
-        )
-      } else if (this.api.promise) {
-        this._setPromise(this.api.promise)
-      }
-
-      return this.api.value as AtomValue<State>
-    } catch (err) {
-      console.error(
-        `Zedux: Error while evaluating atom "${this.atom.key}" with params:`,
-        this.params,
-        err
-      )
-
-      throw err
-    }
   }
 
   private _evaluationTask() {
@@ -484,23 +548,19 @@ export class AtomInstance<
 
     const newStateType = getStateType(newFactoryResult)
 
-    if (DEV && newStateType !== this._stateType) {
+    if (newStateType !== this._stateType) {
       throw new Error(
         `Zedux: atom factory for atom "${this.atom.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
       )
     }
 
-    if (
-      DEV &&
-      newStateType === StateType.Store &&
-      newFactoryResult !== this.store
-    ) {
+    if (newStateType === StateType.Store && newFactoryResult !== this.store) {
       throw new Error(
         `Zedux: atom factory for atom "${this.atom.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
       )
     }
 
-    // there is no way to cause an evaluation loop when the StateType is Value
+    // I believe there is no way to cause an evaluation loop when the StateType is Value
     if (newStateType === StateType.Value) {
       this.store.setState(
         typeof newFactoryResult === 'function'
@@ -508,6 +568,18 @@ export class AtomInstance<
           : (newFactoryResult as State)
       )
     }
+  }
+
+  private _forwardPromises() {
+    const promises = Object.keys(
+      this.ecosystem._graph.nodes[this.keyHash].dependencies
+    )
+      .map(keyHash => this.ecosystem._instances[keyHash].promise)
+      .filter(Boolean) as Promise<any>[]
+
+    if (!promises.length) return
+
+    this._setPromise(Promise.all(promises))
   }
 
   private _getTtl() {
@@ -521,97 +593,82 @@ export class AtomInstance<
     return typeof ttl === 'function' ? ttl() : ttl
   }
 
-  private _handleStateChange(
-    newState: State,
-    oldState: State | undefined,
-    action: ActionChain
-  ) {
-    this.ecosystem._graph.scheduleDependents(
-      this.keyHash,
-      this._nextEvaluationReasons,
-      newState,
-      oldState,
-      false
-    )
+  private _invalidate() {
+    this._scheduleEvaluation({
+      operation: 'invalidate',
+      targetType: EvaluationTargetType.External,
+      type: EvaluationType.CacheInvalidated,
+    })
+  }
 
-    // Set the action's meta field to `metaTypes.SKIP_EVALUATION` to prevent
-    // plugins from receiving it. The Zedux StateHub has to do this to prevent
-    // infinite state update loops when inspecting the state of the StateHub
-    // itself.
-    if (
-      this.ecosystem.mods.stateChanged &&
-      removeAllMeta(action).meta !== metaTypes.SKIP_EVALUATION
-    ) {
-      this.ecosystem.modsMessageBus.dispatch(
-        ZeduxPlugin.actions.stateChanged({
-          action,
-          instance: this,
-          newState,
-          oldState,
-          reasons: this._nextEvaluationReasons,
-        })
-      )
+  private _setPromise(promise: Promise<any>) {
+    this.promise = promise
+    this._promiseStatus = PromiseStatus.Pending
+
+    promise
+      .then(() => {
+        this._promiseStatus = PromiseStatus.Resolved
+      })
+      .catch(err => {
+        this._promiseStatus = PromiseStatus.Rejected
+        this._promiseError = err
+      })
+  }
+
+  private _shouldForwardPromise() {
+    return this.atom.forwardPromises != null
+      ? this.atom.forwardPromises
+      : this.ecosystem.defaultForwardPromises
+  }
+
+  private _updateEdges() {
+    const edges = this.ecosystem._graph.nodes[this.keyHash].dependencies
+    const edgesToAdd = this._edgesToAdd
+
+    // remove any edges that were not recreated this evaluation
+    if (edges) {
+      Object.keys(edges).forEach(dependencyKey => {
+        const existingEdge = this.ecosystem._graph.nodes[dependencyKey]
+          .dependents[this.keyHash]
+
+        const edgeToAdd = edgesToAdd?.[dependencyKey]
+        const existingEdgeDynamicity = getEdgeDynamicity(existingEdge)
+
+        if (edgeToAdd && edgeToAdd[0] === existingEdgeDynamicity) return
+
+        this.ecosystem._graph.removeDependency(this.keyHash, dependencyKey)
+      })
     }
 
-    // run the scheduler synchronously after any atom instance state update
-    this.ecosystem._scheduler.flush()
-  }
+    // add new edges that were added this evaluation
+    if (edgesToAdd) {
+      Object.keys(edgesToAdd).forEach(dependencyKey => {
+        const edgeToAdd = edgesToAdd[dependencyKey]
+        const existingEdge = edges?.[dependencyKey]
 
-  private _invalidate(
-    operation = 'invalidate',
-    targetType = EvaluationTargetType.External
-  ) {
-    this._scheduleEvaluation(
-      {
-        operation,
-        targetType,
-        type: EvaluationType.CacheInvalidated,
-      },
-      0,
-      false
-    )
+        if (existingEdge) {
+          return
+        }
 
-    // run the scheduler synchronously after invalidation
-    this.ecosystem._scheduler.flush()
-  }
-
-  private _setPromise(promise: Promise<any>, isStateUpdater?: boolean) {
-    if (promise === this.promise) return this.store.getState()
-
-    this.promise = promise
-
-    // since we're the first to chain off the returned promise, we don't need to
-    // track the chained promise - it will run first, before React suspense's
-    // `.then` on the thrown promise, for example
-    promise
-      .then(data => {
-        this._promiseStatus = 'success'
-        if (!isStateUpdater) return
-
-        this.store.setState((getSuccessPromiseState(data) as unknown) as State)
+        this.ecosystem._graph.addDependency(
+          this.keyHash,
+          dependencyKey,
+          edgeToAdd[1],
+          edgeToAdd[0] === GraphEdgeDynamicity.Static,
+          false
+        )
       })
-      .catch(error => {
-        this._promiseStatus = 'error'
-        this._promiseError = error
-        if (!isStateUpdater) return
+    }
 
-        this.store.setState((getErrorPromiseState(error) as unknown) as State)
-      })
+    // clean up any AtomSelectors that weren't run again this evaluation
+    this._atomSelectorCache?.forEach((cache, selector) => {
+      if (this._atomSelectorsToCache?.has(selector)) return
 
-    const state: PromiseState<any> = getInitialPromiseState()
-    this._promiseStatus = state.status
+      cleanupAtomSelector(cache)
+    })
 
-    this.ecosystem._graph.scheduleDependents(
-      this.keyHash,
-      this._nextEvaluationReasons,
-      undefined,
-      undefined,
-      true,
-      EvaluationType.PromiseChanged,
-      GraphEdgeSignal.Updated,
-      true
-    )
-
-    return (state as unknown) as State
+    this._atomSelectorCache = this._atomSelectorsToCache
+    this._atomSelectorsToCache = undefined
+    this._edgesToAdd = undefined
   }
 }
