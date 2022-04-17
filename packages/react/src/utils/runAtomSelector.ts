@@ -1,4 +1,4 @@
-import { Dep } from './types'
+import { AtomSelectorCache, Dep } from './types'
 import { Ecosystem } from '../classes'
 import {
   AnyAtomBase,
@@ -9,7 +9,6 @@ import {
   AtomSelectorOrConfig,
   EvaluationReason,
   GraphEdgeDynamicity,
-  Ref,
 } from '../types'
 
 const defaultArgsComparator = (newArgs: any[], prevArgs: any[]) =>
@@ -20,50 +19,67 @@ const defaultResultsComparator = (a: any, b: any) => a === b
 
 const defaultMaterializer = (materializeDeps: () => void) => materializeDeps()
 
-export const runAtomSelector = <T = any, Args extends any[] = []>(
+const isCached = <T, Args extends any[]>(
+  cache: AtomSelectorCache<T, Args>,
   selectorOrConfig: AtomSelectorOrConfig<T, Args>,
-  args: Args,
-  ecosystem: Ecosystem,
-  prevArgs: Ref<Args | undefined>,
-  prevDeps: Ref<Record<string, Dep>>,
-  prevResult: Ref<T | undefined>,
-  prevSelector: Ref<AtomSelectorOrConfig<T, Args> | undefined>,
-  evaluate: (reasons?: EvaluationReason[]) => void,
-  operation: string,
-  id: string,
-  tryToShortCircuit: boolean,
-  materializer = defaultMaterializer
+  args: Args
 ) => {
-  const config = (selectorOrConfig as unknown) as AtomSelectorConfig<T, Args>
   const selector =
     typeof selectorOrConfig === 'function'
       ? selectorOrConfig
       : selectorOrConfig.selector
 
-  const resultsComparator = config.resultsComparator || defaultResultsComparator
-
-  // only try short-circuiting if this isn't the first run
-  if (tryToShortCircuit) {
-    // short-circuit if user supplied argsComparator and args are the same
-    if (config.argsComparator) {
-      if (config.argsComparator(args, prevArgs.current as Args)) {
-        return prevResult.current as T
-      }
-    } else {
-      // user didn't supply argsComparator: Short-circuit if args and selector
-      // are the same
-      if (
-        defaultArgsComparator(args, prevArgs.current as Args) &&
-        selectorOrConfig === prevSelector.current
-      ) {
-        return prevResult.current as T
-      }
+  // short-circuit if user supplied argsComparator and args are the same
+  if ((selectorOrConfig as AtomSelectorConfig<T, Args>).argsComparator) {
+    if (
+      (selectorOrConfig as AtomSelectorConfig<T, Args>).argsComparator?.(
+        args,
+        cache.prevArgs as Args
+      )
+    ) {
+      return true
+    }
+  } else {
+    // user didn't supply argsComparator: Short-circuit if args and prevSelector
+    // are the same
+    if (
+      defaultArgsComparator(args, cache.prevArgs as Args) &&
+      selector === cache.prevSelector
+    ) {
+      return true
     }
   }
 
+  return false
+}
+
+export const runAtomSelector = <T = any, Args extends any[] = []>(
+  selectorOrConfig: AtomSelectorOrConfig<T, Args>,
+  args: Args,
+  ecosystem: Ecosystem,
+  cache: AtomSelectorCache<T, Args>,
+  evaluate: (reasons?: EvaluationReason[]) => void,
+  operation: string,
+  tryToShortCircuit: boolean,
+  materializer = defaultMaterializer
+) => {
+  const selector =
+    typeof selectorOrConfig === 'function'
+      ? selectorOrConfig
+      : selectorOrConfig.selector
+
+  const resultsComparator =
+    (selectorOrConfig as AtomSelectorConfig<T, Args>).resultsComparator ||
+    defaultResultsComparator
+
+  // only try short-circuiting if this isn't the first run
+  if (tryToShortCircuit && isCached(cache, selectorOrConfig, args)) {
+    return cache.prevResult as T
+  }
+
   // we couldn't short-circuit. Update refs
-  prevArgs.current = args
-  prevSelector.current = selectorOrConfig
+  cache.prevArgs = args
+  cache.prevSelector = selector
 
   const deps: Record<string, Dep> = {}
   let isExecuting = true
@@ -108,41 +124,102 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
   }
 
   const select = <T, Args extends any[]>(
-    atomSelector: AtomSelectorOrConfig<T, Args>,
-    ...args: any[]
+    selectorOrConfig: AtomSelectorOrConfig<T, Args>,
+    ...args: Args
   ) => {
     // we throw away any atom selector config in nested selects
     const resolvedSelector =
-      typeof atomSelector === 'function' ? atomSelector : atomSelector.selector
+      typeof selectorOrConfig === 'function'
+        ? selectorOrConfig
+        : selectorOrConfig.selector
 
-    return (resolvedSelector as any)(getters, ...args)
+    if (!isExecuting) return resolvedSelector(getters, ...args)
+
+    if (!cache.children) cache.children = new Map()
+
+    // look in this run's cache first - in case we've already copied the child
+    // cache over - then look in the previous run's cache
+    const childCache =
+      (cache.children?.get(
+        resolvedSelector as AtomSelector<any, any[]>
+      ) as AtomSelectorCache<T, Args>) ||
+      (cache.prevChildren?.get(
+        resolvedSelector as AtomSelector<any, any[]>
+      ) as AtomSelectorCache<T, Args>)
+
+    if (childCache && isCached(childCache, selectorOrConfig, args)) {
+      cache.children.set(
+        resolvedSelector as AtomSelector<any, any[]>,
+        childCache as AtomSelectorCache<any, any[]>
+      )
+
+      return childCache.prevResult as T
+    }
+
+    const result = resolvedSelector(getters, ...args)
+    const resultsComparator =
+      (selectorOrConfig as AtomSelectorConfig<T, Args>).resultsComparator ||
+      defaultResultsComparator
+
+    if (childCache && resultsComparator(result, childCache.prevResult as T)) {
+      childCache.prevArgs = args
+      cache.children.set(
+        resolvedSelector as AtomSelector<any, any[]>,
+        childCache as AtomSelectorCache<any, any[]>
+      )
+
+      return childCache.prevResult as T
+    }
+
+    cache.children.set(resolvedSelector as AtomSelector<any, any[]>, {
+      // an id would be nice
+      prevArgs: args as any[],
+      prevResult: result,
+      prevSelector: resolvedSelector as AtomSelector<any, any[]>,
+    })
+
+    return result
+  }
+
+  if (cache.children) {
+    cache.prevChildren = cache.children
+    cache.children = undefined // this is set on the fly if needed (in `select`)
   }
 
   const getters: AtomGetters = { ecosystem, get, getInstance, select }
   const selectorResult = selector(getters, ...args)
   isExecuting = false
 
+  // Maybe it could be useful to see this in devtools though... or could even
+  // provide an ecosystem selectorGraphHistory option to turn this on. For now,
+  // prevChildren is unused by us after this point so let it be garbage
+  // collected.
+  cache.prevChildren = undefined
+
   // clean up any deps that are gone now
-  Object.values(prevDeps.current).forEach(prevDep => {
-    const dep = deps[prevDep.instance.keyHash]
+  if (cache.prevDeps) {
+    Object.values(cache.prevDeps).forEach(prevDep => {
+      const dep = deps[prevDep.instance.keyHash]
 
-    // don't cleanup if nothing's changed; we'll copy the old dep to the new
-    // deps. Check for instance ref match in case of instance force-destruction
-    if (
-      dep?.instance === prevDep.instance &&
-      dep.dynamicity === prevDep.dynamicity
-    ) {
-      return
-    }
+      // don't cleanup if nothing's changed; we'll copy the old dep to the new
+      // deps. Check for instance ref match in case of instance force-destruction
+      if (
+        dep?.instance === prevDep.instance &&
+        dep.dynamicity === prevDep.dynamicity
+      ) {
+        return
+      }
 
-    prevDep.cleanup?.()
-  })
+      prevDep.cleanup?.()
+    })
+  }
 
+  let hasChanges = false
   const newDeps: Record<string, Dep> = {}
 
   // register new deps
   Object.values(deps).forEach(dep => {
-    const prevDep = prevDeps.current[dep.instance.keyHash]
+    const prevDep = cache.prevDeps?.[dep.instance.keyHash]
 
     // don't create a new edge if nothing's changed; copy the old dep to the new
     // deps. Check for instance ref match in case of instance force-destruction
@@ -157,35 +234,32 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
     const ghost = ecosystem._graph.registerGhostDependent(
       dep.instance,
       (signal, newState, reasons) => {
+        console.log('selector got update!', newState, reasons)
         // we don't need to defer running this on GraphEdgeSignal.Destroyed
         // 'cause this callback already schedules an UpdateExternalDependent
         // job that will defer execution until after the instance is fully
         // destroyed
         const newResult = runAtomSelector(
-          prevSelector.current as AtomSelectorOrConfig<T, Args>,
-          prevArgs.current as Args,
+          selectorOrConfig,
+          cache.prevArgs as Args,
           ecosystem,
-          prevArgs,
-          prevDeps,
-          prevResult,
-          prevSelector,
+          cache,
           evaluate,
           operation,
-          id,
           false // short-circuit not possible if a dep changed
         )
 
         // Only evaluate if the selector result changes
-        if (resultsComparator(newResult, prevResult.current as T)) return
+        if (resultsComparator(newResult, cache.prevResult as T)) return
 
-        prevResult.current = newResult
+        cache.prevResult = newResult
         evaluate(reasons)
       },
       operation,
       dep.dynamicity === GraphEdgeDynamicity.Static,
       false,
       true,
-      id
+      cache.id
     )
 
     dep.cleanup = () => ghost.destroy()
@@ -194,16 +268,19 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
       dep.cleanup = ghost.materialize()
     }
 
+    hasChanges = true
     newDeps[dep.instance.keyHash] = dep
   })
 
-  materializer(() => {
-    Object.values(newDeps).forEach(dep => {
-      dep.materialize?.()
+  if (hasChanges) {
+    materializer(() => {
+      Object.values(newDeps).forEach(dep => {
+        dep.materialize?.()
+      })
     })
-  })
+  }
 
-  prevDeps.current = newDeps
+  cache.prevDeps = newDeps
 
   return selectorResult
 }

@@ -1,9 +1,10 @@
 import React, { FC } from 'react'
+import { AnyAtom } from '../types'
 import { AtomInstanceBase } from '../classes'
 
 export const AtomInstanceProvider: FC<
-  | { instance: AtomInstanceBase<any, any, any>; instances?: undefined }
-  | { instance?: undefined; instances: AtomInstanceBase<any, any, any>[] }
+  | { instance: AtomInstanceBase<any, any, AnyAtom>; instances?: undefined }
+  | { instance?: undefined; instances: AtomInstanceBase<any, any, AnyAtom>[] }
 > = ({ children, instance, instances }) => {
   if (!instance && !instances) {
     throw new Error(
@@ -12,13 +13,20 @@ export const AtomInstanceProvider: FC<
   }
 
   const allInstances =
-    instances || ([instance] as AtomInstanceBase<any, any, any>[])
+    instances || ([instance] as AtomInstanceBase<any, any, AnyAtom>[])
 
-  const el = allInstances.reduceRight((child, instance) => {
-    const context = instance.atom.getReactContext()
+  if (!allInstances.length) {
+    return <>{children}</>
+  }
 
-    return <context.Provider value={instance}>{child}</context.Provider>
-  }, children)
+  const [parentInstance, ...childInstances] = allInstances
+  const context = parentInstance.atom.getReactContext()
 
-  return <>{el}</> // why .. can't we return el
+  return (
+    <context.Provider value={allInstances[0]}>
+      <AtomInstanceProvider instances={childInstances}>
+        {children}
+      </AtomInstanceProvider>
+    </context.Provider>
+  )
 }

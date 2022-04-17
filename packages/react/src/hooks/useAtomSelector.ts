@@ -1,6 +1,6 @@
 import { AtomSelectorOrConfig, MaybeCleanup } from '../types'
-import { useLayoutEffect, useRef, useState } from 'react'
-import { Dep, generateAtomSelectorId } from '../utils'
+import { useEffect, useRef, useState } from 'react'
+import { AtomSelectorCache, generateAtomSelectorId } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { runAtomSelector } from '../utils/runAtomSelector'
 
@@ -12,32 +12,29 @@ export const useAtomSelector = <T, Args extends any[]>(
 ): T => {
   const ecosystem = useEcosystem()
   const [, forceRender] = useState<any>()
-  const prevArgs = useRef<Args>() // don't populate initially
-  const prevDeps = useRef<Record<string, Dep>>({})
-  const prevResult = useRef<T>()
-  const prevSelector = useRef<AtomSelectorOrConfig<T, Args>>() // don't populate initially
-  const idRef = useRef<string>()
+  const cache = useRef<AtomSelectorCache<T, Args>>({
+    id: '',
+    prevDeps: {},
+  })
   const hasEffectRun = useRef(false)
   hasEffectRun.current = false
 
   // doesn't matter if fibers/suspense mess this id up - it's just for some
   // consistency when inspecting dependencies created by this selector in
   // development
-  if (!idRef.current) idRef.current = generateAtomSelectorId()
+  if (!cache.current.id) {
+    cache.current.id = `react-component-${generateAtomSelectorId()}`
+  }
 
   let effect: MaybeCleanup = undefined
   const result = runAtomSelector<T, Args>(
     atomSelector,
     args,
     ecosystem,
-    prevArgs,
-    prevDeps,
-    prevResult,
-    prevSelector,
+    cache.current,
     () => forceRender({}),
     OPERATION,
-    idRef.current,
-    !!prevArgs.current,
+    !!cache.current.prevArgs,
     materializeDeps => {
       // during render, we don't want to create any deps outside an effect.
       // After render, just update the deps immediately
@@ -47,17 +44,22 @@ export const useAtomSelector = <T, Args extends any[]>(
   )
 
   // run this effect every render
-  useLayoutEffect(() => {
+  useEffect(() => {
     hasEffectRun.current = true
-    if (effect) effect()
+    if (effect) {
+      effect()
+      effect = undefined
+    }
   })
 
-  prevResult.current = result
+  cache.current.prevResult = result
 
   // Final cleanup on unmount
-  useLayoutEffect(
+  useEffect(
     () => () => {
-      Object.values(prevDeps.current).forEach(dep => {
+      if (!cache.current.prevDeps) return
+
+      Object.values(cache.current.prevDeps).forEach(dep => {
         dep.cleanup?.()
       })
     },

@@ -1,5 +1,6 @@
 import {
   AsyncStore,
+  AtomSelector,
   Cleanup,
   DependentEdge,
   GraphEdgeDynamicity,
@@ -34,6 +35,19 @@ export interface AtomDynamicInjectorDescriptor<
 > extends InjectorDescriptor {
   instance: InstanceType
   type: InjectorType.AtomDynamic
+}
+
+export interface AtomSelectorCache<T = any, Args extends any[] = []> {
+  // just doing a single level of children - not tracking deeply-nested graphs
+  // of selectors for now (so doing `cache.children.get(selector).children`
+  // isn't a thing - all children live on the top level)
+  children?: Map<AtomSelector<any, any[]>, AtomSelectorCache<any, any[]>>
+  id?: string
+  prevArgs?: Args
+  prevChildren?: Map<AtomSelector<any, any[]>, AtomSelectorCache<any, any[]>>
+  prevDeps?: Record<string, Dep>
+  prevResult?: T
+  prevSelector?: AtomSelector<T, Args>
 }
 
 export interface CallStackContext<T = any> {

@@ -22,11 +22,10 @@ import {
   GraphEdgeDynamicity,
   GraphEdgeInfo,
   PromiseStatus,
-  Ref,
   StateType,
 } from '@zedux/react/types'
 import {
-  Dep,
+  AtomSelectorCache,
   generateAtomSelectorId,
   InjectorDescriptor,
   InjectorType,
@@ -42,19 +41,13 @@ import { StandardAtomBase } from '../atoms/StandardAtomBase'
 import { runAtomSelector } from '../../utils/runAtomSelector'
 import { ZeduxPlugin } from '../ZeduxPlugin'
 
-interface AtomSelectorCache {
-  id: string
-  prevArgs: Ref<any[] | undefined>
-  prevDeps: Ref<Record<string, Dep>>
-  prevResult: Ref<any>
-}
-
 const SELECT_OPERATION = 'select'
 
-const cleanupAtomSelector = (selectorCache: AtomSelectorCache) => {
-  if (!Object.keys(selectorCache.prevDeps.current).length) return
+const cleanupAtomSelector = (selectorCache: AtomSelectorCache<any, any[]>) => {
+  if (!selectorCache.prevDeps || !Object.keys(selectorCache.prevDeps).length)
+    return
 
-  Object.values(selectorCache.prevDeps.current).forEach(dep => {
+  Object.values(selectorCache.prevDeps).forEach(dep => {
     dep.cleanup?.()
   })
 }
@@ -112,19 +105,23 @@ export class AtomInstance<
   public _activeState = ActiveState.Initializing
   public _cancelDestruction?: Cleanup
   public _createdAt = Date.now()
-  public _evaluationReasons: EvaluationReason[] = [] // TODO: Maybe make this undefined in prod and don't use
   public _injectors?: InjectorDescriptor[]
   public _isEvaluating = false
+  public _prevEvaluationReasons: EvaluationReason[] = []
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
   public _stateType?: StateType
 
-  private _atomSelectorCache?: Map<AtomSelector, AtomSelectorCache>
+  private _atomSelectorCache?: Map<
+    AtomSelector<any, any[]>,
+    AtomSelectorCache<any, any[]>
+  >
   private _atomSelectorsToCache?: Map<
     AtomSelector<any, any[]>,
-    AtomSelectorCache
+    AtomSelectorCache<any, any[]>
   >
   private _edgesToAdd?: Record<string, GraphEdgeInfo>
+  private _nextEvaluationReasons: EvaluationReason[] = []
   private _subscription?: Subscription
 
   constructor(
@@ -141,7 +138,7 @@ export class AtomInstance<
     this._subscription = this.store.subscribe((newState, oldState, action) => {
       ecosystem._graph.scheduleDependents(
         keyHash,
-        this._evaluationReasons,
+        this._prevEvaluationReasons,
         newState,
         oldState
       )
@@ -160,7 +157,7 @@ export class AtomInstance<
             instance: this,
             newState,
             oldState,
-            reasons: this._evaluationReasons,
+            reasons: this._prevEvaluationReasons,
           })
         )
       }
@@ -199,8 +196,8 @@ export class AtomInstance<
       params as AtomParamsType<A>
     )
 
-    // when called outside evaluation, instance._get() is just an alias
-    // for ecosystem.getInstance().store.getState()
+    // when called outside evaluation, instance.get() is just an alias
+    // for ecosystem.get()
     if (!this._isEvaluating) return instance.store.getState()
 
     // if get is called during evaluation, track the loaded instances so we can
@@ -228,7 +225,7 @@ export class AtomInstance<
       params as AtomParamsType<A>
     )
 
-    // when called outside evaluation, instance._getInstance() is just an alias
+    // when called outside evaluation, instance.getInstance() is just an alias
     // for ecosystem.getInstance()
     if (!this._isEvaluating) return instance
 
@@ -262,6 +259,8 @@ export class AtomInstance<
     atomSelector: AtomSelectorOrConfig<T, Args>,
     ...args: Args
   ): T {
+    if (!this._isEvaluating) return this.ecosystem.select(atomSelector, ...args)
+
     // AtomSelectors are remembered across evaluations by reference.
     const resolvedSelector = (typeof atomSelector === 'function'
       ? atomSelector
@@ -274,7 +273,9 @@ export class AtomInstance<
     // look in the current run's cache first (in case we've already copied the
     // old cache object over or already created one for this exact selector
     // this run), then the previous run
-    let cache = this._atomSelectorsToCache.get(resolvedSelector)
+    let cache:
+      | AtomSelectorCache<T, any[]>
+      | undefined = this._atomSelectorsToCache.get(resolvedSelector)
 
     if (!cache) {
       cache = this._atomSelectorCache?.get(resolvedSelector)
@@ -284,9 +285,8 @@ export class AtomInstance<
       // no cache has been created for this AtomSelector yet
       cache = {
         id: `${this.keyHash}-${generateAtomSelectorId()}`,
-        prevArgs: { current: undefined },
-        prevDeps: { current: {} },
-        prevResult: { current: undefined },
+        prevDeps: {},
+        prevSelector: resolvedSelector,
       }
     }
 
@@ -294,19 +294,16 @@ export class AtomInstance<
 
     // have to update this value since this code never runs again as long as
     // the AtomSelector is cached
-    let cachedPrevResult = cache.prevResult.current
+    let cachedPrevResult = cache.prevResult
 
     const result = runAtomSelector<T, Args>(
       atomSelector,
       args,
       this.ecosystem,
-      cache.prevArgs as Ref<Args>,
-      cache.prevDeps,
-      cache.prevResult,
-      { current: atomSelector },
+      cache as AtomSelectorCache<T, Args>,
       reasons => {
         this._scheduleEvaluation({
-          newState: cache?.prevResult.current, // runAtomSelector updates this ref before calling this callback
+          newState: cache?.prevResult, // runAtomSelector updates this ref before calling this callback
           oldState: cachedPrevResult,
           operation: SELECT_OPERATION,
           reasons,
@@ -314,14 +311,13 @@ export class AtomInstance<
           type: EvaluationType.StateChanged,
         })
 
-        cachedPrevResult = cache?.prevResult.current
+        cachedPrevResult = cache?.prevResult
       },
       SELECT_OPERATION,
-      cache.id,
-      !!cache.prevArgs.current // allow run to short-circuit if this isn't the first run
+      !!cache.prevArgs // allow run to short-circuit if this isn't the first run
     )
 
-    cache.prevResult.current = result
+    cache.prevResult = result
 
     return result
   }
@@ -357,7 +353,7 @@ export class AtomInstance<
 
     this.setActiveState(ActiveState.Destroyed)
 
-    if (this._evaluationReasons.length) {
+    if (this._nextEvaluationReasons.length) {
       this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
     }
 
@@ -496,16 +492,9 @@ export class AtomInstance<
     // waking up a stale atom)?
     if (this._activeState === ActiveState.Destroyed) return
 
-    if (this._evaluationReasons.length) {
-      this._evaluationReasons.push(reason)
-      return
-    }
+    this._nextEvaluationReasons.push(reason)
 
-    // TODO: maybe we should keep previous evaluation reasons around until the
-    // task runs? Or move _evaluationReasons to _previousEvaluationReasons when
-    // the evaluation task finishes? Just feels odd suddenly overwriting them
-    // here.
-    this._evaluationReasons = [reason]
+    if (this._nextEvaluationReasons.length > 1) return // job already scheduled
 
     this.ecosystem._scheduler.scheduleJob({
       flagScore,
@@ -533,6 +522,8 @@ export class AtomInstance<
         },
         this.evaluate
       )
+
+      this._prevEvaluationReasons = this._nextEvaluationReasons
     } catch (err) {
       newInjectors.forEach(injector => {
         injector.cleanup?.()
@@ -542,7 +533,7 @@ export class AtomInstance<
       this._isEvaluating = false
 
       if (this._activeState !== ActiveState.Initializing) {
-        this._evaluationReasons = []
+        this._nextEvaluationReasons = []
       }
     }
 
