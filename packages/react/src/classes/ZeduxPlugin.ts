@@ -14,7 +14,7 @@ import {
   EvaluationReason,
   MaybeCleanup,
 } from '../types'
-import { Ghost } from './Ghost'
+import { AtomSelectorCache } from '../utils'
 
 type ValuesOf<Rec extends Record<any, any>> = Rec extends Record<any, infer T>
   ? T
@@ -46,29 +46,23 @@ export class ZeduxPlugin {
     edgeCreated: createActor<
       {
         dependency: AnyAtomInstanceBase
-        // string if `edge.isExternal` or the atom instance hasn't been created
-        // yet ('cause the edge was created while the instance was initializing.
-        // TODO: maybe make it so atom instances can be added to the ecosystem
-        // before being fully initialized):
+        // string if `edge.flags & EdgeFlag.External` or the atom instance
+        // hasn't been created yet ('cause the edge was created while the
+        // instance was initializing. TODO: maybe make it so atom instances can
+        // be added to the ecosystem before being fully initialized):
         dependent: AnyAtomInstanceBase | string
-        edge: DependentEdge // external means a ghost edge materialized
+        edge: DependentEdge
       },
       'edgeCreated'
     >('edgeCreated'),
     edgeRemoved: createActor<
       {
-        dependency: AnyAtomInstanceBase
-        dependent: AnyAtomInstanceBase | string // string if `edge.isExternal`
+        dependency: AnyAtomInstanceBase | AtomSelectorCache<any, any[]>
+        dependent: AnyAtomInstanceBase | AtomSelectorCache<any, any[]> | string // string if edge is External
         edge: DependentEdge
       },
       'edgeRemoved'
     >('edgeRemoved'),
-    ghostEdgeCreated: createActor<{ ghost: Ghost }, 'ghostEdgeCreated'>(
-      'ghostEdgeCreated'
-    ),
-    ghostEdgeDestroyed: createActor<{ ghost: Ghost }, 'ghostEdgeDestroyed'>(
-      'ghostEdgeDestroyed'
-    ),
     instanceActiveStateChanged: createActor<
       {
         instance: AnyAtomInstanceBase
@@ -77,16 +71,18 @@ export class ZeduxPlugin {
       },
       'instanceActiveStateChanged'
     >('instanceActiveStateChanged'),
-    instanceStateChanged: createActor<
+    // either instance or selectorCache will always be defined, depending on the node type
+    stateChanged: createActor<
       {
-        action: ActionChain
-        instance: AnyAtomInstanceBase
+        action?: ActionChain
+        instance?: AnyAtomInstanceBase
         newState: any
         oldState: any
         reasons: EvaluationReason[]
+        selectorCache?: AtomSelectorCache
       },
-      'instanceStateChanged'
-    >('instanceStateChanged'),
+      'stateChanged'
+    >('stateChanged'),
   }
 
   public modsStore: Store<Record<Mod, boolean>>

@@ -1,5 +1,5 @@
 import { useAtomInstance, useAtomSelector } from '@zedux/react'
-import React, { FC, useLayoutEffect } from 'react'
+import React, { PropsWithChildren, useLayoutEffect } from 'react'
 import { rect } from '../atoms/rect'
 import { getIsOpen, getPosition, stateHub } from '../atoms/stateHub'
 import styled from '@zedux/react/ssc'
@@ -45,7 +45,7 @@ const Positioner = styled.div<{ col: GridNum; row: GridNum; size: Size }>`
   }
 `
 
-export const Position: FC = ({ children }) => {
+export const Position = ({ children }: PropsWithChildren<{}>) => {
   const position = useAtomSelector(getPosition)
   const isOpen = useAtomSelector(getIsOpen)
   const { positioneeRef, recalculate } = useAtomInstance(rect).exports

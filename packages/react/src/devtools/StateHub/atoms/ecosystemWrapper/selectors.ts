@@ -128,7 +128,7 @@ export const ecosystemAtomInstance = ion(
 
         return newSnapshot
       },
-      ['ecosystemWiped', 'instanceActiveStateChanged', 'instanceStateChanged']
+      ['ecosystemWiped', 'instanceActiveStateChanged', 'stateChanged']
     )
   },
   { ttl: 60000 }

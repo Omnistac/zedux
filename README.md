@@ -7,10 +7,12 @@
 
 A Molecular State Engine for React.
 
+Zedux features a powerful composable store model wrapped in an atomic architecture. State management doesn't have to be hard to be amazing.
+
 ## Feature list of awesomeness
 
-- Composable stores
 - Atomic architecture
+- Composable stores
 - Zero configuration
 - State machines
 - Cache management
@@ -43,7 +45,7 @@ Or include the appropriate unpkg build on your page (module exposed as `window.Z
 
 ## Getting started
 
-To learn by example, check out the [examples doc page](https://bowheart.github.io/zedux/docs/examples) or the [examples in the repo](https://github.com/bowheart/zedux/tree/master/examples).
+To learn by example, check out the [examples doc page](https://Omnistac.github.io/zedux/docs/examples) or the [examples in the repo](https://github.com/bowheart/zedux/tree/master/examples).
 
 To learn by getting dirty, have a play with [this codepen](https://codepen.io/bowheart/pen/MrKMmw?editors=0010).
 
@@ -181,7 +183,7 @@ Note that `store.hydrate()` does _not_ merge state:
 store.hydrate({ c: 3 }) // { c: 3 } (oops)
 ```
 
-> You may have noticed that the branch nodes of our state trees are all plain objects. But Zedux can actually be taught to understand any hierarchical data type. Immutable fans rejoice and check out the guide on [configuring the hierarchy](https://bowheart.github.io/zedux/docs/guides/configuringTheHierarchy).
+> You may have noticed that the branch nodes of our state trees are all plain objects. But Zedux can actually be taught to understand any hierarchical data type. Immutable fans rejoice and check out the guide on [configuring the hierarchy](https://Omnistac.github.io/zedux/docs/guides/configuringTheHierarchy).
 
 ### But what about time travel??
 
@@ -248,7 +250,7 @@ Zedux apps will be able to mix and match approaches, adapting to every stateful 
 
 The composable nature of Zedux makes it especially useful in feature-based, micro-frontend, or otherwise code-split architectures.
 
-At this point you should have a pretty good idea of what Zedux is all about. Check out the [full documentation](https://bowheart.github.io/zedux/docs/getting-started/quick-start) for the rest of the awesomeness.
+At this point you should have a pretty good idea of what Zedux is all about. Check out the [full documentation](https://Omnistac.github.io/zedux/docs/getting-started/quick-start) for the rest of the awesomeness.
 
 ## Official packages
 

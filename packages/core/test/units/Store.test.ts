@@ -231,7 +231,7 @@ describe('Store.setState()', () => {
     const inducer = (state: any) => ({ a: state.a })
 
     expect(() => store.setState(inducer)).toThrowError(
-      /cannot read property.*of undefined/i
+      /cannot read propert.*of undefined/i
     )
   })
 
@@ -242,7 +242,7 @@ describe('Store.setState()', () => {
     const inducer = (state: any) => ({ a: state.a })
 
     expect(() => store.setState(inducer)).toThrowError(
-      /cannot read property.*of undefined/i
+      /cannot read propert.*of undefined/i
     )
     expect(subscriber).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -560,6 +560,27 @@ class Counter extends AtomClass {
 }
 ```
 
+## Usage Context
+
+An atom could receive data from the component or atom using it.
+
+```tsx
+import { atom, injectState, injectUsageHandler } from '@zedux/react'
+
+const curiousAtom = atom('curious', () => {
+  const [state, setState] = injectState()
+
+  injectUsageHandler(context => {
+    if (context) setState(context)
+  })
+})
+
+function CuriousComponent() {
+  // obviously don't do this like ... ever. It's an extreme escape hatch.
+  curiousAtom.useContextualInstance(someContext)
+}
+```
+
 ## Work List
 
 Round 1 (end of December, 2020)
@@ -602,27 +623,23 @@ x- `injectCallback()`
 - make AppProviders composable. Overrides and contexts from multiple parent AppProviders are merged together. Global atoms get added to the lowest pool that overrides them.
 x- `injectWhy()`
 - `methods` -> `exports`
-- `maxInstances` - complements ttl. Use a FIFO queue. No instances will ever be cleaned up while in use. And none will be cleaned up while queueSize <= maxInstances. Stale instances will be scheduled for clean up when queueSize > maxInstances. Newly stale instances will be immediately scheduled for clean up if queueSize > maxInstances.
+x- `maxInstances` - complements ttl. Use a FIFO queue. No instances will ever be cleaned up while in use. And none will be cleaned up while queueSize <= maxInstances. Stale instances will be scheduled for clean up when queueSize > maxInstances. Newly stale instances will be immediately scheduled for clean up if queueSize > maxInstances.
 - should `useSelector()`/`injectSelector()` be changed to `useDerivation()`/`injectDerivation()`? The term "selector" is too overloaded.
 - should `selector()` set ttl to 0 by default? No, but it should probably set `maxInstances` to 10 or smth.
 
-## Usage Context
+Round 3 at least (Apr 17, 2022)
 
-An atom could receive data from the component or atom using it.
-
-```tsx
-import { atom, injectState, injectUsageHandler } from '@zedux/react'
-
-const curiousAtom = atom('curious', () => {
-  const [state, setState] = injectState()
-
-  injectUsageHandler(context => {
-    if (context) setState(context)
-  })
-})
-
-function CuriousComponent() {
-  // obviously don't do this like ... ever. It's an extreme escape hatch.
-  curiousAtom.useContextualInstance(someContext)
-}
-```
+- Move atom model to @zedux/core
+- Make stores able to find their ecosystem when created during atom evaluation so they can use the scheduler
+- Make dispatch and setState interceptable at the store level, remove that functionality from Ion/AtomApi
+- Upgrade to `useSyncExternalStore` and React 18 peer dep
+- Remove Ghost edges (not needed with React 18)
+- StateHub updates:
+  - Make usable as a chrome extension
+  - Make atom graph view layout like DOM tree (this is the new default view)
+- Make AtomSelectors part of the graph
+- Get React component name from an Error stack for those dependents (first CapitalizedVar after at least one lowercaseVar probably starting with "use")
+- `ecosystem.serializeByFlag()` and `ecosystem.hydrate()`
+- AtomSelector `memoizeRef` option
+- Remove scheduler job types, replace with more advanced bitwise flags. Allow any job to have a weight
+- Consolidate runAtomSelector and AtomInstance graph updating logic (possibly even combine their `get`, `getInstance`, and `select` implementations?)

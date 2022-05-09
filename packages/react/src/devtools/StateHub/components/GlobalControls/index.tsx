@@ -120,9 +120,6 @@ on log page:
 on atoms page:
 - (nothing! Everything on this page defines the global filter categories)
 
-on graph page:
-- whether to show ghost edges
-
 
 sort by:
 

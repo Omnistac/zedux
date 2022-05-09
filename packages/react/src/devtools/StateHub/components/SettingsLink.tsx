@@ -1,7 +1,7 @@
 import { RecursivePartial } from '@zedux/core'
 import { useEcosystem } from '@zedux/react'
 import styled from '@zedux/react/ssc'
-import React, { ComponentProps, FC } from 'react'
+import React, { ComponentProps, FC, PropsWithChildren } from 'react'
 import { stateHub, StateHubState } from '../atoms/stateHub'
 import { hexToAlpha, IconButton } from '../styles'
 
@@ -43,11 +43,11 @@ export const SettingsButton: FC<
   )
 }
 
-export const SettingsLink: FC<{
+export const SettingsLink = ({ children, to }: PropsWithChildren<{
   to:
     | RecursivePartial<StateHubState>
     | ((state: StateHubState) => RecursivePartial<StateHubState>)
-}> = ({ children, to }) => {
+}>) => {
   // we're avoiding creating a static dependency on stateHub here 'cause that
   // can add an Edge Created log entry, which can cause confusing motion on the
   // Log screen. It's fine; we know that the instance will exist here 'cause

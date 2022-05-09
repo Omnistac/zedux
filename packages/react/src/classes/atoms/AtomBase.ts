@@ -7,7 +7,6 @@ export abstract class AtomBase<
   InstanceType extends AtomInstanceBase<State, Params, any>
 > {
   public abstract flags?: string[]
-  public abstract internalId: string
   public abstract key: string
 
   public abstract _createInstance(
@@ -16,5 +15,5 @@ export abstract class AtomBase<
     params: Params
   ): InstanceType
 
-  public abstract getKeyHash(params?: Params): string
+  public abstract getKeyHash(ecosystem: Ecosystem, params?: Params): string
 }

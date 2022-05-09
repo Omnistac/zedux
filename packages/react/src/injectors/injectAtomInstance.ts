@@ -9,7 +9,7 @@ import {
   AnyAtomInstanceBase,
   AtomInstanceType,
   AtomParamsType,
-  GraphEdgeDynamicity,
+  EdgeFlag,
 } from '../types'
 import { injectAtomGetters } from './injectAtomGetters'
 import { AtomBase, AtomInstanceBase } from '../classes'
@@ -66,7 +66,7 @@ export const injectAtomInstance: {
     () => {
       const instance = shouldRegisterDependency
         ? getInstance(atom as A, params as AtomParamsType<A>, [
-            GraphEdgeDynamicity.Static,
+            EdgeFlag.Static,
             operation,
           ])
         : is(atom, AtomInstanceBase)
@@ -83,13 +83,13 @@ export const injectAtomInstance: {
       const resolvedAtom = is(atom, AtomInstanceBase)
         ? (atom as AnyAtomInstanceBase).atom
         : (atom as A)
-      const atomHasChanged =
-        resolvedAtom.internalId !== prevDescriptor.instance.atom.internalId
+
+      const atomHasChanged = resolvedAtom !== prevDescriptor.instance.atom
 
       const paramsHaveChanged = haveDepsChanged(
         prevDescriptor.instance.params,
         params,
-        false
+        true
       )
 
       if (
@@ -107,7 +107,7 @@ export const injectAtomInstance: {
 
       const instance = shouldRegisterDependency
         ? getInstance(atom as A, params as AtomParamsType<A>, [
-            GraphEdgeDynamicity.Static,
+            EdgeFlag.Static,
             operation,
           ])
         : is(atom, AtomInstanceBase)

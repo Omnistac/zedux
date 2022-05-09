@@ -1,9 +1,9 @@
 import {
   AsyncStore,
-  AtomSelector,
+  AtomSelectorOrConfig,
   Cleanup,
   DependentEdge,
-  GraphEdgeDynamicity,
+  EvaluationReason,
   MutableRefObject,
   RefObject,
 } from '@zedux/react/types'
@@ -37,17 +37,14 @@ export interface AtomDynamicInjectorDescriptor<
   type: InjectorType.AtomDynamic
 }
 
-export interface AtomSelectorCache<T = any, Args extends any[] = []> {
-  // just doing a single level of children - not tracking deeply-nested graphs
-  // of selectors for now (so doing `cache.children.get(selector).children`
-  // isn't a thing - all children live on the top level)
-  children?: Map<AtomSelector<any, any[]>, AtomSelectorCache<any, any[]>>
-  id?: string
-  prevArgs?: Args
-  prevChildren?: Map<AtomSelector<any, any[]>, AtomSelectorCache<any, any[]>>
-  prevDeps?: Record<string, Dep>
-  prevResult?: T
-  prevSelector?: AtomSelector<T, Args>
+export interface AtomSelectorCache<T = any, Args extends any[] = any[]> {
+  args?: Args
+  cacheKey: string
+  nextEvaluationReasons: EvaluationReason[]
+  prevEvaluationReasons?: EvaluationReason[]
+  result?: T
+  selectorRef: AtomSelectorOrConfig<T, Args>
+  task?: () => void
 }
 
 export interface CallStackContext<T = any> {
@@ -64,7 +61,7 @@ export interface CallStackContextInstance<T = any> {
 export interface Dep<T = any> {
   cleanup?: Cleanup
   instance: AtomInstanceBase<T, any, any>
-  dynamicity: GraphEdgeDynamicity
+  isStatic: boolean
   materialize?: () => void
   memoizedVal?: any
   shouldUpdate?: (newState: T) => boolean
@@ -82,6 +79,7 @@ export interface DiContext {
 export interface EcosystemGraphNode {
   dependencies: Record<string, true>
   dependents: Record<string, DependentEdge>
+  isAtomSelector?: boolean
   weight: number
 }
 
@@ -90,7 +88,7 @@ export interface EffectInjectorDescriptor extends DepsInjectorDescriptor {
 }
 
 export interface EvaluateAtomJob extends JobBase {
-  flagScore: number
+  flags: number
   keyHash: string
   type: JobType.EvaluateAtom
 }
@@ -155,7 +153,7 @@ export interface StoreInjectorDescriptor<State = any>
 }
 
 export interface UpdateExternalDependentJob extends JobBase {
-  flagScore: number
+  flags: number
   type: JobType.UpdateExternalDependent
 }
 

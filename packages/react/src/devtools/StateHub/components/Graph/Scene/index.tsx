@@ -1,4 +1,4 @@
-import { useAtomInstance, useAtomValue, useEcosystem } from '@zedux/react'
+import { EdgeFlag, useAtomInstance, useAtomValue, useEcosystem } from '@zedux/react'
 import styled from '@zedux/react/ssc'
 import React, { Fragment, useMemo, useRef } from 'react'
 import { ecosystemAtomInstances } from '../../../atoms/ecosystemWrapper'
@@ -160,7 +160,7 @@ export const Scene = () => {
         return (
           <Fragment key={keyHash}>
             {Object.entries(dependents).map(([key, edge]) => {
-              if (edge.isExternal) return null
+              if (edge.flags & EdgeFlag.External) return null
 
               const radius = isHighlighted ? scaledRadius : scaledRadius / 2
               const [dependentX, dependentY] = getCoords(

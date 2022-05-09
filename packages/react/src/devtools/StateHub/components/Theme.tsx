@@ -1,13 +1,13 @@
 import { useAtomSelector, useAtomValue } from '@zedux/react'
 import { DefaultTheme, ThemeProvider } from '@zedux/react/ssc'
-import React, { FC, useMemo } from 'react'
+import React, { PropsWithChildren, useMemo } from 'react'
 import { rect } from '../atoms/rect'
 import { getColors } from '../atoms/stateHub'
 import { alphas, bgs, fgs, hexToAlpha } from '../styles'
 
 const white = '#f7f7f7'
 
-export const Theme: FC = ({ children }) => {
+export const Theme = ({ children }: PropsWithChildren<{}>) => {
   const colors = useAtomSelector(getColors)
   const { height, width } = useAtomValue(rect)
 

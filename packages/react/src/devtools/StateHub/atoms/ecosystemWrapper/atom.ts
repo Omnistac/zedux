@@ -64,14 +64,12 @@ const handlers: {
     })
   },
   edgeRemoved: () => {},
-  ghostEdgeCreated: () => {},
-  ghostEdgeDestroyed: () => {},
   instanceActiveStateChanged: ({ ownInstance, wrappedEcosystem }) => {
     ownInstance.store.setStateDeep({
       instances: { ...wrappedEcosystem._instances },
     })
   },
-  instanceStateChanged: ({
+  stateChanged: ({
     ownInstance,
     payload,
     stateHubEcosystem,
@@ -86,7 +84,7 @@ const handlers: {
 
     const loggingMode = stateHubEcosystem.select(
       getLoggingMode,
-      payload.instance.keyHash,
+      payload.instance?.keyHash || payload.selectorCache?.cacheKey,
       wrappedEcosystem.ecosystemId
     )
 
@@ -111,7 +109,12 @@ const handlers: {
       return
     }
 
-    logGroup(`⚛️ State Changed "${payload.instance.keyHash}"`, payload)
+    logGroup(
+      `⚛️ State Changed "${
+        payload.instance?.keyHash || payload.selectorCache?.cacheKey
+      }"`,
+      payload
+    )
   },
 }
 

@@ -121,7 +121,7 @@ describe('ecosystem', () => {
 
     await findByText('1 0 0 2 0 0 2 0')
 
-    expect(childRendered).toHaveBeenCalledTimes(6) // unfortunate but what can be done
+    expect(childRendered).toHaveBeenCalledTimes(2)
     expect(childRendered).toHaveBeenLastCalledWith(
       '1 0 0 2 0 0 2 0',
       '1 0 0 2 0',

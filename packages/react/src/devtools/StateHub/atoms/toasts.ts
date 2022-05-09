@@ -7,10 +7,6 @@ export interface Toast {
   type: 'error' | 'info' | 'warning'
 }
 
-const interpolation = atom('interpolation', (...args: any) => {
-  return ''
-})
-
 export const toasts = atom('toasts', () => {
   const store = injectStore<Toast[]>([], { shouldSubscribe: false })
 

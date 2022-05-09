@@ -407,10 +407,10 @@ export const css = <Props extends Record<string, any>>(
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface DefaultTheme {}
 
-export const ThemeProvider: FC<{
+export const ThemeProvider = ({ children, root, theme }: PropsWithChildren<{
   root?: Pick<Element, 'appendChild'>
   theme: DefaultTheme
-}> = ({ children, root, theme }) => {
+}>) => {
   const getClassName = useMemo(() => createStyleManager(root), [root])
   const value = useMemo(() => ({ getClassName, theme }), [getClassName, theme])
 
