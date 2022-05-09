@@ -1,4 +1,5 @@
 import { ActionChain, Observable, Settable, Store } from '@zedux/core'
+import { TransitionStartFunction } from 'react'
 import {
   AtomBase,
   AtomInstance,
@@ -27,6 +28,26 @@ export type AnyAtomInstanceBase = AtomInstanceBase<
 export type AsyncEffectCallback<T = any> = (
   cleanup: (fn: Cleanup) => void
 ) => Promise<T> | void
+
+export interface AsyncState<T> {
+  data?: T
+  error?: Error
+  isError: boolean
+  isIdle: boolean
+  isLoading: boolean
+  isSuccess: boolean
+  prevStatus?: AsyncStatus
+  status: AsyncStatus
+}
+
+export enum AsyncStatus {
+  Error = 'Error',
+  Idle = 'Idle',
+  Loading = 'Loading',
+  Success = 'Success',
+}
+
+export type AsyncStore<T> = Store<AsyncState<T>>
 
 export interface AtomConfig {
   flags?: string[]
@@ -203,19 +224,16 @@ export interface AtomSetters<
   ): AtomStateType<A>
 }
 
-export type AtomStateFactory<
-  State = any,
-  Params extends any[] = [],
-  Exports extends Record<string, any> = Record<string, any>
-> = (...params: Params) => AtomValue<State> | AtomApi<State, Exports>
-
 export type AtomStateType<
   AtomType extends AnyAtomBase
 > = AtomType extends AtomBase<infer T, any, AtomInstanceBase<infer T, any, any>>
   ? T
   : never
 
-export type AtomTuple<A extends AnyAtomBase> = [A, AtomParamsType<A>]
+export type AtomTuple<A extends AnyAtomBase> = [
+  A,
+  ...(A extends AtomBase<any, [], any> ? [] : [AtomParamsType<A>])
+]
 
 export type AtomValue<State = any> = State | Store<State>
 
@@ -223,7 +241,10 @@ export type AtomValueOrFactory<
   State = any,
   Params extends any[] = [],
   Exports extends Record<string, any> = Record<string, any>
-> = AtomValue<State> | AtomStateFactory<State, Params, Exports>
+> =
+  | AtomValue<State>
+  | AtomApi<State, Exports>
+  | ((...params: Params) => AtomValue<State> | AtomApi<State, Exports>)
 
 export type Cleanup = () => void
 
@@ -231,12 +252,12 @@ export interface DependentEdge {
   callback?: (
     signal: GraphEdgeSignal,
     val?: any,
-    reason?: EvaluationReason
+    reasons?: EvaluationReason[]
   ) => any
   createdAt: number
   flags: number // calculated from EdgeFlag enum
   operation: string
-  task?: () => void // for external edges - so they can unschedule jobs
+  task?: () => void
 }
 
 export type DispatchInterceptor<State = any> = (
@@ -247,8 +268,6 @@ export type DispatchInterceptor<State = any> = (
 export interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
 > {
-  allowComplexAtomParams?: boolean
-  allowComplexSelectorParams?: boolean
   context?: Context
   defaultForwardPromises?: boolean
   defaultTtl?: number
@@ -274,7 +293,6 @@ export enum EdgeFlag {
   Explicit = 1,
   External = 2,
   Static = 4,
-  Deferred = 8,
 }
 
 export type EffectCallback = () => MaybeCleanup
@@ -301,8 +319,7 @@ export enum EvaluationTargetType {
 
 export enum EvaluationType {
   CacheInvalidated = 'cache invalidated',
-  NodeDestroyed = 'node destroyed',
-  PromiseChanged = 'promise changed',
+  InstanceDestroyed = 'atom instance destroyed',
   StateChanged = 'state changed',
 }
 
@@ -313,19 +330,9 @@ export enum GraphEdgeSignal {
   Updated = 'Updated',
 }
 
-export interface GraphViewRecursive {
-  [key: string]: GraphViewRecursive
-}
-
-export type InjectorDeps = any[] | undefined
-
 export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   ? <D = any>(selector: (state: State) => D) => D
   : <D = any>(params: Params, selector: (state: State) => D) => D
-
-export interface InjectStoreConfig {
-  shouldSubscribe?: boolean
-}
 
 export type IonGet<
   State,
@@ -505,22 +512,19 @@ export interface MutableRefObject<T = any> {
   current: T
 }
 
-export interface PromiseState<T> {
-  data?: T
-  error?: Error
-  isError: boolean
-  isLoading: boolean
-  isSuccess: boolean
-  status: PromiseStatus
+export enum PromiseStatus {
+  Pending,
+  Resolved,
+  Rejected,
 }
-
-export type PromiseStatus = 'error' | 'loading' | 'success'
 
 export type Ref<T = any> = MutableRefObject<T>
 
 export interface RefObject<T = any> {
   readonly current: T | null
 }
+
+export type Scheduler = number // | Observable<any> | (store: Store<T>) => Observable<any> - not implementing observable ttl for now
 
 export type SetStateInterceptor<State = any> = (
   settable: Settable<State>,
@@ -534,4 +538,5 @@ export enum StateType {
 
 export interface ZeduxHookConfig {
   operation?: string
+  startTransition?: TransitionStartFunction
 }

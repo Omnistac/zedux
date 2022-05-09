@@ -1,70 +1,61 @@
-import { AtomSelectorOrConfig, MaybeCleanup } from '../types'
-import { useEffect, useRef, useState } from 'react'
-import { AtomSelectorCache, generateAtomSelectorId } from '../utils'
+import { AtomSelectorOrConfig, EdgeFlag } from '../types'
+import { useMemo, useRef, useSyncExternalStore } from 'react'
+import { AtomSelectorCache, haveDepsChanged } from '../utils'
 import { useEcosystem } from './useEcosystem'
-import { runAtomSelector } from '../utils/runAtomSelector'
 
 const OPERATION = 'useAtomSelector'
 
 export const useAtomSelector = <T, Args extends any[]>(
-  atomSelector: AtomSelectorOrConfig<T, Args>,
+  selectorOrConfig: AtomSelectorOrConfig<T, Args>,
   ...args: Args
 ): T => {
   const ecosystem = useEcosystem()
-  const [, forceRender] = useState<any>()
-  const cache = useRef<AtomSelectorCache<T, Args>>({
-    id: '',
-    prevDeps: {},
-  })
-  const hasEffectRun = useRef(false)
-  hasEffectRun.current = false
 
-  // doesn't matter if fibers/suspense mess this id up - it's just for some
-  // consistency when inspecting dependencies created by this selector in
-  // development
-  if (!cache.current.id) {
-    cache.current.id = `react-component-${generateAtomSelectorId()}`
-  }
-
-  let effect: MaybeCleanup = undefined
-  const result = runAtomSelector<T, Args>(
-    atomSelector,
-    args,
-    ecosystem,
-    cache.current,
-    () => forceRender({}),
-    OPERATION,
-    !!cache.current.prevArgs,
-    materializeDeps => {
-      // during render, we don't want to create any deps outside an effect.
-      // After render, just update the deps immediately
-      if (!hasEffectRun.current) effect = materializeDeps
-      else materializeDeps()
-    }
-  )
-
-  // run this effect every render
-  useEffect(() => {
-    hasEffectRun.current = true
-    if (effect) {
-      effect()
-      effect = undefined
-    }
-  })
-
-  cache.current.prevResult = result
-
-  // Final cleanup on unmount
-  useEffect(
-    () => () => {
-      if (!cache.current.prevDeps) return
-
-      Object.values(cache.current.prevDeps).forEach(dep => {
-        dep.cleanup?.()
-      })
-    },
+  // would be nice if React provided some way to know that multiple hooks are
+  // from the same component. For now, every Zedux hook usage creates a new
+  // graph node
+  const dependentKey = useMemo(
+    () => ecosystem._idGenerator.generateReactComponentId(),
     []
   )
+  const cacheRef = useRef<AtomSelectorCache<T, Args>>()
 
-  return result
+  const resolvedArgs = (
+    typeof selectorOrConfig === 'function' ||
+    !selectorOrConfig.argsComparator ||
+    !cacheRef.current?.args
+      ? haveDepsChanged(cacheRef.current?.args, args)
+      : selectorOrConfig.argsComparator(args, cacheRef.current.args)
+  )
+    ? args
+    : cacheRef.current?.args || (([] as unknown) as Args)
+
+  const [subscribe, getSnapshot] = useMemo(
+    () => [
+      (onStoreChange: () => void) => {
+        const [cacheKey, cache] = ecosystem._selectorCache.getCacheAndKey(
+          selectorOrConfig,
+          resolvedArgs
+        )
+        cacheRef.current = cache
+
+        ecosystem._graph.addEdge(
+          dependentKey,
+          cacheKey,
+          OPERATION,
+          EdgeFlag.External,
+          onStoreChange
+        )
+
+        return () => {
+          // I don't think we need to unset the cacheKey ref here
+          ecosystem._graph.removeEdge(dependentKey, cacheKey)
+        }
+      },
+      () => cacheRef.current?.result as T,
+    ],
+    [ecosystem, resolvedArgs, selectorOrConfig]
+  )
+
+  return useSyncExternalStore(subscribe, getSnapshot)
 }

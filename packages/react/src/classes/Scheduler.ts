@@ -1,5 +1,5 @@
 import {
-  EvaluateNodeJob,
+  EvaluateAtomJob,
   Job,
   JobType,
   UpdateExternalDependentJob,
@@ -15,11 +15,9 @@ export class Scheduler {
   constructor(private readonly ecosystem: Ecosystem) {}
 
   /**
-   * Kill any current timeout and run all jobs immediately.
+   * scheduler.flush()
    *
-   * IMPORTANT: Setting and clearing timeouts is expensive. We need to always
-   * pass `shouldSetTimeout: false` to scheduler.scheduleJob() when we're going
-   * to immediately flush
+   * Kill any current timeout and run all jobs immediately
    */
   public flush() {
     if (this._isRunning) return // already flushing
@@ -28,24 +26,19 @@ export class Scheduler {
     this.runJobs()
   }
 
-  /**
-   * Insert a job into the queue. Insertion point depends on job's type and
-   * weight.
-   *
-   * IMPORTANT: Setting and clearing timeouts is expensive. We need to always
-   * pass `shouldSetTimeout: false` when we're going to immediately flush
-   */
-  public scheduleJob(newJob: Job, shouldSetTimeout = true) {
+  public scheduleJob(newJob: Job) {
+    const shouldSetTimeout = this.scheduledJobs.length === 0
+
     if (newJob.type === JobType.RunEffect) {
       this.scheduledJobs.push(newJob)
-    } else if (newJob.type === JobType.EvaluateNode) {
-      this.insertEvaluateNodeJob(newJob)
+    } else if (newJob.type === JobType.EvaluateAtom) {
+      this.insertEvaluateAtomJob(newJob)
     } else {
       this.insertUpdateExternalDependentJob(newJob)
     }
 
     // we just pushed the first job onto the queue
-    if (shouldSetTimeout && this.scheduledJobs.length === 1) {
+    if (shouldSetTimeout) {
       this.setTimeout()
     }
   }
@@ -55,7 +48,7 @@ export class Scheduler {
   }
 
   public wipe() {
-    // allow external jobs to proceed. TODO: should we flush here?
+    // allow external jobs to proceed.
     this.scheduledJobs = this.scheduledJobs.filter(
       job => job.type === JobType.UpdateExternalDependent
     )
@@ -89,14 +82,14 @@ export class Scheduler {
     return this.findInsertionIndex(cb, newIndex, iteration + 1)
   }
 
-  // EvaluateNode jobs go before any other job type and are sorted amongst
+  // EvaluateAtom jobs go before any other job type and are sorted amongst
   // themselves by weight - lower weight evaluated first
-  private insertEvaluateNodeJob(newJob: EvaluateNodeJob) {
+  private insertEvaluateAtomJob(newJob: EvaluateAtomJob) {
     const { nodes } = this.ecosystem._graph
     const newJobGraphNode = nodes[newJob.keyHash]
 
     const index = this.findInsertionIndex(job => {
-      if (job.type !== JobType.EvaluateNode) return -1
+      if (job.type !== JobType.EvaluateAtom) return -1
 
       const thatJobGraphNode = nodes[job.keyHash]
       return newJobGraphNode.weight < thatJobGraphNode.weight
@@ -112,11 +105,11 @@ export class Scheduler {
     this.scheduledJobs.splice(index, 0, newJob)
   }
 
-  // UpdateExternalDependent jobs go just after EvaluateNode jobs, but before
+  // UpdateExternalDependent jobs go just after EvaluateAtom jobs, but before
   // anything else (there is only one other job type right now - RunEffect)
   private insertUpdateExternalDependentJob(newJob: UpdateExternalDependentJob) {
     const index = this.findInsertionIndex(job => {
-      if (job.type === JobType.EvaluateNode) return 1
+      if (job.type === JobType.EvaluateAtom) return 1
       if (job.type !== JobType.UpdateExternalDependent) return -1
 
       return newJob.flags < job.flags ? -1 : +(newJob.flags > job.flags)
@@ -131,7 +124,6 @@ export class Scheduler {
   }
 
   private runJobs() {
-    this._jobTimeoutId = undefined
     // this._runStartTime = performance.now()
     // let counter = 0
 
@@ -149,9 +141,8 @@ export class Scheduler {
   }
 
   private setTimeout() {
-    if (this._isRunning) return
-
     this._jobTimeoutId = setTimeout(() => {
+      this._jobTimeoutId = undefined
       this.runJobs()
     })
   }
