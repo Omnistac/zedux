@@ -17,12 +17,14 @@ import {
   GraphEdgeInfo,
   MaybeCleanup,
 } from '../types'
-import { generateEcosystemId, is } from '../utils'
+import { is } from '../utils'
 import { Atom } from './atoms/Atom'
 import { AtomBase } from './atoms/AtomBase'
 import { Graph } from './Graph'
+import { IdGenerator } from './IdGenerator'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
+import { SelectorCache } from './SelectorCache'
 import { Mod, ZeduxPlugin } from './ZeduxPlugin'
 
 const defaultMods = Object.keys(ZeduxPlugin.actions).reduce((map, mod) => {
@@ -42,20 +44,22 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements AtomGettersBase {
   public _destroyOnUnmount = false
   public _graph: Graph = new Graph(this)
+  public _idGenerator = new IdGenerator()
   public _instances: Record<string, AnyAtomInstance> = {}
   public _onReady: EcosystemConfig<Context>['onReady']
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
+  public _selectorCache: SelectorCache = new SelectorCache(this)
   public context: Context
   public defaultForwardPromises?: boolean
   public defaultTtl?: number
   public ecosystemId: string
   public flags?: string[] = []
-  public ghostTtlMs: number
   public modsMessageBus = createStore() // use an empty store as a message bus
   public mods: Record<Mod, number> = { ...defaultMods }
   public overrides: Record<string, AnyAtomBase> = {}
   private cleanup?: MaybeCleanup
+  private destructionTimeout?: ReturnType<typeof setTimeout>
   private isInitialized = false
   private plugins: { plugin: ZeduxPlugin; cleanup: Cleanup }[] = []
 
@@ -64,7 +68,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     defaultForwardPromises,
     defaultTtl,
     destroyOnUnmount,
-    ghostTtlMs,
     flags,
     id,
     onReady,
@@ -81,7 +84,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       )
     }
 
-    this.ecosystemId = id || generateEcosystemId()
+    this.ecosystemId = id || this._idGenerator.generateEcosystemId()
 
     if (overrides) {
       this.setOverrides(overrides)
@@ -94,7 +97,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.context = context as Context
     this.defaultForwardPromises = defaultForwardPromises
     this.defaultTtl = defaultTtl ?? -1
-    this.ghostTtlMs = ghostTtlMs ?? 2000
     this._destroyOnUnmount = !!destroyOnUnmount
     this._onReady = onReady
 
@@ -128,28 +130,31 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * force destruction anyway.
    */
   public destroy(force?: boolean) {
-    if (!force && this._refCount > 0) return
+    if (this.destructionTimeout || (!force && this._refCount > 0)) return
 
-    this.wipe()
+    this.destructionTimeout = setTimeout(() => {
+      this.destructionTimeout = undefined
+      this.wipe()
 
-    // Check if this ecosystem has been destroyed already
-    const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
-    if (!ecosystem) return
+      // Check if this ecosystem has been destroyed already
+      const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
+      if (!ecosystem) return
 
-    if (this.mods.ecosystemDestroyed) {
-      this.modsMessageBus.dispatch(
-        ZeduxPlugin.actions.ecosystemDestroyed({ ecosystem: this })
+      if (this.mods.ecosystemDestroyed) {
+        this.modsMessageBus.dispatch(
+          ZeduxPlugin.actions.ecosystemDestroyed({ ecosystem: this })
+        )
+      }
+
+      this.plugins.forEach(({ cleanup }) => cleanup())
+      this.plugins = []
+
+      globalStore.dispatch(
+        removeEcosystem({
+          ecosystemId: this.ecosystemId,
+        })
       )
-    }
-
-    this.plugins.forEach(({ cleanup }) => cleanup())
-    this.plugins = []
-
-    globalStore.dispatch(
-      removeEcosystem({
-        ecosystemId: this.ecosystemId,
-      })
-    )
+    })
   }
 
   public findInstances(atom: AtomBase<any, any, any> | string) {
@@ -160,14 +165,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     )
   }
 
-  get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+  public get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
 
-  get<A extends AtomBase<any, [...any], any>>(
+  public get<A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  get<AI extends AtomInstanceBase<any, [...any], any>>(
+  public get<AI extends AtomInstanceBase<any, [...any], any>>(
     instance: AI
   ): AtomInstanceStateType<AI>
 
@@ -219,7 +224,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       return atom
     }
 
-    const keyHash = (atom as A).getKeyHash(params)
+    const keyHash = (atom as A).getKeyHash(this, params)
 
     // try to find an existing instance
     const existingInstance = this._instances[keyHash]
@@ -234,7 +239,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       keyHash,
       (params || []) as AtomParamsType<A>
     )
-    this._instances[keyHash] = newInstance // TODO: dispatch an action over globalStore for this mutation
+    this._instances[keyHash] = newInstance
 
     return newInstance
   }
@@ -288,6 +293,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.recalculateMods(plugin.modsStore.getState())
   }
 
+  /**
+   * Remove all passed atoms from this ecosystem's list of atom overrides. Does
+   * nothing for passed atoms that aren't currently in the overrides list.
+   *
+   * Force destroys all instances of all removed atoms. This forced destruction
+   * will cause dependents of those instances to recreate their dependency atom
+   * instance without using an override.
+   */
   public removeOverrides(overrides: (Atom<any, any, any> | string)[]) {
     this.overrides = mapOverrides(
       Object.values(this.overrides).filter(atom =>
@@ -306,6 +319,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     })
   }
 
+  /**
+   * Destroys all atom instances in this ecosystem, runs the cleanup function
+   * returned from `onReady` (if any), and calls `onReady` again to reinitialize
+   * the ecosystem.
+   */
   public reset(newContext?: Context) {
     this.wipe()
 
@@ -315,10 +333,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.cleanup = this._onReady?.(this, prevContext)
   }
 
+  /**
+   * Runs an AtomSelector statically - without registering any dependencies or
+   * updating any caches. If we've already cached this exact selector+args
+   * combo, returns the cached value without running the selector again
+   */
   public select<T, Args extends any[]>(
     atomSelector: AtomSelectorOrConfig<T, Args>,
     ...args: Args
   ): T {
+    const cache = this._selectorCache.weakGetCache(atomSelector, args)
+    if (cache) return cache.result as T
+
     const resolvedSelector =
       typeof atomSelector === 'function' ? atomSelector : atomSelector.selector
 
@@ -333,6 +359,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     )
   }
 
+  /**
+   * Completely replace this ecosystem's current list of atom overrides with a
+   * new list.
+   *
+   * Force destroys all instances of all previously- and newly-overridden atoms.
+   * This forced destruction will cause dependents of those instances to
+   * recreate their dependency atom instance.
+   */
   public setOverrides(newOverrides: AtomBase<any, any, any>[]) {
     const oldOverrides = this.overrides
 
@@ -415,7 +449,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     atom: A,
     params?: AtomParamsType<A>
   ) {
-    const keyHash = (atom as A).getKeyHash(params)
+    const keyHash = (atom as A).getKeyHash(this, params)
 
     // try to find an existing instance
     return this._instances[keyHash]
@@ -454,6 +488,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
   }
 
+  public _decrementRefCount() {
+    console.log('decrementing ref count')
+    this._refCount--
+    if (!this._destroyOnUnmount) return
+
+    this.destroy() // only destroys if _refCount === 0
+  }
+
   // Should only be used internally
   public _destroyAtomInstance(keyHash: string) {
     // try to destroy instance (if not destroyed - this fn is called as part of
@@ -461,6 +503,13 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this._graph.removeNode(keyHash)
 
     delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
+  }
+
+  public _incrementRefCount() {
+    this._refCount++
+    if (this._refCount === 1 && this.destructionTimeout) {
+      clearTimeout(this.destructionTimeout)
+    }
   }
 
   private recalculateMods(

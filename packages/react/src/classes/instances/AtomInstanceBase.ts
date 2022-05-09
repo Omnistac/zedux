@@ -9,14 +9,14 @@ import {
   GraphEdgeInfo,
   DependentEdge,
   EvaluationReason,
+  Cleanup,
+  EdgeFlag,
 } from '@zedux/react/types'
 import { InjectorDescriptor } from '@zedux/react/utils'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { Store } from '@zedux/core'
-import { Ghost } from '../Ghost'
 import { ZeduxPlugin } from '../ZeduxPlugin'
-import {} from '@zedux/react'
 
 export abstract class AtomInstanceBase<
   State,
@@ -71,24 +71,23 @@ export abstract class AtomInstanceBase<
 
   public abstract _scheduleEvaluation(
     reason: EvaluationReason,
-    flagScore?: number
+    flags?: number
   ): void
 
   public addDependent(
-    operation: string,
-    callback?: DependentEdge['callback']
-  ): Ghost {
-    const ghost = this.ecosystem._graph.registerGhostDependent(
-      this,
-      callback,
+    callback?: DependentEdge['callback'],
+    operation = 'addDependent'
+  ): Cleanup {
+    const id = this.ecosystem._idGenerator.generateNodeId()
+    this.ecosystem._graph.addEdge(
+      id,
+      this.keyHash,
       operation,
-      false,
-      true
+      EdgeFlag.Explicit | EdgeFlag.External,
+      callback
     )
 
-    ghost.materialize()
-
-    return ghost
+    return () => this.ecosystem._graph.removeEdge(id, this.keyHash)
   }
 
   public setActiveState(newActiveState: ActiveState) {

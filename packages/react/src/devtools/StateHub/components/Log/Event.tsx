@@ -1,4 +1,6 @@
 import { Mod } from '@zedux/react'
+import { AnyAtomInstanceBase } from '@zedux/react/types'
+import { AtomSelectorCache } from '@zedux/react/utils'
 import React, { FC } from 'react'
 import { Code, PreviewText, Title } from '../../styles'
 import { Importance, LogEvent } from '../../types'
@@ -70,6 +72,7 @@ const EdgeCreated: FC<{ event: LogEvent<'edgeCreated'> }> = ({ event }) => {
 
 const EdgeRemoved: FC<{ event: LogEvent<'edgeRemoved'> }> = ({ event }) => {
   const { dependency, dependent } = event.action.payload
+  const key = ((dependent as AnyAtomInstanceBase).keyHash || (dependent as AtomSelectorCache).cacheKey)
 
   return (
     <Event
@@ -79,52 +82,8 @@ const EdgeRemoved: FC<{ event: LogEvent<'edgeRemoved'> }> = ({ event }) => {
         <>
           <Title>Edge Removed</Title>
           <PreviewText>
-            {typeof dependent === 'string' ? dependent : dependent.keyHash} &gt;{' '}
-            {dependency.keyHash}
-          </PreviewText>
-        </>
-      }
-    />
-  )
-}
-
-const GhostEdgeCreated: FC<{ event: LogEvent<'ghostEdgeCreated'> }> = ({
-  event,
-}) => {
-  const { ghost } = event.action.payload
-  const { dependency, dependent } = ghost
-
-  return (
-    <Event
-      event={event}
-      importance={Importance.Dirt}
-      preview={
-        <>
-          <Title>Ghost Edge Created</Title>
-          <PreviewText>
-            {dependent} &gt; {dependency.keyHash}
-          </PreviewText>
-        </>
-      }
-    />
-  )
-}
-
-const GhostEdgeDestroyed: FC<{ event: LogEvent<'ghostEdgeDestroyed'> }> = ({
-  event,
-}) => {
-  const { ghost } = event.action.payload
-  const { dependency, dependent } = ghost
-
-  return (
-    <Event
-      event={event}
-      importance={Importance.High}
-      preview={
-        <>
-          <Title>Ghost Edge Destroyed Before Materializing</Title>
-          <PreviewText>
-            {dependent} &gt; {dependency.keyHash}
+            {typeof dependent === 'string' ? dependent : key} &gt;{' '}
+            {key}
           </PreviewText>
         </>
       }
@@ -152,10 +111,10 @@ const InstanceActiveStateChanged: FC<{
   )
 }
 
-const InstanceStateChanged: FC<{ event: LogEvent<'instanceStateChanged'> }> = ({
+const StateChanged: FC<{ event: LogEvent<'stateChanged'> }> = ({
   event,
 }) => {
-  const { instance } = event.action.payload
+  const { instance, selectorCache } = event.action.payload
 
   return (
     <Event
@@ -163,8 +122,8 @@ const InstanceStateChanged: FC<{ event: LogEvent<'instanceStateChanged'> }> = ({
       importance={Importance.Medium}
       preview={
         <>
-          <Title>Atom Instance State Changed</Title>
-          <PreviewText>{instance.keyHash}</PreviewText>
+          <Title>Graph Node State Changed</Title>
+          <PreviewText>{instance ? 'Instance' : 'Selector'} - {instance?.keyHash || selectorCache?.cacheKey}</PreviewText>
         </>
       }
     />
@@ -176,8 +135,6 @@ export const eventMap: Record<Mod, FC<{ event: LogEvent }>> = {
   ecosystemWiped: EcosystemWiped,
   edgeCreated: EdgeCreated,
   edgeRemoved: EdgeRemoved,
-  ghostEdgeCreated: GhostEdgeCreated,
-  ghostEdgeDestroyed: GhostEdgeDestroyed,
   instanceActiveStateChanged: InstanceActiveStateChanged,
-  instanceStateChanged: InstanceStateChanged,
+  stateChanged: StateChanged,
 }

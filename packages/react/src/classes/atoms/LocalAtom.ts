@@ -1,6 +1,6 @@
 import { localAtom } from '@zedux/react/factories/localAtom'
 import { AtomValueOrFactory, AtomConfig } from '@zedux/react/types'
-import { generateLocalId } from '@zedux/react/utils'
+import { Ecosystem } from '../Ecosystem'
 import { Atom } from './Atom'
 
 export class LocalAtom<
@@ -16,14 +16,15 @@ export class LocalAtom<
     super(key, value, { ttl: 0, ...config })
   }
 
-  public getKeyHash(params?: Params) {
+  public getKeyHash(ecosystem: Ecosystem, params?: Params) {
     // If a string is passed as the first param, it's the id of the local atom.
     // An existing hash can be recreated.
-    if (params && typeof params[0] === 'string') return super.getKeyHash(params)
+    if (params && typeof params[0] === 'string')
+      return super.getKeyHash(ecosystem, params)
 
     // Otherwise, every time a local atom is got, we create a new hash.
-    return super.getKeyHash(([
-      generateLocalId(),
+    return super.getKeyHash(ecosystem, ([
+      ecosystem._idGenerator.generateLocalId(),
       ...(params || []).slice(1),
     ] as unknown) as Params)
   }

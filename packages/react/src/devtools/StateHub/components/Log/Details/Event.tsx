@@ -5,7 +5,9 @@ import {
   useEcosystem,
 } from '@zedux/react'
 import styled from '@zedux/react/ssc'
-import React, { FC } from 'react'
+import { AnyAtomInstance } from '@zedux/react/types'
+import { AtomSelectorCache } from '@zedux/react/utils'
+import React, { FC, PropsWithChildren } from 'react'
 import { stateHub } from '../../../atoms/stateHub'
 import {
   Code,
@@ -35,7 +37,7 @@ const Title = styled.div`
   margin: 0;
 `
 
-const DetailsGrid: FC<{ text: string }> = ({ children, text }) => {
+const DetailsGrid = ({ children, text }: PropsWithChildren<{ text: string }>) => {
   const ecosystem = useEcosystem()
 
   return (
@@ -55,15 +57,17 @@ const DetailsGrid: FC<{ text: string }> = ({ children, text }) => {
   )
 }
 
-const EdgeDetails: FC<{
-  dependency: AnyAtomInstanceBase
-  dependent: string | AnyAtomInstanceBase
+const EdgeDetails = ({ dependency, dependent, edge }: {
+  dependency: AnyAtomInstanceBase | AtomSelectorCache
+  dependent: string | AnyAtomInstanceBase | AtomSelectorCache
   edge: DependentEdge
-}> = ({ dependency, dependent, edge }) => {
+}) => {
   const date = new Date(edge.createdAt)
   const hour = date.getHours()
   const minute = date.getMinutes().toString().padStart(2, '0')
   const second = date.getMinutes().toString().padStart(2, '0')
+  const dependencyKey = (dependency as AnyAtomInstanceBase).keyHash || (dependency as AtomSelectorCache).cacheKey
+  const dependentKey = (dependent as AnyAtomInstanceBase).keyHash || (dependent as AtomSelectorCache).cacheKey
 
   return (
     <>
@@ -75,12 +79,12 @@ const EdgeDetails: FC<{
             ecosystemConfig: {
               [state.ecosystemId]: {
                 route: Route.Atoms,
-                selectedAtomInstanceKeyHash: dependency.keyHash,
+                selectedAtomInstanceKeyHash: dependencyKey,
               },
             },
           })}
         >
-          {dependency.keyHash}
+          {dependencyKey}
         </SettingsLink>
       </div>
       <div>
@@ -93,12 +97,12 @@ const EdgeDetails: FC<{
               ecosystemConfig: {
                 [state.ecosystemId]: {
                   route: Route.Atoms,
-                  selectedAtomInstanceKeyHash: dependent.keyHash,
+                  selectedAtomInstanceKeyHash: dependentKey,
                 },
               },
             })}
           >
-            {dependent.keyHash}
+            {dependentKey}
           </SettingsLink>
         )}
       </div>
@@ -160,45 +164,6 @@ const EdgeRemoved: FC<{ event: LogEvent<'edgeRemoved'> }> = ({ event }) => {
   )
 }
 
-const GhostEdgeCreated: FC<{ event: LogEvent<'ghostEdgeCreated'> }> = ({
-  event,
-}) => {
-  const { ghost } = event.action.payload
-  const { dependency, dependent } = ghost
-
-  return (
-    <DetailsGrid text="Ghost Edge Created">
-      <EdgeDetails
-        dependency={dependency}
-        dependent={dependent}
-        edge={ghost.edge}
-      />
-    </DetailsGrid>
-  )
-}
-
-const GhostEdgeDestroyed: FC<{ event: LogEvent<'ghostEdgeDestroyed'> }> = ({
-  event,
-}) => {
-  const { ghost } = event.action.payload
-  const { dependency, dependent } = ghost
-
-  return (
-    <DetailsGrid text="Ghost Edge Destroyed">
-      <div>
-        This ghost edge was destroyed without materializing. This usually means
-        a React fiber took a long time to commit its changes. Consider
-        increasing the <Code>ghostTtlMs</Code> in your ecosystem&apos;s config
-      </div>
-      <EdgeDetails
-        dependency={dependency}
-        dependent={dependent}
-        edge={ghost.edge}
-      />
-    </DetailsGrid>
-  )
-}
-
 const InstanceActiveStateChanged: FC<{
   event: LogEvent<'instanceActiveStateChanged'>
 }> = ({ event }) => {
@@ -226,10 +191,11 @@ const InstanceActiveStateChanged: FC<{
   )
 }
 
-const InstanceStateChanged: FC<{ event: LogEvent<'instanceStateChanged'> }> = ({
+const StateChanged: FC<{ event: LogEvent<'stateChanged'> }> = ({
   event,
 }) => {
-  const { instance } = event.action.payload
+  const { instance, selectorCache } = event.action.payload
+  const key = instance?.keyHash || selectorCache?.cacheKey
 
   return (
     <DetailsGrid text="Atom Instance State Changed">
@@ -240,12 +206,12 @@ const InstanceStateChanged: FC<{ event: LogEvent<'instanceStateChanged'> }> = ({
             ecosystemConfig: {
               [state.ecosystemId]: {
                 route: Route.Atoms,
-                selectedAtomInstanceKeyHash: instance.keyHash,
+                selectedAtomInstanceKeyHash: key,
               },
             },
           })}
         >
-          {instance.keyHash}
+          {key}
         </SettingsLink>
       </div>
     </DetailsGrid>
@@ -257,8 +223,6 @@ export const eventMap: Record<Mod, FC<{ event: LogEvent }>> = {
   ecosystemWiped: EcosystemWiped,
   edgeCreated: EdgeCreated,
   edgeRemoved: EdgeRemoved,
-  ghostEdgeCreated: GhostEdgeCreated,
-  ghostEdgeDestroyed: GhostEdgeDestroyed,
   instanceActiveStateChanged: InstanceActiveStateChanged,
-  instanceStateChanged: InstanceStateChanged,
+  stateChanged: StateChanged,
 }

@@ -1,4 +1,5 @@
-import React, { FC, useEffect, useMemo, useRef } from 'react'
+import React, { ReactNode, useEffect, useMemo, useRef } from 'react'
+import { useSyncExternalStore } from 'react'
 import { Ecosystem, ecosystemContext } from '../classes'
 import { createEcosystem } from '../factories/createEcosystem'
 import { useStableReference } from '../hooks/useStableReference'
@@ -11,25 +12,29 @@ import { EcosystemConfig } from '../types'
  * Creates an atom ecosystem. The behavior of atoms inside this EcosystemProvider can
  * be configured with props passed here.
  */
-export const EcosystemProvider: FC<
-  | (Partial<{ [k in keyof EcosystemConfig]: undefined }> & {
-      ecosystem?: Ecosystem
-    })
-  | (Partial<EcosystemConfig> & { ecosystem?: undefined })
-> = ({
+export const EcosystemProvider = ({
   children,
   context,
   defaultForwardPromises,
   defaultTtl,
   destroyOnUnmount = true,
   ecosystem: passedEcosystem,
-  ghostTtlMs,
   flags,
   id,
   onReady,
   overrides,
-}) => {
-  const ecosystem = useMemo(() => {
+}:
+  | (Partial<{ [k in keyof EcosystemConfig]: undefined }> & {
+      children?: ReactNode
+      ecosystem?: Ecosystem
+    })
+  | (Partial<EcosystemConfig> & {
+      children?: ReactNode
+      ecosystem?: undefined
+    })) => {
+  const stableOverrides = useStableReference(overrides)
+
+  const [subscribe, getSnapshot] = useMemo(() => {
     const resolvedEcosystem =
       passedEcosystem ||
       createEcosystem({
@@ -37,46 +42,43 @@ export const EcosystemProvider: FC<
         defaultForwardPromises,
         defaultTtl,
         destroyOnUnmount,
-        ghostTtlMs,
         flags,
         id,
         onReady,
         overrides,
       })
 
-    // If this ecosystem is shared across windows, it may still need to be added
-    // to this window's instance of Zedux' globalStore
-    if (!globalStore.getState().ecosystems[resolvedEcosystem.ecosystemId]) {
-      globalStore.dispatch(addEcosystem(resolvedEcosystem))
-    }
+    return [
+      () => {
+        // If this ecosystem is shared across windows, it may still need to be added
+        // to this window's instance of Zedux' globalStore
+        if (!globalStore.getState().ecosystems[resolvedEcosystem.ecosystemId]) {
+          globalStore.dispatch(addEcosystem(resolvedEcosystem))
+        }
 
-    return resolvedEcosystem
+        console.log('incrementing ref count')
+
+        resolvedEcosystem._incrementRefCount()
+
+        return () => resolvedEcosystem._decrementRefCount()
+      },
+      () => resolvedEcosystem,
+    ]
   }, [id, passedEcosystem]) // don't pass other vals; just get snapshot when these change
 
+  const ecosystem = useSyncExternalStore(subscribe, getSnapshot)
+
   const isFirstRenderRef = useRef(true)
-  const stableOverrides = useStableReference(overrides)
 
   useEffect(() => {
-    if (isFirstRenderRef.current || !stableOverrides) return
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false
+      return
+    }
+    if (!stableOverrides) return
 
     ecosystem.setOverrides(stableOverrides)
   }, [stableOverrides]) // don't pass ecosystem; just get snapshot when this changes
-
-  useEffect(() => {
-    ecosystem._refCount += 1
-
-    return () => {
-      ecosystem._refCount -= 1
-      if (!ecosystem._destroyOnUnmount) return
-
-      ecosystem.destroy()
-    }
-  }, [])
-
-  useEffect(() => {
-    // I think it's fine to assume this effect runs after the others in this file. Easy to change approaches if not.
-    isFirstRenderRef.current = false
-  }, [])
 
   return (
     <ecosystemContext.Provider value={ecosystem.ecosystemId}>

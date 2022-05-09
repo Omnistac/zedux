@@ -13,5 +13,5 @@ export const injectWhy = () => {
     }
   )
 
-  return diContext.consume().instance._evaluationReasons
+  return diContext.consume().instance._nextEvaluationReasons
 }

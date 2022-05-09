@@ -12,6 +12,7 @@ import {
   ion,
   useAtomInstance,
   useAtomValue,
+  EdgeFlag,
 } from '@zedux/react'
 import React from 'react'
 
@@ -66,11 +67,10 @@ describe('graph', () => {
     expect(div).toHaveTextContent('3')
 
     const expectedEdges = {
+      callback: undefined,
       createdAt: expect.any(Number),
-      isExplicit: false,
-      isStatic: false,
+      flags: 0,
       operation: 'get',
-      shouldUpdate: undefined,
     }
 
     expect(testEcosystem._graph.nodes.atom1.dependents).toEqual({
@@ -146,31 +146,32 @@ describe('graph', () => {
         dependencies: {},
         dependents: {
           ion1: {
+            callback: undefined,
             createdAt: expect.any(Number),
-            isExplicit: false,
-            isStatic: true,
+            flags: EdgeFlag.Static,
             operation: 'getInstance',
-            shouldUpdate: undefined,
           },
         },
+        isAtomSelector: undefined,
         weight: 1,
       },
       atom2: {
         dependencies: {},
         dependents: {
           ion1: {
+            callback: undefined,
             createdAt: expect.any(Number),
-            isExplicit: false,
-            isStatic: true,
+            flags: EdgeFlag.Static,
             operation: 'getInstance',
-            shouldUpdate: undefined,
           },
         },
+        isAtomSelector: undefined,
         weight: 1,
       },
       ion1: {
         dependencies: { atom1: true, atom2: true },
         dependents: {},
+        isAtomSelector: undefined,
         weight: 1, // static dependencies don't affect the weight
       },
     })
@@ -206,26 +207,26 @@ describe('graph', () => {
         dependencies: {},
         dependents: {
           d: {
+            callback: undefined,
             createdAt: expect.any(Number),
-            isExplicit: false,
-            isStatic: false,
+            flags: 0,
             operation: 'injectAtomValue',
-            shouldUpdate: undefined,
           },
         },
+        isAtomSelector: undefined,
         weight: 1,
       },
       'b-["b"]': {
         dependencies: {},
         dependents: {
           d: {
+            callback: undefined,
             createdAt: expect.any(Number),
-            isExplicit: false,
-            isStatic: false,
+            flags: 0,
             operation: 'get',
-            shouldUpdate: undefined,
           },
         },
+        isAtomSelector: undefined,
         weight: 1,
       },
       d: {
@@ -234,6 +235,7 @@ describe('graph', () => {
           'b-["b"]': true,
         },
         dependents: {},
+        isAtomSelector: undefined,
         weight: 3,
       },
     })
@@ -247,31 +249,32 @@ describe('graph', () => {
         dependencies: {},
         dependents: {
           d: {
+            callback: undefined,
             createdAt: expect.any(Number),
-            isExplicit: false,
-            isStatic: false,
+            flags: 0,
             operation: 'injectAtomValue',
-            shouldUpdate: undefined,
           },
         },
+        isAtomSelector: undefined,
         weight: 1,
       },
       'b-["b"]': {
         dependencies: {},
         dependents: {},
+        isAtomSelector: undefined,
         weight: 1,
       },
       c: {
         dependencies: {},
         dependents: {
           d: {
+            callback: undefined,
             createdAt: expect.any(Number),
-            isExplicit: false,
-            isStatic: false,
+            flags: 0,
             operation: 'get',
-            shouldUpdate: undefined,
           },
         },
+        isAtomSelector: undefined,
         weight: 1,
       },
       d: {
@@ -280,6 +283,7 @@ describe('graph', () => {
           c: true,
         },
         dependents: {},
+        isAtomSelector: undefined,
         weight: 3,
       },
     })

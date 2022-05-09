@@ -20,6 +20,8 @@ import {
   getLogEventTypeFilter,
 } from '../../atoms/stateHub'
 import { ListScreenList, ListScreen, SplitScreen } from '../../styles'
+import { EdgeFlag } from '@zedux/react/types'
+import { AtomSelectorCache } from '@zedux/react/utils'
 
 export const Log = () => {
   const instance = useAtomSelector(getCurrentEcosystemWrapperInstance)
@@ -76,13 +78,13 @@ export const Log = () => {
     const edgePasses = (edge: DependentEdge) => {
       const { isExplicit, isExternal, isStatic } = edgeTypeFilter
 
-      if (typeof isExplicit !== 'undefined' && edge.isExplicit !== isExplicit) {
+      if (typeof isExplicit !== 'undefined' && !!(edge.flags & EdgeFlag.Explicit) !== isExplicit) {
         return false
       }
-      if (typeof isExternal !== 'undefined' && edge.isExternal !== isExternal) {
+      if (typeof isExternal !== 'undefined' && !!(edge.flags & EdgeFlag.External) !== isExternal) {
         return false
       }
-      if (typeof isStatic !== 'undefined' && edge.isStatic !== isStatic) {
+      if (typeof isStatic !== 'undefined' && !!(edge.flags && EdgeFlag.Static) !== isStatic) {
         return false
       }
 
@@ -116,6 +118,10 @@ export const Log = () => {
       )
     }
 
+    const selectorPasses = (selector: AtomSelectorCache) => {
+      return true // TODO
+    }
+
     return log.filter(event => {
       if (
         eventTypeFilter?.length &&
@@ -131,19 +137,14 @@ export const Log = () => {
 
           return (
             edgePasses(edge) &&
-            (instancePasses(dependency) ||
-              (typeof dependent !== 'string' && instancePasses(dependent)))
+            (dependency.constructor && instancePasses(dependency as AnyAtomInstanceBase) ||
+              (typeof dependent !== 'string' && dependent.constructor && instancePasses(dependent as AnyAtomInstanceBase)))
           )
         }
-        case 'ghostEdgeCreated':
-        case 'ghostEdgeDestroyed': {
-          const { ghost } = event.action.payload
-          return edgePasses(ghost.edge) && instancePasses(ghost.dependency)
-        }
         case 'instanceActiveStateChanged':
-        case 'instanceStateChanged': {
-          const { instance } = event.action.payload
-          return instancePasses(instance)
+        case 'stateChanged': {
+          const { instance, selectorCache } = event.action.payload as any // TODO
+          return instance ? instancePasses(instance) : selectorPasses(selectorCache)
         }
         default:
           return false // filter out all other events

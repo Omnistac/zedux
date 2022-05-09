@@ -28,7 +28,7 @@ export class Atom<
     )
   }
 
-  public getKeyHash(params?: Params) {
+  public getKeyHash(ecosystem: Ecosystem, params?: Params) {
     const base = this.key
 
     if (!params?.length) return base

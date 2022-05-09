@@ -1,4 +1,4 @@
-import { DependentEdge } from '@zedux/react'
+import { DependentEdge, EdgeFlag } from '@zedux/react'
 import styled from '@zedux/react/ssc'
 import React, { FC } from 'react'
 
@@ -79,16 +79,16 @@ export const DetailsScreen = styled.div<{ isOpen: boolean; width: number }>`
 export const EdgeBadges: FC<{ edge: DependentEdge }> = ({ edge }) => {
   return (
     <>
-      {!edge.isExplicit && <Badge variant="primary">implicit</Badge>}
-      {edge.isExplicit && <Badge variant="secondary">explicit</Badge>}
-      {(!edge.isExternal || edge.isAtomSelector) && (
+      {!(edge.flags & EdgeFlag.Explicit) && <Badge variant="primary">implicit</Badge>}
+      {edge.flags & EdgeFlag.Explicit && <Badge variant="secondary">explicit</Badge>}
+      {!(edge.flags & EdgeFlag.External) && (
         <Badge variant="primary">internal</Badge>
       )}
-      {edge.isExternal && !edge.isAtomSelector && (
+      {edge.flags & EdgeFlag.External && (
         <Badge variant="secondary">external</Badge>
       )}
-      {!edge.isStatic && <Badge variant="primary">dynamic</Badge>}
-      {edge.isStatic && <Badge variant="secondary">static</Badge>}
+      {!(edge.flags & EdgeFlag.Static) && <Badge variant="primary">dynamic</Badge>}
+      {edge.flags & EdgeFlag.Static && <Badge variant="secondary">static</Badge>}
     </>
   )
 }

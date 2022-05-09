@@ -81,7 +81,7 @@ export class Ion<
     )
   }
 
-  public getKeyHash(params?: Params) {
+  public getKeyHash(ecosystem: Ecosystem, params?: Params) {
     const base = this.key
 
     if (!params?.length) return base

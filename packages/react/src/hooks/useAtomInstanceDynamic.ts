@@ -1,14 +1,18 @@
-import { useLayoutEffect, useMemo, useState } from 'react'
-import { AtomInstanceParamsType, AtomInstanceStateType } from '..'
+import { useMemo, useSyncExternalStore } from 'react'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import {
+  AtomInstanceParamsType,
+  AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
   AtomStateType,
-  GraphEdgeSignal,
+  EdgeFlag,
   PromiseStatus,
+  ZeduxHookConfig,
 } from '../types'
 import { useEcosystem } from './useEcosystem'
+
+const OPERATION = 'useAtomInstanceDynamic'
 
 /**
  * useAtomInstanceDynamic
@@ -31,34 +35,42 @@ import { useEcosystem } from './useEcosystem'
  * @param params The params for generating the instance's key.
  */
 export const useAtomInstanceDynamic: {
-  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+  <A extends AtomBase<any, [], any>>(atom: A): [
+    AtomStateType<A>,
+    AtomInstanceType<A>
+  ]
 
   <A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
-    operation?: string,
-    shouldUpdate?: (state: AtomStateType<A>) => boolean
-  ): AtomInstanceType<A>
+    config?: ZeduxHookConfig
+  ): [AtomStateType<A>, AtomInstanceType<A>]
 
   <AI extends AtomInstanceBase<any, [...any], any>>(
     instance: AI,
     params?: AtomInstanceParamsType<AI>,
-    operation?: string,
-    shouldUpdate?: (state: AtomInstanceStateType<AI>) => boolean
-  ): AI
+    config?: ZeduxHookConfig
+  ): [AtomInstanceStateType<AI>, AI]
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
   params?: AtomParamsType<A>,
-  operation = 'useAtomInstanceDynamic',
-  shouldUpdate?: (state: AtomStateType<A>) => boolean
+  { operation = OPERATION, startTransition }: ZeduxHookConfig = {
+    operation: OPERATION,
+  }
 ) => {
   const ecosystem = useEcosystem()
-  const [, forceRender] = useState<any>()
+
+  // would be nice if React provided some way to know that multiple hooks are
+  // from the same component. For now, every Zedux hook usage creates a new
+  // graph node
+  const dependentKey = useMemo(
+    () => ecosystem._idGenerator.generateReactComponentId(),
+    []
+  )
 
   // it should be fine for this to run every render. It's possible to change
   // approaches if it is too heavy sometimes. But don't memoize this call:
   const instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
-  const [state, setReactState] = useState(() => instance.store.getState())
 
   // Suspense!
   if (instance.promise) {
@@ -69,38 +81,34 @@ export const useAtomInstanceDynamic: {
     }
   }
 
-  const ghostSubscription = useMemo(
-    () =>
-      ecosystem._graph.registerGhostDependent(
-        instance,
-        (signal, val: AtomStateType<A>) => {
-          if (signal === GraphEdgeSignal.Destroyed) {
-            forceRender({})
-            return
+  const [subscribe, getSnapshot] = useMemo(
+    () => [
+      (onStoreChange: () => void) => {
+        ecosystem._graph.addEdge(
+          dependentKey,
+          instance.keyHash,
+          operation,
+          EdgeFlag.External,
+          () => {
+            if (!startTransition) return onStoreChange()
+
+            // not sure if React actually supports this. It probably should:
+            startTransition(() => {
+              onStoreChange()
+            })
           }
+        )
 
-          if (shouldUpdate && !shouldUpdate?.(val)) return
-
-          setReactState(val)
-        },
-        operation,
-        false
-      ),
-    [instance]
+        return () => {
+          ecosystem._graph.removeEdge(dependentKey, instance.keyHash)
+        }
+      },
+      () => instance.store.getState(),
+    ],
+    [ecosystem, instance]
   )
 
-  // TODO: guard against ecosystem/instance changing over and over, causing
-  // this effect to set React state over and over
-  useLayoutEffect(() => {
-    const currentState = instance.store.getState()
+  const state = useSyncExternalStore(subscribe, getSnapshot)
 
-    // handle any state updates we missed between render and this effect running
-    // also handle the case where the instance has changed (e.g. different
-    // params were passed)
-    if (currentState !== state) setReactState(currentState)
-
-    return ghostSubscription.materialize()
-  }, [ghostSubscription, instance]) // not state
-
-  return instance
+  return [state, instance] as [AtomStateType<A>, AtomInstanceType<A>]
 }

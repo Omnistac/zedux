@@ -1,10 +1,10 @@
-import React, { FC } from 'react'
+import React, { FC, ReactNode } from 'react'
 import { AnyAtom } from '../types'
 import { AtomInstanceBase } from '../classes'
 
 export const AtomInstanceProvider: FC<
-  | { instance: AtomInstanceBase<any, any, AnyAtom>; instances?: undefined }
-  | { instance?: undefined; instances: AtomInstanceBase<any, any, AnyAtom>[] }
+  | { children: ReactNode; instance: AtomInstanceBase<any, any, AnyAtom>; instances?: undefined }
+  | { children: ReactNode; instance?: undefined; instances: AtomInstanceBase<any, any, AnyAtom>[] }
 > = ({ children, instance, instances }) => {
   if (!instance && !instances) {
     throw new Error(

@@ -1,4 +1,5 @@
 import { ActionChain, Observable, Settable, Store } from '@zedux/core'
+import { TransitionStartFunction } from 'react'
 import {
   AtomBase,
   AtomInstance,
@@ -104,7 +105,7 @@ export interface AtomGettersBase {
   /**
    * Runs an AtomSelector which receives its own AtomGetters object and can use
    * those to register its own dynamic and/or static graph edges (when called
-   * synchronously during atom or AtomSelector evaluation.)
+   * synchronously during atom or AtomSelector evaluation)
    *
    * ```ts
    * const mySelector = ion('mySelector', ({ select }) => {
@@ -195,6 +196,7 @@ export type AtomSelector<T = any, Args extends any[] = []> = (
 
 export interface AtomSelectorConfig<T = any, Args extends any[] = []> {
   argsComparator?: (newArgs: Args, oldArgs: Args) => boolean
+  name?: string
   resultsComparator?: (newResult: T, oldResult: T) => boolean
   selector: AtomSelector<T, Args>
 }
@@ -253,13 +255,8 @@ export interface DependentEdge {
     reasons?: EvaluationReason[]
   ) => any
   createdAt: number
-  isExplicit?: boolean
-  isAtomSelector?: boolean
-  isExternal?: boolean
-  isGhost?: boolean
-  isStatic?: boolean
+  flags: number // calculated from EdgeFlag enum
   operation: string
-  shouldUpdate?: (state: any) => boolean
   task?: () => void
 }
 
@@ -275,7 +272,6 @@ export interface EcosystemConfig<
   defaultForwardPromises?: boolean
   defaultTtl?: number
   destroyOnUnmount?: boolean
-  ghostTtlMs?: number
   flags?: string[]
   id?: string
   onReady?: (
@@ -283,6 +279,20 @@ export interface EcosystemConfig<
     prevContext?: Context
   ) => MaybeCleanup
   overrides?: AtomBase<any, any[], any>[]
+}
+
+/**
+ * The flag score determines job priority in the scheduler. Scores range from
+ * 0-7. Lower score = higher prio. Examples:
+ *
+ * 0 = implicit-internal-dynamic
+ * 3 = explicit-external-dynamic
+ * 7 = explicit-external-static
+ */
+export enum EdgeFlag {
+  Explicit = 1,
+  External = 2,
+  Static = 4,
 }
 
 export type EffectCallback = () => MaybeCleanup
@@ -301,6 +311,7 @@ export interface EvaluationReason<State = any> {
 
 export enum EvaluationTargetType {
   Atom = 'Atom',
+  AtomSelector = 'AtomSelector',
   External = 'External',
   Injector = 'Injector',
   Store = 'Store',
@@ -312,12 +323,7 @@ export enum EvaluationType {
   StateChanged = 'state changed',
 }
 
-export enum GraphEdgeDynamicity {
-  Static = 1,
-  Dynamic = 2,
-}
-
-export type GraphEdgeInfo = [GraphEdgeDynamicity, string]
+export type GraphEdgeInfo = [flags: number, operation: string] // flags are from EdgeFlag enum
 
 export enum GraphEdgeSignal {
   Destroyed = 'Destroyed',
@@ -528,4 +534,9 @@ export type SetStateInterceptor<State = any> = (
 export enum StateType {
   Store,
   Value,
+}
+
+export interface ZeduxHookConfig {
+  operation?: string
+  startTransition?: TransitionStartFunction
 }

@@ -1,10 +1,5 @@
 import { AtomBase, AtomInstanceBase } from '../classes'
-import {
-  AnyAtomInstanceBase,
-  AtomInstanceType,
-  AtomParamsType,
-  GraphEdgeDynamicity,
-} from '../types'
+import { AnyAtomInstanceBase, AtomInstanceType, AtomParamsType } from '../types'
 import {
   AtomDynamicInjectorDescriptor,
   haveDepsChanged,
@@ -20,8 +15,8 @@ const defaultOperation = 'injectAtomInstanceDynamic'
  * injectAtomInstanceDynamic
  *
  * Creates an atom instance for the passed atom based on the passed params. If
- * an instance has already been created for the passed params, reuses the
- * existing instance.
+ * an instance has already been created in this ecosystem for the passed params,
+ * reuses the existing instance.
  *
  * Registers a dynamic graph dependency on the atom instance. This means atoms
  * that use this injector *will* reevaluate when this atom instance's state
@@ -70,7 +65,7 @@ export const injectAtomInstanceDynamic: {
     InjectorType.AtomDynamic,
     () => {
       const instance = getInstance(atom as A, params as AtomParamsType<A>, [
-        GraphEdgeDynamicity.Dynamic,
+        0,
         operation,
       ])
 
@@ -83,18 +78,18 @@ export const injectAtomInstanceDynamic: {
       const resolvedAtom = is(atom, AtomInstanceBase)
         ? (atom as AnyAtomInstanceBase).atom
         : (atom as A)
-      const atomHasChanged =
-        resolvedAtom.internalId !== prevDescriptor.instance.atom.internalId
+
+      const atomHasChanged = resolvedAtom !== prevDescriptor.instance.atom
 
       const paramsHaveChanged = haveDepsChanged(
         prevDescriptor.instance.params,
         params,
-        false
+        true
       )
 
       // make sure the dependency gets registered for this evaluation
       const instance = getInstance(atom as A, params as AtomParamsType<A>, [
-        GraphEdgeDynamicity.Dynamic,
+        0,
         operation,
       ])
 

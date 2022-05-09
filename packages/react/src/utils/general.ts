@@ -4,20 +4,7 @@ import { diContext } from './csContexts'
 import { ActiveState } from '../types'
 import { AtomInstanceBase } from '../classes'
 
-let idCounter = 0
-
-const generateId = () => {
-  idCounter += 1
-  return `${idCounter}${Math.random().toString(16).slice(2, 13)}`
-}
-
 export const EMPTY_CONTEXT = {}
-
-export const generateAtomSelectorId = () => `select-${generateId()}`
-export const generateEcosystemId = () => `ecosystem-${generateId()}`
-export const generateImplementationId = () => `im-${generateId()}`
-export const generateLocalId = () => `lo-${generateId()}`
-export const generateNodeId = () => `no-${generateId()}`
 
 export const hashParams = (params: any[]): string =>
   JSON.stringify(params, (_, param) => {
@@ -32,15 +19,19 @@ export const hashParams = (params: any[]): string =>
       }, {} as Record<string, any>)
   })
 
+/**
+ * Compare two arrays and see if any elements are different (===). Returns true
+ * by default if either array is undefined
+ */
 export const haveDepsChanged = (
   prevDeps?: any[],
   nextDeps?: any[],
-  trueIfNeither = true
+  matchUndefinedAndEmpty?: boolean
 ) => {
   if (!prevDeps || !nextDeps) {
-    if (trueIfNeither) return true
-
-    return prevDeps && nextDeps
+    return matchUndefinedAndEmpty
+      ? !prevDeps?.length && !nextDeps?.length
+      : prevDeps || nextDeps
   }
 
   return (

@@ -1,5 +1,5 @@
 import { Settable } from '@zedux/core'
-import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
+import { AtomBase, AtomInstanceBase } from '../classes'
 import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
 import { useAtomInstanceDynamic } from './useAtomInstanceDynamic'
 
@@ -28,11 +28,13 @@ export const useAtomState: {
   AtomStateType<A>,
   (settable: Settable<AtomStateType<A>>) => AtomStateType<A>
 ] => {
-  const instance = useAtomInstanceDynamic(
+  const [state, instance] = useAtomInstanceDynamic(
     atom,
     params as AtomParamsType<A>,
-    'useAtomState'
-  ) as AtomInstance<AtomStateType<A>, any, any>
+    {
+      operation: 'useAtomState',
+    }
+  )
 
-  return [instance.store.getState(), instance.setState]
+  return [state, instance.setState]
 }
