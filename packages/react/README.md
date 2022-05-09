@@ -632,24 +632,14 @@ Round 3 at least (Apr 17, 2022)
 - Move atom model to @zedux/core
 - Make stores able to find their ecosystem when created during atom evaluation so they can use the scheduler
 - Make dispatch and setState interceptable at the store level, remove that functionality from Ion/AtomApi
-x- Upgrade to `useSyncExternalStore` and React 18 peer dep
-x- Remove Ghost edges (not needed with React 18)
+- Upgrade to `useSyncExternalStore` and React 18 peer dep
+- Remove Ghost edges (not needed with React 18)
 - StateHub updates:
   - Make usable as a chrome extension
   - Make atom graph view layout like DOM tree (this is the new default view)
-  - Quick Filter
-  - Profiling
-  - Macro recording
-x- Make AtomSelectors part of the graph
-x- Get React component name from an Error stack for those dependents (first CapitalizedVar after at least one lowercaseVar probably starting with "use")
+- Make AtomSelectors part of the graph
+- Get React component name from an Error stack for those dependents (first CapitalizedVar after at least one lowercaseVar probably starting with "use")
 - `ecosystem.serializeByFlag()` and `ecosystem.hydrate()`
-x- AtomSelector `memoizeRef` option (not doing - encourage memoizing it yourself)
+- AtomSelector `memoizeRef` option
 - Remove scheduler job types, replace with more advanced bitwise flags. Allow any job to have a weight
 - Consolidate runAtomSelector and AtomInstance graph updating logic (possibly even combine their `get`, `getInstance`, and `select` implementations?)
-- Add config options as the 3rd param to all `get`, `getInstance`, and `select` variants
-  - `select` and its variants will need to use an array of params for the 2nd param instead of spreading the params over arguments
-  - add `{ inline: true }` for `select` and its variants that stops Zedux from trying to cache the selector based on reference (+params) and essentially flattens the nested selector into the current context
-  - add `{ suspend: false }` for all
-  - add `{ throw: false }` for all
-  - add `{ updateStrategy: 'async' | 'sync' }` for all - `'async'` tells Zedux to make sure to wait for an event loop turn before updating the current dependent
-- Add `{ dehydrate: (state => string) | false }` and `{ hydrate: (string => state) | false }` AtomConfig options

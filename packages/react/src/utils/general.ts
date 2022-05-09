@@ -1,8 +1,23 @@
+import { isPlainObject } from '@zedux/core/utils/general'
 import { DiContext, InjectorDescriptor, InjectorType } from './types'
 import { diContext } from './csContexts'
 import { ActiveState } from '../types'
+import { AtomInstanceBase } from '../classes'
 
 export const EMPTY_CONTEXT = {}
+
+export const hashParams = (params: any[]): string =>
+  JSON.stringify(params, (_, param) => {
+    if (is(param, AtomInstanceBase)) return param.keyHash
+    if (!isPlainObject(param)) return param
+
+    return Object.keys(param)
+      .sort()
+      .reduce((result, key) => {
+        result[key] = param[key]
+        return result
+      }, {} as Record<string, any>)
+  })
 
 /**
  * Compare two arrays and see if any elements are different (===). Returns true
@@ -36,19 +51,12 @@ export const haveDepsChanged = (
  * The classToCheck should have a static $$typeof property whose value is a
  * symbol created with Symbol.for() (sharing the symbol reference across realms)
  *
- * Important! Only one level of inheritance is supported currently - we never
- * use $$typeof on a child of a child of a class, but if we do need a $$typeof
- * on the Atom class and the BaseAtom class, for example, we'll need to add
- * logic here to support that
- *
  * @param val anything - the thing we're checking
  * @param classToCheck a class with a static $$typeof property
  * @returns boolean - whether val is an instanceof classToCheck
  */
 export const is = (val: any, classToCheck: { $$typeof: symbol }) =>
-  val?.constructor &&
-  (val.constructor.$$typeof === classToCheck.$$typeof ||
-    Object.getPrototypeOf(val.constructor)?.$$typeof === classToCheck.$$typeof)
+  val?.constructor?.$$typeof === classToCheck.$$typeof
 
 export const split = <T extends InjectorDescriptor>(
   operation: string,
@@ -58,7 +66,7 @@ export const split = <T extends InjectorDescriptor>(
 ) => {
   const context = diContext.consume()
 
-  if (context.instance.activeState === ActiveState.Initializing) {
+  if (context.instance._activeState === ActiveState.Initializing) {
     const descriptor = first(context)
     context.injectors.push(descriptor)
 
@@ -69,7 +77,7 @@ export const split = <T extends InjectorDescriptor>(
     context.injectors.length
   ] as T
 
-  if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
+  if (!prevDescriptor || prevDescriptor.type !== type) {
     throw new Error(
       `Zedux: ${operation} in atom "${context.instance.atom.key}" - injectors cannot be added, removed, or reordered`
     )
@@ -86,7 +94,7 @@ export const validateInjector = <T extends InjectorDescriptor>(
   type: InjectorType,
   context: DiContext
 ): T | undefined => {
-  if (context.instance.activeState === ActiveState.Initializing) {
+  if (context.instance._activeState === ActiveState.Initializing) {
     return
   }
 
@@ -94,7 +102,7 @@ export const validateInjector = <T extends InjectorDescriptor>(
     context.injectors.length
   ] as T
 
-  if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
+  if (!prevDescriptor || prevDescriptor.type !== type) {
     throw new Error(
       `Zedux: ${name} in atom "${context.instance.atom.key}" - injectors cannot be added, removed, or reordered`
     )

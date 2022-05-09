@@ -6,7 +6,11 @@ import {
   EvaluationType,
   GraphEdgeSignal,
 } from '../types'
-import { EcosystemGraphNode, JobType } from '../utils'
+import {
+  EcosystemGraphNode,
+  JobType,
+  UpdateExternalDependentJob,
+} from '../utils'
 import { Ecosystem } from './Ecosystem'
 import { AtomInstance } from './instances/AtomInstance'
 import { ZeduxPlugin } from './ZeduxPlugin'
@@ -46,9 +50,9 @@ export class Graph {
     // We're buffering updates! Buffer this one
     const { dependencies, key } = this.updateStack[this.updateStack.length - 1]
 
-    if (DEV && key !== dependentKey) {
+    if (key !== dependentKey) {
       throw new Error(
-        "Zedux: Tried updating dependencies of a graph node that isn't currently evaluating. This means that either you tried updating the graph manually or there is a bug in Zedux. If it's a bug, please report it!"
+        "Zedux - Tried updating dependencies of a graph node that isn't currently evaluating. This means that either you tried updating the graph manually or there is a bug in Zedux. If it's a bug, please report it!"
       )
     }
 
@@ -91,7 +95,7 @@ export class Graph {
   /**
    * If an atom instance or AtomSelector errors during evaluation, we need to
    * destroy any instances or AtomSelectors created during that evaluation that
-   * now have no dependents.
+   * no longer have dependents
    */
   public destroyBuffer() {
     const { dependencies, key } = this.updateStack[this.updateStack.length - 1]
@@ -103,10 +107,8 @@ export class Graph {
       // the edge wasn't created during the evaluation that errored; keep it
       if (existingEdge) return
 
-      this.scheduleNodeDestruction(dependencyKey)
+      this.scheduleInstanceDestruction(dependencyKey)
     })
-
-    this.updateStack.pop()
   }
 
   /**
@@ -117,18 +119,12 @@ export class Graph {
     const { dependencies, key } = this.updateStack[this.updateStack.length - 1]
     const edges = this.nodes[key].dependencies
 
-    // remove any edges that were not recreated while buffering. Don't remove
-    // anything but implicit-internal edges (those are the only kind we
-    // auto-create during evaluation - other types may have been added manually
-    // by the user and we don't want to touch them here)
+    // remove any edges that were not recreated while buffering
     Object.keys(edges).forEach(dependencyKey => {
       const existingEdge = this.nodes[dependencyKey].dependents[key]
 
-      if (existingEdge.flags & (EdgeFlag.Explicit | EdgeFlag.External)) return
-
       const edgeToAdd = dependencies[dependencyKey]
 
-      // edge already exists; keep it
       if (edgeToAdd && edgeToAdd.flags === existingEdge.flags) return
 
       this.removeEdge(key, dependencyKey)
@@ -139,7 +135,6 @@ export class Graph {
       const edgeToAdd = dependencies[dependencyKey]
       const existingEdge = edges[dependencyKey]
 
-      // edge already exists; keep it
       if (existingEdge) return
 
       this.finishAddingEdge(key, dependencyKey, edgeToAdd)
@@ -153,11 +148,7 @@ export class Graph {
   }
 
   public removeDependencies(dependentKey: string) {
-    const node = this.nodes[dependentKey]
-
-    if (!node) return // node already destroyed
-
-    const edges = node.dependencies
+    const edges = this.nodes[dependentKey].dependencies
 
     if (!edges) return
 
@@ -170,10 +161,6 @@ export class Graph {
    * Should only be used internally. Remove the graph edge between two nodes.
    * The dependent may not exist as a node in the graph if it's external, e.g. a
    * React component
-   *
-   * For some reason in React 18+, React destroys parents before children. This
-   * means a parent EcosystemProvider may have already unmounted and wiped the
-   * whole graph; this edge may already be destroyed.
    */
   public removeEdge(dependentKey: string, dependencyKey: string) {
     const dependency = this.nodes[dependencyKey]
@@ -184,20 +171,17 @@ export class Graph {
       delete dependent.dependencies[dependencyKey]
     }
 
-    // hmm could maybe happen when a dependency was force-destroyed if a child
-    // tries to destroy its edge before recreating it (I don't think we ever do
-    // that though)
+    // TODO: This check should be completely unnecessary. Why would the
+    // dependent still have an edge to this dependency if this dependency has
+    // been cleaned up? Kill this check with amazing tests.
     if (!dependency) return
 
     const dependentEdge = dependency.dependents[dependentKey]
-
-    // happens in React 18+ (see this method's jsdoc above)
-    if (!dependentEdge) return
     delete dependency.dependents[dependentKey]
 
     // static dependencies don't change a node's weight
     if (!(dependentEdge.flags & EdgeFlag.Static)) {
-      this.recalculateNodeWeight(dependentKey, -dependency.weight)
+      this.recalculateWeight(dependentKey, -dependency.weight)
     }
 
     if (dependentEdge.task) {
@@ -209,17 +193,17 @@ export class Graph {
         ZeduxPlugin.actions.edgeRemoved({
           dependency:
             this.ecosystem._instances[dependencyKey] ||
-            this.ecosystem.selectorCache._caches[dependencyKey],
+            this.ecosystem._selectorCache.caches[dependencyKey],
           dependent:
             this.ecosystem._instances[dependentKey] ||
-            this.ecosystem.selectorCache._caches[dependentKey] ||
+            this.ecosystem._selectorCache.caches[dependentKey] ||
             dependentKey,
           edge: dependentEdge,
         })
       )
     }
 
-    this.scheduleNodeDestruction(dependencyKey)
+    this.scheduleInstanceDestruction(dependencyKey)
   }
 
   // Should only be used internally
@@ -229,134 +213,124 @@ export class Graph {
     if (!node) return // already removed
 
     // We don't need to remove this dependent from its dependencies here - the
-    // atom instance/AtomSelector will have removed all its deps before calling
-    // this function as part of its destruction process
-
-    // if an atom instance is force-destroyed, it could still have dependents.
-    // Inform them of the destruction
-    this.scheduleDependents(
-      nodeKey,
-      [],
-      undefined,
-      undefined,
-      true,
-      EvaluationType.NodeDestroyed,
-      GraphEdgeSignal.Destroyed,
-      true
-    )
+    // atom instance will have removed all its deps before calling this function
+    // as part of the instance destruction process
 
     // Remove this dependency from all its dependents and recalculate all
     // weights recursively
     Object.keys(node.dependents).forEach(dependentKey => {
       const dependentEdge = node.dependents[dependentKey]
 
+      if (dependentEdge.flags & EdgeFlag.External) {
+        const job: UpdateExternalDependentJob = {
+          flags: dependentEdge.flags,
+          task: () => dependentEdge.callback?.(GraphEdgeSignal.Destroyed),
+          type: JobType.UpdateExternalDependent,
+        }
+
+        this.ecosystem._scheduler.scheduleJob(job)
+        return
+      }
+
       if (!(dependentEdge.flags & EdgeFlag.Static)) {
-        this.recalculateNodeWeight(dependentKey, -node.weight)
+        this.recalculateWeight(dependentKey, -node.weight)
       }
 
       const dependentNode = this.nodes[dependentKey]
+      delete dependentNode.dependencies[nodeKey]
+      const reasons = {
+        operation: dependentEdge.operation,
+        targetKey: nodeKey,
+        targetType: node.isAtomSelector
+          ? EvaluationTargetType.AtomSelector
+          : EvaluationTargetType.Atom,
+        type: EvaluationType.InstanceDestroyed,
+      }
 
-      if (dependentNode) delete dependentNode.dependencies[nodeKey]
+      if (dependentNode.isAtomSelector) {
+        this.ecosystem._selectorCache._scheduleEvaluation(
+          dependentKey,
+          reasons,
+          dependentEdge.flags
+        )
+      } else {
+        this.ecosystem._instances[dependentKey]._scheduleEvaluation(
+          reasons,
+          dependentEdge.flags
+        )
+      }
     })
 
     delete this.nodes[nodeKey]
   }
 
-  /**
-   * Schedules a job to update all dependents of a node. This is called e.g.
-   * when an atom instance or AtomSelector updates, when an atom instance is
-   * force-destroyed, or when an atom instance's promise changes.
-   */
+  // an atom instance or AtomSelector just updated. Schedule an update for all
+  // dynamic dependents. Should only be used internally
   public scheduleDependents(
     nodeKey: string,
     reasons: EvaluationReason[],
     newState: any,
-    oldState: any,
-    shouldSetTimeout?: boolean,
-    type = EvaluationType.StateChanged,
-    signal = GraphEdgeSignal.Updated,
-    scheduleStaticDeps = false
+    oldState: any
   ) {
     const instance = this.ecosystem._instances[nodeKey]
-    const cache = this.ecosystem.selectorCache._caches[nodeKey]
+    const cache = this.ecosystem._selectorCache.caches[nodeKey]
     const node = this.nodes[nodeKey]
 
     Object.keys(node.dependents).forEach(dependentKey => {
       const dependentEdge = node.dependents[dependentKey]
 
-      // if edge.task exists, this edge has already been scheduled
-      if (dependentEdge.task) {
-        if (signal !== GraphEdgeSignal.Destroyed) return
-
-        // destruction jobs supersede update jobs; cancel the existing job so we
-        // can create a new one for the destruction
-        this.ecosystem._scheduler.unscheduleJob(dependentEdge.task)
-      }
-
-      // Static deps don't update on state change. Dynamic deps don't update on
-      // promise change. Both types update on instance force-destruction
-      const isStatic = dependentEdge.flags & EdgeFlag.Static
-      if (isStatic && !scheduleStaticDeps) return
-
-      const reason = {
-        newState,
-        oldState,
-        operation: dependentEdge.operation,
-        reasons,
-        targetKey: nodeKey,
-        targetType: node.isAtomSelector
-          ? EvaluationTargetType.AtomSelector
-          : EvaluationTargetType.Atom,
-        type,
-      }
+      // static deps don't update and if edge.task exists, this edge has
+      // already been scheduled
+      if (dependentEdge.flags & EdgeFlag.Static || dependentEdge.task) return
 
       // let internal dependents (other atoms and AtomSelectors) schedule their
       // own jobs
       if (!(dependentEdge.flags & EdgeFlag.External)) {
-        if (this.nodes[dependentKey].isAtomSelector) {
-          return this.ecosystem.selectorCache._scheduleEvaluation(
-            dependentKey,
-            reason,
-            dependentEdge.flags,
-            shouldSetTimeout
-          )
+        const reason = {
+          newState,
+          oldState,
+          operation: dependentEdge.operation,
+          reasons,
+          targetKey: nodeKey,
+          targetType: EvaluationTargetType.Atom,
+          type: EvaluationType.StateChanged,
         }
 
-        return this.ecosystem._instances[dependentKey]._scheduleEvaluation(
-          reason,
-          dependentEdge.flags,
-          shouldSetTimeout
-        )
+        if (this.nodes[dependentKey].isAtomSelector) {
+          return this.ecosystem._selectorCache._scheduleEvaluation(
+            dependentKey,
+            reason,
+            dependentEdge.flags
+          )
+        } else {
+          return this.ecosystem._instances[dependentKey]._scheduleEvaluation(
+            reason,
+            dependentEdge.flags
+          )
+        }
       }
 
       // schedule external dependents
       const task = () => {
         dependentEdge.task = undefined
         dependentEdge.callback?.(
-          signal,
+          GraphEdgeSignal.Updated,
           instance ? instance.store.getState() : cache.result, // don't use the snapshotted newState above
-          reason
+          reasons
         )
       }
 
-      this.ecosystem._scheduler.scheduleJob(
-        {
-          flags: dependentEdge.flags,
-          task,
-          type: JobType.UpdateExternalDependent,
-        },
-        shouldSetTimeout
-      )
+      this.ecosystem._scheduler.scheduleJob({
+        flags: dependentEdge.flags,
+        task,
+        type: JobType.UpdateExternalDependent,
+      })
 
       // mutate the edge; give it the scheduled task so it can be cleaned up
       dependentEdge.task = task
     })
   }
 
-  /**
-   * Actually add an edge to the graph. When we buffer graph updates, we're
-   * really just deferring the calling of this method.
-   */
   private finishAddingEdge(
     dependentKey: string,
     dependencyKey: string,
@@ -364,19 +338,17 @@ export class Graph {
   ) {
     const dependency = this.nodes[dependencyKey]
 
-    if (!dependency) return // happened once for some reason
-
     // draw graph edge between dependent and dependency
     if (!(newEdge.flags & EdgeFlag.External)) {
       this.nodes[dependentKey].dependencies[dependencyKey] = true
     }
     dependency.dependents[dependentKey] = newEdge
 
-    this.unscheduleNodeDestruction(dependencyKey)
+    this.unscheduleDestruction(dependencyKey)
 
     // static dependencies don't change a node's weight
     if (!(newEdge.flags & EdgeFlag.Static)) {
-      this.recalculateNodeWeight(dependentKey, dependency.weight)
+      this.recalculateWeight(dependentKey, dependency.weight)
     }
 
     if (this.ecosystem.mods.edgeCreated) {
@@ -384,10 +356,10 @@ export class Graph {
         ZeduxPlugin.actions.edgeCreated({
           dependency:
             this.ecosystem._instances[dependencyKey] ||
-            this.ecosystem.selectorCache._caches[dependencyKey],
+            this.ecosystem._selectorCache.caches[dependencyKey],
           dependent:
             this.ecosystem._instances[dependentKey] ||
-            this.ecosystem.selectorCache._caches[dependentKey] ||
+            this.ecosystem._selectorCache.caches[dependentKey] ||
             dependentKey, // unfortunate but not changing for now
           edge: newEdge,
         })
@@ -397,12 +369,7 @@ export class Graph {
     return newEdge
   }
 
-  /**
-   * When a non-static edge is added or removed, every node below that edge (the
-   * dependent, its dependents, etc) in the graph needs to have its weight
-   * recalculated.
-   */
-  private recalculateNodeWeight(nodeKey: string, weightDiff: number) {
+  private recalculateWeight(nodeKey: string, weightDiff: number) {
     const node = this.nodes[nodeKey]
 
     if (!node) return // happens when node is external
@@ -410,19 +377,16 @@ export class Graph {
     node.weight += weightDiff
 
     Object.keys(node.dependents).forEach(dependentKey => {
-      this.recalculateNodeWeight(dependentKey, weightDiff)
+      this.recalculateWeight(dependentKey, weightDiff)
     })
   }
 
-  /**
-   * When a node's refCount hits 0, schedule destruction of that node.
-   */
-  private scheduleNodeDestruction(nodeKey: string) {
+  private scheduleInstanceDestruction(nodeKey: string) {
     const node = this.nodes[nodeKey]
 
     if (node && !Object.keys(node.dependents).length) {
       if (node.isAtomSelector) {
-        this.ecosystem.selectorCache._destroySelector(nodeKey)
+        this.ecosystem._selectorCache._destroySelector(nodeKey)
       } else {
         this.ecosystem._instances[nodeKey]._scheduleDestruction()
       }
@@ -430,11 +394,11 @@ export class Graph {
   }
 
   /**
-   * When a node's refCount hits 0, we schedule destruction of that node. If
-   * that destruction is still pending and the refCount goes back up to 1,
-   * cancel the scheduled destruction.
+   * When an atom instance's refCount hits 0, we try to schedule destruction of
+   * that atom instance. If that destruction is still pending and the refCount
+   * goes back up to 1, cancel the scheduled destruction.
    */
-  private unscheduleNodeDestruction(nodeKey: string) {
+  private unscheduleDestruction(nodeKey: string) {
     const dependency = this.nodes[nodeKey]
 
     if (

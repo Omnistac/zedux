@@ -7,11 +7,10 @@ import {
   AtomParamsType,
   AtomStateType,
   EdgeFlag,
-  GraphEdgeSignal,
+  PromiseStatus,
   ZeduxHookConfig,
 } from '../types'
 import { useEcosystem } from './useEcosystem'
-import { useReactComponentId } from './useReactComponentId'
 
 const OPERATION = 'useAtomInstanceDynamic'
 
@@ -55,71 +54,61 @@ export const useAtomInstanceDynamic: {
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
   params?: AtomParamsType<A>,
-  { operation = OPERATION }: ZeduxHookConfig = {
+  { operation = OPERATION, startTransition }: ZeduxHookConfig = {
     operation: OPERATION,
   }
 ) => {
   const ecosystem = useEcosystem()
-  const dependentKey = useReactComponentId()
+
+  // would be nice if React provided some way to know that multiple hooks are
+  // from the same component. For now, every Zedux hook usage creates a new
+  // graph node
+  const dependentKey = useMemo(
+    () => ecosystem._idGenerator.generateReactComponentId(),
+    []
+  )
 
   // it should be fine for this to run every render. It's possible to change
   // approaches if it is too heavy sometimes. But don't memoize this call:
   const instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
 
-  const [subscribe, getSnapshot] = useMemo(() => {
-    let val = [instance.store.getState(), instance] as
-      | [AtomStateType<A>, AtomInstanceType<A>]
-      | undefined
+  // Suspense!
+  if (instance.promise) {
+    if (instance._promiseStatus === PromiseStatus.Pending) {
+      throw instance.promise
+    } else if (instance._promiseStatus === PromiseStatus.Rejected) {
+      throw instance._promiseError
+    }
+  }
 
-    return [
+  const [subscribe, getSnapshot] = useMemo(
+    () => [
       (onStoreChange: () => void) => {
-        // this function must be idempotent
-        if (
-          !ecosystem._graph.nodes[instance.keyHash]?.dependents[dependentKey]
-        ) {
-          ecosystem._graph.addEdge(
-            dependentKey,
-            instance.keyHash,
-            operation,
-            EdgeFlag.External,
-            signal => {
-              if (signal === GraphEdgeSignal.Destroyed) {
-                val = undefined
-              }
+        ecosystem._graph.addEdge(
+          dependentKey,
+          instance.keyHash,
+          operation,
+          EdgeFlag.External,
+          () => {
+            if (!startTransition) return onStoreChange()
 
-              // won't pick up on promise changes .. which should be fine since
-              // promise updates aren't currently sent to dynamic dependents
+            // not sure if React actually supports this. It probably should:
+            startTransition(() => {
               onStoreChange()
-            }
-          )
-        }
+            })
+          }
+        )
 
         return () => {
           ecosystem._graph.removeEdge(dependentKey, instance.keyHash)
         }
       },
-      // this getSnapshot has to return a different val if either the instance
-      // or the state change (since in the case of primitive values, the new
-      // instance's state could be exactly the same (===) as the previous
-      // instance's value)
-      () => {
-        if (!val) return undefined as any // hack React like dat boi
+      () => instance.store.getState(),
+    ],
+    [ecosystem, instance]
+  )
 
-        // Suspense!
-        if (val[1]._promiseStatus === 'loading') {
-          throw val[1].promise
-        } else if (val[1]._promiseStatus === 'error') {
-          throw val[1]._promiseError
-        }
+  const state = useSyncExternalStore(subscribe, getSnapshot)
 
-        const state = val[1].store.getState()
-        if (state === val[0]) return val
-
-        val = [state, val[1]]
-        return val
-      },
-    ]
-  }, [ecosystem, instance])
-
-  return useSyncExternalStore(subscribe, getSnapshot)
+  return [state, instance] as [AtomStateType<A>, AtomInstanceType<A>]
 }

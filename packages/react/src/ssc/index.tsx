@@ -173,7 +173,7 @@ const createStyleManager = (
 ) => {
   let idCounter = 0
   let styleTag: HTMLStyleElement
-  const id = Math.random().toString(16).slice(2, 14)
+  const id = btoa(Math.random().toString()).slice(3, 9)
   const generateClassName = () => `s${id}${idCounter++}`
   const replaceStr = `REPLACEWITHCLASS${id}`
   const cachedClassNames: Record<
@@ -407,11 +407,7 @@ export const css = <Props extends Record<string, any>>(
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface DefaultTheme {}
 
-export const ThemeProvider = ({
-  children,
-  root,
-  theme,
-}: PropsWithChildren<{
+export const ThemeProvider = ({ children, root, theme }: PropsWithChildren<{
   root?: Pick<Element, 'appendChild'>
   theme: DefaultTheme
 }>) => {

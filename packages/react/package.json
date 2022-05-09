@@ -1,9 +1,9 @@
 {
   "name": "@zedux/react",
-  "version": "0.5.0-beta.0",
+  "version": "0.4.5",
   "description": "A Molecular State Engine for React",
-  "main": "./dist/zedux-react.umd.min.js",
-  "module": "./dist/zedux-react.es.min.js",
+  "main": "./dist/react/zedux-react.umd.js",
+  "module": "./dist/react/zedux-react.es.js",
   "publishConfig": {
     "registry": "https://omnistac.jfrog.io/omnistac/api/npm/npm-local/"
   },
@@ -15,10 +15,7 @@
   ],
   "scripts": {
     "build-storybook": "build-storybook",
-    "build": "rimraf dist && yarn build:prod && yarn build:dev && yarn build:devtools",
-    "build:dev": "MODE=development vite build",
-    "build:devtools": "PACKAGE=devtools vite build",
-    "build:prod": "vite build",
+    "build": "rimraf dist && tsc && vite build && PACKAGE=devtools vite build",
     "dev": "vite",
     "prepublishOnly": "yarn build",
     "preview": "vite preview",
@@ -60,14 +57,9 @@
   },
   "exports": {
     ".": {
-      "development": {
-        "import": "./dist/react/zedux-react.es.js",
-        "require": "./dist/react/zedux-react.umd.js",
-        "default": "./dist/react/zedux-react.umd.js"
-      },
-      "import": "./dist/zedux-react.es.min.js",
-      "require": "./dist/zedux-react.umd.min.js",
-      "default": "./dist/zedux-react.umd.min.js"
+      "import": "./dist/react/zedux-react.es.js",
+      "require": "./dist/react/zedux-react.umd.js",
+      "default": "./dist/react/zedux-react.umd.js"
     },
     "./devtools": {
       "import": "./dist/react/devtools/zedux-react-devtools.es.js",
@@ -80,12 +72,11 @@
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.1.1",
     "@types/react-dom": "^18.0.1",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
-  "dependencies": {},
-  "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
-  }
+  "dependencies": {
+    "react-icons": "^4.3.1"
+  },
+  "peerDependencies": {}
 }
