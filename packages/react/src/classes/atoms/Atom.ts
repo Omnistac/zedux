@@ -1,6 +1,5 @@
 import { atom } from '@zedux/react/factories/atom'
 import { AtomValueOrFactory } from '@zedux/react/types'
-import { hashParams } from '@zedux/react/utils'
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { StandardAtomBase } from './StandardAtomBase'
@@ -33,7 +32,10 @@ export class Atom<
 
     if (!params?.length) return base
 
-    return `${base}-${hashParams(params)}`
+    return `${base}-${ecosystem._idGenerator.hashParams(
+      params,
+      ecosystem.allowComplexAtomParams
+    )}`
   }
 
   public override(newValue: AtomValueOrFactory<State, Params, Exports>) {

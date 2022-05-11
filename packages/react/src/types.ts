@@ -268,6 +268,8 @@ export type DispatchInterceptor<State = any> = (
 export interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
 > {
+  allowComplexAtomParams?: boolean
+  allowComplexSelectorParams?: boolean
   context?: Context
   defaultForwardPromises?: boolean
   defaultTtl?: number
