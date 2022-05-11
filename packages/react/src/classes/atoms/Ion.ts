@@ -4,7 +4,6 @@ import { api } from '@zedux/react/factories/api'
 import { ion } from '@zedux/react/factories/ion'
 import { injectAtomGetters } from '@zedux/react/injectors'
 import { AtomConfig, IonGet, IonSet, AtomSetters } from '@zedux/react/types'
-import { hashParams } from '@zedux/react/utils'
 import { diContext } from '@zedux/react/utils/csContexts'
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
@@ -86,7 +85,10 @@ export class Ion<
 
     if (!params?.length) return base
 
-    return `${base}-${hashParams(params)}`
+    return `${base}-${ecosystem._idGenerator.hashParams(
+      params,
+      ecosystem.allowComplexAtomParams
+    )}`
   }
 
   public override(

@@ -1,23 +1,8 @@
-import { isPlainObject } from '@zedux/core/utils/general'
 import { DiContext, InjectorDescriptor, InjectorType } from './types'
 import { diContext } from './csContexts'
 import { ActiveState } from '../types'
-import { AtomInstanceBase } from '../classes'
 
 export const EMPTY_CONTEXT = {}
-
-export const hashParams = (params: any[]): string =>
-  JSON.stringify(params, (_, param) => {
-    if (is(param, AtomInstanceBase)) return param.keyHash
-    if (!isPlainObject(param)) return param
-
-    return Object.keys(param)
-      .sort()
-      .reduce((result, key) => {
-        result[key] = param[key]
-        return result
-      }, {} as Record<string, any>)
-  })
 
 /**
  * Compare two arrays and see if any elements are different (===). Returns true
