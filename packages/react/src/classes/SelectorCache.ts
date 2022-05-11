@@ -7,7 +7,7 @@ import {
   EvaluationReason,
   GraphEdgeInfo,
 } from '../types'
-import { AtomSelectorCache, hashParams, JobType } from '../utils'
+import { AtomSelectorCache, JobType } from '../utils'
 import { AtomBase } from './atoms/AtomBase'
 import { Ecosystem } from './Ecosystem'
 import { ZeduxPlugin } from './ZeduxPlugin'
@@ -174,7 +174,13 @@ export class SelectorCache {
     args?: any[]
   ) {
     const baseKey = this.getBaseKey(selectorOrConfig)
-    return args?.length ? `${baseKey}-${hashParams(args)}` : baseKey
+
+    return args?.length
+      ? `${baseKey}-${this.ecosystem._idGenerator.hashParams(
+          args,
+          this.ecosystem.allowComplexSelectorParams
+        )}`
+      : baseKey
   }
 
   /**

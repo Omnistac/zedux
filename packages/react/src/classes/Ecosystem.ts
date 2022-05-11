@@ -50,6 +50,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
   public _selectorCache: SelectorCache = new SelectorCache(this)
+  public allowComplexAtomParams: boolean
+  public allowComplexSelectorParams: boolean
   public context: Context
   public defaultForwardPromises?: boolean
   public defaultTtl?: number
@@ -64,6 +66,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   private plugins: { plugin: ZeduxPlugin; cleanup: Cleanup }[] = []
 
   constructor({
+    allowComplexAtomParams,
+    allowComplexSelectorParams,
     context,
     defaultForwardPromises,
     defaultTtl,
@@ -94,6 +98,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       this.flags = flags
     }
 
+    this.allowComplexAtomParams = !!allowComplexAtomParams
+    this.allowComplexSelectorParams = !!allowComplexSelectorParams
     this.context = context as Context
     this.defaultForwardPromises = defaultForwardPromises
     this.defaultTtl = defaultTtl ?? -1

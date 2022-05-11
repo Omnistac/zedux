@@ -1,3 +1,7 @@
+import { isPlainObject } from '@zedux/core/utils/general'
+import { is } from '../utils'
+import { AtomInstanceBase } from './instances/AtomInstanceBase'
+
 /**
  * When using SSR, only `generateNodeId` should be allowed to run. It is okay
  * for `generateAtomSelectorId` to run, but auto-id'd selectors won't be
@@ -32,11 +36,21 @@
 export class IdGenerator {
   public idCounter = 0
 
+  /**
+   * Cache function and class instance references that get passed as params to
+   * atoms or AtomSelectors. Map them to a unique, serializable id. Use a
+   * WeakMap so we don't hold on to anything here
+   */
+  public weakCache = new WeakMap<any, string>()
+
   public generateAtomSelectorId = (name = 'as') => this.generateId(name)
   public generateEcosystemId = () => this.generateId('es')
   public generateLocalId = () => this.generateId('lo')
   public generateNodeId = () => this.generateId('no')
 
+  /**
+   * Generate a graph node key for a React component
+   */
   public generateReactComponentId() {
     const { stack } = new Error()
 
@@ -63,6 +77,58 @@ export class IdGenerator {
       ?.split(' ')[0]
 
     return this.generateId(componentName || 'UnknownComponent')
+  }
+
+  /**
+   * Turn an array of anything into a predictable string. If any item is an atom
+   * instance, it will be serialized as the instance's keyHash. If
+   * acceptComplexParams is true, map class instances and functions to a
+   * consistent id for the reference.
+   *
+   * Note that recursive objects are not supported - they would add way too much
+   * overhead here and are really just unnecessary.
+   */
+  public hashParams(params: any[], acceptComplexParams?: boolean): string {
+    return JSON.stringify(params, (_, param) => {
+      if (is(param, AtomInstanceBase)) return param.keyHash
+      if (!param) return param
+      if (!isPlainObject(param)) {
+        if (!acceptComplexParams) return param
+        if (typeof param === 'function') return this.cacheFn(param)
+        if (typeof param?.constructor === 'function') {
+          return this.cacheClass(param)
+        }
+
+        return param // let engine try resolve it or throw the error
+      }
+
+      return Object.keys(param)
+        .sort()
+        .reduce((result, key) => {
+          result[key] = param[key]
+          return result
+        }, {} as Record<string, any>)
+    })
+  }
+
+  private cacheClass(instance: { new (): any }) {
+    let id = this.weakCache.get(instance)
+    if (id) return id
+
+    id = this.generateId(instance.constructor.name || 'UnknownClass')
+    this.weakCache.set(instance, id)
+
+    return id
+  }
+
+  private cacheFn(fn: (...args: any[]) => any) {
+    let id = this.weakCache.get(fn)
+    if (id) return id
+
+    id = this.generateId(fn.name || 'anonFn')
+    this.weakCache.set(fn, id)
+
+    return id
   }
 
   private generateId = (prefix: string) =>
