@@ -5,7 +5,6 @@ import {
   AnyAtomInstanceBase,
   AtomGetters,
   AtomParamsType,
-  AtomSelector,
   AtomSelectorConfig,
   AtomSelectorOrConfig,
   EvaluationReason,
@@ -28,7 +27,7 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
   prevArgs: Ref<Args | undefined>,
   prevDeps: Ref<Record<string, Dep>>,
   prevResult: Ref<T | undefined>,
-  prevSelector: Ref<AtomSelector<T, Args> | undefined>,
+  prevSelector: Ref<AtomSelectorOrConfig<T, Args> | undefined>,
   evaluate: (reasons?: EvaluationReason[]) => void,
   operation: string,
   id: string,
@@ -51,11 +50,11 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
         return prevResult.current as T
       }
     } else {
-      // user didn't supply argsComparator: Short-circuit if args and prevSelector
+      // user didn't supply argsComparator: Short-circuit if args and selector
       // are the same
       if (
         defaultArgsComparator(args, prevArgs.current as Args) &&
-        selector === prevSelector.current
+        selectorOrConfig === prevSelector.current
       ) {
         return prevResult.current as T
       }
@@ -64,7 +63,7 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
 
   // we couldn't short-circuit. Update refs
   prevArgs.current = args
-  prevSelector.current = selector
+  prevSelector.current = selectorOrConfig
 
   const deps: Record<string, Dep> = {}
   let isExecuting = true
@@ -163,7 +162,7 @@ export const runAtomSelector = <T = any, Args extends any[] = []>(
         // job that will defer execution until after the instance is fully
         // destroyed
         const newResult = runAtomSelector(
-          selectorOrConfig,
+          prevSelector.current as AtomSelectorOrConfig<T, Args>,
           prevArgs.current as Args,
           ecosystem,
           prevArgs,

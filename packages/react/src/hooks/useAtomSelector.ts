@@ -1,4 +1,4 @@
-import { AtomSelector, AtomSelectorOrConfig, MaybeCleanup } from '../types'
+import { AtomSelectorOrConfig, MaybeCleanup } from '../types'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Dep, generateAtomSelectorId } from '../utils'
 import { useEcosystem } from './useEcosystem'
@@ -15,7 +15,7 @@ export const useAtomSelector = <T, Args extends any[]>(
   const prevArgs = useRef<Args>() // don't populate initially
   const prevDeps = useRef<Record<string, Dep>>({})
   const prevResult = useRef<T>()
-  const prevSelector = useRef<AtomSelector<T, Args>>() // don't populate initially
+  const prevSelector = useRef<AtomSelectorOrConfig<T, Args>>() // don't populate initially
   const idRef = useRef<string>()
   const hasEffectRun = useRef(false)
   hasEffectRun.current = false

@@ -303,7 +303,7 @@ export class AtomInstance<
       cache.prevArgs as Ref<Args>,
       cache.prevDeps,
       cache.prevResult,
-      { current: resolvedSelector },
+      { current: atomSelector },
       reasons => {
         this._scheduleEvaluation({
           newState: cache?.prevResult.current, // runAtomSelector updates this ref before calling this callback
