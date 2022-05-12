@@ -11,6 +11,8 @@ export const Theme = ({ children }: PropsWithChildren<{}>) => {
   const colors = useAtomSelector(getColors)
   const { height, width } = useAtomValue(rect)
 
+  console.log('the colors:', colors)
+
   const theme: DefaultTheme = useMemo(
     () => ({
       colors: {
