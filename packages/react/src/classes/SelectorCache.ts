@@ -100,11 +100,11 @@ export class SelectorCache {
         return ecosystem.select(selectorOrConfig, ...args)
       }
 
-      const [cacheKey, cache] = this.getCacheAndKey(selectorOrConfig, args)
+      const cache = this.getCache(selectorOrConfig, args)
 
       ecosystem._graph.addEdge(
         this.evaluatingStack[this.evaluatingStack.length - 1],
-        cacheKey,
+        cache.cacheKey,
         'select',
         0
       )
@@ -120,28 +120,28 @@ export class SelectorCache {
     }
   }
 
-  public getCacheAndKey<T = any, Args extends [] = []>(
+  public getCache<T = any, Args extends [] = []>(
     selectorOrConfig: AtomSelectorOrConfig<T, Args>
-  ): [string, AtomSelectorCache<T, Args>]
+  ): AtomSelectorCache<T, Args>
 
-  public getCacheAndKey<T = any, Args extends any[] = []>(
+  public getCache<T = any, Args extends any[] = []>(
     selectorOrConfig: AtomSelectorOrConfig<T, Args>,
     args: Args
-  ): [string, AtomSelectorCache<T, Args>]
+  ): AtomSelectorCache<T, Args>
 
   /**
    * Get the cached args and result for the given AtomSelector (or
    * AtomSelectorConfig). Runs the selector, sets up the graph, and caches the
    * initial value if this selector hasn't been cached before.
    */
-  public getCacheAndKey<T = any, Args extends any[] = []>(
+  public getCache<T = any, Args extends any[] = []>(
     selectorOrConfig: AtomSelectorOrConfig<T, Args>,
     args?: Args
   ) {
     const cacheKey = this.getCacheKey(selectorOrConfig, args as Args)
     let cache = this.caches[cacheKey] as AtomSelectorCache<T, Args>
 
-    if (cache) return [cacheKey, cache]
+    if (cache) return cache
 
     cache = {
       args,
@@ -154,7 +154,7 @@ export class SelectorCache {
 
     this.runSelector(cacheKey, args as Args)
 
-    return [cacheKey, cache]
+    return cache
   }
 
   public getCacheKey<T = any, Args extends [] = []>(
@@ -268,7 +268,7 @@ export class SelectorCache {
       selectorOrConfig.name ||
       (selectorOrConfig as AtomSelectorConfig).selector?.name
 
-    const keyExists = this.caches[idealKey]
+    const keyExists = !idealKey || this.caches[idealKey]
 
     // if the ideal key is taken, generate a new hash prefixed with the ideal key
     const key = keyExists

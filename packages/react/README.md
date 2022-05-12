@@ -637,6 +637,8 @@ x- Remove Ghost edges (not needed with React 18)
 - StateHub updates:
   - Make usable as a chrome extension
   - Make atom graph view layout like DOM tree (this is the new default view)
+  - Quick Filter
+  - Macro recording
 x- Make AtomSelectors part of the graph
 x- Get React component name from an Error stack for those dependents (first CapitalizedVar after at least one lowercaseVar probably starting with "use")
 - `ecosystem.serializeByFlag()` and `ecosystem.hydrate()`

@@ -161,6 +161,11 @@ export class Graph {
    * Should only be used internally. Remove the graph edge between two nodes.
    * The dependent may not exist as a node in the graph if it's external, e.g. a
    * React component
+   *
+   * For some reason in React 18+, React destroys parents before children. This
+   * means a parent component may have already destroyed the part of the graph
+   * that a child is now trying to destroy; this edge may have already been
+   * removed.
    */
   public removeEdge(dependentKey: string, dependencyKey: string) {
     const dependency = this.nodes[dependencyKey]
@@ -171,12 +176,15 @@ export class Graph {
       delete dependent.dependencies[dependencyKey]
     }
 
-    // TODO: This check should be completely unnecessary. Why would the
-    // dependent still have an edge to this dependency if this dependency has
-    // been cleaned up? Kill this check with amazing tests.
+    // hmm could maybe happen when a dependency was force-destroyed if a child
+    // tries to destroy its edge before recreating it (I don't think we ever do
+    // that though)
     if (!dependency) return
 
     const dependentEdge = dependency.dependents[dependentKey]
+
+    // happens in React 18+ (see this method's jsdoc above)
+    if (!dependentEdge) return
     delete dependency.dependents[dependentKey]
 
     // static dependencies don't change a node's weight
