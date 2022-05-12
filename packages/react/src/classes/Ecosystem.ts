@@ -495,7 +495,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   public _decrementRefCount() {
-    console.log('decrementing ref count')
     this._refCount--
     if (!this._destroyOnUnmount) return
 

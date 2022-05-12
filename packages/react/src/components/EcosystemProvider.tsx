@@ -56,8 +56,6 @@ export const EcosystemProvider = ({
           globalStore.dispatch(addEcosystem(resolvedEcosystem))
         }
 
-        console.log('incrementing ref count')
-
         resolvedEcosystem._incrementRefCount()
 
         return () => resolvedEcosystem._decrementRefCount()
