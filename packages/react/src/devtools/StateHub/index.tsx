@@ -1,6 +1,6 @@
 import { AtomInstanceType, EcosystemProvider, useEcosystem } from '@zedux/react'
 import React, { useEffect } from 'react'
-import { render } from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import { stateHub } from './atoms/stateHub'
 import { Header } from './components/Header'
 import { Main } from './components/Main'
@@ -96,9 +96,10 @@ export const StateHub = ({ defaultIsOpen }: { defaultIsOpen?: boolean }) => {
     const host = document.createElement('div')
     host.dataset.zedux = 'StateHub'
     document.body.insertBefore(host, document.body.firstElementChild)
-    const root = host.attachShadow({ mode: 'open' })
+    const rootEl = host.attachShadow({ mode: 'open' })
+    const root = createRoot(rootEl)
 
-    render(<App />, root)
+    root.render(<App />)
   }, [])
 
   return null

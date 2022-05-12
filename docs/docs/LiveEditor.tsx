@@ -1,6 +1,6 @@
 import bgUrl from '@site/static/img/bg-texture.png'
 import icon from '@site/static/img/zedux-icon.png'
-import usePrismTheme from '@theme/hooks/usePrismTheme'
+import { usePrismTheme } from '@docusaurus/theme-common'
 import Highlight, { Prism } from 'prism-react-renderer'
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react'
 import Editor from 'react-simple-code-editor'

@@ -84,24 +84,29 @@ export const useAtomInstance: {
   const [subscribe, getSnapshot] = useMemo(() => {
     return [
       (onStoreChange: () => void) => {
-        ecosystem._graph.addEdge(
-          dependentKey,
-          instance.keyHash,
-          operation,
-          EdgeFlag.External | EdgeFlag.Static,
-          signal => {
-            if (signal !== GraphEdgeSignal.Destroyed) return
+        // stupid React 18 forcing this function to be idempotent...
+        if (
+          !ecosystem._graph.nodes[dependentKey]?.dependencies[instance.keyHash]
+        ) {
+          ecosystem._graph.addEdge(
+            dependentKey,
+            instance.keyHash,
+            operation,
+            EdgeFlag.External | EdgeFlag.Static,
+            signal => {
+              if (signal !== GraphEdgeSignal.Destroyed) return
 
-            instanceRef.current = undefined
+              instanceRef.current = undefined
 
-            if (!startTransition) return onStoreChange()
+              if (!startTransition) return onStoreChange()
 
-            // not sure if React actually supports this. It probably should:
-            startTransition(() => {
-              onStoreChange()
-            })
-          }
-        )
+              // not sure if React actually supports this. It probably should:
+              startTransition(() => {
+                onStoreChange()
+              })
+            }
+          )
+        }
 
         return () => {
           ecosystem._graph.removeEdge(dependentKey, instance.keyHash)

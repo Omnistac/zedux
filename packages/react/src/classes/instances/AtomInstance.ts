@@ -199,12 +199,9 @@ export class AtomInstance<
       return this.ecosystem.select(selectorOrConfig, ...args)
     }
 
-    const [cacheKey, cache] = this.ecosystem._selectorCache.getCacheAndKey(
-      selectorOrConfig,
-      args
-    )
+    const cache = this.ecosystem._selectorCache.getCache(selectorOrConfig, args)
 
-    this.ecosystem._graph.addEdge(this.keyHash, cacheKey, 'select', 0)
+    this.ecosystem._graph.addEdge(this.keyHash, cache.cacheKey, 'select', 0)
 
     return cache.result as T
   }

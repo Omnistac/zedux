@@ -33,26 +33,33 @@ export const useAtomSelector = <T, Args extends any[]>(
   const [subscribe, getSnapshot] = useMemo(
     () => [
       (onStoreChange: () => void) => {
-        const [cacheKey, cache] = ecosystem._selectorCache.getCacheAndKey(
+        const cache = ecosystem._selectorCache.getCache(
           selectorOrConfig,
           resolvedArgs
         )
         cacheRef.current = cache
 
-        ecosystem._graph.addEdge(
-          dependentKey,
-          cacheKey,
-          OPERATION,
-          EdgeFlag.External,
-          onStoreChange
-        )
+        // stupid React 18 forcing this function to be idempotent...
+        if (
+          !ecosystem._graph.nodes[dependentKey]?.dependencies[cache.cacheKey]
+        ) {
+          ecosystem._graph.addEdge(
+            dependentKey,
+            cache.cacheKey,
+            OPERATION,
+            EdgeFlag.External,
+            onStoreChange
+          )
+        }
 
         return () => {
           // I don't think we need to unset the cacheKey ref here
-          ecosystem._graph.removeEdge(dependentKey, cacheKey)
+          ecosystem._graph.removeEdge(dependentKey, cache.cacheKey)
         }
       },
-      () => cacheRef.current?.result as T,
+      () =>
+        ecosystem._selectorCache.getCache(selectorOrConfig, resolvedArgs)
+          .result as T,
     ],
     [ecosystem, resolvedArgs, selectorOrConfig]
   )
