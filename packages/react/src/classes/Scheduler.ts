@@ -131,6 +131,7 @@ export class Scheduler {
   }
 
   private runJobs() {
+    this._jobTimeoutId = undefined
     // this._runStartTime = performance.now()
     // let counter = 0
 
@@ -148,8 +149,9 @@ export class Scheduler {
   }
 
   private setTimeout() {
+    if (this._isRunning) return
+
     this._jobTimeoutId = setTimeout(() => {
-      this._jobTimeoutId = undefined
       this.runJobs()
     })
   }
