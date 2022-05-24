@@ -3,8 +3,6 @@ id: injectAtomInstance
 title: injectAtomInstance
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 ```ts
 import { injectAtomInstance } from '@zedux/react'
 ```
@@ -17,27 +15,31 @@ You can also pass an atom instance directly to register a static graph dependenc
 
 ## Examples
 
-<LiveEditor ecosystemId="injectAtomInstance/example" resultVar="Seconds">{`
-const shouldCountAtom = atom('shouldCount', true)\n
+```tsx live ecosystemId=injectAtomInstance/example resultVar=Seconds
+const shouldCountAtom = atom('shouldCount', true)
+
 const secondsAtom = atom('seconds', () => {
   const shouldCountInstance = injectAtomInstance(shouldCountAtom)
-  const store = injectStore(0)\n
+  const store = injectStore(0)
+
   injectEffect(() => {
-    const intervalId = setInterval(
-      () => {
-        const shouldCount = shouldCountInstance.store.getState()
-        if (!shouldCount) return\n
-        store.setState(val => val + 1)
-      },
-      1000
-    )\n
+    const intervalId = setInterval(() => {
+      const shouldCount = shouldCountInstance.store.getState()
+      if (!shouldCount) return
+
+      store.setState(val => val + 1)
+    }, 1000)
+
     return () => clearInterval(intervalId)
-  }, [shouldCountInstance])\n
+  }, [shouldCountInstance])
+
   return store
-})\n
+})
+
 function Seconds() {
   const [shouldCount, setShouldCount] = useAtomState(shouldCountAtom)
-  const state = useAtomValue(secondsAtom)\n
+  const state = useAtomValue(secondsAtom)
+
   return (
     <>
       <div>Seconds: {state}</div>
@@ -47,7 +49,7 @@ function Seconds() {
     </>
   )
 }
-`}</LiveEditor>
+```
 
 Miscellaneous:
 

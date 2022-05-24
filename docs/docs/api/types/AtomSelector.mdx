@@ -3,8 +3,6 @@ id: AtomSelector
 title: AtomSelector
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 A function that receives an [AtomGetters](AtomGetters) object as its first parameter. It can take any number of other parameters and can return anything. It can use the AtomGetters to get atom values and run other AtomSelectors.
 
 This is the most basic tool for deriving state in Zedux. The [selectors walkthrough](../../walkthrough/selectors) teaches the basics of AtomSelectors. This page will only cover a few things the walkthrough doesn't.
@@ -198,14 +196,16 @@ Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig 
 AtomSelectorConfig options (other than `selector`) are ignored when passed to `ecosystem.select()` and nested `select()` calls. They're accepted overloads simply for interop convenience.
 :::
 
-<LiveEditor ecosystemId="AtomSelector/example" resultVar="CountBy5">{`
-const counterAtom = atom('counter', 0)\n
+```tsx live ecosystemId=AtomSelector/example resultVar=CountBy5
+const counterAtom = atom('counter', 0)
+
 function CountBy5() {
   const { setState } = useAtomInstance(counterAtom)
   const counter = useAtomSelector({
     resultsComparator: newCount => newCount % 5,
-    selector: ({ get }) => get(counterAtom)
-  })\n
+    selector: ({ get }) => get(counterAtom),
+  })
+
   return (
     <>
       <div>Value: {counter}</div>
@@ -215,4 +215,4 @@ function CountBy5() {
     </>
   )
 }
-`}</LiveEditor>
+```

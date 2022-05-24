@@ -3,9 +3,7 @@ id: AtomInstance
 title: AtomInstance
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
-All standard "atom instances" are actually instances of this class. [Ions](Ion), [Standard Atoms](Atom), and [Local Atoms](LocalAtom) all create instances of this class.
+All standard "atom instances" are actually instances of this class. When Zedux instantiates [Ions](Ion) and [Standard Atoms](Atom), it's just creating instances of this class.
 
 ## Creation
 
@@ -120,21 +118,22 @@ useAtomInstance(myAtom, ['b', 'a'])
 
 The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`get`](../types/AtomGetters#get), [`injectAtomValue`](../injectors/injectAtomValue), or any other dynamic injector to register a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the passed atom instance.
 
-<LiveEditor ecosystemId="AtomInstance/shout" resultVar="Shout">{`
-const normalAtom = atom('normal', "I'm just a little, black rain cloud")\n
-const shoutingAtom = atom(
-  'shouting',
-  (instance: AtomInstance<string>) => {
-    const val = injectAtomValue(instance) // subscribe to updates\n
-    return val.toUpperCase()
-  }
-)\n
+```tsx live ecosystemId=AtomInstance/shout resultVar=Shout
+const normalAtom = atom('normal', "I'm just a little, black rain cloud")
+
+const shoutingAtom = atom('shouting', (instance: AtomInstance<string>) => {
+  const val = injectAtomValue(instance) // subscribe to updates
+
+  return val.toUpperCase()
+})
+
 function Shout() {
   const instance = useAtomInstance(normalAtom)
-  const shout = useAtomValue(shoutingAtom, [instance]) // just pass the instance\n
+  const shout = useAtomValue(shoutingAtom, [instance]) // pass the instance 😮
+
   return <div>(In a Singing sort of voice): {shout}</div>
 }
-`}</LiveEditor>
+```
 
 ### `.promise`
 
@@ -190,14 +189,16 @@ Required. An [action](../types/Action) or [action chain](../types/ActionChain) o
 
 A bound function property. Forces a reevaluation of the atom instance.
 
-<LiveEditor ecosystemId="AtomInstance/invalidate" resultVar="Coin">{`
-const coinTossAtom = atom('coinToss', () => Math.random() < 0.5)\n
+```tsx live ecosystemId=AtomInstance/invalidate resultVar=Coin
+const coinTossAtom = atom('coinToss', () => Math.random() < 0.5)
+
 function Coin() {
   const isHeads = useAtomValue(coinTossAtom)
-  const { invalidate } = useAtomInstance(coinTossAtom)\n
+  const { invalidate } = useAtomInstance(coinTossAtom)
+
   return <button onClick={invalidate}>{isHeads ? 'Heads' : 'Tails'}</button>
 }
-`}</LiveEditor>
+```
 
 ```ts
 // since this function is bound, dereferencing is fine:

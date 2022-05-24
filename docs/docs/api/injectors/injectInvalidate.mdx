@@ -3,8 +3,6 @@ id: injectInvalidate
 title: injectInvalidate
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 ```ts
 import { injectInvalidate } from '@zedux/react'
 ```
@@ -15,20 +13,23 @@ In general, try to avoid impure, mutation-oriented, or generally non-reactive pa
 
 ## Examples
 
-<LiveEditor ecosystemId="injectInvalidate/example" resultVar="Coin">{`
+```tsx live ecosystemId=injectInvalidate/example resultVar=Coin
 const coinTossAtom = atom('coinToss', () => {
   const isHeads = Math.random() < 0.5
-  const invalidate = injectInvalidate()\n
+  const invalidate = injectInvalidate()
+
   return api(isHeads).setExports({
-    flip: invalidate
+    flip: invalidate,
   })
-})\n
+})
+
 function Coin() {
   const isHeads = useAtomValue(coinTossAtom)
-  const { flip } = useAtomInstance(coinTossAtom).exports\n
+  const { flip } = useAtomInstance(coinTossAtom).exports
+
   return <button onClick={flip}>{isHeads ? 'Heads' : 'Tails'}</button>
 }
-`}</LiveEditor>
+```
 
 `injectInvalidate` is the equivalent of the following pattern in React:
 
@@ -38,7 +39,7 @@ const [, forceRender] = useState()
 forceRender({})
 ```
 
-The equivalent in an atom would look like:
+(Here's the above example in atom form):
 
 ```ts
 const invalidate = injectInvalidate()

@@ -3,8 +3,6 @@ id: suspense
 title: Suspense
 ---
 
-import { LiveEditor } from '../LiveEditor'
-
 Atoms are extremely flexible when working with React suspense. Suspense works by throwing a promise during render that React can catch and await.
 
 ## Setting a Promise
@@ -58,24 +56,30 @@ Fortunately Zedux ships with a high-level injector for creating promises whose e
 - Rather than returning a cleanup function, cleanup functions can be passed to a received `cleanup` param.
 - It returns a tuple consisting of a promise and a special [async store](../api/types/AsyncStore).
 
-<LiveEditor ecosystemId="suspense/injectAsyncEffect" resultVar="App">{`
+```tsx live ecosystemId=suspense/injectAsyncEffect resultVar=App
 const asyncAtom = atom('async', () => {
   const [promise, store] = injectAsyncEffect(cleanup => {
     return new Promise(resolve => {
       const timeoutId = setTimeout(() => {
         resolve('🎉')
-      }, 2000)\n
+      }, 2000)
+
       cleanup(() => clearTimeout(timeoutId))
     })
-  }, [])\n
+  }, [])
+
   return api(store).setPromise(promise)
-})\n
+})
+
 function Child() {
-  const { data } = useAtomValue(asyncAtom)\n
+  const { data } = useAtomValue(asyncAtom)
+
   return <div>The long-awaited value: {data}</div>
-}\n
+}
+
 function App() {
-  const [isRunning, setIsRunning] = useState(false)\n
+  const [isRunning, setIsRunning] = useState(false)
+
   return (
     <Suspense fallback={<div>Falling Back (stuff is loading)</div>}>
       {isRunning ? (
@@ -86,7 +90,7 @@ function App() {
     </Suspense>
   )
 }
-`}</LiveEditor>
+```
 
 The promise returned from `injectAsyncEffect` can be passed directly to `api.setPromise()`.
 

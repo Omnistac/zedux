@@ -3,8 +3,6 @@ id: injectMemo
 title: injectMemo
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 ```ts
 import { injectMemo } from '@zedux/react'
 ```
@@ -13,25 +11,29 @@ An [injector](../glossary#injector) that memoizes a value. You control whether t
 
 ## Example
 
-<LiveEditor ecosystemId="injectMemo/example" resultVar="Seconds">{`
+```tsx live ecosystemId=injectMemo/example resultVar=Seconds
 const secondsAtom = atom('seconds', () => {
-  const store = injectStore(0)\n
+  const store = injectStore(0)
+
   injectEffect(() => {
-    const intervalId = setInterval(
-      () => store.setState(val => val + 1),
-      1000
-    )\n
+    const intervalId = setInterval(() => store.setState(val => val + 1), 1000)
+
     return () => clearInterval(intervalId)
-  }, [])\n
+  }, [])
+
   return store
-})\n
+})
+
 const everyFifthAtom = atom('everyFifth', () => {
-  const seconds = injectAtomValue(secondsAtom)\n
+  const seconds = injectAtomValue(secondsAtom)
+
   return injectMemo(() => seconds, [Math.floor(seconds / 5)])
-})\n
+})
+
 function Seconds() {
   const seconds = useAtomValue(secondsAtom)
-  const everyFifth = useAtomValue(everyFifthAtom)\n
+  const everyFifth = useAtomValue(everyFifthAtom)
+
   return (
     <>
       <div>Seconds: {seconds}</div>
@@ -39,7 +41,7 @@ function Seconds() {
     </>
   )
 }
-`}</LiveEditor>
+```
 
 Miscellaneous:
 

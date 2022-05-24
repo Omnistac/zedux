@@ -3,8 +3,6 @@ id: ecosystems
 title: Ecosystems
 ---
 
-import { LiveEditor } from '../LiveEditor'
-
 All atoms live in an atom ecosystem. An ecosystem is like an isolated group of atoms. Atoms in an ecosystem can interact with each other, but are unaware of atoms in other ecosystems.
 
 There are 2 types of ecosystems:
@@ -118,17 +116,20 @@ In the quick start, we learned that atom instances can be reused by passing the 
 
 In the following example, the `counterAtom` doesn't take any params. But since it's used in two different ecosystems, two different instances are created.
 
-<LiveEditor ecosystemId="ecosystems/instances" resultVar="Apps">{`
-const counterAtom = atom('counter', 0)\n
+```tsx live ecosystemId=ecosystems/instances resultVar=Apps
+const counterAtom = atom('counter', 0)
+
 function Counter() {
-  const [state, setState] = useAtomState(counterAtom)\n
+  const [state, setState] = useAtomState(counterAtom)
+
   return (
     <>
       <div>Value: {state}</div>
       <button onClick={() => setState(state => state + 1)}>Increment</button>
     </>
   )
-}\n
+}
+
 function Apps() {
   return (
     <>
@@ -143,7 +144,7 @@ function Apps() {
     </>
   )
 }
-`}</LiveEditor>
+```
 
 ## Using the Ecosystem
 

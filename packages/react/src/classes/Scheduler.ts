@@ -15,9 +15,11 @@ export class Scheduler {
   constructor(private readonly ecosystem: Ecosystem) {}
 
   /**
-   * scheduler.flush()
+   * Kill any current timeout and run all jobs immediately.
    *
-   * Kill any current timeout and run all jobs immediately
+   * IMPORTANT: Setting and clearing timeouts is expensive. We need to always
+   * pass `shouldSetTimeout: false` to scheduler.scheduleJob() when we're going
+   * to immediately flush
    */
   public flush() {
     if (this._isRunning) return // already flushing
@@ -26,9 +28,14 @@ export class Scheduler {
     this.runJobs()
   }
 
-  public scheduleJob(newJob: Job) {
-    const shouldSetTimeout = this.scheduledJobs.length === 0
-
+  /**
+   * Insert a job into the queue. Insertion point depends on job's type and
+   * weight.
+   *
+   * IMPORTANT: Setting and clearing timeouts is expensive. We need to always
+   * pass `shouldSetTimeout: false` when we're going to immediately flush
+   */
+  public scheduleJob(newJob: Job, shouldSetTimeout = true) {
     if (newJob.type === JobType.RunEffect) {
       this.scheduledJobs.push(newJob)
     } else if (newJob.type === JobType.EvaluateAtom) {
@@ -38,7 +45,7 @@ export class Scheduler {
     }
 
     // we just pushed the first job onto the queue
-    if (shouldSetTimeout) {
+    if (shouldSetTimeout && this.scheduledJobs.length === 1) {
       this.setTimeout()
     }
   }
@@ -48,7 +55,7 @@ export class Scheduler {
   }
 
   public wipe() {
-    // allow external jobs to proceed.
+    // allow external jobs to proceed. TODO: should we flush here?
     this.scheduledJobs = this.scheduledJobs.filter(
       job => job.type === JobType.UpdateExternalDependent
     )

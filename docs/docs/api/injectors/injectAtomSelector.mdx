@@ -3,8 +3,6 @@ id: injectAtomSelector
 title: injectAtomSelector
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 ```ts
 import { injectAtomSelector } from '@zedux/react'
 ```
@@ -15,42 +13,44 @@ The selector will rerun every time the state of any of the dependencies it creat
 
 ## Example
 
-<LiveEditor ecosystemId="injectAtomSelector/example" resultVar="Counters">{`
+```tsx live ecosystemId=injectAtomSelector/example resultVar=Counters
 const countersAtom = atom('counters', () => {
   return injectStore({ counterA: 1, counterB: 1 })
-})\n
+})
+
 const wrapperAtom = atom('wrapper', () => {
   const counterA = injectAtomSelector(({ get }) => get(countersAtom).counterA)
   const instance = injectAtomInstance(countersAtom)
-  const { setState } = instance\n
-  return api({ counterA, counterB: instance.store.getState().counterB })
-    .setExports({
-      incrementA: () =>
-        setState(state => ({ ...state, counterA: state.counterA + 1 })),
-      incrementB: () =>
-        setState(state => ({ ...state, counterB: state.counterB + 1 }))
-    })
-})\n
+  const { setState } = instance
+
+  return api({
+    counterA,
+    counterB: instance.store.getState().counterB,
+  }).setExports({
+    incrementA: () =>
+      setState(state => ({ ...state, counterA: state.counterA + 1 })),
+    incrementB: () =>
+      setState(state => ({ ...state, counterB: state.counterB + 1 })),
+  })
+})
+
 function Counters() {
   const { counterA, counterB } = useAtomValue(wrapperAtom)
   const { incrementA, incrementB } = useAtomInstance(wrapperAtom).exports
   const rendersRef = useRef(0)
-  rendersRef.current++\n
+  rendersRef.current++
+
   return (
     <>
       <div>Number of renders: {rendersRef.current}</div>
       <div>Counter A (dynamic): {counterA}</div>
-      <button onClick={incrementA}>
-        Increment Counter A
-      </button>
+      <button onClick={incrementA}>Increment Counter A</button>
       <div>Counter B (static): {counterB}</div>
-      <button onClick={incrementB}>
-        Increment Counter B
-      </button>
+      <button onClick={incrementB}>Increment Counter B</button>
     </>
   )
 }
-`}</LiveEditor>
+```
 
 Miscellaneous:
 

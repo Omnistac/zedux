@@ -1,4 +1,4 @@
-import { ActionChain, Settable } from '@zedux/core'
+import { ActionChain, Settable, Store, StoreStateType } from '@zedux/core'
 import {
   AtomInstanceTtl,
   AtomValue,
@@ -106,5 +106,14 @@ export class AtomApi<State, Exports extends Record<string, any>> {
     )
 
     return (intercept || next)(settable)
+  }
+}
+
+export class StoreAtomApi<
+  S extends Store,
+  Exports extends Record<string, any>
+> extends AtomApi<StoreStateType<S>, Exports> {
+  constructor(public readonly store: S) {
+    super(store)
   }
 }

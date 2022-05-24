@@ -6,7 +6,7 @@ import { AtomInstanceBase } from './instances/AtomInstanceBase'
  * When using SSR, only `generateNodeId` should be allowed to run. It is okay
  * for `generateAtomSelectorId` to run, but auto-id'd selectors won't be
  * hydratable on the client (usually fine for inline selectors). Ecosystem ids
- * and ids for LocalAtoms must be set manually
+ * must be set manually
  *
  * To prevent Zedux from auto-id'ing AtomSelectors, use a shared function
  * reference. When using AtomSelectorConfig objects, make sure the object
@@ -43,10 +43,17 @@ export class IdGenerator {
    */
   public weakCache = new WeakMap<any, string>()
 
-  public generateAtomSelectorId = (name = 'as') => this.generateId(name)
-  public generateEcosystemId = () => this.generateId('es')
-  public generateLocalId = () => this.generateId('lo')
-  public generateNodeId = () => this.generateId('no')
+  public generateAtomSelectorId(name = 'as') {
+    return this.generateId(name)
+  }
+
+  public generateEcosystemId() {
+    return this.generateId('es')
+  }
+
+  public generateNodeId() {
+    return this.generateId('no')
+  }
 
   /**
    * Generate a graph node key for a React component

@@ -1,13 +1,15 @@
 import { when, createStore } from '@zedux/core/index'
+import { getToggleMachine } from '../utils'
 
 describe('Zedux.when()', () => {
-  test('returns a WhenBuilder', () => {
+  test('returns a WhenBuilder (actually a WhenMachineBuilder)', () => {
     const store = createStore<string>()
     const builder = when(store)
 
     expect(typeof builder).toBe('object')
     expect(builder).toEqual({
-      machine: expect.any(Function),
+      enters: expect.any(Function),
+      leaves: expect.any(Function),
       receivesAction: expect.any(Function),
       stateChanges: expect.any(Function),
       stateMatches: expect.any(Function),
@@ -17,15 +19,14 @@ describe('Zedux.when()', () => {
     })
   })
 
-  test('.machine() returns a WhenMachineBuilder', () => {
-    const store = createStore<string>()
-    const builder = when(store).machine()
+  test('returns a WhenMachineBuilder when called with a MachineStore', () => {
+    const store = getToggleMachine()
+    const builder = when(store)
 
     expect(typeof builder).toBe('object')
     expect(builder).toEqual({
       enters: expect.any(Function),
       leaves: expect.any(Function),
-      machine: expect.any(Function),
       receivesAction: expect.any(Function),
       stateChanges: expect.any(Function),
       stateMatches: expect.any(Function),

@@ -1,5 +1,4 @@
-import { Reactable, MachineStateRepresentation } from '../types'
-import { assertIsValidState } from './errors'
+import { Reactable } from '../types'
 import { DEV } from './general'
 
 /**
@@ -30,13 +29,3 @@ export const extractActionType = (actor: any, method: string) => {
 */
 export const extractActionTypes = (actors: Reactable[], method: string) =>
   actors.map(actor => extractActionType(actor, method))
-
-export const extractStateType = (state: MachineStateRepresentation) => {
-  if (typeof state === 'string') return state
-
-  if (DEV) {
-    assertIsValidState(state)
-  }
-
-  return state.type
-}

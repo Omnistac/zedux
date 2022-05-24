@@ -3,15 +3,13 @@ id: injectAsyncEffect
 title: injectAsyncEffect
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 ```ts
 import { injectAsyncEffect } from '@zedux/react'
 ```
 
 An [injector](../glossary#injector) that runs a promise and creates a store to track the promise's state.
 
-This injector is very similar to [`injectEffect()`](injectEffect), but instead of returning a cleanup function, the effect should return a promise. Since you don't return a cleanup function, a `cleanup` function is passed to the effect that you can call, passing a callback that will be called on cleanup.
+This injector is very similar to [`injectEffect()`](injectEffect), but instead of returning a cleanup function, the effect should return a promise. Since you don't return a cleanup function, a `cleanup` function is passed to the effect. You can pass callbacks to this function that will be called on cleanup.
 
 The state of the store returned by this injector is patterned after [React Query's query state](https://react-query.tanstack.com/reference/useQuery).
 
@@ -19,7 +17,7 @@ One of the primary uses of this injector is to obtain a stable promise reference
 
 ## Example
 
-<LiveEditor ecosystemId="injectAsyncEffect/example" resultVar="App">{`
+```tsx live ecosystemId=injectAsyncEffect/example resultVar=App
 const suspendingAtom = atom('suspending', () => {
   const [promise, asyncStore] = injectAsyncEffect(() => {
     return new Promise(resolve => {
@@ -27,13 +25,21 @@ const suspendingAtom = atom('suspending', () => {
         resolve('Hello, World!')
       }, 2000)
     })
-  }, [])\n
+  }, [])
+
   return api(asyncStore).setPromise(promise)
-})\n
+})
+
 function Child() {
-  const { data } = useAtomValue(suspendingAtom)\n
-  return <div>The value: {data}</div>
-}\n
+  const { data } = useAtomValue(suspendingAtom)
+
+  return (
+    <div>
+      The value: {data} (click "Reset" above if you missed the suspense)
+    </div>
+  )
+}
+
 function App() {
   return (
     <Suspense fallback={<div>Suspending...</div>}>
@@ -41,7 +47,7 @@ function App() {
     </Suspense>
   )
 }
-`}</LiveEditor>
+```
 
 ## Signature
 

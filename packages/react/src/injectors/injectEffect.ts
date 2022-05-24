@@ -1,4 +1,4 @@
-import { EffectCallback } from '../types'
+import { EffectCallback, InjectorDeps } from '../types'
 import { haveDepsChanged, split } from '../utils'
 import { EffectInjectorDescriptor, InjectorType, JobType } from '../utils/types'
 
@@ -18,7 +18,7 @@ const getTask = (
   return task
 }
 
-export const injectEffect = (effect: EffectCallback, deps?: any[]) => {
+export const injectEffect = (effect: EffectCallback, deps?: InjectorDeps) => {
   split<EffectInjectorDescriptor>(
     'injectEffect',
     InjectorType.Effect,

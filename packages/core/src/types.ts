@@ -1,4 +1,6 @@
 import { Store } from './api/createStore'
+import { MachineStore } from './api/MachineStore'
+import { MachineEffectHandler, MachineStateType } from './utils/types'
 
 // Same workaround rxjs uses for Symbol.observable:
 declare global {
@@ -103,13 +105,16 @@ export type EffectCreator<State = any> = (
   action: Action
 ) => EffectChain[]
 
-export interface EffectData<State = any> {
+export interface EffectData<
+  State = any,
+  S extends Store<State> = Store<State>
+> {
   action?: ActionChain
   effect?: EffectChain
   error?: unknown
   newState: State
   oldState?: State
-  store: Store<State>
+  store: S
 }
 
 export interface EffectMeta<Payload = any, Data = any> {
@@ -120,9 +125,10 @@ export interface EffectMeta<Payload = any, Data = any> {
 
 export type EffectType = string
 
-export type EffectsSubscriber<State = any> = (
-  effectData: EffectData<State>
-) => any
+export type EffectsSubscriber<
+  State = any,
+  S extends Store<State> = Store<State>
+> = (effectData: EffectData<State, S>) => any
 
 export type ErrorSubscriber = (error: unknown) => any
 
@@ -146,26 +152,31 @@ export type Inducer<State = any, PartialState extends Partial<State> = any> = (
   state: State
 ) => PartialState
 
-export interface MachineHooksBuilder<State = any> {
-  getSubscription(): Subscription
-  onEnter(
-    action: Reactable,
-    subscriber: EffectsSubscriber<State>
-  ): MachineHooksBuilder<State>
-  onLeave(
-    action: Reactable,
-    subscriber: EffectsSubscriber<State>
-  ): MachineHooksBuilder<State>
-}
+export type MachineStoreEffectHandler<
+  M extends MachineStore<any, any, any> = MachineStore<string, string, any>
+> = MachineEffectHandler<
+  MachineStoreStateNamesType<M>,
+  MachineStoreEventNamesType<M>,
+  MachineStoreContextType<M>
+>
 
-export interface MachineState<Type extends string = string> {
-  transitions: Record<string, string>
-  type: Type
-}
+export type MachineStoreContextType<
+  M extends MachineStore
+> = M extends MachineStore<any, any, infer C> ? C : never
 
-export type MachineStateRepresentation<Type extends string = string> =
-  | MachineState<Type>
-  | Type
+export type MachineStoreEventNamesType<
+  M extends MachineStore
+> = M extends MachineStore<any, infer E, any> ? E : never
+
+export type MachineStoreStateType<
+  M extends MachineStore
+> = M extends MachineStore<infer S, any, infer C>
+  ? MachineStateType<S, C>
+  : never
+
+export type MachineStoreStateNamesType<
+  M extends MachineStore
+> = M extends MachineStore<infer S, any, any> ? S : never
 
 export type NextSubscriber<State = any> = (
   newState: State,
@@ -174,10 +185,8 @@ export type NextSubscriber<State = any> = (
 ) => any
 
 export interface Observable<State = any> {
-  subscribe(subscriber: Subscriber<State>): Subscription
+  subscribe(subscriber: Subscriber<Store<State>>): Subscription
 }
-
-export type Processable<T> = Promise<T> | Iterator<T> | Observable<T>
 
 export type Reactable<Payload = any, Type extends string = string> =
   | Actor<Payload, Type>
@@ -201,24 +210,32 @@ export type Settable<State = any, StateIn = State> =
   | ((state: StateIn) => State)
   | State
 
-export type SideEffectHandler<State = any> = (
-  effectData: EffectData<State>
-) => any
+export type SideEffectHandler<
+  State = any,
+  S extends Store<State> = Store<State>
+> = (effectData: EffectData<State, S>) => any
 
 export type StateSetter<State = any> = (settable: Settable<State>) => State
+
+export type StoreStateType<S extends Store> = S extends Store<infer T>
+  ? T
+  : never
 
 export type SubReducer<State = any, Payload = any> = (
   state: State,
   payload: Payload
 ) => State
 
-export type Subscriber<State = any> =
+export type Subscriber<State = any, S extends Store<any> = Store<any>> =
   | NextSubscriber<State>
-  | SubscriberObject<State>
+  | SubscriberObject<State, S>
 
-export interface SubscriberObject<State = any> {
+export interface SubscriberObject<
+  State = any,
+  S extends Store<State> = Store<State>
+> {
   next?: NextSubscriber<State>
-  effects?: EffectsSubscriber<State>
+  effects?: EffectsSubscriber<State, S>
   error?: ErrorSubscriber
 }
 
@@ -226,29 +243,47 @@ export interface Subscription {
   unsubscribe(): void
 }
 
-export interface WhenBuilder<State = any> {
-  machine: (getMachine?: (state: State) => string) => WhenMachineBuilder<State>
+export interface WhenBuilder<
+  State = any,
+  S extends Store<State> = Store<State>
+> {
   receivesAction: {
-    (actor: Reactable, sideEffect: SideEffectHandler<State>): WhenBuilder<State>
-    (sideEffect: SideEffectHandler<State>): WhenBuilder<State>
+    (actor: Reactable, sideEffect: SideEffectHandler<State, S>): WhenBuilder<
+      State,
+      S
+    >
+    (sideEffect: SideEffectHandler<State, S>): WhenBuilder<State, S>
   }
-  stateChanges: (sideEffect: SideEffectHandler<State>) => WhenBuilder<State>
+  stateChanges: (
+    sideEffect: SideEffectHandler<State, S>
+  ) => WhenBuilder<State, S>
   stateMatches: (
     predicate: (state?: State) => boolean,
-    sideEffect: SideEffectHandler<State>
-  ) => WhenBuilder<State>
+    sideEffect: SideEffectHandler<State, S>
+  ) => WhenBuilder<State, S>
   subscription: Subscription
 }
 
-export interface WhenMachineBuilder<State = any> extends WhenBuilder<State> {
+export interface WhenMachineBuilder<
+  StateNames extends string = string,
+  EventNames extends string = string,
+  Context extends Record<string, any> | undefined = undefined
+> extends WhenBuilder<
+    MachineStateType<StateNames, Context>,
+    MachineStore<StateNames, EventNames, Context>
+  > {
   enters: (
-    state: MachineStateRepresentation,
-    sideEffect: SideEffectHandler<State>
-  ) => WhenMachineBuilder<State>
+    state: StateNames | StateNames[],
+    sideEffect: MachineStoreEffectHandler<
+      MachineStore<StateNames, EventNames, Context>
+    >
+  ) => WhenMachineBuilder<StateNames, EventNames, Context>
   leaves: (
-    state: MachineStateRepresentation,
-    sideEffect: SideEffectHandler<State>
-  ) => WhenMachineBuilder<State>
+    state: StateNames | StateNames[],
+    sideEffect: MachineStoreEffectHandler<
+      MachineStore<StateNames, EventNames, Context>
+    >
+  ) => WhenMachineBuilder<StateNames, EventNames, Context>
 }
 
 export type ZeduxActor<Payload = any, Type extends string = string> = {
@@ -258,15 +293,6 @@ export type ZeduxActor<Payload = any, Type extends string = string> = {
 export type ZeduxActorEmpty<Type extends string = string> = {
   toString(): Type
 } & ActorEmpty<Type>
-
-export interface ZeduxMachineState<Type extends string = string>
-  extends MachineState<Type> {
-  is(str: string): boolean
-  on(
-    actor: Reactable,
-    targetState: MachineStateRepresentation
-  ): ZeduxMachineState<Type>
-}
 
 export interface ZeduxReducer<State = any> extends Reducer<State> {
   reduce<Type extends string = string, Payload = any>(

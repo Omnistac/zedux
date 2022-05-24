@@ -3,8 +3,6 @@ id: useAtomSelector
 title: useAtomSelector
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 ```ts
 import { useAtomSelector } from '@zedux/react'
 ```
@@ -15,36 +13,43 @@ The selector will rerun every time the state of any of the dependencies it creat
 
 ## Example
 
-<LiveEditor ecosystemId="useAtomSelector/example" resultVar="Counters">{`
+```tsx live ecosystemId=useAtomSelector/example resultVar=Counters
 const countersAtom = atom('counters', () => {
-  const store = injectStore({ counterA: 1, counterB: 1 })\n
+  const store = injectStore({ counterA: 1, counterB: 1 })
+
   return store
-})\n
+})
+
 function Counters() {
   const counterA = useAtomSelector(({ get }) => get(countersAtom).counterA)
   const instance = useAtomInstance(countersAtom)
   const { setState } = instance
   const rendersRef = useRef(0)
-  rendersRef.current++\n
+  rendersRef.current++
+
   return (
     <>
       <div>Number of renders: {rendersRef.current}</div>
       <div>Counter A (dynamic): {counterA}</div>
-      <button onClick={
-        () => setState(state => ({ ...state, counterA: state.counterA + 1}))
-      }>
+      <button
+        onClick={() =>
+          setState(state => ({ ...state, counterA: state.counterA + 1 }))
+        }
+      >
         Increment Counter A
       </button>
       <div>Counter B (static): {instance.store.getState().counterB}</div>
-      <button onClick={
-        () => setState(state => ({ ...state, counterB: state.counterB + 1}))
-      }>
+      <button
+        onClick={() =>
+          setState(state => ({ ...state, counterB: state.counterB + 1 }))
+        }
+      >
         Increment Counter B
       </button>
     </>
   )
 }
-`}</LiveEditor>
+```
 
 Miscellaneous:
 

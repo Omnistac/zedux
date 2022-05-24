@@ -3,8 +3,6 @@ id: Ecosystem
 title: Ecosystem
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 The ecosystem is an isolated atom environment. It creates a scheduler for running atom-related tasks and a graph that manages atom dependencies.
 
 This class defines many methods for creating, destroying, and inspecting atom instances and the graph they form.
@@ -39,13 +37,15 @@ function App() {
 
 The ability to swap out atom implementations on the fly is one of Zedux' superpowers. Use [`.addOverrides`](#addoverrides), [`.removeOverrides`](#removeoverrides), or [`.setOverrides`](#setoverrides).
 
-<LiveEditor ecosystemId="Ecosystem/modifying-overrides" resultVar="Swapper">{`
+```tsx live ecosystemId=Ecosystem/modifying-overrides resultVar=Swapper
 const one = atom('common-key', () => 'Numero Uno')
 const two = atom('common-key', () => 'I am the best')
-const three = atom('common-key', () => 'Two is not the best')\n
+const three = atom('common-key', () => 'Two is not the best')
+
 function Swapper() {
   const ecosystem = useEcosystem()
-  const state = useAtomValue(one)\n
+  const state = useAtomValue(one)
+
   return (
     <>
       <div>Current State: {state}</div>
@@ -55,7 +55,7 @@ function Swapper() {
     </>
   )
 }
-`}</LiveEditor>
+```
 
 ## Properties
 

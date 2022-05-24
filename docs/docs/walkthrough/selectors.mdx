@@ -3,8 +3,6 @@ id: selectors
 title: Selectors
 ---
 
-import { LiveEditor } from '../LiveEditor'
-
 A crucial tool in state management is the ability to "derive" or transform data. In the React world, we call such state transformers "selectors". Zedux has a few different flavors of selectors.
 
 :::tip you will learn
@@ -395,27 +393,36 @@ As an AtomGetter, `select` can be used in if statements and loops to conditional
 
 `select` is the key to composing AtomSelectors. Any AtomSelector can use its `select` AtomGetter to run other AtomSelectors.
 
-<LiveEditor ecosystemId="selectors/composition" resultVar="Username">{`
+```tsx live ecosystemId=selectors/composition resultVar=Username
 const usersAtom = atom('users', [
   { id: 1, name: 'Joe' },
   { id: 2, name: 'Jill' },
   { id: 3, name: 'Jim' },
-])\n
-const currentUserIdAtom = atom('currentUserId', 2)\n
+])
+
+// try changing this initial value to 1 or 3:
+const currentUserIdAtom = atom('currentUserId', 2)
+
+// a state transformation! - normalizes the users array
 const getUsersById = ({ get }: AtomGetters) =>
-  get(usersAtom).reduce((map, user) => ({ ...map, [user.id]: user }), {})\n
+  get(usersAtom).reduce((map, user) => ({ ...map, [user.id]: user }), {})
+
 const getUser = ({ select }: AtomGetters, id: string) =>
-  select(getUsersById)[id]\n
-// Hi! just commenting here to break up the monotony. Have a great day!
+  select(getUsersById)[id]
+
+// selectors go brr
 const getCurrentUser = ({ get, select }: AtomGetters) =>
-  select(getUser, get(currentUserIdAtom))\n
+  select(getUser, get(currentUserIdAtom))
+
 const getCurrentUserName = ({ select }: AtomGetters) =>
-  select(getCurrentUser)?.name\n
+  select(getCurrentUser)?.name
+
 function Username() {
-  const currentUserName = useAtomSelector(getCurrentUserName)\n
+  const currentUserName = useAtomSelector(getCurrentUserName)
+
   return <div>Hello, {currentUserName}</div>
 }
-`}</LiveEditor>
+```
 
 ## Static Selection
 

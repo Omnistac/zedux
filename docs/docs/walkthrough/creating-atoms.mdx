@@ -3,8 +3,6 @@ id: creating-atoms
 title: Creating Atoms
 ---
 
-import { LiveEditor } from '../LiveEditor'
-
 Atoms are extremely flexible and can be configured in many ways for many different situations.
 
 :::tip you will learn
@@ -203,8 +201,8 @@ To create an AtomApi, we simply wrap the atom instance's state in a call to `api
 ```ts
 import { api, atom } from '@zedux/react'
 
-const myAtom = atom('my', 'initial state') // before
-const myAtom = atom('my', api('initial state')) // after
+const myAtom = atom('my', () => 'initial state') // before
+const myAtom = atom('my', () => api('initial state')) // after
 ```
 
 This works with stores too:
@@ -224,18 +222,21 @@ So now then ... what can an AtomApi do?
 
 Zedux atoms can export anything via an AtomApi:
 
-<LiveEditor ecosystemId="creating-atoms/exports" resultVar="App">{`
+```tsx live ecosystemId=creating-atoms/exports resultVar=App
 const counterAtom = atom('counter', () => {
-  const store = injectStore(0)\n
+  const store = injectStore(0)
+
   // Expose methods
   return api(store).setExports({
     decrement: () => store.setState(state => state - 1),
-    increment: () => store.setState(state => state + 1)
+    increment: () => store.setState(state => state + 1),
   })
-})\n
+})
+
 function App() {
   const { decrement, increment } = useAtomInstance(counterAtom).exports
-  const value = useAtomValue(counterAtom)\n
+  const value = useAtomValue(counterAtom)
+
   return (
     <>
       <div>Counter: {value}</div>
@@ -244,33 +245,156 @@ function App() {
     </>
   )
 }
-`}</LiveEditor>
+```
 
 :::important
 Exports are constant! This means exported variables should be stable references. Zedux won't update them on subsequent evaluations. In this example, `increment` and `decrement` are not stable references, but they don't reference anything except the store, which is stable.
 :::
 
+Exports are extremely powerful. Exposing an atom's "public API" like this is just one of their uses. Since you can export anything, refs can be used to great effect:
+
+```tsx
+const gridAtom = atom('grid', () => {
+  const gridApiRef = injectRef()
+
+  // this atom provides universal access to the grid api once it's been set:
+  return api().setExports({ gridApiRef })
+})
+
+function Grid() {
+  const { gridApi } = useAtomInstance(gridAtom).exports
+
+  // expose this grid component's api to the atom universe!
+  return <ThirdPartyGridLibrary onLoad={api => (gridApiRef.current = api)} />
+}
+```
+
+Another use is to export callbacks for implementing render-as-you-fetch patterns:
+
+```tsx live ecosystemId=creating-atoms/export-callbacks resultVar=Age
+const mockFetch = data =>
+  new Promise(resolve => {
+    setTimeout(() => resolve(data), 1000)
+  })
+
+const userNameAtom = atom('userName', () => {
+  const store = injectStore('Joe')
+
+  return api(store).setExports({
+    toggleUser: () => {
+      const fetchBob = store.getState() === 'Joe'
+      store.setState('loading...') // lol, yes this is contrived
+      mockFetch(fetchBob ? 'Bob' : 'Joe').then(val => store.setState(val))
+    },
+  })
+})
+
+function Age() {
+  const { toggleUser } = useAtomInstance(userNameAtom).exports
+  const userName = useAtomValue(userNameAtom)
+
+  return (
+    <>
+      <div>Current User's Name: {userName}</div>
+      <button onClick={toggleUser}>Change User</button>
+    </>
+  )
+}
+```
+
 ### Suspense
 
-Atoms can be used as suspending resources in React. To suspend, we give a stable promise reference to the AtomApi
+Atoms can be used as suspending resources in React. To suspend, we simply pass a promise to a returned AtomApi's `.setPromise()` method:
 
 ```ts
 return api(val).setPromise(suspensePromise)
 ```
 
-Now you may be asking how one is to acquire a stable promise reference without kicking off side effects in the evaluator body. Or what if one wants to forward promises from dependencies on to React.
+An atom that returns such an api will cause React to suspend until the promise resolves.
+
+```tsx live ecosystemId=creating-atoms/api-set-promise resultVar=App
+const mockFetch = data =>
+  new Promise(resolve => {
+    setTimeout(() => resolve(data), 1000)
+  })
+
+const ageAtom = atom('age', () => {
+  const store = injectStore(undefined, { shouldSubscribe: false })
+
+  // An inline side effect?? We'll cover this in the side effects walkthrough
+  const promise = mockFetch(Math.floor(Math.random() * 100))
+  promise.then(val => store.setState(val))
+
+  return api(store).setPromise(promise)
+})
+
+function Age() {
+  const instance = useAtomInstance(ageAtom)
+  const age = useAtomValue(ageAtom)
+
+  return (
+    <>
+      <div>The Time Traveller's Age: {age}</div>
+      <button onClick={() => instance.invalidate()}>Refresh</button>
+    </>
+  )
+}
+
+function App() {
+  return (
+    <Suspense fallback={<div>Fetching Age...</div>}>
+      <Age />
+    </Suspense>
+  )
+}
+```
+
+You can also pass a promise directly to `api()`. This tells Zedux to take control over the atom's state and update it based on the promise.
+
+```tsx live ecosystemId=creating-atoms/api-promise resultVar=App
+const mockFetch = data =>
+  new Promise(resolve => {
+    setTimeout(() => resolve(data), 1000)
+  })
+
+const ageAtom = atom('age', () => {
+  const promise = mockFetch(Math.floor(Math.random() * 100))
+
+  // just pass the promise!
+  return api(promise)
+})
+
+function Age() {
+  const instance = useAtomInstance(ageAtom)
+
+  // the promise result will be set as the state's `data` property.
+  // You should recognize this if you know React Query.
+  const { data } = useAtomValue(ageAtom)
+
+  return (
+    <>
+      <div>The Time Traveller's Age: {data}</div>
+      <button onClick={() => instance.invalidate()}>Refresh</button>
+    </>
+  )
+}
+
+function App() {
+  return (
+    <Suspense fallback={<div>Fetching Age...</div>}>
+      <Age />
+    </Suspense>
+  )
+}
+```
 
 We'll cover much more about suspense in [the suspense walkthrough](../walkthrough/suspense).
 
 AtomApis have many more features that we'll cover eventually. Or check out the [AtomApi reference](../api/classes/AtomApi) for all the power.
 
-## Specialized Atoms
+## Ions
 
-Zedux exports a few "specialized" types of atoms. These atoms can be more useful than the default Atoms in certain scenarios.
-
-### Ions
-
-Perhaps the most common atom type. Ions are better suited for selector-type operations. Create them with the `ion` factory:
+Ions are just atoms, but with a slightly different API. Ions are better suited for selector-type operations. Create them with the `ion` factory:
 
 ```ts
 import { ion } from '@zedux/react'
@@ -280,7 +404,7 @@ const filteredTodosAtom = ion('filteredTodos', ({ get }, isDone: boolean) =>
 )
 ```
 
-Ions are only slightly different from normal atoms. They receive a special, Zedux-supplied [AtomGetters](../api/types/AtomGetters) object as their first parameter. Any parameters after that are the actual params of the atom. You can also get the AtomGetters object in normal (non-ion) atoms:
+Ions are only slightly different from normal atoms. They receive a special, Zedux-supplied [AtomGetters](../api/types/AtomGetters) object as their first parameter. Any parameters after that are the actual params of the atom. You can also get the AtomGetters object in normal (non-ion) atoms using [`injectAtomGetters()`](../api/injectors/injectAtomGetters):
 
 ```ts
 import { atom, injectAtomGetters } from '@zedux/react'
@@ -294,43 +418,16 @@ const filteredTodosAtom = atom('filteredTodoos', (isDone: boolean) => {
 
 Note that in either of these examples, we could have used `injectAtomValue` instead of `get`. But `get` and all the AtomGetters have some extra spice. See the [AtomGetters doc page](../api/types/AtomGetters) for spiciness.
 
-See [the `ion()` reference](../api/factories/ion) for more info.
+See [the `ion()` API](../api/factories/ion) for more info.
 
-### Local Atoms
+:::tip
+**When should I use an ion instead of an atom?** You can make your own rules, but here are two possible viewpoints:
 
-Atoms are a full replacement for React context. Local atoms are a special type of atom designed for this use case.
+- Ions are like AtomSelectors (which we'll cover in the [selectors walkthrough](selectors)) in atom form - use them when you want selector-type functionality, but need more control over the memoization details or need to run side effects.
+- Ions are higher-level atoms. High-level is good, so only use ions and ditch raw atoms.
 
-Local atoms have their first parameter automatically set to an optional id string. You can pass a string to id these atoms manually. If no string is passed, a new id is generated and a new atom instance created every time you use the atom.
-
-```tsx
-import {
-  AtomInstanceProvider,
-  localAtom,
-  useAtomConsumer,
-  useAtomInstance
-} from '@zedux/react'
-
-const reactContextAtom = localAtom('reactContext', 'some state')
-
-function Parent() {
-  // allow Zedux to auto-generate an id for this instance:
-  const newInstance = useAtomInstance(reactContextAtom)
-
-  return (
-    <AtomInstanceProvider instance={newInstance}>
-      <Child />
-    </AtomInstanceProvider>
-  )
-}
-
-function Child() {
-  // use the provided instance:
-  const instance = useAtomConsumer(reactContextAtom)
-  ...
-}
-```
-
-Learn more about local atoms in [the React context walkthrough](context)
+You decide! Ions are just a tool that you can use how you see fit.
+:::
 
 ## Recap
 
@@ -341,6 +438,5 @@ Learn more about local atoms in [the React context walkthrough](context)
 - Exports can be attached to an atom via `api(value).setExports({ ... })`
 - Atoms can cause React to suspend by passing a stable promise to `api(value).setPromise(promise)`.
 - Ions specialize in selector-type operations
-- Local Atoms specialize in improving basic React context flows.
 
 Next up we'll cover more ways to [consume atoms](using-atoms).

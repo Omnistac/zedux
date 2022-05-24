@@ -1,47 +1,68 @@
 import {
   EffectData,
   EffectsSubscriber,
-  MachineStateRepresentation,
   Reactable,
   SideEffectHandler,
   WhenBuilder,
+  WhenMachineBuilder,
 } from '../types'
-import { extractActionType, extractStateType } from '../utils/actor'
+import { extractActionType } from '../utils/actor'
 import { assertAreFunctions } from '../utils/errors'
 import { DEV } from '../utils/general'
+import { MachineEffectHandler, MachineStateType } from '../utils/types'
 import { Store } from './createStore'
+import { MachineStore } from './MachineStore'
 import { removeAllMeta } from './meta'
 
-interface MachineHandler<State = any> {
-  enterHooks: Record<string, SideEffectHandler[]>
-  getMachine: (state: State) => string
-  leaveHooks: Record<string, SideEffectHandler[]>
+interface MachineEffectHandlers {
+  enterHooks: Record<string, MachineEffectHandler[]>
+  leaveHooks: Record<string, MachineEffectHandler[]>
 }
 
-interface StateMatchHandler<State = any> {
+interface StateMatchHandler<
+  State = any,
+  S extends Store<State> = Store<State>
+> {
   predicate: (state?: State) => boolean
-  sideEffect: SideEffectHandler<State>
+  sideEffect: SideEffectHandler<State, S>
 }
 
-export const when = <State = any>(store: Store<State>) => {
-  const actionHandlers: Record<string, SideEffectHandler<State>[]> = {}
-  const anyActionHandlers: SideEffectHandler<State>[] = []
-  const machineHandlers: MachineHandler[] = []
-  const stateChangeHandlers: SideEffectHandler<State>[] = []
-  const stateMatchHandlers: StateMatchHandler<State>[] = []
+export const when: {
+  <
+    StateNames extends string = string,
+    EventNames extends string = string,
+    Context extends Record<string, any> | undefined = undefined
+  >(
+    store: MachineStore<StateNames, EventNames, Context>
+  ): WhenMachineBuilder<StateNames, EventNames, Context>
+  <State = any, S extends Store<State> = Store<State>>(store: S): WhenBuilder<
+    State,
+    S
+  >
+} = (store: Store) => {
+  const actionHandlers: Record<string, SideEffectHandler[]> = {}
+  const anyActionHandlers: SideEffectHandler[] = []
+  const machineHandlers: MachineEffectHandlers = {
+    enterHooks: {},
+    leaveHooks: {},
+  }
+  const stateChangeHandlers: SideEffectHandler[] = []
+  const stateMatchHandlers: StateMatchHandler[] = []
 
-  const effectsSubscriber: EffectsSubscriber<State> = effectData => {
+  const effectsSubscriber: EffectsSubscriber = effectData => {
     if (effectData.action) {
       runActionHandlers(effectData)
     }
 
     if (effectData.newState === effectData.oldState) return
 
-    runMachineHandlers(effectData)
+    runMachineHandlers(
+      (effectData as unknown) as EffectData<MachineStateType, MachineStore>
+    )
     runStateChangeHandlers(effectData)
   }
 
-  const runActionHandlers = (effectData: EffectData<State>) => {
+  const runActionHandlers = (effectData: EffectData) => {
     if (!effectData.action) return
 
     anyActionHandlers.forEach(handler => handler(effectData))
@@ -52,25 +73,26 @@ export const when = <State = any>(store: Store<State>) => {
     handlers?.forEach(handler => handler(effectData))
   }
 
-  const runMachineHandlers = (effectData: EffectData<State>) => {
-    machineHandlers.forEach(({ enterHooks, getMachine, leaveHooks }) => {
-      const oldState =
-        typeof effectData.oldState !== 'undefined' &&
-        getMachine(effectData.oldState)
-      const newState = getMachine(effectData.newState)
+  const runMachineHandlers = (
+    effectData: EffectData<MachineStateType, MachineStore>
+  ) => {
+    const oldState =
+      effectData.oldState != null &&
+      ((effectData.oldState as unknown) as MachineStateType).value
+    const newState = ((effectData.newState as unknown) as MachineStateType)
+      .value
 
-      if (newState === oldState) return
+    if (newState === oldState) return
 
-      const currentLeaveHooks =
-        typeof oldState === 'string' ? leaveHooks[oldState] : null
-      const currentEnterHooks = enterHooks[newState]
+    const currentLeaveHooks =
+      typeof oldState === 'string' ? machineHandlers.leaveHooks[oldState] : null
+    const currentEnterHooks = machineHandlers.enterHooks[newState]
 
-      currentLeaveHooks?.forEach(hook => hook(effectData))
-      currentEnterHooks?.forEach(hook => hook(effectData))
-    })
+    currentLeaveHooks?.forEach(hook => hook(effectData))
+    currentEnterHooks?.forEach(hook => hook(effectData))
   }
 
-  const runStateChangeHandlers = (effectData: EffectData<State>) => {
+  const runStateChangeHandlers = (effectData: EffectData) => {
     stateChangeHandlers.forEach(handler => handler(effectData))
 
     stateMatchHandlers.forEach(({ predicate, sideEffect }) => {
@@ -85,67 +107,43 @@ export const when = <State = any>(store: Store<State>) => {
   }
 
   // Exposed methods
-  const machine = (
-    getMachine: (state: State) => string = state => (state as unknown) as string
+  const enters = (
+    state: string | string[],
+    sideEffect: MachineEffectHandler
   ) => {
-    const machineHandler: MachineHandler<State> = {
-      enterHooks: {},
-      getMachine,
-      leaveHooks: {},
-    }
+    const states = Array.isArray(state) ? state : [state]
 
-    machineHandlers.push(machineHandler)
+    states.forEach(stateName => {
+      if (!machineHandlers.enterHooks[stateName]) {
+        machineHandlers.enterHooks[stateName] = []
+      }
 
-    const enters = (
-      stateIn: MachineStateRepresentation | MachineStateRepresentation[],
-      sideEffect: SideEffectHandler<State>
-    ) => {
-      const states = Array.isArray(stateIn) ? stateIn : [stateIn]
+      machineHandlers.enterHooks[stateName].push(sideEffect)
+    })
 
-      states.forEach(state => {
-        const stateName = extractStateType(state)
+    return whenBuilder
+  }
 
-        if (!machineHandler.enterHooks[stateName]) {
-          machineHandler.enterHooks[stateName] = []
-        }
+  const leaves = (
+    state: string | string[],
+    sideEffect: MachineEffectHandler
+  ) => {
+    const states = Array.isArray(state) ? state : [state]
 
-        machineHandler.enterHooks[stateName].push(sideEffect)
-      })
+    states.forEach(stateName => {
+      if (!machineHandlers.leaveHooks[stateName]) {
+        machineHandlers.leaveHooks[stateName] = []
+      }
 
-      return whenMachineBuilder
-    }
+      machineHandlers.leaveHooks[stateName].push(sideEffect)
+    })
 
-    const leaves = (
-      stateIn: MachineStateRepresentation | MachineStateRepresentation[],
-      sideEffect: SideEffectHandler<State>
-    ) => {
-      const states = Array.isArray(stateIn) ? stateIn : [stateIn]
-
-      states.forEach(state => {
-        const stateName = extractStateType(state)
-
-        if (!machineHandler.leaveHooks[stateName]) {
-          machineHandler.leaveHooks[stateName] = []
-        }
-
-        machineHandler.leaveHooks[stateName].push(sideEffect)
-      })
-
-      return whenMachineBuilder
-    }
-
-    const whenMachineBuilder = {
-      ...whenBuilder,
-      enters,
-      leaves,
-    }
-
-    return whenMachineBuilder
+    return whenBuilder
   }
 
   const receivesAction = (
-    reactableOrEffectHandler: Reactable | SideEffectHandler<State>,
-    sideEffect?: SideEffectHandler<State>
+    reactableOrEffectHandler: Reactable | any,
+    sideEffect?: any
   ) => {
     if (typeof sideEffect === 'undefined') {
       assertAreFunctions(
@@ -153,9 +151,7 @@ export const when = <State = any>(store: Store<State>) => {
         'whenBuilder.receivesAction()'
       )
 
-      anyActionHandlers.push(
-        reactableOrEffectHandler as SideEffectHandler<State>
-      )
+      anyActionHandlers.push(reactableOrEffectHandler as SideEffectHandler)
 
       return whenBuilder
     }
@@ -179,15 +175,15 @@ export const when = <State = any>(store: Store<State>) => {
     return whenBuilder
   }
 
-  const stateChanges = (sideEffect: SideEffectHandler<State>) => {
+  const stateChanges = (sideEffect: any) => {
     stateChangeHandlers.push(sideEffect)
 
     return whenBuilder
   }
 
   const stateMatches = (
-    predicate: (state?: State) => boolean,
-    sideEffect: SideEffectHandler<State>
+    predicate: (state?: any) => boolean,
+    sideEffect: any
   ) => {
     if (DEV) {
       assertAreFunctions([predicate, sideEffect], 'whenBuilder.stateMatches()')
@@ -200,8 +196,9 @@ export const when = <State = any>(store: Store<State>) => {
 
   const subscription = store.subscribe({ effects: effectsSubscriber })
 
-  const whenBuilder: WhenBuilder<State> = {
-    machine,
+  const whenBuilder: WhenMachineBuilder = {
+    enters,
+    leaves,
     receivesAction,
     stateChanges,
     stateMatches,

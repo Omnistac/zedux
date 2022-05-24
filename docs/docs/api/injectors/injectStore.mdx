@@ -3,8 +3,6 @@ id: injectStore
 title: injectStore
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 ```ts
 import { injectStore } from '@zedux/react'
 ```
@@ -15,23 +13,25 @@ An [injector](../glossary#injector) that creates a stable [Zedux store](../class
 
 ## Examples
 
-<LiveEditor ecosystemId="injectStore/example" resultVar="Seconds">{`
+```tsx live ecosystemId=injectStore/example resultVar=Seconds
 const secondsAtom = atom('seconds', () => {
-  const store = injectStore(0)\n
+  const store = injectStore(0)
+
   injectEffect(() => {
-    const intervalId = setInterval(
-      () => store.setState(val => val + 1),
-      1000
-    )\n
+    const intervalId = setInterval(() => store.setState(val => val + 1), 1000)
+
     return () => clearInterval(intervalId)
-  }, [])\n
+  }, [])
+
   return store
-})\n
+})
+
 function Seconds() {
-  const state = useAtomValue(secondsAtom)\n
+  const state = useAtomValue(secondsAtom)
+
   return <div>Seconds: {state}</div>
 }
-`}</LiveEditor>
+```
 
 Miscellaneous:
 

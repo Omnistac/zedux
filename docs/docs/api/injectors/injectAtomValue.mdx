@@ -3,8 +3,6 @@ id: injectAtomValue
 title: injectAtomValue
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 ```ts
 import { injectAtomValue } from '@zedux/react'
 ```
@@ -15,27 +13,31 @@ The atom instance that uses this injector will reevaluate whenever the resolved 
 
 ## Example
 
-<LiveEditor ecosystemId="injectAtomValue/example" resultVar="Seconds">{`
+```tsx live ecosystemId=injectAtomValue/example resultVar=Seconds
 const secondsAtom = atom('seconds', () => {
-  const store = injectStore(0)\n
+  const store = injectStore(0)
+
   injectEffect(() => {
-    const intervalId = setInterval(
-      () => store.setState(val => val + 1),
-      1000
-    )\n
+    const intervalId = setInterval(() => store.setState(val => val + 1), 1000)
+
     return () => clearInterval(intervalId)
-  }, [])\n
+  }, [])
+
   return store
-})\n
+})
+
 const timesFiveAtom = atom('timesFive', () => {
-  const seconds = injectAtomValue(secondsAtom)\n
+  const seconds = injectAtomValue(secondsAtom)
+
   return seconds * 5
-})\n
+})
+
 function Seconds() {
-  const state = useAtomValue(timesFiveAtom)\n
+  const state = useAtomValue(timesFiveAtom)
+
   return <div>Seconds Times Five: {state}</div>
 }
-`}</LiveEditor>
+```
 
 Miscellaneous:
 

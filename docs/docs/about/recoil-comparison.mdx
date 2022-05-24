@@ -1,0 +1,65 @@
+---
+id: recoil-comparison
+title: Recoil Comparison
+---
+
+Zedux' atomic model was born in 2020 shortly after Recoil started gaining traction. We liked Recoil, but were turned away mostly by its complexity and (then-)unstable effects model. By borrowing ideas from React Query and React itself, and by using Zedux' existing composable store model, we were able to create an atomic model that's much more beginner-friendly and powerful.
+
+## Synchronous Evaluation
+
+Zedux atoms always evaluate synchronously.
+
+## Effects
+
+In Zedux, side effects are handled exactly as you'd handle them in React - using an exported callback if possible for optimal render-as-you-fetch concurrent mode goodness, or using `injectEffect` to predictably react to state updates.
+
+## Selectors
+
+Recoil selectors are a sort of more advanced atom. Zedux selectors are a completely different category
+
+## Atom/Selector Families
+
+Recoil distinguishes between `atom`, `selector`, `atomFamily`, and `selectorFamily`. Zedux' `atom` alone replaces all 4, though Zedux also provides `ion` which is more commonly used to replace `selector`/`selectorFamily`.
+
+Recoil:
+
+```tsx
+const myNumberState = atom({
+  key: 'MyNumber',
+  default: 2,
+})
+
+const myMultipliedState = selectorFamily({
+  key: 'MyMultipliedNumber',
+  get: multiplier => ({ get }) => {
+    return get(myNumberState) * multiplier
+  },
+})
+
+function MyComponent() {
+  const number = useRecoilValue(myNumberState)
+  const multipliedNumber = useRecoilValue(myMultipliedState(100))
+
+  return <div>...</div>
+}
+```
+
+Zedux:
+
+```tsx
+const myNumberState = atom('myNumber', 2)
+
+const myMultipliedState = ion(
+  'myMultipliedNumber',
+  ({ get }, multiplier: number) => {
+    return get(myNumberState) * multiplier
+  }
+)
+
+function MyComponent() {
+  const number = useAtomValue(myNumberState)
+  const multipliedNumber = useAtomValue(myMultipliedState, [100])
+
+  return <div>...</div>
+}
+```

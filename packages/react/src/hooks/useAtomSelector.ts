@@ -2,6 +2,7 @@ import { AtomSelectorOrConfig, EdgeFlag } from '../types'
 import { useMemo, useRef, useSyncExternalStore } from 'react'
 import { AtomSelectorCache, haveDepsChanged } from '../utils'
 import { useEcosystem } from './useEcosystem'
+import { useReactComponentId } from './useReactComponentId'
 
 const OPERATION = 'useAtomSelector'
 
@@ -10,14 +11,7 @@ export const useAtomSelector = <T, Args extends any[]>(
   ...args: Args
 ): T => {
   const ecosystem = useEcosystem()
-
-  // would be nice if React provided some way to know that multiple hooks are
-  // from the same component. For now, every Zedux hook usage creates a new
-  // graph node
-  const dependentKey = useMemo(
-    () => ecosystem._idGenerator.generateReactComponentId(),
-    []
-  )
+  const dependentKey = useReactComponentId()
   const cacheRef = useRef<AtomSelectorCache<T, Args>>()
 
   const resolvedArgs = (
