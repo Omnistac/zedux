@@ -29,7 +29,6 @@ module.exports = {
           'api/classes/AtomInstance',
           'api/classes/Ecosystem',
           'api/classes/Ion',
-          'api/classes/LocalAtom',
           'api/classes/Store',
         ],
       },
@@ -58,7 +57,6 @@ module.exports = {
           'api/factories/createReducer',
           'api/factories/createStore',
           'api/factories/ion',
-          'api/factories/localAtom',
         ],
       },
       {

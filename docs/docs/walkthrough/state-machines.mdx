@@ -3,8 +3,6 @@ id: state-machines
 title: State Machines
 ---
 
-import { LiveEditor } from '../LiveEditor'
-
 The state machine is one of the most important tools a statesmith can have in his belt. [XState](https://xstate.js.org/) is the current king of the JavaScript state machine world. Zedux is not out to change that, in fact we may build an official XState Zedux integration soon.
 
 However, Zedux does provide a minimal state machine implementation out of the box. Machines are just reducers and interpreters are just stores. Zedux state machines do not cover every use case of state machines. But they should be enough for most situations.
@@ -91,110 +89,107 @@ when(myStore).machine().enters(state, invoke)
 
 ## Contrived Example
 
-<LiveEditor ecosystemId="state-machines/door" resultVar="Machine">{`
-const click = createActor('click')
-const timerStart = createActor<ReturnType<typeof setTimeout>>('timerStart')
-const timerEnd = createActor('timerEnd')\n
-const [open, opening, closed, closing] = states(
-  'open',
-  'opening',
-  'closed',
-  'closing'
-)\n
-const doorMachine = createMachine(
-  open.on(click, closing),
-  closing.on(click, opening).on(timerEnd, closed),
-  opening.on(click, closing).on(timerEnd, open),
-  closed.on(click, opening)
-)\n
-const timeoutIdReducer = createReducer(null)
-  .reduce(timerStart, (_, timeoutId) => timeoutId)
-  .reduce(timerEnd, () => null)\n
-const doorMachineAtom = atom('doorMachine', () => {
-  const store = injectStore(() => createStore({
-    machine: doorMachine,
-    timeoutId: timeoutIdReducer
-  }))\n
+```tsx live ecosystemId=state-machines/door resultVar=Machine
+const doorAtom = atom('door', () => {
+  const store = injectMachineStore(
+    state => {
+      const startTimeout = ({ store }) => {
+        store.setContext()
+      }
+
+      return [
+        state('open').on('click', 'closing'),
+        state('opening').on('click', 'closing').on('timeout', 'open'),
+        state('closed').on('click', 'opening'),
+        state('closing').on('click', 'opening').on('timeout', 'closed'),
+      ]
+    },
+    { timeoutId: null }
+  )
+
   injectEffect(() => {
     const { subscription } = when(store)
-      .machine(({ machine }) => machine)
-      .enters([closing, opening], ({ store }) => {
+      .enters(['closing', 'opening'], ({ store }) => {
         const timeoutId = setTimeout(() => {
-          store.dispatch(timerEnd())
-        }, 1000)\n
-        store.dispatch(timerStart(timeoutId))
+          store.send.timeout()
+        }, 1000)
+
+        store.setContext({ timeoutId })
       })
-      .leaves([open, opening, closed, closing], ({ oldState }) => {
-        if (oldState.timeoutId) {
-          clearTimeout(oldState.timeoutId)
+      .leaves(['closing', 'opening'], ({ oldState }) => {
+        if (oldState.context.timeoutId) {
+          clearTimeout(oldState.context.timeoutId)
+          store.setContext('timeoutId', null)
         }
-      })\n
+      })
+
     return () => subscription.unsubscribe()
-  }, [])\n
-  return store
-})\n
+  }, [])
+
+  return api(store).setExports(store.send)
+})
+
 function Machine() {
-  const state = useAtomValue(doorMachineAtom)
-  const { dispatch } = useAtomInstance(doorMachineAtom)\n
+  const { value } = useAtomValue(doorAtom)
+  const { click } = useAtomInstance(doorAtom).exports
+
   return (
     <>
-      <div>State: {state.machine}</div>
-      <button onClick={() => dispatch(click())}>Fire Click</button>
+      <div>State: {value}</div>
+      <button onClick={() => click()}>Fire Click</button>
     </>
   )
 }
-`}</LiveEditor>
+```
 
 ## `useReducer`
 
 Since state machines are just reducers, they can be used directly in `useReducer()`
 
-export const buttonStyle = {
-  appearance: 'none',
-  border: '1px solid #ccc',
-  cursor: 'pointer',
-  fontSize: '20px',
-  padding: '12px',
-}
+```tsx live ecosystemId=state-machine/theme resultVar=Theme
+// const buttonStyle = {
+//   appearance: 'none',
+//   border: '1px solid #ccc',
+//   cursor: 'pointer',
+//   fontSize: '20px',
+//   padding: '12px',
+// }
 
-export const getStyle = theme => {
-  switch (theme) {
-    case 'light':
-      return { ...buttonStyle, background: '#f7f7f7' }
-    case 'dark':
-      return { ...buttonStyle, background: '#333542', color: '#fff' }
-    case 'classic':
-      return {
-        ...buttonStyle,
-        background: '#fed',
-        borderRadius: '20px',
-        fontStyle: 'italic',
-      }
-  }
-}
+// const getStyle = theme => {
+//   switch (theme) {
+//     case 'light':
+//       return { ...buttonStyle, background: '#f7f7f7' }
+//     case 'dark':
+//       return { ...buttonStyle, background: '#333542', color: '#fff' }
+//     case 'classic':
+//       return {
+//         ...buttonStyle,
+//         background: '#fed',
+//         borderRadius: '20px',
+//         fontStyle: 'italic',
+//       }
+//   }
+// }
 
-<LiveEditor
-  ecosystemId="state-machines/theme"
-  extraScope={{ getStyle }}
-  resultVar="Theme"
->{`
-const cycle = createActor('cycle')
-const [light, dark, classic] = states('light', 'dark', 'classic')\n
-const machine = createMachine(
-  light.on(cycle, dark),
-  dark.on(cycle, classic),
-  classic.on(cycle, light)
-)\n
-function Theme() {
-  const [theme, dispatch] = useReducer(machine, light.type)\n
-  return (
-    <button
-      onClick={() => dispatch(cycle())}
-      style={getStyle(theme)}
-    >Cycle Theme</button>
-  )
-}
-`}</LiveEditor>
+// const cycle = createActor('cycle')
+// const [light, dark, classic] = states('light', 'dark', 'classic')
+
+// const machine = createMachine(
+//   light.on(cycle, dark),
+//   dark.on(cycle, classic),
+//   classic.on(cycle, light)
+// )
+
+// function Theme() {
+//   const [theme, dispatch] = useReducer(machine, light.type)
+
+//   return (
+//     <button onClick={() => dispatch(cycle())} style={getStyle(theme)}>
+//       Cycle Theme
+//     </button>
+//   )
+// }
+```
 
 ## Recap
 

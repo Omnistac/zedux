@@ -3,13 +3,11 @@ id: overview
 title: Overview
 ---
 
-import { LiveEditor } from '../LiveEditor'
-
 Buckle in for a quick description and contrived example of every key feature of Zedux. The [walkthrough](../walkthrough/quick-start) will walk through this list in much more detail.
 
 ## Atoms
 
-Atoms are state containers.
+Atoms are the basic state management unit in Zedux.
 
 ```tsx
 import { atom } from '@zedux/react'
@@ -39,23 +37,25 @@ See [the using atoms walkthrough](../walkthrough/using-atoms).
 
 Injectors are like hooks for atoms.
 
-<LiveEditor ecosystemId="overview/injectors" resultVar="Seconds">{`
+```tsx live ecosystemId=overview/injectors resultVar=Seconds
 const secondsAtom = atom('seconds', () => {
-  const store = injectStore(0)\n
+  const store = injectStore(0)
+
   injectEffect(() => {
-    const intervalId = setInterval(
-      () => store.setState(val => val + 1),
-      1000
-    )\n
+    const intervalId = setInterval(() => store.setState(val => val + 1), 1000)
+
     return () => clearInterval(intervalId)
-  }, [])\n
+  }, [])
+
   return store
-})\n
+})
+
 function Seconds() {
-  const state = useAtomValue(secondsAtom)\n
+  const state = useAtomValue(secondsAtom)
+
   return <div>{state}</div>
 }
-`}</LiveEditor>
+```
 
 See [the creating atoms walkthrough](../walkthrough/creating-atoms#injectors)
 
@@ -108,7 +108,7 @@ See [the creating atoms walkthrough](../walkthrough/creating-atoms) and [the `Io
 
 ### Flags
 
-Atoms can be given flags to raise warnings if they're run in invalid environments.
+Atoms can be given flags. One major use case for these is to raise warnings if a flagged atom is used in invalid environments.
 
 ```tsx
 const axiosAtom = atom('axios', axios, {
@@ -146,13 +146,11 @@ See [the testing guide](/not-done) and [Ecosystem's `.flags` property](../api/cl
 
 Atoms can expose variables to consumers.
 
-```tsx
-import { api, ion } from '@zedux/react'
-
+```tsx live ecosystemId=overview/exports resultVar=Counter
 const counterAtom = ion('counter', () => {
   const store = injectStore(0)
 
-  return api(state).setExports({
+  return api(store).setExports({
     decrement: () => store.setState(state => state - 1),
     increment: () => store.setState(state => state + 1),
   })
@@ -230,22 +228,29 @@ See [the Dependency Injection walkthrough](../walkthrough/dependency-injection).
 
 An atom's value can be a store.
 
-<LiveEditor ecosystemId="overview/stores" resultVar="BigComponent">{`
-const goBig = createActor('goBig')\n
+```tsx live ecosystemId=overview/stores resultVar=BigComponent
+const goBig = createActor('goBig')
+
 const bigAtom = atom('big', () => {
-  const store = injectStore()\n
+  const store = injectStore()
+
   injectEffect(() => {
-    const { subscription } = when(store)
-      .receivesAction(goBig, () => alert('go home'))\n
+    const { subscription } = when(store).receivesAction(goBig, () =>
+      alert('go home')
+    )
+
     return () => subscription.unsubscribe()
-  }, [])\n
+  }, [])
+
   return store
-})\n
+})
+
 function BigComponent() {
-  const { dispatch } = useAtomInstance(bigAtom)\n
+  const { dispatch } = useAtomInstance(bigAtom)
+
   return <button onClick={() => dispatch(goBig())}>Go Big</button>
 }
-`}</LiveEditor>
+```
 
 See [the stores walkthrough](../walkthrough/stores) and [the `Store` class](../api/classes/Store).
 
@@ -335,12 +340,12 @@ Atoms can take parameters. Different params cause new atom instances to be creat
 ```tsx
 const totallyUsefulAtom = atom(
   'totallyUseful',
-  (usefulness: number) => usefulness * 10)
+  (usefulness: number) => usefulness * 10
 )
 
 function MyComponent() {
-  const [totallyUsefulNumber] = totallyUsefulAtom.useState(4.2)
-  const [moreUsefulNumber] = totallyUsefulAtom.useState(0.314159)
+  const [totallyUsefulNumber] = useAtomState(totallyUsefulAtom, [4.2])
+  const [moreUsefulNumber] = useAtomState(totallyUsefulAtom, [0.314159])
   ...
 }
 ```
@@ -352,7 +357,7 @@ See [the quick start](../walkthrough/quick-start#params) and [the using atoms wa
 Atom instances can be destroyed with `ttl` and `maxInstances`.
 
 ```tsx
-const deathStarAtom = atom('deathStar', 'All The Sith', {
+const deathStarAtom = atom('deathStar', 'All the Sith', {
   // destroy excess instances immediately when their ref count reaches 0
   maxInstances: 1,
   // destroy deathStarAtom instances 10 seconds after their ref count reaches 0
@@ -376,16 +381,20 @@ function RandomNumber() {
   const state = useAtomValue(instance) // don't have to re-pass params here
 
   return (
+    {/* instances can be provided over React context */}
     <AtomInstanceProvider instance={instance}>
-      {/* The instance's cached value can be invalidated directly */}
-      <button onClick={() => instance.invalidate()}>Reevaluate atom</button>
       <SomeChild />
     </AtomInstanceProvider>
   )
 }
+
+function SomeChild() {
+  const instance = useAtomConsumer(randomNumAtom) // don't need to pass params
+  ...
+}
 ```
 
-See [the using atoms](../walkthrough/using-atoms#instances) and [context](../walkthrough/context) walkthroughs.
+See the [using atoms](../walkthrough/using-atoms#instances) and [context](../walkthrough/context) walkthroughs.
 
 ### Invalidation
 
@@ -419,57 +428,23 @@ See [`injectInvalidate()`](../api/injectors/injectInvalidate) and [the cache man
 
 Atoms are designed for executing and sharing promises and observables
 
-### Queries
+### `injectEffect`
 
-:::note
-🚧 The `@zedux/react/query` package is under construction
-:::
-
-React Query-style queries are just another type of atom:
+An injector that works just like React's `useEffect`, but in atoms
 
 ```tsx
-import { query, useQuery } from '@zedux/react/query'
+const currentUserDataAtom = ion('userData', ({ get }) => {
+  const userId = get(currentUser).id
+  const store = injectStore()
 
-const fetchUserQuery = query('fetchUser', async (id: string) => {
-  const API_URL = injectAtomSelector(configAtom, config => config.API_URL)
+  injectEffect(() => {
+    fetch(`/api/user/${userId}`)
+      .then(data => data.json())
+      .then(data => store.setState(data))
+  }, [userId])
 
-  const result = await fetch(`${API_URL}/users/${id}`)
-  return result.json()
+  return store
 })
-
-function UserProfile({ id }) {
-  const { data, error, isLoading } = useQuery(fetchUserQuery, [id])
-  ...
-}
-```
-
-See [`query()`](/not-done) and [the side effects walkthrough](../walkthrough/side-effects).
-
-### Mutations
-
-:::note
-🚧 The `@zedux/react/query` package is under construction
-:::
-
-Zedux also has React Query-style mutations:
-
-```tsx
-import { mutation, useMutation } from '@zedux/react/query'
-
-const updateUserMutation = mutation('updateUser', () => {
-  const API_URL = injectAtomSelector(({ get }) => get(configAtom).API_URL)
-
-  return async (newUser: User) => {
-    const result = await axios.post(`${API_URL}/users`, newUser)
-    return result.json()
-  }
-})
-
-function ChangePassword() {
-  const { data, error, isLoading, mutate } = useMutation(updateUserMutation)
-  ...
-  mutate({ ...user, password: newPassword })
-}
 ```
 
 ### Streams
@@ -523,59 +498,22 @@ See [the suspense walkthrough](../walkthrough/suspense)
 
 ## Advanced
 
-### Molecules
-
-:::note
-🚧 Molecules and `injectAllInstances` are under construction
-:::
-
-Molecules are bidirectional accumulators of atoms.
-
-```tsx
-import { atom, injectAllInstances, injectStore, molecule } from '@zedux/react'
-
-const formsMolecule = molecule('forms', () => {
-  const store = injectStore()
-
-  injectAllInstances((injectedAtom, instance) => {
-    store.use({
-      [injectedAtom.key]: {
-        [instance.keyHash]: instance.store,
-      },
-    })
-  })
-})
-
-const registrationFormAtom = atom(
-  'registrationForm',
-  () => ({ email: '', password: '' }),
-  {
-    molecules: [formsMolecule],
-  }
-)
-```
-
-See [the persistence walkthrough](/not-done) and [`molecule()`](/not-done)
-
 ### Hydration
 
 :::note
-🚧 `molecule` and `injectAllInstances` is under construction
+🚧 `ecosystem.hydrate()` is not implemented yet
 :::
 
-Hydrating initial atom state can be done with molecules.
+Hydrating atom state can be done with `ecosystem.hydrate()`.
 
 ```tsx
-const persistenceMolecule = molecule('persistence', () => {
-  const persistedStuff = injectLocalStorage()
+import { createEcosystem } from '@zedux/react'
 
-  injectAllInstances((atom, instance) => {
-    const persistedState = persistedStuff[instance.keyHash]
-
-    if (persistedState) {
-      instance.store.setState(persistedState)
-    }
-  })
+const rootEcosystem = createEcosystem({
+  id: 'root',
+  onReady: ecosystem => {
+    ecosystem.hydrate(serverSnapshot)
+  },
 })
 ```
 
@@ -587,7 +525,7 @@ See [the persistence walkthrough](/not-done).
 🚧 Molecules are under construction
 :::
 
-Atoms (including molecules) can be preloaded to kickstart hydration, alleviate render waterfalls, and bootstrap data from outside Zedux.
+Atoms can be preloaded to kickstart hydration, alleviate render waterfalls, and bootstrap data from outside Zedux.
 
 ```tsx
 import { EcosystemProvider, useEcosystem } from '@zedux/react'
@@ -596,7 +534,11 @@ function App() {
   return (
     <EcosystemProvider
       onReady={ecosystem => {
-        ecosystem.getInstance(persistenceMolecule)
+        ecosystem.getInstance(authAtom)
+        ecosystem.getInstance(initialDataAtom)
+
+        const storage = ecosystem.get(localStorageAtom)
+        ecosystem.hydrate(storage.persistedAtomState)
       }}
     >
       <Routes />
@@ -645,13 +587,13 @@ Use `getPerformanceSnapshot()` to discover which atoms have high reevaluations, 
 Use the profiler to root out the cause of slowdowns.
 
 ```tsx
-import { getPerformanceSnapshot, profiler } from '@zedux/react'
+import { getPerformanceSnapshot, profiler } from '@zedux/react/devtools'
 
-const snapshot = getPerformanceSnapshot()
+const snapshot = getPerformanceSnapshot(ecosystem)
 
-profiler.startRecording()
+profiler.startRecording(ecosystem)
 setTimeout(() => {
-  const diff = profiler.stopRecording()
+  const diff = profiler.stopRecording(ecosystem)
 }, 15000)
 ```
 
@@ -659,14 +601,10 @@ See [the dev tools walkthrough](/not-done)
 
 ### State Hub
 
-:::note
-🚧 The `@zedux/react/state-hub` package is under construction
-:::
-
-Coming Soon! Will be available at `@zedux/react/state-hub`. Provides UIs to easily make use of the dev, debugging, performance, and profiling tools. Plus it's pretty and has cool graphs.
+Available in the `@zedux/react/devtools` package. Provides UIs to easily make use of the dev, debugging, performance, and profiling tools. Plus it's pretty and has cool stuffs.
 
 ```tsx
-import { StateHub } from '@zedux/react/state-hub'
+import { StateHub } from '@zedux/react/devtools'
 
 function App() {
   return (
@@ -678,4 +616,4 @@ function App() {
 }
 ```
 
-See [the state hub walkthrough](/not-done)
+See [the dev tools walkthrough](/not-done)

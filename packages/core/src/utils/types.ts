@@ -1,5 +1,6 @@
 import { Store } from '../api/createStore'
-import { Reducer } from '../types'
+import { MachineStore } from '../api/MachineStore'
+import { EffectData, Reducer } from '../types'
 import { HierarchyType } from './general'
 
 export interface BranchNode extends DiffNodeBase {
@@ -17,6 +18,25 @@ export interface DiffNodeBase {
 
 export interface DiffTree {
   [key: string]: DiffNode
+}
+
+export type MachineEffectHandler<
+  StateNames extends string = string,
+  EventNames extends string = string,
+  Context extends Record<string, any> | undefined = undefined
+> = (
+  effectData: EffectData<
+    MachineStateType<StateNames, Context>,
+    MachineStore<StateNames, EventNames, Context>
+  >
+) => void
+
+export interface MachineStateType<
+  StateNames extends string = string,
+  Context extends Record<string, any> | undefined = undefined
+> {
+  value: StateNames
+  context: Context
 }
 
 export interface NullNode extends DiffNodeBase {

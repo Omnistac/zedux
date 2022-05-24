@@ -3,8 +3,6 @@ id: using-atoms
 title: Using Atoms
 ---
 
-import { LiveEditor } from '../LiveEditor'
-
 In the quick start, we learned a few basic ways to instantiate and consume atoms. In this page, we'll cover more hooks and injectors for atom instantiation and consumption, as well as how to interact with atom instances directly.
 
 ## Dynamic Hooks & Injectors
@@ -17,20 +15,19 @@ All these hooks have complementary injectors. When the injected atom instance's 
 
 Returns a portion or derivation of the state of an atom instance's store. Also ensures that the component only reevaluates when the selector's result changes. Similar to Redux' [`useSelector()`](https://react-redux.js.org/api/hooks#useselector).
 
-<LiveEditor
-  ecosystemId="using-atoms/useAtomSelector"
-  resultVar="SelectorSerendipity"
->{`
+```tsx live ecosystemId=using-atoms/useAtomSelector resultVar=SelectorSerenity
 const countersAtom = atom('counters', () => ({
   a: 0,
-  b: 0
-}))\n
-function SelectorSerendipity() {
+  b: 0,
+}))
+
+function SelectorSerenity() {
   // whenever countersAtom's state changes, this selector will run.
   // If the selector returns a new value, this component will rerender.
-  const counterA = useAtomSelector(countersAtom, ({ a }) => a)
+  const counterA = useAtomSelector(({ get }) => get(countersAtom).a)
   const instance = useAtomInstance(countersAtom)
-  const { setState } = instance\n
+  const { setState } = instance
+
   return (
     <>
       <div>Counter A: {counterA}</div>
@@ -44,7 +41,7 @@ function SelectorSerendipity() {
     </>
   )
 }
-`}</LiveEditor>
+```
 
 If the atom takes params, pass those as the second parameter to `useAtomSelector`:
 
@@ -277,11 +274,13 @@ These exports are constant - they are set the first time an atom instance evalua
 
 Call this to force the atom instance to reevaluate. Outside of testing, there shouldn't be a need for this. Unless you know what you're doing, avoid impure or mutation-oriented patterns that require you to manually invalidate atom instances.
 
-<LiveEditor ecosystemId="using-atoms/invalidate" resultVar="RandomNum">{`
-const randomNumAtom = atom('randomNum', () => Math.floor(Math.random() * 100))\n
+```tsx live ecosystemId=using-atoms/invalidate resultVar=RandomNum
+const randomNumAtom = atom('randomNum', () => Math.floor(Math.random() * 100))
+
 function RandomNum() {
   const instance = useAtomInstance(randomNumAtom)
-  const value = useAtomValue(randomNumAtom)\n
+  const value = useAtomValue(randomNumAtom)
+
   return (
     <>
       <div>Random Number: {value}</div>
@@ -289,7 +288,7 @@ function RandomNum() {
     </>
   )
 }
-`}</LiveEditor>
+```
 
 ### Hooks and Injectors
 

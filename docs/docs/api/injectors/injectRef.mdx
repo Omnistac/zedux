@@ -3,8 +3,6 @@ id: injectRef
 title: injectRef
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 ```ts
 import { injectRef } from '@zedux/react'
 ```
@@ -15,21 +13,26 @@ The returned Ref object has a `.current` property that is set initially to the p
 
 ## Examples
 
-<LiveEditor ecosystemId="injectRef/example" resultVar="Seconds">{`
+```tsx live ecosystemId=injectRef/example resultVar=Seconds
 const secondsAtom = atom('seconds', () => {
-  const ref = injectRef(0)\n
+  const ref = injectRef(0)
+
   injectEffect(() => {
     const intervalId = setInterval(
       () => ref.current++, // doesn't trigger an update
       1000
-    )\n
+    )
+
     return () => clearInterval(intervalId)
-  }, [])\n
+  }, [])
+
   return ref.current
-})\n
+})
+
 function Seconds() {
   const seconds = useAtomValue(secondsAtom)
-  const instance = useAtomInstance(secondsAtom)\n
+  const instance = useAtomInstance(secondsAtom)
+
   return (
     <>
       <div>Unchanging Seconds: {seconds}</div>
@@ -37,7 +40,7 @@ function Seconds() {
     </>
   )
 }
-`}</LiveEditor>
+```
 
 Miscellaneous:
 

@@ -118,7 +118,7 @@ const handlers: {
   },
 }
 
-const rand = btoa(Math.random().toString()).slice(3, 9)
+const rand = Math.random().toString(16).slice(2, 14)
 
 /**
  * Ecosystems aren't reactive. They utilize mutation for performance's sake. But

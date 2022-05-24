@@ -3,7 +3,6 @@ id: atom
 title: atom
 ---
 
-import { LiveEditor } from '../../LiveEditor'
 import { AtomKeyDesc } from '../classes/Atom.mdx'
 
 ```ts
@@ -14,24 +13,34 @@ Where it all starts. `atom()` is a factory for creating normal, everyday atoms. 
 
 ## Example
 
-<LiveEditor ecosystemId="atom/example" resultVar="App">{`
-const simpleAtom = atom('simple', 'super simple state stuffs')\n
-const complexAtom = atom('complex', () => {
-  const store = injectStore({ date: new Date() })\n
-  injectEffect(() => {
-    const intervalId = setInterval(
-      () => store.setState({ date: new Date() }),
-      1000
-    )\n
-    return () => clearInterval(intervalId)
-  }, [])\n
-  return store
-}, {
-  flags: ['side-effect']
-})\n
+```tsx live ecosystemId=atom/example resultVar=App
+const simpleAtom = atom('simple', 'super simple state stuffs')
+
+const complexAtom = atom(
+  'complex',
+  () => {
+    const store = injectStore({ date: new Date() })
+
+    injectEffect(() => {
+      const intervalId = setInterval(
+        () => store.setState({ date: new Date() }),
+        1000
+      )
+
+      return () => clearInterval(intervalId)
+    }, [])
+
+    return store
+  },
+  {
+    flags: ['side-effect'],
+  }
+)
+
 function App() {
   const simple = useAtomValue(simpleAtom)
-  const { date } = useAtomValue(complexAtom)\n
+  const { date } = useAtomValue(complexAtom)
+
   return (
     <>
       <div>simple state: {simple}</div>
@@ -39,7 +48,7 @@ function App() {
     </>
   )
 }
-`}</LiveEditor>
+```
 
 ## Signature
 

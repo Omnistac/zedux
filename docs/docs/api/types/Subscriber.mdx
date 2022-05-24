@@ -3,8 +3,6 @@ id: Subscriber
 title: Subscriber
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 A function passed to [`store.subscribe()`](../classes/Store#subscribe). Zedux will call the function when certain events happen.
 
 ## Subscriber Types
@@ -140,28 +138,31 @@ A reference to the store this effects subscriber is subscribed to.
 
 ## Example
 
-<LiveEditor ecosystemId="Subscriber/example" resultVar="Subscribers">{`
-const store = createStore(null, 1)\n
+```tsx live ecosystemId=Subscriber/example resultVar=Subscribers
+const store = createStore(null, 0)
+
 function Subscribers() {
-  const [log, setLog] = useState('')\n
+  const [log, setLog] = useState('')
+
   useEffect(() => {
     const subscription = store.subscribe({
-      next: (newState, oldState, action) => setLog(
-        log => \`\${log}Next - \${JSON.stringify({
-          newState,
-          oldState,
-          action
-        })}\\n\\n\`
-      ),
-      error: (...params) => setLog(
-        log => \`\${log}Error - \${params}\\n\\n\`
-      ),
-      effects: (...params) => setLog(
-        log => \`\${log}Effect - \${JSON.stringify(params)}\\n\\n\`
-      )
-    })\n
+      next: (newState, oldState, action) =>
+        setLog(
+          log =>
+            `${log}Next - ${JSON.stringify({
+              newState,
+              oldState,
+              action,
+            })}\n\n`
+        ),
+      error: (...params) => setLog(log => `${log}Error - ${params}\n\n`),
+      effects: (...params) =>
+        setLog(log => `${log}Effect - ${JSON.stringify(params)}\n\n`),
+    })
+
     return () => subscription.unsubscribe()
-  }, [])\n
+  }, [])
+
   return (
     <>
       <pre>{log}</pre>
@@ -170,19 +171,21 @@ function Subscribers() {
       <button onClick={() => store.dispatch({ type: 'test' })}>
         Dispatch Action
       </button>
-      <button onClick={() => {
-        try {
-          store.setState(() => {
-            throw new Error('test-error')
-          })
-        } catch (err) {}
-      }}>
+      <button
+        onClick={() => {
+          try {
+            store.setState(() => {
+              throw new Error('test-error')
+            })
+          } catch (err) {}
+        }}
+      >
         Trigger Error
       </button>
     </>
   )
 }
-`}</LiveEditor>
+```
 
 ## Definition
 

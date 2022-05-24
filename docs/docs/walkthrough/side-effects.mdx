@@ -3,8 +3,6 @@ id: side-effects
 title: Side Effects
 ---
 
-import { LiveEditor } from '../LiveEditor'
-
 Zedux stores do not have middleware. Read more on that in the [Redux comparison](../about/redux-comparison). Basic side effects like logging and state persistence can be done by hooking into a store's side effects layer.
 
 In general, side effects should be colocated with the state that triggers them and that they act upon. This is exactly what we do in React thanks to hooks. In Zedux, we can use injectors:
@@ -13,23 +11,29 @@ In general, side effects should be colocated with the state that triggers them a
 
 Your primary weapon for running side effects in atoms. This works just like React's [`useEffect()`](https://reactjs.org/docs/hooks-reference.html#useeffect).
 
-<LiveEditor ecosystemId="side-effects/injectEffect" resultVar="Alert">{`
+```tsx live ecosystemId=side-effects/injectEffect resultVar=Alert
 const alertAtom = atom('alert', () => {
-  const store = injectStore(0)\n
+  const store = injectStore(0)
+
   injectEffect(() => {
-    const state = store.getState()\n
-    if (state === 0) return\n
+    const state = store.getState()
+
+    if (state === 0) return
+
     alert('Hey! You changed the state to ' + state)
-  }, [store.getState()])\n
+  }, [store.getState()])
+
   return store // remember to return the store
-})\n
+})
+
 function Alert() {
-  const [, setState] = useAtomState(alertAtom)\n
+  const [, setState] = useAtomState(alertAtom)
+
   return (
     <button onClick={() => setState(state => state + 1)}>Show Alert</button>
   )
 }
-`}</LiveEditor>
+```
 
 ## Effects Subscribers
 
@@ -170,26 +174,29 @@ As with all subscriptions, it's important to clean up effects subscribers when t
 
 `when()` builders have a `subscription` property, which is a reference to the store subscription created by the `when()` call. Remember to call `subscription.unsubscribe()` in `useEffect` and `injectEffect`:
 
-<LiveEditor ecosystemId="side-effects/cleanup" resultVar="Button">{`
-const triggerAlert = createActor('triggerAlert')\n
+```tsx live ecosystemId=side-effects/cleanup resultVar=Button
+const triggerAlert = createActor('triggerAlert')
+
 const buttonPressAtom = atom('buttonPress', () => {
-  const store = injectStore()\n
+  const store = injectStore()
+
   injectEffect(() => {
-    const { subscription } = when(store).receivesAction(
-      triggerAlert,
-      () => alert('consider it done')
-    )\n
+    const { subscription } = when(store).receivesAction(triggerAlert, () =>
+      alert('consider it done')
+    )
+
     return () => subscription.unsubscribe()
-  }, [store]) // don't have to pass store since it's a stable reference\n
+  }, [store]) // don't have to pass store since it's a stable reference
+
   return store
-})\n
+})
+
 function Button() {
-  const { dispatch } = useAtomInstance(buttonPressAtom)\n
-  return (
-    <button onClick={() => dispatch(triggerAlert())}>Do It</button>
-  )
+  const { dispatch } = useAtomInstance(buttonPressAtom)
+
+  return <button onClick={() => dispatch(triggerAlert())}>Do It</button>
 }
-`}</LiveEditor>
+```
 
 For the full API, see [`when()`](/not-done).
 

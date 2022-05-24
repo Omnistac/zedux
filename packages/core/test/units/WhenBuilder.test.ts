@@ -1,228 +1,178 @@
-import {
-  actionTypes,
-  createActor,
-  createMachine,
-  createStore,
-  states,
-  when,
-} from '@zedux/core/index'
+import { actionTypes, createActor, createStore, when } from '@zedux/core/index'
+import { getDoorMachine, getToggleMachine } from '../utils'
 
-const advance = createActor('advance')
 const doNothing = createActor('doNothing')
-const [a, b, c] = states('a', 'b', 'c')
-
-const machine = createMachine(a.on(advance, b), b.on(advance, c))
+const doSomething = createActor('doSomething')
 
 describe('WhenBuilder', () => {
-  describe('.machine()', () => {
-    test('uses the identity function if no machine selector is passed', () => {
-      const store = createStore(machine)
-      const subscriber = jest.fn()
-
-      when(store).machine().enters('b', subscriber)
-
-      store.dispatch(advance())
-
-      expect(subscriber).toHaveBeenCalledTimes(1)
-      expect(subscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          newState: 'b',
-          oldState: 'a',
-        })
-      )
-    })
-
-    test('uses the machine selector passed', () => {
-      const store = createStore({ machine })
-      const subscriber = jest.fn()
-
-      when(store)
-        .machine(({ machine }) => machine)
-        .leaves(a, subscriber)
-
-      store.dispatch(advance())
-
-      expect(subscriber).toHaveBeenCalledTimes(1)
-      expect(subscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          newState: { machine: 'b' },
-          oldState: { machine: 'a' },
-        })
-      )
-    })
-
-    test('notifies enter() subscribers when the machine is added to the store', () => {
-      const store = createStore()
-      const subscriber = jest.fn()
-
-      when(store).machine().enters(a, subscriber)
-
-      store.dispatch(advance())
-
-      expect(subscriber).not.toHaveBeenCalled()
-
-      store.use(machine)
-
-      expect(subscriber).toHaveBeenCalledTimes(1)
-      expect(subscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          newState: 'a',
-          oldState: undefined,
-        })
-      )
-    })
-
+  describe('.enters()/.leaves()', () => {
     test('calls nothing if the machine state has not changed', () => {
-      const store = createStore(machine)
+      const store = getToggleMachine()
       const subscriber = jest.fn()
 
-      when(store).machine().leaves('a', subscriber)
+      when(store).leaves('a', subscriber)
 
       store.dispatch(doNothing())
 
       expect(subscriber).not.toHaveBeenCalled()
     })
 
-    test('calls nothing if store state changes, but machine state does not', () => {
-      const store = createStore({ machine, other: () => 1 })
+    test('calls nothing if store state changes, but machine status does not', () => {
+      const store = getDoorMachine()
       const subscriber = jest.fn()
 
-      when(store)
-        .machine(({ machine }) => machine)
-        .leaves(a, subscriber)
+      when(store).leaves('open', subscriber)
 
-      store.setState(state => ({ ...state, other: 2 }))
+      store.setContext({ other: 'a' })
 
       expect(subscriber).not.toHaveBeenCalled()
     })
 
     test('registers an onEnter subscriber', () => {
-      const store = createStore(machine)
+      const store = getToggleMachine()
       const subscriber = jest.fn()
 
-      when(store).machine().enters(b, subscriber)
+      when(store).enters('b', subscriber)
 
-      store.dispatch(advance())
+      store.send.toggle()
 
       expect(subscriber).toHaveBeenCalledTimes(1)
       expect(subscriber).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: { type: advance.type },
-          newState: 'b',
-          oldState: 'a',
+          action: {
+            type: actionTypes.HYDRATE,
+            payload: { value: 'b', context: undefined },
+          },
+          newState: { value: 'b', context: undefined },
+          oldState: { value: 'a', context: undefined },
         })
       )
     })
 
     test('registers multiple onEnter subscribers', () => {
-      const store = createStore(machine)
+      const store = getToggleMachine()
       const subscriber1 = jest.fn()
       const subscriber2 = jest.fn()
 
       when(store)
-        .machine()
-        .enters(b, subscriber1)
+        .enters('b', subscriber1)
         .enters('b', subscriber2)
-        .enters(c, subscriber2)
+        .enters('a', subscriber2)
 
-      store.dispatch(advance())
-      store.dispatch(advance())
+      store.send.toggle()
+      store.send.toggle()
 
       expect(subscriber1).toHaveBeenCalledTimes(1)
       expect(subscriber1).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: { type: advance.type },
-          newState: 'b',
-          oldState: 'a',
+          action: {
+            type: actionTypes.HYDRATE,
+            payload: { value: 'b', context: undefined },
+          },
+          newState: { value: 'b', context: undefined },
+          oldState: { value: 'a', context: undefined },
         })
       )
 
       expect(subscriber2).toHaveBeenCalledTimes(2)
       expect(subscriber2).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          action: { type: advance.type },
-          newState: 'c',
-          oldState: 'b',
+          action: {
+            type: actionTypes.HYDRATE,
+            payload: { value: 'a', context: undefined },
+          },
+          newState: { value: 'a', context: undefined },
+          oldState: { value: 'b', context: undefined },
         })
       )
     })
 
     test('registers an onLeave subscriber', () => {
-      const store = createStore(machine)
+      const store = getToggleMachine()
       const subscriber = jest.fn()
 
-      when(store).machine().leaves('a', subscriber)
+      when(store).leaves('a', subscriber)
 
-      store.dispatch(advance())
+      store.send.toggle()
 
       expect(subscriber).toHaveBeenCalledTimes(1)
       expect(subscriber).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: { type: advance.type },
-          newState: 'b',
-          oldState: 'a',
+          action: {
+            type: actionTypes.HYDRATE,
+            payload: { value: 'b', context: undefined },
+          },
+          newState: { value: 'b', context: undefined },
+          oldState: { value: 'a', context: undefined },
         })
       )
     })
 
     test('registers multiple onLeave subscribers', () => {
-      const store = createStore(machine)
+      const store = getToggleMachine()
       const subscriber1 = jest.fn()
       const subscriber2 = jest.fn()
 
       when(store)
-        .machine()
         .leaves('a', subscriber1)
-        .leaves(a, subscriber2)
+        .leaves('a', subscriber2)
         .leaves('b', subscriber2)
 
-      store.dispatch(advance())
-      store.dispatch(advance())
+      store.send.toggle()
+      store.send.toggle()
 
       expect(subscriber1).toHaveBeenCalledTimes(1)
       expect(subscriber1).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: { type: advance.type },
-          newState: 'b',
-          oldState: 'a',
+          action: {
+            type: actionTypes.HYDRATE,
+            payload: { value: 'b', context: undefined },
+          },
+          newState: { value: 'b', context: undefined },
+          oldState: { value: 'a', context: undefined },
         })
       )
 
       expect(subscriber2).toHaveBeenCalledTimes(2)
       expect(subscriber2).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          action: { type: advance.type },
-          newState: 'c',
-          oldState: 'b',
+          action: {
+            type: actionTypes.HYDRATE,
+            payload: { value: 'a', context: undefined },
+          },
+          newState: { value: 'a', context: undefined },
+          oldState: { value: 'b', context: undefined },
         })
       )
     })
 
     test('does not call subscribers when their state has not been entered or left', () => {
-      const store = createStore(machine)
-      const aEnterSubscriber = jest.fn()
-      const bLeaveSubscriber = jest.fn()
-      const cLeaveSubscriber = jest.fn()
+      const store = getDoorMachine()
+      const openEnter = jest.fn()
+      const openLeave = jest.fn()
+      const closedLeave = jest.fn()
 
       when(store)
-        .machine()
-        .enters(a, aEnterSubscriber)
-        .leaves(b, bLeaveSubscriber)
-        .leaves(c, cLeaveSubscriber)
+        .enters('open', openEnter)
+        .leaves('open', openLeave)
+        .leaves('closed', closedLeave)
 
-      store.dispatch(advance())
-      store.dispatch(advance())
+      store.send.buttonPress()
+      store.send.buttonPress()
 
-      expect(aEnterSubscriber).not.toHaveBeenCalled()
-      expect(bLeaveSubscriber).toHaveBeenCalledTimes(1)
-      expect(bLeaveSubscriber).toHaveBeenCalledWith(
+      expect(openEnter).not.toHaveBeenCalled()
+      expect(openLeave).toHaveBeenCalledTimes(1)
+      expect(openLeave).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: { type: advance.type },
-          newState: 'c',
-          oldState: 'b',
+          action: {
+            type: actionTypes.HYDRATE,
+            payload: { value: 'closing', context: { timeoutId: null } },
+          },
+          newState: { value: 'closing', context: { timeoutId: null } },
+          oldState: { value: 'open', context: { timeoutId: null } },
         })
       )
-      expect(cLeaveSubscriber).not.toHaveBeenCalled()
+      expect(closedLeave).not.toHaveBeenCalled()
     })
   })
 
@@ -244,7 +194,7 @@ describe('WhenBuilder', () => {
         })
       )
 
-      store.use(machine)
+      store.use(() => 1)
 
       expect(subscriber).toHaveBeenCalledTimes(2)
       expect(subscriber).toHaveBeenLastCalledWith(
@@ -260,8 +210,8 @@ describe('WhenBuilder', () => {
       const subscriber2 = jest.fn()
 
       when(store)
-        .receivesAction(advance, subscriber)
-        .receivesAction(advance, subscriber2)
+        .receivesAction(doSomething, subscriber)
+        .receivesAction(doSomething, subscriber2)
 
       expect(subscriber).not.toHaveBeenCalled()
       expect(subscriber2).not.toHaveBeenCalled()
@@ -271,19 +221,19 @@ describe('WhenBuilder', () => {
       expect(subscriber).not.toHaveBeenCalled()
       expect(subscriber2).not.toHaveBeenCalled()
 
-      store.dispatch(advance())
+      store.dispatch(doSomething())
 
       expect(subscriber).toHaveBeenCalledTimes(1)
       expect(subscriber).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          action: { type: advance.type },
+          action: { type: doSomething.type },
         })
       )
 
       expect(subscriber2).toHaveBeenCalledTimes(1)
       expect(subscriber2).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          action: { type: advance.type },
+          action: { type: doSomething.type },
         })
       )
     })
@@ -388,14 +338,14 @@ describe('WhenBuilder', () => {
   })
 
   test('.subscription is set to the subscription', () => {
-    const store = createStore(machine)
+    const store = getToggleMachine()
     const subscriber = jest.fn()
 
-    const { subscription } = when(store)
+    const { subscription } = when(store).stateChanges(subscriber)
 
     subscription.unsubscribe()
 
-    store.dispatch({ type: 'b' })
+    store.send.toggle()
 
     expect(subscriber).not.toHaveBeenCalled()
   })

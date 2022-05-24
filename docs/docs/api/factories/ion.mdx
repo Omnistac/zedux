@@ -5,7 +5,6 @@ title: ion
 
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
-import { LiveEditor } from '../../LiveEditor'
 import { AtomKeyDesc } from '../classes/Atom.mdx'
 
 ```ts
@@ -18,8 +17,9 @@ Ions are loosely based off of Recoil's [selectors](https://recoiljs.org/docs/api
 
 ## Example
 
-<LiveEditor ecosystemId="ion/example" resultVar="TempCelsius">{`
-const tempFahrenheit = atom('tempFahrenheit', 32);\n
+```tsx live ecosystemId=ion/example resultVar=TempCelsius
+const tempFahrenheit = atom('tempFahrenheit', 32);
+
 const tempCelsius = ion(
   'tempCelsius',
   ({ get }) => ((get(tempFahrenheit) - 32) * 5) / 9,
@@ -28,12 +28,15 @@ const tempCelsius = ion(
       tempFahrenheit,
       (newValue * 9) / 5 + 32
     ),
-});\n
+});
+
 function TempCelsius() {
   const [tempF, setTempF] = useAtomState(tempFahrenheit);
-  const [tempC, setTempC] = useAtomState(tempCelsius);\n
+  const [tempC, setTempC] = useAtomState(tempCelsius);
+
   const addTenCelsius = () => setTempC(tempC + 10);
-  const addTenFahrenheit = () => setTempF(tempF + 10);\n
+  const addTenFahrenheit = () => setTempF(tempF + 10);
+
   return (
     <div>
       Temp (Celsius): {Math.round(tempC)}
@@ -46,7 +49,7 @@ function TempCelsius() {
     </div>
   );
 }
-`}</LiveEditor>
+```
 
 ## Signature
 

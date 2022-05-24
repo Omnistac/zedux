@@ -34,6 +34,7 @@ module.exports = {
   deploymentBranch: 'gh-pages',
   stylesheets: [
     'https://fonts.googleapis.com/css2?family=Quicksand&display=swap',
+    'https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap',
   ],
   scripts: ['https://unpkg.com/typescript@latest/lib/typescriptServices.js'],
   trailingSlash: false,

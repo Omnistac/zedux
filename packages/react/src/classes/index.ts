@@ -2,7 +2,6 @@ export * from './atoms/Ion' // this .. has to be imported before Atom or the bui
 export * from './atoms/Atom'
 export * from './atoms/AtomBase'
 export * from './atoms/StandardAtomBase'
-export * from './atoms/LocalAtom'
 export * from './instances/AtomInstance'
 export * from './instances/AtomInstanceBase'
 export * from './AtomApi'

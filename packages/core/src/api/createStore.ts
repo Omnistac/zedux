@@ -64,7 +64,7 @@ export class Store<State = any> {
   private _currentState: State
   private _isDispatching?: boolean
   private _rootReducer?: Reducer<State>
-  private _subscribers = new Map<SubscriberObject<State>, boolean>()
+  private _subscribers = new Map<SubscriberObject, boolean>()
 
   constructor(
     initialHierarchy?: HierarchyDescriptor<State>,
@@ -164,7 +164,7 @@ export class Store<State = any> {
     Returns a subscription object. Calling `subscription.unsubscribe()`
     unregisters the subscriber.
   */
-  public subscribe(subscriber: Subscriber<State>) {
+  public subscribe(subscriber: Subscriber<State, this>) {
     const subscriberObj =
       typeof subscriber === 'function' ? { next: subscriber } : subscriber
 
@@ -200,13 +200,13 @@ export class Store<State = any> {
     // as any - this "id" field is hidden from the outside world
     // so it doesn't exist on the Subscriber type
     this._subscribers.set(
-      subscriberObj,
+      subscriberObj as SubscriberObject,
       (subscriberObj as any).id === INTERNAL_SUBSCRIBER_ID
     )
 
     return {
       unsubscribe: () => {
-        this._subscribers.delete(subscriberObj)
+        this._subscribers.delete(subscriberObj as SubscriberObject)
       },
     }
   }
@@ -388,7 +388,7 @@ export class Store<State = any> {
     // Update the stored state
     this._currentState = newState
 
-    let infoObj: EffectData<State> | undefined
+    let infoObj: EffectData<State, this> | undefined
 
     // Clone the subscribers in case of mutation mid-iteration
     const subscribers = [...this._subscribers.keys()]
@@ -413,7 +413,7 @@ export class Store<State = any> {
         }
       }
 
-      subscriber.effects(infoObj as EffectData<State>)
+      subscriber.effects(infoObj)
     }
   }
 

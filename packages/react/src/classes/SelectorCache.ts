@@ -218,9 +218,9 @@ export class SelectorCache {
     }
 
     this.ecosystem._graph.removeDependencies(cacheKey)
+    this.ecosystem._graph.removeNode(cacheKey)
     delete this.caches[cacheKey]
     this.refBaseKeys.delete(cache.selectorRef)
-    this.ecosystem._graph.removeNode(cacheKey)
   }
 
   /**
@@ -229,7 +229,8 @@ export class SelectorCache {
   public _scheduleEvaluation(
     cacheKey: string,
     reason: EvaluationReason,
-    flags: number
+    flags: number,
+    shouldSetTimeout?: boolean
   ) {
     const cache = this.caches[cacheKey]
 
@@ -247,12 +248,15 @@ export class SelectorCache {
     }
     cache.task = task
 
-    this.ecosystem._scheduler.scheduleJob({
-      flags,
-      keyHash: cacheKey,
-      task,
-      type: JobType.EvaluateAtom,
-    })
+    this.ecosystem._scheduler.scheduleJob(
+      {
+        flags,
+        keyHash: cacheKey,
+        task,
+        type: JobType.EvaluateAtom,
+      },
+      shouldSetTimeout
+    )
   }
 
   /**

@@ -30,7 +30,7 @@ In this comparison, we won't use Zedux' React or atomic APIs. Zedux' React usage
 - Redux apps typically have one store. Zedux apps typically create many stores.
 - Both have similar state hydration APIs
 - Redux uses middleware to manage side effects. Zedux uses effects subscribers.
-- Redux uses middleware for plugins. Zedux doesn't offer a dedicated plugin system at the store level (plugins will be at the ecosystem level. 🚧 This feature is under construction).
+- Redux uses middleware for plugins. Zedux doesn't offer a dedicated plugin system at the store level (plugins are at the ecosystem level).
 - In both, stores are observables (streams) of state
 - In Zedux, stores are also observables of actions.
 - In Zedux, store dispatches are completely synchronous.
@@ -47,7 +47,7 @@ RTK - all stores use a reducer.
 import { configureStore } from '@reduxjs/toolkit'
 
 const store = configureStore({
-  reducer: rootReducer
+  reducer: rootReducer,
 })
 ```
 
@@ -79,9 +79,9 @@ const store = configureStore({
     a: reducerA,
     b: combineReducers({
       c: reducerC,
-      d: reducerD
-    })
-  }
+      d: reducerD,
+    }),
+  },
 })
 ```
 
@@ -94,8 +94,8 @@ const store = createStore({
   a: reducerA,
   b: {
     c: reducerC,
-    d: reducerD
-  }
+    d: reducerD,
+  },
 })
 ```
 
@@ -114,7 +114,7 @@ const incrementByAmount = createAction<number>('counter/incrementByAmount')
 
 const initialState = { value: 0 }
 
-const counterReducer = createReducer(initialState, (builder) => {
+const counterReducer = createReducer(initialState, builder => {
   builder
     .addCase(increment, state => {
       state.value++
@@ -169,8 +169,8 @@ const counterSlice = createSlice({
 
 const store = configureStore({
   reducer: {
-    counter: counterSlice.reducer
-  }
+    counter: counterSlice.reducer,
+  },
 })
 
 store.dispatch(counterSlice.actions.increment())
@@ -184,15 +184,13 @@ import { createStore } from '@zedux/react'
 
 const counterStore = createStore(null, { value: 0 })
 
-const increment = () => counterStore.setStateDeep(
-  ({ value }) => ({ value: value + 1 })
-)
-const decrement = () => counterStore.setStateDeep(
-  ({ value }) => ({ value: value + 1 })
-)
+const increment = () =>
+  counterStore.setStateDeep(({ value }) => ({ value: value + 1 }))
+const decrement = () =>
+  counterStore.setStateDeep(({ value }) => ({ value: value + 1 }))
 
 const store = createStore({
-  counter: counterStore
+  counter: counterStore,
 })
 
 increment()
@@ -208,7 +206,7 @@ import { configureStore } from '@reduxjs/toolkit'
 
 const store = configureStore({
   preloadedState: myData,
-  reducer: {}
+  reducer: {},
 })
 ```
 
@@ -253,7 +251,7 @@ const store = createStore()
 store.subscribe({
   effects: ({ newState, oldState }) => {
     console.log('store state updated', { newState, oldState })
-  }
+  },
 })
 ```
 

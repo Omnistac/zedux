@@ -3,8 +3,6 @@ id: useEcosystem
 title: useEcosystem
 ---
 
-import { LiveEditor } from '../../LiveEditor'
-
 ```ts
 import { useEcosystem } from '@zedux/react'
 ```
@@ -15,56 +13,66 @@ See [the ecosystems walkthrough](../../walkthrough/ecosystems) for more info abo
 
 ## Examples
 
-<LiveEditor ecosystemId="useEcosystem/simple-example" resultVar="Seconds">{`
+```tsx live ecosystemId=useEcosystem/simple-example resultVar=Seconds
 const secondsAtom = atom('seconds', () => {
-  const store = injectStore(0)\n
+  const store = injectStore(0)
+
   injectEffect(() => {
-    const intervalId = setInterval(
-      () => store.setState(val => val + 1),
-      1000
-    )\n
+    const intervalId = setInterval(() => store.setState(val => val + 1), 1000)
+
     return () => clearInterval(intervalId)
-  }, [])\n
+  }, [])
+
   return store
-})\n
+})
+
 function Seconds() {
   const ecosystem = useEcosystem()
   const instance = ecosystem.getInstance(secondsAtom)
-  const state = useAtomValue(instance)\n
+  const state = useAtomValue(instance)
+
   return <div>Seconds: {state}</div>
 }
-`}</LiveEditor>
+```
 
-<LiveEditor ecosystemId="useEcosystem/counters-example" resultVar="App">{`
+```tsx live ecosystemId=useEcosystem/counters-example resultVar=App
 const secondsAtom = atom('seconds', (startingNumber: number) => {
-  const store = injectStore(startingNumber)\n
+  const store = injectStore(startingNumber)
+
   injectEffect(() => {
-    const intervalId = setInterval(
-      () => store.setState(val => val + 1),
-      1000
-    )\n
+    const intervalId = setInterval(() => store.setState(val => val + 1), 1000)
+
     return () => clearInterval(intervalId)
-  }, [])\n
+  }, [])
+
   return store
-})\n
+})
+
 function First() {
-  const seconds = useAtomValue(secondsAtom, [0])\n
+  const seconds = useAtomValue(secondsAtom, [0])
+
   return <div>First State: {seconds}</div>
-}\n
+}
+
 function Second() {
-  const seconds = useAtomValue(secondsAtom, [10])\n
+  const seconds = useAtomValue(secondsAtom, [10])
+
   return <div>Second State: {seconds}</div>
-}\n
+}
+
 function App() {
   const [isStarted, setIsStarted] = useState(false)
   const [isFirst, setIsFirst] = useState(true)
-  const ecosystem = useEcosystem()\n
+  const ecosystem = useEcosystem()
+
   const start = () => {
-    setIsStarted(true)\n
+    setIsStarted(true)
+
     // preload both counters, so they start at the same time:
     ecosystem.getInstance(secondsAtom, [0])
     ecosystem.getInstance(secondsAtom, [10])
-  }\n
+  }
+
   return (
     <>
       {!isStarted ? (
@@ -78,7 +86,7 @@ function App() {
     </>
   )
 }
-`}</LiveEditor>
+```
 
 Global and custom ecosystems:
 

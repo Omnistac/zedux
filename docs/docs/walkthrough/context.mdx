@@ -3,28 +3,30 @@ id: context
 title: Context
 ---
 
-import { LiveEditor } from '../LiveEditor'
-
 The atomic model naturally fixes all the problems with React context. In Zedux, we can use React context with all of its benefits and none of its downsides.
 
 The important philosophy here is that Zedux uses [React context for Dependency Injection, not State Management](https://blog.testdouble.com/posts/2021-03-19-react-context-for-dependency-injection-not-state/). That article is an excellent breakdown of this technique.
 
 ## Simple Example
 
-<LiveEditor ecosystemId="context/simple" resultVar="Parent">{`
-const providedAtom = atom('provided', 'the state!')\n
+```tsx live ecosystemId=context/simple resultVar=Parent2
+const providedAtom = atom('provided', 'the state!')
+
 function Child() {
   const instance = useAtomConsumer(providedAtom)
-  const [state, setState] = useAtomState(instance)\n
+  const [state, setState] = useAtomState(instance)
+
   return (
     <>
       <div>Child State (subscribed): {state}</div>
       <button onClick={() => setState('new state!')}>Change</button>
     </>
   )
-}\n
+}
+
 function Parent() {
-  const instance = useAtomInstance(providedAtom)\n
+  const instance = useAtomInstance(providedAtom)
+
   return (
     <AtomInstanceProvider instance={instance}>
       <div>Parent State (not subscribed): {instance.store.getState()}</div>
@@ -32,7 +34,11 @@ function Parent() {
     </AtomInstanceProvider>
   )
 }
-`}</LiveEditor>
+
+function Parent2() {
+  return <Parent />
+}
+```
 
 ## Providing
 
@@ -152,85 +158,6 @@ function Child() {
 }
 ```
 
-## Local Atoms
-
-[Local atoms](../api/classes/LocalAtom) are a type of atom that specializes in React Context.
-
-```ts
-import { localAtom } from '@zedux/react'
-
-const myContextAtom = localAtom('myContext')
-```
-
-The first param of all local atoms is an optional string id. You can pass this string yourself to id local atoms manually. This can be useful e.g. when persisting/rehydrating them, or just so you know what's what when debugging. Manually-id'd local atoms can also be reused anywhere by passing the same id, just like any other normal atom.
-
-If you don't pass an id, Zedux will auto-generate one every time you use the local atom in any hook or injector.
-
-```ts
-injectAtomValue(myContextAtom) // creates a new instance
-injectAtomInstance(myContextAtom) // creates another new instance
-
-useAtomInstance(myContextAtom) // creates another new instance
-useAtomState(myContextAtom) // creates another new instance
-useAtomState(myContextAtom, []) // creates another new instance
-
-useAtomInstance(myContextAtom, ['manual-id']) // creates another new instance
-useAtomInstance(myContextAtom, ['manual-id']) // reuses the 'manual-id' instance
-```
-
-Local atoms also always set [`ttl`](../api/classes/Atom#ttl) to `0`, which will clean up atom instances immediately when all components using the atom instance unmount.
-
-### Example
-
-Local atoms are useful when you just want to provide different atom instances to different component trees.
-
-export const popupStyle = {
-  background: 'rgba(255, 255, 255, 0.4)',
-  boxShadow: '2px 2px 5px 1px rgba(0, 0, 0, 0.2)',
-  padding: '12px',
-  position: 'absolute',
-  top: '8px',
-  right: '20px',
-}
-
-<LiveEditor
-  ecosystemId="context/popup"
-  extraScope={{ popupStyle }}
-  resultVar="Popups"
->{`
-const popupAtom = localAtom('popup', () => ({ isOpen: false }))\n
-function Popup() {
-  const [{ isOpen }, setVal] = useAtomState(useAtomConsumer(popupAtom, []))
-  const toggle = () => setVal(val => ({ ...val, isOpen: !val.isOpen }))\n
-  return (
-    <div>
-      <button onClick={toggle}>
-        {isOpen ? 'Close' : 'Open'}
-      </button>
-      {isOpen && (
-        <div style={popupStyle} onClick={toggle}>
-          I Am Open!!
-        </div>
-      )}
-    </div>
-  )
-}\n
-function Popups() {
-  const instanceA = useAtomInstance(popupAtom)
-  const instanceB = useAtomInstance(popupAtom)\n
-  return (
-    <>
-      <AtomInstanceProvider instance={instanceA}>
-        <Popup />
-      </AtomInstanceProvider>
-      <AtomInstanceProvider instance={instanceB}>
-        <Popup />
-      </AtomInstanceProvider>
-    </>
-  )
-}
-`}</LiveEditor>
-
 ## Recap
 
 - Atom instances can be provided over React context via [`<AtomInstanceProvider>`](../api/components/AtomInstanceProvider).
@@ -239,7 +166,6 @@ function Popups() {
 - `useAtomConsumer(myAtom, true)` throws an error if no atom instance was provided.
 - You can subscribe any component to an atom instance by using [`useAtomValue`](../api/hooks/useAtomValue) or any other hook that creates a [dynamic graph dependency](../api/glossary#dynamic-graph-dependency).
 - `useAtomSelector` will only rerender the component when the selector result changes.
-- Local atoms set their first param to an optional string, which can be used to create multiple atom instances without specifying unique ids.
 
 ## Next Steps
 
