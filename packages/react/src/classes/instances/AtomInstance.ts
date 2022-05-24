@@ -1,9 +1,12 @@
 import {
   ActionChain,
+  createStore,
+  isZeduxStore,
   metaTypes,
   Observable,
   removeAllMeta,
   Settable,
+  Store,
   Subscription,
 } from '@zedux/core'
 import {
@@ -19,6 +22,8 @@ import {
   EvaluationTargetType,
   EvaluationType,
   GraphEdgeInfo,
+  GraphEdgeSignal,
+  PromiseState,
   PromiseStatus,
   StateType,
 } from '@zedux/react/types'
@@ -29,8 +34,12 @@ import {
   JobType,
 } from '@zedux/react/utils'
 import { diContext } from '@zedux/react/utils/csContexts'
+import {
+  getErrorPromiseState,
+  getInitialPromiseState,
+  getSuccessPromiseState,
+} from '@zedux/react/utils/promiseUtils'
 import { Ecosystem } from '../Ecosystem'
-import { createStore, isZeduxStore, Store } from '@zedux/core'
 import { AtomApi } from '../AtomApi'
 import { AtomInstanceBase } from './AtomInstanceBase'
 import { StandardAtomBase } from '../atoms/StandardAtomBase'
@@ -117,14 +126,12 @@ export class AtomInstance<
         return
       }
 
-      this._scheduleDependents(newState, oldState, action)
+      this._handleStateChange(newState, oldState, action)
     })
-
-    if (!this.promise && this._shouldForwardPromise()) this._forwardPromises()
 
     // lol
     this.exports = (this as any).exports || undefined
-    this._promiseStatus = (this as any)._promiseStatus ?? PromiseStatus.Resolved
+    this._promiseStatus = (this as any)._promiseStatus ?? 'success'
 
     this.setActiveState(ActiveState.Active)
   }
@@ -311,7 +318,11 @@ export class AtomInstance<
     this._cancelDestruction = () => subscription.unsubscribe()
   }
 
-  public _scheduleEvaluation = (reason: EvaluationReason, flags = 0) => {
+  public _scheduleEvaluation = (
+    reason: EvaluationReason,
+    flags = 0,
+    shouldSetTimeout?: boolean
+  ) => {
     // TODO: Any calls in this case probably indicate a memory leak on the
     // user's part. Notify them. TODO: Can we pause evaluations while
     // activeState is Stale (and should we just always evaluate once when
@@ -322,16 +333,21 @@ export class AtomInstance<
 
     if (this._nextEvaluationReasons.length > 1) return // job already scheduled
 
-    this.ecosystem._scheduler.scheduleJob({
-      flags,
-      keyHash: this.keyHash,
-      task: this.evaluationTask,
-      type: JobType.EvaluateAtom,
-    })
+    this.ecosystem._scheduler.scheduleJob(
+      {
+        flags,
+        keyHash: this.keyHash,
+        task: this.evaluationTask,
+        type: JobType.EvaluateAtom,
+      },
+      shouldSetTimeout
+    )
   }
 
   // create small, memory-efficient bound function properties we can pass around
-  public invalidate = () => this._invalidate()
+  public invalidate = (operation?: string, targetType?: EvaluationTargetType) =>
+    this._invalidate(operation, targetType)
+
   private evaluate = () => this._evaluate()
   private evaluationTask = () => this._evaluationTask()
 
@@ -363,7 +379,7 @@ export class AtomInstance<
       // even if evaluation errored, we need to update dependents if the store's
       // state changed
       if (this._bufferedUpdate) {
-        this._scheduleDependents(
+        this._handleStateChange(
           this._bufferedUpdate.newState,
           this._bufferedUpdate.oldState,
           this._bufferedUpdate.action
@@ -388,7 +404,6 @@ export class AtomInstance<
    *
    * - A raw value
    * - A Zedux store
-   * - An AtomApi
    * - A function that returns a raw value
    * - A function that returns a Zedux store
    * - A function that returns an AtomApi
@@ -396,14 +411,8 @@ export class AtomInstance<
   private _evaluate() {
     const { _value } = this.atom
 
-    if (is(_value, AtomApi)) {
-      const asAtomApi = _value as AtomApi<State, Exports>
-      this.api = asAtomApi
-      return asAtomApi.value
-    }
-
     if (typeof _value !== 'function') {
-      return _value as AtomValue<State>
+      return _value
     }
 
     try {
@@ -411,25 +420,32 @@ export class AtomInstance<
         ...params: Params
       ) => AtomValue<State> | AtomApi<State, Exports>)(...this.params)
 
-      if (is(val, AtomApi)) {
-        this.api = val as AtomApi<State, Exports>
+      if (!is(val, AtomApi)) return val as AtomValue<State>
 
-        // Exports can only be set on initial evaluation
-        if (this._activeState === ActiveState.Initializing) {
-          this.exports = this.api.exports as Exports
-        }
+      this.api = val as AtomApi<State, Exports>
 
-        if (this.api.promise && this.api.promise !== this.promise) {
-          this._setPromise(this.api.promise)
-        }
-
-        return this.api.value
+      // Exports can only be set on initial evaluation
+      if (this._activeState === ActiveState.Initializing) {
+        this.exports = this.api.exports as Exports
       }
 
-      return val as AtomValue<State>
+      // if api.value is a promise, we ignore api.promise
+      if (
+        typeof ((this.api.value as unknown) as Promise<any>)?.then ===
+        'function'
+      ) {
+        return this._setPromise(
+          (this.api.value as unknown) as Promise<any>,
+          true
+        )
+      } else if (this.api.promise) {
+        this._setPromise(this.api.promise)
+      }
+
+      return this.api.value as AtomValue<State>
     } catch (err) {
       console.error(
-        `Zedux: Error while instantiating atom "${this.atom.key}" with params:`,
+        `Zedux: Error while evaluating atom "${this.atom.key}" with params:`,
         this.params,
         err
       )
@@ -455,7 +471,7 @@ export class AtomInstance<
       )
     }
 
-    // I believe there is no way to cause an evaluation loop when the StateType is Value
+    // there is no way to cause an evaluation loop when the StateType is Value
     if (newStateType === StateType.Value) {
       this.store.setState(
         typeof newFactoryResult === 'function'
@@ -463,18 +479,6 @@ export class AtomInstance<
           : (newFactoryResult as State)
       )
     }
-  }
-
-  private _forwardPromises() {
-    const promises = Object.keys(
-      this.ecosystem._graph.nodes[this.keyHash].dependencies
-    )
-      .map(keyHash => this.ecosystem._instances[keyHash].promise)
-      .filter(Boolean) as Promise<any>[]
-
-    if (!promises.length) return
-
-    this._setPromise(Promise.all(promises))
   }
 
   private _getTtl() {
@@ -488,15 +492,7 @@ export class AtomInstance<
     return typeof ttl === 'function' ? ttl() : ttl
   }
 
-  private _invalidate() {
-    this._scheduleEvaluation({
-      operation: 'invalidate',
-      targetType: EvaluationTargetType.External,
-      type: EvaluationType.CacheInvalidated,
-    })
-  }
-
-  private _scheduleDependents(
+  private _handleStateChange(
     newState: State,
     oldState: State | undefined,
     action: ActionChain
@@ -505,7 +501,8 @@ export class AtomInstance<
       this.keyHash,
       this._nextEvaluationReasons,
       newState,
-      oldState
+      oldState,
+      false
     )
 
     // Set the action's meta field to `metaTypes.SKIP_EVALUATION` to prevent
@@ -531,23 +528,61 @@ export class AtomInstance<
     this.ecosystem._scheduler.flush()
   }
 
-  private _setPromise(promise: Promise<any>) {
-    this.promise = promise
-    this._promiseStatus = PromiseStatus.Pending
+  private _invalidate(
+    operation = 'invalidate',
+    targetType = EvaluationTargetType.External
+  ) {
+    this._scheduleEvaluation(
+      {
+        operation,
+        targetType,
+        type: EvaluationType.CacheInvalidated,
+      },
+      0,
+      false
+    )
 
-    promise
-      .then(() => {
-        this._promiseStatus = PromiseStatus.Resolved
-      })
-      .catch(err => {
-        this._promiseStatus = PromiseStatus.Rejected
-        this._promiseError = err
-      })
+    // run the scheduler synchronously after invalidation
+    this.ecosystem._scheduler.flush()
   }
 
-  private _shouldForwardPromise() {
-    return this.atom.forwardPromises != null
-      ? this.atom.forwardPromises
-      : this.ecosystem.defaultForwardPromises
+  private _setPromise(promise: Promise<any>, isStateUpdater?: boolean) {
+    if (promise === this.promise) return this.store.getState()
+
+    this.promise = promise
+
+    // since we're the first to chain off the returned promise, we don't need to
+    // track the chained promise - it will run first, before React suspense's
+    // `.then` on the thrown promise, for example
+    promise
+      .then(data => {
+        this._promiseStatus = 'success'
+        if (!isStateUpdater) return
+
+        this.store.setState((getSuccessPromiseState(data) as unknown) as State)
+      })
+      .catch(error => {
+        this._promiseStatus = 'error'
+        this._promiseError = error
+        if (!isStateUpdater) return
+
+        this.store.setState((getErrorPromiseState(error) as unknown) as State)
+      })
+
+    const state: PromiseState<any> = getInitialPromiseState()
+    this._promiseStatus = state.status
+
+    this.ecosystem._graph.scheduleDependents(
+      this.keyHash,
+      this._nextEvaluationReasons,
+      undefined,
+      undefined,
+      true,
+      EvaluationType.PromiseChanged,
+      GraphEdgeSignal.Updated,
+      true
+    )
+
+    return (state as unknown) as State
   }
 }

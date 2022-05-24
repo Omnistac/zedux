@@ -4,7 +4,7 @@ import {
   getInitialPromiseState,
   getSuccessPromiseState,
 } from '../utils/promiseUtils'
-import { InjectorDeps, InjectStoreConfig } from '../types'
+import { InjectorDeps } from '../types'
 import { injectEffect } from './injectEffect'
 import { injectMemo } from './injectMemo'
 import { injectStore } from './injectStore'
@@ -13,8 +13,7 @@ import { detailedTypeof } from '@zedux/core/utils/general'
 
 export const injectPromise = <T>(
   getPromise: (controller?: AbortController) => Promise<T>,
-  deps?: InjectorDeps,
-  storeConfig?: InjectStoreConfig
+  deps?: InjectorDeps
 ) => {
   const controller = injectMemo(
     () =>
@@ -25,15 +24,15 @@ export const injectPromise = <T>(
   )
   const promiseRef = injectRef<Promise<T>>()
 
-  const store = injectStore(getInitialPromiseState<T>(), storeConfig)
+  const store = injectStore(getInitialPromiseState())
 
   // setting a ref during evaluation is perfectly fine in Zedux
   promiseRef.current = injectMemo(() => {
     const promise = getPromise(controller)
 
-    if (DEV && typeof promise?.then !== 'function') {
+    if (typeof promise?.then !== 'function') {
       throw new TypeError(
-        `Zedux: injectPromise expected callback to return a promise. Received ${detailedTypeof(
+        `Zedux - injectPromise expected callback to return a promise. Received ${detailedTypeof(
           promise
         )}`
       )
