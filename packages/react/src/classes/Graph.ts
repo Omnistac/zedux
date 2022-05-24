@@ -333,11 +333,14 @@ export class Graph {
         )
       }
 
-      this.ecosystem._scheduler.scheduleJob({
-        flags: dependentEdge.flags,
-        task,
-        type: JobType.UpdateExternalDependent,
-      })
+      this.ecosystem._scheduler.scheduleJob(
+        {
+          flags: dependentEdge.flags,
+          task,
+          type: JobType.UpdateExternalDependent,
+        },
+        shouldSetTimeout
+      )
 
       // mutate the edge; give it the scheduled task so it can be cleaned up
       dependentEdge.task = task
