@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "build-storybook": "build-storybook",
-    "build": "rimraf dist && yarn build:prod && yarn build:dev && yarn build:devtools && cp -r src/ dist/react/src",
+    "build": "rimraf dist && yarn build:prod && yarn build:dev && yarn build:devtools",
     "build:dev": "MODE=development vite build",
     "build:devtools": "PACKAGE=devtools vite build",
     "build:prod": "vite build",
