@@ -4,17 +4,21 @@ import react from '@vitejs/plugin-react'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { join, resolve, sep } from 'path'
 
+const isDev = process.env.MODE === 'development'
+
 const baseGlobals = {
   react: 'React',
   'react-dom': 'ReactDOM',
 }
 const basePlugins = [react(), tsconfigPaths()]
+const constants = { DEV: isDev.toString() }
 const distDir = resolve('dist')
 const numDistPathNodes = distDir.split(sep).filter(Boolean).length
 
 const packages: Record<
   string,
   {
+    define: Record<string, string>
     globals: Record<string, string>
     lib: LibraryOptions
     outDir: string
@@ -22,6 +26,7 @@ const packages: Record<
   }
 > = {
   devtools: {
+    define: constants,
     globals: {
       ...baseGlobals,
       '@zedux/react': 'Zedux',
@@ -41,13 +46,14 @@ const packages: Record<
     ],
   },
   main: {
+    define: constants,
     globals: baseGlobals,
     lib: {
       entry: resolve('./src/index.ts'),
-      fileName: 'zedux-react',
+      fileName: format => `zedux-react.${format}${isDev ? '' : '.min'}.js`,
       name: 'Zedux',
     },
-    outDir: 'dist/react',
+    outDir: isDev ? 'dist/react' : 'dist',
     plugins: [
       dts({
         beforeWriteFile: (filePath, content) => {
@@ -76,7 +82,7 @@ const packages: Record<
             ),
           }
         },
-        include: [resolve('./src'), resolve('../core/src')],
+        include: isDev ? [resolve('./src'), resolve('../core/src')] : [],
       }),
       ...basePlugins,
     ],
@@ -89,6 +95,7 @@ const pkg = packages[process.env.PACKAGE || 'main']
 export default defineConfig({
   build: {
     lib: pkg.lib,
+    minify: isDev ? false : 'esbuild',
     outDir: pkg.outDir,
     rollupOptions: {
       external: Object.keys(pkg.globals),
@@ -98,6 +105,7 @@ export default defineConfig({
     },
     sourcemap: true,
   },
+  define: pkg.define,
   plugins: pkg.plugins,
   server: {
     port: 3030,

@@ -20,7 +20,7 @@ export const createActor: <Payload = undefined, Type extends string = string>(
   : ZeduxActor<Payload, Type> = <Payload, Type extends string>(
   actionType: Type
 ) => {
-  if (typeof actionType !== 'string') {
+  if (DEV && typeof actionType !== 'string') {
     throw new TypeError(
       `Zedux: createActor() - actionType must be a string. Received ${detailedTypeof(
         actionType

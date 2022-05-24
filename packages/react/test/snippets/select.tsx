@@ -65,7 +65,7 @@ function Controls() {
       >
         Increment Other Num
       </button>
-      <button onClick={invalidate}>Invalidate Ion</button>
+      <button onClick={() => invalidate()}>Invalidate Ion</button>
     </>
   )
 }

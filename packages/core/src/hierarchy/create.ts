@@ -4,7 +4,6 @@ import { addMeta } from '../api/meta'
 import { Action, Branch, HierarchyDescriptor, Reducer } from '../types'
 import {
   detailedTypeof,
-  DEV,
   HierarchyType,
   isPlainObject,
   isZeduxStore,

@@ -30,5 +30,5 @@
     "strict": true,
     "target": "es2015"
   },
-  "include": ["./packages"]
+  "include": ["./packages", "global.d.ts"]
 }

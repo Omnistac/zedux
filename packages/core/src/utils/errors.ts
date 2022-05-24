@@ -1,4 +1,4 @@
-import { DEV, noop } from './general'
+import { noop } from './general'
 
 export const assertAreFunctions = DEV
   ? (args: any[], method: string) => {

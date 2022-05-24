@@ -15,7 +15,10 @@
   ],
   "scripts": {
     "build-storybook": "build-storybook",
-    "build": "rimraf dist && tsc && vite build && PACKAGE=devtools vite build",
+    "build": "rimraf dist && yarn build:prod && yarn build:dev && yarn build:devtools && cp -r src/ dist/react/src",
+    "build:dev": "MODE=development vite build",
+    "build:devtools": "PACKAGE=devtools vite build",
+    "build:prod": "vite build",
     "dev": "vite",
     "prepublishOnly": "yarn build",
     "preview": "vite preview",
@@ -57,9 +60,14 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/react/zedux-react.es.js",
-      "require": "./dist/react/zedux-react.umd.js",
-      "default": "./dist/react/zedux-react.umd.js"
+      "development": {
+        "import": "./dist/react/zedux-react.es.js",
+        "require": "./dist/react/zedux-react.umd.js",
+        "default": "./dist/react/zedux-react.umd.js"
+      },
+      "import": "./dist/zedux-react.es.min.js",
+      "require": "./dist/zedux-react.umd.min.js",
+      "default": "./dist/zedux-react.umd.min.js"
     },
     "./devtools": {
       "import": "./dist/react/devtools/zedux-react-devtools.es.js",

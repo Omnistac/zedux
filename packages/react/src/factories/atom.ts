@@ -31,7 +31,7 @@ export const atom: {
   value: AtomValueOrFactory<State, Params, Exports>,
   config?: AtomConfig
 ) => {
-  if (!key) {
+  if (DEV && !key) {
     throw new TypeError('Zedux: All atoms must have a key')
   }
 

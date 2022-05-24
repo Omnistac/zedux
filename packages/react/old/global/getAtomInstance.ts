@@ -17,7 +17,7 @@ export const getAtomInstance = <T, A extends any[]>(
 
   if (appPool.isTestMode && maybeOverriddenAtom.isTestSafe === false) {
     console.error(
-      `Zedux - encountered unsafe atom "${atom.key}". This atom should be overridden when testing`
+      `Zedux: encountered unsafe atom "${atom.key}". This atom should be overridden when testing`
     )
   }
 

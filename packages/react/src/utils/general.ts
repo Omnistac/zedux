@@ -69,7 +69,7 @@ export const split = <T extends InjectorDescriptor>(
     context.injectors.length
   ] as T
 
-  if (!prevDescriptor || prevDescriptor.type !== type) {
+  if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
     throw new Error(
       `Zedux: ${operation} in atom "${context.instance.atom.key}" - injectors cannot be added, removed, or reordered`
     )
@@ -94,7 +94,7 @@ export const validateInjector = <T extends InjectorDescriptor>(
     context.injectors.length
   ] as T
 
-  if (!prevDescriptor || prevDescriptor.type !== type) {
+  if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
     throw new Error(
       `Zedux: ${name} in atom "${context.instance.atom.key}" - injectors cannot be added, removed, or reordered`
     )

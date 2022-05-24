@@ -1,4 +1,4 @@
-import { detailedTypeof, DEV, noop } from '../utils/general'
+import { detailedTypeof, noop } from '../utils/general'
 import {
   Action,
   ActionChain,
