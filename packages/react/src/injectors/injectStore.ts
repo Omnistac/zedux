@@ -21,23 +21,27 @@ const doSubscribe = <State>(
         return
       }
 
-      instance._scheduleEvaluation({
-        newState,
-        oldState,
-        operation: 'injectStore',
-        reasons: [
-          {
-            action,
-            newState,
-            oldState,
-            operation: 'dispatch',
-            targetType: EvaluationTargetType.Store,
-            type: EvaluationType.StateChanged,
-          },
-        ],
-        targetType: EvaluationTargetType.Injector,
-        type: EvaluationType.StateChanged,
-      })
+      instance._scheduleEvaluation(
+        {
+          newState,
+          oldState,
+          operation: 'injectStore',
+          reasons: [
+            {
+              action,
+              newState,
+              oldState,
+              operation: 'dispatch',
+              targetType: EvaluationTargetType.Store,
+              type: EvaluationType.StateChanged,
+            },
+          ],
+          targetType: EvaluationTargetType.Injector,
+          type: EvaluationType.StateChanged,
+        },
+        0,
+        false
+      )
 
       // run the scheduler synchronously after any store update
       instance.ecosystem._scheduler.flush()
