@@ -46,9 +46,9 @@ export class Graph {
     // We're buffering updates! Buffer this one
     const { dependencies, key } = this.updateStack[this.updateStack.length - 1]
 
-    if (key !== dependentKey) {
+    if (DEV && key !== dependentKey) {
       throw new Error(
-        "Zedux - Tried updating dependencies of a graph node that isn't currently evaluating. This means that either you tried updating the graph manually or there is a bug in Zedux. If it's a bug, please report it!"
+        "Zedux: Tried updating dependencies of a graph node that isn't currently evaluating. This means that either you tried updating the graph manually or there is a bug in Zedux. If it's a bug, please report it!"
       )
     }
 

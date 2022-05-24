@@ -1,5 +1,4 @@
 import { Reactable } from '../types'
-import { DEV } from './general'
 
 /**
   Pulls the string action type out of an actor or returns
