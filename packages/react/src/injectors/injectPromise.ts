@@ -24,15 +24,15 @@ export const injectPromise = <T>(
   )
   const promiseRef = injectRef<Promise<T>>()
 
-  const store = injectStore(getInitialPromiseState())
+  const store = injectStore(getInitialPromiseState<T>())
 
   // setting a ref during evaluation is perfectly fine in Zedux
   promiseRef.current = injectMemo(() => {
     const promise = getPromise(controller)
 
-    if (typeof promise?.then !== 'function') {
+    if (DEV && typeof promise?.then !== 'function') {
       throw new TypeError(
-        `Zedux - injectPromise expected callback to return a promise. Received ${detailedTypeof(
+        `Zedux: injectPromise expected callback to return a promise. Received ${detailedTypeof(
           promise
         )}`
       )

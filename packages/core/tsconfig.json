@@ -4,5 +4,5 @@
     "lib": ["ES2020"],
     "outDir": "./dist"
   },
-  "include": ["./src", "./test"]
+  "include": ["./src", "./test", "../../global.d.ts"]
 }

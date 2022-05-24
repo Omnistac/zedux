@@ -2,14 +2,14 @@ import {
   api,
   atom,
   createStore,
-  injectAsyncEffect,
+  injectPromise,
   injectStore,
   useAtomValue,
 } from '@zedux/react'
 import React, { Suspense } from 'react'
 
 const asyncAtom = atom('async', () => {
-  const [promise, asyncStore] = injectAsyncEffect(async () => {
+  const promiseApi = injectPromise(async () => {
     const val = await new Promise<string>((resolve, reject) => {
       setTimeout(() => {
         Math.random() > 0.5 ? resolve('the value!') : reject('the error!')
@@ -23,18 +23,18 @@ const asyncAtom = atom('async', () => {
     () =>
       createStore({
         myReducer: () => 2,
-        asyncStuff: asyncStore,
+        asyncStuff: promiseApi.store,
       }),
     { shouldSubscribe: false }
   )
 
-  return api(store).setPromise(promise)
+  return api(store).setPromise(promiseApi.promise as Promise<any>)
 })
 
 function Child() {
   console.log('running child...')
   const {
-    asyncStuff: { data, error, isError, isIdle, isLoading, isSuccess },
+    asyncStuff: { data, error, isError, isLoading, isSuccess },
   } = useAtomValue(asyncAtom)
 
   return (
@@ -42,11 +42,9 @@ function Child() {
       {isLoading ? (
         <span>Loading...</span>
       ) : isError ? (
-        <span>Error! {error}</span>
+        <span>Error! {error?.message}</span>
       ) : isSuccess ? (
         <span>Success! {data}</span>
-      ) : isIdle ? (
-        <span>Idle...</span>
       ) : (
         <span>?</span>
       )}

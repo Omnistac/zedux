@@ -1,6 +1,6 @@
 import { metaTypes } from '../api/constants'
 import { ActionChain, HierarchyConfig } from '../types'
-import { DEV, HierarchyType } from '../utils/general'
+import { HierarchyType } from '../utils/general'
 import { getMetaData, removeMeta } from '../api/meta'
 import { DiffNode, StoreNode } from '../utils/types'
 

@@ -30,9 +30,13 @@ export const useAtomConsumer: {
   }
 
   if (typeof defaultParams === 'boolean') {
-    throw new ReferenceError(
-      `Zedux: useAtomConsumer - No atom instance was provided for atom "${atom.key}".`
-    )
+    if (DEV) {
+      throw new ReferenceError(
+        `Zedux: useAtomConsumer - No atom instance was provided for atom "${atom.key}".`
+      )
+    } else {
+      return instance as AtomInstanceType<A>
+    }
   }
 
   return ecosystem.getInstance(atom, defaultParams)

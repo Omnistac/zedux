@@ -1,4 +1,5 @@
 const { resolve } = require('path')
+const webpack = require('webpack')
 
 // @ts-check
 
@@ -17,6 +18,7 @@ const PathsPlugin = (context, options) => {
             'react-dom': resolve('node_modules/react-dom'),
           },
         },
+        plugins: [new webpack.DefinePlugin({ DEV: true })],
       }
     },
   }
