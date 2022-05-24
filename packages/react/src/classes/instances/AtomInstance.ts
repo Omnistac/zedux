@@ -388,9 +388,7 @@ export class AtomInstance<
       }
 
       this._prevEvaluationReasons = this._nextEvaluationReasons
-      if (this._activeState !== ActiveState.Initializing) {
-        this._nextEvaluationReasons = []
-      }
+      this._nextEvaluationReasons = []
     }
 
     this._injectors = newInjectors
