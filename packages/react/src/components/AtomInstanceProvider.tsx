@@ -4,12 +4,12 @@ import { AtomInstanceBase } from '../classes'
 
 export const AtomInstanceProvider: FC<
   | {
-      children: ReactNode
+      children?: ReactNode
       instance: AtomInstanceBase<any, any, AnyAtom>
       instances?: undefined
     }
   | {
-      children: ReactNode
+      children?: ReactNode
       instance?: undefined
       instances: AtomInstanceBase<any, any, AnyAtom>[]
     }
