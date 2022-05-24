@@ -1,5 +1,4 @@
 import { createStore } from '@zedux/core'
-import { DEV } from '@zedux/core/utils/general'
 import { createContext } from 'react'
 import { addEcosystem, globalStore, removeEcosystem } from '../store'
 import {
@@ -77,12 +76,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     onReady,
     overrides,
   }: EcosystemConfig<Context>) {
-    if (flags && !Array.isArray(flags)) {
+    if (DEV && flags && !Array.isArray(flags)) {
       throw new TypeError(
         "Zedux: The Ecosystem's `flags` property must be an array of strings"
       )
     }
-    if (overrides && !Array.isArray(overrides)) {
+    if (DEV && overrides && !Array.isArray(overrides)) {
       throw new TypeError(
         "Zedux: The Ecosystem's `overrides` property must be an array of Atom objects"
       )
@@ -546,7 +545,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
       if (DEV && badFlag) {
         console.error(
-          `Zedux - encountered unsafe atom "${atom.key}" with flag "${badFlag}". This atom should be overridden in the current environment.`
+          `Zedux: encountered unsafe atom "${atom.key}" with flag "${badFlag}". This atom should be overridden in the current environment.`
         )
       }
     }

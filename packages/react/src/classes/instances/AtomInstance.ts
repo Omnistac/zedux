@@ -459,13 +459,17 @@ export class AtomInstance<
 
     const newStateType = getStateType(newFactoryResult)
 
-    if (newStateType !== this._stateType) {
+    if (DEV && newStateType !== this._stateType) {
       throw new Error(
         `Zedux: atom factory for atom "${this.atom.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
       )
     }
 
-    if (newStateType === StateType.Store && newFactoryResult !== this.store) {
+    if (
+      DEV &&
+      newStateType === StateType.Store &&
+      newFactoryResult !== this.store
+    ) {
       throw new Error(
         `Zedux: atom factory for atom "${this.atom.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
       )

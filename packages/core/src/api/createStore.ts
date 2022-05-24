@@ -19,7 +19,6 @@ import {
 } from '../types'
 import {
   detailedTypeof,
-  DEV,
   INTERNAL_SUBSCRIBER_ID,
   isPlainObject,
   STORE_IDENTIFIER,
