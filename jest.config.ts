@@ -12,6 +12,7 @@ const config: Config.InitialOptions = {
   collectCoverage: true,
   collectCoverageFrom: ['**/src/**'],
   globals: {
+    DEV: true,
     'ts-jest': {
       tsconfig: jestCompilerOptions,
     },
