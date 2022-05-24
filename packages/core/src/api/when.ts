@@ -8,6 +8,7 @@ import {
 } from '../types'
 import { extractActionType } from '../utils/actor'
 import { assertAreFunctions } from '../utils/errors'
+import { DEV } from '../utils/general'
 import { MachineEffectHandler, MachineStateType } from '../utils/types'
 import { Store } from './createStore'
 import { MachineStore } from './MachineStore'

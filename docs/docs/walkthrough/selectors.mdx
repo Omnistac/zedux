@@ -417,45 +417,10 @@ const getCurrentUser = ({ get, select }: AtomGetters) =>
 const getCurrentUserName = ({ select }: AtomGetters) =>
   select(getCurrentUser)?.name
 
-function Child() {
-  const idInstance = useAtomInstance(currentUserIdAtom)
-  const [isInline, setIsInline] = useState(false)
-  const [text, setText] = useState('')
-
-  const currentUserName = useAtomSelector(
-    isInline
-      ? {
-          resultsComparator: () => true,
-          selector: ({ select }: AtomGetters) => {
-            return select(getCurrentUserName)
-          },
-        }
-      : getCurrentUserName,
-    text,
-    +text
-  )
-
-  return (
-    <div>
-      <button onClick={() => setIsInline(state => !state)}>toggle</button>
-      <input
-        onChange={event => setText(event.currentTarget.value)}
-        value={text}
-      />
-      <span>Hello, {currentUserName}</span>
-      <button onClick={() => idInstance.setState(1)}>One</button>
-      <button onClick={() => idInstance.setState(2)}>Two</button>
-      <button onClick={() => idInstance.setState(3)}>Three</button>
-    </div>
-  )
-}
-
 function Username() {
-  return (
-    <Suspense fallback={<div>suspending..</div>}>
-      <Child />
-    </Suspense>
-  )
+  const currentUserName = useAtomSelector(getCurrentUserName)
+
+  return <div>Hello, {currentUserName}</div>
 }
 ```
 

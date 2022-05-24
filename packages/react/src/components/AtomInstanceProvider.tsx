@@ -3,8 +3,16 @@ import { AnyAtom } from '../types'
 import { AtomInstanceBase } from '../classes'
 
 export const AtomInstanceProvider: FC<
-  | { children: ReactNode; instance: AtomInstanceBase<any, any, AnyAtom>; instances?: undefined }
-  | { children: ReactNode; instance?: undefined; instances: AtomInstanceBase<any, any, AnyAtom>[] }
+  | {
+      children: ReactNode
+      instance: AtomInstanceBase<any, any, AnyAtom>
+      instances?: undefined
+    }
+  | {
+      children: ReactNode
+      instance?: undefined
+      instances: AtomInstanceBase<any, any, AnyAtom>[]
+    }
 > = ({ children, instance, instances }) => {
   if (!instance && !instances) {
     throw new Error(
@@ -15,15 +23,19 @@ export const AtomInstanceProvider: FC<
   const allInstances =
     instances || ([instance] as AtomInstanceBase<any, any, AnyAtom>[])
 
-  if (!allInstances.length) {
-    return <>{children}</>
+  if (allInstances.length === 1) {
+    const context = allInstances[0].atom.getReactContext()
+
+    return (
+      <context.Provider value={allInstances[0]}>{children}</context.Provider>
+    )
   }
 
   const [parentInstance, ...childInstances] = allInstances
   const context = parentInstance.atom.getReactContext()
 
   return (
-    <context.Provider value={allInstances[0]}>
+    <context.Provider value={parentInstance}>
       <AtomInstanceProvider instances={childInstances}>
         {children}
       </AtomInstanceProvider>

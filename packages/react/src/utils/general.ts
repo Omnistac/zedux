@@ -36,12 +36,19 @@ export const haveDepsChanged = (
  * The classToCheck should have a static $$typeof property whose value is a
  * symbol created with Symbol.for() (sharing the symbol reference across realms)
  *
+ * Important! Only one level of inheritance is supported currently - we never
+ * use $$typeof on a child of a child of a class, but if we do need a $$typeof
+ * on the Atom class and the BaseAtom class, for example, we'll need to add
+ * logic here to support that
+ *
  * @param val anything - the thing we're checking
  * @param classToCheck a class with a static $$typeof property
  * @returns boolean - whether val is an instanceof classToCheck
  */
 export const is = (val: any, classToCheck: { $$typeof: symbol }) =>
-  val?.constructor?.$$typeof === classToCheck.$$typeof
+  val?.constructor &&
+  (val.constructor.$$typeof === classToCheck.$$typeof ||
+    Object.getPrototypeOf(val.constructor)?.$$typeof === classToCheck.$$typeof)
 
 export const split = <T extends InjectorDescriptor>(
   operation: string,

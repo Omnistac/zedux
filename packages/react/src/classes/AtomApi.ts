@@ -1,10 +1,4 @@
-import {
-  ActionChain,
-  isZeduxStore,
-  Settable,
-  Store,
-  StoreStateType,
-} from '@zedux/core'
+import { ActionChain, Settable, Store, StoreStateType } from '@zedux/core'
 import {
   AtomInstanceTtl,
   AtomValue,
@@ -119,25 +113,7 @@ export class StoreAtomApi<
   S extends Store,
   Exports extends Record<string, any>
 > extends AtomApi<StoreStateType<S>, Exports> {
-  public static $$typeof = Symbol.for('@@react/zedux/StoreAtomApi')
-  public readonly store: S
-
-  constructor(storeOrApi: S | StoreAtomApi<S, Exports>) {
-    super(storeOrApi)
-    this.store = isZeduxStore(storeOrApi)
-      ? (storeOrApi as S)
-      : (storeOrApi as StoreAtomApi<S, Exports>).store
-  }
-
-  public addExports<NewExports extends Record<string, any>>(
-    exports: NewExports
-  ): StoreAtomApi<S, Exports & NewExports> {
-    return super.addExports(exports) as StoreAtomApi<S, Exports & NewExports>
-  }
-
-  public setExports<NewExports extends Record<string, any>>(
-    exports: NewExports
-  ): StoreAtomApi<S, NewExports> {
-    return super.setExports(exports) as StoreAtomApi<S, NewExports>
+  constructor(public readonly store: S) {
+    super(store)
   }
 }

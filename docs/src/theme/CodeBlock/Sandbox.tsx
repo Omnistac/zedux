@@ -139,6 +139,13 @@ const serialize = (nodes: Descendant[]) =>
     )
     .join('\n')
 
+// modifications and additions to prism library
+
+Prism.languages.javascript = Prism.languages.extend('javascript', {})
+Prism.languages.insertBefore('javascript', 'prolog', {
+  comment: { pattern: /\/\/[^\n]*/, alias: 'comment' },
+})
+
 class ErrorBoundary extends React.Component<any, { hasError: boolean }> {
   constructor(props) {
     super(props)

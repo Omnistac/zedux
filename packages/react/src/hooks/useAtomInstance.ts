@@ -1,14 +1,13 @@
-import { useMemo, useRef, useSyncExternalStore } from 'react'
+import { useMemo, useSyncExternalStore } from 'react'
 import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
 import {
   AtomInstanceType,
   AtomParamsType,
   EdgeFlag,
-  GraphEdgeSignal,
-  PromiseStatus,
   ZeduxHookConfig,
 } from '../types'
 import { useEcosystem } from './useEcosystem'
+import { useReactComponentId } from './useReactComponentId'
 
 const OPERATION = 'useAtomInstance'
 
@@ -46,36 +45,20 @@ export const useAtomInstance: {
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
   params?: AtomParamsType<A>,
-  { operation = OPERATION, startTransition }: ZeduxHookConfig = {
+  { operation = OPERATION }: ZeduxHookConfig = {
     operation: OPERATION,
   }
 ) => {
   const ecosystem = useEcosystem()
-
-  // would be nice if React provided some way to know that multiple hooks are
-  // from the same component. For now, every Zedux hook usage creates a new
-  // graph node
-  const dependentKey = useMemo(
-    () => ecosystem._idGenerator.generateReactComponentId(),
-    []
-  )
+  const dependentKey = useReactComponentId()
 
   // it should be fine for this to run every render. It's possible to change
   // approaches if it is too heavy sometimes. But don't memoize this call:
   const instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
-  const instanceRef = useRef()
-  instanceRef.current = instance
-
-  // Suspense!
-  if (instance.promise) {
-    if (instance._promiseStatus === PromiseStatus.Pending) {
-      throw instance.promise
-    } else if (instance._promiseStatus === PromiseStatus.Rejected) {
-      throw instance._promiseError
-    }
-  }
 
   const [subscribe, getSnapshot] = useMemo(() => {
+    let cachedInstance: typeof instance | undefined = instance
+
     return [
       (onStoreChange: () => void) => {
         // stupid React 18 forcing this function to be idempotent...
@@ -87,17 +70,9 @@ export const useAtomInstance: {
             instance.keyHash,
             operation,
             EdgeFlag.External | EdgeFlag.Static,
-            signal => {
-              if (signal !== GraphEdgeSignal.Destroyed) return
-
-              instanceRef.current = undefined
-
-              if (!startTransition) return onStoreChange()
-
-              // not sure if React actually supports this. It probably should:
-              startTransition(() => {
-                onStoreChange()
-              })
+            () => {
+              cachedInstance = undefined
+              onStoreChange()
             }
           )
         }
@@ -106,16 +81,23 @@ export const useAtomInstance: {
           ecosystem._graph.removeEdge(dependentKey, instance.keyHash)
         }
       },
-      () =>
-        instanceRef.current ||
-        (instanceRef.current = ecosystem.getInstance(
-          atom as A,
-          params as AtomParamsType<A>
-        )),
+      () => {
+        // This hack should work 'cause React can't use the return value unless
+        // it renders this component. And when it rerenders,
+        // `cachedInstance` will get defined again before this point
+        if (!cachedInstance) return cachedInstance as typeof instance
+
+        // Suspense!
+        if (cachedInstance._promiseStatus === 'loading') {
+          throw cachedInstance.promise
+        } else if (cachedInstance._promiseStatus === 'error') {
+          throw cachedInstance._promiseError
+        }
+
+        return cachedInstance
+      },
     ]
-  }, [ecosystem, instance])
+  }, [ecosystem, instance, instance.promise])
 
-  useSyncExternalStore(subscribe, getSnapshot)
-
-  return instance
+  return useSyncExternalStore(subscribe, getSnapshot)
 }
