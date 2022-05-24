@@ -9,6 +9,7 @@ const isDev = process.env.MODE === 'development'
 const baseGlobals = {
   react: 'React',
   'react-dom': 'ReactDOM',
+  'react-dom/client': 'ReactDOMClient',
 }
 const basePlugins = [react(), tsconfigPaths()]
 const constants = { DEV: isDev.toString() }
