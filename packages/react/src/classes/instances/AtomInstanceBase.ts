@@ -75,7 +75,8 @@ export abstract class AtomInstanceBase<
 
   public abstract _scheduleEvaluation(
     reason: EvaluationReason,
-    flags?: number
+    flags?: number,
+    shouldSetTimeout?: boolean
   ): void
 
   public addDependent(
