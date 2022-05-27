@@ -84,18 +84,18 @@ export class AtomInstance<
     StandardAtomBase<State, Params, Exports>
   >
   implements AtomGetters {
+  public activeState = ActiveState.Initializing
   public api?: AtomApi<State, Exports>
   public exports: Exports
   public promise?: Promise<any>
   public store: Store<State>
 
-  public _activeState = ActiveState.Initializing
   public _cancelDestruction?: Cleanup
   public _createdAt = Date.now()
   public _injectors?: InjectorDescriptor[]
   public _isEvaluating = false
   public _nextEvaluationReasons: EvaluationReason[] = []
-  public _prevEvaluationReasons: EvaluationReason[] = []
+  public _prevEvaluationReasons?: EvaluationReason[]
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
   public _stateType?: StateType
@@ -136,6 +136,56 @@ export class AtomInstance<
     this.setActiveState(ActiveState.Active)
   }
 
+  /**
+   * Detach this atom instance from the ecosystem and clean up all graph edges
+   * and other subscriptions/effects created by this atom instance.
+   *
+   * Destruction will bail out if this atom instance still has dependents. Pass
+   * `true` to force-destroy the atom instance anyway.
+   */
+  public destroy(force?: boolean) {
+    if (this.activeState === ActiveState.Destroyed) return
+
+    // If we're not force-destroying, don't destroy if there are dependents
+    if (
+      !force &&
+      Object.keys(this.ecosystem._graph.nodes[this.keyHash]?.dependents || {})
+        .length
+    ) {
+      return
+    }
+
+    this._cancelDestruction?.()
+    this._cancelDestruction = undefined
+
+    this.setActiveState(ActiveState.Destroyed)
+
+    if (this._nextEvaluationReasons.length) {
+      this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
+    }
+
+    // Clean up effect injectors first, then everything else
+    const nonEffectInjectors: InjectorDescriptor[] = []
+    this._injectors?.forEach(injector => {
+      if (injector.type !== InjectorType.Effect) {
+        nonEffectInjectors.push(injector)
+        return
+      }
+      injector.cleanup?.()
+    })
+    nonEffectInjectors.forEach(injector => {
+      injector.cleanup?.()
+    })
+
+    this.ecosystem._graph.removeDependencies(this.keyHash)
+    this._subscription?.unsubscribe()
+    this.ecosystem._destroyAtomInstance(this.keyHash)
+  }
+
+  /**
+   * Call `store.dispatch()` on this atom instance's store. Run any `dispatch`
+   * interceptors from this atom's AtomApi (if any) first.
+   */
   public dispatch = (action: ActionChain) => {
     const val = this.api?.dispatchInterceptors?.length
       ? this.api._interceptDispatch(action, (newAction: ActionChain) =>
@@ -213,6 +263,10 @@ export class AtomInstance<
     return cache.result as T
   }
 
+  /**
+   * Call `store.setState()` on this atom instance's store. Run any `setState`
+   * interceptors from this atom's AtomApi (if any) first.
+   */
   public setState = (settable: Settable<State>, meta?: any) => {
     const val = this.api?.setStateInterceptors?.length
       ? this.api._interceptSetState(settable, (newSettable: Settable<State>) =>
@@ -224,77 +278,40 @@ export class AtomInstance<
   }
 
   /**
-   * Detach this atom instance from the ecosystem and clean up all graph edges
-   * and other subscriptions/effects created by this atom instance.
-   *
-   * Destruction will bail out if this atom instance still has dependents. Pass
-   * `true` to force-destroy the atom instance anyway.
-   */
-  public _destroy(force?: boolean) {
-    if (this._activeState === ActiveState.Destroyed) return
-
-    // If we're not force-destroying, don't destroy if there are dependents
-    if (
-      !force &&
-      Object.keys(this.ecosystem._graph.nodes[this.keyHash]?.dependents || {})
-        .length
-    ) {
-      return
-    }
-
-    this.setActiveState(ActiveState.Destroyed)
-
-    if (this._nextEvaluationReasons.length) {
-      this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
-    }
-
-    // Clean up effect injectors first, then everything else
-    const nonEffectInjectors: InjectorDescriptor[] = []
-    this._injectors?.forEach(injector => {
-      if (injector.type !== InjectorType.Effect) {
-        nonEffectInjectors.push(injector)
-        return
-      }
-      injector.cleanup?.()
-    })
-    nonEffectInjectors.forEach(injector => {
-      injector.cleanup?.()
-    })
-
-    this.ecosystem._graph.removeDependencies(this.keyHash)
-    this._subscription?.unsubscribe()
-    this.ecosystem._destroyAtomInstance(this.keyHash)
-  }
-
-  /**
    * When a standard atom instance's refCount hits 0 and a ttl is set, we set a
    * timeout to destroy this atom instance.
    */
   public _scheduleDestruction() {
     // the atom is already scheduled for destruction or destroyed
-    if (this._activeState !== ActiveState.Active) return
+    if (this.activeState !== ActiveState.Active) return
 
     this.setActiveState(ActiveState.Stale)
     const { maxInstances } = this.atom
 
     if (maxInstances != null) {
-      if (maxInstances === 0) return this._destroy()
+      if (maxInstances === 0) return this.destroy()
 
       const currentCount = this.ecosystem.findInstances(this.atom).length
 
-      if (currentCount > maxInstances) return this._destroy()
+      if (currentCount > maxInstances) return this.destroy()
     }
 
     const ttl = this._getTtl()
     if (ttl == null || ttl === -1) return
-    if (ttl === 0) return this._destroy()
+    if (ttl === 0) return this.destroy()
 
     if (typeof ttl === 'number') {
       // ttl is > 0; schedule destruction
-      const timeoutId = setTimeout(() => this._destroy(), ttl)
+      const timeoutId = setTimeout(() => {
+        this._cancelDestruction = undefined
+        this.destroy()
+      }, ttl)
 
       // TODO: dispatch an action over stateStore for these mutations
-      this._cancelDestruction = () => clearTimeout(timeoutId)
+      this._cancelDestruction = () => {
+        this._cancelDestruction = undefined
+        clearTimeout(timeoutId)
+      }
 
       return
     }
@@ -302,10 +319,12 @@ export class AtomInstance<
     if (typeof (ttl as Promise<any>).then === 'function') {
       let isCanceled = false
       ;(ttl as Promise<any>).then(() => {
-        if (!isCanceled) this._destroy()
+        this._cancelDestruction = undefined
+        if (!isCanceled) this.destroy()
       })
 
       this._cancelDestruction = () => {
+        this._cancelDestruction = undefined
         isCanceled = true
       }
 
@@ -313,9 +332,15 @@ export class AtomInstance<
     }
 
     // ttl is an observable; destroy as soon as it emits
-    const subscription = (ttl as Observable).subscribe(() => this._destroy())
+    const subscription = (ttl as Observable).subscribe(() => {
+      this._cancelDestruction = undefined
+      this.destroy()
+    })
 
-    this._cancelDestruction = () => subscription.unsubscribe()
+    this._cancelDestruction = () => {
+      this._cancelDestruction = undefined
+      subscription.unsubscribe()
+    }
   }
 
   public _scheduleEvaluation = (
@@ -327,7 +352,7 @@ export class AtomInstance<
     // user's part. Notify them. TODO: Can we pause evaluations while
     // activeState is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
-    if (this._activeState === ActiveState.Destroyed) return
+    if (this.activeState === ActiveState.Destroyed) return
 
     this._nextEvaluationReasons.push(reason)
 
@@ -423,7 +448,7 @@ export class AtomInstance<
       this.api = val as AtomApi<State, Exports>
 
       // Exports can only be set on initial evaluation
-      if (this._activeState === ActiveState.Initializing) {
+      if (this.activeState === ActiveState.Initializing) {
         this.exports = this.api.exports as Exports
       }
 

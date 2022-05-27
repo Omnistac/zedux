@@ -78,13 +78,22 @@ export const Log = () => {
     const edgePasses = (edge: DependentEdge) => {
       const { isExplicit, isExternal, isStatic } = edgeTypeFilter
 
-      if (typeof isExplicit !== 'undefined' && !!(edge.flags & EdgeFlag.Explicit) !== isExplicit) {
+      if (
+        typeof isExplicit !== 'undefined' &&
+        !!(edge.flags & EdgeFlag.Explicit) !== isExplicit
+      ) {
         return false
       }
-      if (typeof isExternal !== 'undefined' && !!(edge.flags & EdgeFlag.External) !== isExternal) {
+      if (
+        typeof isExternal !== 'undefined' &&
+        !!(edge.flags & EdgeFlag.External) !== isExternal
+      ) {
         return false
       }
-      if (typeof isStatic !== 'undefined' && !!(edge.flags && EdgeFlag.Static) !== isStatic) {
+      if (
+        typeof isStatic !== 'undefined' &&
+        !!(edge.flags && EdgeFlag.Static) !== isStatic
+      ) {
         return false
       }
 
@@ -94,7 +103,7 @@ export const Log = () => {
     const instancePasses = (instance: AnyAtomInstanceBase) => {
       const passesActiveStateFilter =
         !atomInstanceActiveStateFilter?.length ||
-        atomInstanceActiveStateFilter.includes(instance._activeState)
+        atomInstanceActiveStateFilter.includes(instance.activeState)
 
       if (
         !atomFilter?.length &&
@@ -137,14 +146,19 @@ export const Log = () => {
 
           return (
             edgePasses(edge) &&
-            (dependency.constructor && instancePasses(dependency as AnyAtomInstanceBase) ||
-              (typeof dependent !== 'string' && dependent.constructor && instancePasses(dependent as AnyAtomInstanceBase)))
+            ((dependency.constructor &&
+              instancePasses(dependency as AnyAtomInstanceBase)) ||
+              (typeof dependent !== 'string' &&
+                dependent.constructor &&
+                instancePasses(dependent as AnyAtomInstanceBase)))
           )
         }
         case 'instanceActiveStateChanged':
         case 'stateChanged': {
           const { instance, selectorCache } = event.action.payload as any // TODO
-          return instance ? instancePasses(instance) : selectorPasses(selectorCache)
+          return instance
+            ? instancePasses(instance)
+            : selectorPasses(selectorCache)
         }
         default:
           return false // filter out all other events
