@@ -61,9 +61,9 @@ export const useAtomInstance: {
 
     return [
       (onStoreChange: () => void) => {
-        // stupid React 18 forcing this function to be idempotent...
+        // this function must be idempotent
         if (
-          !ecosystem._graph.nodes[dependentKey]?.dependencies[instance.keyHash]
+          !ecosystem._graph.nodes[instance.keyHash]?.dependents[dependentKey]
         ) {
           ecosystem._graph.addEdge(
             dependentKey,
