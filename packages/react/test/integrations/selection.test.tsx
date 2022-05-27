@@ -48,25 +48,25 @@ describe('selection', () => {
 
     const button = await findByTestId('button')
 
-    expect(selector1).toHaveBeenCalledTimes(1)
-    expect(selector2).toHaveBeenCalledTimes(1)
+    expect(selector1).toHaveBeenCalledTimes(2)
+    expect(selector2).toHaveBeenCalledTimes(2)
     expect((await findByTestId('text')).innerHTML).toBe('a')
 
     act(() => {
       fireEvent.click(button)
+      jest.runAllTimers()
     })
-
-    jest.runAllTimers()
-
-    expect(selector1).toHaveBeenCalledTimes(1)
-    expect(selector2).toHaveBeenCalledTimes(1)
-
-    testEcosystem.weakGetInstance(atom1, ['a'])?.setState('b')
-
-    jest.runAllTimers()
 
     expect(selector1).toHaveBeenCalledTimes(2)
     expect(selector2).toHaveBeenCalledTimes(2)
+
+    act(() => {
+      testEcosystem.weakGetInstance(atom1, ['a'])?.setState('b')
+      jest.runAllTimers()
+    })
+
+    expect(selector1).toHaveBeenCalledTimes(3)
+    expect(selector2).toHaveBeenCalledTimes(3)
     expect((await findByTestId('text')).innerHTML).toBe('b')
   })
 })
