@@ -121,7 +121,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     overrides.forEach(override => {
       const instances = this.findInstances(override)
-      instances.forEach(instance => instance._destroy(true))
+      instances.forEach(instance => instance.destroy(true))
     })
   }
 
@@ -320,7 +320,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     overrides.forEach(override => {
       const instances = this.findInstances(override)
 
-      instances.forEach(instance => instance._destroy(true))
+      instances.forEach(instance => instance.destroy(true))
     })
   }
 
@@ -383,7 +383,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       const instances = this.findInstances(atom)
 
       instances.forEach(instance => {
-        instance._destroy(true)
+        instance.destroy(true)
       })
     })
 
@@ -393,7 +393,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       const instances = this.findInstances(atom)
 
       instances.forEach(instance => {
-        instance._destroy(true)
+        instance.destroy(true)
       })
     })
   }
@@ -480,7 +480,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     // nodes schedule unnecessary reevaaluations to recreate force-destroyed
     // instances
     Object.values(this._instances).forEach(instance => {
-      instance._destroy(true)
+      instance.destroy(true)
     })
 
     this._scheduler.wipe()

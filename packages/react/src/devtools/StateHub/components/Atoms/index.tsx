@@ -53,7 +53,7 @@ export const Atoms = () => {
       // check to see whether any other filters exist. So just do it here since
       // we already checked the other filters)
       return instances.filter(instance =>
-        atomInstanceActiveStateFilter.includes(instance._activeState)
+        atomInstanceActiveStateFilter.includes(instance.activeState)
       )
     }
 
@@ -68,7 +68,7 @@ export const Atoms = () => {
               .includes(partialKeyHash.toLowerCase())
           )) &&
         (!atomInstanceActiveStateFilter?.length ||
-          atomInstanceActiveStateFilter.includes(instance._activeState))
+          atomInstanceActiveStateFilter.includes(instance.activeState))
     )
   }, [
     atomFilter,
