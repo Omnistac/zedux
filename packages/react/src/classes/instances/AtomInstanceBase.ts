@@ -25,15 +25,15 @@ export abstract class AtomInstanceBase<
   AtomType extends AtomBase<State, Params, any>
 > implements AtomGettersBase {
   public static $$typeof = Symbol.for('@@react/zedux/AtomInstanceBase')
+  public abstract activeState: ActiveState
   public abstract atom: AtomType
   public abstract ecosystem: Ecosystem
   public abstract keyHash: string
   public abstract promise?: Promise<any>
   public abstract store: Store<State>
 
-  public abstract _activeState: ActiveState
   public abstract _createdAt: number
-  public abstract _prevEvaluationReasons: EvaluationReason[]
+  public abstract _prevEvaluationReasons?: EvaluationReason[]
   public abstract _injectors?: InjectorDescriptor[]
   public abstract _isEvaluating: boolean
   public abstract _promiseError?: Error
@@ -96,8 +96,8 @@ export abstract class AtomInstanceBase<
   }
 
   public setActiveState(newActiveState: ActiveState) {
-    const oldActiveState = this._activeState
-    this._activeState = newActiveState
+    const oldActiveState = this.activeState
+    this.activeState = newActiveState
 
     if (this.ecosystem.mods.instanceActiveStateChanged) {
       this.ecosystem.modsMessageBus.dispatch(
