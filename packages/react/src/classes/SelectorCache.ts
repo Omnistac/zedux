@@ -5,6 +5,8 @@ import {
   AtomSelectorOrConfig,
   EdgeFlag,
   EvaluationReason,
+  EvaluationTargetType,
+  EvaluationType,
   GraphEdgeInfo,
 } from '../types'
 import { AtomSelectorCache, JobType } from '../utils'
@@ -184,6 +186,59 @@ export class SelectorCache {
   }
 
   /**
+   * Get the string key we would ideally use as the cacheKey of the given
+   * AtomSelector function or AtomSelectorConfig object - doesn't necessarily
+   * mean we end up caching using this key.
+   */
+  public getIdealCacheKey(
+    selectorOrConfig: AtomSelectorOrConfig<any, any>
+  ): string | undefined {
+    const idealKey =
+      selectorOrConfig.name ||
+      (selectorOrConfig as AtomSelectorConfig).selector?.name
+
+    // 'selector' is too generic - it's the key in AtomSelectorConfig objects
+    return idealKey === 'selector' ? undefined : idealKey
+  }
+
+  public invalidate<T = any, Args extends [] = []>(
+    selectorOrConfig: AtomSelectorOrConfig<T, Args>
+  ): void
+
+  public invalidate<T = any, Args extends any[] = []>(
+    selectorOrConfig: AtomSelectorOrConfig<T, Args>,
+    args: Args
+  ): void
+
+  /**
+   * Tell Zedux the data for the given selector + params is stale - the
+   * AtomSelector needs to be rerun.
+   *
+   * Zedux uses this internally. AtomSelectors usually subscribe to anything
+   * that should make them rerun. You shouldn't need to call this yourself.
+   */
+  public invalidate(
+    selectorOrConfig: AtomSelectorOrConfig<any, any[]>,
+    args?: any[]
+  ) {
+    const cache = this.weakGetCache(selectorOrConfig, args as any[])
+    if (!cache) return
+
+    this._scheduleEvaluation(
+      cache.cacheKey,
+      {
+        operation: 'invalidate',
+        type: EvaluationType.CacheInvalidated,
+        targetType: EvaluationTargetType.External,
+      },
+      0,
+      false
+    )
+
+    this.ecosystem._scheduler.flush()
+  }
+
+  /**
    * Get the cache for the given selector. Don't create it if it doesn't exist,
    * just return undefined.
    */
@@ -268,10 +323,7 @@ export class SelectorCache {
 
     if (existingId) return existingId
 
-    const idealKey =
-      selectorOrConfig.name ||
-      (selectorOrConfig as AtomSelectorConfig).selector?.name
-
+    const idealKey = this.getIdealCacheKey(selectorOrConfig)
     const keyExists = !idealKey || this.caches[idealKey]
 
     // if the ideal key is taken, generate a new hash prefixed with the ideal key
