@@ -111,7 +111,7 @@ export const ecosystemAtomInstance = ion(
         if (!instance) return oldSnapshot
 
         const newSnapshot: AtomInstanceSnapshot = {
-          activeState: instance?._activeState,
+          activeState: instance?.activeState,
           instance,
           state: instance?.store.getState(),
         }

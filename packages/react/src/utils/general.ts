@@ -58,7 +58,7 @@ export const split = <T extends InjectorDescriptor>(
 ) => {
   const context = diContext.consume()
 
-  if (context.instance._activeState === ActiveState.Initializing) {
+  if (context.instance.activeState === ActiveState.Initializing) {
     const descriptor = first(context)
     context.injectors.push(descriptor)
 
@@ -86,7 +86,7 @@ export const validateInjector = <T extends InjectorDescriptor>(
   type: InjectorType,
   context: DiContext
 ): T | undefined => {
-  if (context.instance._activeState === ActiveState.Initializing) {
+  if (context.instance.activeState === ActiveState.Initializing) {
     return
   }
 

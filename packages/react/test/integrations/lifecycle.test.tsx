@@ -36,7 +36,7 @@ describe('maxInstances', () => {
     expect(es.get(atomA)).toBe('a')
     expect(es.get(atomB)).toBe('ab')
 
-    instanceB._destroy()
+    instanceB.destroy()
 
     expect(es._instances).toEqual({})
 
@@ -72,14 +72,14 @@ describe('maxInstances', () => {
     expect(es.get(atomB, ['aa'])).toBe('aab')
 
     // The first destruction should destroy the first atomA instance immediately
-    instance1._destroy()
+    instance1.destroy()
 
     expect(es._instances).toEqual({
       'a-["aa"]': expect.any(Object),
       'b-["aa"]': expect.any(Object),
     })
 
-    instance2._destroy()
+    instance2.destroy()
 
     expect(es._instances).toEqual({
       'a-["aa"]': expect.any(Object),

@@ -35,7 +35,7 @@ export const history = atom('history', (instance: AnyAtomInstance) => {
       // store updates are synchronous. Take advantage of that just 'cause:
       if (
         isFromHistory.current ||
-        instance._activeState === ActiveState.Destroyed
+        instance.activeState === ActiveState.Destroyed
       ) {
         return
       }
@@ -64,7 +64,7 @@ export const history = atom('history', (instance: AnyAtomInstance) => {
       index < 0 ||
       index >= stack.length ||
       index === pointer ||
-      instance._activeState === ActiveState.Destroyed
+      instance.activeState === ActiveState.Destroyed
     ) {
       return
     }
