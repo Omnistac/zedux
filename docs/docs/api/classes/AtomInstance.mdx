@@ -53,6 +53,12 @@ function Child() {
 
 Atom instances have the following **readonly** properties:
 
+### `.activeState`
+
+A string representing the status of the atom instance. Can be `Active`, `Destroyed`, `Stale`, or `Initializing`.
+
+You typically shouldn't need to look at this, but there are some cases where you might. For example, when holding a reference to an atom instance outside of React that you expect to be destroyed, you may need to check that `instance.activeState !== 'Destroyed'` before you use it (and if it is, update your local reference using [`ecosystem.getInstance()`](Ecosystem#getinstance)).
+
 ### `.atom`
 
 A reference to the [atom](Atom) that this atom instance was created from.
@@ -150,6 +156,22 @@ A Zedux [store](Store). A reference to this atom instance's store. All atom inst
 ## Methods
 
 Atom instances have the following methods:
+
+### `.destroy`
+
+Destroys the atom instance. Does nothing if the instance is already destroyed. Destruction bails out by default if the atom instance currently has dependents.
+
+Pass `true` to force destruction regardless of whether this atom instance has dependents. This will schedule a task to tell any dependents to automatically create a new instance after this one is destroyed.
+
+#### Signature
+
+```ts
+.destroy(force?) => void
+```
+
+#### `force`
+
+Optional. Default: `false`. If passed, Zedux will not prevent destruction if this atom instance has dependents.
 
 ### `.dispatch`
 

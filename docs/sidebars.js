@@ -3,6 +3,7 @@ module.exports = {
     About: [
       'about/introduction',
       'about/overview',
+      'about/recoil-comparison',
       'about/redux-comparison',
       'about/react-query-comparison',
     ],
