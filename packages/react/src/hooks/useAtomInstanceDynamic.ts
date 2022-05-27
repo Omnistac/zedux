@@ -75,7 +75,7 @@ export const useAtomInstanceDynamic: {
       (onStoreChange: () => void) => {
         // this function must be idempotent
         if (
-          !ecosystem._graph.nodes[dependentKey]?.dependencies[instance.keyHash]
+          !ecosystem._graph.nodes[instance.keyHash]?.dependents[dependentKey]
         ) {
           ecosystem._graph.addEdge(
             dependentKey,
