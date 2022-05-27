@@ -11,6 +11,7 @@ import {
   useAtomValue,
 } from '@zedux/react'
 import React from 'react'
+import { act } from 'react-dom/test-utils'
 
 const testEcosystem = createEcosystem({ id: 'test' })
 
@@ -117,7 +118,9 @@ describe('ecosystem', () => {
     )
     expect(evaluations).toEqual([5, 2, 1, 4, 3])
 
-    testEcosystem.getInstance(atom1).setState('0')
+    act(() => {
+      testEcosystem.getInstance(atom1).setState('0')
+    })
 
     await findByText('1 0 0 2 0 0 2 0')
 
