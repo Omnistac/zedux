@@ -1,5 +1,5 @@
 import {
-  EvaluateAtomJob,
+  EvaluateNodeJob,
   Job,
   JobType,
   UpdateExternalDependentJob,
@@ -38,8 +38,8 @@ export class Scheduler {
   public scheduleJob(newJob: Job, shouldSetTimeout = true) {
     if (newJob.type === JobType.RunEffect) {
       this.scheduledJobs.push(newJob)
-    } else if (newJob.type === JobType.EvaluateAtom) {
-      this.insertEvaluateAtomJob(newJob)
+    } else if (newJob.type === JobType.EvaluateNode) {
+      this.insertEvaluateNodeJob(newJob)
     } else {
       this.insertUpdateExternalDependentJob(newJob)
     }
@@ -89,14 +89,14 @@ export class Scheduler {
     return this.findInsertionIndex(cb, newIndex, iteration + 1)
   }
 
-  // EvaluateAtom jobs go before any other job type and are sorted amongst
+  // EvaluateNode jobs go before any other job type and are sorted amongst
   // themselves by weight - lower weight evaluated first
-  private insertEvaluateAtomJob(newJob: EvaluateAtomJob) {
+  private insertEvaluateNodeJob(newJob: EvaluateNodeJob) {
     const { nodes } = this.ecosystem._graph
     const newJobGraphNode = nodes[newJob.keyHash]
 
     const index = this.findInsertionIndex(job => {
-      if (job.type !== JobType.EvaluateAtom) return -1
+      if (job.type !== JobType.EvaluateNode) return -1
 
       const thatJobGraphNode = nodes[job.keyHash]
       return newJobGraphNode.weight < thatJobGraphNode.weight
@@ -112,11 +112,11 @@ export class Scheduler {
     this.scheduledJobs.splice(index, 0, newJob)
   }
 
-  // UpdateExternalDependent jobs go just after EvaluateAtom jobs, but before
+  // UpdateExternalDependent jobs go just after EvaluateNode jobs, but before
   // anything else (there is only one other job type right now - RunEffect)
   private insertUpdateExternalDependentJob(newJob: UpdateExternalDependentJob) {
     const index = this.findInsertionIndex(job => {
-      if (job.type === JobType.EvaluateAtom) return 1
+      if (job.type === JobType.EvaluateNode) return 1
       if (job.type !== JobType.UpdateExternalDependent) return -1
 
       return newJob.flags < job.flags ? -1 : +(newJob.flags > job.flags)
