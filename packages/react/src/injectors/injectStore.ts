@@ -1,6 +1,10 @@
 import { createStore, metaTypes, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes'
-import { EvaluationType, EvaluationTargetType } from '../types'
+import {
+  EvaluationType,
+  EvaluationTargetType,
+  InjectStoreConfig,
+} from '../types'
 import { split, StoreInjectorDescriptor, InjectorType } from '../utils'
 
 const doSubscribe = <State>(
@@ -87,7 +91,7 @@ const doSubscribe = <State>(
  */
 export const injectStore = <State = any>(
   storeFactory?: State | (() => Store<State>),
-  config?: { shouldSubscribe?: boolean }
+  config?: InjectStoreConfig
 ) => {
   const shouldSubscribe = config?.shouldSubscribe ?? true
 
