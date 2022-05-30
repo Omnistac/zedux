@@ -63,7 +63,7 @@ export class Store<State = any> {
   private _currentState: State
   private _isDispatching?: boolean
   private _rootReducer?: Reducer<State>
-  private _subscribers = new Map<SubscriberObject, boolean>()
+  private _subscribers: SubscriberObject[] = []
 
   constructor(
     initialHierarchy?: HierarchyDescriptor<State>,
@@ -198,14 +198,19 @@ export class Store<State = any> {
 
     // as any - this "id" field is hidden from the outside world
     // so it doesn't exist on the Subscriber type
-    this._subscribers.set(
-      subscriberObj as SubscriberObject,
-      (subscriberObj as any).id === INTERNAL_SUBSCRIBER_ID
-    )
+    if ((subscriberObj as any).id === INTERNAL_SUBSCRIBER_ID) {
+      this._subscribers.unshift(subscriberObj as SubscriberObject)
+    } else {
+      this._subscribers.push(subscriberObj as SubscriberObject)
+    }
 
     return {
       unsubscribe: () => {
-        this._subscribers.delete(subscriberObj as SubscriberObject)
+        const index = this._subscribers.indexOf(
+          subscriberObj as SubscriberObject
+        )
+
+        if (index > -1) this._subscribers.splice(index, 1)
       },
     }
   }
@@ -390,9 +395,11 @@ export class Store<State = any> {
     let infoObj: EffectData<State, this> | undefined
 
     // Clone the subscribers in case of mutation mid-iteration
-    const subscribers = [...this._subscribers.keys()]
+    const subscribers = [...this._subscribers]
 
-    for (const subscriber of subscribers) {
+    for (let i = 0; i < subscribers.length; i++) {
+      const subscriber = subscribers[i]
+
       if (error && subscriber.error) subscriber.error(error)
 
       if (newState !== oldState && subscriber.next) {
