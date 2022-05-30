@@ -319,6 +319,10 @@ export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   ? <D = any>(selector: (state: State) => D) => D
   : <D = any>(params: Params, selector: (state: State) => D) => D
 
+export interface InjectStoreConfig {
+  shouldSubscribe?: boolean
+}
+
 export type IonGet<
   State,
   Params extends any[],
