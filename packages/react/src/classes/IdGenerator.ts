@@ -59,6 +59,8 @@ export class IdGenerator {
    * Generate a graph node key for a React component
    */
   public generateReactComponentId() {
+    if (!DEV) return this.generateId('rc')
+
     const { stack } = new Error()
 
     if (!stack) return ''
