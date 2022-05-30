@@ -4,7 +4,7 @@ import {
   getInitialPromiseState,
   getSuccessPromiseState,
 } from '../utils/promiseUtils'
-import { InjectorDeps } from '../types'
+import { InjectorDeps, InjectStoreConfig } from '../types'
 import { injectEffect } from './injectEffect'
 import { injectMemo } from './injectMemo'
 import { injectStore } from './injectStore'
@@ -13,7 +13,8 @@ import { detailedTypeof } from '@zedux/core/utils/general'
 
 export const injectPromise = <T>(
   getPromise: (controller?: AbortController) => Promise<T>,
-  deps?: InjectorDeps
+  deps?: InjectorDeps,
+  storeConfig?: InjectStoreConfig
 ) => {
   const controller = injectMemo(
     () =>
@@ -24,7 +25,7 @@ export const injectPromise = <T>(
   )
   const promiseRef = injectRef<Promise<T>>()
 
-  const store = injectStore(getInitialPromiseState<T>())
+  const store = injectStore(getInitialPromiseState<T>(), storeConfig)
 
   // setting a ref during evaluation is perfectly fine in Zedux
   promiseRef.current = injectMemo(() => {
