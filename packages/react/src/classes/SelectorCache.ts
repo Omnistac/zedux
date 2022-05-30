@@ -308,7 +308,7 @@ export class SelectorCache {
         flags,
         keyHash: cacheKey,
         task,
-        type: JobType.EvaluateAtom,
+        type: JobType.EvaluateNode,
       },
       shouldSetTimeout
     )

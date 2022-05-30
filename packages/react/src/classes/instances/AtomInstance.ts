@@ -363,7 +363,7 @@ export class AtomInstance<
         flags,
         keyHash: this.keyHash,
         task: this.evaluationTask,
-        type: JobType.EvaluateAtom,
+        type: JobType.EvaluateNode,
       },
       shouldSetTimeout
     )
