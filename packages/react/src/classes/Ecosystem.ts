@@ -1,6 +1,6 @@
 import { createStore } from '@zedux/core'
 import { createContext } from 'react'
-import { addEcosystem, globalStore, removeEcosystem } from '../store'
+import { globalStore, removeEcosystem } from '../store'
 import {
   AnyAtomBase,
   AnyAtomInstance,
@@ -60,7 +60,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public mods: Record<Mod, number> = { ...defaultMods }
   public overrides: Record<string, AnyAtomBase> = {}
   private cleanup?: MaybeCleanup
-  private destructionTimeout?: ReturnType<typeof setTimeout>
   private isInitialized = false
   private plugins: { plugin: ZeduxPlugin; cleanup: Cleanup }[] = []
 
@@ -104,11 +103,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.defaultTtl = defaultTtl ?? -1
     this._destroyOnUnmount = !!destroyOnUnmount
     this._onReady = onReady
-
-    // yep. Dispatch this here. We'll make sure no component can ever be updated
-    // synchronously from this call (causing update-during-render react warnings)
-    globalStore.dispatch(addEcosystem(this))
-
     this.isInitialized = true
     this.cleanup = onReady?.(this)
   }
@@ -135,31 +129,28 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * force destruction anyway.
    */
   public destroy(force?: boolean) {
-    if (this.destructionTimeout || (!force && this._refCount > 0)) return
+    if (!force && this._refCount > 0) return
 
-    this.destructionTimeout = setTimeout(() => {
-      this.destructionTimeout = undefined
-      this.wipe()
+    this.wipe()
 
-      // Check if this ecosystem has been destroyed already
-      const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
-      if (!ecosystem) return
+    // Check if this ecosystem has been destroyed already
+    const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
+    if (!ecosystem) return
 
-      if (this.mods.ecosystemDestroyed) {
-        this.modsMessageBus.dispatch(
-          ZeduxPlugin.actions.ecosystemDestroyed({ ecosystem: this })
-        )
-      }
-
-      this.plugins.forEach(({ cleanup }) => cleanup())
-      this.plugins = []
-
-      globalStore.dispatch(
-        removeEcosystem({
-          ecosystemId: this.ecosystemId,
-        })
+    if (this.mods.ecosystemDestroyed) {
+      this.modsMessageBus.dispatch(
+        ZeduxPlugin.actions.ecosystemDestroyed({ ecosystem: this })
       )
-    })
+    }
+
+    this.plugins.forEach(({ cleanup }) => cleanup())
+    this.plugins = []
+
+    globalStore.dispatch(
+      removeEcosystem({
+        ecosystemId: this.ecosystemId,
+      })
+    )
   }
 
   public findInstances(atom: AtomBase<any, any, any> | string) {
@@ -511,9 +502,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   public _incrementRefCount() {
     this._refCount++
-    if (this._refCount === 1 && this.destructionTimeout) {
-      clearTimeout(this.destructionTimeout)
-    }
   }
 
   private recalculateMods(
