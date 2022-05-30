@@ -65,10 +65,10 @@ export interface EffectInjectorDescriptor extends DepsInjectorDescriptor {
   type: InjectorType.Effect
 }
 
-export interface EvaluateAtomJob extends JobBase {
+export interface EvaluateNodeJob extends JobBase {
   flags: number
   keyHash: string
-  type: JobType.EvaluateAtom
+  type: JobType.EvaluateNode
 }
 
 export interface InjectorDescriptor {
@@ -94,10 +94,10 @@ export interface JobBase {
   type: JobType
 }
 
-export type Job = EvaluateAtomJob | RunEffectJob | UpdateExternalDependentJob
+export type Job = EvaluateNodeJob | RunEffectJob | UpdateExternalDependentJob
 
 export enum JobType {
-  EvaluateAtom = 'EvaluateAtom',
+  EvaluateNode = 'EvaluateNode',
   RunEffect = 'RunEffect',
   UpdateExternalDependent = 'UpdateExternalDependent',
 }
