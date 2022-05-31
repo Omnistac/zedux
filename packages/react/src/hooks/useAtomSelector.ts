@@ -160,7 +160,7 @@ export const useAtomSelector = <T, Args extends any[]>(
   }, [
     ecosystem,
     resolvedArgs,
-    isDifferent ? selectorOrConfig : cacheRef.current?.selectorRef,
+    isDifferent ? selectorOrConfig : cacheRef, // not `.current?.selectorRef`
   ])
 
   // if ref changed but is clearly the "same" selector, swap out the ref and
