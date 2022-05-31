@@ -3,7 +3,6 @@ import { useSyncExternalStore } from 'react'
 import { Ecosystem, ecosystemContext } from '../classes'
 import { createEcosystem } from '../factories/createEcosystem'
 import { useStableReference } from '../hooks/useStableReference'
-import { addEcosystem, globalStore } from '../store'
 import { EcosystemConfig } from '../types'
 
 /**
@@ -50,12 +49,6 @@ export const EcosystemProvider = ({
 
     return [
       () => {
-        // If this ecosystem is shared across windows, it may still need to be added
-        // to this window's instance of Zedux' globalStore
-        if (!globalStore.getState().ecosystems[resolvedEcosystem.ecosystemId]) {
-          globalStore.dispatch(addEcosystem(resolvedEcosystem))
-        }
-
         resolvedEcosystem._incrementRefCount()
 
         return () => resolvedEcosystem._decrementRefCount()
