@@ -105,6 +105,8 @@ export class Graph {
 
       this.scheduleNodeDestruction(dependencyKey)
     })
+
+    this.updateStack.pop()
   }
 
   /**
