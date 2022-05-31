@@ -35,7 +35,7 @@ export class SelectorCache {
    * be used to predictably create selectorKey+params keyHashes to look up the
    * cache in `this._selectorCache`
    */
-  public refBaseKeys = new Map<AtomSelectorOrConfig<any, any[]>, string>()
+  public refBaseKeys = new WeakMap<AtomSelectorOrConfig<any, any[]>, string>()
 
   /**
    * A stack of AtomSelectors that are currently evaluating - innermost selector
@@ -168,14 +168,21 @@ export class SelectorCache {
     args: Args
   ): string
 
+  public getCacheKey<T = any, Args extends any[] = []>(
+    selectorOrConfig: AtomSelectorOrConfig<T, Args>,
+    args: Args,
+    weak: true
+  ): string | undefined
+
   /**
    * Get the fully qualified key hash for the given selector+params combo
    */
   public getCacheKey(
     selectorOrConfig: AtomSelectorOrConfig<any, any[]>,
-    args?: any[]
+    args?: any[],
+    weak?: boolean
   ) {
-    const baseKey = this.getBaseKey(selectorOrConfig)
+    const baseKey = this.getBaseKey(selectorOrConfig, weak)
 
     return args?.length
       ? `${baseKey}-${this.ecosystem._idGenerator.hashParams(
@@ -255,7 +262,9 @@ export class SelectorCache {
     selectorOrConfig: AtomSelectorOrConfig<T, Args>,
     args?: Args
   ) {
-    const cacheKey = this.getCacheKey(selectorOrConfig, args as Args)
+    const cacheKey = this.getCacheKey(selectorOrConfig, args as Args, true)
+    if (!cacheKey) return
+
     return this.caches[cacheKey]
   }
 
@@ -318,10 +327,13 @@ export class SelectorCache {
    * Get a base key that can be used to generate consistent cacheKeys for the
    * given selector
    */
-  private getBaseKey(selectorOrConfig: AtomSelectorOrConfig<any, any[]>) {
+  private getBaseKey(
+    selectorOrConfig: AtomSelectorOrConfig<any, any[]>,
+    weak?: boolean
+  ) {
     const existingId = this.refBaseKeys.get(selectorOrConfig)
 
-    if (existingId) return existingId
+    if (existingId || weak) return existingId
 
     const idealKey = this.getIdealCacheKey(selectorOrConfig)
     const keyExists = !idealKey || this.caches[idealKey]
