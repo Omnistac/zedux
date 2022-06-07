@@ -8,7 +8,7 @@ let idCounter = 0
 
 const generateId = () => {
   idCounter += 1
-  return idCounter
+  return `${idCounter}${Math.random().toString(16).slice(2, 13)}`
 }
 
 export const EMPTY_CONTEXT = {}
