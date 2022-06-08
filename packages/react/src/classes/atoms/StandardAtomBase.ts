@@ -15,7 +15,7 @@ export abstract class StandardAtomBase<
   public readonly maxInstances?: number
   public readonly ttl?: number
 
-  private reactContext?: Context<any>
+  public _reactContext?: Context<any>
 
   constructor(
     public readonly key: string,
@@ -36,8 +36,8 @@ export abstract class StandardAtomBase<
   }
 
   public getReactContext() {
-    if (this.reactContext) return this.reactContext
+    if (this._reactContext) return this._reactContext
 
-    return (this.reactContext = createContext(EMPTY_CONTEXT))
+    return (this._reactContext = createContext(EMPTY_CONTEXT))
   }
 }

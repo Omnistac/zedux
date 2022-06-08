@@ -1,11 +1,17 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
-import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
+import {
+  AtomBase,
+  AtomInstance,
+  AtomInstanceBase,
+  StandardAtomBase,
+} from '../classes'
 import {
   AtomInstanceType,
   AtomParamsType,
   GraphEdgeSignal,
   PromiseStatus,
 } from '../types'
+import { is } from '../utils'
 import { useEcosystem } from './useEcosystem'
 
 /**
@@ -73,6 +79,16 @@ export const useAtomInstance: {
   useLayoutEffect(() => {
     return ghostSubscription.materialize()
   }, [ghostSubscription])
+
+  // sync React contexts across realms (e.g. windows) - if an atom instance was
+  // created in one realm and used in another, the atom used to create the
+  // instance is different from the atom used to get the existing instance in
+  // the current realm. This only causes a problem with React context since we
+  // store the context object on the atom object itself (for now)
+  if (instance.atom !== atom && !is(atom, AtomInstanceBase)) {
+    ;((atom as unknown) as StandardAtomBase<any, any, any>)._reactContext =
+      instance.atom._reactContext
+  }
 
   return instance
 }
