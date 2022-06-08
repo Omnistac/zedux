@@ -86,8 +86,11 @@ export const useAtomInstance: {
   // the current realm. This only causes a problem with React context since we
   // store the context object on the atom object itself (for now)
   if (instance.atom !== atom && !is(atom, AtomInstanceBase)) {
-    ;((atom as unknown) as StandardAtomBase<any, any, any>)._reactContext =
-      instance.atom._reactContext
+    ;((atom as unknown) as StandardAtomBase<
+      any,
+      any,
+      any
+    >)._reactContext = instance.atom.getReactContext()
   }
 
   return instance
