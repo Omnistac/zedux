@@ -256,7 +256,7 @@ export class AtomInstance<
       return this.ecosystem.select(selectorOrConfig, ...args)
     }
 
-    const cache = this.ecosystem._selectorCache.getCache(selectorOrConfig, args)
+    const cache = this.ecosystem.selectorCache.getCache(selectorOrConfig, args)
 
     this.ecosystem._graph.addEdge(this.keyHash, cache.cacheKey, 'select', 0)
 
@@ -291,7 +291,9 @@ export class AtomInstance<
     if (maxInstances != null) {
       if (maxInstances === 0) return this.destroy()
 
-      const currentCount = this.ecosystem.findInstances(this.atom).length
+      const currentCount = Object.keys(
+        this.ecosystem.inspectInstances(this.atom)
+      ).length
 
       if (currentCount > maxInstances) return this.destroy()
     }

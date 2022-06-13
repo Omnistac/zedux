@@ -36,7 +36,7 @@ const isRefDifferent = (
 ) => {
   if (!cacheRef.current) return true
 
-  const oldSelector = cacheRef.current?.selectorRef
+  const oldSelector = cacheRef.current.selectorRef
 
   if (newSelector === oldSelector) return false
 
@@ -50,8 +50,8 @@ const isRefDifferent = (
 
   if (newIsFunction !== oldIsFunction) return true
 
-  const newKey = ecosystem._selectorCache.getIdealCacheKey(newSelector)
-  const oldKey = ecosystem._selectorCache.getIdealCacheKey(oldSelector)
+  const newKey = ecosystem.selectorCache.getIdealCacheKey(newSelector)
+  const oldKey = ecosystem.selectorCache.getIdealCacheKey(oldSelector)
 
   if (newKey !== oldKey) return true
 
@@ -114,7 +114,7 @@ export const useAtomSelector = <T, Args extends any[]>(
 
     return [
       (onStoreChange: () => void) => {
-        const cache = ecosystem._selectorCache.getCache(
+        const cache = ecosystem.selectorCache.getCache(
           selectorOrConfig,
           resolvedArgs
         )
@@ -160,14 +160,14 @@ export const useAtomSelector = <T, Args extends any[]>(
   }, [
     ecosystem,
     resolvedArgs,
-    isDifferent ? selectorOrConfig : cacheRef, // not `.current?.selectorRef`
+    isDifferent && cacheRef.current ? selectorOrConfig : cacheRef, // not `.current?.selectorRef`
   ])
 
   // if ref changed but is clearly the "same" selector, swap out the ref and
   // invalidate the cache
   if (hasRefChanged && !isDifferent && cacheRef.current) {
     cacheRef.current.selectorRef = selectorOrConfig
-    ecosystem._selectorCache.invalidate(selectorOrConfig, resolvedArgs)
+    ecosystem.selectorCache.invalidateCache(selectorOrConfig, resolvedArgs)
   }
 
   return useSyncExternalStore(subscribe, getSnapshot)

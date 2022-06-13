@@ -23,7 +23,7 @@ export const useAtomConsumer: {
   defaultParams?: AtomParamsType<A> | true
 ) => {
   const ecosystem = useEcosystem()
-  const instance = useContext(atom.getReactContext())
+  const instance = useContext(ecosystem._getReactContext(atom))
 
   if (!defaultParams || is(instance, AtomInstanceBase)) {
     return instance as AtomInstanceType<A>

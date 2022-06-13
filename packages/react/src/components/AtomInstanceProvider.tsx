@@ -1,6 +1,7 @@
 import React, { FC, ReactNode } from 'react'
 import { AnyAtom } from '../types'
 import { AtomInstanceBase } from '../classes'
+import { useEcosystem } from '../hooks'
 
 export const AtomInstanceProvider: FC<
   | {
@@ -14,6 +15,8 @@ export const AtomInstanceProvider: FC<
       instances: AtomInstanceBase<any, any, AnyAtom>[]
     }
 > = ({ children, instance, instances }) => {
+  const ecosystem = useEcosystem()
+
   if (DEV && !instance && !instances) {
     throw new Error(
       'Zedux: AtomInstanceProvider requires either an `instance` or `instances` prop'
@@ -24,7 +27,7 @@ export const AtomInstanceProvider: FC<
     instances || ([instance] as AtomInstanceBase<any, any, AnyAtom>[])
 
   if (allInstances.length === 1) {
-    const context = allInstances[0].atom.getReactContext()
+    const context = ecosystem._getReactContext(allInstances[0].atom)
 
     return (
       <context.Provider value={allInstances[0]}>{children}</context.Provider>
@@ -32,7 +35,7 @@ export const AtomInstanceProvider: FC<
   }
 
   const [parentInstance, ...childInstances] = allInstances
-  const context = parentInstance.atom.getReactContext()
+  const context = ecosystem._getReactContext(parentInstance.atom)
 
   return (
     <context.Provider value={parentInstance}>
