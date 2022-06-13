@@ -93,6 +93,10 @@ export const useAtomSelector = <T, Args extends any[]>(
   const ecosystem = useEcosystem()
   const dependentKey = useReactComponentId()
   const cacheRef = useRef<AtomSelectorCache<T, Args>>()
+
+  // crazy stuff... we need to toggle a single param we pass to useMemo but keep
+  // it constant on subsequent renders after toggling
+  const toggler = useRef(false)
   const isConfig = typeof selectorOrConfig !== 'function'
 
   const argsChanged =
@@ -107,6 +111,11 @@ export const useAtomSelector = <T, Args extends any[]>(
   const hasRefChanged = selectorOrConfig !== cacheRef.current?.selectorRef
   const isDifferent =
     argsChanged || isRefDifferent(ecosystem, selectorOrConfig, cacheRef)
+
+  if (isDifferent) {
+    // yes, this mutation is fine
+    toggler.current = !toggler.current
+  }
 
   const [subscribe, getSnapshot] = useMemo(() => {
     let localCache: T
@@ -157,11 +166,7 @@ export const useAtomSelector = <T, Args extends any[]>(
         )
       },
     ]
-  }, [
-    ecosystem,
-    resolvedArgs,
-    isDifferent && cacheRef.current ? selectorOrConfig : cacheRef, // not `.current?.selectorRef`
-  ])
+  }, [ecosystem, resolvedArgs, toggler.current])
 
   // if ref changed but is clearly the "same" selector, swap out the ref and
   // invalidate the cache
