@@ -1,6 +1,6 @@
 {
   "name": "@zedux/react",
-  "version": "0.5.0-rc.0",
+  "version": "0.5.0-rc.1",
   "description": "A Molecular State Engine for React",
   "main": "./dist/zedux-react.umd.min.js",
   "module": "./dist/zedux-react.es.min.js",
