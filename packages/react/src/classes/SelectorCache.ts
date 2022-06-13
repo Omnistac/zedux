@@ -3,6 +3,8 @@ import {
   AtomParamsType,
   AtomSelectorConfig,
   AtomSelectorOrConfig,
+  Cleanup,
+  DependentEdge,
   EdgeFlag,
   EvaluationReason,
   EvaluationTargetType,
@@ -28,22 +30,22 @@ export class SelectorCache {
    * Map selectorKey+params keyHash strings to the cached params and result for
    * the selector
    */
-  public caches: Record<string, AtomSelectorCache<any, any[]>> = {}
+  public _caches: Record<string, AtomSelectorCache<any, any[]>> = {}
 
   /**
    * Map selectors (or selector config objects) to a base selectorKey that can
    * be used to predictably create selectorKey+params keyHashes to look up the
-   * cache in `this._selectorCache`
+   * cache in `this._caches`
    */
-  public refBaseKeys = new WeakMap<AtomSelectorOrConfig<any, any[]>, string>()
+  public _refBaseKeys = new WeakMap<AtomSelectorOrConfig<any, any[]>, string>()
 
   /**
    * A stack of AtomSelectors that are currently evaluating - innermost selector
    * (the one that's actually currently evaluating) at the end of the array
    */
-  private evaluatingStack: string[] = []
+  private _evaluatingStack: string[] = []
 
-  private atomGetters: AtomGetters
+  private _atomGetters: AtomGetters
 
   constructor(private readonly ecosystem: Ecosystem) {
     const get: AtomGetters['get'] = ((atomOrInstance, params) => {
@@ -51,12 +53,12 @@ export class SelectorCache {
 
       // when called outside AtomSelector evaluation, get() is just an alias for
       // ecosystem.get()
-      if (!this.evaluatingStack.length) return instance.store.getState()
+      if (!this._evaluatingStack.length) return instance.store.getState()
 
       // if get is called during evaluation, track the required atom instances so
       // we can add graph edges for them
       ecosystem._graph.addEdge(
-        this.evaluatingStack[this.evaluatingStack.length - 1],
+        this._evaluatingStack[this._evaluatingStack.length - 1],
         instance.keyHash,
         'get',
         0
@@ -79,12 +81,12 @@ export class SelectorCache {
 
       // when called outside AtomSelector evaluation, getInstance() is just an alias
       // for ecosystem.getInstance()
-      if (!this.evaluatingStack.length) return instance
+      if (!this._evaluatingStack.length) return instance
 
       // if getInstance is called during evaluation, track the required atom
       // instances so we can add graph edges for them
       ecosystem._graph.addEdge(
-        this.evaluatingStack[this.evaluatingStack.length - 1],
+        this._evaluatingStack[this._evaluatingStack.length - 1],
         instance.keyHash,
         edgeInfo?.[1] || 'getInstance',
         edgeInfo?.[0] ?? EdgeFlag.Static
@@ -98,14 +100,14 @@ export class SelectorCache {
       ...args: Args
     ) => {
       // when called outside AtomSelector evaluation, select() is just an alias for ecosystem.select()
-      if (!this.evaluatingStack.length) {
+      if (!this._evaluatingStack.length) {
         return ecosystem.select(selectorOrConfig, ...args)
       }
 
       const cache = this.getCache(selectorOrConfig, args)
 
       ecosystem._graph.addEdge(
-        this.evaluatingStack[this.evaluatingStack.length - 1],
+        this._evaluatingStack[this._evaluatingStack.length - 1],
         cache.cacheKey,
         'select',
         0
@@ -114,12 +116,67 @@ export class SelectorCache {
       return cache.result as T
     }
 
-    this.atomGetters = {
+    this._atomGetters = {
       ecosystem,
       get,
       getInstance,
       select,
     }
+  }
+
+  public addDependent(
+    cache: AtomSelectorCache<any, any>,
+    {
+      callback,
+      operation = 'addDependent',
+    }: {
+      callback?: DependentEdge['callback']
+      operation?: string
+    } = {}
+  ): Cleanup {
+    const id = this.ecosystem._idGenerator.generateNodeId()
+    this.ecosystem._graph.addEdge(
+      id,
+      cache.cacheKey,
+      operation,
+      EdgeFlag.Explicit | EdgeFlag.External,
+      callback
+    )
+
+    return () => this.ecosystem._graph.removeEdge(id, cache.cacheKey)
+  }
+
+  public destroyCache<T = any, Args extends [] = []>(
+    selectorOrConfig: AtomSelectorOrConfig<T, Args>
+  ): void
+
+  public destroyCache<T = any, Args extends any[] = []>(
+    selectorOrConfig: AtomSelectorOrConfig<T, Args>,
+    args: Args,
+    force?: boolean
+  ): void
+
+  /**
+   * Destroys the cache for the given selector + args combo (if it exists).
+   *
+   * Destruction bails out by default if the selector's ref count is > 0. Pass
+   * `true` as the 3rd param to force destruction.
+   */
+  public destroyCache<T = any, Args extends any[] = []>(
+    selectorOrConfig: AtomSelectorOrConfig<T, Args>,
+    args?: Args,
+    force?: boolean
+  ) {
+    const cacheKey = this.getCacheKey(selectorOrConfig, args as Args)
+    const cache = this._caches[cacheKey] as AtomSelectorCache<T, Args>
+
+    if (!cache) return
+
+    const node = this.ecosystem._graph.nodes[cacheKey]
+
+    if (!force && Object.keys(node?.dependents || {}).length) return
+
+    this._destroySelector(cacheKey)
   }
 
   public getCache<T = any, Args extends [] = []>(
@@ -141,7 +198,7 @@ export class SelectorCache {
     args?: Args
   ) {
     const cacheKey = this.getCacheKey(selectorOrConfig, args as Args)
-    let cache = this.caches[cacheKey] as AtomSelectorCache<T, Args>
+    let cache = this._caches[cacheKey] as AtomSelectorCache<T, Args>
 
     if (cache) return cache
 
@@ -151,7 +208,7 @@ export class SelectorCache {
       nextEvaluationReasons: [],
       selectorRef: selectorOrConfig,
     }
-    this.caches[cacheKey] = cache as AtomSelectorCache<any, any[]>
+    this._caches[cacheKey] = cache as AtomSelectorCache<any, any[]>
     this.ecosystem._graph.addNode(cacheKey, true)
 
     this.runSelector(cacheKey, args as Args)
@@ -208,23 +265,72 @@ export class SelectorCache {
     return idealKey === 'selector' ? undefined : idealKey
   }
 
-  public invalidate<T = any, Args extends [] = []>(
+  /**
+   * Get an object of all currently-cached AtomSelectors.
+   *
+   * Pass a selector reference or string to filter by caches whose cacheKey
+   * weakly matches the passed selector name.
+   */
+  public inspectCaches(
+    selectorOrConfigOrName?: AtomSelectorOrConfig<any, any> | string
+  ) {
+    const hash: Record<string, AtomSelectorCache> = {}
+    const filterKey =
+      !selectorOrConfigOrName || typeof selectorOrConfigOrName === 'string'
+        ? selectorOrConfigOrName
+        : this.getBaseKey(selectorOrConfigOrName, true) ||
+          this.getIdealCacheKey(selectorOrConfigOrName)
+
+    Object.values(this._caches)
+      .sort((a, b) => a.cacheKey.localeCompare(b.cacheKey))
+      .forEach(instance => {
+        if (filterKey && !instance.cacheKey.includes(filterKey)) {
+          return
+        }
+
+        hash[instance.cacheKey] = instance
+      })
+
+    return hash
+  }
+
+  /**
+   * Get an object mapping all cacheKeys in this selectorCache to their current
+   * values.
+   *
+   * Pass an atom or atom key string to only return instances whose keyHash
+   * weakly matches the passed key.
+   */
+  public inspectCacheValues(
+    selectorOrConfigOrName?: AtomSelectorOrConfig<any, any> | string
+  ) {
+    const hash = this.inspectCaches(selectorOrConfigOrName)
+
+    // We just created the object. Just mutate it.
+    Object.keys(hash).forEach(cacheKey => {
+      hash[cacheKey] = hash[cacheKey].result
+    })
+
+    return hash
+  }
+
+  public invalidateCache<T = any, Args extends [] = []>(
     selectorOrConfig: AtomSelectorOrConfig<T, Args>
   ): void
 
-  public invalidate<T = any, Args extends any[] = []>(
+  public invalidateCache<T = any, Args extends any[] = []>(
     selectorOrConfig: AtomSelectorOrConfig<T, Args>,
     args: Args
   ): void
 
   /**
-   * Tell Zedux the data for the given selector + params is stale - the
+   * Tell Zedux the data for the given selector + args combo is stale - the
    * AtomSelector needs to be rerun.
    *
    * Zedux uses this internally. AtomSelectors usually subscribe to anything
    * that should make them rerun. You shouldn't need to call this yourself.
    */
-  public invalidate(
+  public invalidateCache(
     selectorOrConfig: AtomSelectorOrConfig<any, any[]>,
     args?: any[]
   ) {
@@ -234,7 +340,7 @@ export class SelectorCache {
     this._scheduleEvaluation(
       cache.cacheKey,
       {
-        operation: 'invalidate',
+        operation: 'invalidateCache',
         type: EvaluationType.CacheInvalidated,
         targetType: EvaluationTargetType.External,
       },
@@ -265,7 +371,19 @@ export class SelectorCache {
     const cacheKey = this.getCacheKey(selectorOrConfig, args as Args, true)
     if (!cacheKey) return
 
-    return this.caches[cacheKey]
+    return this._caches[cacheKey]
+  }
+
+  /**
+   * Destroy all cached selectors. Should probably only be used internally.
+   * Prefer `ecosystem.reset()`.
+   */
+  public wipe() {
+    Object.keys(this._caches).forEach(cacheKey => {
+      this._destroySelector(cacheKey)
+    })
+
+    this._refBaseKeys = new WeakMap()
   }
 
   /**
@@ -273,7 +391,7 @@ export class SelectorCache {
    * the graph
    */
   public _destroySelector(cacheKey: string) {
-    const cache = this.caches[cacheKey]
+    const cache = this._caches[cacheKey]
 
     if (!cache) return // shouldn't happen
 
@@ -283,8 +401,8 @@ export class SelectorCache {
 
     this.ecosystem._graph.removeDependencies(cacheKey)
     this.ecosystem._graph.removeNode(cacheKey)
-    delete this.caches[cacheKey]
-    this.refBaseKeys.delete(cache.selectorRef)
+    delete this._caches[cacheKey]
+    // don't delete the ref from this._refBaseKeys
   }
 
   /**
@@ -296,7 +414,7 @@ export class SelectorCache {
     flags: number,
     shouldSetTimeout?: boolean
   ) {
-    const cache = this.caches[cacheKey]
+    const cache = this._caches[cacheKey]
 
     // TODO: Any calls in this case probably indicate a memory leak on the
     // user's part. Notify them.
@@ -331,19 +449,19 @@ export class SelectorCache {
     selectorOrConfig: AtomSelectorOrConfig<any, any[]>,
     weak?: boolean
   ) {
-    const existingId = this.refBaseKeys.get(selectorOrConfig)
+    const existingId = this._refBaseKeys.get(selectorOrConfig)
 
     if (existingId || weak) return existingId
 
     const idealKey = this.getIdealCacheKey(selectorOrConfig)
-    const keyExists = !idealKey || this.caches[idealKey]
+    const keyExists = !idealKey || this._caches[idealKey]
 
     // if the ideal key is taken, generate a new hash prefixed with the ideal key
     const key = keyExists
       ? this.ecosystem._idGenerator.generateAtomSelectorId(idealKey)
       : idealKey
 
-    this.refBaseKeys.set(selectorOrConfig, key)
+    this._refBaseKeys.set(selectorOrConfig, key)
 
     return key
   }
@@ -357,9 +475,9 @@ export class SelectorCache {
     cacheKey: string,
     args: Args
   ) {
-    this.evaluatingStack.push(cacheKey)
+    this._evaluatingStack.push(cacheKey)
     this.ecosystem._graph.bufferUpdates(cacheKey)
-    const cache = this.caches[cacheKey] as AtomSelectorCache<T, Args>
+    const cache = this._caches[cacheKey] as AtomSelectorCache<T, Args>
     const selector =
       typeof cache.selectorRef === 'function'
         ? cache.selectorRef
@@ -371,7 +489,7 @@ export class SelectorCache {
       defaultResultsComparator
 
     try {
-      const result = selector(this.atomGetters, ...args)
+      const result = selector(this._atomGetters, ...args)
 
       if (
         (typeof cache.result === 'undefined' && result !== cache.result) ||
@@ -405,7 +523,7 @@ export class SelectorCache {
 
       throw err
     } finally {
-      this.evaluatingStack.pop()
+      this._evaluatingStack.pop()
       cache.prevEvaluationReasons = cache.nextEvaluationReasons
       cache.nextEvaluationReasons = []
     }

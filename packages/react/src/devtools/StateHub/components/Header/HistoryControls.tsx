@@ -1,11 +1,7 @@
 import { useAtomSelector, useAtomValue } from '@zedux/react'
 import styled from '@zedux/react/ssc'
 import React from 'react'
-import { BsChevronLeft } from 'react-icons/bs'
-import { BsChevronRight } from 'react-icons/bs'
 import { getStateHubHistoryInstance } from '../../atoms/history'
-
-const BackIcon = styled(BsChevronLeft)``
 
 const Button = styled.button`
   appearance: none;
@@ -28,8 +24,6 @@ const Button = styled.button`
   }
 `
 
-const ForwardIcon = styled(BsChevronRight)``
-
 const Grid = styled.div`
   display: grid;
   grid-template-columns: 1.5em 1.5em;
@@ -45,10 +39,10 @@ export const HistoryControls = () => {
   return (
     <Grid>
       <Button disabled={!canGoBack()} onClick={back}>
-        <BackIcon />
+        <span>&lt;</span>
       </Button>
       <Button disabled={!canGoForward()} onClick={forward}>
-        <ForwardIcon />
+        <span>&gt;</span>
       </Button>
     </Grid>
   )

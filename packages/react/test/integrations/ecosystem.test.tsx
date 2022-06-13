@@ -263,25 +263,25 @@ describe('ecosystem', () => {
     ecosystem.destroy(true)
   })
 
-  test('.findInstances()', () => {
+  test('.inspectInstances()', () => {
     const atomA = atom('a', (param: string) => param)
     const atomB = atom('b', () => 'b')
 
-    const ecosystem = createEcosystem({ id: 'findInstances' })
+    const ecosystem = createEcosystem({ id: 'inspectInstances' })
 
     ecosystem.getInstance(atomA, ['a'])
     ecosystem.getInstance(atomA, ['aa'])
     ecosystem.getInstance(atomB)
 
-    expect(ecosystem.findInstances(atomA)).toEqual([
-      expect.objectContaining({ params: ['a'] }),
-      expect.objectContaining({ params: ['aa'] }),
-    ])
+    expect(ecosystem.inspectInstances(atomA)).toEqual({
+      'a-["a"]': expect.objectContaining({ params: ['a'] }),
+      'a-["aa"]': expect.objectContaining({ params: ['aa'] }),
+    })
 
-    expect(ecosystem.findInstances('a')).toEqual([
-      expect.objectContaining({ params: ['a'] }),
-      expect.objectContaining({ params: ['aa'] }),
-    ])
+    expect(ecosystem.inspectInstances('a')).toEqual({
+      'a-["a"]': expect.objectContaining({ params: ['a'] }),
+      'a-["aa"]': expect.objectContaining({ params: ['aa'] }),
+    })
 
     ecosystem.destroy(true)
   })

@@ -1,13 +1,4 @@
 import React from 'react'
-import { AiOutlineApartment } from 'react-icons/ai'
-import { BsChevronExpand, BsGearFill } from 'react-icons/bs'
-import { GiAtom } from 'react-icons/gi'
-import { GrClear, GrCycle } from 'react-icons/gr'
-import { FaFlag } from 'react-icons/fa'
-import { FiGlobe } from 'react-icons/fi'
-import { IoMdKey, IoMdList } from 'react-icons/io'
-import { MdClear } from 'react-icons/md'
-import { IconType } from 'react-icons/lib'
 
 const AtomInstanceIcon = ({ className }: { className?: string }) => {
   return (
@@ -201,7 +192,11 @@ const RemoveItemIcon = ({ className }: { className?: string }) => {
   )
 }
 
-const wrap = <R extends Record<string, IconType>>(icons: R) => {
+const wrap = <
+  R extends Record<string, React.ComponentType<{ className?: string }>>
+>(
+  icons: R
+) => {
   // just mutate just 'cause...
   Object.entries(icons).forEach(([key, Icon]) => {
     const WrappedIcon = ({ className }: { className?: string }) => (
@@ -214,18 +209,20 @@ const wrap = <R extends Record<string, IconType>>(icons: R) => {
   return icons
 }
 
+const Placeholder = ({ className }: { className?: string }) => <div>☐</div>
+
 const wrappedIcons = wrap({
-  Atom: GiAtom,
-  Clear: GrClear,
-  Cycle: GrCycle,
-  Expand: BsChevronExpand,
-  Flag: FaFlag,
-  Gear: BsGearFill,
-  Graph: AiOutlineApartment,
-  Key: IoMdKey,
-  List: IoMdList,
-  X: MdClear,
-  World: FiGlobe,
+  Atom: Placeholder, // GiAtom,
+  Clear: Placeholder, // GrClear,
+  Cycle: Placeholder, // GrCycle,
+  Expand: Placeholder, // BsChevronExpand,
+  Flag: Placeholder, // FaFlag,
+  Gear: Placeholder, // BsGearFill,
+  Graph: Placeholder, // AiOutlineApartment,
+  Key: Placeholder, // IoMdKey,
+  List: Placeholder, // IoMdList,
+  X: Placeholder, // MdClear,
+  World: Placeholder, // FiGlobe,
 })
 
 export const rawIcons = {
