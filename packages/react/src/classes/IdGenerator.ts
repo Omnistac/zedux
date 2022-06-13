@@ -43,8 +43,12 @@ export class IdGenerator {
    */
   public weakCache = new WeakMap<any, string>()
 
-  public generateAtomSelectorId(name = 'as') {
-    return this.generateId(name)
+  public generateAtomSelectorId(name = '') {
+    if (!name) {
+      name = DEV ? 'unknownSelector' : 'as'
+    }
+
+    return this.generateId(`@@selector-${name}`)
   }
 
   public generateEcosystemId() {
