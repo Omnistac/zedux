@@ -13,10 +13,12 @@ import {
   AtomStateType,
   Cleanup,
   EcosystemConfig,
+  EdgeFlag,
   GraphEdgeInfo,
+  GraphViewRecursive,
   MaybeCleanup,
 } from '../types'
-import { is } from '../utils'
+import { EcosystemGraphNode, EMPTY_CONTEXT, is } from '../utils'
 import { Atom } from './atoms/Atom'
 import { AtomBase } from './atoms/AtomBase'
 import { Graph } from './Graph'
@@ -46,9 +48,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public _idGenerator = new IdGenerator()
   public _instances: Record<string, AnyAtomInstance> = {}
   public _onReady: EcosystemConfig<Context>['onReady']
+  public _reactContexts: Record<string, React.Context<any>> = {}
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
-  public _selectorCache: SelectorCache = new SelectorCache(this)
+  public selectorCache: SelectorCache = new SelectorCache(this)
   public allowComplexAtomParams: boolean
   public allowComplexSelectorParams: boolean
   public context: Context
@@ -114,8 +117,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
 
     overrides.forEach(override => {
-      const instances = this.findInstances(override)
-      instances.forEach(instance => instance.destroy(true))
+      const instances = this.inspectInstances(override)
+
+      Object.values(instances).forEach(instance => instance.destroy(true))
     })
   }
 
@@ -150,14 +154,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       removeEcosystem({
         ecosystemId: this.ecosystemId,
       })
-    )
-  }
-
-  public findInstances(atom: AtomBase<any, any, any> | string) {
-    const key = typeof atom === 'string' ? atom : atom.key
-
-    return Object.values(this._instances).filter(
-      instance => instance.atom.key === key
     )
   }
 
@@ -240,23 +236,148 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     return newInstance
   }
 
-  public inspectInstanceValues(atom?: Atom<any, any[], any> | string) {
-    const hash: Record<string, any> = {}
-    const filterKey = typeof atom === 'string' ? atom : atom?.key
+  public inspectGraph(view: 'bottom-up'): GraphViewRecursive
+  public inspectGraph(
+    view: 'flat'
+  ): Record<
+    string,
+    {
+      dependencies: { key: string; operation: string }[]
+      dependents: { key: string; operation: string }[]
+    }
+  >
+  public inspectGraph(view: 'top-down'): GraphViewRecursive
 
-    Object.entries(this._instances)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .forEach(([key, instance]) => {
+  /**
+   * Get the current graph of this ecosystem. There are 3 views:
+   *
+   * Flat (default). Returns an object with all graph nodes on the top layer,
+   * each node pointing to its dependencies and dependents. No nesting.
+   *
+   * Bottom-Up. Returns an object containing all the leaf nodes of the graph
+   * (nodes that have no internal dependents), each node containing an object of
+   * its parent nodes, recursively.
+   *
+   * Top-Down. Returns an object containing all the root nodes of the graph
+   * (nodes that have no dependencies), each node containing an object of its
+   * child nodes, recursively.
+   */
+  public inspectGraph(view?: string) {
+    if (view !== 'top-down' && view !== 'bottom-up') {
+      const hash: Record<
+        string,
+        {
+          dependencies: { key: string; operation: string }[]
+          dependents: { key: string; operation: string }[]
+        }
+      > = {}
+
+      Object.keys(this._graph.nodes).forEach(cacheKey => {
+        const node = this._graph.nodes[cacheKey]
+
+        hash[cacheKey] = {
+          dependencies: Object.keys(node.dependencies).map(key => ({
+            key,
+            operation: this._graph.nodes[key].dependents[cacheKey].operation,
+          })),
+          dependents: Object.keys(node.dependents).map(key => ({
+            key,
+            operation: node.dependents[key].operation,
+          })),
+        }
+      })
+
+      return hash
+    }
+
+    const hash: GraphViewRecursive = {}
+
+    Object.keys(this._graph.nodes).forEach(key => {
+      const node = this._graph.nodes[key]
+      const isTopLevel =
+        view === 'bottom-up'
+          ? Object.keys(node.dependents).every(key => {
+              const dependent = node.dependents[key]
+
+              return dependent.flags & EdgeFlag.External
+            })
+          : !Object.keys(node.dependencies).length
+
+      if (isTopLevel) {
+        hash[key] = {}
+      }
+    })
+
+    const recurse = (node?: EcosystemGraphNode) => {
+      if (!node) return
+
+      const keys = Object.keys(
+        view === 'bottom-up' ? node.dependencies : node.dependents
+      )
+      const children: GraphViewRecursive = {}
+
+      keys.forEach(key => {
+        const child = recurse(this._graph.nodes[key])
+
+        if (child) children[key] = child
+      })
+
+      return children
+    }
+
+    Object.keys(hash).forEach(key => {
+      const node = this._graph.nodes[key]
+      const children = recurse(node)
+
+      if (children) hash[key] = children
+    })
+
+    return hash
+  }
+
+  /**
+   * Get an object of all atom instances in this ecosystem.
+   *
+   * Pass an atom or atom key string to only return instances whose keyHash
+   * weakly matches the passed key.
+   */
+  public inspectInstances(atom?: AnyAtomBase | string) {
+    const isAtom = (atom as AnyAtomBase)?.key
+    const filterKey = isAtom ? (atom as AnyAtomBase)?.key : (atom as string)
+    const hash: Record<string, AtomInstanceBase<any, any, any>> = {}
+
+    Object.values(this._instances)
+      .sort((a, b) => a.keyHash.localeCompare(b.keyHash))
+      .forEach(instance => {
         if (
           filterKey &&
-          !instance.atom.key.includes(filterKey) &&
-          !instance.keyHash.includes(filterKey)
+          (isAtom
+            ? instance.atom.key !== filterKey
+            : !instance.keyHash.includes(filterKey))
         ) {
           return
         }
 
-        hash[key] = instance.store.getState()
+        hash[instance.keyHash] = instance
       })
+
+    return hash
+  }
+
+  /**
+   * Get an object mapping all atom instance keyHashes in this ecosystem to
+   * their current values.
+   *
+   * Pass an atom or atom key string to only return instances whose keyHash
+   * weakly matches the passed key.
+   */
+  public inspectInstanceValues(atom?: AnyAtomBase | string) {
+    const hash = this.inspectInstances(atom)
+
+    // We just created the object. Just mutate it.
+    Object.keys(hash).forEach(key => {
+      hash[key] = hash[key].store.getState()
+    })
 
     return hash
   }
@@ -309,9 +430,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     )
 
     overrides.forEach(override => {
-      const instances = this.findInstances(override)
+      const instances = this.inspectInstances(override)
 
-      instances.forEach(instance => instance.destroy(true))
+      Object.values(instances).forEach(instance => instance.destroy(true))
     })
   }
 
@@ -338,7 +459,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     atomSelector: AtomSelectorOrConfig<T, Args>,
     ...args: Args
   ): T {
-    const cache = this._selectorCache.weakGetCache(atomSelector, args)
+    const cache = this.selectorCache.weakGetCache(atomSelector, args)
     if (cache) return cache.result as T
 
     const resolvedSelector =
@@ -371,9 +492,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     if (!this.isInitialized) return
 
     newOverrides.forEach(atom => {
-      const instances = this.findInstances(atom)
+      const instances = this.inspectInstances(atom)
 
-      instances.forEach(instance => {
+      Object.values(instances).forEach(instance => {
         instance.destroy(true)
       })
     })
@@ -381,9 +502,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     if (!oldOverrides) return
 
     Object.values(oldOverrides).forEach(atom => {
-      const instances = this.findInstances(atom)
+      const instances = this.inspectInstances(atom)
 
-      instances.forEach(instance => {
+      Object.values(instances).forEach(instance => {
         instance.destroy(true)
       })
     })
@@ -474,6 +595,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       instance.destroy(true)
     })
 
+    this.selectorCache.wipe()
+
     this._scheduler.wipe()
     this._scheduler.flush()
 
@@ -484,6 +607,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
   }
 
+  // Should only be used internally
   public _decrementRefCount() {
     this._refCount--
     if (!this._destroyOnUnmount) return
@@ -500,6 +624,19 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
   }
 
+  // Should only be used internally
+  public _getReactContext(atom: AnyAtomBase) {
+    const existingContext = this._reactContexts[atom.key]
+
+    if (existingContext) return existingContext
+
+    const newContext = createContext(EMPTY_CONTEXT)
+    this._reactContexts[atom.key] = newContext
+
+    return newContext
+  }
+
+  // Should only be used internally
   public _incrementRefCount() {
     this._refCount++
   }
