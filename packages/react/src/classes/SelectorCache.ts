@@ -262,7 +262,9 @@ export class SelectorCache {
       (selectorOrConfig as AtomSelectorConfig).selector?.name
 
     // 'selector' is too generic (it's the key in AtomSelectorConfig objects)
-    return idealKey === 'selector' ? undefined : `@@selector-${idealKey}`
+    return !idealKey || idealKey === 'selector'
+      ? undefined
+      : `@@selector-${idealKey}`
   }
 
   /**
