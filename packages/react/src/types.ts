@@ -313,6 +313,10 @@ export enum GraphEdgeSignal {
   Updated = 'Updated',
 }
 
+export interface GraphViewRecursive {
+  [key: string]: GraphViewRecursive
+}
+
 export type InjectorDeps = any[] | undefined
 
 export type InjectOrUseSelector<State, Params extends any[]> = Params extends []

@@ -39,6 +39,8 @@ export abstract class AtomInstanceBase<
   public abstract _promiseError?: Error
   public abstract _promiseStatus?: PromiseStatus
 
+  public abstract destroy(force?: boolean): void
+
   public abstract get<A extends AtomBase<any, [], any>>(
     atom: A
   ): AtomStateType<A>
@@ -79,10 +81,13 @@ export abstract class AtomInstanceBase<
     shouldSetTimeout?: boolean
   ): void
 
-  public addDependent(
-    callback?: DependentEdge['callback'],
-    operation = 'addDependent'
-  ): Cleanup {
+  public addDependent({
+    callback,
+    operation = 'addDependent',
+  }: {
+    callback?: DependentEdge['callback']
+    operation?: string
+  } = {}): Cleanup {
     const id = this.ecosystem._idGenerator.generateNodeId()
     this.ecosystem._graph.addEdge(
       id,

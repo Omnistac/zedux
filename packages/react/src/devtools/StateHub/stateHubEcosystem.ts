@@ -17,8 +17,10 @@ const getPlugin = (stateHubEcosystem: Ecosystem) => {
       )
 
       // register an explicit dependent on the ecosystemWrapper instance
-      const destroyEdge = ecosystemWrapperInstance.addDependent(() => {},
-      'registerEcosystem')
+      const destroyEdge = ecosystemWrapperInstance.addDependent({
+        operation: 'registerEcosystem',
+      })
+
       const subscription = ecosystem.modsMessageBus.subscribe({
         effects: ({ action }) => {
           if (action) ecosystemWrapperInstance.exports.log(action as any)

@@ -153,7 +153,11 @@ export class Graph {
   }
 
   public removeDependencies(dependentKey: string) {
-    const edges = this.nodes[dependentKey].dependencies
+    const node = this.nodes[dependentKey]
+
+    if (!node) return // node already destroyed
+
+    const edges = node.dependencies
 
     if (!edges) return
 
@@ -205,10 +209,10 @@ export class Graph {
         ZeduxPlugin.actions.edgeRemoved({
           dependency:
             this.ecosystem._instances[dependencyKey] ||
-            this.ecosystem._selectorCache.caches[dependencyKey],
+            this.ecosystem.selectorCache._caches[dependencyKey],
           dependent:
             this.ecosystem._instances[dependentKey] ||
-            this.ecosystem._selectorCache.caches[dependentKey] ||
+            this.ecosystem.selectorCache._caches[dependentKey] ||
             dependentKey,
           edge: dependentEdge,
         })
@@ -274,7 +278,7 @@ export class Graph {
     scheduleStaticDeps = false
   ) {
     const instance = this.ecosystem._instances[nodeKey]
-    const cache = this.ecosystem._selectorCache.caches[nodeKey]
+    const cache = this.ecosystem.selectorCache._caches[nodeKey]
     const node = this.nodes[nodeKey]
 
     Object.keys(node.dependents).forEach(dependentKey => {
@@ -310,7 +314,7 @@ export class Graph {
       // own jobs
       if (!(dependentEdge.flags & EdgeFlag.External)) {
         if (this.nodes[dependentKey].isAtomSelector) {
-          return this.ecosystem._selectorCache._scheduleEvaluation(
+          return this.ecosystem.selectorCache._scheduleEvaluation(
             dependentKey,
             reason,
             dependentEdge.flags,
@@ -380,10 +384,10 @@ export class Graph {
         ZeduxPlugin.actions.edgeCreated({
           dependency:
             this.ecosystem._instances[dependencyKey] ||
-            this.ecosystem._selectorCache.caches[dependencyKey],
+            this.ecosystem.selectorCache._caches[dependencyKey],
           dependent:
             this.ecosystem._instances[dependentKey] ||
-            this.ecosystem._selectorCache.caches[dependentKey] ||
+            this.ecosystem.selectorCache._caches[dependentKey] ||
             dependentKey, // unfortunate but not changing for now
           edge: newEdge,
         })
@@ -418,7 +422,7 @@ export class Graph {
 
     if (node && !Object.keys(node.dependents).length) {
       if (node.isAtomSelector) {
-        this.ecosystem._selectorCache._destroySelector(nodeKey)
+        this.ecosystem.selectorCache._destroySelector(nodeKey)
       } else {
         this.ecosystem._instances[nodeKey]._scheduleDestruction()
       }
