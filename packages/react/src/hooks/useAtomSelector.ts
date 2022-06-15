@@ -171,8 +171,11 @@ export const useAtomSelector = <T, Args extends any[]>(
   // if ref changed but is clearly the "same" selector, swap out the ref and
   // invalidate the cache
   if (hasRefChanged && !isDifferent && cacheRef.current) {
-    cacheRef.current.selectorRef = selectorOrConfig
-    ecosystem.selectorCache.invalidateCache(selectorOrConfig, resolvedArgs)
+    ecosystem.selectorCache._swapRefs(
+      cacheRef.current.selectorRef as AtomSelectorOrConfig<any, any[]>,
+      selectorOrConfig as AtomSelectorOrConfig<any, any[]>,
+      resolvedArgs
+    )
   }
 
   return useSyncExternalStore(subscribe, getSnapshot)

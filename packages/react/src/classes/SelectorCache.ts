@@ -444,6 +444,24 @@ export class SelectorCache {
   }
 
   /**
+   * Should only be used internally
+   */
+  public _swapRefs(
+    oldRef: AtomSelectorOrConfig<any, any[]>,
+    newRef: AtomSelectorOrConfig<any, any[]>,
+    args: any[]
+  ) {
+    const existingCache = this.weakGetCache(oldRef, args)
+    const baseKey = this._refBaseKeys.get(oldRef)
+
+    if (!existingCache || !baseKey) return
+
+    this._refBaseKeys.set(newRef, baseKey)
+    existingCache.selectorRef = newRef
+    this.invalidateCache(newRef, args)
+  }
+
+  /**
    * Get a base key that can be used to generate consistent cacheKeys for the
    * given selector
    */
