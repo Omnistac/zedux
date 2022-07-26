@@ -36,9 +36,9 @@ describe('delegate()', () => {
     metaData: ['a', 'b', 'c'],
     payload: {
       metaType: metaTypes.DELEGATE,
-      metaDAta: ['d', 'e'],
+      metaData: ['d', 'e'],
       payload: {
-        type: 'd',
+        type: 'f',
       },
     },
   }
@@ -144,6 +144,42 @@ describe('delegate()', () => {
     )
 
     expect(mockStore.dispatch).toHaveBeenLastCalledWith(action3.payload)
+  })
+
+  test('delegates the action through multiple stores', () => {
+    const childStore = createStore()
+    const parentStore = createStore({ d: { e: childStore } })
+
+    childStore.dispatch = jest.fn(childStore.dispatch)
+
+    delegate(
+      {
+        type: HierarchyType.Branch,
+        children: {
+          a: {
+            type: HierarchyType.Branch,
+            children: {
+              b: {
+                type: HierarchyType.Branch,
+                children: {
+                  c: {
+                    reducer: () => 1,
+                    store: parentStore,
+                    type: HierarchyType.Store,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      action3
+    )
+
+    expect(childStore.dispatch).toHaveBeenCalledTimes(1)
+    expect(childStore.dispatch).toHaveBeenLastCalledWith(
+      action3.payload.payload
+    )
   })
 })
 

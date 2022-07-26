@@ -6,6 +6,7 @@ import { useReactComponentId } from './useReactComponentId'
 import { Ecosystem } from '../classes'
 
 const OPERATION = 'useAtomSelector'
+let isSwappingRefs = false
 
 /**
  * If we detect an inline selector using these not-exactly-cheap checks, we can
@@ -136,7 +137,9 @@ export const useAtomSelector = <T, Args extends any[]>(
             cache.cacheKey,
             OPERATION,
             EdgeFlag.External,
-            onStoreChange
+            () => {
+              if (!isSwappingRefs) onStoreChange()
+            }
           )
         }
 
@@ -169,13 +172,19 @@ export const useAtomSelector = <T, Args extends any[]>(
   }, [ecosystem, resolvedArgs, toggler.current])
 
   // if ref changed but is clearly the "same" selector, swap out the ref and
-  // invalidate the cache
+  // invalidate the cache. This would trigger React "Can't update a component
+  // while rendering a different component" warnings unless we track that we're
+  // doing this. This can only happen if there's exactly one dependent of the
+  // selector, so we go ahead and use a global variable for this to avoid making
+  // another ref for every selector.
   if (hasRefChanged && !isDifferent && cacheRef.current) {
+    isSwappingRefs = true
     ecosystem.selectorCache._swapRefs(
       cacheRef.current.selectorRef as AtomSelectorOrConfig<any, any[]>,
       selectorOrConfig as AtomSelectorOrConfig<any, any[]>,
       resolvedArgs
     )
+    isSwappingRefs = false
   }
 
   return useSyncExternalStore(subscribe, getSnapshot)

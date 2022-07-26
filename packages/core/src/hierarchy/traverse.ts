@@ -56,9 +56,7 @@ export const delegate = (
     throw new TypeError(getErrorMessage(subStorePath))
   }
 
-  return (child as StoreNode).store.dispatch(
-    removeMeta(action, metaTypes.DELEGATE)
-  )
+  ;(child as StoreNode).store.dispatch(removeMeta(action, metaTypes.DELEGATE))
 }
 
 /**
