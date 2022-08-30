@@ -21,7 +21,7 @@ let isSwappingRefs = false
  * useSyncExternalStore(() => () => {}, () => ({}))
  * ```
  *
- * It's also better dev-X when the graph doesn't unnecessarily.
+ * It's also better dev-X when the graph doesn't change unnecessarily.
  *
  * Inline selectors that haven't _actually_ changed must be exactly the same,
  * stringified. The stringified `resultsComparator` must also be exactly the

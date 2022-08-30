@@ -11,8 +11,12 @@ export const api: {
     State = undefined,
     Exports extends Record<string, any> = Record<string, any>
   >(
-    value?: AtomValue<State> | AtomApi<State, Exports>
+    value: AtomValue<State> | AtomApi<State, Exports>
   ): AtomApi<State, Exports>
+  <
+    State = undefined,
+    Exports extends Record<string, any> = Record<string, any>
+  >(): AtomApi<State, Exports>
 } = <
   State = undefined,
   Exports extends Record<string, any> = Record<string, any>
