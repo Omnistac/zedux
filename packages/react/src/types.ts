@@ -32,7 +32,6 @@ export type AtomApiPromise = Promise<any> | undefined
 
 export interface AtomConfig {
   flags?: string[]
-  forwardPromises?: boolean
   maxInstances?: number
   // molecules?: Molecule<any, any>[] // TODO: type this first `any` (the second `any` is correct as-is)
   // readonly?: boolean

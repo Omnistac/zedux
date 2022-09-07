@@ -17,7 +17,6 @@ export abstract class StandardAtomBase<
   AtomInstance<State, Params, Exports, PromiseType>
 > {
   public readonly flags?: string[]
-  public readonly forwardPromises?: boolean
   public readonly maxInstances?: number
   public readonly ttl?: number
 
@@ -33,7 +32,6 @@ export abstract class StandardAtomBase<
   ) {
     super()
     this.flags = config?.flags
-    this.forwardPromises = config?.forwardPromises
     this.maxInstances = config?.maxInstances
     this.ttl = config?.ttl
 
