@@ -110,7 +110,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.cleanup = onReady?.(this)
   }
 
-  public addOverrides(overrides: Atom<any, any, any>[]) {
+  public addOverrides(overrides: Atom<any, any, any, any>[]) {
     this.overrides = {
       ...this.overrides,
       ...mapOverrides(overrides),
@@ -418,7 +418,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * will cause dependents of those instances to recreate their dependency atom
    * instance without using an override.
    */
-  public removeOverrides(overrides: (Atom<any, any, any> | string)[]) {
+  public removeOverrides(overrides: (Atom<any, any, any, any> | string)[]) {
     this.overrides = mapOverrides(
       Object.values(this.overrides).filter(atom =>
         overrides.every(override => {

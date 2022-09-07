@@ -15,9 +15,9 @@ export enum ActiveState {
   Initializing = 'Initializing',
 }
 
-export type AnyAtom = StandardAtomBase<any, any, any>
+export type AnyAtom = StandardAtomBase<any, any, any, any>
 export type AnyAtomBase = AtomBase<any, any, AtomInstanceBase<any, any, any>>
-export type AnyAtomInstance = AtomInstance<any, any, any>
+export type AnyAtomInstance = AtomInstance<any, any, any, any>
 export type AnyAtomInstanceBase = AtomInstanceBase<
   any,
   any,
@@ -27,6 +27,8 @@ export type AnyAtomInstanceBase = AtomInstanceBase<
 export type AsyncEffectCallback<T = any> = (
   cleanup: (fn: Cleanup) => void
 ) => Promise<T> | void
+
+export type AtomApiPromise = Promise<any> | undefined
 
 export interface AtomConfig {
   flags?: string[]
@@ -39,7 +41,7 @@ export interface AtomConfig {
 
 export type AtomExportsType<
   AtomType extends AnyAtom
-> = AtomType extends StandardAtomBase<any, any, infer T> ? T : never
+> = AtomType extends StandardAtomBase<any, any, infer T, any> ? T : never
 
 /**
  * The AtomGettersBase interface. You probably won't want to use this directly.
@@ -147,12 +149,16 @@ export type AtomInstanceAtomType<
 > = AtomInstanceType extends AtomInstanceBase<any, any, infer T> ? T : never
 
 export type AtomInstanceExportsType<
-  AtomInstanceType extends AtomInstance<any, any, any>
-> = AtomInstanceType extends AtomInstance<any, any, infer T> ? T : never
+  AtomInstanceType extends AtomInstance<any, any, any, any>
+> = AtomInstanceType extends AtomInstance<any, any, infer T, any> ? T : never
 
 export type AtomInstanceParamsType<
   AtomInstanceType extends AtomInstanceBase<any, any, any>
 > = AtomInstanceType extends AtomInstanceBase<any, infer T, any> ? T : never
+
+export type AtomInstancePromiseType<
+  AtomInstanceType extends AtomInstance<any, any, any, any>
+> = AtomInstanceType extends AtomInstance<any, any, any, infer T> ? T : never
 
 export type AtomInstanceStateType<
   AtomInstanceType extends AtomInstanceBase<any, any, any>
@@ -167,6 +173,10 @@ export type AtomInstanceTtl = number | Promise<any> | Observable<any>
 export type AtomParamsType<
   AtomType extends AnyAtomBase
 > = AtomType extends AtomBase<any, infer T, any> ? T : never
+
+export type AtomPromiseType<
+  AtomType extends AnyAtom
+> = AtomType extends StandardAtomBase<any, any, any, infer T> ? T : never
 
 export type AtomSelector<T = any, Args extends any[] = []> = (
   getters: AtomGetters,
@@ -187,9 +197,10 @@ export type AtomSelectorOrConfig<T = any, Args extends any[] = []> =
 export interface AtomSetters<
   State,
   Params extends any[],
-  Exports extends Record<string, any>
+  Exports extends Record<string, any>,
+  PromiseType extends AtomApiPromise
 > extends AtomGetters {
-  instance: AtomInstance<State, Params, Exports>
+  instance: AtomInstance<State, Params, Exports, PromiseType>
 
   set<A extends AtomBase<any, [], any>>(
     atom: A,
@@ -206,8 +217,11 @@ export interface AtomSetters<
 export type AtomStateFactory<
   State = any,
   Params extends any[] = [],
-  Exports extends Record<string, any> = Record<string, any>
-> = (...params: Params) => AtomValue<State> | AtomApi<State, Exports>
+  Exports extends Record<string, any> = Record<string, any>,
+  PromiseType extends AtomApiPromise = undefined
+> = (
+  ...params: Params
+) => AtomValue<State> | AtomApi<State, Exports, PromiseType>
 
 export type AtomStateType<
   AtomType extends AnyAtomBase
@@ -222,8 +236,9 @@ export type AtomValue<State = any> = State | Store<State>
 export type AtomValueOrFactory<
   State = any,
   Params extends any[] = [],
-  Exports extends Record<string, any> = Record<string, any>
-> = AtomValue<State> | AtomStateFactory<State, Params, Exports>
+  Exports extends Record<string, any> = Record<string, any>,
+  PromiseType extends AtomApiPromise = undefined
+> = AtomValue<State> | AtomStateFactory<State, Params, Exports, PromiseType>
 
 export type Cleanup = () => void
 
@@ -330,18 +345,20 @@ export interface InjectStoreConfig {
 export type IonGet<
   State,
   Params extends any[],
-  Exports extends Record<string, any>
+  Exports extends Record<string, any>,
+  PromiseType extends AtomApiPromise
 > = (
   getters: AtomGetters,
   ...params: Params
-) => AtomValue<State> | AtomApi<State, Exports>
+) => AtomValue<State> | AtomApi<State, Exports, PromiseType>
 
 export type IonSet<
   State,
   Params extends any[],
-  Exports extends Record<string, any>
+  Exports extends Record<string, any>,
+  PromiseType extends AtomApiPromise
 > = (
-  setters: AtomSetters<State, Params, Exports>,
+  setters: AtomSetters<State, Params, Exports, PromiseType>,
   settable: Settable<State>
 ) => State | void
 

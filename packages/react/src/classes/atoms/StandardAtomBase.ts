@@ -1,12 +1,21 @@
-import { AtomConfig, AtomValueOrFactory } from '@zedux/react/types'
+import {
+  AtomConfig,
+  AtomApiPromise,
+  AtomValueOrFactory,
+} from '@zedux/react/types'
 import { AtomInstance } from '../instances/AtomInstance'
 import { AtomBase } from './AtomBase'
 
 export abstract class StandardAtomBase<
   State,
   Params extends any[],
-  Exports extends Record<string, any>
-> extends AtomBase<State, Params, AtomInstance<State, Params, Exports>> {
+  Exports extends Record<string, any>,
+  PromiseType extends AtomApiPromise
+> extends AtomBase<
+  State,
+  Params,
+  AtomInstance<State, Params, Exports, PromiseType>
+> {
   public readonly flags?: string[]
   public readonly forwardPromises?: boolean
   public readonly maxInstances?: number
@@ -14,7 +23,12 @@ export abstract class StandardAtomBase<
 
   constructor(
     public readonly key: string,
-    public readonly _value: AtomValueOrFactory<State, Params, Exports>,
+    public readonly _value: AtomValueOrFactory<
+      State,
+      Params,
+      Exports,
+      PromiseType
+    >,
     config?: AtomConfig
   ) {
     super()

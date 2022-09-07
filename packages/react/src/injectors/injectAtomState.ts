@@ -32,7 +32,7 @@ export const injectAtomState: {
     atom,
     params as AtomParamsType<A>,
     'injectAtomState'
-  ) as AtomInstance<AtomStateType<A>, [...any], any>
+  ) as AtomInstance<AtomStateType<A>, [...any], any, any>
 
   return [instance.store.getState(), instance.setState]
 }
