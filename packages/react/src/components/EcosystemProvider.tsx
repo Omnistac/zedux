@@ -12,6 +12,8 @@ import { EcosystemConfig } from '../types'
  * be configured with props passed here.
  */
 export const EcosystemProvider = ({
+  allowComplexAtomParams,
+  allowComplexSelectorParams,
   children,
   context,
   defaultForwardPromises,
@@ -37,6 +39,8 @@ export const EcosystemProvider = ({
     const resolvedEcosystem =
       passedEcosystem ||
       createEcosystem({
+        allowComplexAtomParams,
+        allowComplexSelectorParams,
         context,
         defaultForwardPromises,
         defaultTtl,
