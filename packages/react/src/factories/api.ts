@@ -1,30 +1,39 @@
 import { isZeduxStore, Store } from '@zedux/core'
 import { AtomApi, StoreAtomApi } from '../classes/AtomApi'
-import { AtomValue } from '../types'
+import { AtomApiPromise, AtomValue } from '../types'
 import { is } from '../utils'
 
 export const api: {
-  <State = any, Exports extends Record<string, any> = Record<string, any>>(
-    value: Store<State> | StoreAtomApi<Store<State>, Exports>
-  ): StoreAtomApi<Store<State>, Exports>
   <
-    State = undefined,
-    Exports extends Record<string, any> = Record<string, any>
+    State = any,
+    Exports extends Record<string, any> = Record<string, any>,
+    PromiseType extends AtomApiPromise = undefined
   >(
-    value: AtomValue<State> | AtomApi<State, Exports>
-  ): AtomApi<State, Exports>
+    value: Store<State> | StoreAtomApi<Store<State>, Exports, PromiseType>
+  ): StoreAtomApi<Store<State>, Exports, PromiseType>
   <
     State = undefined,
-    Exports extends Record<string, any> = Record<string, any>
-  >(): AtomApi<State, Exports>
+    Exports extends Record<string, any> = Record<string, any>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    value: AtomValue<State> | AtomApi<State, Exports, PromiseType>
+  ): AtomApi<State, Exports, PromiseType>
+  <
+    State = undefined,
+    Exports extends Record<string, any> = Record<string, any>,
+    PromiseType extends AtomApiPromise = undefined
+  >(): AtomApi<State, Exports, PromiseType>
 } = <
   State = undefined,
-  Exports extends Record<string, any> = Record<string, any>
+  Exports extends Record<string, any> = Record<string, any>,
+  PromiseType extends AtomApiPromise = undefined
 >(
-  value?: AtomValue<State> | AtomApi<State, Exports>
+  value?: AtomValue<State> | AtomApi<State, Exports, PromiseType>
 ) =>
   isZeduxStore(value) || is(value, StoreAtomApi)
     ? new StoreAtomApi(
-        value as Store<State> | StoreAtomApi<Store<State>, Exports>
+        value as Store<State> | StoreAtomApi<Store<State>, Exports, PromiseType>
       )
-    : (new AtomApi(value as AtomValue<State> | AtomApi<State, Exports>) as any)
+    : (new AtomApi(
+        value as AtomValue<State> | AtomApi<State, Exports, PromiseType>
+      ) as any)

@@ -103,6 +103,7 @@ export class ZeduxPlugin {
         return hash
       }, {} as Record<Mod, boolean>)
     )
+    this.constructor = undefined as any // bleh
 
     this.registerEcosystem = registerEcosystem || (() => {})
   }

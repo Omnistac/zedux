@@ -14,6 +14,7 @@ import {
   AtomGetters,
   AtomInstanceType,
   AtomParamsType,
+  AtomApiPromise,
   AtomSelectorOrConfig,
   AtomValue,
   Cleanup,
@@ -76,18 +77,19 @@ const getStateStore = <State extends any = any>(
 export class AtomInstance<
     State,
     Params extends any[],
-    Exports extends Record<string, any>
+    Exports extends Record<string, any>,
+    PromiseType extends AtomApiPromise
   >
   extends AtomInstanceBase<
     State,
     Params,
-    StandardAtomBase<State, Params, Exports>
+    StandardAtomBase<State, Params, Exports, PromiseType>
   >
   implements AtomGetters {
   public activeState = ActiveState.Initializing
-  public api?: AtomApi<State, Exports>
+  public api?: AtomApi<State, Exports, PromiseType>
   public exports: Exports
-  public promise?: Promise<any>
+  public promise: PromiseType
   public store: Store<State>
 
   public _cancelDestruction?: Cleanup
@@ -109,7 +111,7 @@ export class AtomInstance<
 
   constructor(
     public readonly ecosystem: Ecosystem,
-    public readonly atom: StandardAtomBase<State, Params, Exports>,
+    public readonly atom: StandardAtomBase<State, Params, Exports, PromiseType>,
     public readonly keyHash: string,
     public readonly params: Params
   ) {
@@ -131,6 +133,7 @@ export class AtomInstance<
 
     // lol
     this.exports = (this as any).exports || undefined
+    this.promise = (this as any).promise || undefined
     this._promiseStatus = (this as any)._promiseStatus ?? 'success'
 
     this.setActiveState(ActiveState.Active)
@@ -196,10 +199,10 @@ export class AtomInstance<
     return val
   }
 
-  public get<A extends StandardAtomBase<any, [...any], any>>(
+  public get<A extends StandardAtomBase<any, [...any], any, any>>(
     atomOrInstance: A | AtomInstanceBase<any, [], any>,
     params?: AtomParamsType<A>
-  ): A extends StandardAtomBase<infer T, any, any> ? T : never {
+  ): A extends StandardAtomBase<infer T, any, any, any> ? T : never {
     // TODO: check if the instance exists so we know if we create it here so we
     // can destroy it if the evaluate call errors (to prevent that memory leak)
     const instance = this.ecosystem.getInstance(
@@ -218,7 +221,9 @@ export class AtomInstance<
     return instance.store.getState()
   }
 
-  public getInstance<A extends StandardAtomBase<any, [...any], any>>(
+  public getInstance<
+    A extends StandardAtomBase<any, [...any], any, PromiseType>
+  >(
     atomOrInstance: A,
     params?: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
@@ -443,11 +448,13 @@ export class AtomInstance<
     try {
       const val = (_value as (
         ...params: Params
-      ) => AtomValue<State> | AtomApi<State, Exports>)(...this.params)
+      ) => AtomValue<State> | AtomApi<State, Exports, PromiseType>)(
+        ...this.params
+      )
 
       if (!is(val, AtomApi)) return val as AtomValue<State>
 
-      this.api = val as AtomApi<State, Exports>
+      this.api = val as AtomApi<State, Exports, PromiseType>
 
       // Exports can only be set on initial evaluation
       if (this.activeState === ActiveState.Initializing) {
@@ -578,7 +585,7 @@ export class AtomInstance<
   private _setPromise(promise: Promise<any>, isStateUpdater?: boolean) {
     if (promise === this.promise) return this.store.getState()
 
-    this.promise = promise
+    this.promise = promise as PromiseType
 
     // since we're the first to chain off the returned promise, we don't need to
     // track the chained promise - it will run first, before React suspense's

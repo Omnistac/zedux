@@ -5,20 +5,20 @@ import { AtomInstanceType, AtomParamsType } from '../types'
 import { useEcosystem } from './useEcosystem'
 
 export const useAtomConsumer: {
-  <A extends StandardAtomBase<any, [...any], any>>(atom: A):
+  <A extends StandardAtomBase<any, [...any], any, any>>(atom: A):
     | AtomInstanceType<A>
     | Record<string, never>
 
-  <A extends StandardAtomBase<any, [...any], any>>(
+  <A extends StandardAtomBase<any, [...any], any, any>>(
     atom: A,
     defaultParams: AtomParamsType<A>
   ): AtomInstanceType<A>
 
-  <A extends StandardAtomBase<any, [...any], any>>(
+  <A extends StandardAtomBase<any, [...any], any, any>>(
     atom: A,
     throwIfNotProvided: true
   ): AtomInstanceType<A>
-} = <A extends StandardAtomBase<any, [...any], any>>(
+} = <A extends StandardAtomBase<any, [...any], any, any>>(
   atom: A,
   defaultParams?: AtomParamsType<A> | true
 ) => {

@@ -37,7 +37,7 @@ export const useAtomInstance: {
     config?: ZeduxHookConfig
   ): AtomInstanceType<A>
 
-  <AI extends AtomInstance<any, [...any], any>>(
+  <AI extends AtomInstance<any, [...any], any, any>>(
     instance: AI,
     params?: [],
     config?: ZeduxHookConfig

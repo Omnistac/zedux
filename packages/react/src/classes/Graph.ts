@@ -444,6 +444,7 @@ export class Graph {
       const instance = this.ecosystem._instances[nodeKey] as AtomInstance<
         any,
         any[],
+        any,
         any
       >
 
