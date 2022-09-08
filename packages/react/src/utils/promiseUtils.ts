@@ -8,11 +8,12 @@ export const getErrorPromiseState = <T>(error: Error): PromiseState<T> => ({
   status: 'error',
 })
 
-export const getInitialPromiseState = <T>(): PromiseState<T> => ({
+export const getInitialPromiseState = <T>(data?: T): PromiseState<T> => ({
+  data,
   isError: false,
   isLoading: true,
   isSuccess: false,
-  status: 'loading',
+  status: 'loading' as const,
 })
 
 export const getSuccessPromiseState = <T>(data: T): PromiseState<T> => ({
