@@ -291,7 +291,7 @@ export enum EdgeFlag {
   Deferred = 8,
 }
 
-export type EffectCallback = () => MaybeCleanup
+export type EffectCallback = () => MaybeCleanup | Promise<any>
 
 export interface EvaluationReason<State = any> {
   action?: ActionChain

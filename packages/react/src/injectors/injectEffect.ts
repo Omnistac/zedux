@@ -11,13 +11,26 @@ const getTask = (
 
     // now that the task has run, there's no need for the scheduler cleanup
     // function; replace it with the cleanup logic returned from the effect
-    // (if any)
-    descriptor.cleanup = cleanup || undefined
+    // (if any). If a promise was returned, ignore it.
+    descriptor.cleanup = typeof cleanup === 'function' ? cleanup : undefined
   }
 
   return task
 }
 
+/**
+ * Runs a deferred side effect. This is just like React's `useEffect`. When
+ * `deps` change on a subsequent reevaluation, the previous effect will be
+ * cleaned up and the effect will rerun.
+ *
+ * Return a cleanup function to clean up resources when the effect reruns or the
+ * current atom instance is destroyed.
+ *
+ * Unlike `useEffect`, you can return a promise from `injectEffect` (e.g. by
+ * passing an async function). This is only for convenience in cases where you
+ * don't have anything to cleanup, as you'll be unable to clean up resources if
+ * you return a promise.
+ */
 export const injectEffect = (effect: EffectCallback, deps?: InjectorDeps) => {
   split<EffectInjectorDescriptor>(
     'injectEffect',
