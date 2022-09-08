@@ -104,8 +104,7 @@ export const injectPromise: {
     }
 
     if (promise === promiseRef.current) return promiseRef.current
-
-    prevController?.abort('updated')
+    ;(prevController?.abort as any)('updated')
 
     if (!dataOnly) {
       // preserve previous data and error using setStateDeep:
