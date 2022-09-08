@@ -14,7 +14,48 @@ import { injectRef } from './injectRef'
 import { StoreAtomApi } from '../classes'
 
 /**
- * Create a memoized promise reference
+ * Create a memoized promise reference. Kicks off the promise immediately
+ * (unlike injectEffect which waits a tick). Creates a store to track promise
+ * state. This store's state shape is based off React Query:
+ *
+ * ```ts
+ * {
+ *   data?: <promise result type>
+ *   error?: Error
+ *   isError: boolean
+ *   isLoading: boolean
+ *   isSuccess: boolean
+ *   status: 'error' | 'loading' | 'success'
+ * }
+ * ```
+ *
+ * Returns an Atom API with `.store` and `.promise` set.
+ *
+ * The 2nd `deps` param is just like `injectMemo` - these deps determine when
+ * the promise's reference should change.
+ *
+ * The 3rd `config` param can take the following options:
+ *
+ * - `dataOnly`: Set this to true to prevent the store from tracking promise
+ *   status and make your promise's `data` the entire state.
+ *
+ * - `initialState`: Set the initial state of the store (e.g. a placeholder
+ *   value before the promise resolves)
+ *
+ * - store config: Any other config options will be passed directly to
+ *   `injectStore`'s config. For example, pass `shouldSubscribe: false` to
+ *   prevent the store from reevaluating the current atom on update.
+ *
+ * ```ts
+ * const promiseApi = injectPromise(async () => {
+ *   const response = await fetch(url)
+ *   return await response.json()
+ * }, [url], {
+ *   dataOnly: true,
+ *   initialState: '',
+ *   shouldSubscribe: false
+ * })
+ * ```
  */
 export const injectPromise: {
   <T>(
