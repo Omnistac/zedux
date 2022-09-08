@@ -55,7 +55,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public allowComplexAtomParams: boolean
   public allowComplexSelectorParams: boolean
   public context: Context
-  public defaultForwardPromises?: boolean
   public defaultTtl?: number
   public ecosystemId: string
   public flags?: string[] = []
@@ -70,7 +69,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     allowComplexAtomParams,
     allowComplexSelectorParams,
     context,
-    defaultForwardPromises,
     defaultTtl,
     destroyOnUnmount,
     flags,
@@ -102,7 +100,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.allowComplexAtomParams = !!allowComplexAtomParams
     this.allowComplexSelectorParams = !!allowComplexSelectorParams
     this.context = context as Context
-    this.defaultForwardPromises = defaultForwardPromises
     this.defaultTtl = defaultTtl ?? -1
     this._destroyOnUnmount = !!destroyOnUnmount
     this._onReady = onReady

@@ -264,7 +264,6 @@ export interface EcosystemConfig<
   allowComplexAtomParams?: boolean
   allowComplexSelectorParams?: boolean
   context?: Context
-  defaultForwardPromises?: boolean
   defaultTtl?: number
   destroyOnUnmount?: boolean
   flags?: string[]
