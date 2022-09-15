@@ -287,7 +287,7 @@ export enum EdgeFlag {
   Explicit = 1,
   External = 2,
   Static = 4,
-  Deferred = 8,
+  // Deferred = 8,
 }
 
 export type EffectCallback = () => MaybeCleanup | Promise<any>
