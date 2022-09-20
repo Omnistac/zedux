@@ -1,10 +1,11 @@
-import { AtomSelectorOrConfig, EdgeFlag } from '../types'
+import { AtomSelectorConfig, AtomSelectorOrConfig, EdgeFlag } from '../types'
 import { MutableRefObject, useMemo, useRef, useSyncExternalStore } from 'react'
 import { AtomSelectorCache, haveDepsChanged } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
 import { Ecosystem } from '../classes'
 
+const glob = ((typeof globalThis !== 'undefined' && globalThis) || {}) as any
 const OPERATION = 'useAtomSelector'
 let isSwappingRefs = false
 
@@ -56,23 +57,35 @@ const isRefDifferent = (
 
   if (newKey !== oldKey) return true
 
-  const newResultsComparatorStr = newIsFunction
-    ? ''
-    : newSelector.resultsComparator?.toString() || ''
+  if (
+    !newIsFunction &&
+    !oldIsFunction &&
+    newSelector.resultsComparator !== oldSelector.resultsComparator
+  ) {
+    const newResultsComparatorStr =
+      newSelector.resultsComparator?.toString() || ''
 
-  const oldResultsComparatorStr = oldIsFunction
-    ? ''
-    : oldSelector.resultsComparator?.toString() || ''
+    const oldResultsComparatorStr =
+      oldSelector.resultsComparator?.toString() || ''
 
-  if (newResultsComparatorStr !== oldResultsComparatorStr) return true
+    if (newResultsComparatorStr !== oldResultsComparatorStr) return true
+  }
 
-  const newRefStr = newIsFunction
-    ? newSelector.toString()
-    : newSelector.selector.toString()
+  // last thing to compare is the selectors themselves
+  if (newIsFunction && oldIsFunction) {
+    return newSelector.toString() !== oldSelector.toString()
+  }
 
-  const oldRefStr = oldIsFunction
-    ? oldSelector.toString()
-    : oldSelector.selector.toString()
+  // we know they're both objects at this point
+  if (
+    (newSelector as AtomSelectorConfig).selector ===
+    (oldSelector as AtomSelectorConfig).selector
+  ) {
+    return false
+  }
+
+  const newRefStr = (newSelector as AtomSelectorConfig).selector.toString()
+  const oldRefStr = (oldSelector as AtomSelectorConfig).selector.toString()
 
   return newRefStr !== oldRefStr
 }
@@ -129,6 +142,12 @@ export const useAtomSelector = <T, Args extends any[]>(
           resolvedArgs
         )
         pendingCache = cache
+
+        // we have to fire an extra update on subscribe in test envs because
+        // there's a bug in React (but only in test environments) where
+        // useEffects in child components run before useSyncExternalStore
+        // subscribe is called in the parent component.
+        if (glob.IS_REACT_ACT_ENVIRONMENT) onStoreChange()
 
         // this function must be idempotent
         if (!ecosystem._graph.nodes[cache.cacheKey]?.dependents[dependentKey]) {

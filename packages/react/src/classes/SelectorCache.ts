@@ -211,7 +211,7 @@ export class SelectorCache {
     this._caches[cacheKey] = cache as AtomSelectorCache<any, any[]>
     this.ecosystem._graph.addNode(cacheKey, true)
 
-    this.runSelector(cacheKey, args as Args)
+    this.runSelector(cacheKey, args as Args, true)
 
     return cache
   }
@@ -493,7 +493,8 @@ export class SelectorCache {
    */
   private runSelector<T = any, Args extends any[] = []>(
     cacheKey: string,
-    args: Args
+    args: Args,
+    isInitializing?: boolean
   ) {
     this._evaluatingStack.push(cacheKey)
     this.ecosystem._graph.bufferUpdates(cacheKey)
@@ -511,10 +512,7 @@ export class SelectorCache {
     try {
       const result = selector(this._atomGetters, ...args)
 
-      if (
-        (typeof cache.result === 'undefined' && result !== cache.result) ||
-        !resultsComparator(result, cache.result)
-      ) {
+      if (!isInitializing && !resultsComparator(result, cache.result as T)) {
         this.ecosystem._graph.scheduleDependents(
           cacheKey,
           cache.nextEvaluationReasons,
@@ -533,6 +531,8 @@ export class SelectorCache {
           )
         }
 
+        cache.result = result
+      } else if (isInitializing) {
         cache.result = result
       }
     } catch (err) {
