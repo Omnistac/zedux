@@ -1,4 +1,9 @@
-import { AtomSelectorConfig, AtomSelectorOrConfig, EdgeFlag } from '../types'
+import {
+  AtomSelectorConfig,
+  AtomSelectorOrConfig,
+  EdgeFlag,
+  GraphEdgeSignal,
+} from '../types'
 import { MutableRefObject, useMemo, useRef, useSyncExternalStore } from 'react'
 import { AtomSelectorCache, haveDepsChanged } from '../utils'
 import { useEcosystem } from './useEcosystem'
@@ -107,10 +112,6 @@ export const useAtomSelector = <T, Args extends any[]>(
   const ecosystem = useEcosystem()
   const dependentKey = useReactComponentId()
   const cacheRef = useRef<AtomSelectorCache<T, Args>>()
-
-  // crazy stuff... we need to toggle a single param we pass to useMemo but keep
-  // it constant on subsequent renders after toggling
-  const toggler = useRef(false)
   const isConfig = typeof selectorOrConfig !== 'function'
 
   const argsChanged =
@@ -126,23 +127,17 @@ export const useAtomSelector = <T, Args extends any[]>(
   const isDifferent =
     argsChanged || isRefDifferent(ecosystem, selectorOrConfig, cacheRef)
 
-  if (isDifferent) {
-    // yes, this mutation is fine
-    toggler.current = !toggler.current
-  }
+  const cache =
+    isDifferent || !cacheRef.current
+      ? ecosystem.selectorCache.getCache(selectorOrConfig, resolvedArgs)
+      : cacheRef.current
+
+  // yes, this mutation is fine
+  cacheRef.current = cache
 
   const [subscribe, getSnapshot] = useMemo(() => {
-    let localCache: T
-    let pendingCache: AtomSelectorCache<T, Args> | undefined
-
     return [
       (onStoreChange: () => void) => {
-        const cache = ecosystem.selectorCache.getCache(
-          selectorOrConfig,
-          resolvedArgs
-        )
-        pendingCache = cache
-
         // we have to fire an extra update on subscribe in test envs because
         // there's a bug in React (but only in test environments) where
         // useEffects in child components run before useSyncExternalStore
@@ -156,7 +151,13 @@ export const useAtomSelector = <T, Args extends any[]>(
             cache.cacheKey,
             OPERATION,
             EdgeFlag.External,
-            () => {
+            signal => {
+              if (signal === GraphEdgeSignal.Destroyed) {
+                // see comment in useAtomInstanceDynamic about why returning
+                // undefined from `getSnapshot` works
+                cacheRef.current = undefined
+              }
+
               if (!isSwappingRefs) onStoreChange()
             }
           )
@@ -167,28 +168,9 @@ export const useAtomSelector = <T, Args extends any[]>(
           ecosystem._graph.removeEdge(dependentKey, cache.cacheKey)
         }
       },
-      () => {
-        if (pendingCache) {
-          cacheRef.current = pendingCache
-          pendingCache = undefined
-        } else if (cacheRef.current) {
-          return cacheRef.current.result as T
-        }
-
-        // React designed `useSyncExternalStore` for Redux, which is just sooo
-        // unfortunate for us. This means they call `getSnapshot` before
-        // `subscribe` which .. just ..... :angry: (they in fact wait until the
-        // component renders fully without suspending. I suppose they think
-        // `subscribe` is too expensive to call _and_ clean up every suspended
-        // render? In our case, it's really no more expensive than calling
-        // `getSnapshot` and so much less convenient. So yeah :angry:)
-        return (
-          localCache ||
-          (localCache = ecosystem.select(selectorOrConfig, ...resolvedArgs))
-        )
-      },
+      () => cacheRef.current?.result as T,
     ]
-  }, [ecosystem, resolvedArgs, toggler.current])
+  }, [ecosystem, cache])
 
   // if ref changed but is clearly the "same" selector, swap out the ref and
   // invalidate the cache. This would trigger React "Can't update a component
