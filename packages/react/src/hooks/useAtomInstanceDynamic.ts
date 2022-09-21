@@ -84,6 +84,10 @@ export const useAtomInstanceDynamic: {
             EdgeFlag.External,
             signal => {
               if (signal === GraphEdgeSignal.Destroyed) {
+                // returning undefined from `getSnapshot` after we call
+                // `onStoreChange` causes the component to rerender. On
+                // rerender, we'll set val to an array again, so
+                // `useSyncExternalStore` will never actually return undefined.
                 val = undefined
               }
 
