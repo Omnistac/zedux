@@ -51,7 +51,7 @@ const Text = styled.text<{ index: number; $isActive: boolean }>`
 `
 
 const isSkipTransition = (state: ActiveState, prevState?: ActiveState) =>
-  state === ActiveState.Destroyed && prevState === ActiveState.Active
+  state === 'Destroyed' && prevState === 'Active'
 
 const Group = ({
   index,
@@ -118,12 +118,7 @@ export const ActiveStateGraphic = ({
   return (
     <Grid>
       <Svg className={className} height="1em" viewBox="0 0 240 240" width="1em">
-        {[
-          ActiveState.Initializing,
-          ActiveState.Active,
-          ActiveState.Stale,
-          ActiveState.Destroyed,
-        ].map((text, index) => (
+        {['Initializing', 'Active', 'Stale', 'Destroyed'].map((text, index) => (
           <Group
             index={index}
             key={text}

@@ -11,7 +11,7 @@
     <script type="module">
       import { atom, useAtomState } from './src/index'
       import { createElement } from 'react'
-      import { render } from 'react-dom'
+      import { createRoot } from 'react-dom/client'
 
       const greetingAtom = atom('greeting', 'Hello, World!')
 
@@ -27,7 +27,8 @@
         )
       }
 
-      render(createElement(App), document.getElementById('root'))
+      const root = createRoot(document.getElementById('root'))
+      root.render(createElement(App))
     </script>
   </body>
 </html>

@@ -13,11 +13,6 @@ import { Store } from './createStore'
 import { MachineStore } from './MachineStore'
 import { removeAllMeta } from './meta'
 
-interface MachineEffectHandlers {
-  enterHooks: Record<string, MachineEffectHandler[]>
-  leaveHooks: Record<string, MachineEffectHandler[]>
-}
-
 interface StateMatchHandler<
   State = any,
   S extends Store<State> = Store<State>
@@ -41,10 +36,8 @@ export const when: {
 } = (store: Store) => {
   const actionHandlers: Record<string, SideEffectHandler[]> = {}
   const anyActionHandlers: SideEffectHandler[] = []
-  const machineHandlers: MachineEffectHandlers = {
-    enterHooks: {},
-    leaveHooks: {},
-  }
+  const enterHooks: Record<string, MachineEffectHandler[]> = {}
+  const leaveHooks: Record<string, MachineEffectHandler[]> = {}
   const stateChangeHandlers: SideEffectHandler[] = []
   const stateMatchHandlers: StateMatchHandler[] = []
 
@@ -84,8 +77,8 @@ export const when: {
     if (newState === oldState) return
 
     const currentLeaveHooks =
-      typeof oldState === 'string' ? machineHandlers.leaveHooks[oldState] : null
-    const currentEnterHooks = machineHandlers.enterHooks[newState]
+      typeof oldState === 'string' ? leaveHooks[oldState] : null
+    const currentEnterHooks = enterHooks[newState]
 
     currentLeaveHooks?.forEach(hook => hook(effectData))
     currentEnterHooks?.forEach(hook => hook(effectData))
@@ -113,11 +106,11 @@ export const when: {
     const states = Array.isArray(state) ? state : [state]
 
     states.forEach(stateName => {
-      if (!machineHandlers.enterHooks[stateName]) {
-        machineHandlers.enterHooks[stateName] = []
+      if (!enterHooks[stateName]) {
+        enterHooks[stateName] = []
       }
 
-      machineHandlers.enterHooks[stateName].push(sideEffect)
+      enterHooks[stateName].push(sideEffect)
     })
 
     return whenBuilder
@@ -130,11 +123,11 @@ export const when: {
     const states = Array.isArray(state) ? state : [state]
 
     states.forEach(stateName => {
-      if (!machineHandlers.leaveHooks[stateName]) {
-        machineHandlers.leaveHooks[stateName] = []
+      if (!leaveHooks[stateName]) {
+        leaveHooks[stateName] = []
       }
 
-      machineHandlers.leaveHooks[stateName].push(sideEffect)
+      leaveHooks[stateName].push(sideEffect)
     })
 
     return whenBuilder

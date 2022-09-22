@@ -8,12 +8,7 @@ import {
 } from './classes'
 import { AtomApi } from './classes/AtomApi'
 
-export enum ActiveState {
-  Active = 'Active',
-  Destroyed = 'Destroyed',
-  Stale = 'Stale',
-  Initializing = 'Initializing',
-}
+export type ActiveState = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
 
 export type AnyAtom = StandardAtomBase<any, any, any, any>
 export type AnyAtomBase = AtomBase<any, any, AtomInstanceBase<any, any, any>>
@@ -297,34 +292,34 @@ export interface EvaluationReason<State = any> {
   newState?: State
   oldState?: State
   operation: string // e.g. a method like "injectValue"
-  targetType: EvaluationTargetType
-  targetKey?: string // e.g. an atom like "myAtom"
-  targetParams?: any
+  sourceType: EvaluationSourceType
+  sourceKey?: string // e.g. an atom like "myAtom"
   reasons?: EvaluationReason[]
   type: EvaluationType
 }
 
-export enum EvaluationTargetType {
-  Atom = 'Atom',
-  AtomSelector = 'AtomSelector',
-  External = 'External',
-  Injector = 'Injector',
-  Store = 'Store',
-}
+export type EvaluationSourceType =
+  | 'Atom'
+  | 'AtomSelector'
+  | 'External'
+  | 'Injector'
+  | 'Store'
 
-export enum EvaluationType {
-  CacheInvalidated = 'cache invalidated',
-  NodeDestroyed = 'node destroyed',
-  PromiseChanged = 'promise changed',
-  StateChanged = 'state changed',
-}
+export type EvaluationType =
+  | 'cache invalidated'
+  | 'node destroyed'
+  | 'promise changed'
+  | 'state changed'
 
 export type GraphEdgeInfo = [flags: number, operation: string] // flags are from EdgeFlag enum
 
-export enum GraphEdgeSignal {
-  Destroyed = 'Destroyed',
-  Updated = 'Updated',
-}
+/**
+ * A low-level detail that tells dependents what sort of event is causing the
+ * current update. Promise changes and state updates are lumped together as
+ * 'Update' signals. If you need to distinguish between them, look at the
+ * EvaluationType (the `type` field) in the full reasons list.
+ */
+export type GraphEdgeSignal = 'Destroyed' | 'Updated'
 
 export interface GraphViewRecursive {
   [key: string]: GraphViewRecursive
@@ -541,11 +536,6 @@ export type SetStateInterceptor<State = any> = (
   settable: Settable<State>,
   next: (settable: Settable<State>) => State
 ) => State
-
-export enum StateType {
-  Store,
-  Value,
-}
 
 export interface ZeduxHookConfig {
   operation?: string

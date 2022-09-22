@@ -32,7 +32,7 @@ describe('zero-configuration', () => {
     )
   })
 
-  test('inducers dispatch the special HYDRATE action to the store', () => {
+  test('setState functions dispatch the special HYDRATE action to the store', () => {
     const effectSubscriber = jest.fn()
     const store = createStore(null, 1)
 
@@ -49,7 +49,7 @@ describe('zero-configuration', () => {
     )
   })
 
-  test('inducers fully replace the state', () => {
+  test('setState functions fully replace the state', () => {
     const initialState = {
       a: 1,
       b: {

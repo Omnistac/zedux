@@ -145,7 +145,12 @@ const AtomInstanceActiveStateFilter = () => {
           (state = []) => [...state, id as ActiveState]
         )
       }}
-      options={ActiveState}
+      options={{
+        Active: 'Active',
+        Destroyed: 'Destroyed',
+        Initializing: 'Initializing',
+        Stale: 'Stale',
+      }}
       placeholder="Filter By Instance Active State"
       selected={selected}
     />

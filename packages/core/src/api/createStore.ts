@@ -10,7 +10,7 @@ import {
   EffectsSubscriber,
   HierarchyConfig,
   HierarchyDescriptor,
-  Inducer,
+  SetState,
   RecursivePartial,
   Reducer,
   Settable,
@@ -250,7 +250,7 @@ export class Store<State = any> {
   private _dispatch(action: Dispatchable) {
     if (DEV && typeof action === 'function') {
       throw new TypeError(
-        'Zedux: store.dispatch() - Thunks are not currently supported. Only normal action objects can be passed to store.dispatch(). Inducers should be passed to store.setState()'
+        'Zedux: store.dispatch() - Thunks are not currently supported. Only normal action objects can be passed to store.dispatch(). For zero-config stores, you can pass a function to store.setState()'
       )
     }
 
@@ -350,15 +350,15 @@ export class Store<State = any> {
     return this._dispatchAction(action, action, newState)
   }
 
-  private _dispatchInducer(
-    inducer: Inducer<State>,
+  private _dispatchStateSetter(
+    getState: SetState<State>,
     meta?: any,
     deep?: boolean
   ) {
     let newState
 
     try {
-      newState = inducer(this._currentState)
+      newState = getState(this._currentState)
     } catch (error) {
       this._informSubscribers(
         this._currentState,
@@ -505,7 +505,7 @@ export class Store<State = any> {
     deep = false
   ) {
     if (typeof settable === 'function') {
-      return this._dispatchInducer(settable as Inducer<State>, meta, deep)
+      return this._dispatchStateSetter(settable as SetState<State>, meta, deep)
     }
 
     return this._dispatchHydration(

@@ -20,13 +20,10 @@ import {
   Cleanup,
   EdgeFlag,
   EvaluationReason,
-  EvaluationTargetType,
-  EvaluationType,
+  EvaluationSourceType,
   GraphEdgeInfo,
-  GraphEdgeSignal,
   PromiseState,
   PromiseStatus,
-  StateType,
 } from '@zedux/react/types'
 import {
   InjectorDescriptor,
@@ -45,6 +42,11 @@ import { AtomApi } from '../AtomApi'
 import { AtomInstanceBase } from './AtomInstanceBase'
 import { StandardAtomBase } from '../atoms/StandardAtomBase'
 import { ZeduxPlugin } from '../ZeduxPlugin'
+
+enum StateType {
+  Store,
+  Value,
+}
 
 const getStateType = (val: any) => {
   if (isZeduxStore(val)) return StateType.Store
@@ -86,7 +88,7 @@ export class AtomInstance<
     StandardAtomBase<State, Params, Exports, PromiseType>
   >
   implements AtomGetters {
-  public activeState = ActiveState.Initializing
+  public activeState: ActiveState = 'Initializing'
   public api?: AtomApi<State, Exports, PromiseType>
   public exports: Exports
   public promise: PromiseType
@@ -136,7 +138,7 @@ export class AtomInstance<
     this.promise = (this as any).promise || undefined
     this._promiseStatus = (this as any)._promiseStatus ?? 'success'
 
-    this.setActiveState(ActiveState.Active)
+    this.setActiveState('Active')
   }
 
   /**
@@ -147,7 +149,7 @@ export class AtomInstance<
    * `true` to force-destroy the atom instance anyway.
    */
   public destroy(force?: boolean) {
-    if (this.activeState === ActiveState.Destroyed) return
+    if (this.activeState === 'Destroyed') return
 
     // If we're not force-destroying, don't destroy if there are dependents
     if (
@@ -161,7 +163,7 @@ export class AtomInstance<
     this._cancelDestruction?.()
     this._cancelDestruction = undefined
 
-    this.setActiveState(ActiveState.Destroyed)
+    this.setActiveState('Destroyed')
 
     if (this._nextEvaluationReasons.length) {
       this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
@@ -288,9 +290,9 @@ export class AtomInstance<
    */
   public _scheduleDestruction() {
     // the atom is already scheduled for destruction or destroyed
-    if (this.activeState !== ActiveState.Active) return
+    if (this.activeState !== 'Active') return
 
-    this.setActiveState(ActiveState.Stale)
+    this.setActiveState('Stale')
     const { maxInstances } = this.atom
 
     if (maxInstances != null) {
@@ -359,7 +361,7 @@ export class AtomInstance<
     // user's part. Notify them. TODO: Can we pause evaluations while
     // activeState is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
-    if (this.activeState === ActiveState.Destroyed) return
+    if (this.activeState === 'Destroyed') return
 
     this._nextEvaluationReasons.push(reason)
 
@@ -377,8 +379,8 @@ export class AtomInstance<
   }
 
   // create small, memory-efficient bound function properties we can pass around
-  public invalidate = (operation?: string, targetType?: EvaluationTargetType) =>
-    this._invalidate(operation, targetType)
+  public invalidate = (operation?: string, sourceType?: EvaluationSourceType) =>
+    this._invalidate(operation, sourceType)
 
   private evaluate = () => this._evaluate()
   private evaluationTask = () => this._evaluationTask()
@@ -457,7 +459,7 @@ export class AtomInstance<
       this.api = val as AtomApi<State, Exports, PromiseType>
 
       // Exports can only be set on initial evaluation
-      if (this.activeState === ActiveState.Initializing) {
+      if (this.activeState === 'Initializing') {
         this.exports = this.api.exports as Exports
       }
 
@@ -566,13 +568,13 @@ export class AtomInstance<
 
   private _invalidate(
     operation = 'invalidate',
-    targetType = EvaluationTargetType.External
+    sourceType: EvaluationSourceType = 'External'
   ) {
     this._scheduleEvaluation(
       {
         operation,
-        targetType,
-        type: EvaluationType.CacheInvalidated,
+        sourceType,
+        type: 'cache invalidated',
       },
       0,
       false
@@ -614,8 +616,8 @@ export class AtomInstance<
       undefined,
       undefined,
       true,
-      EvaluationType.PromiseChanged,
-      GraphEdgeSignal.Updated,
+      'promise changed',
+      'Updated',
       true
     )
 

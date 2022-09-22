@@ -29,17 +29,12 @@ export class AtomApi<
   public value: AtomValue<State>
 
   constructor(value: AtomValue<State> | AtomApi<State, Exports, PromiseType>) {
+    this.promise = undefined as PromiseType
+    this.value = value as AtomValue<State>
+
     if (is(value, AtomApi)) {
       const asAtomApi = value as AtomApi<State, Exports, PromiseType>
-      this.dispatchInterceptors = asAtomApi.dispatchInterceptors
-      this.exports = asAtomApi.exports
-      this.setStateInterceptors = asAtomApi.setStateInterceptors
-      this.promise = asAtomApi.promise
-      this.ttl = asAtomApi.ttl
-      this.value = asAtomApi.value
-    } else {
-      this.promise = undefined as PromiseType
-      this.value = value as AtomValue<State>
+      Object.assign(this, asAtomApi)
     }
   }
 
@@ -75,9 +70,13 @@ export class AtomApi<
   public setExports<NewExports extends Record<string, any>>(
     exports: NewExports
   ): AtomApi<State, NewExports, PromiseType> {
-    ;(this as AtomApi<State, NewExports, PromiseType>).exports = exports
+    ;((this as unknown) as AtomApi<
+      State,
+      NewExports,
+      PromiseType
+    >).exports = exports
 
-    return this as AtomApi<State, NewExports, PromiseType> // for chaining
+    return (this as unknown) as AtomApi<State, NewExports, PromiseType> // for chaining
   }
 
   public setPromise<T>(

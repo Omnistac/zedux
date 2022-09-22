@@ -1,6 +1,5 @@
 import { DiContext, InjectorDescriptor, InjectorType } from './types'
 import { diContext } from './csContexts'
-import { ActiveState } from '../types'
 
 export const EMPTY_CONTEXT = {}
 
@@ -58,7 +57,7 @@ export const split = <T extends InjectorDescriptor>(
 ) => {
   const context = diContext.consume()
 
-  if (context.instance.activeState === ActiveState.Initializing) {
+  if (context.instance.activeState === 'Initializing') {
     const descriptor = first(context)
     context.injectors.push(descriptor)
 
@@ -86,7 +85,7 @@ export const validateInjector = <T extends InjectorDescriptor>(
   type: InjectorType,
   context: DiContext
 ): T | undefined => {
-  if (context.instance.activeState === ActiveState.Initializing) {
+  if (context.instance.activeState === 'Initializing') {
     return
   }
 

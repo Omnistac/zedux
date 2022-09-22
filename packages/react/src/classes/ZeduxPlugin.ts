@@ -36,6 +36,14 @@ export class ZeduxPlugin {
    * store, so they don't need prefixes
    */
   public static actions = {
+    activeStateChanged: createActor<
+      {
+        instance: AnyAtomInstanceBase
+        newActiveState: ActiveState
+        oldActiveState: ActiveState
+      },
+      'activeStateChanged'
+    >('activeStateChanged'),
     ecosystemDestroyed: createActor<
       { ecosystem: Ecosystem },
       'ecosystemDestroyed'
@@ -63,14 +71,6 @@ export class ZeduxPlugin {
       },
       'edgeRemoved'
     >('edgeRemoved'),
-    instanceActiveStateChanged: createActor<
-      {
-        instance: AnyAtomInstanceBase
-        newActiveState: ActiveState
-        oldActiveState: ActiveState
-      },
-      'instanceActiveStateChanged'
-    >('instanceActiveStateChanged'),
     // either instance or selectorCache will always be defined, depending on the node type
     stateChanged: createActor<
       {

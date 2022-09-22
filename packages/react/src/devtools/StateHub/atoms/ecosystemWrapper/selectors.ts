@@ -66,7 +66,7 @@ export const ecosystemAtoms = createReactiveIon(
 
     return [...atoms]
   },
-  ['ecosystemWiped', 'instanceActiveStateChanged']
+  ['ecosystemWiped', 'activeStateChanged']
 )
 
 export const ecosystemAtomFlags = createReactiveIon(
@@ -82,7 +82,7 @@ export const ecosystemAtomFlags = createReactiveIon(
 
     return [...flags]
   },
-  ['ecosystemWiped', 'instanceActiveStateChanged']
+  ['ecosystemWiped', 'activeStateChanged']
 )
 
 export const ecosystemAtomInstances = createReactiveIon(
@@ -92,7 +92,7 @@ export const ecosystemAtomInstances = createReactiveIon(
 
     return Object.values(ecosystem._instances)
   },
-  ['ecosystemWiped', 'instanceActiveStateChanged']
+  ['ecosystemWiped', 'activeStateChanged']
 )
 
 export const ecosystemAtomInstance = ion(
@@ -128,7 +128,7 @@ export const ecosystemAtomInstance = ion(
 
         return newSnapshot
       },
-      ['ecosystemWiped', 'instanceActiveStateChanged', 'stateChanged']
+      ['ecosystemWiped', 'activeStateChanged', 'stateChanged']
     )
   },
   { ttl: 60000 }

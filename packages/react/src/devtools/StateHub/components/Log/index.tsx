@@ -153,7 +153,7 @@ export const Log = () => {
                 instancePasses(dependent as AnyAtomInstanceBase)))
           )
         }
-        case 'instanceActiveStateChanged':
+        case 'activeStateChanged':
         case 'stateChanged': {
           const { instance, selectorCache } = event.action.payload as any // TODO
           return instance

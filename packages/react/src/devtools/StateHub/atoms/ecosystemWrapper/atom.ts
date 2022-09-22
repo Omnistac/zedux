@@ -64,7 +64,7 @@ const handlers: {
     })
   },
   edgeRemoved: () => {},
-  instanceActiveStateChanged: ({ ownInstance, wrappedEcosystem }) => {
+  activeStateChanged: ({ ownInstance, wrappedEcosystem }) => {
     ownInstance.store.setStateDeep({
       instances: { ...wrappedEcosystem._instances },
     })

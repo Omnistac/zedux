@@ -7,7 +7,6 @@ import {
   AtomParamsType,
   AtomStateType,
   EdgeFlag,
-  GraphEdgeSignal,
   ZeduxHookConfig,
 } from '../types'
 import { useEcosystem } from './useEcosystem'
@@ -83,7 +82,7 @@ export const useAtomInstanceDynamic: {
             operation,
             EdgeFlag.External,
             signal => {
-              if (signal === GraphEdgeSignal.Destroyed) {
+              if (signal === 'Destroyed') {
                 // returning undefined from `getSnapshot` after we call
                 // `onStoreChange` causes the component to rerender. On
                 // rerender, we'll set val to an array again, so

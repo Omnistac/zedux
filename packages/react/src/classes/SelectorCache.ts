@@ -7,8 +7,6 @@ import {
   DependentEdge,
   EdgeFlag,
   EvaluationReason,
-  EvaluationTargetType,
-  EvaluationType,
   GraphEdgeInfo,
 } from '../types'
 import { AtomSelectorCache, JobType } from '../utils'
@@ -343,8 +341,8 @@ export class SelectorCache {
       cache.cacheKey,
       {
         operation: 'invalidateCache',
-        type: EvaluationType.CacheInvalidated,
-        targetType: EvaluationTargetType.External,
+        type: 'cache invalidated',
+        sourceType: 'External',
       },
       0,
       false

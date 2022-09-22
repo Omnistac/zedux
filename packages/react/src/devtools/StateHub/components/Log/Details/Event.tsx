@@ -37,7 +37,10 @@ const Title = styled.div`
   margin: 0;
 `
 
-const DetailsGrid = ({ children, text }: PropsWithChildren<{ text: string }>) => {
+const DetailsGrid = ({
+  children,
+  text,
+}: PropsWithChildren<{ text: string }>) => {
   const ecosystem = useEcosystem()
 
   return (
@@ -57,7 +60,11 @@ const DetailsGrid = ({ children, text }: PropsWithChildren<{ text: string }>) =>
   )
 }
 
-const EdgeDetails = ({ dependency, dependent, edge }: {
+const EdgeDetails = ({
+  dependency,
+  dependent,
+  edge,
+}: {
   dependency: AnyAtomInstanceBase | AtomSelectorCache
   dependent: string | AnyAtomInstanceBase | AtomSelectorCache
   edge: DependentEdge
@@ -66,8 +73,12 @@ const EdgeDetails = ({ dependency, dependent, edge }: {
   const hour = date.getHours()
   const minute = date.getMinutes().toString().padStart(2, '0')
   const second = date.getMinutes().toString().padStart(2, '0')
-  const dependencyKey = (dependency as AnyAtomInstanceBase).keyHash || (dependency as AtomSelectorCache).cacheKey
-  const dependentKey = (dependent as AnyAtomInstanceBase).keyHash || (dependent as AtomSelectorCache).cacheKey
+  const dependencyKey =
+    (dependency as AnyAtomInstanceBase).keyHash ||
+    (dependency as AtomSelectorCache).cacheKey
+  const dependentKey =
+    (dependent as AnyAtomInstanceBase).keyHash ||
+    (dependent as AtomSelectorCache).cacheKey
 
   return (
     <>
@@ -164,8 +175,8 @@ const EdgeRemoved: FC<{ event: LogEvent<'edgeRemoved'> }> = ({ event }) => {
   )
 }
 
-const InstanceActiveStateChanged: FC<{
-  event: LogEvent<'instanceActiveStateChanged'>
+const activeStateChanged: FC<{
+  event: LogEvent<'activeStateChanged'>
 }> = ({ event }) => {
   const { instance, newActiveState, oldActiveState } = event.action.payload
   return (
@@ -191,9 +202,7 @@ const InstanceActiveStateChanged: FC<{
   )
 }
 
-const StateChanged: FC<{ event: LogEvent<'stateChanged'> }> = ({
-  event,
-}) => {
+const StateChanged: FC<{ event: LogEvent<'stateChanged'> }> = ({ event }) => {
   const { instance, selectorCache } = event.action.payload
   const key = instance?.keyHash || selectorCache?.cacheKey
 
@@ -223,6 +232,6 @@ export const eventMap: Record<Mod, FC<{ event: LogEvent }>> = {
   ecosystemWiped: EcosystemWiped,
   edgeCreated: EdgeCreated,
   edgeRemoved: EdgeRemoved,
-  instanceActiveStateChanged: InstanceActiveStateChanged,
+  activeStateChanged: activeStateChanged,
   stateChanged: StateChanged,
 }

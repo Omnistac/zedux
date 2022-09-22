@@ -2,7 +2,6 @@ import {
   DependentEdge,
   EdgeFlag,
   EvaluationReason,
-  EvaluationTargetType,
   EvaluationType,
   GraphEdgeSignal,
 } from '../types'
@@ -240,8 +239,8 @@ export class Graph {
       undefined,
       undefined,
       true,
-      EvaluationType.NodeDestroyed,
-      GraphEdgeSignal.Destroyed,
+      'node destroyed',
+      'Destroyed',
       true
     )
 
@@ -273,8 +272,8 @@ export class Graph {
     newState: any,
     oldState: any,
     shouldSetTimeout?: boolean,
-    type = EvaluationType.StateChanged,
-    signal = GraphEdgeSignal.Updated,
+    type: EvaluationType = 'state changed',
+    signal: GraphEdgeSignal = 'Updated',
     scheduleStaticDeps = false
   ) {
     const instance = this.ecosystem._instances[nodeKey]
@@ -286,7 +285,7 @@ export class Graph {
 
       // if edge.task exists, this edge has already been scheduled
       if (dependentEdge.task) {
-        if (signal !== GraphEdgeSignal.Destroyed) return
+        if (signal !== 'Destroyed') return
 
         // destruction jobs supersede update jobs; cancel the existing job so we
         // can create a new one for the destruction
@@ -298,15 +297,13 @@ export class Graph {
       const isStatic = dependentEdge.flags & EdgeFlag.Static
       if (isStatic && !scheduleStaticDeps) return
 
-      const reason = {
+      const reason: EvaluationReason = {
         newState,
         oldState,
         operation: dependentEdge.operation,
         reasons,
-        targetKey: nodeKey,
-        targetType: node.isAtomSelector
-          ? EvaluationTargetType.AtomSelector
-          : EvaluationTargetType.Atom,
+        sourceKey: nodeKey,
+        sourceType: node.isAtomSelector ? 'AtomSelector' : 'Atom',
         type,
       }
 
