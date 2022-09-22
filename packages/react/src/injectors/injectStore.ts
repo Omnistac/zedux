@@ -1,10 +1,6 @@
 import { createStore, metaTypes, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes'
-import {
-  EvaluationType,
-  EvaluationTargetType,
-  InjectStoreConfig,
-} from '../types'
+import { InjectStoreConfig } from '../types'
 import { split, StoreInjectorDescriptor, InjectorType } from '../utils'
 
 const doSubscribe = <State>(
@@ -36,12 +32,12 @@ const doSubscribe = <State>(
               newState,
               oldState,
               operation: 'dispatch',
-              targetType: EvaluationTargetType.Store,
-              type: EvaluationType.StateChanged,
+              sourceType: 'Store',
+              type: 'state changed',
             },
           ],
-          targetType: EvaluationTargetType.Injector,
-          type: EvaluationType.StateChanged,
+          sourceType: 'Injector',
+          type: 'state changed',
         },
         0,
         false

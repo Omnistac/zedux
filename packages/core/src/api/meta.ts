@@ -61,7 +61,7 @@ export const getMetaData = (
   actionOrEffect: ActionChain | EffectChain,
   metaType: string
 ) => {
-  while (actionOrEffect.hasOwnProperty('metaType')) {
+  while ((actionOrEffect as ActionMeta).metaType) {
     if ((actionOrEffect as ActionMeta).metaType === metaType) {
       return (actionOrEffect as ActionMeta).metaData
     }
@@ -82,7 +82,7 @@ export const hasMeta = (
   actionOrEffect: ActionChain | EffectChain,
   metaType: string
 ) => {
-  while (actionOrEffect.hasOwnProperty('metaType')) {
+  while ((actionOrEffect as ActionMeta).metaType) {
     if ((actionOrEffect as ActionMeta).metaType === metaType) return true
 
     actionOrEffect = actionOrEffect.payload
@@ -103,7 +103,7 @@ export const removeAllMeta: {
   (action: ActionChain): Action
   (effect: EffectChain): Effect
 } = (actionOrEffect: any) => {
-  while (actionOrEffect.hasOwnProperty('metaType')) {
+  while (actionOrEffect.metaType) {
     actionOrEffect = actionOrEffect.payload
 
     if (DEV) {
@@ -129,7 +129,7 @@ export const removeMeta: {
   let prevNode = null
   let rootNode = null
 
-  while (currentNode.hasOwnProperty('metaType')) {
+  while ((currentNode as ActionMeta).metaType) {
     if ((currentNode as ActionMeta).metaType === metaType) {
       return getNewRoot(currentNode, prevNode, rootNode)
     }

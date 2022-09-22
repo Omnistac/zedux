@@ -1,8 +1,7 @@
-import React, { ReactNode, useEffect, useMemo, useRef } from 'react'
+import React, { ReactNode, useMemo } from 'react'
 import { useSyncExternalStore } from 'react'
 import { Ecosystem, ecosystemContext } from '../classes'
 import { createEcosystem } from '../factories/createEcosystem'
-import { useStableReference } from '../hooks/useStableReference'
 import { EcosystemConfig } from '../types'
 
 /**
@@ -12,17 +11,9 @@ import { EcosystemConfig } from '../types'
  * be configured with props passed here.
  */
 export const EcosystemProvider = ({
-  allowComplexAtomParams,
-  allowComplexSelectorParams,
   children,
-  context,
-  defaultTtl,
-  destroyOnUnmount = true,
   ecosystem: passedEcosystem,
-  flags,
-  id,
-  onReady,
-  overrides,
+  ...ecosystemConfig
 }:
   | (Partial<{ [k in keyof EcosystemConfig]: undefined }> & {
       children?: ReactNode
@@ -32,21 +23,12 @@ export const EcosystemProvider = ({
       children?: ReactNode
       ecosystem?: undefined
     })) => {
-  const stableOverrides = useStableReference(overrides)
-
   const [subscribe, getSnapshot] = useMemo(() => {
     const resolvedEcosystem =
       passedEcosystem ||
       createEcosystem({
-        allowComplexAtomParams,
-        allowComplexSelectorParams,
-        context,
-        defaultTtl,
-        destroyOnUnmount,
-        flags,
-        id,
-        onReady,
-        overrides,
+        destroyOnUnmount: true,
+        ...ecosystemConfig,
       })
 
     return [
@@ -57,21 +39,9 @@ export const EcosystemProvider = ({
       },
       () => resolvedEcosystem,
     ]
-  }, [id, passedEcosystem]) // don't pass other vals; just get snapshot when these change
+  }, [ecosystemConfig.id, passedEcosystem]) // don't pass other vals; just get snapshot when these change
 
   const ecosystem = useSyncExternalStore(subscribe, getSnapshot)
-
-  const isFirstRenderRef = useRef(true)
-
-  useEffect(() => {
-    if (isFirstRenderRef.current) {
-      isFirstRenderRef.current = false
-      return
-    }
-    if (!stableOverrides) return
-
-    ecosystem.setOverrides(stableOverrides)
-  }, [stableOverrides]) // don't pass ecosystem; just get snapshot when this changes
 
   return (
     <ecosystemContext.Provider value={ecosystem.ecosystemId}>

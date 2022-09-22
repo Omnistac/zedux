@@ -226,22 +226,22 @@ describe('Store.setState()', () => {
     )
   })
 
-  test('re-throws an error thrown in an inducer', () => {
+  test('re-throws an error thrown in a setState function', () => {
     const store = createStore()
-    const inducer = (state: any) => ({ a: state.a })
+    const setState = (state: any) => ({ a: state.a })
 
-    expect(() => store.setState(inducer)).toThrowError(
+    expect(() => store.setState(setState)).toThrowError(
       /cannot read propert.*of undefined/i
     )
   })
 
-  test('notifies effects subscriber of an error thrown in an inducer', () => {
+  test('notifies effects subscriber of an error thrown in a setState function', () => {
     const store = createStore()
     const subscriber = jest.fn()
     store.subscribe({ effects: subscriber })
-    const inducer = (state: any) => ({ a: state.a })
+    const setState = (state: any) => ({ a: state.a })
 
-    expect(() => store.setState(inducer)).toThrowError(
+    expect(() => store.setState(setState)).toThrowError(
       /cannot read propert.*of undefined/i
     )
     expect(subscriber).toHaveBeenCalledWith(
@@ -251,22 +251,22 @@ describe('Store.setState()', () => {
     )
   })
 
-  test('accepts a non-modifying inducer', () => {
+  test('accepts a non-modifying setState function', () => {
     const store = createStore(null, {})
-    const inducer = (state: any) => state
+    const setState = (state: any) => state
 
     const prevState = store.getState()
-    const nextState = store.setState(inducer)
+    const nextState = store.setState(setState)
 
     expect(prevState).toBe(nextState)
   })
 
-  test('accepts a modifying inducer', () => {
+  test('accepts a modifying setState function', () => {
     const store = createStore()
-    const inducer = () => 'a'
+    const setState = () => 'a'
 
     const prevState = store.getState()
-    const state = store.setState(inducer)
+    const state = store.setState(setState)
 
     expect(prevState).not.toBe(state)
     expect(state).toBe('a')

@@ -1,9 +1,4 @@
-import {
-  AtomSelectorConfig,
-  AtomSelectorOrConfig,
-  EdgeFlag,
-  GraphEdgeSignal,
-} from '../types'
+import { AtomSelectorConfig, AtomSelectorOrConfig, EdgeFlag } from '../types'
 import { MutableRefObject, useMemo, useRef, useSyncExternalStore } from 'react'
 import { AtomSelectorCache, haveDepsChanged } from '../utils'
 import { useEcosystem } from './useEcosystem'
@@ -152,7 +147,7 @@ export const useAtomSelector = <T, Args extends any[]>(
             OPERATION,
             EdgeFlag.External,
             signal => {
-              if (signal === GraphEdgeSignal.Destroyed) {
+              if (signal === 'Destroyed') {
                 // see comment in useAtomInstanceDynamic about why returning
                 // undefined from `getSnapshot` works
                 cacheRef.current = undefined

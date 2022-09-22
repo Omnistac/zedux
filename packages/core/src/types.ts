@@ -148,10 +148,6 @@ export type HierarchyDescriptor<State = any> =
   | Reducer<State>
   | null
 
-export type Inducer<State = any, PartialState extends Partial<State> = any> = (
-  state: State
-) => PartialState
-
 export type MachineStoreEffectHandler<
   M extends MachineStore<any, any, any> = MachineStore<string, string, any>
 > = MachineEffectHandler<
@@ -205,6 +201,10 @@ export type Reducer<State = any> = (
 export type Selector<State = any, Derivation = any> = (
   state: State
 ) => Derivation
+
+export type SetState<State = any, PartialState extends Partial<State> = any> = (
+  state: State
+) => PartialState
 
 export type Settable<State = any, StateIn = State> =
   | ((state: StateIn) => State)

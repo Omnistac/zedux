@@ -104,9 +104,9 @@ export abstract class AtomInstanceBase<
     const oldActiveState = this.activeState
     this.activeState = newActiveState
 
-    if (this.ecosystem.mods.instanceActiveStateChanged) {
+    if (this.ecosystem.mods.activeStateChanged) {
       this.ecosystem.modsMessageBus.dispatch(
-        ZeduxPlugin.actions.instanceActiveStateChanged({
+        ZeduxPlugin.actions.activeStateChanged({
           instance: this,
           newActiveState,
           oldActiveState,

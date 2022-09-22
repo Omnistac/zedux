@@ -1,5 +1,4 @@
 import {
-  ActiveState,
   AnyAtomInstance,
   api,
   atom,
@@ -33,10 +32,7 @@ export const history = atom('history', (instance: AnyAtomInstance) => {
   injectEffect(() => {
     const subscription = instance.store.subscribe(newState => {
       // store updates are synchronous. Take advantage of that just 'cause:
-      if (
-        isFromHistory.current ||
-        instance.activeState === ActiveState.Destroyed
-      ) {
+      if (isFromHistory.current || instance.activeState === 'Destroyed') {
         return
       }
 
@@ -64,7 +60,7 @@ export const history = atom('history', (instance: AnyAtomInstance) => {
       index < 0 ||
       index >= stack.length ||
       index === pointer ||
-      instance.activeState === ActiveState.Destroyed
+      instance.activeState === 'Destroyed'
     ) {
       return
     }

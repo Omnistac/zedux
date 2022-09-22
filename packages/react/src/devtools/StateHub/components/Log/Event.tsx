@@ -72,7 +72,9 @@ const EdgeCreated: FC<{ event: LogEvent<'edgeCreated'> }> = ({ event }) => {
 
 const EdgeRemoved: FC<{ event: LogEvent<'edgeRemoved'> }> = ({ event }) => {
   const { dependency, dependent } = event.action.payload
-  const key = ((dependent as AnyAtomInstanceBase).keyHash || (dependent as AtomSelectorCache).cacheKey)
+  const key =
+    (dependent as AnyAtomInstanceBase).keyHash ||
+    (dependent as AtomSelectorCache).cacheKey
 
   return (
     <Event
@@ -82,8 +84,7 @@ const EdgeRemoved: FC<{ event: LogEvent<'edgeRemoved'> }> = ({ event }) => {
         <>
           <Title>Edge Removed</Title>
           <PreviewText>
-            {typeof dependent === 'string' ? dependent : key} &gt;{' '}
-            {key}
+            {typeof dependent === 'string' ? dependent : key} &gt; {key}
           </PreviewText>
         </>
       }
@@ -91,8 +92,8 @@ const EdgeRemoved: FC<{ event: LogEvent<'edgeRemoved'> }> = ({ event }) => {
   )
 }
 
-const InstanceActiveStateChanged: FC<{
-  event: LogEvent<'instanceActiveStateChanged'>
+const activeStateChanged: FC<{
+  event: LogEvent<'activeStateChanged'>
 }> = ({ event }) => {
   const { instance, newActiveState, oldActiveState } = event.action.payload
   return (
@@ -111,9 +112,7 @@ const InstanceActiveStateChanged: FC<{
   )
 }
 
-const StateChanged: FC<{ event: LogEvent<'stateChanged'> }> = ({
-  event,
-}) => {
+const StateChanged: FC<{ event: LogEvent<'stateChanged'> }> = ({ event }) => {
   const { instance, selectorCache } = event.action.payload
 
   return (
@@ -123,7 +122,10 @@ const StateChanged: FC<{ event: LogEvent<'stateChanged'> }> = ({
       preview={
         <>
           <Title>Graph Node State Changed</Title>
-          <PreviewText>{instance ? 'Instance' : 'Selector'} - {instance?.keyHash || selectorCache?.cacheKey}</PreviewText>
+          <PreviewText>
+            {instance ? 'Instance' : 'Selector'} -{' '}
+            {instance?.keyHash || selectorCache?.cacheKey}
+          </PreviewText>
         </>
       }
     />
@@ -135,6 +137,6 @@ export const eventMap: Record<Mod, FC<{ event: LogEvent }>> = {
   ecosystemWiped: EcosystemWiped,
   edgeCreated: EdgeCreated,
   edgeRemoved: EdgeRemoved,
-  instanceActiveStateChanged: InstanceActiveStateChanged,
+  activeStateChanged: activeStateChanged,
   stateChanged: StateChanged,
 }
