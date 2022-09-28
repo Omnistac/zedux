@@ -21,7 +21,7 @@
     "dev": "vite",
     "prepublishOnly": "yarn build",
     "preview": "vite preview",
-    "test": "cd ../.. && yarn test packages/react"
+    "test": "cd ../.. && yarn test packages/react --collectCoverageFrom=packages/react/src/**/*.ts"
   },
   "keywords": [
     "atom",
@@ -78,12 +78,11 @@
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.1.1",
     "@types/react-dom": "^18.0.1",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "dependencies": {},
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react": ">=18.0.0"
   }
 }
