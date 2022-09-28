@@ -7,7 +7,6 @@ import { Ecosystem } from '../classes'
 
 const glob = ((typeof globalThis !== 'undefined' && globalThis) || {}) as any
 const OPERATION = 'useAtomSelector'
-let isSwappingRefs = false
 
 /**
  * If we detect an inline selector using these not-exactly-cheap checks, we can
@@ -153,7 +152,7 @@ export const useAtomSelector = <T, Args extends any[]>(
                 cacheRef.current = undefined
               }
 
-              if (!isSwappingRefs) onStoreChange()
+              onStoreChange()
             }
           )
         }
@@ -174,13 +173,11 @@ export const useAtomSelector = <T, Args extends any[]>(
   // selector, so we go ahead and use a global variable for this to avoid making
   // another ref for every selector.
   if (hasRefChanged && !isDifferent && cacheRef.current) {
-    isSwappingRefs = true
     ecosystem.selectorCache._swapRefs(
       cacheRef.current.selectorRef as AtomSelectorOrConfig<any, any[]>,
       selectorOrConfig as AtomSelectorOrConfig<any, any[]>,
       resolvedArgs
     )
-    isSwappingRefs = false
   }
 
   return useSyncExternalStore(subscribe, getSnapshot)
