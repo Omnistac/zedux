@@ -1,6 +1,11 @@
 import { Settable } from '@zedux/core'
 import { AtomBase, AtomInstanceBase } from '../classes'
-import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
+import {
+  AtomInstanceStateType,
+  AtomParamsType,
+  AtomStateType,
+  ZeduxHookConfig,
+} from '../types'
 import { useAtomInstanceDynamic } from './useAtomInstanceDynamic'
 
 export const useAtomState: {
@@ -11,19 +16,25 @@ export const useAtomState: {
 
   <A extends AtomBase<any, [...any], any>>(
     atom: A,
-    params: AtomParamsType<A>
+    params: AtomParamsType<A>,
+    config?: ZeduxHookConfig
   ): [
     AtomStateType<A>,
     (settable: Settable<AtomStateType<A>>) => AtomStateType<A>
   ]
 
-  <AI extends AtomInstanceBase<any, [...any], any>>(instance: AI): [
+  <AI extends AtomInstanceBase<any, [...any], any>>(
+    instance: AI,
+    params?: [],
+    config?: ZeduxHookConfig
+  ): [
     AtomInstanceStateType<AI>,
     (settable: Settable<AtomInstanceStateType<AI>>) => AtomInstanceStateType<AI>
   ]
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A,
-  params?: AtomParamsType<A>
+  params?: AtomParamsType<A>,
+  config: ZeduxHookConfig = { operation: 'useAtomState' }
 ): [
   AtomStateType<A>,
   (settable: Settable<AtomStateType<A>>) => AtomStateType<A>
@@ -31,9 +42,7 @@ export const useAtomState: {
   const [state, instance] = useAtomInstanceDynamic(
     atom,
     params as AtomParamsType<A>,
-    {
-      operation: 'useAtomState',
-    }
+    config
   )
 
   return [state, instance.setState]

@@ -45,7 +45,7 @@ export const useAtomInstance: {
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
   params?: AtomParamsType<A>,
-  { operation = OPERATION }: ZeduxHookConfig = {
+  { operation = OPERATION, shouldSuspend }: ZeduxHookConfig = {
     operation: OPERATION,
   }
 ) => {
@@ -70,8 +70,10 @@ export const useAtomInstance: {
             instance.keyHash,
             operation,
             EdgeFlag.External | EdgeFlag.Static,
-            () => {
-              cachedInstance = undefined
+            signal => {
+              // see note in useAtomInstanceDynamic
+              if (signal === 'Destroyed') cachedInstance = undefined
+
               onStoreChange()
             }
           )
@@ -88,16 +90,18 @@ export const useAtomInstance: {
         if (!cachedInstance) return cachedInstance as typeof instance
 
         // Suspense!
-        if (cachedInstance._promiseStatus === 'loading') {
-          throw cachedInstance.promise
-        } else if (cachedInstance._promiseStatus === 'error') {
-          throw cachedInstance._promiseError
+        if (shouldSuspend !== false) {
+          if (cachedInstance._promiseStatus === 'loading') {
+            throw cachedInstance.promise
+          } else if (cachedInstance._promiseStatus === 'error') {
+            throw cachedInstance._promiseError
+          }
         }
 
         return cachedInstance
       },
     ]
-  }, [ecosystem, instance, instance.promise])
+  }, [ecosystem, instance, shouldSuspend])
 
   return useSyncExternalStore(subscribe, getSnapshot)
 }

@@ -54,7 +54,7 @@ export const useAtomInstanceDynamic: {
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
   params?: AtomParamsType<A>,
-  { operation = OPERATION }: ZeduxHookConfig = {
+  { operation = OPERATION, shouldSuspend }: ZeduxHookConfig = {
     operation: OPERATION,
   }
 ) => {
@@ -90,8 +90,6 @@ export const useAtomInstanceDynamic: {
                 val = undefined
               }
 
-              // won't pick up on promise changes .. which should be fine since
-              // promise updates aren't currently sent to dynamic dependents
               onStoreChange()
             }
           )
@@ -109,10 +107,12 @@ export const useAtomInstanceDynamic: {
         if (!val) return undefined as any // hack React like dat boi
 
         // Suspense!
-        if (val[1]._promiseStatus === 'loading') {
-          throw val[1].promise
-        } else if (val[1]._promiseStatus === 'error') {
-          throw val[1]._promiseError
+        if (shouldSuspend !== false) {
+          if (val[1]._promiseStatus === 'loading') {
+            throw val[1].promise
+          } else if (val[1]._promiseStatus === 'error') {
+            throw val[1]._promiseError
+          }
         }
 
         const state = val[1].store.getState()
@@ -122,7 +122,7 @@ export const useAtomInstanceDynamic: {
         return val
       },
     ]
-  }, [ecosystem, instance])
+  }, [ecosystem, instance, shouldSuspend])
 
   return useSyncExternalStore(subscribe, getSnapshot)
 }

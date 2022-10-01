@@ -1,5 +1,10 @@
 import { AtomBase, AtomInstanceBase } from '../classes'
-import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
+import {
+  AtomInstanceStateType,
+  AtomParamsType,
+  AtomStateType,
+  ZeduxHookConfig,
+} from '../types'
 import { useAtomInstanceDynamic } from './useAtomInstanceDynamic'
 
 export const useAtomValue: {
@@ -7,19 +12,25 @@ export const useAtomValue: {
 
   <A extends AtomBase<any, [...any], any>>(
     atom: A,
-    params: AtomParamsType<A>
+    params: AtomParamsType<A>,
+    config?: ZeduxHookConfig
   ): AtomStateType<A>
 
   <AI extends AtomInstanceBase<any, [...any], any>>(
-    instance: AI
+    instance: AI,
+    params?: [],
+    config?: ZeduxHookConfig
   ): AtomInstanceStateType<AI>
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A,
-  params?: AtomParamsType<A>
+  params?: AtomParamsType<A>,
+  config: ZeduxHookConfig = { operation: 'useAtomValue' }
 ) => {
-  const [state] = useAtomInstanceDynamic(atom, params as AtomParamsType<A>, {
-    operation: 'useAtomValue',
-  })
+  const [state] = useAtomInstanceDynamic(
+    atom,
+    params as AtomParamsType<A>,
+    config
+  )
 
   return state
 }
