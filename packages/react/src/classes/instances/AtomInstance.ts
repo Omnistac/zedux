@@ -594,12 +594,16 @@ export class AtomInstance<
     // `.then` on the thrown promise, for example
     promise
       .then(data => {
+        if (this.promise !== promise) return
+
         this._promiseStatus = 'success'
         if (!isStateUpdater) return
 
         this.store.setState((getSuccessPromiseState(data) as unknown) as State)
       })
       .catch(error => {
+        if (this.promise !== promise) return
+
         this._promiseStatus = 'error'
         this._promiseError = error
         if (!isStateUpdater) return

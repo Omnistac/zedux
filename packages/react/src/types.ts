@@ -539,4 +539,5 @@ export type SetStateInterceptor<State = any> = (
 
 export interface ZeduxHookConfig {
   operation?: string
+  shouldSuspend?: boolean
 }

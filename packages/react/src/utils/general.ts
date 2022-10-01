@@ -15,7 +15,7 @@ export const haveDepsChanged = (
   if (!prevDeps || !nextDeps) {
     return matchUndefinedAndEmpty
       ? !prevDeps?.length && !nextDeps?.length
-      : prevDeps || nextDeps
+      : !prevDeps || !nextDeps
   }
 
   return (

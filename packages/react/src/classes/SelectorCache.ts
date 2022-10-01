@@ -333,8 +333,7 @@ export class SelectorCache {
    */
   public invalidateCache(
     selectorOrConfig: AtomSelectorOrConfig<any, any[]>,
-    args?: any[],
-    flushScheduler = true
+    args?: any[]
   ) {
     const cache = this.weakGetCache(selectorOrConfig, args as any[])
     if (!cache) return
@@ -350,7 +349,7 @@ export class SelectorCache {
       false
     )
 
-    if (flushScheduler) this.ecosystem._scheduler.flush()
+    this.ecosystem._scheduler.flush()
   }
 
   /**
@@ -458,7 +457,7 @@ export class SelectorCache {
 
     this._refBaseKeys.set(newRef, baseKey)
     existingCache.selectorRef = newRef
-    this.invalidateCache(newRef, args, false)
+    this.runSelector(existingCache.cacheKey, args)
   }
 
   /**
