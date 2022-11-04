@@ -121,7 +121,7 @@ export const useAtomSelector = <T, Args extends any[]>(
   const isDifferent =
     argsChanged || isRefDifferent(ecosystem, selectorOrConfig, cacheRef)
 
-  const cache =
+  let cache =
     isDifferent || !cacheRef.current
       ? ecosystem.selectorCache.getCache(selectorOrConfig, resolvedArgs)
       : cacheRef.current
@@ -140,6 +140,16 @@ export const useAtomSelector = <T, Args extends any[]>(
 
         // this function must be idempotent
         if (!ecosystem._graph.nodes[cache.cacheKey]?.dependents[dependentKey]) {
+          // React can unmount other components before calling this subscribe
+          // function but after we got the cache above. Re-get the cache
+          // if such unmountings destroyed it in the meantime:
+          if (cache.isDestroyed) {
+            cacheRef.current = cache = ecosystem.selectorCache.getCache(
+              selectorOrConfig,
+              resolvedArgs
+            )
+          }
+
           ecosystem._graph.addEdge(
             dependentKey,
             cache.cacheKey,

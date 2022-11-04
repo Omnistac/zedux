@@ -65,6 +65,16 @@ export const useAtomInstance: {
         if (
           !ecosystem._graph.nodes[instance.keyHash]?.dependents[dependentKey]
         ) {
+          // React can unmount other components before calling this subscribe
+          // function but after we got the instance above. Re-get the instance
+          // if such unmountings destroyed it in the meantime:
+          if (instance.activeState === 'Destroyed') {
+            cachedInstance = ecosystem.getInstance(
+              atom as A,
+              params as AtomParamsType<A>
+            )
+          }
+
           ecosystem._graph.addEdge(
             dependentKey,
             instance.keyHash,

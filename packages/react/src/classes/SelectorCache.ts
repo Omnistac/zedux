@@ -403,6 +403,7 @@ export class SelectorCache {
     this.ecosystem._graph.removeDependencies(cacheKey)
     this.ecosystem._graph.removeNode(cacheKey)
     delete this._caches[cacheKey]
+    cache.isDestroyed = true
     // don't delete the ref from this._refBaseKeys
   }
 
