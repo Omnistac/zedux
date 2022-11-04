@@ -27,6 +27,7 @@ export interface AtomDynamicInjectorDescriptor<
 export interface AtomSelectorCache<T = any, Args extends any[] = any[]> {
   args?: Args
   cacheKey: string
+  isDestroyed?: true
   nextEvaluationReasons: EvaluationReason[]
   prevEvaluationReasons?: EvaluationReason[]
   result?: T
