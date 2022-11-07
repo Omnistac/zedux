@@ -260,9 +260,7 @@ export class SelectorCache {
       (selectorOrConfig as AtomSelectorConfig).selector?.name
 
     // 'selector' is too generic (it's the key in AtomSelectorConfig objects)
-    return !idealKey || idealKey === 'selector'
-      ? undefined
-      : `@@selector-${idealKey}`
+    return (idealKey !== 'selector' && idealKey) || undefined
   }
 
   /**
@@ -474,12 +472,14 @@ export class SelectorCache {
     if (existingId || weak) return existingId
 
     const idealKey = this.getIdealCacheKey(selectorOrConfig)
-    const keyExists = !idealKey || this._caches[idealKey]
+    const prefixedKey = `@@selector-${idealKey}`
+    const keyExists = this._caches[prefixedKey]
 
     // if the ideal key is taken, generate a new hash prefixed with the ideal key
-    const key = keyExists
-      ? this.ecosystem._idGenerator.generateAtomSelectorId(idealKey)
-      : idealKey
+    const key =
+      !idealKey || keyExists
+        ? this.ecosystem._idGenerator.generateAtomSelectorId(idealKey)
+        : prefixedKey
 
     this._refBaseKeys.set(selectorOrConfig, key)
 
