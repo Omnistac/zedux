@@ -80,13 +80,10 @@ export const useAtomInstanceDynamic: {
           // function but after we got the instance above. Re-get the instance
           // if such unmountings destroyed it in the meantime:
           if (instance.activeState === 'Destroyed') {
-            ;(val as [
-              AtomStateType<A>,
-              AtomInstanceType<A>
-            ])[1] = ecosystem.getInstance(
-              atom as A,
-              params as AtomParamsType<A>
-            )
+            val = undefined
+            onStoreChange()
+
+            return () => {} // let the next render register the graph edge
           }
 
           ecosystem._graph.addEdge(

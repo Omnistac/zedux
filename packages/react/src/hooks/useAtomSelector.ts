@@ -6,6 +6,7 @@ import { useReactComponentId } from './useReactComponentId'
 import { Ecosystem } from '../classes'
 
 const glob = ((typeof globalThis !== 'undefined' && globalThis) || {}) as any
+const INVALIDATE_REACT = `INVALIDATE_REACT_${Math.random()}`
 const OPERATION = 'useAtomSelector'
 
 /**
@@ -121,15 +122,19 @@ export const useAtomSelector = <T, Args extends any[]>(
   const isDifferent =
     argsChanged || isRefDifferent(ecosystem, selectorOrConfig, cacheRef)
 
-  let cache =
-    isDifferent || !cacheRef.current
-      ? ecosystem.selectorCache.getCache(selectorOrConfig, resolvedArgs)
-      : cacheRef.current
+  if (isDifferent || !cacheRef.current) {
+    // yes, this mutation is fine
+    cacheRef.current = ecosystem.selectorCache.getCache(
+      selectorOrConfig,
+      resolvedArgs
+    )
+  }
 
-  // yes, this mutation is fine
-  cacheRef.current = cache
+  const cache = cacheRef.current as AtomSelectorCache<T, Args>
 
   const [subscribe, getSnapshot] = useMemo(() => {
+    let isInvalidated = false
+
     return [
       (onStoreChange: () => void) => {
         // we have to fire an extra update on subscribe in test envs because
@@ -144,10 +149,12 @@ export const useAtomSelector = <T, Args extends any[]>(
           // function but after we got the cache above. Re-get the cache
           // if such unmountings destroyed it in the meantime:
           if (cache.isDestroyed) {
-            cacheRef.current = cache = ecosystem.selectorCache.getCache(
-              selectorOrConfig,
-              resolvedArgs
-            )
+            cacheRef.current = undefined
+            isInvalidated = true
+
+            onStoreChange()
+
+            return () => {} // let the next render register the graph edge
           }
 
           ecosystem._graph.addEdge(
@@ -158,8 +165,9 @@ export const useAtomSelector = <T, Args extends any[]>(
             signal => {
               if (signal === 'Destroyed') {
                 // see comment in useAtomInstanceDynamic about why returning
-                // undefined from `getSnapshot` works
+                // a nonsense value from `getSnapshot` works
                 cacheRef.current = undefined
+                isInvalidated = true
               }
 
               onStoreChange()
@@ -172,23 +180,19 @@ export const useAtomSelector = <T, Args extends any[]>(
           ecosystem._graph.removeEdge(dependentKey, cache.cacheKey)
         }
       },
-      () => cacheRef.current?.result as T,
+      () => (isInvalidated ? INVALIDATE_REACT : cache.result),
     ]
   }, [ecosystem, cache])
 
   // if ref changed but is clearly the "same" selector, swap out the ref and
-  // invalidate the cache. This would trigger React "Can't update a component
-  // while rendering a different component" warnings unless we track that we're
-  // doing this. This can only happen if there's exactly one dependent of the
-  // selector, so we go ahead and use a global variable for this to avoid making
-  // another ref for every selector.
-  if (hasRefChanged && !isDifferent && cacheRef.current) {
+  // invalidate the cache
+  if (hasRefChanged && !isDifferent) {
     ecosystem.selectorCache._swapRefs(
-      cacheRef.current.selectorRef as AtomSelectorOrConfig<any, any[]>,
+      cache.selectorRef as AtomSelectorOrConfig<any, any[]>,
       selectorOrConfig as AtomSelectorOrConfig<any, any[]>,
       resolvedArgs
     )
   }
 
-  return useSyncExternalStore(subscribe, getSnapshot)
+  return useSyncExternalStore(subscribe, getSnapshot) as T
 }

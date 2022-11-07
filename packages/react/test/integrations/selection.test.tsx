@@ -35,7 +35,7 @@ describe('selection', () => {
 
       return (
         <>
-          <button onClick={() => setState(2)} data-testid="button"></button>
+          <button onClick={() => setState(2)} data-testid="button" />
           <div data-testid="text">{val}</div>
         </>
       )
@@ -71,7 +71,7 @@ describe('selection', () => {
     expect((await findByTestId('text')).innerHTML).toBe('b')
   })
 
-  test.only('selector is recreated if an unmounted component destroys it after a newly-rendered component reads from the cache but before the new component can create the dependency', async () => {
+  test('selector is recreated if an unmounted component destroys it after a newly-rendered component reads from the cache but before the new component can create the dependency', async () => {
     jest.useFakeTimers()
     const selector = jest.fn(({ get }: AtomGetters) => get(atom1, ['a']))
 
@@ -99,7 +99,7 @@ describe('selection', () => {
 
       return (
         <>
-          <button onClick={() => setView(2)} data-testid="button"></button>
+          <button onClick={() => setView(2)} data-testid="button" />
           {view === 1 ? <DyingComponent /> : <NewComponent />}
         </>
       )
@@ -121,7 +121,99 @@ describe('selection', () => {
       jest.runAllTimers()
     })
 
-    expect(selector).toHaveBeenCalledTimes(3)
+    expect(selector).toHaveBeenCalledTimes(2)
     expect((await findByTestId('text')).innerHTML).toBe('b')
+  })
+
+  test('selectors are recreated when necessary on component remount', async () => {
+    jest.useFakeTimers()
+    let b = 2
+    const selector1 = jest.fn(() => ({ a: 1 })) // two dependents; shouldn't rerun
+    const selector2 = jest.fn(() => ({ b: b++ })) // one dependent; should rerun
+    const selector3 = jest.fn((_: AtomGetters, arg: number) => 'c' + arg) // args change; should run with 2 different args
+
+    function ResurrectingComponent({ view }: { view: number }) {
+      useAtomSelector(selector1)
+      const { b } = useAtomSelector(selector2)
+      useAtomSelector(selector3, view)
+
+      return <div data-testid="text">{b}</div>
+    }
+
+    function Test() {
+      useAtomSelector(selector1)
+      const [view, setView] = useState(1)
+
+      return (
+        <>
+          <button onClick={() => setView(2)} data-testid="button" />
+          <ResurrectingComponent key={view} view={view} />
+        </>
+      )
+    }
+
+    const { findByTestId } = render(
+      <EcosystemProvider ecosystem={testEcosystem}>
+        <Test />
+      </EcosystemProvider>
+    )
+
+    const button = await findByTestId('button')
+
+    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector2).toHaveBeenCalledTimes(1)
+    expect(selector3).toHaveBeenCalledTimes(1)
+    expect((await findByTestId('text')).innerHTML).toBe('2')
+
+    act(() => {
+      fireEvent.click(button)
+      jest.runAllTimers()
+    })
+
+    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector2).toHaveBeenCalledTimes(2)
+    expect(selector3).toHaveBeenCalledTimes(2)
+    expect((await findByTestId('text')).innerHTML).toBe('3')
+  })
+
+  test('inline selectors are swapped out and evaluated every time the ref changes', async () => {
+    jest.useFakeTimers()
+    const selector = jest.fn((_, arg: number) => arg * 2)
+
+    function Test() {
+      const [view, setView] = useState(1)
+      const val = useAtomSelector(({ select }) => select(selector, view))
+
+      return (
+        <>
+          <button
+            onClick={() => setView(val => val + 1)}
+            data-testid="button"
+          />
+          <div data-testid="text">{val}</div>
+        </>
+      )
+    }
+
+    const { findByTestId } = render(
+      <EcosystemProvider ecosystem={testEcosystem}>
+        <Test />
+      </EcosystemProvider>
+    )
+
+    const button = await findByTestId('button')
+
+    expect(selector).toHaveBeenCalledTimes(1)
+    expect(selector).toHaveBeenLastCalledWith(expect.any(Object), 1)
+    expect((await findByTestId('text')).innerHTML).toBe('2')
+
+    act(() => {
+      fireEvent.click(button)
+      jest.runAllTimers()
+    })
+
+    expect(selector).toHaveBeenCalledTimes(2)
+    expect(selector).toHaveBeenLastCalledWith(expect.any(Object), 2)
+    expect((await findByTestId('text')).innerHTML).toBe('4')
   })
 })
