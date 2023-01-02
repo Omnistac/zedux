@@ -85,7 +85,13 @@ const doSubscribe = <State>(
  *   - `shouldSubscribe` - Whether to subscribe to the store (default: `true`)
  * @returns Store
  */
-export const injectStore = <State = any>(
+export const injectStore: {
+  <State = any>(
+    storeFactory: State | (() => Store<State>),
+    config?: InjectStoreConfig
+  ): Store<State>
+  <State = undefined>(): Store<State>
+} = <State = any>(
   storeFactory?: State | (() => Store<State>),
   config?: InjectStoreConfig
 ) => {
