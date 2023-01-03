@@ -537,6 +537,13 @@ export type SetStateInterceptor<State = any> = (
   next: (settable: Settable<State>) => State
 ) => State
 
+export type StateHookTuple<S, E> = [
+  S,
+  E & {
+    (settable: Settable<S>, meta?: any): S
+  }
+]
+
 export interface ZeduxHookConfig {
   operation?: string
   shouldSuspend?: boolean

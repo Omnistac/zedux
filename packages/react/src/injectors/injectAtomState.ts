@@ -1,38 +1,42 @@
-import { Settable } from '@zedux/core'
-import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
-import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
+import { AtomInstance, StandardAtomBase } from '../classes'
+import {
+  AtomExportsType,
+  AtomInstanceExportsType,
+  AtomInstanceStateType,
+  AtomParamsType,
+  AtomStateType,
+  StateHookTuple,
+} from '../types'
 import { injectAtomInstanceDynamic } from './injectAtomInstanceDynamic'
 
 export const injectAtomState: {
-  <A extends AtomBase<any, [], any>>(atom: A): [
+  <A extends StandardAtomBase<any, [], any, any>>(atom: A): StateHookTuple<
     AtomStateType<A>,
-    (settable: Settable<AtomStateType<A>>) => AtomStateType<A>
-  ]
+    AtomExportsType<A>
+  >
 
-  <A extends AtomBase<any, [...any], any>>(
+  <A extends StandardAtomBase<any, [...any], any, any>>(
     atom: A,
     params: AtomParamsType<A>
-  ): [
-    AtomStateType<A>,
-    (settable: Settable<AtomStateType<A>>) => AtomStateType<A>
-  ]
+  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
 
-  <AI extends AtomInstanceBase<any, [...any], any>>(instance: AI): [
-    AtomInstanceStateType<AI>,
-    (settable: Settable<AtomInstanceStateType<AI>>) => AtomInstanceStateType<AI>
-  ]
-} = <A extends AtomBase<any, [...any], any>>(
+  <AI extends AtomInstance<any, [...any], any, any>>(
+    instance: AI
+  ): StateHookTuple<AtomInstanceStateType<AI>, AtomInstanceExportsType<AI>>
+} = <A extends StandardAtomBase<any, [...any], any, any>>(
   atom: A,
   params?: AtomParamsType<A>
-): [
-  AtomStateType<A>,
-  (settable: Settable<AtomStateType<A>>) => AtomStateType<A>
-] => {
+): StateHookTuple<AtomStateType<A>, AtomExportsType<A>> => {
   const instance = injectAtomInstanceDynamic(
     atom,
     params as AtomParamsType<A>,
     'injectAtomState'
   ) as AtomInstance<AtomStateType<A>, [...any], any, any>
 
-  return [instance.store.getState(), instance.setState]
+  const setState: any = (settable: any, meta?: any) =>
+    instance.setState(settable, meta)
+
+  Object.assign(setState, instance.exports)
+
+  return [instance.store.getState(), setState]
 }
