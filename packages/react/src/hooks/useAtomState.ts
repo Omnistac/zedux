@@ -1,49 +1,47 @@
-import { Settable } from '@zedux/core'
-import { AtomBase, AtomInstanceBase } from '../classes'
+import { AtomInstance, StandardAtomBase } from '../classes'
 import {
+  AtomExportsType,
+  AtomInstanceExportsType,
   AtomInstanceStateType,
   AtomParamsType,
   AtomStateType,
+  StateHookTuple,
   ZeduxHookConfig,
 } from '../types'
 import { useAtomInstanceDynamic } from './useAtomInstanceDynamic'
 
 export const useAtomState: {
-  <A extends AtomBase<any, [], any>>(atom: A): [
+  <A extends StandardAtomBase<any, [], any, any>>(atom: A): StateHookTuple<
     AtomStateType<A>,
-    (settable: Settable<AtomStateType<A>>) => AtomStateType<A>
-  ]
+    AtomExportsType<A>
+  >
 
-  <A extends AtomBase<any, [...any], any>>(
+  <A extends StandardAtomBase<any, [...any], any, any>>(
     atom: A,
     params: AtomParamsType<A>,
     config?: ZeduxHookConfig
-  ): [
-    AtomStateType<A>,
-    (settable: Settable<AtomStateType<A>>) => AtomStateType<A>
-  ]
+  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
 
-  <AI extends AtomInstanceBase<any, [...any], any>>(
+  <AI extends AtomInstance<any, [...any], any, any>>(
     instance: AI,
     params?: [],
     config?: ZeduxHookConfig
-  ): [
-    AtomInstanceStateType<AI>,
-    (settable: Settable<AtomInstanceStateType<AI>>) => AtomInstanceStateType<AI>
-  ]
-} = <A extends AtomBase<any, [...any], any>>(
+  ): StateHookTuple<AtomInstanceStateType<AI>, AtomInstanceExportsType<AI>>
+} = <A extends StandardAtomBase<any, [...any], any, any>>(
   atom: A,
   params?: AtomParamsType<A>,
   config: ZeduxHookConfig = { operation: 'useAtomState' }
-): [
-  AtomStateType<A>,
-  (settable: Settable<AtomStateType<A>>) => AtomStateType<A>
-] => {
+): StateHookTuple<AtomStateType<A>, AtomExportsType<A>> => {
   const [state, instance] = useAtomInstanceDynamic(
     atom,
     params as AtomParamsType<A>,
     config
   )
 
-  return [state, instance.setState]
+  const setState: any = (settable: any, meta?: any) =>
+    instance.setState(settable, meta)
+
+  Object.assign(setState, instance.exports)
+
+  return [state, setState]
 }
