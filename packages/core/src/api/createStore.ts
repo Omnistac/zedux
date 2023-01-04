@@ -74,6 +74,38 @@ export class Store<State = any> {
     if (initialHierarchy) this.use(initialHierarchy)
   }
 
+  public actionStream() {
+    return {
+      [Symbol.observable]() {
+        return this
+      },
+      '@@observable'() {
+        return this
+      },
+      subscribe: (
+        subscriber:
+          | {
+              complete?: () => void
+              error?: (error: any) => void
+              next?: (action: ActionChain) => void
+            }
+          | ((action: ActionChain) => void)
+      ) => {
+        return this.subscribe({
+          effects: ({ action, error }) => {
+            if (error && typeof subscriber !== 'function') {
+              subscriber.error?.(error)
+            } else if (action) {
+              typeof subscriber === 'function'
+                ? subscriber(action)
+                : subscriber.next?.(action)
+            }
+          },
+        })
+      },
+    }
+  }
+
   /**
     Dispatches an action to the store.
 
@@ -245,6 +277,14 @@ export class Store<State = any> {
     }
 
     return this // for chaining
+  }
+
+  public [Symbol.observable]() {
+    return this
+  }
+
+  public '@@observable'() {
+    return this
   }
 
   private _dispatch(action: Dispatchable) {
