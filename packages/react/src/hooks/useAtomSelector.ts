@@ -194,5 +194,5 @@ export const useAtomSelector = <T, Args extends any[]>(
     )
   }
 
-  return useSyncExternalStore(subscribe, getSnapshot) as T
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot) as T
 }
