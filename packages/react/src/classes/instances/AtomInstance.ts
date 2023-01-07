@@ -253,6 +253,14 @@ export class AtomInstance<
     return instance
   }
 
+  /**
+   * An alias for `instance.store.getState()`. Returns the current state of this
+   * atom instance's store.
+   */
+  public getState() {
+    return this.store.getState()
+  }
+
   public select<T, Args extends any[]>(
     selectorOrConfig: AtomSelectorOrConfig<T, Args>,
     ...args: Args
