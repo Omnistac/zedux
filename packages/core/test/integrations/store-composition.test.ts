@@ -287,4 +287,48 @@ describe('store composition', () => {
       b: 1,
     })
   })
+
+  test('composed stores wait until all stores in the hierarchy update before notifying subscribers', () => {
+    const greatGrandchild111 = createStore(null, 'a')
+    const grandchild11 = createStore({ greatGrandchild111 })
+    const grandchild12 = createStore(null, 'b')
+    const grandchild21 = createStore(null, 'c')
+    const child1 = createStore({ grandchild11, grandchild12 })
+    const child2 = createStore({ grandchild21 })
+    const parent = createStore({ child1, child2 })
+
+    const stores = {
+      greatGrandchild111,
+      grandchild11,
+      grandchild12,
+      grandchild21,
+      child1,
+      child2,
+      parent,
+    }
+
+    const calls: string[] = []
+
+    Object.entries(stores)
+      // subscription order shouldn't matter:
+      .sort(() => Math.random() - 0.5)
+      .forEach(([name, store]) => {
+        store.subscribe(() => calls.push(name))
+      })
+
+    child1.setState({
+      grandchild11: {
+        greatGrandchild111: 'aa',
+      },
+      grandchild12: 'bb',
+    })
+
+    expect(calls).toEqual([
+      'parent',
+      'child1',
+      'grandchild12',
+      'grandchild11',
+      'greatGrandchild111',
+    ])
+  })
 })

@@ -129,7 +129,8 @@ export function hierarchyDescriptorToDiffTree(
 
   Since the parent store also registers an effects subscriber on this child
   store, it will know not to propagate the inherited action from the child
-  store.
+  store. UPDATE: Actually, it doesn't even need to check - the parent store
+  knows that it _isDispatching and can ignore child store actions while it is.
 */
 export function wrapStoreInReducer<State>(store: Store<State>) {
   const reducer: Reducer = (state: State, action: Action) => {

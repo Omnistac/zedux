@@ -30,6 +30,14 @@ import { addMeta, removeAllMeta } from './meta'
 
 const RECALCULATE_ACTION = { type: actionTypes.RECALCULATE }
 
+// When an action is dispatched to a parent store and delegated to a child
+// store, the child store needs to wait until the update propagates everywhere
+// and the parent store finishes its dispatch before notifying its subscribers.
+// This queue is a simple "scheduler" of sorts that lets all child stores of the
+// currently-dispatching parent store wait to notify their subscribers until all
+// stores in the hierarchy are done dispatching.
+let notifyQueue: [Store, (() => void) | undefined][] | undefined
+
 /**
   Creates a new Zedux store.
 */
@@ -59,6 +67,7 @@ export class Store<State = any> {
   static readonly hierarchyConfig: HierarchyConfig = defaultHierarchyConfig
   static readonly $$typeof = STORE_IDENTIFIER
 
+  public _isIgnoringPropagations?: boolean
   private _currentDiffTree?: DiffNode
   private _currentState: State
   private _isDispatching?: boolean
@@ -328,6 +337,11 @@ export class Store<State = any> {
 
     let error: unknown
     let newState = rootState
+    let queue: typeof notifyQueue | undefined
+
+    if (!notifyQueue) {
+      queue = notifyQueue = [[this, undefined]]
+    }
 
     try {
       if (this._rootReducer) {
@@ -340,7 +354,7 @@ export class Store<State = any> {
     } finally {
       this._isDispatching = false
 
-      this._informSubscribers(newState, action, undefined, error)
+      this._informSubscribers(newState, action, undefined, error, queue)
     }
 
     return newState
@@ -421,8 +435,23 @@ export class Store<State = any> {
     newState: State,
     action?: ActionChain,
     effect?: EffectChain,
-    error?: unknown
+    error?: unknown,
+    queue?: typeof notifyQueue
   ) {
+    // defer this call if a parent store is currently dispatching
+    if (notifyQueue) {
+      if (queue) {
+        // this is the parent store that is now done dispatching
+        notifyQueue = undefined
+      } else {
+        notifyQueue.unshift([
+          this,
+          () => this._informSubscribers(newState, action, effect, error),
+        ])
+        return
+      }
+    }
+
     const oldState = this._currentState
 
     // There is a case here where a reducer in this store could
@@ -461,6 +490,12 @@ export class Store<State = any> {
 
       subscriber.effects(infoObj)
     }
+
+    if (queue) {
+      queue.forEach(([store]) => (store._isIgnoringPropagations = true))
+      queue.forEach(([, callback]) => callback?.())
+      queue.forEach(([store]) => (store._isIgnoringPropagations = false))
+    }
   }
 
   private _registerChildStore<State = any>(
@@ -478,7 +513,7 @@ export class Store<State = any> {
       // substore in the first place, ignore the propagation; this store
       // will receive it anyway.
       // const isInherited = hasMeta(action, metaTypes.INHERIT)
-      if (this._isDispatching) return
+      if (this._isDispatching || this._isIgnoringPropagations) return
 
       const newOwnState =
         newState === oldState
@@ -520,18 +555,13 @@ export class Store<State = any> {
       )
     }
 
-    if (unwrappedAction.type === actionTypes.HYDRATE) {
+    if (
+      unwrappedAction.type === actionTypes.HYDRATE ||
+      unwrappedAction.type === actionTypes.PARTIAL_HYDRATE
+    ) {
       return this._dispatchHydration(
         unwrappedAction.payload,
-        actionTypes.HYDRATE,
-        unwrappedAction.meta
-      )
-    }
-
-    if (unwrappedAction.type === actionTypes.PARTIAL_HYDRATE) {
-      return this._dispatchHydration(
-        unwrappedAction.payload,
-        actionTypes.PARTIAL_HYDRATE,
+        unwrappedAction.type,
         unwrappedAction.meta
       )
     }
