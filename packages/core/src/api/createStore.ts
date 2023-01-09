@@ -95,7 +95,7 @@ export class Store<State = any> {
         subscriber:
           | {
               complete?: () => void
-              error?: (error: any) => void
+              error?: (error: unknown) => void
               next?: (action: ActionChain) => void
             }
           | ((action: ActionChain) => void)
