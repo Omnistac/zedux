@@ -16,7 +16,11 @@ export abstract class StandardAtomBase<
   Params,
   AtomInstance<State, Params, Exports, PromiseType>
 > {
+  public readonly consumeHydrations?: boolean
+  public readonly dehydrate?: AtomConfig<State>['dehydrate']
   public readonly flags?: string[]
+  public readonly hydrate?: AtomConfig<State>['hydrate']
+  public readonly manualHydration?: boolean
   public readonly maxInstances?: number
   public readonly ttl?: number
 
@@ -28,10 +32,14 @@ export abstract class StandardAtomBase<
       Exports,
       PromiseType
     >,
-    config?: AtomConfig
+    config?: AtomConfig<State>
   ) {
     super()
+    this.consumeHydrations = config?.consumeHydrations
+    this.dehydrate = config?.dehydrate
     this.flags = config?.flags
+    this.hydrate = config?.hydrate
+    this.manualHydration = config?.manualHydration
     this.maxInstances = config?.maxInstances
     this.ttl = config?.ttl
 

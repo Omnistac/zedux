@@ -41,7 +41,7 @@ export const EcosystemProvider = ({
     ]
   }, [ecosystemConfig.id, passedEcosystem]) // don't pass other vals; just get snapshot when these change
 
-  const ecosystem = useSyncExternalStore(subscribe, getSnapshot)
+  const ecosystem = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 
   return (
     <ecosystemContext.Provider value={ecosystem.ecosystemId}>

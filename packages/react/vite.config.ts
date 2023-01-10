@@ -68,8 +68,9 @@ const packages: Record<
               (match, capture1, capture2, capture3, capture4, capture5) => {
                 const base = `${capture1}${capture2}port ${capture3} from `
 
-                if (!capture5.startsWith('@zedux'))
+                if (!capture5.startsWith('@zedux')) {
                   return `${base}'${capture5}'`
+                }
 
                 const importNodes = capture5.split('/')
 

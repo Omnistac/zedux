@@ -41,20 +41,24 @@ export const injectEffect = (effect: EffectCallback, deps?: InjectorDeps) => {
         type: InjectorType.Effect,
       }
 
-      const task = getTask(effect, descriptor)
-      descriptor.cleanup = () => {
-        instance.ecosystem._scheduler.unscheduleJob(task)
-        descriptor.cleanup = undefined
-      }
+      if (!instance.ecosystem.ssr) {
+        const task = getTask(effect, descriptor)
+        descriptor.cleanup = () => {
+          instance.ecosystem._scheduler.unscheduleJob(task)
+          descriptor.cleanup = undefined
+        }
 
-      instance.ecosystem._scheduler.scheduleJob({
-        task,
-        type: JobType.RunEffect,
-      })
+        instance.ecosystem._scheduler.scheduleJob({
+          task,
+          type: JobType.RunEffect,
+        })
+      }
 
       return descriptor
     },
     (prevDescriptor, { instance }) => {
+      if (instance.ecosystem.ssr) return prevDescriptor
+
       const depsHaveChanged = haveDepsChanged(prevDescriptor?.deps, deps)
 
       if (!depsHaveChanged) return prevDescriptor

@@ -1,6 +1,0 @@
-{
-  "internal": true,
-  "main": "./index.js",
-  "module": "./index.js",
-  "types": "../dist/react/src/devtools/index.d.ts"
-}

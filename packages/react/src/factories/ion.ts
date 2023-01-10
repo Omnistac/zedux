@@ -21,7 +21,7 @@ export const ion: {
       getters: AtomGetters,
       ...params: Params
     ) => AtomApi<Promise<State>, Exports, PromiseType>,
-    config?: AtomConfig
+    config?: AtomConfig<State>
   ): Ion<PromiseState<State>, Params, Exports, PromiseType>
 
   <
@@ -32,7 +32,7 @@ export const ion: {
   >(
     key: string,
     get: IonGet<State, Params, Exports, PromiseType>,
-    config?: AtomConfig
+    config?: AtomConfig<State>
   ): Ion<State, Params, Exports, PromiseType>
 
   <
@@ -47,7 +47,7 @@ export const ion: {
       ...params: Params
     ) => AtomApi<Promise<State>, Exports, PromiseType>,
     set?: IonSet<State, Params, Exports, PromiseType>,
-    config?: AtomConfig
+    config?: AtomConfig<State>
   ): Ion<PromiseState<State>, Params, Exports, PromiseType>
 
   <
@@ -59,7 +59,7 @@ export const ion: {
     key: string,
     get: IonGet<State, Params, Exports, PromiseType>,
     set?: IonSet<State, Params, Exports, PromiseType>,
-    config?: AtomConfig
+    config?: AtomConfig<State>
   ): Ion<State, Params, Exports, PromiseType>
 } = <
   State = any,
@@ -69,11 +69,11 @@ export const ion: {
 >(
   key: string,
   get: IonGet<State, Params, Exports, PromiseType>,
-  setIn?: IonSet<State, Params, Exports, PromiseType> | AtomConfig,
-  configIn?: AtomConfig
+  setIn?: IonSet<State, Params, Exports, PromiseType> | AtomConfig<State>,
+  configIn?: AtomConfig<State>
 ) => {
   const set = typeof setIn === 'function' ? setIn : undefined
-  const config = configIn || (setIn as AtomConfig)
+  const config = set ? configIn : (setIn as AtomConfig<State>)
 
   return new Ion(key, get, set, config)
 }

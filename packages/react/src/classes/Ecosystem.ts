@@ -19,7 +19,6 @@ import {
   MaybeCleanup,
 } from '../types'
 import { EcosystemGraphNode, EMPTY_CONTEXT, is } from '../utils'
-import { Atom } from './atoms/Atom'
 import { AtomBase } from './atoms/AtomBase'
 import { Graph } from './Graph'
 import { IdGenerator } from './IdGenerator'
@@ -45,6 +44,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements AtomGettersBase {
   public _destroyOnUnmount = false
   public _graph: Graph = new Graph(this)
+  public hydration?: Record<string, any>
   public _idGenerator = new IdGenerator()
   public _instances: Record<string, AnyAtomInstance> = {}
   public _onReady: EcosystemConfig<Context>['onReady']
@@ -52,22 +52,25 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
   public selectorCache: SelectorCache = new SelectorCache(this)
-  public allowComplexAtomParams: boolean
-  public allowComplexSelectorParams: boolean
+  public complexAtomParams: boolean
+  public complexSelectorParams: boolean
+  public consumeHydrations?: boolean
   public context: Context
   public defaultTtl?: number
   public ecosystemId: string
-  public flags?: string[] = []
+  public flags?: string[]
   public modsMessageBus = createStore() // use an empty store as a message bus
   public mods: Record<Mod, number> = { ...defaultMods }
   public overrides: Record<string, AnyAtomBase> = {}
+  public ssr?: boolean
   private cleanup?: MaybeCleanup
   private isInitialized = false
   private plugins: { plugin: ZeduxPlugin; cleanup: Cleanup }[] = []
 
   constructor({
-    allowComplexAtomParams,
-    allowComplexSelectorParams,
+    complexAtomParams,
+    complexSelectorParams,
+    consumeHydrations,
     context,
     defaultTtl,
     destroyOnUnmount,
@@ -75,6 +78,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     id,
     onReady,
     overrides,
+    ssr,
   }: EcosystemConfig<Context>) {
     if (DEV && flags && !Array.isArray(flags)) {
       throw new TypeError(
@@ -93,21 +97,28 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       this.setOverrides(overrides)
     }
 
-    if (flags) {
-      this.flags = flags
-    }
-
-    this.allowComplexAtomParams = !!allowComplexAtomParams
-    this.allowComplexSelectorParams = !!allowComplexSelectorParams
+    this.consumeHydrations = consumeHydrations
+    this.flags = flags
+    this.complexAtomParams = !!complexAtomParams
+    this.complexSelectorParams = !!complexSelectorParams
     this.context = context as Context
     this.defaultTtl = defaultTtl ?? -1
+    this.ssr = ssr
     this._destroyOnUnmount = !!destroyOnUnmount
     this._onReady = onReady
     this.isInitialized = true
     this.cleanup = onReady?.(this)
   }
 
-  public addOverrides(overrides: Atom<any, any, any, any>[]) {
+  /**
+   * Merge the passed atom overrides into the ecosystem's current list of
+   * overrides. Force-destroys all atom instances currently in the ecosystem
+   * that should now be overridden.
+   *
+   * This can't be used to remove overrides. Use `.setOverrides()` or
+   * `.removeOverrides()` for that.
+   */
+  public addOverrides(overrides: AnyAtomBase[]) {
     this.overrides = {
       ...this.overrides,
       ...mapOverrides(overrides),
@@ -118,6 +129,106 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
       Object.values(instances).forEach(instance => instance.destroy(true))
     })
+  }
+
+  /**
+   * Retrieve an object mapping atom instance keyHashes to their current values.
+   * Uses the `dehydrate` atom config option when specified to transform state
+   * to a serializable form.
+   *
+   * Atoms can be excluded from dehydration by passing `exclude` and/or
+   * `excludeFlags` options:
+   *
+   * ```ts
+   * myEcosystem.dehydrate({
+   *   exclude: [myAtom, 'my-fuzzy-search-string'],
+   *   excludeFlags: ['no-ssr']
+   * })
+   * ```
+   *
+   * An atom passed to `exclude` will exclude all instances of that atom. A
+   * string passed to `exclude` will exclude all instances whose keyHash
+   * contains the string (case-insensitive)
+   *
+   * You can dehydrate only a subset of all atoms by passing `include` and/or
+   * `includeFlags` options:
+   *
+   * ```ts
+   * myEcosystem.dehydrate({
+   *   include: [myAtom, 'my-fuzzy-search-string'],
+   *   includeFlags: ['ssr']
+   * })
+   * ```
+   *
+   * An atom passed to `include` will include all instances of that atom. A
+   * string passed to `include` will include all instances whose keyHash
+   * contains the string (case-insensitive)
+   *
+   * Exclude takes precedence over include
+   */
+  public dehydrate({
+    exclude,
+    excludeFlags,
+    include,
+    includeFlags,
+  }: {
+    exclude?: (AnyAtomBase | string)[]
+    excludeFlags?: string[]
+    include?: (AnyAtomBase | string)[]
+    includeFlags?: string[]
+  } = {}) {
+    const instances = Object.values(this._instances).filter(instance => {
+      if (
+        exclude &&
+        exclude.some(atomOrKey =>
+          typeof atomOrKey === 'string'
+            ? instance.keyHash.toLowerCase().includes(atomOrKey.toLowerCase())
+            : instance.atom.key === atomOrKey.key
+        )
+      ) {
+        return false
+      }
+
+      if (
+        excludeFlags &&
+        excludeFlags.some(flag => instance.atom.flags?.includes(flag))
+      ) {
+        return false
+      }
+
+      if (!include && !includeFlags) return true
+
+      if (
+        include &&
+        include.some(atomOrKey =>
+          typeof atomOrKey === 'string'
+            ? instance.keyHash.toLowerCase().includes(atomOrKey.toLowerCase())
+            : instance.atom.key === atomOrKey.key
+        )
+      ) {
+        return true
+      }
+
+      if (
+        includeFlags &&
+        includeFlags.some(flag => instance.atom.flags?.includes(flag))
+      ) {
+        return true
+      }
+
+      return false
+    })
+
+    return Object.fromEntries(
+      instances.map(instance => {
+        const state = instance.store.getState()
+
+        return [
+          instance.keyHash,
+          instance.atom.dehydrate ? instance.atom.dehydrate(state) : state,
+        ]
+      })
+    )
   }
 
   /**
@@ -231,6 +342,47 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this._instances[keyHash] = newInstance
 
     return newInstance
+  }
+
+  /**
+   * Hydrate the state of atoms in this ecosystem with an object mapping atom
+   * instance keyHashes to their hydrated state. This object will usually be the
+   * result of a call to `ecosystem.dehydrate()`.
+   *
+   * This is the key to SSR. The ecosystem's initial state can be dehydrated on
+   * the server, sent to the client in serialized form, deserialized, and passed
+   * to `ecosystem.hydrate()`. Every atom instance that evaluates after this
+   * hydration can use `injectHydration()` to retrieve its hydrated state.
+   *
+   * Pass `retroactive: false` to prevent this call from updating the state of
+   * all atom instances that have already been initialized with this new
+   * hydration. Hydration is retroactive by default.
+   *
+   * ```ts
+   * ecosystem.hydrate(dehydratedState, { retroactive: false })
+   * ```
+   */
+  public hydrate(
+    dehydratedState: Record<string, any>,
+    config?: { retroactive?: boolean }
+  ) {
+    this.hydration = { ...this.hydration, ...dehydratedState }
+
+    if (config?.retroactive === false) return
+
+    Object.entries(dehydratedState).forEach(([key, val]) => {
+      const instance = this._instances[key]
+
+      if (!instance) return
+
+      instance.setState(
+        instance.atom.hydrate ? instance.atom.hydrate(val) : val
+      )
+
+      if (this.consumeHydrations) {
+        delete this.hydration?.[key]
+      }
+    })
   }
 
   public inspectGraph(view: 'bottom-up'): GraphViewRecursive
@@ -350,7 +502,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
           filterKey &&
           (isAtom
             ? instance.atom.key !== filterKey
-            : !instance.keyHash.includes(filterKey))
+            : !instance.keyHash.toLowerCase().includes(filterKey))
         ) {
           return
         }
@@ -396,8 +548,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const subscription = plugin.modsStore.subscribe((newState, oldState) => {
       this.recalculateMods(newState, oldState)
     })
-    const cleanupRegistration = plugin.registerEcosystem(this)
 
+    const cleanupRegistration = plugin.registerEcosystem(this)
     const cleanup = () => {
       subscription.unsubscribe()
       if (cleanupRegistration) cleanupRegistration()
@@ -415,7 +567,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * will cause dependents of those instances to recreate their dependency atom
    * instance without using an override.
    */
-  public removeOverrides(overrides: (Atom<any, any, any, any> | string)[]) {
+  public removeOverrides(overrides: (AnyAtomBase | string)[]) {
     this.overrides = mapOverrides(
       Object.values(this.overrides).filter(atom =>
         overrides.every(override => {
@@ -592,6 +744,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       instance.destroy(true)
     })
 
+    this.hydration = undefined
     this.selectorCache.wipe()
 
     this._scheduler.wipe()

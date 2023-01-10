@@ -27,7 +27,7 @@ export class Ion<
     key: string,
     get: IonGet<State, Params, Exports, PromiseType>,
     set?: IonSet<State, Params, Exports, PromiseType>,
-    config?: AtomConfig
+    config?: AtomConfig<State>
   ) {
     const value = (...params: Params) => {
       const atomGetters = injectAtomGetters()
@@ -104,7 +104,7 @@ export class Ion<
 
     return `${base}-${ecosystem._idGenerator.hashParams(
       params,
-      ecosystem.allowComplexAtomParams
+      ecosystem.complexAtomParams
     )}`
   }
 

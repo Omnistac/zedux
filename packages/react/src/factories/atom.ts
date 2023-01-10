@@ -16,7 +16,7 @@ export const atom: {
   >(
     key: string,
     value: (...params: Params) => AtomApi<Promise<State>, Exports, PromiseType>,
-    config?: AtomConfig
+    config?: AtomConfig<State>
   ): Atom<PromiseState<State>, Params, Exports, PromiseType>
 
   <
@@ -27,7 +27,7 @@ export const atom: {
   >(
     key: string,
     value: AtomValueOrFactory<State, Params, Exports, PromiseType>,
-    config?: AtomConfig
+    config?: AtomConfig<State>
   ): Atom<State, Params, Exports, PromiseType>
 } = <
   State = any,
@@ -37,7 +37,7 @@ export const atom: {
 >(
   key: string,
   value: AtomValueOrFactory<State, Params, Exports, PromiseType>,
-  config?: AtomConfig
+  config?: AtomConfig<State>
 ) => {
   if (DEV && !key) {
     throw new TypeError('Zedux: All atoms must have a key')

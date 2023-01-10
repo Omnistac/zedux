@@ -25,11 +25,13 @@ export type AsyncEffectCallback<T = any> = (
 
 export type AtomApiPromise = Promise<any> | undefined
 
-export interface AtomConfig {
+export interface AtomConfig<State = any> {
+  consumeHydrations?: boolean
+  dehydrate?: <D>(state: State) => D
   flags?: string[]
+  hydrate?: <D>(dehydratedState: D) => State
+  manualHydration?: boolean
   maxInstances?: number
-  // molecules?: Molecule<any, any>[] // TODO: type this first `any` (the second `any` is correct as-is)
-  // readonly?: boolean
   ttl?: number
 }
 
@@ -256,8 +258,9 @@ export type DispatchInterceptor<State = any> = (
 export interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
 > {
-  allowComplexAtomParams?: boolean
-  allowComplexSelectorParams?: boolean
+  complexAtomParams?: boolean
+  complexSelectorParams?: boolean
+  consumeHydrations?: boolean
   context?: Context
   defaultTtl?: number
   destroyOnUnmount?: boolean
@@ -268,6 +271,7 @@ export interface EcosystemConfig<
     prevContext?: Context
   ) => MaybeCleanup
   overrides?: AtomBase<any, any[], any>[]
+  ssr?: boolean
 }
 
 /**
