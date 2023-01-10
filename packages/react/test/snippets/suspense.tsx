@@ -3,7 +3,6 @@ import {
   atom,
   injectAtomInstance,
   injectAtomValue,
-  injectMemo,
   injectPromise,
   useAtomInstance,
   useAtomValue,

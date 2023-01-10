@@ -212,7 +212,7 @@ describe('Store.setState()', () => {
     const reducer = (state: string) => {
       if (state) store.setState('a')
 
-      return { state: 'b' }
+      return 'b'
     }
 
     store.use(reducer)
@@ -327,6 +327,20 @@ describe('Store.setState()', () => {
     expect(subscriber).not.toHaveBeenCalled()
     expect(state).toBe(initialState)
   })
+
+  test('attaches the passed metadata as the `meta` property of the generated action', () => {
+    const subscriber = jest.fn()
+    const store = createStore()
+
+    store.subscribe(subscriber)
+    store.setState('a', 'b')
+
+    expect(subscriber).toHaveBeenCalledWith('a', undefined, {
+      meta: 'b',
+      payload: 'a',
+      type: actionTypes.HYDRATE,
+    })
+  })
 })
 
 describe('Store.setStateDeep()', () => {
@@ -355,6 +369,40 @@ describe('Store.setStateDeep()', () => {
       a: 1,
       b: {
         c: 4,
+        d: {
+          e: 3,
+        },
+        f: 5,
+      },
+    })
+
+    expect(state.b.d).toBe(initialState.b.d)
+  })
+
+  test('accepts a function overload', () => {
+    const initialState = {
+      a: 1,
+      b: {
+        c: 2,
+        d: {
+          e: 3,
+        },
+      },
+    }
+
+    const store = createStore(null, initialState)
+
+    const state = store.setStateDeep(state => ({
+      b: {
+        c: state.b.c + 4,
+        f: 5,
+      },
+    }))
+
+    expect(state).toEqual({
+      a: 1,
+      b: {
+        c: 6,
         d: {
           e: 3,
         },

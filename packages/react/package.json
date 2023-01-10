@@ -14,9 +14,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && yarn build:prod && yarn build:dev && yarn build:devtools",
+    "build": "rimraf dist && yarn build:prod && yarn build:dev",
     "build:dev": "MODE=development vite build",
-    "build:devtools": "PACKAGE=devtools vite build",
     "build:prod": "vite build",
     "dev": "vite",
     "prepublishOnly": "yarn build",

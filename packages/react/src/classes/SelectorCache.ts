@@ -242,7 +242,7 @@ export class SelectorCache {
     return args?.length
       ? `${baseKey}-${this.ecosystem._idGenerator.hashParams(
           args,
-          this.ecosystem.allowComplexSelectorParams
+          this.ecosystem.complexSelectorParams
         )}`
       : baseKey
   }

@@ -9,5 +9,5 @@
     "skipLibCheck": false,
     "useDefineForClassFields": true
   },
-  "include": ["./devtools", "./examples", "./src", "./test", "../core/src", "../../global.d.ts"]
+  "include": ["./examples", "./src", "./test", "../core/src", "../../global.d.ts"]
 }

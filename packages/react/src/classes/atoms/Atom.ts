@@ -35,7 +35,7 @@ export class Atom<
 
     return `${base}-${ecosystem._idGenerator.hashParams(
       params,
-      ecosystem.allowComplexAtomParams
+      ecosystem.complexAtomParams
     )}`
   }
 
