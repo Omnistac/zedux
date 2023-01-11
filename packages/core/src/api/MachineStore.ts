@@ -1,4 +1,4 @@
-import { RecursivePartial } from '../types'
+import { RecursivePartial, Settable } from '../types'
 import { MachineStateType } from '../utils/types'
 import { Store } from './createStore'
 
@@ -18,7 +18,13 @@ export class MachineStore<
 
   constructor(
     initialState: StateNames,
-    states: Record<StateNames, Record<EventNames, StateNames>>,
+    states: Record<
+      StateNames,
+      Record<
+        EventNames,
+        { name: StateNames; guard?: (context: Context) => boolean }
+      >
+    >,
     eventNames: Set<EventNames>,
     initialContext?: Context
   ) {
@@ -34,8 +40,12 @@ export class MachineStore<
             const nextValue =
               states[currentState.value][eventName as EventNames]
 
+            if (nextValue?.guard && !nextValue.guard(currentState.context)) {
+              return currentState
+            }
+
             return nextValue
-              ? { context: currentState.context, value: nextValue }
+              ? { context: currentState.context, value: nextValue.name }
               : currentState
           })
 
@@ -47,8 +57,23 @@ export class MachineStore<
     )
   }
 
-  public setContext = (partialContext: RecursivePartial<Context>) =>
-    this.setStateDeep({
-      context: partialContext,
-    })
+  public getContext = () => this.getState().context
+
+  public is = (stateName: StateNames) => this.getState().value === stateName
+
+  public setContext = (context: Settable<Context>) =>
+    this.setState(state => ({
+      context: typeof context === 'function' ? context(state.context) : context,
+      value: state.value,
+    }))
+
+  public setContextDeep = (
+    partialContext: Settable<RecursivePartial<Context>, Context>
+  ) =>
+    this.setStateDeep(state => ({
+      context:
+        typeof partialContext === 'function'
+          ? partialContext(state.context)
+          : partialContext,
+    }))
 }
