@@ -113,8 +113,8 @@ describe('rxjs integration', () => {
   })
 
   test('reducer errors emit error signals on action streams', () => {
-    const reducer = (state: any) => {
-      if (state) throw 'a'
+    const reducer = (state: any, action: any) => {
+      if (action.type === 'throw') throw 'a'
 
       return 'b'
     }
@@ -123,21 +123,25 @@ describe('rxjs integration', () => {
     const error = jest.fn()
 
     const store = createStore(reducer)
-    const action$ = from(store.actionStream())
+    const action$ = store.actionStream()['@@observable']()
     const subscription = action$.subscribe({
       next,
       error,
     })
+    const subscription2 = action$.subscribe({ error })
 
+    store.dispatch({ type: 'no-throw' })
     try {
-      store.dispatch({ type: 'test' })
+      store.dispatch({ type: 'throw' })
     } catch (err) {}
 
     subscription.unsubscribe()
+    subscription2.unsubscribe()
 
-    expect(next).not.toHaveBeenCalled()
-    expect(error).toHaveBeenCalledTimes(1)
-    expect(error).toHaveBeenCalledWith('a')
+    expect(next).toHaveBeenCalledTimes(1)
+    expect(next).toHaveBeenCalledWith({ type: 'no-throw' })
+    expect(error).toHaveBeenCalledTimes(2)
+    expect(error).toHaveBeenLastCalledWith('a')
   })
 
   test('reducer errors emit nothing if no error subscriber is passed', () => {
