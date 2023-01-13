@@ -436,8 +436,12 @@ export class Store<State = any> {
     action?: ActionChain,
     effect?: EffectChain,
     error?: unknown,
-    queue?: typeof notifyQueue
+    queue?: typeof notifyQueue,
+    oldState = this._currentState
   ) {
+    // Update the stored state
+    this._currentState = newState
+
     // defer this call if a parent store is currently dispatching
     if (notifyQueue) {
       if (queue) {
@@ -446,20 +450,25 @@ export class Store<State = any> {
       } else {
         notifyQueue.unshift([
           this,
-          () => this._informSubscribers(newState, action, effect, error),
+          () => {
+            // skip informing subscribers if the state has already been changed
+            // by a parent store's subscriber (which state change is already
+            // propagated to this store's subscribers by this point):
+            if (this._currentState !== newState) return
+
+            this._informSubscribers(
+              newState,
+              action,
+              effect,
+              error,
+              undefined,
+              oldState
+            )
+          },
         ])
         return
       }
     }
-
-    const oldState = this._currentState
-
-    // There is a case here where a reducer in this store could
-    // dispatch an action to a parent or child store. Investigate
-    // ways to handle this.
-
-    // Update the stored state
-    this._currentState = newState
 
     let infoObj: EffectData<State, this> | undefined
 
