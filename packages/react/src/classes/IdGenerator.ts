@@ -106,7 +106,7 @@ export class IdGenerator {
       if (is(param, AtomInstanceBase)) return param.keyHash
       if (!param) return param
       if (!isPlainObject(param)) {
-        if (!acceptComplexParams) return param
+        if (!acceptComplexParams || Array.isArray(param)) return param
         if (typeof param === 'function') return this.cacheFn(param)
         if (typeof param?.constructor === 'function') {
           return this.cacheClass(param)
