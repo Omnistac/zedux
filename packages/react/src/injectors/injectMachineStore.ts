@@ -8,7 +8,22 @@ type ArrToUnion<S extends string[]> = S extends [infer K, ...infer Rest]
     : never
   : never
 
-interface MachineState<
+export type InjectMachineStoreParams<
+  States extends MachineState[],
+  Context extends Record<string, any> | undefined = undefined
+> = [
+  statesFactory: (
+    state: <Name extends string>(stateName: Name) => MachineState<Context, Name>
+  ) => [...States],
+  initialContext?: Context,
+  config?: MachineStoreConfig<
+    MapStatesToStateNames<States, Context>,
+    MapStatesToEvents<States, Context>,
+    Context
+  >
+]
+
+export interface MachineState<
   Context extends Record<string, any> | undefined = any,
   Name extends string = string,
   Events extends string[] = [],
@@ -77,17 +92,51 @@ type StateNameType<S extends MachineState> = S extends MachineState<
   ? Name
   : never
 
+/**
+ * Create a MachineStore. Pass a statesFactory
+ *
+ * The first state in the state list returned from your statesFactory will
+ * become the initial state (`.value`) of the store.
+ *
+ * Registers an effect that listens to all store changes and calls the
+ * configured listeners appropriately.
+ *
+ * ```ts
+ * const store = injectMachineStore(state => [
+ *   state('a')
+ *     .on('next', 'b', localGuard)
+ *     .onEnter(enterListener)
+ *     .onLeave(leaveListener),
+ *   state('b').on('next', 'a')
+ * ], initialContext, { guard, onTransition })
+ * ```
+ *
+ * Set a universal transition guard via the 3rd `config` object param. This
+ * guard will be called every time a valid transition is about to occur. It will
+ * be called with the current `.context` value and should return a boolean.
+ * Return true to allow the transition, or any falsy value to deny it.
+ *
+ * Set a universal `onTransition` listener via the 3rd `config` object param.
+ * This listener will be called every time the machine transitions to a new
+ * state (after the state is updated). It will be called with 2 params: The
+ * current MachineStore and the effectData of the action that transitioned the
+ * store. For example, use `effectData.oldState.value` to see what state the
+ * machine just transitioned from.
+ *
+ * @param statesFactory Required. A function. Use the received state factory to
+ * create a list of states for the machine and specify their transitions,
+ * guards, and listeners.
+ * @param initialContext Optional. An object or undefined. Will be set as the
+ * initial `.context` value of the machine store's state.
+ * @param config Optional. An object with 2 additional properties: `guard` and
+ * `onTransition`.
+ */
 export const injectMachineStore = <
   States extends MachineState[],
   Context extends Record<string, any> | undefined = undefined
 >(
-  statesFactory: (
-    state: <Name extends string>(stateName: Name) => MachineState<Context, Name>
-  ) => [...States],
-  initialContext?: Context,
-  config?: MachineStoreConfig<
-    MapStatesToStateNames<States, Context>,
-    MapStatesToEvents<States, Context>,
+  ...[statesFactory, initialContext, config]: InjectMachineStoreParams<
+    States,
     Context
   >
 ): MachineStore<
@@ -127,8 +176,12 @@ export const injectMachineStore = <
             states[stateName as StateNames] = {}
           }
 
+          if (!states[nextState as StateNames]) {
+            states[nextState as StateNames] = {}
+          }
+
           states[stateName as StateNames][eventName as EventNames] = {
-            name: nextState as MapStatesToStateNames<States, Context>,
+            name: nextState as StateNames,
             guard,
           }
 
@@ -190,6 +243,17 @@ export const injectMachineStore = <
         }
       },
     })
+
+    const currentState = store.getState()
+
+    if (enterHooks[currentState.value]) {
+      enterHooks[currentState.value].forEach(callback =>
+        callback(store, {
+          newState: currentState,
+          store,
+        })
+      )
+    }
 
     return () => subscription.unsubscribe()
   }, [])

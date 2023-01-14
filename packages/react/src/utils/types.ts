@@ -13,7 +13,6 @@ export interface AtomInjectorDescriptor<
   InstanceType extends AtomInstanceBase<any, any[], any>
 > extends InjectorDescriptor {
   instance: InstanceType
-  shouldRegisterDependency: boolean
   type: InjectorType.Atom
 }
 
