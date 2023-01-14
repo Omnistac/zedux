@@ -59,24 +59,24 @@ import { StoreAtomApi } from '../classes'
  */
 export const injectPromise: {
   <T>(
-    getPromise: (controller?: AbortController) => Promise<T>,
+    promiseFactory: (controller?: AbortController) => Promise<T>,
     deps: InjectorDeps,
     config: { initialState?: T; dataOnly: true } & InjectStoreConfig
   ): StoreAtomApi<Store<T>, Record<string, any>, Promise<T>>
 
   <T>(
-    getPromise: (controller?: AbortController) => Promise<T>,
+    promiseFactory: (controller?: AbortController) => Promise<T>,
     deps?: InjectorDeps,
     config?: { initialState?: T; dataOnly?: boolean } & InjectStoreConfig
   ): StoreAtomApi<Store<PromiseState<T>>, Record<string, any>, Promise<T>>
 } = <T>(
-  getPromise: (controller?: AbortController) => Promise<T>,
+  promiseFactory: (controller?: AbortController) => Promise<T>,
   deps?: InjectorDeps,
   {
-    initialState,
     dataOnly,
+    initialState,
     ...storeConfig
-  }: { initialState?: T; dataOnly?: boolean } & InjectStoreConfig = {}
+  }: { dataOnly?: boolean; initialState?: T } & InjectStoreConfig = {}
 ) => {
   const controllerRef = injectRef<AbortController>()
   const promiseRef = injectRef<Promise<T>>()
@@ -93,7 +93,7 @@ export const injectPromise: {
       typeof AbortController !== 'undefined' ? new AbortController() : undefined
 
     controllerRef.current = nextController
-    const promise = getPromise(controllerRef.current)
+    const promise = promiseFactory(controllerRef.current)
 
     if (DEV && typeof promise?.then !== 'function') {
       throw new TypeError(

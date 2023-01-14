@@ -2,23 +2,23 @@ import { InjectorDeps } from '../types'
 import { haveDepsChanged, split } from '../utils'
 import { InjectorType, MemoInjectorDescriptor } from '../utils/types'
 
-export const injectMemo = <State = any>(
-  factory: () => State,
+export const injectMemo = <Value = any>(
+  valueFactory: () => Value,
   deps?: InjectorDeps
 ) => {
-  const { memoizedVal } = split<MemoInjectorDescriptor<State>>(
+  const { memoizedVal } = split<MemoInjectorDescriptor<Value>>(
     'injectMemo',
     InjectorType.Memo,
     () => ({
       type: InjectorType.Memo,
       deps: deps,
-      memoizedVal: factory(),
+      memoizedVal: valueFactory(),
     }),
     prevDescriptor => {
       const depsHaveChanged = haveDepsChanged(prevDescriptor.deps, deps)
 
       const memoizedVal = depsHaveChanged
-        ? factory()
+        ? valueFactory()
         : prevDescriptor.memoizedVal
 
       prevDescriptor.deps = deps

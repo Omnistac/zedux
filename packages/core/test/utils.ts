@@ -23,12 +23,14 @@ export const getDoorMachine = () =>
   >(
     'open',
     {
-      open: { buttonPress: 'closing' },
-      opening: { buttonPress: 'closing', timeout: 'open' },
-      closing: { buttonPress: 'opening', timeout: 'closed' },
-      closed: { buttonPress: 'opening' },
+      open: { buttonPress: { name: 'closing' } },
+      opening: { buttonPress: { name: 'closing' }, timeout: { name: 'open' } },
+      closing: {
+        buttonPress: { name: 'opening' },
+        timeout: { name: 'closed' },
+      },
+      closed: { buttonPress: { name: 'opening' } },
     } as any,
-    new Set(['buttonPress', 'timeout']),
     { timeoutId: null }
   )
 
@@ -39,11 +41,10 @@ export const getStoreBase = (store: Store) => ({
 })
 
 export const getToggleMachine = () =>
-  new MachineStore(
-    'a',
-    { a: { toggle: 'b' }, b: { toggle: 'a' } },
-    new Set(['toggle'])
-  )
+  new MachineStore('a', {
+    a: { toggle: { name: 'b' } },
+    b: { toggle: { name: 'a' } },
+  })
 
 export const nonDispatchables = [
   undefined,

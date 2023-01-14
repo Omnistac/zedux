@@ -148,6 +148,30 @@ export type HierarchyDescriptor<State = any> =
   | Reducer<State>
   | null
 
+export type MachineHook<
+  StateNames extends string,
+  EventNames extends string,
+  Context extends Record<string, any> | undefined
+> = (
+  store: MachineStore<StateNames, EventNames, Context>,
+  effectData: EffectData<
+    MachineStateType<StateNames, Context>,
+    MachineStore<StateNames, EventNames, Context>
+  >
+) => void
+
+export interface MachineStoreConfig<
+  StateNames extends string,
+  EventNames extends string,
+  Context extends Record<string, any> | undefined
+> {
+  guard?: (
+    currentState: MachineStateType<StateNames, Context>,
+    nextValue: StateNames
+  ) => boolean
+  onTransition?: MachineHook<StateNames, EventNames, Context>
+}
+
 export type MachineStoreEffectHandler<
   M extends MachineStore<any, any, any> = MachineStore<string, string, any>
 > = MachineEffectHandler<
