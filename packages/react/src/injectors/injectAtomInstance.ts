@@ -42,40 +42,32 @@ export const injectAtomInstance: {
   <A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
-    operation?: string,
-    shouldRegisterDependency?: boolean
+    operation?: string
   ): AtomInstanceType<A>
 
   <AI extends AtomInstanceBase<any, [...any], any>>(
     instance: AI,
     params?: [],
-    operation?: string,
-    shouldRegisterDependency?: boolean
+    operation?: string
   ): AI
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AnyAtomInstanceBase,
   params?: AtomParamsType<A>,
-  operation = 'injectAtomInstance',
-  shouldRegisterDependency = true
+  operation = 'injectAtomInstance'
 ) => {
-  const { ecosystem, getInstance } = injectAtomGetters()
+  const { getInstance } = injectAtomGetters()
 
   const { instance } = split<AtomInjectorDescriptor<AtomInstanceType<A>>>(
     'injectAtomInstance',
     InjectorType.Atom,
     () => {
-      const instance = shouldRegisterDependency
-        ? getInstance(atom as A, params as AtomParamsType<A>, [
-            EdgeFlag.Static,
-            operation,
-          ])
-        : is(atom, AtomInstanceBase)
-        ? atom
-        : ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
+      const instance = getInstance(atom as A, params as AtomParamsType<A>, [
+        EdgeFlag.Static,
+        operation,
+      ])
 
       return {
         instance: instance as AtomInstanceType<A>,
-        shouldRegisterDependency,
         type: InjectorType.Atom,
       }
     },
@@ -92,27 +84,17 @@ export const injectAtomInstance: {
         true
       )
 
-      if (
-        !atomHasChanged &&
-        !paramsHaveChanged &&
-        shouldRegisterDependency === prevDescriptor.shouldRegisterDependency
-      ) {
+      if (!atomHasChanged && !paramsHaveChanged) {
         // make sure the dependency gets registered for this evaluation
-        if (shouldRegisterDependency) {
-          getInstance(atom as A, params as AtomParamsType<A>)
-        }
+        getInstance(atom as A, params as AtomParamsType<A>)
 
         return prevDescriptor
       }
 
-      const instance = shouldRegisterDependency
-        ? getInstance(atom as A, params as AtomParamsType<A>, [
-            EdgeFlag.Static,
-            operation,
-          ])
-        : is(atom, AtomInstanceBase)
-        ? atom
-        : ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
+      const instance = getInstance(atom as A, params as AtomParamsType<A>, [
+        EdgeFlag.Static,
+        operation,
+      ])
 
       prevDescriptor.instance = instance as AtomInstanceType<A>
 
