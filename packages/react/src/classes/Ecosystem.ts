@@ -320,9 +320,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     atom: A | AtomInstanceBase<any, [...any], any>,
     params?: AtomParamsType<A>
   ) {
-    if (is(atom, AtomInstanceBase)) {
-      return atom
-    }
+    if (is(atom, AtomInstanceBase)) return atom
 
     const keyHash = (atom as A).getKeyHash(this, params)
 
