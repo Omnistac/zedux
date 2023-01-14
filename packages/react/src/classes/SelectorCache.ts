@@ -1,16 +1,12 @@
 import {
-  AtomGetters,
-  AtomParamsType,
   AtomSelectorConfig,
   AtomSelectorOrConfig,
   Cleanup,
   DependentEdge,
   EdgeFlag,
   EvaluationReason,
-  GraphEdgeInfo,
 } from '../types'
 import { AtomSelectorCache, JobType } from '../utils'
-import { AtomBase } from './atoms/AtomBase'
 import { Ecosystem } from './Ecosystem'
 import { ZeduxPlugin } from './ZeduxPlugin'
 
@@ -37,90 +33,7 @@ export class SelectorCache {
    */
   public _refBaseKeys = new WeakMap<AtomSelectorOrConfig<any, any[]>, string>()
 
-  /**
-   * A stack of AtomSelectors that are currently evaluating - innermost selector
-   * (the one that's actually currently evaluating) at the end of the array
-   */
-  private _evaluatingStack: string[] = []
-
-  private _atomGetters: AtomGetters
-
-  constructor(private readonly ecosystem: Ecosystem) {
-    const get: AtomGetters['get'] = ((atomOrInstance, params) => {
-      const instance = ecosystem.getInstance(atomOrInstance, params)
-
-      // when called outside AtomSelector evaluation, get() is just an alias for
-      // ecosystem.get()
-      if (!this._evaluatingStack.length) return instance.store.getState()
-
-      // if get is called during evaluation, track the required atom instances so
-      // we can add graph edges for them
-      ecosystem._graph.addEdge(
-        this._evaluatingStack[this._evaluatingStack.length - 1],
-        instance.keyHash,
-        'get',
-        0
-      )
-
-      return instance.store.getState()
-    }) as AtomGetters['get']
-
-    const getInstance: AtomGetters['getInstance'] = <
-      A extends AtomBase<any, [...any], any>
-    >(
-      atomOrInstance: A,
-      params?: AtomParamsType<A>,
-      edgeInfo?: GraphEdgeInfo
-    ) => {
-      const instance = ecosystem.getInstance(
-        atomOrInstance,
-        params as AtomParamsType<A>
-      )
-
-      // when called outside AtomSelector evaluation, getInstance() is just an alias
-      // for ecosystem.getInstance()
-      if (!this._evaluatingStack.length) return instance
-
-      // if getInstance is called during evaluation, track the required atom
-      // instances so we can add graph edges for them
-      ecosystem._graph.addEdge(
-        this._evaluatingStack[this._evaluatingStack.length - 1],
-        instance.keyHash,
-        edgeInfo?.[1] || 'getInstance',
-        edgeInfo?.[0] ?? EdgeFlag.Static
-      )
-
-      return instance
-    }
-
-    const select: AtomGetters['select'] = <T = any, Args extends any[] = []>(
-      selectorOrConfig: AtomSelectorOrConfig<T, Args>,
-      ...args: Args
-    ) => {
-      // when called outside AtomSelector evaluation, select() is just an alias for ecosystem.select()
-      if (!this._evaluatingStack.length) {
-        return ecosystem.select(selectorOrConfig, ...args)
-      }
-
-      const cache = this.getCache(selectorOrConfig, args)
-
-      ecosystem._graph.addEdge(
-        this._evaluatingStack[this._evaluatingStack.length - 1],
-        cache.cacheKey,
-        'select',
-        0
-      )
-
-      return cache.result as T
-    }
-
-    this._atomGetters = {
-      ecosystem,
-      get,
-      getInstance,
-      select,
-    }
-  }
+  constructor(private readonly ecosystem: Ecosystem) {}
 
   public addDependent(
     cache: AtomSelectorCache<any, any>,
@@ -496,7 +409,7 @@ export class SelectorCache {
     args: Args,
     isInitializing?: boolean
   ) {
-    this._evaluatingStack.push(cacheKey)
+    this.ecosystem._evaluationStack.stack.push(cacheKey)
     this.ecosystem._graph.bufferUpdates(cacheKey)
     const cache = this._caches[cacheKey] as AtomSelectorCache<T, Args>
     const selector =
@@ -510,7 +423,10 @@ export class SelectorCache {
       defaultResultsComparator
 
     try {
-      const result = selector(this._atomGetters, ...args)
+      const result = selector(
+        this.ecosystem._evaluationStack.atomGetters,
+        ...args
+      )
 
       if (!isInitializing && !resultsComparator(result, cache.result as T)) {
         this.ecosystem._graph.scheduleDependents(
@@ -543,7 +459,7 @@ export class SelectorCache {
 
       throw err
     } finally {
-      this._evaluatingStack.pop()
+      this.ecosystem._evaluationStack.stack.pop()
       cache.prevEvaluationReasons = cache.nextEvaluationReasons
       cache.nextEvaluationReasons = []
     }

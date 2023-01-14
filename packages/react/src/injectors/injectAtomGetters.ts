@@ -1,4 +1,3 @@
-import { AtomGetters } from '../types'
 import { diContext } from '../utils/csContexts'
 
 /**
@@ -28,12 +27,5 @@ import { diContext } from '../utils/csContexts'
 export const injectAtomGetters = () => {
   const { instance } = diContext.consume()
 
-  const atomGetters: AtomGetters = {
-    ecosystem: instance.ecosystem,
-    get: instance.get.bind(instance),
-    getInstance: instance.getInstance.bind(instance),
-    select: instance.select.bind(instance),
-  }
-
-  return atomGetters
+  return instance.ecosystem._evaluationStack.atomGetters
 }

@@ -82,7 +82,7 @@ export interface AtomGettersBase {
   /**
    * Runs an AtomSelector which receives its own AtomGetters object and can use
    * those to register its own dynamic and/or static graph edges (when called
-   * synchronously during atom or AtomSelector evaluation)
+   * synchronously during the AtomSelector's evaluation)
    *
    * ```ts
    * const mySelector = ion('mySelector', ({ select }) => {
