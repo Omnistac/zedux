@@ -7,5 +7,8 @@ export const injectAtomSelector = <T, Args extends any[]>(
 ): T => {
   const { instance } = diContext.consume()
 
-  return instance.select(atomSelector, ...args)
+  return instance.ecosystem._evaluationStack.atomGetters.select(
+    atomSelector,
+    ...args
+  )
 }

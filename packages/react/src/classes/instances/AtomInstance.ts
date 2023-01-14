@@ -11,17 +11,11 @@ import {
 } from '@zedux/core'
 import {
   ActiveState,
-  AtomGetters,
-  AtomInstanceType,
-  AtomParamsType,
   AtomApiPromise,
-  AtomSelectorOrConfig,
   AtomValue,
   Cleanup,
-  EdgeFlag,
   EvaluationReason,
   EvaluationSourceType,
-  GraphEdgeInfo,
   PromiseState,
   PromiseStatus,
 } from '@zedux/react/types'
@@ -77,17 +71,15 @@ const getStateStore = <State extends any = any>(
 }
 
 export class AtomInstance<
-    State,
-    Params extends any[],
-    Exports extends Record<string, any>,
-    PromiseType extends AtomApiPromise
-  >
-  extends AtomInstanceBase<
-    State,
-    Params,
-    StandardAtomBase<State, Params, Exports, PromiseType>
-  >
-  implements AtomGetters {
+  State,
+  Params extends any[],
+  Exports extends Record<string, any>,
+  PromiseType extends AtomApiPromise
+> extends AtomInstanceBase<
+  State,
+  Params,
+  StandardAtomBase<State, Params, Exports, PromiseType>
+> {
   public activeState: ActiveState = 'Initializing'
   public api?: AtomApi<State, Exports, PromiseType>
   public exports: Exports
@@ -97,7 +89,6 @@ export class AtomInstance<
   public _cancelDestruction?: Cleanup
   public _createdAt = Date.now()
   public _injectors?: InjectorDescriptor[]
-  public _isEvaluating = false
   public _nextEvaluationReasons: EvaluationReason[] = []
   public _prevEvaluationReasons?: EvaluationReason[]
   public _promiseError?: Error
@@ -125,7 +116,7 @@ export class AtomInstance<
     this._subscription = this.store.subscribe((newState, oldState, action) => {
       // buffer updates (with cache size of 1) if this instance is currently
       // evaluating
-      if (this._isEvaluating) {
+      if (this.ecosystem._evaluationStack.isEvaluating(this.keyHash)) {
         this._bufferedUpdate = { newState, oldState, action }
         return
       }
@@ -218,81 +209,12 @@ export class AtomInstance<
     return val
   }
 
-  public get<A extends StandardAtomBase<any, [...any], any, any>>(
-    atomOrInstance: A | AtomInstanceBase<any, [], any>,
-    params?: AtomParamsType<A>
-  ): A extends StandardAtomBase<infer T, any, any, any> ? T : never {
-    // TODO: check if the instance exists so we know if we create it here so we
-    // can destroy it if the evaluate call errors (to prevent that memory leak)
-    const instance = this.ecosystem.getInstance(
-      atomOrInstance as A,
-      params as AtomParamsType<A>
-    )
-
-    // when called outside evaluation, instance.get() is just an alias
-    // for ecosystem.get()
-    if (!this._isEvaluating) return instance.store.getState()
-
-    // if get is called during evaluation, track the required atom instances so
-    // we can add graph edges for them
-    this.ecosystem._graph.addEdge(this.keyHash, instance.keyHash, 'get', 0)
-
-    return instance.store.getState()
-  }
-
-  public getInstance<
-    A extends StandardAtomBase<any, [...any], any, PromiseType>
-  >(
-    atomOrInstance: A,
-    params?: AtomParamsType<A>,
-    edgeInfo?: GraphEdgeInfo
-  ): AtomInstanceType<A> {
-    // TODO: check if the instance exists so we know if we create it here so we
-    // can destroy it if the evaluate call errors (to prevent that memory leak)
-    const instance = this.ecosystem.getInstance(
-      atomOrInstance as A,
-      params as AtomParamsType<A>
-    )
-
-    // when called outside evaluation, instance.getInstance() is just an alias
-    // for ecosystem.getInstance()
-    if (!this._isEvaluating) return instance
-
-    // if getInstance is called during evaluation, track the required atom
-    // instances so we can add graph edges for them
-    this.ecosystem._graph.addEdge(
-      this.keyHash,
-      instance.keyHash,
-      edgeInfo?.[1] || 'getInstance',
-      edgeInfo?.[0] ?? EdgeFlag.Static
-    )
-
-    return instance
-  }
-
   /**
    * An alias for `instance.store.getState()`. Returns the current state of this
    * atom instance's store.
    */
   public getState() {
     return this.store.getState()
-  }
-
-  public select<T, Args extends any[]>(
-    selectorOrConfig: AtomSelectorOrConfig<T, Args>,
-    ...args: Args
-  ): T {
-    // when called outside evaluation, instance.select() is just an alias for
-    // ecosystem.select()
-    if (!this._isEvaluating) {
-      return this.ecosystem.select(selectorOrConfig, ...args)
-    }
-
-    const cache = this.ecosystem.selectorCache.getCache(selectorOrConfig, args)
-
-    this.ecosystem._graph.addEdge(this.keyHash, cache.cacheKey, 'select', 0)
-
-    return cache.result as T
   }
 
   /**
@@ -413,7 +335,7 @@ export class AtomInstance<
   private _doEvaluate(): AtomValue<State> {
     const newInjectors: InjectorDescriptor[] = []
     let newFactoryResult: AtomValue<State>
-    this._isEvaluating = true
+    this.ecosystem._evaluationStack.stack.push(this.keyHash)
     this.ecosystem._graph.bufferUpdates(this.keyHash)
 
     try {
@@ -433,7 +355,7 @@ export class AtomInstance<
 
       throw err
     } finally {
-      this._isEvaluating = false
+      this.ecosystem._evaluationStack.stack.pop()
 
       // even if evaluation errored, we need to update dependents if the store's
       // state changed

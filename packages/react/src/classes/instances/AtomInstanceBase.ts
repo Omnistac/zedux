@@ -1,12 +1,5 @@
 import {
   ActiveState,
-  AtomGettersBase,
-  AtomInstanceStateType,
-  AtomInstanceType,
-  AtomParamsType,
-  AtomSelectorOrConfig,
-  AtomStateType,
-  GraphEdgeInfo,
   DependentEdge,
   EvaluationReason,
   Cleanup,
@@ -23,7 +16,7 @@ export abstract class AtomInstanceBase<
   State,
   Params extends any[],
   AtomType extends AtomBase<State, Params, any>
-> implements AtomGettersBase {
+> {
   public static $$typeof = Symbol.for('@@react/zedux/AtomInstanceBase')
   public abstract activeState: ActiveState
   public abstract atom: AtomType
@@ -35,45 +28,10 @@ export abstract class AtomInstanceBase<
   public abstract _createdAt: number
   public abstract _prevEvaluationReasons?: EvaluationReason[]
   public abstract _injectors?: InjectorDescriptor[]
-  public abstract _isEvaluating: boolean
   public abstract _promiseError?: Error
   public abstract _promiseStatus?: PromiseStatus
 
   public abstract destroy(force?: boolean): void
-
-  public abstract get<A extends AtomBase<any, [], any>>(
-    atom: A
-  ): AtomStateType<A>
-
-  public abstract get<A extends AtomBase<any, [...any], any>>(
-    atom: A,
-    params: AtomParamsType<A>
-  ): AtomStateType<A>
-
-  public abstract get<AI extends AtomInstanceBase<any, [...any], any>>(
-    instance: AI
-  ): AtomInstanceStateType<AI>
-
-  public abstract getInstance<A extends AtomBase<any, [], any>>(
-    atom: A
-  ): AtomInstanceType<A>
-
-  public abstract getInstance<A extends AtomBase<any, [...any], any>>(
-    atom: A,
-    params: AtomParamsType<A>,
-    edgeInfo?: GraphEdgeInfo
-  ): AtomInstanceType<A>
-
-  public abstract getInstance<AI extends AtomInstanceBase<any, any, any>>(
-    instance: AI,
-    params?: [],
-    edgeInfo?: GraphEdgeInfo
-  ): AI
-
-  public abstract select<T, Args extends any[]>(
-    atomSelector: AtomSelectorOrConfig<T, Args>,
-    ...args: Args
-  ): T
 
   public abstract _scheduleEvaluation(
     reason: EvaluationReason,

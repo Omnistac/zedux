@@ -20,6 +20,7 @@ import {
 } from '../types'
 import { EcosystemGraphNode, EMPTY_CONTEXT, is } from '../utils'
 import { AtomBase } from './atoms/AtomBase'
+import { EvaluationStack } from './EvaluationStack'
 import { Graph } from './Graph'
 import { IdGenerator } from './IdGenerator'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
@@ -44,7 +45,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements AtomGettersBase {
   public _destroyOnUnmount = false
   public _graph: Graph = new Graph(this)
-  public hydration?: Record<string, any>
+  public _evaluationStack: EvaluationStack = new EvaluationStack(this)
   public _idGenerator = new IdGenerator()
   public _instances: Record<string, AnyAtomInstance> = {}
   public _onReady: EcosystemConfig<Context>['onReady']
@@ -59,6 +60,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public defaultTtl?: number
   public ecosystemId: string
   public flags?: string[]
+  public hydration?: Record<string, any>
   public modsMessageBus = createStore() // use an empty store as a message bus
   public mods: Record<Mod, number> = { ...defaultMods }
   public overrides: Record<string, AnyAtomBase> = {}
