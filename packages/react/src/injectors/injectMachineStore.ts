@@ -1,4 +1,5 @@
-import { MachineStore } from '@zedux/core'
+import { MachineHook, MachineStore, MachineStoreConfig } from '@zedux/core'
+import { injectEffect } from './injectEffect'
 import { injectMemo } from './injectMemo'
 
 type ArrToUnion<S extends string[]> = S extends [infer K, ...infer Rest]
@@ -18,6 +19,12 @@ interface MachineState<
     nextState: S,
     guard?: (context: Context) => boolean
   ) => MachineState<Context, Name, [...Events, E], [...ChildStates, S]>
+  onEnter: (
+    listener: MachineHook<ArrToUnion<ChildStates>, ArrToUnion<Events>, Context>
+  ) => MachineState<Context, Name, Events, ChildStates>
+  onLeave: (
+    listener: MachineHook<ArrToUnion<ChildStates>, ArrToUnion<Events>, Context>
+  ) => MachineState<Context, Name, Events, ChildStates>
   stateName: Name
 }
 
@@ -74,10 +81,15 @@ export const injectMachineStore = <
   States extends MachineState[],
   Context extends Record<string, any> | undefined = undefined
 >(
-  createMachine: (
+  statesFactory: (
     state: <Name extends string>(stateName: Name) => MachineState<Context, Name>
   ) => [...States],
-  initialContext?: Context
+  initialContext?: Context,
+  config?: MachineStoreConfig<
+    MapStatesToStateNames<States, Context>,
+    MapStatesToEvents<States, Context>,
+    Context
+  >
 ): MachineStore<
   MapStatesToStateNames<States, Context>,
   MapStatesToEvents<States, Context>,
@@ -86,8 +98,16 @@ export const injectMachineStore = <
   type EventNames = MapStatesToEvents<States, Context>
   type StateNames = MapStatesToStateNames<States, Context>
 
+  const enterHooks: Record<
+    string,
+    MachineHook<StateNames, EventNames, Context>[]
+  > = {}
+  const leaveHooks: Record<
+    string,
+    MachineHook<StateNames, EventNames, Context>[]
+  > = {}
+
   const store = injectMemo(() => {
-    const eventNames = new Set<EventNames>()
     const states = {} as Record<
       StateNames,
       Record<
@@ -103,8 +123,6 @@ export const injectMachineStore = <
           nextState: string,
           guard?: (context: Context) => boolean
         ) => {
-          eventNames.add(eventName as EventNames)
-
           if (!states[stateName as StateNames]) {
             states[stateName as StateNames] = {}
           }
@@ -116,20 +134,64 @@ export const injectMachineStore = <
 
           return state
         },
+        onEnter: (callback: any) => {
+          if (!enterHooks[stateName]) {
+            enterHooks[stateName] = []
+          }
+
+          enterHooks[stateName].push(callback)
+
+          return state
+        },
+        onLeave: (callback: any) => {
+          if (!leaveHooks[stateName]) {
+            leaveHooks[stateName] = []
+          }
+
+          leaveHooks[stateName].push(callback)
+
+          return state
+        },
         stateName,
       }
 
       return state
     }
 
-    const [initialState] = createMachine(createState)
+    const [initialState] = statesFactory(createState)
 
     return new MachineStore<StateNames, EventNames, Context>(
       initialState.stateName as StateNames,
       states,
-      eventNames,
-      initialContext
+      initialContext,
+      config
     )
+  }, [])
+
+  injectEffect(() => {
+    const subscription = store.subscribe({
+      effects: effectData => {
+        const { newState, oldState } = effectData
+
+        if (newState.value === oldState?.value) return
+
+        if (oldState && leaveHooks[oldState.value]) {
+          leaveHooks[oldState.value].forEach(callback =>
+            callback(store, effectData)
+          )
+        }
+        if (enterHooks[newState.value]) {
+          enterHooks[newState.value].forEach(callback =>
+            callback(store, effectData)
+          )
+        }
+        if (config?.onTransition) {
+          config.onTransition(store, effectData)
+        }
+      },
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   return store

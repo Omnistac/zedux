@@ -23,7 +23,7 @@ describe('WhenBuilder', () => {
 
       when(store).leaves('open', subscriber)
 
-      store.setContext({ other: 'a' })
+      store.setContextDeep({ other: 'a' })
 
       expect(subscriber).not.toHaveBeenCalled()
     })
@@ -34,7 +34,7 @@ describe('WhenBuilder', () => {
 
       when(store).enters('b', subscriber)
 
-      store.send.toggle()
+      store.send('toggle')
 
       expect(subscriber).toHaveBeenCalledTimes(1)
       expect(subscriber).toHaveBeenCalledWith(
@@ -59,8 +59,8 @@ describe('WhenBuilder', () => {
         .enters('b', subscriber2)
         .enters('a', subscriber2)
 
-      store.send.toggle()
-      store.send.toggle()
+      store.send('toggle')
+      store.send('toggle')
 
       expect(subscriber1).toHaveBeenCalledTimes(1)
       expect(subscriber1).toHaveBeenCalledWith(
@@ -93,7 +93,7 @@ describe('WhenBuilder', () => {
 
       when(store).leaves('a', subscriber)
 
-      store.send.toggle()
+      store.send('toggle')
 
       expect(subscriber).toHaveBeenCalledTimes(1)
       expect(subscriber).toHaveBeenCalledWith(
@@ -118,8 +118,8 @@ describe('WhenBuilder', () => {
         .leaves('a', subscriber2)
         .leaves('b', subscriber2)
 
-      store.send.toggle()
-      store.send.toggle()
+      store.send('toggle')
+      store.send('toggle')
 
       expect(subscriber1).toHaveBeenCalledTimes(1)
       expect(subscriber1).toHaveBeenCalledWith(
@@ -157,8 +157,8 @@ describe('WhenBuilder', () => {
         .leaves('open', openLeave)
         .leaves('closed', closedLeave)
 
-      store.send.buttonPress()
-      store.send.buttonPress()
+      store.send('buttonPress')
+      store.send('buttonPress')
 
       expect(openEnter).not.toHaveBeenCalled()
       expect(openLeave).toHaveBeenCalledTimes(1)
@@ -345,7 +345,7 @@ describe('WhenBuilder', () => {
 
     subscription.unsubscribe()
 
-    store.send.toggle()
+    store.send('toggle')
 
     expect(subscriber).not.toHaveBeenCalled()
   })

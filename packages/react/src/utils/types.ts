@@ -103,9 +103,9 @@ export enum JobType {
   UpdateExternalDependent = 'UpdateExternalDependent',
 }
 
-export interface MemoInjectorDescriptor<State = any>
+export interface MemoInjectorDescriptor<Value = any>
   extends DepsInjectorDescriptor {
-  memoizedVal: State
+  memoizedVal: Value
   type: InjectorType.Memo
 }
 

@@ -1,4 +1,4 @@
-import { RecursivePartial, Settable } from '../types'
+import { MachineStoreConfig, RecursivePartial, Settable } from '../types'
 import { MachineStateType } from '../utils/types'
 import { Store } from './createStore'
 
@@ -12,54 +12,49 @@ export class MachineStore<
   EventNames extends string = string,
   Context extends Record<string, any> | undefined = undefined
 > extends Store<MachineStateType<StateNames, Context>> {
-  send: {
-    [K in EventNames]: () => MachineStateType<StateNames, Context>
-  }
-
   constructor(
     initialState: StateNames,
-    states: Record<
+    public readonly states: Record<
       StateNames,
       Record<
         EventNames,
         { name: StateNames; guard?: (context: Context) => boolean }
       >
     >,
-    eventNames: Set<EventNames>,
-    initialContext?: Context
+    initialContext?: Context,
+    private readonly config?: MachineStoreConfig<
+      StateNames,
+      EventNames,
+      Context
+    >
   ) {
     super(null, {
       context: initialContext as Context,
       value: initialState,
     })
-
-    this.send = [...eventNames].reduce(
-      (hash, eventName) => {
-        hash[eventName as EventNames] = () =>
-          this.setState(currentState => {
-            const nextValue =
-              states[currentState.value][eventName as EventNames]
-
-            if (nextValue?.guard && !nextValue.guard(currentState.context)) {
-              return currentState
-            }
-
-            return nextValue
-              ? { context: currentState.context, value: nextValue.name }
-              : currentState
-          })
-
-        return hash
-      },
-      {} as {
-        [K in EventNames]: () => MachineStateType<StateNames, Context>
-      }
-    )
   }
 
   public getContext = () => this.getState().context
 
+  public getValue = () => this.getState().value
+
   public is = (stateName: StateNames) => this.getState().value === stateName
+
+  public send = (eventName: EventNames) => {
+    this.setState(currentState => {
+      const nextValue = this.states[currentState.value][eventName]
+
+      if (
+        !nextValue ||
+        (nextValue?.guard && !nextValue.guard(currentState.context)) ||
+        (this.config?.guard && !this.config.guard(currentState, nextValue.name))
+      ) {
+        return currentState
+      }
+
+      return { context: currentState.context, value: nextValue.name }
+    })
+  }
 
   public setContext = (context: Settable<Context>) =>
     this.setState(state => ({
