@@ -1,5 +1,5 @@
+import { readInstance } from '../classes/EvaluationStack'
 import { InjectorType, split, WhyInjectorDescriptor } from '../utils'
-import { diContext } from '../utils/csContexts'
 
 export const injectWhy = () => {
   split<WhyInjectorDescriptor>(
@@ -13,5 +13,5 @@ export const injectWhy = () => {
     }
   )
 
-  return diContext.consume().instance._nextEvaluationReasons
+  return readInstance()._nextEvaluationReasons
 }

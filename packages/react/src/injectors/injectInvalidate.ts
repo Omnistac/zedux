@@ -1,7 +1,7 @@
-import { diContext } from '../utils/csContexts'
+import { readInstance } from '../classes/EvaluationStack'
 
 export const injectInvalidate = () => {
-  const { instance } = diContext.consume()
+  const instance = readInstance()
 
   return () => instance.invalidate('injectInvalidate', 'Injector')
 }

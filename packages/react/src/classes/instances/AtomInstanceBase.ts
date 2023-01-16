@@ -10,7 +10,6 @@ import { InjectorDescriptor } from '@zedux/react/utils'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { Store } from '@zedux/core'
-import { ZeduxPlugin } from '../ZeduxPlugin'
 
 export abstract class AtomInstanceBase<
   State,
@@ -26,8 +25,8 @@ export abstract class AtomInstanceBase<
   public abstract store: Store<State>
 
   public abstract _createdAt: number
-  public abstract _prevEvaluationReasons?: EvaluationReason[]
   public abstract _injectors?: InjectorDescriptor[]
+  public abstract _prevEvaluationReasons?: EvaluationReason[]
   public abstract _promiseError?: Error
   public abstract _promiseStatus?: PromiseStatus
 
@@ -56,20 +55,5 @@ export abstract class AtomInstanceBase<
     )
 
     return () => this.ecosystem._graph.removeEdge(id, this.keyHash)
-  }
-
-  public setActiveState(newActiveState: ActiveState) {
-    const oldActiveState = this.activeState
-    this.activeState = newActiveState
-
-    if (this.ecosystem.mods.activeStateChanged) {
-      this.ecosystem.modsMessageBus.dispatch(
-        ZeduxPlugin.actions.activeStateChanged({
-          instance: this,
-          newActiveState,
-          oldActiveState,
-        })
-      )
-    }
   }
 }

@@ -340,6 +340,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       (params || []) as AtomParamsType<A>
     )
     this._instances[keyHash] = newInstance
+    newInstance._init()
 
     return newInstance
   }

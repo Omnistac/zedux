@@ -1,11 +1,11 @@
+import { readInstance } from '../classes/EvaluationStack'
 import { AtomSelectorOrConfig } from '../types'
-import { diContext } from '../utils/csContexts'
 
 export const injectAtomSelector = <T, Args extends any[]>(
   atomSelector: AtomSelectorOrConfig<T, Args>,
   ...args: Args
 ): T => {
-  const { instance } = diContext.consume()
+  const instance = readInstance()
 
   return instance.ecosystem._evaluationStack.atomGetters.select(
     atomSelector,

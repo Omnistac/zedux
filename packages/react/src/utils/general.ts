@@ -1,5 +1,6 @@
-import { DiContext, InjectorDescriptor, InjectorType } from './types'
-import { diContext } from './csContexts'
+import { InjectorDescriptor, InjectorType } from './types'
+import { readInstance } from '../classes/EvaluationStack'
+import { AnyAtomInstanceBase } from '../types'
 
 export const EMPTY_CONTEXT = {}
 
@@ -52,52 +53,30 @@ export const is = (val: any, classToCheck: { $$typeof: symbol }) =>
 export const split = <T extends InjectorDescriptor>(
   operation: string,
   type: InjectorType,
-  first: (context: DiContext) => T,
-  next?: (prevDescriptor: T, context: DiContext) => T
+  first: (instance: AnyAtomInstanceBase) => T,
+  next?: (prevDescriptor: T, instance: AnyAtomInstanceBase) => T
 ) => {
-  const context = diContext.consume()
+  const instance = readInstance()
 
-  if (context.instance.activeState === 'Initializing') {
-    const descriptor = first(context)
-    context.injectors.push(descriptor)
+  if (instance.activeState === 'Initializing') {
+    const descriptor = first(instance)
+    instance._nextInjectors?.push(descriptor)
 
     return descriptor
   }
 
-  const prevDescriptor = context.instance._injectors?.[
-    context.injectors.length
+  const prevDescriptor = instance._injectors?.[
+    instance._nextInjectors?.length as number
   ] as T
 
   if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
     throw new Error(
-      `Zedux: ${operation} in atom "${context.instance.atom.key}" - injectors cannot be added, removed, or reordered`
+      `Zedux: ${operation} in atom "${instance.atom.key}" - injectors cannot be added, removed, or reordered`
     )
   }
 
-  const descriptor = next ? next(prevDescriptor, context) : prevDescriptor
-  context.injectors.push(descriptor)
+  const descriptor = next ? next(prevDescriptor, instance) : prevDescriptor
+  instance._nextInjectors?.push(descriptor)
 
   return descriptor
-}
-
-export const validateInjector = <T extends InjectorDescriptor>(
-  name: string,
-  type: InjectorType,
-  context: DiContext
-): T | undefined => {
-  if (context.instance.activeState === 'Initializing') {
-    return
-  }
-
-  const prevDescriptor = context.instance._injectors?.[
-    context.injectors.length
-  ] as T
-
-  if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
-    throw new Error(
-      `Zedux: ${name} in atom "${context.instance.atom.key}" - injectors cannot be added, removed, or reordered`
-    )
-  }
-
-  return prevDescriptor
 }

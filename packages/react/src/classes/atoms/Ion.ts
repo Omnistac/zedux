@@ -10,9 +10,9 @@ import {
   AtomSetters,
   AtomApiPromise,
 } from '@zedux/react/types'
-import { diContext } from '@zedux/react/utils/csContexts'
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
+import { readInstance } from '../EvaluationStack'
 
 export class Ion<
   State,
@@ -31,7 +31,7 @@ export class Ion<
   ) {
     const value = (...params: Params) => {
       const atomGetters = injectAtomGetters()
-      const { instance } = diContext.consume()
+      const instance = readInstance()
       const val = get(atomGetters, ...params)
 
       const ionApi = api(val)

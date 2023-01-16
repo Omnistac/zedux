@@ -113,6 +113,7 @@ export class SelectorCache {
 
     if (cache) return cache
 
+    // create the cache; it doesn't exist yet
     cache = {
       args,
       cacheKey,
@@ -409,9 +410,9 @@ export class SelectorCache {
     args: Args,
     isInitializing?: boolean
   ) {
-    this.ecosystem._evaluationStack.stack.push(cacheKey)
     this.ecosystem._graph.bufferUpdates(cacheKey)
     const cache = this._caches[cacheKey] as AtomSelectorCache<T, Args>
+    this.ecosystem._evaluationStack.start(cache)
     const selector =
       typeof cache.selectorRef === 'function'
         ? cache.selectorRef
@@ -459,7 +460,7 @@ export class SelectorCache {
 
       throw err
     } finally {
-      this.ecosystem._evaluationStack.stack.pop()
+      this.ecosystem._evaluationStack.finish()
       cache.prevEvaluationReasons = cache.nextEvaluationReasons
       cache.nextEvaluationReasons = []
     }

@@ -7,7 +7,6 @@ import {
 } from '@zedux/react/types'
 import { Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
-import { AtomInstance } from '../classes/instances/AtomInstance'
 
 export interface AtomInjectorDescriptor<
   InstanceType extends AtomInstanceBase<any, any[], any>
@@ -34,24 +33,8 @@ export interface AtomSelectorCache<T = any, Args extends any[] = any[]> {
   task?: () => void
 }
 
-export interface CallStackContext<T = any> {
-  consume(): T
-  consume(throwError: false): T | null
-  provide: <R = any>(value: T, callback: () => R) => R
-}
-
-export interface CallStackContextInstance<T = any> {
-  context: CallStackContext<T>
-  value: T
-}
-
 export interface DepsInjectorDescriptor extends InjectorDescriptor {
   deps?: any[]
-}
-
-export interface DiContext {
-  injectors: InjectorDescriptor[]
-  instance: AtomInstance<any, any[], any, any>
 }
 
 export interface EcosystemGraphNode {
