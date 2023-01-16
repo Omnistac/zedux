@@ -1,4 +1,4 @@
-import { diContext } from '../utils/csContexts'
+import { readInstance } from '../classes/EvaluationStack'
 
 /**
  * injectAtomGetters
@@ -25,7 +25,7 @@ import { diContext } from '../utils/csContexts'
  * @see AtomGetters
  */
 export const injectAtomGetters = () => {
-  const { instance } = diContext.consume()
+  const instance = readInstance()
 
   return instance.ecosystem._evaluationStack.atomGetters
 }

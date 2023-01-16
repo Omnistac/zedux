@@ -1,4 +1,4 @@
-import { diContext } from '../utils/csContexts'
+import { readInstance } from '../classes/EvaluationStack'
 
 /**
  * Retrieves the hydrated value of the current atom instance from the last call
@@ -50,7 +50,7 @@ export const injectHydration: {
   <State = any>(defaultState: State): State
   <State = any>(): State
 } = <State = any>(defaultState?: State) => {
-  const { instance } = diContext.consume()
+  const instance = readInstance()
   const hydratedValue = instance.ecosystem.hydration?.[instance.keyHash]
 
   if (typeof hydratedValue === 'undefined') return defaultState

@@ -9,7 +9,7 @@ import {
 import { Ecosystem } from './Ecosystem'
 import {
   ActiveState,
-  AnyAtomInstanceBase,
+  AnyAtomInstance,
   DependentEdge,
   EvaluationReason,
   MaybeCleanup,
@@ -38,7 +38,7 @@ export class ZeduxPlugin {
   public static actions = {
     activeStateChanged: createActor<
       {
-        instance: AnyAtomInstanceBase
+        instance: AnyAtomInstance
         newActiveState: ActiveState
         oldActiveState: ActiveState
       },
@@ -53,29 +53,40 @@ export class ZeduxPlugin {
     ),
     edgeCreated: createActor<
       {
-        dependency: AnyAtomInstanceBase
+        dependency: AnyAtomInstance
         // string if `edge.flags & EdgeFlag.External` or the atom instance
         // hasn't been created yet ('cause the edge was created while the
         // instance was initializing. TODO: maybe make it so atom instances can
         // be added to the ecosystem before being fully initialized):
-        dependent: AnyAtomInstanceBase | string
+        dependent: AnyAtomInstance | string
         edge: DependentEdge
       },
       'edgeCreated'
     >('edgeCreated'),
     edgeRemoved: createActor<
       {
-        dependency: AnyAtomInstanceBase | AtomSelectorCache<any, any[]>
-        dependent: AnyAtomInstanceBase | AtomSelectorCache<any, any[]> | string // string if edge is External
+        dependency: AnyAtomInstance | AtomSelectorCache<any, any[]>
+        dependent: AnyAtomInstance | AtomSelectorCache<any, any[]> | string // string if edge is External
         edge: DependentEdge
       },
       'edgeRemoved'
     >('edgeRemoved'),
+    evaluationFinished: createActor<
+      | {
+          instance: AnyAtomInstance
+          time: number
+        }
+      | {
+          cache: AtomSelectorCache
+          time: number
+        },
+      'evaluationFinished'
+    >('evaluationFinished'),
     // either instance or selectorCache will always be defined, depending on the node type
     stateChanged: createActor<
       {
         action?: ActionChain
-        instance?: AnyAtomInstanceBase
+        instance?: AnyAtomInstance
         newState: any
         oldState: any
         reasons: EvaluationReason[]

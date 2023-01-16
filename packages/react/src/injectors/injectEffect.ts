@@ -35,7 +35,7 @@ export const injectEffect = (effect: EffectCallback, deps?: InjectorDeps) => {
   split<EffectInjectorDescriptor>(
     'injectEffect',
     InjectorType.Effect,
-    ({ instance }) => {
+    instance => {
       const descriptor: EffectInjectorDescriptor = {
         deps,
         type: InjectorType.Effect,
@@ -56,7 +56,7 @@ export const injectEffect = (effect: EffectCallback, deps?: InjectorDeps) => {
 
       return descriptor
     },
-    (prevDescriptor, { instance }) => {
+    (prevDescriptor, instance) => {
       if (instance.ecosystem.ssr) return prevDescriptor
 
       const depsHaveChanged = haveDepsChanged(prevDescriptor?.deps, deps)

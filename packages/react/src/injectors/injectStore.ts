@@ -100,7 +100,7 @@ export const injectStore: {
   const { store } = split<StoreInjectorDescriptor<State>>(
     'injectStore',
     InjectorType.Store,
-    ({ instance }) => {
+    instance => {
       const getStore =
         typeof storeFactory === 'function'
           ? (storeFactory as () => Store<State>)
@@ -116,7 +116,7 @@ export const injectStore: {
         type: InjectorType.Store,
       }
     },
-    (prevInjector, { instance }) => {
+    (prevInjector, instance) => {
       const prevShouldSubscribe = !!prevInjector.cleanup
 
       if (prevShouldSubscribe === shouldSubscribe) return prevInjector

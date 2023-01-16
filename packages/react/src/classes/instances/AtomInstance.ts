@@ -25,7 +25,6 @@ import {
   is,
   JobType,
 } from '@zedux/react/utils'
-import { diContext } from '@zedux/react/utils/csContexts'
 import {
   getErrorPromiseState,
   getInitialPromiseState,
@@ -90,6 +89,7 @@ export class AtomInstance<
   public _createdAt = Date.now()
   public _injectors?: InjectorDescriptor[]
   public _nextEvaluationReasons: EvaluationReason[] = []
+  public _nextInjectors?: InjectorDescriptor[]
   public _prevEvaluationReasons?: EvaluationReason[]
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
@@ -109,44 +109,12 @@ export class AtomInstance<
     public readonly params: Params
   ) {
     super()
-    const factoryResult = this._doEvaluate()
-
-    ;[this._stateType, this.store] = getStateStore(factoryResult)
-
-    this._subscription = this.store.subscribe((newState, oldState, action) => {
-      // buffer updates (with cache size of 1) if this instance is currently
-      // evaluating
-      if (this.ecosystem._evaluationStack.isEvaluating(this.keyHash)) {
-        this._bufferedUpdate = { newState, oldState, action }
-        return
-      }
-
-      this._handleStateChange(newState, oldState, action)
-    })
 
     // lol
-    this.exports = (this as any).exports || undefined
-    this.promise = (this as any).promise || undefined
-    this._promiseStatus = (this as any)._promiseStatus ?? 'success'
-
-    this.setActiveState('Active')
-
-    // hydrate if possible
-    if (this.ecosystem.hydration && !this.atom.manualHydration) {
-      const hydration = this.ecosystem.hydration[keyHash]
-
-      if (typeof hydration !== 'undefined') {
-        const transformed = this.atom.hydrate
-          ? this.atom.hydrate(hydration)
-          : hydration
-
-        this.store.setState(transformed)
-
-        if (this.atom.consumeHydrations ?? this.ecosystem.consumeHydrations) {
-          delete this.ecosystem.hydration[keyHash]
-        }
-      }
-    }
+    this.exports = (this as any).exports
+    this.promise = (this as any).promise
+    this.store = (this as any).store
+    this._promiseStatus = (this as any)._promiseStatus
   }
 
   /**
@@ -171,7 +139,7 @@ export class AtomInstance<
     this._cancelDestruction?.()
     this._cancelDestruction = undefined
 
-    this.setActiveState('Destroyed')
+    this._setActiveState('Destroyed')
 
     if (this._nextEvaluationReasons.length) {
       this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
@@ -231,6 +199,42 @@ export class AtomInstance<
     return val
   }
 
+  public _init() {
+    const factoryResult = this._doEvaluate()
+
+    ;[this._stateType, this.store] = getStateStore(factoryResult)
+
+    this._subscription = this.store.subscribe((newState, oldState, action) => {
+      // buffer updates (with cache size of 1) if this instance is currently
+      // evaluating
+      if (this.ecosystem._evaluationStack.isEvaluating(this.keyHash)) {
+        this._bufferedUpdate = { newState, oldState, action }
+        return
+      }
+
+      this._handleStateChange(newState, oldState, action)
+    })
+
+    this._setActiveState('Active')
+
+    // hydrate if possible
+    if (this.ecosystem.hydration && !this.atom.manualHydration) {
+      const hydration = this.ecosystem.hydration[this.keyHash]
+
+      if (typeof hydration !== 'undefined') {
+        const transformed = this.atom.hydrate
+          ? this.atom.hydrate(hydration)
+          : hydration
+
+        this.store.setState(transformed)
+
+        if (this.atom.consumeHydrations ?? this.ecosystem.consumeHydrations) {
+          delete this.ecosystem.hydration[this.keyHash]
+        }
+      }
+    }
+  }
+
   /**
    * When a standard atom instance's refCount hits 0 and a ttl is set, we set a
    * timeout to destroy this atom instance.
@@ -239,7 +243,7 @@ export class AtomInstance<
     // the atom is already scheduled for destruction or destroyed
     if (this.activeState !== 'Active') return
 
-    this.setActiveState('Stale')
+    this._setActiveState('Stale')
     const { maxInstances } = this.atom
 
     if (maxInstances != null) {
@@ -329,33 +333,27 @@ export class AtomInstance<
   public invalidate = (operation?: string, sourceType?: EvaluationSourceType) =>
     this._invalidate(operation, sourceType)
 
-  private evaluate = () => this._evaluate()
   private evaluationTask = () => this._evaluationTask()
 
   private _doEvaluate(): AtomValue<State> {
-    const newInjectors: InjectorDescriptor[] = []
+    this._nextInjectors = []
     let newFactoryResult: AtomValue<State>
-    this.ecosystem._evaluationStack.stack.push(this.keyHash)
+    this.ecosystem._evaluationStack.start(this)
     this.ecosystem._graph.bufferUpdates(this.keyHash)
 
     try {
-      newFactoryResult = diContext.provide(
-        {
-          injectors: newInjectors,
-          instance: this,
-        },
-        this.evaluate
-      )
+      newFactoryResult = this._evaluate()
     } catch (err) {
-      newInjectors.forEach(injector => {
+      this._nextInjectors.forEach(injector => {
         injector.cleanup?.()
       })
 
+      this._nextInjectors = undefined
       this.ecosystem._graph.destroyBuffer()
 
       throw err
     } finally {
-      this.ecosystem._evaluationStack.stack.pop()
+      this.ecosystem._evaluationStack.finish()
 
       // even if evaluation errored, we need to update dependents if the store's
       // state changed
@@ -372,7 +370,8 @@ export class AtomInstance<
       this._nextEvaluationReasons = []
     }
 
-    this._injectors = newInjectors
+    this._injectors = this._nextInjectors
+    this._nextInjectors = undefined
     this.ecosystem._graph.flushUpdates()
 
     return newFactoryResult
@@ -529,6 +528,21 @@ export class AtomInstance<
 
     // run the scheduler synchronously after invalidation
     this.ecosystem._scheduler.flush()
+  }
+
+  private _setActiveState(newActiveState: ActiveState) {
+    const oldActiveState = this.activeState
+    this.activeState = newActiveState
+
+    if (this.ecosystem.mods.activeStateChanged) {
+      this.ecosystem.modsMessageBus.dispatch(
+        ZeduxPlugin.actions.activeStateChanged({
+          instance: this,
+          newActiveState,
+          oldActiveState,
+        })
+      )
+    }
   }
 
   private _setPromise(promise: Promise<any>, isStateUpdater?: boolean) {
