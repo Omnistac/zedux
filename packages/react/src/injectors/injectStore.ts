@@ -1,6 +1,6 @@
 import { createStore, metaTypes, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes'
-import { InjectStoreConfig } from '../types'
+import { AnyAtomInstance, InjectStoreConfig } from '../types'
 import { split, StoreInjectorDescriptor, InjectorType } from '../utils'
 
 const doSubscribe = <State>(
@@ -48,6 +48,20 @@ const doSubscribe = <State>(
     },
   })
 
+const getHydration = (instance: AnyAtomInstance) => {
+  const hydratedValue = instance.ecosystem.hydration?.[instance.keyHash]
+
+  if (typeof hydratedValue === 'undefined') return
+
+  if (instance.atom.consumeHydrations ?? instance.ecosystem.consumeHydrations) {
+    delete instance.ecosystem.hydration?.[instance.keyHash]
+  }
+
+  return instance.atom.hydrate
+    ? instance.atom.hydrate(hydratedValue)
+    : hydratedValue
+}
+
 /**
  * injectStore()
  *
@@ -79,20 +93,39 @@ const doSubscribe = <State>(
  * })
  * ```
  *
+ * When `hydrate: true` is passed, the store's initial state will be set to the
+ * value from the last call to `ecosystem.hydrate()` whose key matches this atom
+ * instance. The hydrated value will be passed to the atom's `hydrate` config
+ * option, if any, to transform the value first.
+ *
+ * When the function `storeFactory` overload is used and `hydrate: true` is
+ * passed, the transformed hydration will be passed to the store factory
+ * function and it's up to you to use it to hydrate the store you create.
+ *
+ * ```ts
+ * const store = injectStore(
+ *   hydration => createStore(null, hydration ?? defaultVal),
+ *   { hydrate: true }
+ * )
+ * // or simply:
+ * const store = injectStore(defaultVal, { hydrate: true })
+ * ```
+ *
  * @param storeFactory - Either a function that returns a store or the initial
  * state of the store
- * @param config - A config object. Currently only accepts one prop:
+ * @param config - A config object. Accepts the following properties:
+ *   - `hydrate` - Whether to try hydrating this store with
  *   - `shouldSubscribe` - Whether to subscribe to the store (default: `true`)
  * @returns Store
  */
 export const injectStore: {
   <State = any>(
-    storeFactory: State | (() => Store<State>),
+    storeFactory: State | ((hydration?: State) => Store<State>),
     config?: InjectStoreConfig
   ): Store<State>
   <State = undefined>(): Store<State>
 } = <State = any>(
-  storeFactory?: State | (() => Store<State>),
+  storeFactory?: State | ((hydration?: State) => Store<State>),
   config?: InjectStoreConfig
 ) => {
   const shouldSubscribe = config?.shouldSubscribe ?? true
@@ -104,9 +137,12 @@ export const injectStore: {
       const getStore =
         typeof storeFactory === 'function'
           ? (storeFactory as () => Store<State>)
-          : () => createStore<State>(null, storeFactory)
+          : (hydration?: State) =>
+              createStore<State>(null, hydration || storeFactory)
 
-      const store = getStore()
+      const store = getStore(
+        config?.hydrate ? getHydration(instance) : undefined
+      )
 
       const subscription = shouldSubscribe && doSubscribe(instance, store)
 

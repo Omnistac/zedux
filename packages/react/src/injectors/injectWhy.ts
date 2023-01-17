@@ -1,17 +1,12 @@
 import { readInstance } from '../classes/EvaluationStack'
-import { InjectorType, split, WhyInjectorDescriptor } from '../utils'
 
-export const injectWhy = () => {
-  split<WhyInjectorDescriptor>(
-    'injectWhy',
-    InjectorType.Why,
-    () => ({
-      type: InjectorType.Why,
-    }),
-    prevDescriptor => {
-      return prevDescriptor
-    }
-  )
-
-  return readInstance()._nextEvaluationReasons
-}
+/**
+ * A fake injector (can actually be used in loops and if statements). An alias
+ * for:
+ *
+ * ```ts
+ * const { ecosystem } = injectAtomGetters()
+ * const reasons = ecosystem.why()
+ * ```
+ */
+export const injectWhy = () => readInstance()._nextEvaluationReasons

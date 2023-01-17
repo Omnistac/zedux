@@ -160,18 +160,6 @@ export type MachineHook<
   >
 ) => void
 
-export interface MachineStoreConfig<
-  StateNames extends string,
-  EventNames extends string,
-  Context extends Record<string, any> | undefined
-> {
-  guard?: (
-    currentState: MachineStateType<StateNames, Context>,
-    nextValue: StateNames
-  ) => boolean
-  onTransition?: MachineHook<StateNames, EventNames, Context>
-}
-
 export type MachineStoreEffectHandler<
   M extends MachineStore<any, any, any> = MachineStore<string, string, any>
 > = MachineEffectHandler<

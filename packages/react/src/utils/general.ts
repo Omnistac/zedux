@@ -1,8 +1,30 @@
 import { InjectorDescriptor, InjectorType } from './types'
 import { readInstance } from '../classes/EvaluationStack'
-import { AnyAtomInstanceBase } from '../types'
+import { AnyAtomInstance } from '../types'
 
 export const EMPTY_CONTEXT = {}
+
+export const getPrevInjector = <T extends InjectorDescriptor>(
+  operation: string,
+  type: InjectorType,
+  instance: AnyAtomInstance,
+  next?: (prevDescriptor: T, instance: AnyAtomInstance) => T
+) => {
+  const prevDescriptor = instance._injectors?.[
+    instance._nextInjectors?.length as number
+  ] as T
+
+  if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
+    throw new Error(
+      `Zedux: ${operation} in atom "${instance.atom.key}" - injectors cannot be added, removed, or reordered`
+    )
+  }
+
+  const descriptor = next ? next(prevDescriptor, instance) : prevDescriptor
+  instance._nextInjectors?.push(descriptor)
+
+  return descriptor
+}
 
 /**
  * Compare two arrays and see if any elements are different (===). Returns true
@@ -53,8 +75,8 @@ export const is = (val: any, classToCheck: { $$typeof: symbol }) =>
 export const split = <T extends InjectorDescriptor>(
   operation: string,
   type: InjectorType,
-  first: (instance: AnyAtomInstanceBase) => T,
-  next?: (prevDescriptor: T, instance: AnyAtomInstanceBase) => T
+  first: (instance: AnyAtomInstance) => T,
+  next?: (prevDescriptor: T, instance: AnyAtomInstance) => T
 ) => {
   const instance = readInstance()
 
@@ -65,18 +87,5 @@ export const split = <T extends InjectorDescriptor>(
     return descriptor
   }
 
-  const prevDescriptor = instance._injectors?.[
-    instance._nextInjectors?.length as number
-  ] as T
-
-  if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
-    throw new Error(
-      `Zedux: ${operation} in atom "${instance.atom.key}" - injectors cannot be added, removed, or reordered`
-    )
-  }
-
-  const descriptor = next ? next(prevDescriptor, instance) : prevDescriptor
-  instance._nextInjectors?.push(descriptor)
-
-  return descriptor
+  return getPrevInjector(operation, type, instance, next)
 }

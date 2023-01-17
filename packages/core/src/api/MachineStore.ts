@@ -1,4 +1,4 @@
-import { MachineStoreConfig, RecursivePartial, Settable } from '../types'
+import { RecursivePartial, Settable } from '../types'
 import { MachineStateType } from '../utils/types'
 import { Store } from './createStore'
 
@@ -22,11 +22,10 @@ export class MachineStore<
       >
     >,
     initialContext?: Context,
-    private readonly config?: MachineStoreConfig<
-      StateNames,
-      EventNames,
-      Context
-    >
+    private readonly guard?: (
+      currentState: MachineStateType<StateNames, Context>,
+      nextValue: StateNames
+    ) => boolean
   ) {
     super(null, {
       context: initialContext as Context,
@@ -47,7 +46,7 @@ export class MachineStore<
       if (
         !nextValue ||
         (nextValue?.guard && !nextValue.guard(currentState.context)) ||
-        (this.config?.guard && !this.config.guard(currentState, nextValue.name))
+        (this.guard && !this.guard(currentState, nextValue.name))
       ) {
         return currentState
       }
