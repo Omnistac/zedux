@@ -18,7 +18,13 @@ import {
   GraphViewRecursive,
   MaybeCleanup,
 } from '../types'
-import { EcosystemGraphNode, EMPTY_CONTEXT, is } from '../utils'
+import {
+  EcosystemGraphNode,
+  EMPTY_CONTEXT,
+  InstanceStackItem,
+  is,
+  SelectorStackItem,
+} from '../utils'
 import { AtomBase } from './atoms/AtomBase'
 import { EvaluationStack } from './EvaluationStack'
 import { Graph } from './Graph'
@@ -353,7 +359,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * This is the key to SSR. The ecosystem's initial state can be dehydrated on
    * the server, sent to the client in serialized form, deserialized, and passed
    * to `ecosystem.hydrate()`. Every atom instance that evaluates after this
-   * hydration can use `injectHydration()` to retrieve its hydrated state.
+   * hydration can use the `hydrate` injectStore config option to retrieve its
+   * hydrated state.
    *
    * Pass `retroactive: false` to prevent this call from updating the state of
    * all atom instances that have already been initialized with this new
@@ -720,6 +727,25 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     // try to find an existing instance
     return this._instances[keyHash]
+  }
+
+  /**
+   * Returns the list of reasons detailing why the current atom instance or
+   * selector is evaluating.
+   *
+   * Returns undefined if nothing is currently evaluating. Returns an empty
+   * array if this is the first evaluation of the instance or selector.
+   */
+  public why() {
+    const item = this._evaluationStack.read()
+
+    if (!item) return
+
+    if ((item as SelectorStackItem).cache) {
+      return (item as SelectorStackItem).cache.nextEvaluationReasons
+    }
+
+    return (item as InstanceStackItem).instance._nextEvaluationReasons
   }
 
   /**

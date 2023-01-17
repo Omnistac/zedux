@@ -336,6 +336,7 @@ export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   : <D = any>(params: Params, selector: (state: State) => D) => D
 
 export interface InjectStoreConfig {
+  hydrate?: boolean
   shouldSubscribe?: boolean
 }
 

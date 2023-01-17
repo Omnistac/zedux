@@ -1,11 +1,12 @@
 import {
+  AnyAtomInstance,
   AtomSelectorOrConfig,
   DependentEdge,
   EvaluationReason,
   MutableRefObject,
   RefObject,
 } from '@zedux/react/types'
-import { Store } from '@zedux/core'
+import { MachineStore, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 
 export interface AtomInjectorDescriptor<
@@ -64,12 +65,12 @@ export enum InjectorType {
   Atom = 'Atom',
   AtomDynamic = 'AtomDynamic',
   Effect = 'Effect',
+  MachineStore = 'MachineStore',
   Memo = 'Memo',
   Ref = 'Ref',
   Selector = 'Selector',
   Store = 'Store',
   Value = 'Value',
-  Why = 'Why',
 }
 
 export interface JobBase {
@@ -83,6 +84,15 @@ export enum JobType {
   EvaluateNode = 'EvaluateNode',
   RunEffect = 'RunEffect',
   UpdateExternalDependent = 'UpdateExternalDependent',
+}
+
+export interface MachineStoreInjectorDescriptor<
+  StateNames extends string,
+  EventNames extends string,
+  Context extends Record<string, any> | undefined
+> extends InjectorDescriptor {
+  store: MachineStore<StateNames, EventNames, Context>
+  type: InjectorType.MachineStore
 }
 
 export interface MemoInjectorDescriptor<Value = any>
@@ -107,6 +117,28 @@ export interface SelectorInjectorDescriptor<State = any, D = any>
   type: InjectorType.Selector
 }
 
+export interface StackItemBase {
+  /**
+   * The cacheKey of the instance or selectorCache
+   */
+  key: string
+
+  /**
+   * the high-def timestamp of when the item was pushed onto the stack
+   */
+  start?: number
+}
+
+export interface InstanceStackItem extends StackItemBase {
+  instance: AnyAtomInstance
+}
+
+export interface SelectorStackItem extends StackItemBase {
+  cache: AtomSelectorCache
+}
+
+export type StackItem = InstanceStackItem | SelectorStackItem
+
 export interface StoreInjectorDescriptor<State = any>
   extends InjectorDescriptor {
   store: Store<State>
@@ -116,8 +148,4 @@ export interface StoreInjectorDescriptor<State = any>
 export interface UpdateExternalDependentJob extends JobBase {
   flags: number
   type: JobType.UpdateExternalDependent
-}
-
-export interface WhyInjectorDescriptor extends InjectorDescriptor {
-  type: InjectorType.Why
 }

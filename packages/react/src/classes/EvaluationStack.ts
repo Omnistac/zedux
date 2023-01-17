@@ -7,37 +7,23 @@ import {
   EdgeFlag,
   GraphEdgeInfo,
 } from '../types'
-import { AtomSelectorCache } from '../utils'
+import {
+  AtomSelectorCache,
+  InstanceStackItem,
+  SelectorStackItem,
+  StackItem,
+} from '../utils'
 import { AtomBase } from './atoms/AtomBase'
 import { Ecosystem } from './Ecosystem'
 import { ZeduxPlugin } from './ZeduxPlugin'
 
-interface StackItemBase {
-  /**
-   * The cacheKey of the instance or selectorCache
-   */
-  key: string
-
-  /**
-   * the high-def timestamp of when the item was pushed onto the stack
-   */
-  start?: number
-}
-
-interface InstanceStackItem extends StackItemBase {
-  instance: AnyAtomInstance
-}
-
-interface SelectorStackItem extends StackItemBase {
-  cache: AtomSelectorCache
-}
-
-type StackItem = InstanceStackItem | SelectorStackItem
-
 /**
  * A stack of AtomInstances and AtomSelectors that are currently evaluating -
- * innermost instance/selector (the one that's actually currently evaluating)
- * at the end of the array.
+ * innermost instance/selector (the one that's actually currently evaluating) at
+ * the end of the array.
+ *
+ * This has to live in the module scope so `readInstance` can access it without
+ * any ecosystem context. That's how injectors work.
  */
 const stack: StackItem[] = []
 
@@ -160,6 +146,10 @@ export class EvaluationStack {
     this.ecosystem.modsMessageBus.dispatch(
       ZeduxPlugin.actions.evaluationFinished(action as any)
     )
+  }
+
+  public read() {
+    return stack[stack.length - 1]
   }
 
   public start(item: AnyAtomInstance | AtomSelectorCache<any, any>) {

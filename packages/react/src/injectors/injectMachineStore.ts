@@ -1,6 +1,12 @@
-import { MachineHook, MachineStore, MachineStoreConfig } from '@zedux/core'
-import { injectEffect } from './injectEffect'
-import { injectMemo } from './injectMemo'
+import { MachineHook, MachineStore } from '@zedux/core'
+import { MachineStateType } from '@zedux/core/utils/types'
+import { readInstance } from '../classes/EvaluationStack'
+import { InjectStoreConfig } from '../types'
+import {
+  getPrevInjector,
+  InjectorType,
+  MachineStoreInjectorDescriptor,
+} from '../utils'
 
 type ArrToUnion<S extends string[]> = S extends [infer K, ...infer Rest]
   ? Rest extends string[]
@@ -16,11 +22,17 @@ export type InjectMachineStoreParams<
     state: <Name extends string>(stateName: Name) => MachineState<Context, Name>
   ) => [...States],
   initialContext?: Context,
-  config?: MachineStoreConfig<
-    MapStatesToStateNames<States, Context>,
-    MapStatesToEvents<States, Context>,
-    Context
-  >
+  config?: {
+    guard?: (
+      currentState: MachineStateType<MapStatesToStateNames<States>, Context>,
+      nextValue: MapStatesToStateNames<States>
+    ) => boolean
+    onTransition?: MachineHook<
+      MapStatesToStateNames<States>,
+      MapStatesToEvents<States, Context>,
+      Context
+    >
+  } & InjectStoreConfig
 ]
 
 export interface MachineState<
@@ -147,116 +159,130 @@ export const injectMachineStore = <
   type EventNames = MapStatesToEvents<States, Context>
   type StateNames = MapStatesToStateNames<States, Context>
 
+  const instance = readInstance()
+
+  if (instance.activeState !== 'Initializing') {
+    return getPrevInjector<
+      MachineStoreInjectorDescriptor<StateNames, EventNames, Context>
+    >('injectMachineStore', InjectorType.MachineStore, instance).store
+  }
+
   const enterHooks: Record<
     string,
     MachineHook<StateNames, EventNames, Context>[]
   > = {}
+
   const leaveHooks: Record<
     string,
     MachineHook<StateNames, EventNames, Context>[]
   > = {}
 
-  const store = injectMemo(() => {
-    const states = {} as Record<
-      StateNames,
-      Record<
-        EventNames,
-        { name: StateNames; guard?: (context: Context) => boolean }
-      >
+  const states = {} as Record<
+    StateNames,
+    Record<
+      EventNames,
+      { name: StateNames; guard?: (context: Context) => boolean }
     >
+  >
 
-    const createState = <Name extends string>(stateName: Name) => {
-      const state = {
-        on: (
-          eventName: string,
-          nextState: string,
-          guard?: (context: Context) => boolean
-        ) => {
-          if (!states[stateName as StateNames]) {
-            states[stateName as StateNames] = {}
-          }
-
-          if (!states[nextState as StateNames]) {
-            states[nextState as StateNames] = {}
-          }
-
-          states[stateName as StateNames][eventName as EventNames] = {
-            name: nextState as StateNames,
-            guard,
-          }
-
-          return state
-        },
-        onEnter: (callback: any) => {
-          if (!enterHooks[stateName]) {
-            enterHooks[stateName] = []
-          }
-
-          enterHooks[stateName].push(callback)
-
-          return state
-        },
-        onLeave: (callback: any) => {
-          if (!leaveHooks[stateName]) {
-            leaveHooks[stateName] = []
-          }
-
-          leaveHooks[stateName].push(callback)
-
-          return state
-        },
-        stateName,
-      }
-
-      return state
-    }
-
-    const [initialState] = statesFactory(createState)
-
-    return new MachineStore<StateNames, EventNames, Context>(
-      initialState.stateName as StateNames,
-      states,
-      initialContext,
-      config
-    )
-  }, [])
-
-  injectEffect(() => {
-    const subscription = store.subscribe({
-      effects: effectData => {
-        const { newState, oldState } = effectData
-
-        if (newState.value === oldState?.value) return
-
-        if (oldState && leaveHooks[oldState.value]) {
-          leaveHooks[oldState.value].forEach(callback =>
-            callback(store, effectData)
-          )
+  const createState = <Name extends string>(stateName: Name) => {
+    const state = {
+      on: (
+        eventName: string,
+        nextState: string,
+        guard?: (context: Context) => boolean
+      ) => {
+        if (!states[stateName as StateNames]) {
+          states[stateName as StateNames] = {}
         }
-        if (enterHooks[newState.value]) {
-          enterHooks[newState.value].forEach(callback =>
-            callback(store, effectData)
-          )
+
+        if (!states[nextState as StateNames]) {
+          states[nextState as StateNames] = {}
         }
-        if (config?.onTransition) {
-          config.onTransition(store, effectData)
+
+        states[stateName as StateNames][eventName as EventNames] = {
+          name: nextState as StateNames,
+          guard,
         }
+
+        return state
       },
-    })
+      onEnter: (callback: any) => {
+        if (!enterHooks[stateName]) {
+          enterHooks[stateName] = []
+        }
 
-    const currentState = store.getState()
+        enterHooks[stateName].push(callback)
 
-    if (enterHooks[currentState.value]) {
-      enterHooks[currentState.value].forEach(callback =>
-        callback(store, {
-          newState: currentState,
-          store,
-        })
-      )
+        return state
+      },
+      onLeave: (callback: any) => {
+        if (!leaveHooks[stateName]) {
+          leaveHooks[stateName] = []
+        }
+
+        leaveHooks[stateName].push(callback)
+
+        return state
+      },
+      stateName,
     }
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return state
+  }
+
+  const [initialState] = statesFactory(createState)
+
+  const store = new MachineStore<StateNames, EventNames, Context>(
+    initialState.stateName as StateNames,
+    states,
+    initialContext,
+    config?.guard
+  )
+
+  const subscription = store.subscribe({
+    effects: effectData => {
+      const { newState, oldState } = effectData
+
+      if (newState.value === oldState?.value) return
+
+      if (oldState && leaveHooks[oldState.value]) {
+        leaveHooks[oldState.value].forEach(callback =>
+          callback(store, effectData)
+        )
+      }
+      if (enterHooks[newState.value]) {
+        enterHooks[newState.value].forEach(callback =>
+          callback(store, effectData)
+        )
+      }
+      if (config?.onTransition) {
+        config.onTransition(store, effectData)
+      }
+    },
+  })
+
+  const currentState = store.getState()
+
+  if (enterHooks[currentState.value]) {
+    enterHooks[currentState.value].forEach(callback =>
+      callback(store, {
+        newState: currentState,
+        store,
+      })
+    )
+  }
+
+  const descriptor: MachineStoreInjectorDescriptor<
+    StateNames,
+    EventNames,
+    Context
+  > = {
+    cleanup: () => subscription.unsubscribe(),
+    store,
+    type: InjectorType.MachineStore,
+  }
+  instance._nextInjectors?.push(descriptor)
 
   return store
 }
