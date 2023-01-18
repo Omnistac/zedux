@@ -55,6 +55,9 @@ export class IdGenerator {
     return this.generateId('es')
   }
 
+  public generateId = (prefix: string) =>
+    `${prefix}-${++this.idCounter}${Math.random().toString(16).slice(2, 14)}`
+
   public generateNodeId() {
     return this.generateId('no')
   }
@@ -143,7 +146,4 @@ export class IdGenerator {
 
     return id
   }
-
-  private generateId = (prefix: string) =>
-    `${prefix}-${++this.idCounter}${Math.random().toString(16).slice(2, 14)}`
 }

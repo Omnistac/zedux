@@ -127,7 +127,7 @@ export class Graph {
 
       const edgeToAdd = dependencies[dependencyKey]
 
-      // edge already exists; keep it
+      // edge still exists; keep it
       if (edgeToAdd && edgeToAdd.flags === existingEdge.flags) return
 
       this.removeEdge(key, dependencyKey)

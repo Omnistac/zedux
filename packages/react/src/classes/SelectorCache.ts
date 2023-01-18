@@ -316,7 +316,7 @@ export class SelectorCache {
     this.ecosystem._graph.removeNode(cacheKey)
     delete this._caches[cacheKey]
     cache.isDestroyed = true
-    // don't delete the ref from this._refBaseKeys
+    this._refBaseKeys.delete(cache.selectorRef)
   }
 
   /**
@@ -455,7 +455,8 @@ export class SelectorCache {
     } catch (err) {
       this.ecosystem._graph.destroyBuffer()
       console.error(
-        `Zedux encountered an error while running AtomSelector with key "${cacheKey}":`
+        `Zedux encountered an error while running AtomSelector with key "${cacheKey}":`,
+        err
       )
 
       throw err
