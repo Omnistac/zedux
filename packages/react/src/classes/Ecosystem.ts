@@ -395,7 +395,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   public inspectGraph(view: 'bottom-up'): GraphViewRecursive
   public inspectGraph(
-    view: 'flat'
+    view?: 'flat'
   ): Record<
     string,
     {
