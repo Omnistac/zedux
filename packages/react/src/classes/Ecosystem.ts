@@ -17,6 +17,7 @@ import {
   GraphEdgeInfo,
   GraphViewRecursive,
   MaybeCleanup,
+  Selectable,
 } from '../types'
 import {
   EcosystemGraphNode,
@@ -31,7 +32,7 @@ import { Graph } from './Graph'
 import { IdGenerator } from './IdGenerator'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
-import { SelectorCache } from './SelectorCache'
+import { AtomSelectorCache, SelectorCache } from './SelectorCache'
 import { Mod, ZeduxPlugin } from './ZeduxPlugin'
 
 const defaultMods = Object.keys(ZeduxPlugin.actions).reduce((map, mod) => {
@@ -609,13 +610,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   /**
    * Runs an AtomSelector statically - without registering any dependencies or
-   * updating any caches. If we've already cached this exact selector+args
+   * updating any caches. If we've already cached this exact selector + args
    * combo, returns the cached value without running the selector again
    */
   public select<T, Args extends any[]>(
-    atomSelector: AtomSelectorOrConfig<T, Args>,
+    selectable: Selectable<T, Args>,
     ...args: Args
   ): T {
+    if (is(selectable, AtomSelectorCache)) {
+      return (selectable as AtomSelectorCache<T, Args>).result as T
+    }
+
+    const atomSelector = selectable as AtomSelectorOrConfig<T, Args>
     const cache = this.selectorCache.weakGetCache(atomSelector, args)
     if (cache) return cache.result as T
 

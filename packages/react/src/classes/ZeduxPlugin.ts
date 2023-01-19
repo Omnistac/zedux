@@ -14,7 +14,7 @@ import {
   EvaluationReason,
   MaybeCleanup,
 } from '../types'
-import { AtomSelectorCache } from '../utils'
+import { AtomSelectorCache } from './SelectorCache'
 
 type ValuesOf<Rec extends Record<any, any>> = Rec extends Record<any, infer T>
   ? T

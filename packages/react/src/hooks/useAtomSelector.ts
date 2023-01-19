@@ -1,9 +1,10 @@
 import { AtomSelectorConfig, AtomSelectorOrConfig, EdgeFlag } from '../types'
 import { MutableRefObject, useMemo, useRef, useSyncExternalStore } from 'react'
-import { AtomSelectorCache, haveDepsChanged } from '../utils'
+import { haveDepsChanged } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
-import { Ecosystem } from '../classes'
+import { Ecosystem } from '../classes/Ecosystem'
+import { AtomSelectorCache } from '../classes/SelectorCache'
 
 const glob = ((typeof globalThis !== 'undefined' && globalThis) || {}) as any
 const INVALIDATE_REACT = `INVALIDATE_REACT_${Math.random()}`
