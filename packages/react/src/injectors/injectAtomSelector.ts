@@ -1,14 +1,14 @@
 import { readInstance } from '../classes/EvaluationStack'
-import { AtomSelectorOrConfig } from '../types'
+import { Selectable } from '../types'
 
 export const injectAtomSelector = <T, Args extends any[]>(
-  atomSelector: AtomSelectorOrConfig<T, Args>,
+  selectable: Selectable<T, Args>,
   ...args: Args
 ): T => {
   const instance = readInstance()
 
   return instance.ecosystem._evaluationStack.atomGetters.select(
-    atomSelector,
+    selectable,
     ...args
   )
 }

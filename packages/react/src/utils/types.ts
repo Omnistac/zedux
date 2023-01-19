@@ -1,13 +1,12 @@
 import {
   AnyAtomInstance,
-  AtomSelectorOrConfig,
   DependentEdge,
-  EvaluationReason,
   MutableRefObject,
   RefObject,
 } from '@zedux/react/types'
 import { MachineStore, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
+import { AtomSelectorCache } from '../classes/SelectorCache'
 
 export interface AtomInjectorDescriptor<
   InstanceType extends AtomInstanceBase<any, any[], any>
@@ -21,17 +20,6 @@ export interface AtomDynamicInjectorDescriptor<
 > extends InjectorDescriptor {
   instance: InstanceType
   type: InjectorType.AtomDynamic
-}
-
-export interface AtomSelectorCache<T = any, Args extends any[] = any[]> {
-  args?: Args
-  cacheKey: string
-  isDestroyed?: true
-  nextEvaluationReasons: EvaluationReason[]
-  prevEvaluationReasons?: EvaluationReason[]
-  result?: T
-  selectorRef: AtomSelectorOrConfig<T, Args>
-  task?: () => void
 }
 
 export interface DepsInjectorDescriptor extends InjectorDescriptor {

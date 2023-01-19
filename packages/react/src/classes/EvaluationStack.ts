@@ -3,18 +3,14 @@ import {
   AnyAtomInstance,
   AtomGetters,
   AtomParamsType,
-  AtomSelectorOrConfig,
   EdgeFlag,
   GraphEdgeInfo,
+  Selectable,
 } from '../types'
-import {
-  AtomSelectorCache,
-  InstanceStackItem,
-  SelectorStackItem,
-  StackItem,
-} from '../utils'
+import { InstanceStackItem, SelectorStackItem, StackItem } from '../utils'
 import { AtomBase } from './atoms/AtomBase'
 import { Ecosystem } from './Ecosystem'
+import { AtomSelectorCache } from './SelectorCache'
 import { ZeduxPlugin } from './ZeduxPlugin'
 
 /**
@@ -89,18 +85,15 @@ export class EvaluationStack {
     }
 
     const select: AtomGetters['select'] = <T = any, Args extends any[] = []>(
-      selectorOrConfig: AtomSelectorOrConfig<T, Args>,
+      selectable: Selectable<T, Args>,
       ...args: Args
     ) => {
       // when called outside AtomSelector evaluation, select() is just an alias for ecosystem.select()
       if (!stack.length) {
-        return ecosystem.select(selectorOrConfig, ...args)
+        return ecosystem.select(selectable, ...args)
       }
 
-      const cache = this.ecosystem.selectorCache.getCache(
-        selectorOrConfig,
-        args
-      )
+      const cache = this.ecosystem.selectorCache.getCache(selectable, args)
 
       ecosystem._graph.addEdge(
         stack[stack.length - 1].key,
