@@ -47,9 +47,7 @@ const getStateType = (val: any) => {
   return StateType.Value
 }
 
-const getStateStore = <State extends any = any>(
-  factoryResult: AtomValue<State>
-) => {
+const getStateStore = <State = any>(factoryResult: AtomValue<State>) => {
   const stateType = getStateType(factoryResult)
 
   const stateStore =
