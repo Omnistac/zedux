@@ -1,4 +1,4 @@
-import { ActorPayloadType } from '..'
+import { ActionFactoryPayloadType } from '@zedux/core'
 import {
   AnyAtomInstance,
   AtomGetters,
@@ -122,7 +122,7 @@ export class EvaluationStack {
     if (!item || !this.ecosystem.mods.evaluationFinished) return
 
     const time = item.start ? performance.now() - item.start : 0
-    const action = { time } as ActorPayloadType<
+    const action = { time } as ActionFactoryPayloadType<
       typeof ZeduxPlugin.actions.evaluationFinished
     >
 

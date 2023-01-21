@@ -24,14 +24,31 @@ export type ActionChain<Payload = any, Type extends string = string> =
   | ActionMeta<Payload, Type>
   | Action<Payload, Type>
 
-export type ActionCreator<Payload = any, Type extends string = string> = (
-  payload: Payload
-) => Action<Payload, Type>
+export type ActionCreator<
+  Payload = any,
+  Type extends string = string
+> = Payload extends undefined
+  ? () => Action<Payload, Type>
+  : (payload: Payload) => Action<Payload, Type>
 
-export type ActionCreatorEmpty<Type extends string = string> = () => Action<
-  undefined,
-  Type
->
+export type ActionFactory<
+  Payload = any,
+  Type extends string = string
+> = ActionCreator<Payload, Type> & {
+  type: Type
+}
+
+export type ActionFactoryPayloadType<
+  A extends ActionFactory
+> = A extends ActionFactory<infer T> ? T : never
+
+export type ActionFactoryActionType<
+  A extends ActionFactory
+> = A extends ActionFactory<infer P, infer T> ? { payload: P; type: T } : never
+
+export type ActionFactoryTypeType<
+  A extends ActionFactory
+> = A extends ActionFactory<any, infer T> ? T : never
 
 export interface ActionMeta<
   Payload = any,
@@ -60,26 +77,6 @@ export type ActionPayloadType<A extends Action> = A extends Action<infer T>
 export type ActionType = string
 
 export type ActionTypeType<A extends Action> = A extends Action<any, infer T>
-  ? T
-  : never
-
-export type Actor<Payload = any, Type extends string = string> = {
-  type: Type
-} & ActionCreator<Payload, Type>
-
-export type ActorEmpty<Type extends string = string> = {
-  type: Type
-} & ActionCreatorEmpty<Type>
-
-export type ActorPayloadType<A extends Actor> = A extends Actor<infer T>
-  ? T
-  : never
-
-export type ActorActionType<A extends Actor> = A extends Actor<infer P, infer T>
-  ? { payload: P; type: T }
-  : never
-
-export type ActorTypeType<A extends Actor> = A extends Actor<any, infer T>
   ? T
   : never
 
@@ -197,8 +194,7 @@ export interface Observable<State = any> {
 }
 
 export type Reactable<Payload = any, Type extends string = string> =
-  | Actor<Payload, Type>
-  | ActorEmpty<Type>
+  | ActionFactory<Payload, Type>
   | Type
 
 export type RecursivePartial<T> = T extends Record<string, any>
@@ -297,14 +293,6 @@ export interface WhenMachineBuilder<
     >
   ) => WhenMachineBuilder<StateNames, EventNames, Context>
 }
-
-export type ZeduxActor<Payload = any, Type extends string = string> = {
-  toString(): Type
-} & Actor<Payload, Type>
-
-export type ZeduxActorEmpty<Type extends string = string> = {
-  toString(): Type
-} & ActorEmpty<Type>
 
 export interface ZeduxReducer<State = any> extends Reducer<State> {
   reduce<Type extends string = string, Payload = any>(

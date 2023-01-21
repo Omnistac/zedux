@@ -1,5 +1,5 @@
 import { createStore } from '@zedux/core'
-import { createContext } from 'react'
+import React, { createContext } from 'react'
 import { globalStore, removeEcosystem } from '../store'
 import {
   AnyAtomBase,
@@ -21,7 +21,6 @@ import {
 } from '../types'
 import {
   EcosystemGraphNode,
-  EMPTY_CONTEXT,
   InstanceStackItem,
   is,
   SelectorStackItem,
@@ -813,10 +812,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     if (existingContext) return existingContext
 
-    const newContext = createContext(EMPTY_CONTEXT)
+    const newContext = createContext(undefined)
     this._reactContexts[atom.key] = newContext
 
-    return newContext
+    return newContext as React.Context<any>
   }
 
   // Should only be used internally

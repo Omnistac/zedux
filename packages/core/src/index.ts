@@ -1,6 +1,5 @@
 export * from './api/constants'
-export * from './api/createActor'
-export * from './api/createActorFactory'
+export * from './api/actionFactory'
 export * from './api/createReducer'
 export * from './api/createStore'
 export * from './api/MachineStore'

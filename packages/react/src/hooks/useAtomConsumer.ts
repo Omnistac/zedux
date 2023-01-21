@@ -7,7 +7,7 @@ import { useEcosystem } from './useEcosystem'
 export const useAtomConsumer: {
   <A extends StandardAtomBase<any, [...any], any, any>>(atom: A):
     | AtomInstanceType<A>
-    | Record<string, never>
+    | undefined
 
   <A extends StandardAtomBase<any, [...any], any, any>>(
     atom: A,
@@ -16,11 +16,11 @@ export const useAtomConsumer: {
 
   <A extends StandardAtomBase<any, [...any], any, any>>(
     atom: A,
-    throwIfNotProvided: true
+    throwIfNotProvided: boolean
   ): AtomInstanceType<A>
 } = <A extends StandardAtomBase<any, [...any], any, any>>(
   atom: A,
-  defaultParams?: AtomParamsType<A> | true
+  defaultParams?: AtomParamsType<A> | boolean
 ) => {
   const ecosystem = useEcosystem()
   const instance = useContext(ecosystem._getReactContext(atom))

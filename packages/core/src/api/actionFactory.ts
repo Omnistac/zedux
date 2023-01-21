@@ -1,28 +1,24 @@
-import { Action, Actor, ZeduxActor, ZeduxActorEmpty } from '../types'
+import { Action, ActionFactory } from '../types'
 import { detailedTypeof } from '../utils/general'
 
-function sharedToStringMethod(this: Actor) {
-  return this.type as string
-}
-
 /**
-  Factory for creating ZeduxActor objects.
+  Factory for creating ActionFactory objects.
 
   Actors are like action creators with a little extra functionality.
 
   They can be passed directly to a ZeduxReducer's `reduce()` method, thus
   removing the necessity of string constants.
 */
-export const createActor: <Payload = undefined, Type extends string = string>(
+export const actionFactory: <Payload = undefined, Type extends string = string>(
   actionType: Type
 ) => Payload extends undefined
-  ? ZeduxActorEmpty<Type>
-  : ZeduxActor<Payload, Type> = <Payload, Type extends string>(
+  ? ActionFactory<undefined, Type>
+  : ActionFactory<Payload, Type> = <Payload, Type extends string>(
   actionType: Type
 ) => {
   if (DEV && typeof actionType !== 'string') {
     throw new TypeError(
-      `Zedux: createActor() - actionType must be a string. Received ${detailedTypeof(
+      `Zedux: actionFactory() - actionType must be a string. Received ${detailedTypeof(
         actionType
       )}`
     )
@@ -38,12 +34,7 @@ export const createActor: <Payload = undefined, Type extends string = string>(
     if (typeof payload !== 'undefined') action.payload = payload
 
     return action
-  }) as ZeduxActor<Payload, Type> | ZeduxActorEmpty<Type>
-
-  // For convenience, overwrite the function's .toString() method.
-  // Make it return the actor's `type`. Useful for stuff like:
-  // { [anActor]: aReducer }
-  actor.toString = sharedToStringMethod as any
+  }) as ActionFactory<Payload, Type>
 
   // Expose the action `type` for this actor.
   // Read only! There should never be any reason to modify this.

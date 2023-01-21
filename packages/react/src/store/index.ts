@@ -20,7 +20,7 @@ const getGlobalStore = (): GlobalStore => {
     })
   }
 
-  if (window.opener && window.dispatchEvent && window.CustomEvent) {
+  if (window.opener && (window as any).dispatchEvent && window.CustomEvent) {
     let store: Store | undefined = undefined
     const callback = (storeFromAbove: Store) => (store = storeFromAbove)
 
