@@ -1,8 +1,13 @@
-import { actionTypes, createActor, createStore, when } from '@zedux/core/index'
+import {
+  actionTypes,
+  actionFactory,
+  createStore,
+  when,
+} from '@zedux/core/index'
 import { getDoorMachine, getToggleMachine } from '../utils'
 
-const doNothing = createActor('doNothing')
-const doSomething = createActor('doSomething')
+const doNothing = actionFactory('doNothing')
+const doSomething = actionFactory('doSomething')
 
 describe('WhenBuilder', () => {
   describe('.enters()/.leaves()', () => {

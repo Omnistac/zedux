@@ -1,11 +1,12 @@
-import { createActorFactory } from '@zedux/core'
+import { actionFactory } from '@zedux/core'
 import { Ecosystem } from '../classes/Ecosystem'
 
-const createActor = createActorFactory('@@react-zedux', 'global')
-export const addEcosystem = createActor<Ecosystem>('addEcosystem')
+export const addEcosystem = actionFactory<Ecosystem>(
+  '@@zedux/react/addEcosystem'
+)
 
-export const removeEcosystem = createActor<{
+export const removeEcosystem = actionFactory<{
   ecosystemId: string
 }>('removeEcosystem')
 
-export const wipe = createActor('wipe')
+export const wipe = actionFactory('wipe')

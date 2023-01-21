@@ -1,8 +1,8 @@
 import {
   ActionChain,
-  ActorActionType,
-  ActorPayloadType,
-  createActor,
+  actionFactory,
+  ActionFactoryActionType,
+  ActionFactoryPayloadType,
   createStore,
   Store,
 } from '@zedux/core'
@@ -21,11 +21,11 @@ type ValuesOf<Rec extends Record<any, any>> = Rec extends Record<any, infer T>
   : never
 
 export type Mod = keyof ZeduxPlugin['constructor']['actions']
-export type ModAction = ActorActionType<
+export type ModAction = ActionFactoryActionType<
   ValuesOf<ZeduxPlugin['constructor']['actions']>
 >
 export type ModPayloadMap = {
-  [K in Mod]: ActorPayloadType<ZeduxPlugin['constructor']['actions'][K]>
+  [K in Mod]: ActionFactoryPayloadType<ZeduxPlugin['constructor']['actions'][K]>
 }
 
 export class ZeduxPlugin {
@@ -36,7 +36,7 @@ export class ZeduxPlugin {
    * store, so they don't need prefixes
    */
   public static actions = {
-    activeStateChanged: createActor<
+    activeStateChanged: actionFactory<
       {
         instance: AnyAtomInstance
         newActiveState: ActiveState
@@ -44,14 +44,14 @@ export class ZeduxPlugin {
       },
       'activeStateChanged'
     >('activeStateChanged'),
-    ecosystemDestroyed: createActor<
+    ecosystemDestroyed: actionFactory<
       { ecosystem: Ecosystem },
       'ecosystemDestroyed'
     >('ecosystemDestroyed'),
-    ecosystemWiped: createActor<{ ecosystem: Ecosystem }, 'ecosystemWiped'>(
+    ecosystemWiped: actionFactory<{ ecosystem: Ecosystem }, 'ecosystemWiped'>(
       'ecosystemWiped'
     ),
-    edgeCreated: createActor<
+    edgeCreated: actionFactory<
       {
         dependency: AnyAtomInstance
         // string if `edge.flags & EdgeFlag.External` or the atom instance
@@ -63,7 +63,7 @@ export class ZeduxPlugin {
       },
       'edgeCreated'
     >('edgeCreated'),
-    edgeRemoved: createActor<
+    edgeRemoved: actionFactory<
       {
         dependency: AnyAtomInstance | AtomSelectorCache<any, any[]>
         dependent: AnyAtomInstance | AtomSelectorCache<any, any[]> | string // string if edge is External
@@ -71,7 +71,7 @@ export class ZeduxPlugin {
       },
       'edgeRemoved'
     >('edgeRemoved'),
-    evaluationFinished: createActor<
+    evaluationFinished: actionFactory<
       | {
           instance: AnyAtomInstance
           time: number
@@ -83,7 +83,7 @@ export class ZeduxPlugin {
       'evaluationFinished'
     >('evaluationFinished'),
     // either instance or selectorCache will always be defined, depending on the node type
-    stateChanged: createActor<
+    stateChanged: actionFactory<
       {
         action?: ActionChain
         instance?: AnyAtomInstance

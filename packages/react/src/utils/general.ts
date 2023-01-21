@@ -2,8 +2,6 @@ import { InjectorDescriptor, InjectorType } from './types'
 import { readInstance } from '../classes/EvaluationStack'
 import { AnyAtomInstance } from '../types'
 
-export const EMPTY_CONTEXT = {}
-
 export const getPrevInjector = <T extends InjectorDescriptor>(
   operation: string,
   type: InjectorType,
