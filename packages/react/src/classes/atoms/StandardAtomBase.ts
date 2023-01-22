@@ -1,3 +1,4 @@
+import { Store } from '@zedux/core'
 import {
   AtomConfig,
   AtomApiPromise,
@@ -10,11 +11,12 @@ export abstract class StandardAtomBase<
   State,
   Params extends any[],
   Exports extends Record<string, any>,
+  StoreType extends Store<State>,
   PromiseType extends AtomApiPromise
 > extends AtomBase<
   State,
   Params,
-  AtomInstance<State, Params, Exports, PromiseType>
+  AtomInstance<State, Params, Exports, StoreType, PromiseType>
 > {
   public readonly consumeHydrations?: boolean
   public readonly dehydrate?: AtomConfig<State>['dehydrate']
@@ -30,6 +32,7 @@ export abstract class StandardAtomBase<
       State,
       Params,
       Exports,
+      StoreType,
       PromiseType
     >,
     config?: AtomConfig<State>

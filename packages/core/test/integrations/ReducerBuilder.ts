@@ -1,6 +1,6 @@
 import { createReducer } from '@zedux/core/index'
 
-describe('ZeduxReactor configuration', () => {
+describe('ReducerBuilder', () => {
   test('.reduce() registers a sub-reducer that will be called only for the given action type', () => {
     const subReducer = jest.fn()
     const reducer = createReducer().reduce('a', subReducer)
@@ -8,7 +8,10 @@ describe('ZeduxReactor configuration', () => {
     reducer(null, { type: 'a', payload: 1 })
     reducer(null, { type: 'b', payload: 2 })
 
-    expect(subReducer).toHaveBeenLastCalledWith(null, 1)
+    expect(subReducer).toHaveBeenLastCalledWith(null, 1, {
+      type: 'a',
+      payload: 1,
+    })
     expect(subReducer).toHaveBeenCalledTimes(1)
   })
 
@@ -21,7 +24,7 @@ describe('ZeduxReactor configuration', () => {
     const output1 = reducer(1, { type: 'a', payload: 1 })
     const output2 = reducer(1, { type: 'b', payload: 2 })
 
-    expect(subReducer).toHaveBeenLastCalledWith(1, 1)
+    expect(subReducer).toHaveBeenLastCalledWith(1, 1, { type: 'a', payload: 1 })
     expect(subReducer).toHaveBeenCalledTimes(2)
 
     expect(output1).toEqual(1)
@@ -57,12 +60,18 @@ describe('ZeduxReactor configuration', () => {
     reducer(null, { type: 'a', payload: 1 })
     reducer(null, { type: 'b', payload: 2 })
 
-    expect(subReducer).toHaveBeenLastCalledWith(null, 1)
+    expect(subReducer).toHaveBeenLastCalledWith(null, 1, {
+      type: 'a',
+      payload: 1,
+    })
 
     reducer(null, { type: 'c', payload: 3 })
     reducer(null, { type: 'd', payload: 4 })
 
-    expect(subReducer).toHaveBeenLastCalledWith(null, 3)
+    expect(subReducer).toHaveBeenLastCalledWith(null, 3, {
+      type: 'c',
+      payload: 3,
+    })
     expect(subReducer).toHaveBeenCalledTimes(2)
   })
 

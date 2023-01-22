@@ -1,14 +1,14 @@
-import { Action, Reactable, SubReducer, ZeduxReducer } from '../types'
-import { extractActionType, extractActionTypes } from '../utils/actor'
+import { Action, Reactable, ReducerBuilder, SubReducer } from '../types'
+import { extractActionType, extractActionTypes } from '../utils/actions'
 
 interface ReducersMap<State> {
   [key: string]: SubReducer<State>[]
 }
 
 /**
-  Creates a new Zedux reducer.
+  Creates a new ReducerBuilder.
 
-  A Zedux reducer is just a reducer with a few special methods for
+  A ReducerBuilder is just a reducer with a special `.reducer()` method for
   easily mapping action types to sub-reducers that handle them.
 */
 export const createReducer = <State = any>(initialState?: State) => {
@@ -18,16 +18,16 @@ export const createReducer = <State = any>(initialState?: State) => {
     const reducers = actionToReducersMap[action.type] || []
 
     return runReducers(reducers, state, action)
-  }) as ZeduxReducer<State>
+  }) as ReducerBuilder<State>
 
-  reducer.reduce = <Payload = any, Type extends string = string>(
-    actor: Reactable<Payload, Type> | Reactable<Payload, Type>[],
-    subReducer: SubReducer<State>
+  reducer.reduce = <Payload = any, Type extends string = any, Meta = any>(
+    reactable: Reactable<Payload, Type> | Reactable<Payload, Type>[],
+    subReducer: SubReducer<State, Payload, Type, Meta>
   ) => {
-    const method = 'ZeduxReducer.reduce()'
-    const actionTypes = Array.isArray(actor)
-      ? extractActionTypes(actor, method)
-      : [extractActionType(actor, method)]
+    const method = 'ReducerBuilder.reduce()'
+    const actionTypes = Array.isArray(reactable)
+      ? extractActionTypes(reactable, method)
+      : [extractActionType(reactable, method)]
 
     mapActionTypesToReducer(actionToReducersMap, actionTypes, subReducer)
 
@@ -57,7 +57,8 @@ function runReducers<State>(
   action: Action
 ) {
   return reducers.reduce(
-    (accumulatedState, reducer) => reducer(accumulatedState, action.payload),
+    (accumulatedState, reducer) =>
+      reducer(accumulatedState, action.payload, action),
     state
   )
 }

@@ -1,6 +1,6 @@
 import { createReducer } from '@zedux/core/index'
 
-describe('ZeduxReducer', () => {
+describe('ReducerBuilder', () => {
   test('with no delegates, returns the state passed to it', () => {
     const action = { type: 'a' }
 
@@ -11,7 +11,7 @@ describe('ZeduxReducer', () => {
     expect(createReducer()({ a: 1 }, action)).toEqual({ a: 1 })
   })
 
-  test("anything passed to createReducer() becomes the ZeduxReducer's default state", () => {
+  test("anything passed to createReducer() becomes the ReducerBuilder's default state", () => {
     const action = { type: 'a' }
 
     expect(createReducer('a')(undefined, action)).toEqual('a')

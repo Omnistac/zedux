@@ -1,3 +1,4 @@
+import { Store } from '@zedux/core'
 import { atom } from '@zedux/react/factories/atom'
 import { AtomApiPromise, AtomValueOrFactory } from '@zedux/react/types'
 import { AtomInstance } from '../instances/AtomInstance'
@@ -8,8 +9,9 @@ export class Atom<
   State,
   Params extends any[],
   Exports extends Record<string, any>,
+  StoreType extends Store<State>,
   PromiseType extends AtomApiPromise
-> extends StandardAtomBase<State, Params, Exports, PromiseType> {
+> extends StandardAtomBase<State, Params, Exports, StoreType, PromiseType> {
   /**
    * This method should be overridden when creating custom atom classes that
    * create a custom atom instance class. Return a new instance of your atom
@@ -19,8 +21,8 @@ export class Atom<
     ecosystem: Ecosystem,
     keyHash: string,
     params: Params
-  ): AtomInstance<State, Params, Exports, PromiseType> {
-    return new AtomInstance<State, Params, Exports, PromiseType>(
+  ): AtomInstance<State, Params, Exports, StoreType, PromiseType> {
+    return new AtomInstance<State, Params, Exports, StoreType, PromiseType>(
       ecosystem,
       this,
       keyHash,
@@ -40,7 +42,7 @@ export class Atom<
   }
 
   public override(
-    newValue: AtomValueOrFactory<State, Params, Exports, PromiseType>
+    newValue: AtomValueOrFactory<State, Params, Exports, StoreType, PromiseType>
   ) {
     return atom(this.key, newValue, {
       flags: this.flags,

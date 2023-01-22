@@ -1,5 +1,6 @@
 import { AtomInstance, StandardAtomBase } from '../classes'
 import {
+  AnyAtom,
   AtomExportsType,
   AtomInstanceExportsType,
   AtomInstanceStateType,
@@ -10,20 +11,20 @@ import {
 import { injectAtomInstanceDynamic } from './injectAtomInstanceDynamic'
 
 export const injectAtomState: {
-  <A extends StandardAtomBase<any, [], any, any>>(atom: A): StateHookTuple<
+  <A extends StandardAtomBase<any, [], any, any, any>>(atom: A): StateHookTuple<
     AtomStateType<A>,
     AtomExportsType<A>
   >
 
-  <A extends StandardAtomBase<any, [...any], any, any>>(
-    atom: A,
-    params: AtomParamsType<A>
-  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
+  <A extends AnyAtom>(atom: A, params: AtomParamsType<A>): StateHookTuple<
+    AtomStateType<A>,
+    AtomExportsType<A>
+  >
 
-  <AI extends AtomInstance<any, [...any], any, any>>(
+  <AI extends AtomInstance<any, [...any], any, any, any>>(
     instance: AI
   ): StateHookTuple<AtomInstanceStateType<AI>, AtomInstanceExportsType<AI>>
-} = <A extends StandardAtomBase<any, [...any], any, any>>(
+} = <A extends AnyAtom>(
   atom: A,
   params?: AtomParamsType<A>
 ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>> => {
@@ -31,7 +32,7 @@ export const injectAtomState: {
     atom,
     params as AtomParamsType<A>,
     'injectAtomState'
-  ) as AtomInstance<AtomStateType<A>, [...any], any, any>
+  ) as AtomInstance<AtomStateType<A>, [...any], any, any, any>
 
   const setState: any = (settable: any, meta?: any) =>
     instance.setState(settable, meta)

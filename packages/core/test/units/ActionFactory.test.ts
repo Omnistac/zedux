@@ -27,10 +27,10 @@ describe('ActionFactory', () => {
 
 describe('ActionFactory.type', () => {
   test("can be modified, but please don't", () => {
-    const actor = actionFactory('a')
-    ;(actor as any).type = 'b'
+    const createActor = actionFactory('a')
+    ;(createActor as any).type = 'b'
 
-    expect(actor()).toEqual({
+    expect(createActor()).toEqual({
       type: 'b',
     })
   })

@@ -1,7 +1,7 @@
 import { createReducer } from '@zedux/core/index'
 
 describe('Zedux.createReducer()', () => {
-  test('returns a ZeduxReducer', () => {
+  test('returns a ReducerBuilder', () => {
     const reducer = createReducer()
 
     expect(typeof reducer).toBe('function')

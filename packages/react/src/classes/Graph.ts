@@ -1,4 +1,5 @@
 import {
+  AnyAtomInstance,
   DependentEdge,
   EdgeFlag,
   EvaluationReason,
@@ -7,7 +8,6 @@ import {
 } from '../types'
 import { EcosystemGraphNode, JobType } from '../utils'
 import { Ecosystem } from './Ecosystem'
-import { AtomInstance } from './instances/AtomInstance'
 import { ZeduxPlugin } from './ZeduxPlugin'
 
 export class Graph {
@@ -438,12 +438,7 @@ export class Graph {
       !dependency.isAtomSelector &&
       Object.keys(dependency.dependents).length === 1
     ) {
-      const instance = this.ecosystem._instances[nodeKey] as AtomInstance<
-        any,
-        any[],
-        any,
-        any
-      >
+      const instance = this.ecosystem._instances[nodeKey] as AnyAtomInstance
 
       instance._cancelDestruction?.()
     }

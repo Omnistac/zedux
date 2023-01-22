@@ -11,7 +11,7 @@ import { injectEffect } from './injectEffect'
 import { injectMemo } from './injectMemo'
 import { injectStore } from './injectStore'
 import { injectRef } from './injectRef'
-import { StoreAtomApi } from '../classes'
+import { AtomApi } from '../classes'
 
 /**
  * Create a memoized promise reference. Kicks off the promise immediately
@@ -62,13 +62,18 @@ export const injectPromise: {
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps: InjectorDeps,
     config: { initialState?: T; dataOnly: true } & InjectStoreConfig
-  ): StoreAtomApi<Store<T>, Record<string, any>, Promise<T>>
+  ): AtomApi<T, Record<string, any>, Store<T>, Promise<T>>
 
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps?: InjectorDeps,
     config?: { initialState?: T; dataOnly?: boolean } & InjectStoreConfig
-  ): StoreAtomApi<Store<PromiseState<T>>, Record<string, any>, Promise<T>>
+  ): AtomApi<
+    PromiseState<T>,
+    Record<string, any>,
+    Store<PromiseState<T>>,
+    Promise<T>
+  >
 } = <T>(
   promiseFactory: (controller?: AbortController) => Promise<T>,
   deps?: InjectorDeps,
