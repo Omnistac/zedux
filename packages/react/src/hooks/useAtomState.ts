@@ -1,5 +1,6 @@
 import { AtomInstance, StandardAtomBase } from '../classes'
 import {
+  AnyAtom,
   AtomExportsType,
   AtomInstanceExportsType,
   AtomInstanceStateType,
@@ -11,23 +12,23 @@ import {
 import { useAtomInstanceDynamic } from './useAtomInstanceDynamic'
 
 export const useAtomState: {
-  <A extends StandardAtomBase<any, [], any, any>>(atom: A): StateHookTuple<
+  <A extends StandardAtomBase<any, [], any, any, any>>(atom: A): StateHookTuple<
     AtomStateType<A>,
     AtomExportsType<A>
   >
 
-  <A extends StandardAtomBase<any, [...any], any, any>>(
+  <A extends AnyAtom>(
     atom: A,
     params: AtomParamsType<A>,
     config?: ZeduxHookConfig
   ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
 
-  <AI extends AtomInstance<any, [...any], any, any>>(
+  <AI extends AtomInstance<any, [...any], any, any, any>>(
     instance: AI,
     params?: [],
     config?: ZeduxHookConfig
   ): StateHookTuple<AtomInstanceStateType<AI>, AtomInstanceExportsType<AI>>
-} = <A extends StandardAtomBase<any, [...any], any, any>>(
+} = <A extends AnyAtom>(
   atom: A,
   params?: AtomParamsType<A>,
   config: ZeduxHookConfig = { operation: 'useAtomState' }

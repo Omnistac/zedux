@@ -12,7 +12,6 @@ import {
 import {
   ActiveState,
   AtomApiPromise,
-  AtomValue,
   Cleanup,
   EvaluationReason,
   EvaluationSourceType,
@@ -47,13 +46,19 @@ const getStateType = (val: any) => {
   return StateType.Value
 }
 
-const getStateStore = <State = any>(factoryResult: AtomValue<State>) => {
+const getStateStore = <
+  State = any,
+  StoreType extends Store<State> = Store<State>,
+  P extends State | StoreType = State | StoreType
+>(
+  factoryResult: P
+) => {
   const stateType = getStateType(factoryResult)
 
   const stateStore =
     stateType === StateType.Store
-      ? (factoryResult as Store<State>)
-      : createStore<State>()
+      ? (factoryResult as StoreType)
+      : (createStore<State>() as StoreType)
 
   // define how we populate our store (doesn't apply to user-supplied stores)
   if (stateType === StateType.Value) {
@@ -71,17 +76,18 @@ export class AtomInstance<
   State,
   Params extends any[],
   Exports extends Record<string, any>,
+  StoreType extends Store<State>,
   PromiseType extends AtomApiPromise
 > extends AtomInstanceBase<
   State,
   Params,
-  StandardAtomBase<State, Params, Exports, PromiseType>
+  StandardAtomBase<State, Params, Exports, StoreType, PromiseType>
 > {
   public activeState: ActiveState = 'Initializing'
-  public api?: AtomApi<State, Exports, PromiseType>
+  public api?: AtomApi<State, Exports, StoreType, PromiseType>
   public exports: Exports
   public promise: PromiseType
-  public store: Store<State>
+  public store: StoreType
 
   public _cancelDestruction?: Cleanup
   public _createdAt = Date.now()
@@ -102,7 +108,13 @@ export class AtomInstance<
 
   constructor(
     public readonly ecosystem: Ecosystem,
-    public readonly atom: StandardAtomBase<State, Params, Exports, PromiseType>,
+    public readonly atom: StandardAtomBase<
+      State,
+      Params,
+      Exports,
+      StoreType,
+      PromiseType
+    >,
     public readonly keyHash: string,
     public readonly params: Params
   ) {
@@ -333,9 +345,9 @@ export class AtomInstance<
 
   private evaluationTask = () => this._evaluationTask()
 
-  private _doEvaluate(): AtomValue<State> {
+  private _doEvaluate(): StoreType | State {
     this._nextInjectors = []
-    let newFactoryResult: AtomValue<State>
+    let newFactoryResult: StoreType | State
     this.ecosystem._evaluationStack.start(this)
     this.ecosystem._graph.bufferUpdates(this.keyHash)
 
@@ -394,13 +406,13 @@ export class AtomInstance<
     try {
       const val = (_value as (
         ...params: Params
-      ) => AtomValue<State> | AtomApi<State, Exports, PromiseType>)(
+      ) => StoreType | State | AtomApi<State, Exports, StoreType, PromiseType>)(
         ...this.params
       )
 
-      if (!is(val, AtomApi)) return val as AtomValue<State>
+      if (!is(val, AtomApi)) return val as StoreType | State
 
-      this.api = val as AtomApi<State, Exports, PromiseType>
+      this.api = val as AtomApi<State, Exports, StoreType, PromiseType>
 
       // Exports can only be set on initial evaluation
       if (this.activeState === 'Initializing') {
@@ -420,7 +432,7 @@ export class AtomInstance<
         this._setPromise(this.api.promise)
       }
 
-      return this.api.value as AtomValue<State>
+      return this.api.value as StoreType | State
     } catch (err) {
       console.error(
         `Zedux: Error while evaluating atom "${this.atom.key}" with params:`,

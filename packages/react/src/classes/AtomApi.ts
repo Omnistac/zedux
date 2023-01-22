@@ -1,14 +1,7 @@
-import {
-  ActionChain,
-  isZeduxStore,
-  Settable,
-  Store,
-  StoreStateType,
-} from '@zedux/core'
+import { ActionChain, isZeduxStore, Settable, Store } from '@zedux/core'
 import {
   AtomInstanceTtl,
   AtomApiPromise,
-  AtomValue,
   DispatchInterceptor,
   SetStateInterceptor,
 } from '@zedux/react/types'
@@ -17,6 +10,7 @@ import { is } from '@zedux/react/utils/general'
 export class AtomApi<
   State,
   Exports extends Record<string, any>,
+  StoreType extends Store<State> | undefined,
   PromiseType extends AtomApiPromise
 > {
   public static $$typeof = Symbol.for('@@react/zedux/AtomApi')
@@ -25,16 +19,22 @@ export class AtomApi<
   public exports?: Exports
   public promise: PromiseType
   public setStateInterceptors?: SetStateInterceptor<State>[]
+  public store: StoreType
   public ttl?: AtomInstanceTtl | (() => AtomInstanceTtl)
-  public value: AtomValue<State>
+  public value: State | StoreType
 
-  constructor(value: AtomValue<State> | AtomApi<State, Exports, PromiseType>) {
+  constructor(
+    value: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
+  ) {
     this.promise = undefined as PromiseType
-    this.value = value as AtomValue<State>
+    this.value = value as StoreType | State
+    this.store = (isZeduxStore(value) ? value : undefined) as StoreType
 
     if (is(value, AtomApi)) {
-      const asAtomApi = value as AtomApi<State, Exports, PromiseType>
-      Object.assign(this, asAtomApi)
+      Object.assign(
+        this,
+        value as AtomApi<State, Exports, StoreType, PromiseType>
+      )
     }
   }
 
@@ -45,16 +45,16 @@ export class AtomApi<
 
     this.dispatchInterceptors.push(interceptor)
 
-    return this as AtomApi<State, Exports, PromiseType> // for chaining
+    return this as AtomApi<State, Exports, StoreType, PromiseType> // for chaining
   }
 
   public addExports<NewExports extends Record<string, any>>(
     exports: NewExports
-  ): AtomApi<State, Exports & NewExports, PromiseType> {
+  ): AtomApi<State, Exports & NewExports, StoreType, PromiseType> {
     if (!this.exports) this.exports = exports as any
     else this.exports = { ...this.exports, ...exports }
 
-    return this as AtomApi<State, Exports & NewExports, PromiseType>
+    return this as AtomApi<State, Exports & NewExports, StoreType, PromiseType>
   }
 
   public addSetStateInterceptor(interceptor: SetStateInterceptor<State>) {
@@ -64,27 +64,33 @@ export class AtomApi<
 
     this.setStateInterceptors.push(interceptor)
 
-    return this as AtomApi<State, Exports, PromiseType> // for chaining
+    return this as AtomApi<State, Exports, StoreType, PromiseType> // for chaining
   }
 
   public setExports<NewExports extends Record<string, any>>(
     exports: NewExports
-  ): AtomApi<State, NewExports, PromiseType> {
+  ): AtomApi<State, NewExports, StoreType, PromiseType> {
     ;((this as unknown) as AtomApi<
       State,
       NewExports,
+      StoreType,
       PromiseType
     >).exports = exports
 
-    return (this as unknown) as AtomApi<State, NewExports, PromiseType> // for chaining
+    return (this as unknown) as AtomApi<
+      State,
+      NewExports,
+      StoreType,
+      PromiseType
+    > // for chaining
   }
 
   public setPromise<T>(
     promise: Promise<T>
-  ): AtomApi<State, Exports, Promise<T>> {
+  ): AtomApi<State, Exports, StoreType, Promise<T>> {
     this.promise = (promise as unknown) as PromiseType
 
-    return this as AtomApi<State, Exports, Promise<T>> // for chaining
+    return this as AtomApi<State, Exports, StoreType, Promise<T>> // for chaining
   }
 
   public setTtl(ttl: AtomInstanceTtl | (() => AtomInstanceTtl)) {
@@ -119,63 +125,5 @@ export class AtomApi<
     )
 
     return (intercept || next)(settable)
-  }
-}
-
-export class StoreAtomApi<
-  S extends Store,
-  Exports extends Record<string, any>,
-  PromiseType extends AtomApiPromise
-> extends AtomApi<StoreStateType<S>, Exports, PromiseType> {
-  public static $$typeof = Symbol.for('@@react/zedux/StoreAtomApi')
-  public readonly store: S
-
-  constructor(storeOrApi: S | StoreAtomApi<S, Exports, PromiseType>) {
-    super(storeOrApi)
-    this.store = isZeduxStore(storeOrApi)
-      ? (storeOrApi as S)
-      : (storeOrApi as StoreAtomApi<S, Exports, PromiseType>).store
-  }
-
-  public addDispatchInterceptor(
-    interceptor: DispatchInterceptor<StoreStateType<S>>
-  ): StoreAtomApi<S, Exports, PromiseType> {
-    return super.addDispatchInterceptor(interceptor) as StoreAtomApi<
-      S,
-      Exports,
-      PromiseType
-    >
-  }
-
-  public addExports<NewExports extends Record<string, any>>(
-    exports: NewExports
-  ): StoreAtomApi<S, Exports & NewExports, PromiseType> {
-    return super.addExports(exports) as StoreAtomApi<
-      S,
-      Exports & NewExports,
-      PromiseType
-    >
-  }
-
-  public addSetStateInterceptor(
-    interceptor: SetStateInterceptor<StoreStateType<S>>
-  ): StoreAtomApi<S, Exports, PromiseType> {
-    return super.addSetStateInterceptor(interceptor) as StoreAtomApi<
-      S,
-      Exports,
-      PromiseType
-    >
-  }
-
-  public setExports<NewExports extends Record<string, any>>(
-    exports: NewExports
-  ): StoreAtomApi<S, NewExports, PromiseType> {
-    return super.setExports(exports) as StoreAtomApi<S, NewExports, PromiseType>
-  }
-
-  public setPromise<T>(
-    promise: Promise<T>
-  ): StoreAtomApi<S, Exports, Promise<T>> {
-    return super.setPromise(promise) as StoreAtomApi<S, Exports, Promise<T>>
   }
 }

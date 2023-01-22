@@ -1,39 +1,52 @@
-import { isZeduxStore, Store } from '@zedux/core'
-import { AtomApi, StoreAtomApi } from '../classes/AtomApi'
-import { AtomApiPromise, AtomValue } from '../types'
-import { is } from '../utils'
+import { Store, StoreStateType } from '@zedux/core'
+import { AtomApi } from '../classes/AtomApi'
+import { AtomApiPromise } from '../types'
 
 export const api: {
+  // Custom Stores
   <
-    State = any,
+    StoreType extends Store<any> = Store<any>,
     Exports extends Record<string, any> = Record<string, any>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: Store<State> | StoreAtomApi<Store<State>, Exports, PromiseType>
-  ): StoreAtomApi<Store<State>, Exports, PromiseType>
+    value:
+      | StoreType
+      | AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
+  ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
+
+  // No Value
+  <
+    State = undefined,
+    Exports extends Record<string, any> = Record<string, any>,
+    PromiseType extends AtomApiPromise = undefined
+  >(): AtomApi<State, Exports, undefined, PromiseType>
+
+  // No Store
   <
     State = undefined,
     Exports extends Record<string, any> = Record<string, any>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: AtomValue<State> | AtomApi<State, Exports, PromiseType>
-  ): AtomApi<State, Exports, PromiseType>
+    value: State | AtomApi<State, Exports, undefined, PromiseType>
+  ): AtomApi<State, Exports, undefined, PromiseType>
+
+  // Catch-all
   <
     State = undefined,
     Exports extends Record<string, any> = Record<string, any>,
+    StoreType extends Store<State> = Store<State>,
     PromiseType extends AtomApiPromise = undefined
-  >(): AtomApi<State, Exports, PromiseType>
+  >(
+    value: State | StoreType | AtomApi<State, Exports, StoreType, PromiseType>
+  ): AtomApi<State, Exports, StoreType, PromiseType>
 } = <
   State = undefined,
   Exports extends Record<string, any> = Record<string, any>,
+  StoreType extends Store<State> | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(
-  value?: AtomValue<State> | AtomApi<State, Exports, PromiseType>
+  value?: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
 ) =>
-  isZeduxStore(value) || is(value, StoreAtomApi)
-    ? new StoreAtomApi(
-        value as Store<State> | StoreAtomApi<Store<State>, Exports, PromiseType>
-      )
-    : (new AtomApi(
-        value as AtomValue<State> | AtomApi<State, Exports, PromiseType>
-      ) as any)
+  new AtomApi(
+    value as AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
+  )

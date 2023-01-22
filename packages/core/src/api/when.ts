@@ -6,7 +6,7 @@ import {
   WhenBuilder,
   WhenMachineBuilder,
 } from '../types'
-import { extractActionType } from '../utils/actor'
+import { extractActionType } from '../utils/actions'
 import { assertAreFunctions } from '../utils/errors'
 import { MachineEffectHandler, MachineStateType } from '../utils/types'
 import { Store } from './createStore'

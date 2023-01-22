@@ -4,10 +4,11 @@ import { detailedTypeof } from '../utils/general'
 /**
   Factory for creating ActionFactory objects.
 
-  Actors are like action creators with a little extra functionality.
+  ActionFactories are just action creators with an extra `.type` property set to
+  the string passed to `actionFactory()`.
 
-  They can be passed directly to a ZeduxReducer's `reduce()` method, thus
-  removing the necessity of string constants.
+  ActionFactories can be passed directly to a ReducerBuilder's `reduce()`
+  method, thus removing the necessity of string constants.
 */
 export const actionFactory: <Payload = undefined, Type extends string = string>(
   actionType: Type
@@ -24,11 +25,11 @@ export const actionFactory: <Payload = undefined, Type extends string = string>(
     )
   }
 
-  // The actor itself just returns a normal action object with the
-  // `type` and optional `payload` set.
-  const actor = ((payload?: Payload) => {
+  // The factory itself just returns a normal action object with the `type` and
+  // optional `payload` set.
+  const factory = ((payload?: Payload) => {
     const action: Action<Payload, Type> = {
-      type: actor.type,
+      type: factory.type,
     }
 
     if (typeof payload !== 'undefined') action.payload = payload
@@ -36,9 +37,9 @@ export const actionFactory: <Payload = undefined, Type extends string = string>(
     return action
   }) as ActionFactory<Payload, Type>
 
-  // Expose the action `type` for this actor.
-  // Read only! There should never be any reason to modify this.
-  actor.type = actionType
+  // Expose the action `type` for this factory. Read only! There should never be
+  // any reason to modify this.
+  factory.type = actionType
 
-  return actor as any
+  return factory as any
 }

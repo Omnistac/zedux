@@ -47,7 +47,10 @@ export const createStore: {
     initialState?: State
   ): Store<State>
 
-  <State = any>(initialHierarchy: null, initialState: State): Store<State>
+  <State = any>(
+    initialHierarchy: null | undefined,
+    initialState: State
+  ): Store<State>
 } = <State = any>(
   initialHierarchy?: HierarchyDescriptor<State>,
   initialState?: State

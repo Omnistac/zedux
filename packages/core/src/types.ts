@@ -193,7 +193,7 @@ export interface Observable<State = any> {
   subscribe(subscriber: Subscriber<Store<State>>): Subscription
 }
 
-export type Reactable<Payload = any, Type extends string = string> =
+export type Reactable<Payload = any, Type extends string = any> =
   | ActionFactory<Payload, Type>
   | Type
 
@@ -229,9 +229,15 @@ export type StoreStateType<S extends Store> = S extends Store<infer T>
   ? T
   : never
 
-export type SubReducer<State = any, Payload = any> = (
+export type SubReducer<
+  State = any,
+  Payload = any,
+  Type extends string = any,
+  Meta = any
+> = (
   state: State,
-  payload: Payload
+  payload: Payload,
+  action: Action<Payload, Type, Meta>
 ) => State
 
 export type Subscriber<State = any, S extends Store<any> = Store<any>> =
@@ -256,10 +262,10 @@ export interface WhenBuilder<
   S extends Store<State> = Store<State>
 > {
   receivesAction: {
-    (actor: Reactable, sideEffect: SideEffectHandler<State, S>): WhenBuilder<
-      State,
-      S
-    >
+    (
+      reactable: Reactable,
+      sideEffect: SideEffectHandler<State, S>
+    ): WhenBuilder<State, S>
     (sideEffect: SideEffectHandler<State, S>): WhenBuilder<State, S>
   }
   stateChanges: (
@@ -294,9 +300,9 @@ export interface WhenMachineBuilder<
   ) => WhenMachineBuilder<StateNames, EventNames, Context>
 }
 
-export interface ZeduxReducer<State = any> extends Reducer<State> {
+export interface ReducerBuilder<State = any> extends Reducer<State> {
   reduce<Type extends string = string, Payload = any>(
-    actor: Reactable<Payload, Type> | Reactable<Payload, Type>[], // TODO: allow multiple actions with different payload types
+    reactable: Reactable<Payload, Type> | Reactable<Payload, Type>[], // TODO: allow multiple actions with different payload types
     reducer: SubReducer<State, Payload>
-  ): ZeduxReducer<State>
+  ): ReducerBuilder<State>
 }

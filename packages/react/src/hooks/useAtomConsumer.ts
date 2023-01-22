@@ -1,24 +1,19 @@
 import { useContext } from 'react'
-import { AtomInstanceBase, StandardAtomBase } from '../classes'
+import { AtomInstanceBase } from '../classes'
 import { is } from '../utils'
-import { AtomInstanceType, AtomParamsType } from '../types'
+import { AnyAtom, AtomInstanceType, AtomParamsType } from '../types'
 import { useEcosystem } from './useEcosystem'
 
 export const useAtomConsumer: {
-  <A extends StandardAtomBase<any, [...any], any, any>>(atom: A):
-    | AtomInstanceType<A>
-    | undefined
+  <A extends AnyAtom>(atom: A): AtomInstanceType<A> | undefined
 
-  <A extends StandardAtomBase<any, [...any], any, any>>(
+  <A extends AnyAtom>(
     atom: A,
     defaultParams: AtomParamsType<A>
   ): AtomInstanceType<A>
 
-  <A extends StandardAtomBase<any, [...any], any, any>>(
-    atom: A,
-    throwIfNotProvided: boolean
-  ): AtomInstanceType<A>
-} = <A extends StandardAtomBase<any, [...any], any, any>>(
+  <A extends AnyAtom>(atom: A, throwIfNotProvided: boolean): AtomInstanceType<A>
+} = <A extends AnyAtom>(
   atom: A,
   defaultParams?: AtomParamsType<A> | boolean
 ) => {

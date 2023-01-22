@@ -1,3 +1,4 @@
+import { Store, StoreStateType } from '@zedux/core'
 import { AtomApi } from '../classes'
 import { Ion } from '../classes/atoms/Ion'
 import {
@@ -10,6 +11,7 @@ import {
 } from '../types'
 
 export const ion: {
+  // Query Atoms
   <
     State = any,
     Params extends any[] = [],
@@ -20,36 +22,34 @@ export const ion: {
     value: (
       getters: AtomGetters,
       ...params: Params
-    ) => AtomApi<Promise<State>, Exports, PromiseType>,
+    ) => AtomApi<Promise<State>, Exports, undefined, PromiseType>,
     config?: AtomConfig<State>
-  ): Ion<PromiseState<State>, Params, Exports, PromiseType>
+  ): Ion<
+    PromiseState<State>,
+    Params,
+    Exports,
+    Store<PromiseState<State>>,
+    PromiseType
+  >
 
+  // Custom Stores
   <
-    State = any,
+    StoreType extends Store<any> = Store<any>,
     Params extends any[] = [],
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    get: IonGet<State, Params, Exports, PromiseType>,
-    config?: AtomConfig<State>
-  ): Ion<State, Params, Exports, PromiseType>
-
-  <
-    State = any,
-    Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>,
-    PromiseType extends AtomApiPromise = undefined
-  >(
-    key: string,
-    value: (
+    get: (
       getters: AtomGetters,
       ...params: Params
-    ) => AtomApi<Promise<State>, Exports, PromiseType>,
-    set?: IonSet<State, Params, Exports, PromiseType>,
-    config?: AtomConfig<State>
-  ): Ion<PromiseState<State>, Params, Exports, PromiseType>
+    ) =>
+      | StoreType
+      | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
+    config?: AtomConfig<StoreStateType<StoreType>>
+  ): Ion<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>
 
+  // No Store
   <
     State = any,
     Params extends any[] = [],
@@ -57,19 +57,51 @@ export const ion: {
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    get: IonGet<State, Params, Exports, PromiseType>,
-    set?: IonSet<State, Params, Exports, PromiseType>,
+    get: (
+      getters: AtomGetters,
+      ...params: Params
+    ) => AtomApi<State, Exports, undefined, PromiseType> | State,
     config?: AtomConfig<State>
-  ): Ion<State, Params, Exports, PromiseType>
+  ): Ion<State, Params, Exports, Store<State>, PromiseType>
+
+  // Catch-all
+  <
+    State = any,
+    Params extends any[] = [],
+    Exports extends Record<string, any> = Record<string, never>,
+    StoreType extends Store<any> = Store<any>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    key: string,
+    get: IonGet<State, Params, Exports, StoreType, PromiseType>,
+    config?: AtomConfig<State>
+  ): Ion<State, Params, Exports, StoreType, PromiseType>
+
+  // Catch-all with deprecated setter overload
+  <
+    State = any,
+    Params extends any[] = [],
+    Exports extends Record<string, any> = Record<string, never>,
+    StoreType extends Store<State> = Store<State>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    key: string,
+    get: IonGet<State, Params, Exports, StoreType, PromiseType>,
+    set?: IonSet<State, Params, Exports, StoreType, PromiseType>,
+    config?: AtomConfig<State>
+  ): Ion<State, Params, Exports, StoreType, PromiseType>
 } = <
   State = any,
   Params extends any[] = [],
   Exports extends Record<string, any> = Record<string, never>,
+  StoreType extends Store<State> = Store<State>,
   PromiseType extends AtomApiPromise = undefined
 >(
   key: string,
-  get: IonGet<State, Params, Exports, PromiseType>,
-  setIn?: IonSet<State, Params, Exports, PromiseType> | AtomConfig<State>,
+  get: IonGet<State, Params, Exports, StoreType, PromiseType>,
+  setIn?:
+    | IonSet<State, Params, Exports, StoreType, PromiseType>
+    | AtomConfig<State>,
   configIn?: AtomConfig<State>
 ) => {
   const set = typeof setIn === 'function' ? setIn : undefined

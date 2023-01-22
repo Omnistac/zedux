@@ -1,4 +1,4 @@
-import { Settable } from '@zedux/core'
+import { Settable, Store } from '@zedux/core'
 import { StandardAtomBase } from '@zedux/react/classes/atoms/StandardAtomBase'
 import { api } from '@zedux/react/factories/api'
 import { ion } from '@zedux/react/factories/ion'
@@ -18,15 +18,16 @@ export class Ion<
   State,
   Params extends any[],
   Exports extends Record<string, any>,
+  StoreType extends Store<State>,
   PromiseType extends AtomApiPromise
-> extends StandardAtomBase<State, Params, Exports, PromiseType> {
-  private _get: IonGet<State, Params, Exports, PromiseType>
-  private _set?: IonSet<State, Params, Exports, PromiseType>
+> extends StandardAtomBase<State, Params, Exports, StoreType, PromiseType> {
+  private _get: IonGet<State, Params, Exports, StoreType, PromiseType>
+  private _set?: IonSet<State, Params, Exports, StoreType, PromiseType>
 
   constructor(
     key: string,
-    get: IonGet<State, Params, Exports, PromiseType>,
-    set?: IonSet<State, Params, Exports, PromiseType>,
+    get: IonGet<State, Params, Exports, StoreType, PromiseType>,
+    set?: IonSet<State, Params, Exports, StoreType, PromiseType>,
     config?: AtomConfig<State>
   ) {
     const value = (...params: Params) => {
@@ -42,9 +43,10 @@ export class Ion<
             State,
             Params,
             Exports,
+            StoreType,
             PromiseType
           >['set'] = (
-            atom: StandardAtomBase<any, [...any], any, any>,
+            atom: StandardAtomBase<any, [...any], any, any, any>,
             paramsIn: any[],
             settableIn?: Settable
           ) => {
@@ -62,6 +64,7 @@ export class Ion<
                 State,
                 Params,
                 Exports,
+                StoreType,
                 PromiseType
               >,
               set: innerSet,
@@ -88,8 +91,8 @@ export class Ion<
     ecosystem: Ecosystem,
     keyHash: string,
     params: Params
-  ): AtomInstance<State, Params, Exports, PromiseType> {
-    return new AtomInstance<State, Params, Exports, PromiseType>(
+  ): AtomInstance<State, Params, Exports, StoreType, PromiseType> {
+    return new AtomInstance<State, Params, Exports, StoreType, PromiseType>(
       ecosystem,
       this,
       keyHash,
@@ -109,8 +112,8 @@ export class Ion<
   }
 
   public override(
-    newGet?: IonGet<State, Params, Exports, PromiseType>,
-    newSet?: IonSet<State, Params, Exports, PromiseType>
+    newGet?: IonGet<State, Params, Exports, StoreType, PromiseType>,
+    newSet?: IonSet<State, Params, Exports, StoreType, PromiseType>
   ) {
     return ion(this.key, newGet || this._get, newSet || this._set, {
       flags: this.flags,
