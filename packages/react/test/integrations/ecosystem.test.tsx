@@ -317,5 +317,26 @@ describe('ecosystem', () => {
       expect.objectContaining({ context: { val: 'aa' } }),
       { val: 'a' }
     )
+
+    ecosystem.destroy(true)
+  })
+
+  test('weakGetInstance', () => {
+    const atomA = atom('a', (param: string) => param)
+
+    const ecosystem = createEcosystem({
+      id: 'weakGetInstance',
+    })
+
+    const instance1 = ecosystem.getInstance(atomA, ['a'])
+    const instance2 = ecosystem.weakGetInstance(atomA, ['a'])
+    const instance3 = ecosystem.weakGetInstance('a')
+    const instance4 = ecosystem.weakGetInstance('a-["a"]')
+    const instance5 = ecosystem.weakGetInstance('a-["b"]')
+
+    expect(instance2).toBe(instance1)
+    expect(instance3).toBe(instance1)
+    expect(instance4).toBe(instance1)
+    expect(instance5).toBeUndefined()
   })
 })

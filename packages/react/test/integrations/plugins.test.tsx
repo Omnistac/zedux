@@ -24,7 +24,7 @@ describe('plugins', () => {
     const instance = ecosystem.getInstance(atom1)
     instance.setState('b')
 
-    ecosystem.destroy()
+    ecosystem.destroy(true)
 
     expect(actionList).toEqual([
       ['activeStateChanged', 'Active'],

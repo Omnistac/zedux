@@ -725,14 +725,22 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     params: AtomParamsType<A>
   ): AtomInstanceType<A> | undefined
 
+  public weakGetInstance<A extends AnyAtomBase = any>(
+    key: string
+  ): AtomInstanceType<A>
+
   public weakGetInstance<A extends AtomBase<any, [...any], any>>(
-    atom: A,
+    atom: A | string,
     params?: AtomParamsType<A>
   ) {
-    const keyHash = (atom as A).getKeyHash(this, params)
+    if (typeof atom !== 'string') {
+      const keyHash = (atom as A).getKeyHash(this, params)
 
-    // try to find an existing instance
-    return this._instances[keyHash]
+      // try to find an existing instance
+      return this._instances[keyHash]
+    }
+
+    return Object.values(this.inspectInstances(atom))[0]
   }
 
   /**
