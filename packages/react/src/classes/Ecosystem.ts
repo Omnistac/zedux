@@ -25,6 +25,7 @@ import {
   is,
   SelectorStackItem,
 } from '../utils'
+import { pluginActions } from '../utils/plugin-actions'
 import { AtomBase } from './atoms/AtomBase'
 import { EvaluationStack } from './EvaluationStack'
 import { Graph } from './Graph'
@@ -34,7 +35,7 @@ import { Scheduler } from './Scheduler'
 import { AtomSelectorCache, SelectorCache } from './SelectorCache'
 import { Mod, ZeduxPlugin } from './ZeduxPlugin'
 
-const defaultMods = Object.keys(ZeduxPlugin.actions).reduce((map, mod) => {
+const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
   map[mod as Mod] = 0
   return map
 }, {} as Record<Mod, number>)
@@ -55,6 +56,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public _idGenerator = new IdGenerator()
   public _instances: Record<string, AnyAtomInstance> = {}
   public _onReady: EcosystemConfig<Context>['onReady']
+  public _mods: Record<Mod, number> = { ...defaultMods }
   public _reactContexts: Record<string, React.Context<any>> = {}
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
@@ -67,8 +69,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public ecosystemId: string
   public flags?: string[]
   public hydration?: Record<string, any>
-  public modsMessageBus = createStore() // use an empty store as a message bus
-  public mods: Record<Mod, number> = { ...defaultMods }
+  public modBus = createStore() // use an empty store as a message bus
   public overrides: Record<string, AnyAtomBase> = {}
   public ssr?: boolean
   private cleanup?: MaybeCleanup
@@ -257,9 +258,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
     if (!ecosystem) return
 
-    if (this.mods.ecosystemDestroyed) {
-      this.modsMessageBus.dispatch(
-        ZeduxPlugin.actions.ecosystemDestroyed({ ecosystem: this })
+    if (this._mods.ecosystemDestroyed) {
+      this.modBus.dispatch(
+        pluginActions.ecosystemDestroyed({ ecosystem: this })
       )
     }
 
@@ -545,7 +546,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * of this ecosystem.
    *
    * This method will also call the passed plugin's `.registerEcosystem` method,
-   * allowing the plugin to subscribe to this ecosystem's modsMessageBus
+   * allowing the plugin to subscribe to this ecosystem's modBus
    *
    * The plugin will remain part of this ecosystem until it is unregistered or
    * this ecosystem is destroyed. `.wipe()` and `.reset()` don't remove plugins.
@@ -782,10 +783,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this._scheduler.wipe()
     this._scheduler.flush()
 
-    if (this.mods.ecosystemWiped) {
-      this.modsMessageBus.dispatch(
-        ZeduxPlugin.actions.ecosystemWiped({ ecosystem: this })
-      )
+    if (this._mods.ecosystemWiped) {
+      this.modBus.dispatch(pluginActions.ecosystemWiped({ ecosystem: this }))
     }
   }
 
@@ -829,13 +828,13 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   ) {
     if (oldState) {
       Object.entries(oldState).forEach(([key, isModded]) => {
-        if (isModded) this.mods[key as Mod]-- // fun fact, undefined-- is fine
+        if (isModded) this._mods[key as Mod]-- // fun fact, undefined-- is fine
       })
     }
 
     if (newState) {
       Object.entries(newState).forEach(([key, isModded]) => {
-        if (isModded) this.mods[key as Mod]++
+        if (isModded) this._mods[key as Mod]++
       })
     }
   }

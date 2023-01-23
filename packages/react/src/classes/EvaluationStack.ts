@@ -8,10 +8,10 @@ import {
   Selectable,
 } from '../types'
 import { InstanceStackItem, SelectorStackItem, StackItem } from '../utils'
+import { pluginActions } from '../utils/plugin-actions'
 import { AtomBase } from './atoms/AtomBase'
 import { Ecosystem } from './Ecosystem'
 import { AtomSelectorCache } from './SelectorCache'
-import { ZeduxPlugin } from './ZeduxPlugin'
 
 /**
  * A stack of AtomInstances and AtomSelectors that are currently evaluating -
@@ -119,11 +119,11 @@ export class EvaluationStack {
 
   public finish() {
     const item = stack.pop()
-    if (!item || !this.ecosystem.mods.evaluationFinished) return
+    if (!item || !this.ecosystem._mods.evaluationFinished) return
 
     const time = item.start ? performance.now() - item.start : 0
     const action = { time } as ActionFactoryPayloadType<
-      typeof ZeduxPlugin.actions.evaluationFinished
+      typeof pluginActions.evaluationFinished
     >
 
     if ((item as InstanceStackItem).instance) {
@@ -136,8 +136,8 @@ export class EvaluationStack {
       }).cache = (item as SelectorStackItem).cache
     }
 
-    this.ecosystem.modsMessageBus.dispatch(
-      ZeduxPlugin.actions.evaluationFinished(action as any)
+    this.ecosystem.modBus.dispatch(
+      pluginActions.evaluationFinished(action as any)
     )
   }
 
@@ -156,7 +156,7 @@ export class EvaluationStack {
       ;(newItem as SelectorStackItem).cache = item as AtomSelectorCache
     }
 
-    if (this.ecosystem.mods.evaluationFinished) {
+    if (this.ecosystem._mods.evaluationFinished) {
       newItem.start = performance.now()
     }
 

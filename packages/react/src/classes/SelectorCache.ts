@@ -8,8 +8,8 @@ import {
   Selectable,
 } from '../types'
 import { is, JobType } from '../utils'
+import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
-import { ZeduxPlugin } from './ZeduxPlugin'
 
 const defaultResultsComparator = (a: any, b: any) => a === b
 
@@ -466,9 +466,9 @@ export class SelectorCache {
           cache.result
         )
 
-        if (this.ecosystem.mods.stateChanged) {
-          this.ecosystem.modsMessageBus.dispatch(
-            ZeduxPlugin.actions.stateChanged({
+        if (this.ecosystem._mods.stateChanged) {
+          this.ecosystem.modBus.dispatch(
+            pluginActions.stateChanged({
               newState: result,
               oldState: cache.result,
               reasons: cache.nextEvaluationReasons,
