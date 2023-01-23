@@ -33,7 +33,7 @@ import { Ecosystem } from '../Ecosystem'
 import { AtomApi } from '../AtomApi'
 import { AtomInstanceBase } from './AtomInstanceBase'
 import { StandardAtomBase } from '../atoms/StandardAtomBase'
-import { ZeduxPlugin } from '../ZeduxPlugin'
+import { pluginActions } from '@zedux/react/utils/plugin-actions'
 
 enum StateType {
   Store,
@@ -504,11 +504,11 @@ export class AtomInstance<
     // infinite state update loops when inspecting the state of the StateHub
     // itself.
     if (
-      this.ecosystem.mods.stateChanged &&
+      this.ecosystem._mods.stateChanged &&
       removeAllMeta(action).meta !== metaTypes.SKIP_EVALUATION
     ) {
-      this.ecosystem.modsMessageBus.dispatch(
-        ZeduxPlugin.actions.stateChanged({
+      this.ecosystem.modBus.dispatch(
+        pluginActions.stateChanged({
           action,
           instance: this,
           newState,
@@ -544,9 +544,9 @@ export class AtomInstance<
     const oldActiveState = this.activeState
     this.activeState = newActiveState
 
-    if (this.ecosystem.mods.activeStateChanged) {
-      this.ecosystem.modsMessageBus.dispatch(
-        ZeduxPlugin.actions.activeStateChanged({
+    if (this.ecosystem._mods.activeStateChanged) {
+      this.ecosystem.modBus.dispatch(
+        pluginActions.activeStateChanged({
           instance: this,
           newActiveState,
           oldActiveState,

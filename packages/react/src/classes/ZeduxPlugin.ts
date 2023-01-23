@@ -1,107 +1,35 @@
 import {
-  ActionChain,
-  actionFactory,
   ActionFactoryActionType,
   ActionFactoryPayloadType,
   createStore,
   Store,
 } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
-import {
-  ActiveState,
-  AnyAtomInstance,
-  DependentEdge,
-  EvaluationReason,
-  MaybeCleanup,
-} from '../types'
-import { AtomSelectorCache } from './SelectorCache'
+import { MaybeCleanup } from '../types'
+import { pluginActions } from '../utils/plugin-actions'
 
 type ValuesOf<Rec extends Record<any, any>> = Rec extends Record<any, infer T>
   ? T
   : never
 
-export type Mod = keyof ZeduxPlugin['constructor']['actions']
-export type ModAction = ActionFactoryActionType<
-  ValuesOf<ZeduxPlugin['constructor']['actions']>
->
+export type Mod = keyof typeof pluginActions
+export type ModAction = ActionFactoryActionType<ValuesOf<typeof pluginActions>>
 export type ModPayloadMap = {
-  [K in Mod]: ActionFactoryPayloadType<ZeduxPlugin['constructor']['actions'][K]>
+  [K in Mod]: ActionFactoryPayloadType<typeof pluginActions[K]>
 }
 
 export class ZeduxPlugin {
-  ['constructor']: typeof ZeduxPlugin
-
   /**
-   * These actions should only be dispatched to an ecosystem's modsMessageBus
+   * These actions should only be dispatched to an ecosystem's modBus
    * store, so they don't need prefixes
    */
-  public static actions = {
-    activeStateChanged: actionFactory<
-      {
-        instance: AnyAtomInstance
-        newActiveState: ActiveState
-        oldActiveState: ActiveState
-      },
-      'activeStateChanged'
-    >('activeStateChanged'),
-    ecosystemDestroyed: actionFactory<
-      { ecosystem: Ecosystem },
-      'ecosystemDestroyed'
-    >('ecosystemDestroyed'),
-    ecosystemWiped: actionFactory<{ ecosystem: Ecosystem }, 'ecosystemWiped'>(
-      'ecosystemWiped'
-    ),
-    edgeCreated: actionFactory<
-      {
-        dependency: AnyAtomInstance
-        // string if `edge.flags & EdgeFlag.External` or the atom instance
-        // hasn't been created yet ('cause the edge was created while the
-        // instance was initializing. TODO: maybe make it so atom instances can
-        // be added to the ecosystem before being fully initialized):
-        dependent: AnyAtomInstance | string
-        edge: DependentEdge
-      },
-      'edgeCreated'
-    >('edgeCreated'),
-    edgeRemoved: actionFactory<
-      {
-        dependency: AnyAtomInstance | AtomSelectorCache<any, any[]>
-        dependent: AnyAtomInstance | AtomSelectorCache<any, any[]> | string // string if edge is External
-        edge: DependentEdge
-      },
-      'edgeRemoved'
-    >('edgeRemoved'),
-    evaluationFinished: actionFactory<
-      | {
-          instance: AnyAtomInstance
-          time: number
-        }
-      | {
-          cache: AtomSelectorCache
-          time: number
-        },
-      'evaluationFinished'
-    >('evaluationFinished'),
-    // either instance or selectorCache will always be defined, depending on the node type
-    stateChanged: actionFactory<
-      {
-        action?: ActionChain
-        instance?: AnyAtomInstance
-        newState: any
-        oldState: any
-        reasons: EvaluationReason[]
-        selectorCache?: AtomSelectorCache
-      },
-      'stateChanged'
-    >('stateChanged'),
-  }
+  public static actions = pluginActions
 
   public modsStore: Store<Record<Mod, boolean>>
   public registerEcosystem: (ecosystem: Ecosystem) => MaybeCleanup
 
   constructor({
-    // sure, default to All The Mods
-    initialMods = Object.keys(ZeduxPlugin.actions) as Mod[],
+    initialMods = [],
     registerEcosystem,
   }: {
     initialMods?: Mod[]
@@ -114,7 +42,6 @@ export class ZeduxPlugin {
         return hash
       }, {} as Record<Mod, boolean>)
     )
-    this.constructor = undefined as any // bleh
 
     this.registerEcosystem = registerEcosystem || (() => {})
   }

@@ -7,8 +7,8 @@ import {
   GraphEdgeSignal,
 } from '../types'
 import { EcosystemGraphNode, JobType } from '../utils'
+import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
-import { ZeduxPlugin } from './ZeduxPlugin'
 
 export class Graph {
   public nodes: Record<string, EcosystemGraphNode> = {}
@@ -203,9 +203,9 @@ export class Graph {
       this.ecosystem._scheduler.unscheduleJob(dependentEdge.task)
     }
 
-    if (this.ecosystem.mods.edgeRemoved) {
-      this.ecosystem.modsMessageBus.dispatch(
-        ZeduxPlugin.actions.edgeRemoved({
+    if (this.ecosystem._mods.edgeRemoved) {
+      this.ecosystem.modBus.dispatch(
+        pluginActions.edgeRemoved({
           dependency:
             this.ecosystem._instances[dependencyKey] ||
             this.ecosystem.selectorCache._caches[dependencyKey],
@@ -376,16 +376,16 @@ export class Graph {
       this.recalculateNodeWeight(dependentKey, dependency.weight)
     }
 
-    if (this.ecosystem.mods.edgeCreated) {
-      this.ecosystem.modsMessageBus.dispatch(
-        ZeduxPlugin.actions.edgeCreated({
+    if (this.ecosystem._mods.edgeCreated) {
+      this.ecosystem.modBus.dispatch(
+        pluginActions.edgeCreated({
           dependency:
             this.ecosystem._instances[dependencyKey] ||
             this.ecosystem.selectorCache._caches[dependencyKey],
           dependent:
             this.ecosystem._instances[dependentKey] ||
             this.ecosystem.selectorCache._caches[dependentKey] ||
-            dependentKey, // unfortunate but not changing for now
+            dependentKey, // unfortunate but not changing for now UPDATE: shouldn't be needed anymore. Double check
           edge: newEdge,
         })
       )
