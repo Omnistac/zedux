@@ -356,7 +356,7 @@ export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
 
 export interface InjectStoreConfig {
   hydrate?: boolean
-  shouldSubscribe?: boolean
+  subscribe?: boolean
 }
 
 export type IonGet<

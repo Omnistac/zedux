@@ -78,7 +78,7 @@ const getHydration = (instance: AnyAtomInstance) => {
  *
  * Subscribes to the store by default, causing the atom to be reevaluated on
  * every state change. This can be changed by passing `false` as the
- * shouldSubscribe config option.
+ * subscribe config option.
  *
  * In most cases you won't need to prevent subscribing. But it can be a useful
  * performance optimization.
@@ -87,7 +87,7 @@ const getHydration = (instance: AnyAtomInstance) => {
  * import { atom, injectStore } from '@zedux/react'
  *
  * const inputAtom = atom('input', () => {
- *   const store = injectStore('', { shouldSubscribe: false })
+ *   const store = injectStore('', { subscribe: false })
  *
  *   return store
  * })
@@ -115,7 +115,7 @@ const getHydration = (instance: AnyAtomInstance) => {
  * state of the store
  * @param config - A config object. Accepts the following properties:
  *   - `hydrate` - Whether to try hydrating this store with
- *   - `shouldSubscribe` - Whether to subscribe to the store (default: `true`)
+ *   - `subscribe` - Whether to subscribe to the store (default: `true`)
  * @returns Store
  */
 export const injectStore: {
@@ -128,7 +128,7 @@ export const injectStore: {
   storeFactory?: State | ((hydration?: State) => Store<State>),
   config?: InjectStoreConfig
 ) => {
-  const shouldSubscribe = config?.shouldSubscribe ?? true
+  const subscribe = config?.subscribe ?? true
 
   const { store } = split<StoreInjectorDescriptor<State>>(
     'injectStore',
@@ -144,7 +144,7 @@ export const injectStore: {
         config?.hydrate ? getHydration(instance) : undefined
       )
 
-      const subscription = shouldSubscribe && doSubscribe(instance, store)
+      const subscription = subscribe && doSubscribe(instance, store)
 
       return {
         cleanup: subscription ? () => subscription.unsubscribe() : undefined,
@@ -155,10 +155,10 @@ export const injectStore: {
     (prevInjector, instance) => {
       const prevShouldSubscribe = !!prevInjector.cleanup
 
-      if (prevShouldSubscribe === shouldSubscribe) return prevInjector
+      if (prevShouldSubscribe === subscribe) return prevInjector
 
       // we were subscribed, now we're not
-      if (!shouldSubscribe) {
+      if (!subscribe) {
         prevInjector.cleanup?.()
         prevInjector.cleanup = undefined
         return prevInjector

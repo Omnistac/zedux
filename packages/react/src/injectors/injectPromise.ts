@@ -43,7 +43,7 @@ import { AtomApi } from '../classes'
  *   value before the promise resolves)
  *
  * - store config: Any other config options will be passed directly to
- *   `injectStore`'s config. For example, pass `shouldSubscribe: false` to
+ *   `injectStore`'s config. For example, pass `subscribe: false` to
  *   prevent the store from reevaluating the current atom on update.
  *
  * ```ts
@@ -53,7 +53,7 @@ import { AtomApi } from '../classes'
  * }, [url], {
  *   dataOnly: true,
  *   initialState: '',
- *   shouldSubscribe: false
+ *   subscribe: false
  * })
  * ```
  */
