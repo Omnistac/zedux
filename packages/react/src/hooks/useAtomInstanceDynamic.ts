@@ -54,7 +54,7 @@ export const useAtomInstanceDynamic: {
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
   params?: AtomParamsType<A>,
-  { operation = OPERATION, shouldSuspend }: ZeduxHookConfig = {
+  { operation = OPERATION, suspend }: ZeduxHookConfig = {
     operation: OPERATION,
   }
 ) => {
@@ -117,7 +117,7 @@ export const useAtomInstanceDynamic: {
         if (!val) return undefined as any // hack React like dat boi
 
         // Suspense!
-        if (shouldSuspend !== false) {
+        if (suspend !== false) {
           if (val[1]._promiseStatus === 'loading') {
             throw val[1].promise
           } else if (val[1]._promiseStatus === 'error') {
@@ -132,7 +132,7 @@ export const useAtomInstanceDynamic: {
         return val
       },
     ]
-  }, [ecosystem, instance, shouldSuspend])
+  }, [ecosystem, instance, suspend])
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 }

@@ -45,7 +45,7 @@ export const useAtomInstance: {
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
   params?: AtomParamsType<A>,
-  { operation = OPERATION, shouldSuspend }: ZeduxHookConfig = {
+  { operation = OPERATION, suspend }: ZeduxHookConfig = {
     operation: OPERATION,
   }
 ) => {
@@ -100,7 +100,7 @@ export const useAtomInstance: {
         if (!cachedInstance) return cachedInstance as typeof instance
 
         // Suspense!
-        if (shouldSuspend !== false) {
+        if (suspend !== false) {
           if (cachedInstance._promiseStatus === 'loading') {
             throw cachedInstance.promise
           } else if (cachedInstance._promiseStatus === 'error') {
@@ -111,7 +111,7 @@ export const useAtomInstance: {
         return cachedInstance
       },
     ]
-  }, [ecosystem, instance, shouldSuspend])
+  }, [ecosystem, instance, suspend])
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 }

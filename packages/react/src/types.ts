@@ -423,5 +423,5 @@ export type StateHookTuple<S, E> = [
 
 export interface ZeduxHookConfig {
   operation?: string
-  shouldSuspend?: boolean
+  suspend?: boolean
 }
