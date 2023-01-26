@@ -66,6 +66,9 @@ export const injectEffect = (effect: EffectCallback, deps?: InjectorDeps) => {
       prevDescriptor.cleanup?.()
 
       const task = getTask(effect, prevDescriptor)
+      // this cleanup should be unnecessary since effects run immediately every
+      // time except init. Leave this though in case we add a way to update an
+      // atom instance without flushing the scheduler
       prevDescriptor.cleanup = () => {
         instance.ecosystem._scheduler.unscheduleJob(task)
         prevDescriptor.cleanup = undefined
