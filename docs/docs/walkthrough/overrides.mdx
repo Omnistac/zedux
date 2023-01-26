@@ -1,0 +1,174 @@
+---
+id: overrides
+title: Overrides
+---
+
+Zedux' Dependency Injection (DI) model is extremely dynamic. This walkthrough has taught several ways to inject atoms and create the DI graph so far. But Zedux has another DI superpower: Overrides.
+
+:::tip you will learn:
+How to create atom overrides and use them to dynamically swap out atom implementations.
+:::
+
+## Creating
+
+Atoms have a [`.override()` method](../api/classes/Atom#override) which will create an exact clone of the atom, but with a different value.
+
+```ts
+const axiosAtom = atom('axios', axios)
+const testAxiosAtom = axiosAtom.override({ post: jest.fn() })
+```
+
+You don't have to use `.override()`. You can create a clone manually. The only requirement is that the override must have the same `key`:
+
+```ts
+const testAtom = atom('test', 'some state')
+const testAtomOverride = atom('test', 'overridden state!', { ttl: 0 })
+```
+
+The nice thing about `.override()` for TS users is that it will tell you if the override doesn't match the overridden atom's state, params, exports, or promise type.
+
+## Using
+
+These overridden atoms can then be supplied to an `ecosystem` via the `overrides` field:
+
+```tsx
+function TestApp() {
+  return (
+    <EcosystemProvider id="test" overrides={[testAxiosAtom]}>
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+
+// or
+
+const ecosystem = createEcosystem({
+  id: 'test',
+  overrides: [testAxiosAtom],
+})
+```
+
+Now this test ecosystem will use `testAxiosAtom` everywhere `axiosAtom` is used:
+
+```tsx
+function Routes {
+  const axios = useAtomValue(axiosAtom) // testAxiosAtom is used instead
+  ...
+}
+
+const userAtom = ion('user', ({ get }) => {
+  const axios = get(axiosAtom) // testAxiosAtom is injected instead
+})
+```
+
+Live example:
+
+```tsx live ecosystemId=overrides/simple resultVar=App
+const textAtom = atom('text', 'the text!')
+const betterTextAtom = textAtom.override('better text!')
+
+function Child() {
+  const text = useAtomValue(textAtom)
+
+  return <div>{text}</div>
+}
+
+function App() {
+  return (
+    <>
+      <EcosystemProvider id="a">
+        <Child />
+      </EcosystemProvider>
+      <EcosystemProvider id="b" overrides={[betterTextAtom]}>
+        <Child />
+      </EcosystemProvider>
+    </>
+  )
+}
+```
+
+## Updating
+
+Atom implementations can be swapped out dynamically using [`ecosystem.setOverrides()`](../api/classes/Ecosystem#setoverrides). This is an extremely powerful feature of Zedux' DI model.
+
+```tsx live ecosystemId=overrides/setOverrides resultVar=Swapper
+const one = atom('common-key', () => 'Numero Uno')
+const two = atom('common-key', () => 'I am the best')
+const three = atom('common-key', () => 'Two is not the best')
+
+function Swapper() {
+  const ecosystem = useEcosystem()
+  const state = useAtomValue(one)
+
+  return (
+    <>
+      <div>Current State: {state}</div>
+      <button onClick={() => ecosystem.setOverrides([one])}>Use One</button>
+      <button onClick={() => ecosystem.setOverrides([two])}>Use Two</button>
+      <button onClick={() => ecosystem.setOverrides([three])}>Use Three</button>
+    </>
+  )
+}
+```
+
+`setOverrides` completely replaces the ecosystem's overrides with the list you pass. Use [`ecosystem.addOverrides()`](../api/classes/Ecosystem#addoverrides) and [`ecosystem.removeOverrides()`](../api/classes/Ecosystem#removeoverrides) to selectively update only certain overrides.
+
+```tsx live ecosystemId=overrides/addOverrides resultVar=Overrider
+const original = atom('common-key', () => 'Pick Me')
+const override = atom('common-key', () => 'No, Me')
+
+function Overrider() {
+  const ecosystem = useEcosystem()
+  const state = useAtomValue(original)
+
+  return (
+    <>
+      <div>Current State: {state}</div>
+      <button onClick={() => ecosystem.addOverrides([override])}>
+        Override
+      </button>
+      <button onClick={() => ecosystem.removeOverrides([override])}>
+        Remove Override
+      </button>
+    </>
+  )
+}
+```
+
+## Getting
+
+Ecosystems have a `.overrides` property which is an object mapping atom keys to their current override.
+
+```ts
+const myAtom = atom('theKey', () => 'the original')
+const myAtomOverride = myAtom.override(() => 'the override')
+
+const ecosystem = createEcosystem({ overrides: [myAtomOverride] })
+ecosystem.overrides // { theKey: myAtomOverride }
+```
+
+## Cool But Why?
+
+The primary use case for DI overrides is probably to swap out atoms when testing. For example, if you create separate atoms to handle side effects like logging and network requests, it becomes trivial to swap out your `loggingAtom` or `axiosAtom` or `socketAtom` during testing to inspect network requests triggered by tested atoms and feed mock data back to those atoms.
+
+You can use DI overrides however you want. Here's a list of possibilities:
+
+- Swap out side-effect atoms when testing.
+- Swap out atoms in different environments - e.g. separate out atoms that use electron-only or mobile-only APIs and override those atoms when your app runs in the browser.
+- Feature switches and a/b testing - e.g. put an effect in a `currentUserAtom` that swaps out atom implementations based on the current user's enabled features.
+- Theming - swap out a `themeAtom` based on user preferences.
+
+:::tip 😮
+This concept is so new in the React world that there may be amazing patterns yet to be discovered!
+:::
+
+## Recap
+
+- Create an override of an atom with `myAtom.override()` or create a different atom with the same key.
+- Set an ecosystem's initial overrides with the `overrides` prop.
+- Update an ecosystem's overrides with `ecosystem.setOverrides()`, `ecosystem.addOverrides()`, and `ecosystem.removeOverrides()`.
+- View the current overrides with `ecosystem.overrides`.
+
+## Next Steps
+
+Remembering which atoms need to be overridden in which situations can get unruly in a big app. Let's look at some [more ways to configure atoms](configuring-atoms) that can help alleviate this.

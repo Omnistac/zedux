@@ -3,6 +3,8 @@ id: injectRef
 title: injectRef
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectRef } from '@zedux/react'
 ```
@@ -73,10 +75,39 @@ function Table() {
 
 ## Signature
 
-```ts
-injectRef(initialValue?) => MutableRefObject
-```
+<Tabs>
+  {tab1(`injectRef = (initialValue?) => ref`)}
+  {tab2(
+    `declare const injectRef: {
+  <T>(initialVal: T): MutableRefObject<T>;
+  <T>(initialVal: T | null): RefObject<T>;
+  <T = undefined>(): MutableRefObject<T | undefined>;
+}`
+  )}
+</Tabs>
 
-### `initialValue`
+<Legend>
+  <Item name="initialValue">
+    <p>Optional. Can be absolutely anything.</p>
+    <p>
+      If passed, this will be set as the initial value of the ref's{' '}
+      <code>.current</code> property.
+    </p>
+    <p>This value is discarded on all evaluations but the first.</p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      A mutable "ref" object with a <code>.current</code> property containing
+      the ref's value.
+    </p>
+    <p>
+      This object is a stable reference - it will be the same exact object
+      reference every time the current atom instance evaluates.
+    </p>
+  </Item>
+</Legend>
 
-Optional. Can be absolutely anything. The returned Ref object will have its `.current` property set to this value initially. Will be ignored on subsequent evaluations.
+## See Also
+
+- [React's `useRef()` hook](https://reactjs.org/docs/hooks-reference.html#useref)
+- [Exporting refs](../../walkthrough/atom-apis#exporting-refs)

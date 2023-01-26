@@ -103,7 +103,7 @@ store.setState(state => state) // doesn't hit effects subscribers
 Effects subscribers receive an object with the following properties:
 
 ```ts
-interface EffectData<State = any> {
+interface StoreEffect<State = any> {
   action?: ActionChain
   error?: Error
   newState: State
@@ -111,7 +111,7 @@ interface EffectData<State = any> {
   store: Store<State>
 }
 
-type EffectsSubscriber<State = any> = (effectData: EffectData<State>) => void
+type EffectsSubscriber<State = any> = (storeEffect: StoreEffect<State>) => void
 ```
 
 #### `action`

@@ -3,6 +3,8 @@ id: injectCallback
 title: injectCallback
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectCallback } from '@zedux/react'
 ```
@@ -51,14 +53,42 @@ const withDeps = injectCallback(fn, [depA, depB])
 
 ## Signature
 
-```ts
-injectCallback(callback, deps?) => callback
-```
+<Tabs>
+  {tab1(`injectCallback = (callback, deps?) => callback`)}
+  {tab2(`declare const injectCallback: <Args extends any[] = [], Ret = any>(
+  callback: (...args: Args) => Ret,
+  deps?: InjectorDeps
+) => (...args: Args) => Ret`)}
+</Tabs>
 
-### `callback`
+<Legend>
+  <Item name="callback">
+    Required. The function to memoize. This function reference will be discarded
+    when deps are the same.
+  </Item>
+  <Item name="deps">
+    <p>
+      Optional (though you'll always want to pass it). An array containing
+      absolutely anything.
+    </p>
+    <p>
+      If any items in this array change on a subsequent evaluation, the
+      previously memoized callback will be discarded, replaced with the
+      newly-passed function.
+    </p>
+    <p>
+      Pass an empty array to prevent the returned callback reference from ever
+      changing, as long as this atom instance is alive.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      The memoized callback function. The returned reference will only change if
+      any deps change.
+    </p>
+  </Item>
+</Legend>
 
-Required. A function. If the `deps` haven't changed since the previous evaluation, this function will be ignored. Otherwise, `injectCallback` will return this function itself.
+## See Also
 
-### `deps`
-
-Optional (but you should probably pass it). An array of values that will cause the memoized function to be swapped out for the current one when they change.
+- [`injectMemo()`](injectMemo)

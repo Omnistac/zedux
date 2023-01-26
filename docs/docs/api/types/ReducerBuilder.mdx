@@ -1,0 +1,75 @@
+---
+id: ReducerBuilder
+title: ReducerBuilder
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+The function returned from [createReducer](../factories/createReducer).
+
+A ReducerBuilder _is_ a [reducer](Reducer) - it can be used directly as a reducer passed to [`createStore()`](../factories/createStore) or React's `useReducer()` hook.
+
+ReducerBuilders also have a `.reduce()` method that can be used to extend the reducer's capabilities.
+
+## Examples
+
+```ts
+import { createReducer } from '@zedux/react'
+
+const builder = createReducer('initial state')
+
+builder.reduce('myActionType', (state, payload) => )
+```
+
+## Definition
+
+```ts
+type SubReducer<
+  State = any,
+  Payload = any,
+  Type extends string = string,
+  Meta = any
+> = (
+  state: State,
+  payload: Payload,
+  action: Action<Payload, Type, Meta>
+) => State
+
+interface ReducerBuilder<State = any> extends Reducer<State> {
+  reduce<Payload = any, Type extends string = any, Meta = any>(
+    reactable: Reactable<Payload, Type> | Reactable<Payload, Type>[],
+    subReducer: SubReducer<State, Payload, Type, Meta>
+  ): ReducerBuilder<State>
+}
+```
+
+<Legend>
+  <Item name="reduce">
+    <p>
+      A function that accepts an action type and a "sub-reducer" and returns the
+      ReducerBuilder for chaining.
+    </p>
+    <p>The action type can be any of the following:</p>
+    <ul>
+      <li>A string.</li>
+      <li>
+        An <Link to="ActionFactory">ActionFactory</Link> with <code>.type</code>{' '}
+        property attached.
+      </li>
+      <li>A list containing any combination of the above.</li>
+    </ul>
+    <p>
+      The sub-reducer is a function that accepts the current state, the payload
+      from the matched action, and the full action object, and should return the
+      new state or the current state if no change.
+    </p>
+    <Ts>{`.reduce([myActionFactory, 'myActionType'], (state, payload, action) => newState)`}</Ts>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Stores walkthrough](../../walkthrough/stores)
+- [The `actionFactory()` factory](../factories/actionFactory)
+- [The `createReducer()` factory](../factories/createReducer)
+- [The `Reducer` type](Reducer)

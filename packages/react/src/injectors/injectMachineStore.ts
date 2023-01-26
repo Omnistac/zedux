@@ -131,8 +131,8 @@ type StateNameType<S extends MachineState> = S extends MachineState<
  * Set a universal `onTransition` listener via the 3rd `config` object param.
  * This listener will be called every time the machine transitions to a new
  * state (after the state is updated). It will be called with 2 params: The
- * current MachineStore and the effectData of the action that transitioned the
- * store. For example, use `effectData.oldState.value` to see what state the
+ * current MachineStore and the storeEffect of the action that transitioned the
+ * store. For example, use `storeEffect.oldState.value` to see what state the
  * machine just transitioned from.
  *
  * @param statesFactory Required. A function. Use the received state factory to
@@ -241,23 +241,23 @@ export const injectMachineStore = <
   )
 
   const subscription = store.subscribe({
-    effects: effectData => {
-      const { newState, oldState } = effectData
+    effects: storeEffect => {
+      const { newState, oldState } = storeEffect
 
       if (newState.value === oldState?.value) return
 
       if (oldState && leaveHooks[oldState.value]) {
         leaveHooks[oldState.value].forEach(callback =>
-          callback(store, effectData)
+          callback(store, storeEffect)
         )
       }
       if (enterHooks[newState.value]) {
         enterHooks[newState.value].forEach(callback =>
-          callback(store, effectData)
+          callback(store, storeEffect)
         )
       }
       if (config?.onTransition) {
-        config.onTransition(store, effectData)
+        config.onTransition(store, storeEffect)
       }
     },
   })

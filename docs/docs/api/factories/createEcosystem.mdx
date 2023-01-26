@@ -3,6 +3,8 @@ id: createEcosystem
 title: createEcosystem
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { createEcosystem } from '@zedux/react'
 ```
@@ -32,12 +34,33 @@ const withOnReadyFn = createEcosystem({
 
 ## Signature
 
-```ts
-createEcosystem(config?) => Ecosystem
-```
+<Tabs>
+  {tab1(`createEcosystem = (config?) => Ecosystem`)}
+  {tab2(
+    `declare const createEcosystem: <Context extends Record<string, any> | undefined = any>(config?: EcosystemConfig<Context>) => Ecosystem<any> | Ecosystem<Context>`
+  )}
+</Tabs>
 
-### `config`
+<Legend>
+  <Item name="config">
+    <p>
+      Optional. An <Link to="../types/EcosystemConfig">EcosystemConfig</Link>{' '}
+      object.
+    </p>
+    <p>
+      While all fields are optional, it's recommended to at least pass an{' '}
+      <code>id</code>.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      An <Link to="../classes/Ecosystem">Ecosystem</Link> instance, configured
+      with the passed <code>config</code>.
+    </p>
+  </Item>
+</Legend>
 
-Optional. An [EcosystemConfig object](../types/EcosystemConfig).
+## See Also
 
-All config fields are optional. But it is recommended to at least pass an id.
+- [The Ecosystems walkthrough](../../walkthrough/ecosystems)
+- [The `Ecosystem` class](../classes/Ecosystem)

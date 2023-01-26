@@ -13,25 +13,24 @@ interface EvaluationReason<State = any> {
   newState?: State
   oldState?: State
   operation: string // e.g. a function like "injectAtomValue"
-  targetType: EvaluationTargetType
-  targetKey?: string // e.g. an atom like "myAtom"
-  targetParams?: any
+  sourceType: EvaluationSourceType
+  sourceKey?: string // e.g. an atom like "myAtom"
   reasons?: EvaluationReason[]
   type: EvaluationType
 }
 
-enum EvaluationTargetType {
-  Atom = 'Atom',
-  External = 'External',
-  Injector = 'Injector',
-  Store = 'Store',
-}
+type EvaluationSourceType =
+  | 'Atom'
+  | 'AtomSelector'
+  | 'External'
+  | 'Injector'
+  | 'Store'
 
-enum EvaluationType {
-  CacheInvalidated = 'cache invalidated',
-  InstanceDestroyed = 'atom instance destroyed',
-  StateChanged = 'state changed',
-}
+type EvaluationType =
+  | 'cache invalidated'
+  | 'node destroyed'
+  | 'promise changed'
+  | 'state changed'
 ```
 
 ### `action`
@@ -40,31 +39,27 @@ If this EvaluationReason was a store's state updating, then this will be a refer
 
 ### `newState`
 
-The target's new state after updating. If the target is a store, this is the new state of the store. If the target is an atom instance, it's the new state of the atom instance's store. If the target is external (e.g. an invalidation from a React component), this will be undefined.
+The source's new state after updating. If the source is a store, this is the new state of the store. If the source is an atom instance, it's the new state of the atom instance's store. If the source is external (e.g. an invalidation from a React component), this will be undefined.
 
 ### `oldState`
 
-The target's state before updating. If the target is a store, this is the previous state of the store. If the target is an atom instance, it's the old state of the atom instance's store. If the target is external, this will be undefined.
+The source's state before updating. If the source is a store, this is the previous state of the store. If the source is an atom instance, it's the old state of the atom instance's store. If the source is external, this will be undefined.
 
 ### `operation`
 
-The name of the function triggering this evaluation. If the target is an atom, injector, or store, `operation` will be the function name you called to create the [dynamic graph dependency](../glossary#dynamic-graph-dependency) - e.g. an injector name like "injectStore" or "injectAtomValue". If the target is external, the operation name will be "invalidate".
+The name of the function triggering this evaluation. If the source is an atom, injector, or store, `operation` will be the function name you called to create the [dynamic graph dependency](../glossary#dynamic-graph-dependency) - e.g. an injector name like "injectStore" or "injectAtomValue". If the source is external, the operation name will be "invalidate".
 
-### `targetType`
+### `sourceType`
 
 What changed. Could be a store we're subscribed to via [`injectStore()`](../injectors/injectStore), or an atom instance that we injected, or an [`.invalidate()`](../classes/AtomInstance#invalidate) call from a dependent.
 
-### `targetKey`
+### `sourceKey`
 
-If the target dependency was another atom instance, this will be the key of that atom instance's atom. Otherwise, this will be undefined.
-
-### `targetParams`
-
-If the target dependency was another atom instance, this will be the raw, unserialized parameters of the atom instance. Otherwise, this will be undefined.
+If the source dependency was another atom instance, this will be the key of that atom instance's atom. Otherwise, this will be undefined.
 
 ### `reasons`
 
-If the target dependency itself was updated in response to one of its dependencies updating, those EvaluationReasons will be listed here. This is recursive! With this, you can see an update that originated many layers deep in the dependency tree and ultimately led to this atom reevaluating. If the target dependency was the instigator of the change, then this will be undefined.
+If the source dependency itself was updated in response to one of its dependencies updating, those EvaluationReasons will be listed here. This is recursive! With this, you can see an update that originated many layers deep in the dependency tree and ultimately led to this atom reevaluating. If the source dependency was the instigator of the change, then this will be undefined.
 
 ### `type`
 

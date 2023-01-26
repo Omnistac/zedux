@@ -1,0 +1,315 @@
+---
+id: destruction
+title: Destruction
+---
+
+In [the atom instances walkthrough](atom-instances), we learned that every atom instance has an `activeState` "lifecycle":
+
+![Initializing -> Active <-> Stale -> Destroyed](/img/diagrams/active-state-machine.png)
+
+But when exactly does an atom instance transition between these states?
+
+:::tip you will learn:
+
+- What makes an atom instance go stale
+- How to manipulate the graph manually to control destruction
+- How to force-destroy atom instances
+- How to destroy entire ecosystems (insert sci-fi reference here)
+
+:::
+
+## Ref Count
+
+Every time you use a hook, injector, or Atom Getter (synchronously during evaluation) to get an atom instance or value, Zedux updates [the graph](the-graph). Zedux uses this graph to determine which atom instances are being used and which are not. We call unused atom instances "stale instances".
+
+When an atom instance is first created, it will usually have exactly one dependent - the React component or atom instance that `use`d or `inject`ed the instance.
+
+```tsx
+const lifecycleTestAtom = atom('lifecycleTest', null)
+
+function MyComponent() {
+  // this call creates the atom instance and gives it its first dependent:
+  const instance = useAtomInstance(lifecycleTestAtom)
+  instance.activeState // 'Active'
+}
+```
+
+We call "the number of dependents of an atom instance" the atom instance's "ref count". As long as the ref count is `> 0`, the atom instance is Active. When the ref count hits 0, the atom instance goes Stale.
+
+In the example above, if `MyComponent` is the only dependent on the `lifecycleTest` atom instance, its ref count will be 1. If `MyComponent` is unmounted, the ref count will go to 0 and Zedux will set the instance's `activeState` to `'Stale'`.
+
+When a Stale atom instance's ref count goes back up to 1, its `activeState` transitions back to `'Active'`.
+
+## Instance Destruction
+
+When an atom instance is destroyed, Zedux removes all its dependency graph edges, cleans up its injectors (e.g. by calling `injectEffect` cleanup functions), and removes it from the ecosystem and the graph.
+
+But how do we destroy the instance?
+
+### TTL
+
+We learned about `ttl` in [the configuring atoms walkthrough](configuring-atoms). This is the simplest way to destroy atom instances.
+
+There are 4 possible TTL logic flows:
+
+- When `ttl` is 0, the instance will never be Stale - Zedux transitions it straight from Active to Destroyed as soon as its ref count hits 0.
+- When `ttl` is a number greater than 0, the instance will remain Stale for `ttl` milliseconds before being destroyed.
+- When `ttl` is a promise, the instance will remain Stale until the promise resolves.
+- When `ttl` is an observable, the instance will remain Stale until the observable emits.
+
+Additionally, when you pass a function to [`atomApi.setTtl()`](configuring-atoms#apisetttl), Zedux will call that function when the instance goes Stale and then follow the appropriate logic flow for the returned value.
+
+```ts
+return api().setTtl(
+  // Zedux waits until the instance goes Stale to call this function:
+  () => new Promise(...)
+)
+```
+
+In all cases, if a Stale atom instance becomes Active again (by getting a new dependent), **destruction is cancelled**. That's the purpose of the Stale status! - to allow some time for an atom instance to be revived.
+
+### `instance.destroy()`
+
+Every atom instance has a `.destroy()` method that allows you to destroy the instance manually. Usually you'll want to let the graph do its thing and destroy instances for you, but this can be necessary sometimes when working with atoms outside React.
+
+By default, this method does nothing if the atom instance's ref count is `> 0`. The purpose of this method is to tell Zedux, "I'm done using this instance here, destroy it if no-one else is using it."
+
+```ts
+const ecosystem = createEcosystem({ id: 'root' })
+
+// getInstance creates the instance if it doesn't exist:
+const myInstance = ecosystem.getInstance(myAtom)
+myInstance.exports.doSomething()
+
+// if we did just create it, destroy it:
+myInstance.destroy()
+```
+
+:::note
+Since `ecosystem.getInstance()` (and all ecosystem Atom Getters) doesn't update the graph, this example doesn't change the ref count of the `myAtom` instance.
+:::
+
+This flow is not recommended in most cases. Prefer using the graph. We'll look at ways to manually update the graph [shortly](#manual-graphing).
+
+## Atom Selector Destruction
+
+Atom Selectors don't have the same `activeState` lifecycle status as atom instances. But Atom Selector caches do have a ref count and a lifecycle of sorts.
+
+:::note
+Unlike atom instances, selector caches can never be stale - they're always destroyed automatically as soon as their ref count hits 0 (essentially they always have `ttl: 0`).
+:::
+
+Just like with atom instances, you should usually let the graph do its thing. But there is a method for destroying selector caches:
+
+### `selectorCache.destroyCache()`
+
+We saw this briefly in [the selectors walkthrough](selectors).
+
+```ts
+ecosystem.selectorCache.destroyCache(myAtomSelector)
+```
+
+Just like `instance.destroy()`, this method does nothing by default if the selector cache's ref count is `> 0`.
+
+## Force Destruction
+
+We just saw that by default Zedux always tries to bail out of destruction if a node's ref count is `> 0`. But we can change this behavior.
+
+`instance.destroy()` takes a single optional boolean parameter - `force`. Simply pass `true` to force destruction, ignoring ref count:
+
+```ts
+instance.destroy(true)
+```
+
+We can do the same thing with selector caches. `selectorCache.destroyCache` also has an optional `force` parameter as its 3rd param:
+
+```ts
+ecosystem.selectorCache.destroyCache(
+  myAtomSelector,
+  ['param 1', 'param 2'],
+  true
+)
+
+// if the selector doesn't take params, pass an empty array:
+ecosystem.selectorCache.destroyCache(myAtomSelector, [], true)
+```
+
+When a node is force-destroyed, TTL is disregarded. Zedux immediately destroys the node and notifies all current dependents that their dependency was destroyed. But those dependents **need** this node! That's what a _dependency_ is, after all.
+
+Dependents of a force-destroyed node automatically schedule a rerender (if the dependent is a React component) or reevaluation (if the dependent is an atom or Atom Selector) to recreate their dependency. That's right; force-destroyed nodes will be automatically recreated by their dependents. Because of this, force-destruction serves as a sort of "reset". More on this in [the resets walkthrough](resets).
+
+```tsx live ecosystemId=destruction/force-destruction resultVar=Destroyer
+const destroyableAtom = atom('destroyable', () => Math.random().toFixed(4))
+
+function Destroyer() {
+  const instance = useAtomInstance(destroyableAtom)
+  const rendersRef = useRef(0)
+  rendersRef.current++
+
+  return (
+    <>
+      <button onClick={() => instance.destroy(true)}>Destroy Instance</button>
+      <div>Renders: {rendersRef.current}</div>
+      <div>Instance state: {instance.getState()}</div>
+    </>
+  )
+}
+```
+
+## Manual Graphing
+
+We've learned how to use hooks, injectors, and Atom Getters to make Zedux update the dependency graph automatically. But thanks to ecosystems, you can work with atom instances completely outside of React or atoms themselves. Since Zedux can't automatically update the graph in this case, you might encounter a few unideal situations:
+
+- You create an atom instance with 0 dependents - Zedux can only automatically destroy atom instances when their ref count goes from 1 to 0. Instances that never get any dependents can never be automatically cleaned up!
+
+```ts
+const ecosystem = createEcosystem({ id: 'root' })
+
+// this instance is created with a ref count of 0!
+const instance = ecosystem.getInstance(myAtom)
+```
+
+- Zedux automatically destroys an atom instance that you're holding a reference to.
+
+```ts
+const myAtom = atom('destructionTest', null, { ttl: 0 })
+
+// say we're using this atom instance outside React:
+const instance = ecosystem.getInstance(myAtom)
+
+// and say myAtom has a single dependent, registered normally like so:
+function MyComponent() {
+  useAtomValue(myAtom)
+  ...
+}
+
+// when MyComponent unmounts, myAtom's ref count goes from 1 to 0 and Zedux
+// destroys the instance! Now we're holding onto a Destroyed atom instance :o
+```
+
+As you can imagine, these situations can lead to state being out-of-sync, memory leaks, and just some confusing stuff. While such memory leaks are non-aggressive and the confusion is probably minimal if you've read this doc page, it would be nice if there was a better way.
+
+Well. This is where manual graphing comes in. Atom instances and the Selector Cache have methods that allow you to add and remove custom edges between graph nodes. With this capability, you can tell Zedux that an instance or selector _does_ have a dependent, preventing automatic cleanup. And you can then trigger automatic cleanup by removing that graph edge.
+
+:::tip
+Manual graphing can also improve Dev X by making the graph more accurate!
+:::
+
+### `instance.addDependent()`
+
+Manual graphing is as simple as calling this method. It adds a custom edge to the graph and returns a cleanup function that you can call to remove the custom graph edge.
+
+```ts
+// now if we create the instance automatically here:
+const instance = ecosystem.getInstance(myAtom)
+
+// we can prevent it from being destroyed underneath us:
+const cleanup = instance.addDependent() // increments ref count
+
+// decrements ref count: (triggers automatic destruction if ref count is now 0!)
+cleanup()
+```
+
+It's that simple! When you call `instance.addDependent()`, Zedux creates a new "pseudo-node" in the graph and draws an edge between the instance and the new pseudo-node. This dependent means the instance's ref count can never hit 0 until we call the cleanup function.
+
+`.addDependent()` takes an optional config object that allows you to give the new edge a dev-friendly name and a callback function for handling some real low-level details about the new dependency.
+
+```ts
+let instance = ecosystem.getInstance(myAtom)
+
+const cleanup = instance.addDependent({
+  callback: (signal, currentState, reason) => {
+    // recreate the instance if it gets force-destroyed:
+    if (signal === 'Destroyed') instance = ecosystem.getInstance(myAtom)
+  },
+  operation: 'mySpecificReasonForUsingTheInstanceHere',
+})
+```
+
+See [`instance.addDependent()`](../api/classes/AtomInstance#adddependent) for the low-level details.
+
+### `selectorCache.addDependent()`
+
+Atom Selectors have the same capability.
+
+```ts
+const cleanup = ecosystem.selectorCache.addDependent(myAtomSelector)
+
+// with params:
+ecosystem.selectorCache.addDependent(myAtomSelector, ['param 1', 'param 2'])
+
+// the config object is the optional 3rd param:
+ecosystem.selectorCache.addDependent(myAtomSelector, ['param 1', 'param 2'], {
+  callback: (signal, currentState, reason) => {
+    ...
+  },
+  operation: 'mySpecificReasonForUsingTheSelectorHere'
+})
+
+// if the selector doesn't take params, pass an empty array:
+ecosystem.selectorCache.addDependent(myAtomSelector, [], {
+  operation: 'mySpecificReasonForUsingTheSelectorHere'
+})
+```
+
+:::tip
+Manual graphing combined with TTL is the recommended way to trigger destruction of atom instances and Atom Selectors. It keeps your graph clean and accurate and prevents surprises.
+:::
+
+## Ecosystem Destruction
+
+Ecosystems themselves can be destroyed, which in turn destroys every atom instance and selector cache in the ecosystem. There are 2 ways to go about it:
+
+### `ecosystem.destroy()`
+
+The manual way. You'll probably never need this in a normal app. It's mostly for testing convenience - to ensure all atom instances and cached selectors are cleaned up after you're done testing them.
+
+Ecosystems also keep a "ref count" of sorts to track how often they're provided in [`<EcosystemProvider>`s](../api/components/EcosystemProvider). Destruction will bail out by default if the ref count is `> 0`. Pass `true` to force destruction anyway.
+
+:::important
+Unlike force-destroying atom instances and selector caches, force-destroying ecosystems is not at all recommended (and not really tested). There shouldn't ever be a need to force-destroy an ecosystem. We may remove the ability.
+:::
+
+```ts
+const ecosystem = createEcosystem({ id: 'root' })
+ecosystem.destroy()
+// Be sure to not use the ecosystem after it's destroyed. Zedux doesn't do
+// anything special to warn you about invalid usages (currently)
+```
+
+### `destroyOnUnmount`
+
+You can set this ecosystem configuration option to `true` when creating an ecosystem. When `destroyOnUnmount` is `true`, Zedux will automatically destroy the ecosystem when the last `<EcosystemProvider>` providing it unmounts.
+
+When using `<EcosystemProvider>` to auto-create an ecosystem, this prop is true by default. For manually created ecosystems, it's false by default.
+
+```tsx
+// destroyOnUnmount is unnecessary here; it's the default
+<EcosystemProvider destroyOnUnmount id="root">
+  <Child />
+</EcosystemProvider>
+
+// or:
+const ecosystem = createEcosystem({
+  destroyOnUnmount: true,
+  id: 'root',
+})
+
+<EcosystemProvider ecosystem={ecosystem}>
+  <Child />
+</EcosystemProvider>
+```
+
+Again, this is mostly for testing convenience. You probably won't find yourself destroying ecosystems much in a real app.
+
+## Recap
+
+- Atom instances go stale when their ref count goes from 1 to 0.
+- Use `instance.destroy()` and `ecosystem.selectorCache.destroyCache()` to manually destroy and force-destroy atom instances and selector caches.
+- Use `instance.addDependent()` and `ecosystem.selectorCache.addDependent()` to manually add graph edges.
+- Manual graphing with TTL is the recommended way to trigger destruction of atom instances when working with atoms outside React.
+- Use `ecosystem.destroy()` or `destroyOnUnmount` to destroy ecosystems.
+
+## Next Steps
+
+Now that you know how to control the lifecycle of atom instances, you're ready to learn the cool stuff. Let's start with learning how to [provide atom instances over React context](react-context).

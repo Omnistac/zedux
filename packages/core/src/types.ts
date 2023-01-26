@@ -102,7 +102,7 @@ export type EffectCreator<State = any> = (
   action: Action
 ) => EffectChain[]
 
-export interface EffectData<
+export interface StoreEffect<
   State = any,
   S extends Store<State> = Store<State>
 > {
@@ -125,7 +125,7 @@ export type EffectType = string
 export type EffectsSubscriber<
   State = any,
   S extends Store<State> = Store<State>
-> = (effectData: EffectData<State, S>) => any
+> = (storeEffect: StoreEffect<State, S>) => any
 
 export type ErrorSubscriber = (error: unknown) => any
 
@@ -151,7 +151,7 @@ export type MachineHook<
   Context extends Record<string, any> | undefined
 > = (
   store: MachineStore<StateNames, EventNames, Context>,
-  effectData: EffectData<
+  storeEffect: StoreEffect<
     MachineStateType<StateNames, Context>,
     MachineStore<StateNames, EventNames, Context>
   >
@@ -221,7 +221,7 @@ export type Settable<State = any, StateIn = State> =
 export type SideEffectHandler<
   State = any,
   S extends Store<State> = Store<State>
-> = (effectData: EffectData<State, S>) => any
+> = (storeEffect: StoreEffect<State, S>) => any
 
 export type StateSetter<State = any> = (settable: Settable<State>) => State
 

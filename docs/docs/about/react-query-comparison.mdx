@@ -3,7 +3,7 @@ id: react-query-comparison
 title: React Query Comparison
 ---
 
-While Zedux doesn't (yet!) handle query fetching, refetching, or special query types, Zedux is currently patterned after React Query more than any other library (yes, more than Redux or Recoil). React Query's cache management is unparalleled. So Zedux' atomic model borrows a lot of ideas from it.
+While Zedux doesn't (yet!) provide helpers for query operations (infinite scrolling, pagination, etc), Zedux is currently patterned after React Query more than any other library (yes, more than Redux or Recoil). React Query's cache management is unparalleled. So Zedux' atomic model borrows a lot of ideas from it.
 
 However, the purpose of Zedux is very different from React Query. React Query is designed around promises - managing their state, side effects, and result caches. Zedux is designed to manage both application state (a la Redux/Recoil) and cached server data. Zedux isn't limited to promises.
 
@@ -13,11 +13,11 @@ Structurally, Zedux [atoms](../api/classes/Atom) are very similar to React Query
 
 - For destroying stale instances: Atoms have [`ttl`](../api/classes/Atom#ttl). Queries have `cacheTime`.
 - For suspense: Atoms have [`.setPromise()`](../api/classes/AtomApi#setpromise). Queries have `suspense`.
-- Queries track promise state by default. Atoms have [`injectAsyncEffect()`](../api/injectors/injectAsyncEffect) for tracking promise state.
+- For tracking promise state: Zedux has query atoms and [`injectPromise()`]. Queries track promise state by default.
 
 ## QueryClient
 
-Zedux [ecosystems](../api/classes/Ecosystem) are patterned after React Query's [QueryClient](https://react-query.tanstack.com/reference/QueryClient). They both create autonomous environments for managing queries or atoms that can be used outside React and are especially useful for testing.
+Zedux [ecosystems](../api/classes/Ecosystem) are patterned after React Query's [QueryClient](https://react-query.tanstack.com/reference/QueryClient). They both create autonomous environments for managing atoms/queries that can be used outside React and are especially useful for testing.
 
 ## Stream Support
 
@@ -47,4 +47,4 @@ const messagesAtom = atom('messages', () => {
 })
 ```
 
-This is more flexible, but does require more boilerplate. Most functionality can be abstracted, of course. We'll probably provide a `@zedux/react/query` package someday that provides a full suite of tools for handling promises.
+This is more flexible, but does require more boilerplate. Most functionality can be abstracted, of course. We may provide a `@zedux/query` package someday that provides a full suite of tools for handling promises.

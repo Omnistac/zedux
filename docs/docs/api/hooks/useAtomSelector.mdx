@@ -3,13 +3,20 @@ id: useAtomSelector
 title: useAtomSelector
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+import { InjectAtomSelectorLegend } from '../injectors/injectAtomSelector.mdx'
+
 ```ts
 import { useAtomSelector } from '@zedux/react'
 ```
 
-A React hook that accepts an [AtomSelector](../types/AtomSelector) and registers graph dependencies on any atom instances the AtomSelector uses. Returns whatever the AtomSelector returns.
+A React hook that accepts an [AtomSelector](../types/AtomSelector) and registers a dynamic graph dependency on the selector's cache.
 
-The selector will rerun every time the state of any of the dependencies it creates change. The component that uses this hook will only rerender when the selector result changes.
+The selector will rerun every time any of its own dynamic dependencies update. The React component that uses this injector will only rerender when the selector result changes.
+
+Caches the selector's result in the ecosystem's [`.selectorCache`](../classes/SelectorCache) if it hasn't been cached yet. If this selector has been cached before with the exact same arguments, the selector doesn't run, and `useAtomSelector()` returns the cached result.
+
+Unlike all other atom selection APIs ([`injectAtomSelector()`](../injectors/injectAtomSelector) and the [`select` AtomGetter](../types/AtomGetters#select)), `useAtomSelector()` actually respects the [`argsComparator` AtomSelectorConfig option](../types/AtomSelectorConfig#argscomparator).
 
 ## Example
 
@@ -38,7 +45,7 @@ function Counters() {
       >
         Increment Counter A
       </button>
-      <div>Counter B (static): {instance.store.getState().counterB}</div>
+      <div>Counter B (static): {instance.getState().counterB}</div>
       <button
         onClick={() =>
           setState(state => ({ ...state, counterB: state.counterB + 1 }))
@@ -66,28 +73,27 @@ const selectorComposition = useAtomSelector(
 )
 
 const staticVal = useAtomSelector(
-  ({ getInstance }) => getInstance(myAtom).store.getState().someField
+  ({ getInstance }) => getInstance(myAtom).getState().someField
 )
 
 const staticValUsingEcosystem = useAtomSelector(
   ({ ecosystem }) => ecosystem.get(myAtom).someField
 )
+
+// passing a selector cache directly:
+const cache = ecosystem.selectorCache.getCache(mySelector) // doesn't subscribe
+const value = useAtomSelector(cache) // subscribes
 ```
 
 ## Signature
 
-```ts
-useAtomSelector(atomSelectorOrConfig, ...args) => result
-```
+<Tabs>
+  {tab1(`useAtomSelector = (selectable, ...args?) => result`)}
+  {tab2(
+    `declare const useAtomSelector: <T, Args extends any[]>(selectable: Selectable<T, Args>, ...args: Args) => T`
+  )}
+</Tabs>
 
-### `atomSelectorOrConfig`
+<InjectAtomSelectorLegend name="useAtomSelector" type="hook" />
 
-The [AtomSelector](../types/AtomSelector) to run or an [AtomSelectorConfig object](../types/AtomSelector#atomselectorconfig) with the AtomSelector as the `selector` property.
-
-### `args`
-
-The extra arguments to pass to the AtomSelector (besides the first AtomGetters arg, which Zedux passes for you). In TypeScript, all of the AtomSelector's required arguments are required here.
-
-### `result`
-
-Whatever the AtomSelector returns.
+## See Also

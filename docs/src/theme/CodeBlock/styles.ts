@@ -13,11 +13,11 @@ export const EditorWrapper = styled.div`
 `
 
 export const Gutter = styled.div`
-  background: #fff2;
   border-bottom-left-radius: 12px;
   display: flex;
   flex-flow: column nowrap;
   height: fit-content;
+  min-height: 100%;
   min-width: 1.7rem;
   padding: 0.5rem 5px 1rem;
   text-align: right;
@@ -75,6 +75,8 @@ export const Result = styled.div`
   background: #fff;
   border-bottom-right-radius: 12px;
   box-shadow: inset 4px 4px 6px #888;
+  color: #1c1e21;
+  color-scheme: light;
   max-height: 500px;
   overflow: auto;
   padding: 0.5rem;
@@ -84,7 +86,10 @@ export const Result = styled.div`
 export const StyledEditable = styled(Editable)<{
   $theme: ReturnType<typeof usePrismTheme>
 }>`
+  background: #2b313a;
+  flex: 1;
   height: fit-content;
+  min-height: 100%;
   overflow-x: auto;
   padding: 0.5rem 0.5rem 1rem;
   white-space: pre !important;
@@ -122,7 +127,7 @@ export const StyledEditable = styled(Editable)<{
 `
 
 export const Wrapper = styled.section`
-  background: #2b313a;
+  background: #474c54;
   border-radius: 12px;
   box-shadow: 10px 10px 7px rgba(0, 0, 0, 0.4);
   display: grid;

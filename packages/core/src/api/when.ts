@@ -1,5 +1,5 @@
 import {
-  EffectData,
+  StoreEffect,
   EffectsSubscriber,
   Reactable,
   SideEffectHandler,
@@ -41,37 +41,37 @@ export const when: {
   const stateChangeHandlers: SideEffectHandler[] = []
   const stateMatchHandlers: StateMatchHandler[] = []
 
-  const effectsSubscriber: EffectsSubscriber = effectData => {
-    if (effectData.action) {
-      runActionHandlers(effectData)
+  const effectsSubscriber: EffectsSubscriber = storeEffect => {
+    if (storeEffect.action) {
+      runActionHandlers(storeEffect)
     }
 
-    if (effectData.newState === effectData.oldState) return
+    if (storeEffect.newState === storeEffect.oldState) return
 
     runMachineHandlers(
-      (effectData as unknown) as EffectData<MachineStateType, MachineStore>
+      (storeEffect as unknown) as StoreEffect<MachineStateType, MachineStore>
     )
-    runStateChangeHandlers(effectData)
+    runStateChangeHandlers(storeEffect)
   }
 
-  const runActionHandlers = (effectData: EffectData) => {
-    if (!effectData.action) return
+  const runActionHandlers = (storeEffect: StoreEffect) => {
+    if (!storeEffect.action) return
 
-    anyActionHandlers.forEach(handler => handler(effectData))
+    anyActionHandlers.forEach(handler => handler(storeEffect))
 
-    const unwrappedAction = removeAllMeta(effectData.action)
+    const unwrappedAction = removeAllMeta(storeEffect.action)
     const handlers = actionHandlers[unwrappedAction.type]
 
-    handlers?.forEach(handler => handler(effectData))
+    handlers?.forEach(handler => handler(storeEffect))
   }
 
   const runMachineHandlers = (
-    effectData: EffectData<MachineStateType, MachineStore>
+    storeEffect: StoreEffect<MachineStateType, MachineStore>
   ) => {
     const oldState =
-      effectData.oldState != null &&
-      ((effectData.oldState as unknown) as MachineStateType).value
-    const newState = ((effectData.newState as unknown) as MachineStateType)
+      storeEffect.oldState != null &&
+      ((storeEffect.oldState as unknown) as MachineStateType).value
+    const newState = ((storeEffect.newState as unknown) as MachineStateType)
       .value
 
     if (newState === oldState) return
@@ -80,21 +80,21 @@ export const when: {
       typeof oldState === 'string' ? leaveHooks[oldState] : null
     const currentEnterHooks = enterHooks[newState]
 
-    currentLeaveHooks?.forEach(hook => hook(effectData))
-    currentEnterHooks?.forEach(hook => hook(effectData))
+    currentLeaveHooks?.forEach(hook => hook(storeEffect))
+    currentEnterHooks?.forEach(hook => hook(storeEffect))
   }
 
-  const runStateChangeHandlers = (effectData: EffectData) => {
-    stateChangeHandlers.forEach(handler => handler(effectData))
+  const runStateChangeHandlers = (storeEffect: StoreEffect) => {
+    stateChangeHandlers.forEach(handler => handler(storeEffect))
 
     stateMatchHandlers.forEach(({ predicate, sideEffect }) => {
-      const oldPredicate = predicate(effectData.oldState)
-      const newPredicate = predicate(effectData.newState)
+      const oldPredicate = predicate(storeEffect.oldState)
+      const newPredicate = predicate(storeEffect.newState)
 
       // We only run stateMatch handlers when state changes and now matches but didn't before
       if (!newPredicate || oldPredicate === newPredicate) return
 
-      sideEffect(effectData)
+      sideEffect(storeEffect)
     })
   }
 

@@ -6,7 +6,7 @@ import {
   ActionChain,
   Dispatchable,
   EffectChain,
-  EffectData,
+  StoreEffect,
   EffectsSubscriber,
   HierarchyConfig,
   HierarchyDescriptor,
@@ -473,7 +473,7 @@ export class Store<State = any> {
       }
     }
 
-    let infoObj: EffectData<State, this> | undefined
+    let infoObj: StoreEffect<State, this> | undefined
 
     // Clone the subscribers in case of mutation mid-iteration
     const subscribers = [...this._subscribers]

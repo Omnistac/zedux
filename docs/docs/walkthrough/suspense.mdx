@@ -3,27 +3,38 @@ id: suspense
 title: Suspense
 ---
 
-Atoms are extremely flexible when working with React suspense. Suspense works by throwing a promise during render that React can catch and await.
+Atoms are extremely flexible when working with React suspense. We've learned how to use [Atom APIs](atom-apis) to set an atom instance's promise. It's time we learned all about suspense.
 
-## Setting a Promise
+:::tip you will learn
 
-Atoms can be given a promise via an [AtomApi](../api/classes/AtomApi). Simply pass the promise to [AtomApi's `.setPromise()`](../api/classes/AtomApi#setpromise) and return the api from the atom evaluator function:
+- How to efficiently use atoms as suspending resources in React
+- How to "render-as-you-fetch" with atoms
+- Best practices for creating and updating promises
+
+:::
+
+## Quick Overview
+
+To quickly review setting promises with an [AtomApi](../api/classes/AtomApi), let's create an example atom that we'll use throughout this walkthrough:
 
 ```ts
 import { api, atom } from '@zedux/react'
 
 const fetchAtom = atom('fetch', (url: string) => {
-  const promise = fetch(url).then(result => result.json())
+  const store = injectStore(undefined, { subscribe: false })
+  const promise = fetch(url).then(async result =>
+    store.setState(await result.json())
+  )
 
-  return api().setPromise(promise)
+  return api(store).setPromise(promise)
 })
 ```
 
-When `fetchAtom` is used in a component, Zedux will throw the promise, allowing React to suspend. When the promise completes, React will recreate the component and Zedux will no longer throw the now-completed promise.
+When `fetchAtom` is used in a component (e.g. with `useAtomValue` or `useAtomInstance`), Zedux will throw the promise, allowing React to suspend. When the promise completes, React will recreate the component and Zedux will no longer throw the now-resolved promise.
 
-Currently promises are a one-off per atom instance. You can't set a new promise on a subsequent atom evaluation. If you do, Zedux will ignore the new promise. This is because the promise's job is really just to indicate initial loading state. To indicate more states, add state to the atom.
+Using `subscribe: false` is essential to make this approach work. Without it the promise will make this atom reevaluate every time it completes, which would recreate the promise, making an infinite loop.
 
-The promise can also be useful in general for indicating the loading status of the atom.
+You can access the promise directly on the atom instance via `instance.promise`. You can use this outside React to wait until an atom instance is "ready":
 
 ```ts
 const fetchUsersInstance = myEcosystem.getInstance(fetchAtom, ['/users'])
@@ -32,9 +43,143 @@ fetchUsersInstance.promise.then(() => {
 })
 ```
 
-## Deferring Side Effects
+## Changing the Promise
 
-You may have noticed in the above example we kicked off a fetch directly in the body of `fetchAtom`'s evaluator function. While this can be fine if you know what you're doing, it typically isn't good practice.
+If the promise reference changes on a subsequent evaluation, Zedux will make all components using the atom instance suspend again.
+
+Our `fetchAtom` above will create a new promise reference every time it evaluates. But with the current implementation, it has no dependencies that could cause it to reevaluate! As we learned in [the selectors walkthrough](selectors), Zedux gives you lots of control over when evaluations happen. In this case, we can use [`instance.invalidate()`](../api/classes/AtomInstance#invalidate) to force the atom to reevaluate:
+
+```tsx
+function RefreshUsers() {
+  const instance = useAtomInstance(fetchAtom, ['/users'])
+
+  return <button onClick={() => instance.invalidate()}>Refresh</button>
+}
+```
+
+When this button is clicked, `fetchAtom` will reevaluate and create a new promise reference, causing all components using it to suspend again. We can prevent a component from suspending with the `suspend` hook config option:
+
+```ts
+function RefreshUsers() {
+  const instance = useAtomInstance(fetchAtom, ['/users'], {
+    // highlight-next-line
+    suspend: false,
+  })
+
+  return <button onClick={() => instance.invalidate()}>Refresh</button>
+}
+```
+
+Here's a live sandbox putting this all together:
+
+```tsx live ecosystemId=suspense/first-example resultVar=Users
+// mock stuff for example:
+const mockUsers = ['Joe', 'Jim', 'Sally', 'Jill', 'Bob', 'Jamie']
+const mockFetch = () =>
+  new Promise(resolve =>
+    setTimeout(
+      () => resolve([...mockUsers].sort(() => Math.random() - 0.5)),
+      1500
+    )
+  )
+
+// start here:
+const fetchAtom = atom('fetch', (url: string) => {
+  const store = injectStore([], { subscribe: false }) // important!
+  const promise = mockFetch(url).then(data => store.setState(data))
+
+  return api(store).setPromise(promise)
+})
+
+function RefreshUsers() {
+  const instance = useAtomInstance(fetchAtom, ['/users'], {
+    suspend: false,
+  })
+
+  return <button onClick={() => instance.invalidate()}>Refresh</button>
+}
+
+function UsersList() {
+  const users = useAtomValue(fetchAtom, ['/users'])
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user}>{user}</li>
+      ))}
+    </ul>
+  )
+}
+
+function Users() {
+  return (
+    <>
+      <Suspense fallback={<div>fetching users...</div>}>
+        <UsersList />
+      </Suspense>
+      <RefreshUsers />
+    </>
+  )
+}
+```
+
+## Query Atoms
+
+In [the atom apis walkthrough](atom-apis), we learned about "query atoms". A query atom is just an atom whose state factory returns `api(promise)`. We can revise `fetchAtom` to use this technique:
+
+```ts
+const fetchAtom = atom('fetch', (url: string) => {
+  const promise = fetch(url).then(result => result.json())
+
+  return api(promise)
+})
+```
+
+This simplified a lot:
+
+- We no longer have to inject our own store and track state ourselves.
+- We don't have to `.setPromise` anymore - the promise passed to `api()` serves as both the atom's state source and suspense promise.
+
+Query atoms have their state set to an object with the following shape:
+
+```ts
+interface PromiseState<T> {
+  data?: T
+  error?: Error
+  isError: boolean
+  isLoading: boolean
+  isSuccess: boolean
+  status: PromiseStatus
+}
+
+type PromiseStatus = 'error' | 'loading' | 'success'
+```
+
+:::tip
+They're called "query atoms" because they mimic React Query queries.
+:::
+
+The resolved promise value will be set as the `.data` property:
+
+```ts
+function UsersList() {
+  const { data } = useAtomValue(fetchAtom, ['/users'])
+
+  return (
+    <ul>
+      {data.map(user => (
+        <li key={user}>{user}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+Try plugging the new `fetchAtom` and `UsersList` component into the above live sandbox!
+
+## `injectPromise`
+
+So far we've been creating our promise inline in the state factory. While this is certainly a supported pattern, there are downsides:
 
 - A side effect is running immediately when the atom instance is initialized. Since atoms are often initialized during a React render, this means we're kicking off side effects during render 😮. Especially when using SSR, this can be a problem.
 
@@ -46,73 +191,65 @@ We could use `injectMemo` to at least prevent the fetch from running unnecessari
 const promise = injectMemo(() => fetch(url), [url])
 ```
 
-But we still have the first problem of the side effect running immediately.
+But we still have the first problem of the side effect running immediately. A separate injector to isolate these side effects during SSR would be nice. Fortunately there is an injector that solves all of the above: `injectPromise`.
 
-### `injectAsyncEffect`
+```ts
+const fetchAtom = atom('fetch', (url: string) => {
+  const queryApi = injectPromise(() => fetch(url).then(data => data.json()), [
+    url,
+  ])
 
-Fortunately Zedux ships with a high-level injector for creating promises whose evaluation is deferred. It works rather like [`injectEffect()`](../api/injectors/injectEffect), but with a few differences:
+  return queryApi
+})
+```
 
-- You can pass an async function (or any function that returns a promise).
-- Rather than returning a cleanup function, cleanup functions can be passed to a received `cleanup` param.
-- It returns a tuple consisting of a promise and a special [async store](../api/types/AsyncStore).
+`injectPromise` gives you the skeleton of a query atom. The first param is a promise factory function that returns your promise. The second param is a dependency array, just like other injectors like `injectEffect` and `injectMemo`. Zedux will only rerun the promise factory when deps change.
 
-```tsx live ecosystemId=suspense/injectAsyncEffect resultVar=App
-const asyncAtom = atom('async', () => {
-  const [promise, store] = injectAsyncEffect(cleanup => {
-    return new Promise(resolve => {
-      const timeoutId = setTimeout(() => {
-        resolve('🎉')
-      }, 2000)
+`injectPromise` returns an [AtomApi](../api/classes/AtomApi) with:
 
-      cleanup(() => clearTimeout(timeoutId))
-    })
-  }, [])
+- A `.store` whose state looks like a query atom's state (see the above `PromiseState` interface).
+- An attached `.promise` set to the promise returned from your promise factory.
+
+### AtomApi Composition
+
+The AtomApi can then be returned directly from your state factory as your atom's api. Or you can use the returned store and promise however you want - e.g. to compose them together with other stores/promises:
+
+```ts
+import {
+  atom,
+  createStore,
+  injectMemo,
+  injectPromise,
+  injectStore,
+} from '@zedux/react'
+
+// an atom that fetches a blog post and all its comments:
+const blogPostAtom = atom('blogPost', (id: string) => {
+  const commentsApi = injectPromise(
+    () => fetch(`/comments/${id}`).then(data => data.json()),
+    [id]
+  )
+  const postApi = injectPromise(
+    () => fetch(`/post/${id}`).then(data => data.json()),
+    [id]
+  )
+
+  // compose both stores together:
+  const store = injectStore()
+  store.use({ comments: commentsApi.store, post: postApi.store })
+
+  const promise = injectMemo(
+    () => Promise.all([commentsApi.promise, postApi.promise]),
+    [commentsApi.promise, postApi.promise]
+  )
 
   return api(store).setPromise(promise)
 })
-
-function Child() {
-  const { data } = useAtomValue(asyncAtom)
-
-  return <div>The long-awaited value: {data}</div>
-}
-
-function App() {
-  const [isRunning, setIsRunning] = useState(false)
-
-  return (
-    <Suspense fallback={<div>Falling Back (stuff is loading)</div>}>
-      {isRunning ? (
-        <Child />
-      ) : (
-        <button onClick={() => setIsRunning(true)}>Run</button>
-      )}
-    </Suspense>
-  )
-}
 ```
 
-The promise returned from `injectAsyncEffect` can be passed directly to `api.setPromise()`.
+### No Suspense
 
-### AsyncStore
-
-The [async store](../api/types/AsyncStore) is a special store that holds a state machine representing an async flow and the resulting `data` or `error`. It's patterned after the object returned from [React Query's `useQuery`](https://react-query.tanstack.com/reference/useQuery).
-
-```ts
-const [promise, store] = injectAsyncEffect(...)
-
-const {
-  data,
-  error,
-  isError,
-  isIdle,
-  isLoading,
-  isSuccess,
-  status
-} = store.getState()
-```
-
-In components that you don't want to suspend, these flags can be used to implement old-school loading flows:
+In components that you don't want to suspend, the `isSuccess`, `isError`, and `isLoading` flags can be used to implement old-school loading flows:
 
 ```tsx
 function UserList() {
@@ -124,34 +261,92 @@ function UserList() {
 }
 ```
 
-### Composing State
+### Cleanup
 
-The async store returned from `injectAsyncEffect` can be composed with any other state in a parent store.
+Zedux passes an AbortController to the promise factory. Hook into this to cancel fetches or otherwise clean up your async flow.
 
 ```ts
-const composedAtom = atom('composed', () => {
-  const otherStore = injectStore('some state')
-  const [, asyncStore] = injectAsyncEffect(myEffect, [])
-
-  return injectStore(() =>
-    createStore({ other: otherStore, request: asyncStore })
+const fetchAtom = atom('fetch', (url: string) => {
+  const queryApi = injectPromise(
+    controller =>
+      fetch(url, { signal: controller.signal }).then(data => data.json()),
+    [url]
   )
-})
 
-// then in SomeComponent:
-const {
-  other,
-  request: { isLoading },
-} = useAtomValue(composedAtom)
+  return queryApi
+})
 ```
 
-## Configuring Suspense
+Just like `injectEffect`'s cleanup, Zedux will abort the signal whenever the promise factory runs again due to deps changing and when the atom instance is destroyed.
 
-There aren't currently any flags to turn suspense on or off. It's always on by default. To turn it off, just don't `setPromise` 🙃. We may add ecosystem- and hook/injector-level options to configure this in the future. Feel free to open an issue if you need this functionality (or PR it!).
+### Example
 
-### Forwarding Promises
+Let's see `injectPromise` plugged into our `fetchAtom` example:
 
-The atom dependency graph can get very big. Say we have a setup where atom `a` injects atom `b` which injects atom `c`:
+```tsx live ecosystemId=suspense/injectPromise resultVar=Users
+// mock stuff for example:
+const mockUsers = ['Joe', 'Jim', 'Sally', 'Jill', 'Bob', 'Jamie']
+const mockFetch = () =>
+  new Promise(resolve =>
+    setTimeout(
+      () => resolve([...mockUsers].sort(() => Math.random() - 0.5)),
+      1500
+    )
+  )
+
+// start here:
+const fetchAtom = atom('fetch', (url: string) => {
+  const queryApi = injectPromise(() => mockFetch(url), [url])
+
+  return queryApi
+})
+
+function RefreshUsers() {
+  const [isPending, startTransition] = useTransition()
+  const instance = useAtomInstance(fetchAtom, ['/users'], {
+    suspend: false,
+  })
+
+  return (
+    <button onClick={() => instance.invalidate()}>
+      Refresh (does nothing!)
+    </button>
+  )
+}
+
+function UsersList() {
+  const { data } = useAtomValue(fetchAtom, ['/users'])
+
+  return (
+    <ul>
+      {data.map(user => (
+        <li key={user}>{user}</li>
+      ))}
+    </ul>
+  )
+}
+
+function Users() {
+  return (
+    <>
+      <Suspense fallback={<div>fetching users...</div>}>
+        <UsersList />
+      </Suspense>
+      <RefreshUsers />
+    </>
+  )
+}
+```
+
+Clicking the button now does nothing because `injectPromise` prevents the promise from being recreated. The params we pass it (`[url]`) aren't changing, so Zedux doesn't rerun the promise factory.
+
+:::tip challenge!
+Try modifying the above sandbox to make the button work again while still using `injectPromise` (tip: As with most things in Zedux, there are several ways to go about it).
+:::
+
+## Forwarding Promises
+
+Say we have a graph where atom `a` injects atom `b` which injects atom `c`:
 
 ```
 a -> b -> c
@@ -159,7 +354,7 @@ a -> b -> c
 
 Atoms `a` and `b` don't set promises, but atom `c` does. Now say we use atom `a` in a component. Since we didn't set a promise in atom `a` itself, React won't suspend. Atom `c`'s promise will be ignored!
 
-Zedux is designed to be flexible in handling this situation. We can forward the promise manually:
+Currently, to get around this, promises must be forwarded manually:
 
 ```ts
 const atomC = atom('c', () => {
@@ -179,91 +374,7 @@ const atomA = atom('a', () => {
 })
 ```
 
-But this is obviously very tedious and error-prone. Fortunately, atoms can be given an option to automatically forward their dependencies' promises.
-
-### `forwardPromises`
-
-```ts
-const atomB = atom(
-  'b',
-  () => {
-    injectAtomInstance(atomC) // just create a dependency
-  },
-  {
-    forwardPromises: true,
-  }
-)
-
-const atomA = atom(
-  'a',
-  () => {
-    injectAtomInstance(atomB) // just create a dependency
-  },
-  {
-    forwardPromises: true,
-  }
-)
-```
-
-When `forwardPromises` is true, Zedux will automatically find all the promises of all initial dependencies, `Promise.all()` them, and set that as the atom instance's [`promise`](../api/classes/AtomInstance#promise).
-
-Setting a promise in the atom will override this option:
-
-```ts
-const atomA = atom(
-  'a',
-  (doTheThing: boolean) => {
-    injectAtomInstance(atomB)
-
-    return doTheThing ? api(myValue).setPromise(myPromise) : myValue
-  },
-  {
-    forwardPromises: true, // ignored when `doTheThing` param is true
-  }
-)
-```
-
-### `defaultForwardPromises`
-
-Setting the `forwardPromises` option manually on lots of atoms can also be tedious. Sometimes that's fine. But this option can also be configured at the [ecosystem level](../api/classes/Ecosystem#defaultforwardpromises).
-
-We do this by setting `defaultForwardPromises`:
-
-```tsx
-import { EcosystemProvider } from '@zedux/react'
-
-function App() {
-  return (
-    <EcosystemProvider defaultForwardPromises id="root">
-      <Routes />
-    </EcosystemProvider>
-  )
-}
-```
-
-With this set, our `a` atom will cause React to suspend by default, with no manual forwarding or nuthin'.
-
-```ts
-const atomC = atom('c', () => {
-  return api().setPromise(myPromise)
-})
-
-const atomB = atom('b', () => {
-  injectAtomInstance(atomC) // just create the dependency
-})
-
-const atomA = atom('a', () => {
-  injectAtomInstance(atomB) // just create the dependency
-})
-
-function SuspendingComponent() {
-  const a = useAtomValue(atomA)
-}
-```
-
-### More Control
-
-Sometimes manually forwarding promises is okay! It gives you full flexibility over the async flow. You can use `Promise.all()` yourself. Or use a `Promise.race()` or any helper or library for handling parallelization or serialization of promises - you can even use RxJS.
+This gives you full flexibility over the async flow. You can use `Promise.all()` yourself. Or use a `Promise.race()` or any helper or library for handling parallelization or serialization of promises - you can even use RxJS.
 
 ```ts
 import { from } from 'rxjs'
@@ -271,17 +382,62 @@ import { from } from 'rxjs'
 const rxAtom = atom('rx', () => {
   const asyncInstance = injectAtomInstance(myAsyncAtom)
 
-  const [promise, store] = injectAsyncEffect(
-    cleanup => {
+  return injectPromise(
+    controller => {
       const subscription = from(asyncInstance.promise)
         .pipe(doCrazyRxStuff)
-        .subscribe(val => console.log('val:', val))
+        .subscribe(result => console.log('result:', result))
 
-      cleanup(() => subscription.unsubscribe())
+      controller.signal.addEventListener('abort', () => {
+        subscription.unsubscribe()
+      })
     },
     [asyncInstance]
   )
-
-  return api(store).setPromise(promise)
 })
 ```
+
+While this async flexibility is intentional, it does seem boilerplate-heavy compared to Recoil's async-by-default approach. We may create an atom type someday that mimics Recoil. In fact, an early prototype of Zedux already did. We pivoted from that approach because we didn't need it at Omnistac. This may be a job we leave up to userspace.
+
+## Manual Suspense
+
+You don't have to use Zedux' built-in suspense handling. Here's an example exporting a promise and handling suspense by hand:
+
+```tsx
+const fetchAtom = atom('fetch', (url: string) => {
+  const { promise, store } = injectPromise(
+    () => fetch(url).then(data => data.json()),
+    [url]
+  )
+
+  return api(store).setExports({ promise })
+})
+
+function Username() {
+  const userInstance = useAtomInstance(fetchAtom, ['/user'])
+  const { data, isError, isLoading } = useAtomValue(userInstance)
+
+  if (isError) {
+    throw 'User request failed'
+  } else if (isLoading) {
+    throw userInstance.exports.promise
+  }
+
+  return <div>{data.username}</div>
+}
+```
+
+:::caution
+This example is a little contrived - you probably wouldn't want to export the promise itself since exports are constant but the promise reference could change. Instead export a getter function or a ref.
+:::
+
+## Recap
+
+- Set an atom instance's promise by returning an AtomApi with a promise attached via `.setPromise()`
+  - Or pass the promise directly to `api(promise)` to create a "query atom".
+- `injectPromise` gives you more granular control over the store and promise of a query.
+- Promises must be forwarded manually to trigger React suspense.
+
+## Next Steps
+
+One of the most efficient ways to trigger React suspense is with [query atoms](query-atoms).

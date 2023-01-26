@@ -1,0 +1,211 @@
+---
+id: injectMachineStore
+title: injectMachineStore
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectMachineStore } from '@zedux/react'
+```
+
+An [injector](../glossary#injector) that creates and configures a [MachineStore](../classes/MachineStore).
+
+Accepts a `statesFactory` function, optional initial context state, and an optional config object.
+
+```ts
+const cyclingStore = injectMachineStore(stateFactory, initialContext, {
+  guard,
+  onTransition,
+})
+```
+
+Zedux state machines are only designed for simple use cases where the high-level API and automatic TypeScript types can give quick gains. If you need more power, use XState.
+
+## Example
+
+```tsx live ecosystemId=injectMachineStore/example resultVar=Theme
+const themeAtom = atom('theme', () => {
+  const store = injectMachineStore(
+    state => [
+      state('light').on('toggle', 'dark'),
+      state('dark').on('toggle', 'light'),
+    ],
+    { count: 0 },
+    {
+      onTransition: machine =>
+        machine.setContext(context => ({ count: context.count + 1 })),
+    }
+  )
+
+  return api(store).setExports({ send: store.send })
+})
+
+function Theme() {
+  const [{ context, value }, { send }] = useAtomState(themeAtom)
+
+  return (
+    <div style={value === 'dark' ? { background: '#444', color: '#fff' } : {}}>
+      <label>
+        <input
+          checked={value === 'dark'}
+          onChange={() => send('toggle')}
+          type="checkbox"
+        />
+        <span>{value} mode</span>
+      </label>
+      <div>Toggle Count: {context.count}</div>
+    </div>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(
+    `injectMachineStore = (statesFactory, initialContext?, config?) => machineStore`
+  )}
+  {tab2(`declare const injectMachineStore: <
+  States extends MachineState[],
+  Context extends Record<string, any> | undefined = undefined
+>(
+  statesFactory: (
+    state: <Name extends string>(stateName: Name) => MachineState<Context, Name>
+  ) => [...States],\n
+  initialContext?: Context,\n
+  config?: MachineStoreConfig<
+    MapStatesToStateNames<States, Context>,
+    MapStatesToEvents<States, Context>,
+    Context
+  >
+): MachineStore<
+  MapStatesToStateNames<States, Context>,
+  MapStatesToEvents<States, Context>,
+  Context
+>`)}
+</Tabs>
+
+<Legend>
+  <Item name="statesFactory">
+    <p>
+      Required. A function that returns an array of "states". States are created
+      using the received <code>createState</code> factory function. Signature:
+    </p>
+    <Tabs>
+      {tab1(`statesFactory = (createState) => stateList`)}
+      {tab2(`statesFactory: (
+  createState: <Name extends string>(stateName: Name) => MachineState<Context, Name>
+) => [...States]`)}
+    </Tabs>
+    <Legend>
+      <Item name="createState">
+        <p>
+          A function that accepts a single string - the name of the state.
+          Returns a <Link to="../types/MachineState">MachineState</Link>. This
+          function is often abbreviated as simply <code>state</code> or even{' '}
+          <code>s</code>:
+        </p>
+        <Ts>{`injectMachineStore(state => [state('a'), state('b')])
+injectMachineStore(s => [s('a'), s('b')])`}</Ts>
+      </Item>
+      <Item name="Returns">
+        <p>
+          An array of <Link to="../types/MachineState">MachineStates</Link>{' '}
+          created using the <code>createState</code> factory function.
+        </p>
+        <p>
+          The first state in this list will become the initial state of the
+          machine.
+        </p>
+        <Ts>{`injectMachineStore(state => [state('initial'), state('other')])`}</Ts>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="initialContext">
+    <p>
+      Optional. An object or <code>undefined</code> if no context.
+    </p>
+    <p>
+      If set, this will become the initial value of the MachineStore's{' '}
+      <code>.context</code> state property.
+    </p>
+    <Ts>{`const store = injectMachineStore(stateFactory, { foo: 'bar' })
+store.getContext() // { foo: 'bar' }`}</Ts>
+  </Item>
+  <Item name="config">
+    <p>Optional. An object with the following optional properties:</p>
+    <Ts>{`{ guard, onTransition }`}</Ts>
+    <Legend>
+      <Item name="guard">
+        <p>
+          Optional. A function that receives the MachineStore's current{' '}
+          <code>.context</code> value and should return a boolean.
+        </p>
+        <Tabs>
+          {tab1(`guard = (context) => boolean`)}
+          {tab2(`guard?: (
+  currentState: MachineStateType<StateNames, Context>,
+  nextState: StateNames
+) => boolean`)}
+        </Tabs>
+        <p>
+          This function is called every time the state receives a signal that
+          will transition the machine to a new state.
+        </p>
+        <p>Return true to allow the transition</p>
+        <p>Return false (or any falsy value) to prevent the transition</p>
+        <Ts>{`const store = injectMachineStore(statesFactory, initialContext, {
+  guard: (currentState, nextValue) => !currentState.context.isPaused
+})`}</Ts>
+      </Item>
+      <Item name="onTransition">
+        <p>
+          Optional. A function that receives the MachineStore and the{' '}
+          <Link to="../types/StoreEffect">StoreEffect</Link> of the action
+          responsible for the transition.
+        </p>
+        <Tabs>
+          {tab1(`onTransition = (currentState, nextState) => void`)}
+          {tab2(`onTransition?: MachineHook<StateNames, EventNames, Context>`)}
+        </Tabs>
+        <p>
+          This function is called every time the MachineStore transitions to a
+          new state (after the transition has finished).
+        </p>
+        <Ts>{`const store = injectMachineStore(statesFactory, initialContext, {
+  onTransition: (machineStore, storeEffect) => console.log(storeEffect)
+})`}</Ts>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="Returns">
+    <p>
+      A <Link to="../classes/MachineStore">MachineStore</Link>.
+    </p>
+    <p>
+      This store's initial <code>.value</code> will be set to the first state
+      returned from the <code>statesFactory</code>.
+    </p>
+    <p>
+      This store's initial <code>.context</code> will be set to the passed{' '}
+      <code>initialContext</code> (if any).
+    </p>
+    <p>
+      <code>injectMachineStore()</code> will also register all guards and
+      listeners on all individual states as well as the universal guard and{' '}
+      <code>onTransition</code> listener.
+    </p>
+    <p>
+      If returning this store from a state factory, you may also want to export
+      some of the MachineStore's properties like <code>.send</code>,{' '}
+      <code>.is</code>, and <code>.setContext</code>
+    </p>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The State Machines walkthrough](../../walkthrough/state-machines)
+- [The `MachineStore` class](../classes/MachineStore)
+- [The `MachineState` type](../types/MachineState)

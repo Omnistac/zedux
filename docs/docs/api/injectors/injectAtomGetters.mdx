@@ -3,17 +3,13 @@ id: injectAtomGetters
 title: injectAtomGetters
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectAtomGetters } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that returns an [AtomGetters object](../types/AtomGetters) with `ecosystem`, `get`, `getInstance`, and `select` properties. `get`, `getInstance`, and `select` are similar to the corresponding methods on the ecosystem, but they have one extra superpower:
-
-When called synchronously during atom evaluation, `get`, `getInstance`, and `select` will register graph dependencies on resolved atom instances. In this way, `get` is like [`injectAtomValue`](injectAtomValue), `getInstance` is like [`injectAtomInstance`](injectAtomInstance), and `select` is like [`injectAtomSelector`](injectAtomSelector). However, the AtomGetters are not injectors. This means they can be called in loops or if statements or even asynchronously.
-
-When called asynchronously, `get` is really just an alias for `ecosystem.get()`, `getInstance` is an alias for `ecosystem.getInstance()`, and `select` is an alias for `ecosystem.select()`. They don't register any graph dependencies; they simply return the expected values.
-
-[Ions](../classes/Ion) use this injector internally to provide their [AtomGetters](../types/AtomGetters) and [AtomSetters](../types/AtomSetters) objects.
+An [unrestricted injector](../glossary#unrestricted-injector) that returns an [AtomGetters object](../types/AtomGetters)
 
 ## Examples
 
@@ -116,8 +112,22 @@ const fromInstance = get(instance)
 
 ## Signature
 
-```ts
-injectAtomGetters() => AtomGetters
-```
+<Tabs>
+  {tab1(`injectAtomGetters = () => atomGetters`)}
+  {tab2(`declare const injectAtomGetters: () => AtomGetters`)}
+</Tabs>
 
-The injector itself doesn't take any params. See [../types/AtomGetters] for the definitions of the getters.
+<Legend>
+  <Item name="Returns">
+    <p>
+      An <Link to="../types/AtomGetters">AtomGetters</Link> object:
+    </p>
+    <Ts>{`const { ecosystem, get, getInstance, select } = injectAtomGetters()`}</Ts>
+  </Item>
+</Legend>
+
+## See Also
+
+- [`useEcosystem()`](../hooks/useEcosystem)
+- [The Atom Getters walkthrough](../../walkthrough/atom-getters)
+- [The `AtomGetters` type](../types/AtomGetters)

@@ -1,0 +1,205 @@
+---
+id: injectPromise
+title: injectPromise
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectPromise } from '@zedux/react'
+```
+
+An [injector](../glossary#injector) that creates a memoized promise reference. Returns an [AtomApi](../classes/AtomApi) with a promise and store attached. This AtomApi's store tracks the promise's state.
+
+Accepts a promise factory function, a list of dependencies (like `injectMemo` and `injectEffect`), and an optional config object.
+
+```ts
+const atomApi = injectPromise(createPromise, [dep1, dep2], {
+  dataOnly,
+  initialState,
+})
+const { promise, store } = atomApi
+```
+
+:::note
+`injectPromise` calls the factory function immediately to produce the promise. It doesn't defer the side effect like `injectEffect` would.
+:::
+
+The state of the store returned by this injector is patterned after [React Query's query state](https://tanstack.com/query/latest/docs/react/reference/useQuery).
+
+Use this injector to obtain a stable promise reference that can be passed to [`AtomApi#setPromise()`](../classes/AtomApi#setpromise) to trigger React suspense.
+
+## Example
+
+```tsx live ecosystemId=injectPromise/example resultVar=App
+const suspendingAtom = atom('suspending', () => {
+  const promiseApi = injectPromise(() => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve('Hello, World!')
+      }, 2000)
+    })
+  }, [])
+
+  return promiseApi
+})
+
+function Child() {
+  const { data } = useAtomValue(suspendingAtom)
+
+  return (
+    <div>
+      The value: {data} (click "Reset" above if you missed the suspense)
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <Suspense fallback={<div>Suspending...</div>}>
+      <Child />
+    </Suspense>
+  )
+}
+```
+
+The advantage of using `injectPromise` over query atoms is that it gives you more control over when the promise is recreated.
+
+It also gives you access to the promise and store so you can compose them with other promises/stores or handle/subscribe to them yourself.
+
+## Signature
+
+<Tabs>
+  {tab1(`injectPromise = (promiseFactory, deps?, config?) => atomApi`)}
+  {tab2(`declare const injectPromise: {
+  <T>(
+    promiseFactory: (controller?: AbortController) => Promise<T>,
+    deps: InjectorDeps,
+    config: { initialState?: T; dataOnly: true } & InjectStoreConfig
+  ): AtomApi<T, Record<string, any>, Store<T>, Promise<T>>\n
+  <T>(
+    promiseFactory: (controller?: AbortController) => Promise<T>,
+    deps?: InjectorDeps,
+    config?: { initialState?: T; dataOnly?: boolean } & InjectStoreConfig
+  ): AtomApi<
+    PromiseState<T>,
+    Record<string, any>,
+    Store<PromiseState<T>>,
+    Promise<T>
+  >
+}`)}
+</Tabs>
+
+export const dataOnlyExample = `const { store } = injectPromise(promiseFactory, [])
+store.getState() // { ...status flags..., data: <the data> }\n
+// with dataOnly:
+const { store } = injectPromise(promiseFactory, [], { dataOnly: true })
+store.getState() // <the data>
+`
+
+<Legend>
+  <Item name="promiseFactory">
+    <p>Required. A function that returns a promise. Signature:</p>
+    <Tabs>
+      {tab1(`promiseFactory = (controller) => promise`)}
+      {tab2(`promiseFactory: (controller?: AbortController) => Promise<T>`)}
+    </Tabs>
+    <Legend>
+      <Item name="controller">
+        <p>
+          An{' '}
+          <a href="https://developer.mozilla.org/en-US/docs/Web/API/AbortController">
+            AbortController
+          </a>
+          . Use this controller's signal to abort fetch requests or run your own
+          cleanup.
+        </p>
+        <p>
+          Will be <code>undefined</code> if AbortController is not available in
+          the current environment.
+        </p>
+      </Item>
+      <Item link="promise" name="Returns">
+        The promise you want to memoize and whose state you want{' '}
+        <code>injectPromise</code>'s store to track.
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="deps">
+    <p>Optional. An array containing anything.</p>
+    <p>
+      When any items in the array change on a subsequent evaluation,{' '}
+      <code>injectPromise</code> will call the promise factory again and reset
+      the state of the store for the new promise.
+    </p>
+    <p>
+      Pass an empty array if you want the promise to never be recreated. Pass{' '}
+      <code>undefined</code> to recreate the promise on every evaluation (not
+      usually what you want).
+    </p>
+  </Item>
+  <Item name="config">
+    <p>Optional. An object with the following optional properties:</p>
+    <Ts>{`{ dataOnly, initialState, ...storeConfig }`}</Ts>
+    <Legend>
+      <Item name="dataOnly">
+        <p>
+          Optional. Boolean. Default <code>false</code>.
+        </p>
+        <p>
+          If true, the store's state will only contain the promise's resolved
+          value (aka "data"), instead of an object containing <code>data</code>,{' '}
+          <code>isLoading</code>, etc properties.
+        </p>
+        <Ts>{dataOnlyExample}</Ts>
+      </Item>
+      <Item name="initialState">
+        <p>
+          Optional. Should match the type of the promise's resolved value.
+          Default <code>undefined</code>.
+        </p>
+        <p>
+          The initial value of the store's <code>data</code> property. If{' '}
+          <code>dataOnly</code> is true, this will be the entire state of the
+          store.
+        </p>
+        <p>
+          Without this specified, the store's <code>data</code> will be{' '}
+          <code>undefined</code> until the promise resolves
+        </p>
+      </Item>
+      <Item name="storeConfig">
+        <p>Optional. Configuration properties for the created store.</p>
+        <p>
+          These are passed directly on to{' '}
+          <Link to="injectStore">
+            <code>injectStore()</code>
+          </Link>
+          . See available options <Link to="injectStore#config">here</Link>.
+        </p>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="Returns">
+    <p>
+      An <Link to="../classes/AtomApi">AtomApi</Link>. This AtomApi's{' '}
+      <code>.promise</code> property is a reference to the promise returned from
+      the <code>promiseFactory</code>. This AtomApi's <code>.store</code>{' '}
+      property is a store with a{' '}
+      <Link to="../types/PromiseState">PromiseState</Link> shape that tracks the
+      state of the promise.
+    </p>
+    <p>
+      This AtomApi can be returned directly from the atom state factory. Or you
+      can consume/compose the promise and store however you want.
+    </p>
+    <Ts>{`const { promise, store } = injectPromise(...)`}</Ts>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The AtomApi walkthrough](../../walkthrough/atom-apis)
+- [The suspense walkthrough](../../walkthrough/suspense)
+- [The `AtomApi` class](../classes/AtomApi)
+- [The `PromiseState` type](../types/PromiseState)

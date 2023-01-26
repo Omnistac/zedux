@@ -3,21 +3,24 @@ id: injectWhy
 title: injectWhy
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectWhy } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that tells you why an atom instance reevaluated. This injector is ignored on the first evaluation - it returns an empty array. On subsequent evaluations, this injector returns the full list of [EvaluationReasons](../types/EvaluationReason) detailing why this atom reevaluated.
+An [unrestricted injector](../glossary#unrestricted-injector) that returns a list of reasons explaining why the current atom instance is reevaluating. This injector returns an empty array on the first evaluation. On subsequent evaluations, it returns the full list of [EvaluationReasons](../types/EvaluationReason) detailing why this atom reevaluated.
 
-These reasons can be nested indefinitely. They can tell you abut a store state change many atoms deep in the dependency tree of this atom instance.
+`injectWhy()` is essentially an alias for:
 
-:::important
-We will _maybe_ only make `injectWhy` usable in dev builds, as tracking evaluation reasons has some overhead. In prod, it will be a no-op that always returns an empty array.
+```ts
+const { ecosystem } = injectAtomGetters()
+const reasons = ecosystem.why()
+```
 
-This change is not definite. We need to actually calculate the overhead and determine if the utility `injectWhy` provides may be needed in prod.
+(Note that [`injectAtomGetters()`](injectAtomGetters) is also an unrestricted injector).
 
-It may also be possible to create an ecosystem option to turn on evaluation reason tracking. Feedback welcome! Open an issue and let's discuss.
-:::
+Evaluation reasons can be nested indefinitely. They can tell you about a store state change many atoms deep in the dependency tree of this atom instance.
 
 ## Examples
 
@@ -86,7 +89,7 @@ function Reasons() {
 }
 ```
 
-`injectWhy` will return an empty array on the first evaluation. And that's the only time. Thus `injectWhy` can be used to determine if this is the first evaluation.
+`injectWhy` will return an empty array on the first evaluation. That's the only time. Thus `injectWhy` can be used to determine if this is the first evaluation.
 
 ```ts
 const reasons = injectWhy()
@@ -97,8 +100,25 @@ if (!reasons.length) {
 
 ## Signature
 
-```ts
-injectWhy() => EvaluationReasons
-```
+<Tabs>
+  {tab1(`injectWhy = () => evaluationReasons`)}
+  {tab2(`declare const injectWhy: () => EvaluationReason<any>[]`)}
+</Tabs>
 
-Returns the list of [EvaluationReasons](../types/EvaluationReason) for this reevaluation. Will return an empty array if this is the first evaluation.
+<Legend>
+  <Item name="Returns">
+    <p>
+      The list of <Link to="../types/EvaluationReason">EvaluationReasons</Link>{' '}
+      for this reevaluation.
+    </p>
+    <p>
+      Returns an empty array if this is the first time the current atom instance
+      is being evaluated.
+    </p>
+  </Item>
+</Legend>
+
+## See Also
+
+- [`ecosystem.why()`](../classes/Ecosystem#why)
+- [The `EvaluationReason` type](../types/EvaluationReason)

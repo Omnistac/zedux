@@ -8,8 +8,9 @@
 /* You can override the default Infima variables here. */
 :root:root {
   --color-dark: #282729;
+  --color-primary: #ffa359;
   --doc-sidebar-width: 220px;
-  --ifm-color-primary: #cc5b00; /* #fe7608; /* #fea359; */
+  --ifm-color-primary: #ffa359; /* #fe7608; /* #fea359; #ffa359; */
   --ifm-color-primary-dark: #fe8d30;
   --ifm-color-primary-darker: #fe7608;
   --ifm-color-primary-darkest: #db6301;
@@ -19,13 +20,48 @@
   --ifm-code-font-size: 80%;
   --ifm-font-family-base: 'Quicksand', sans-serif;
   --ifm-font-size-base: 16px;
-  --ifm-link-color: #b34f00;
-  --ifm-link-hover-color: #cc5b00;
-  --ifm-menu-color-active: #cc5b00;
+  --ifm-link-color: var(--ifm-color-primary-dark);
+  --ifm-link-hover-color: var(--ifm-color-primary);
+  --ifm-menu-color-active: var(--ifm-color-primary);
+
+  --ifm-menu-link-sublist-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><path stroke="rgba(0,0,0,0.3)" fill="none" d="M6 16l6-4l6 4"></path></svg>');
+  
 }
 
 html[data-theme='dark'] {
   --ifm-background-color: var(--color-dark);
+}
+
+@media (max-width: 900px) {
+  html {
+    font-size: calc(var(--ifm-font-size-base) - 1px);
+  }
+}
+
+@media (max-width: 750px) {
+  html {
+    font-size: calc(var(--ifm-font-size-base) - 2px);
+  }
+}
+
+@media (max-width: 600px) {
+  html {
+    font-size: calc(var(--ifm-font-size-base) - 3px);
+  }
+}
+
+@media (max-width: 450px) {
+  html {
+    font-size: calc(var(--ifm-font-size-base) - 4px);
+  }
+}
+
+ul.spaced > li {
+  margin-bottom: var(--ifm-paragraph-margin-bottom);
+}
+
+pre {
+  --prism-background-color: #2b313a;
 }
 
 .admonition {
@@ -68,11 +104,27 @@ html[data-theme='dark'] {
 }
 
 .markdown > [class^='codeBlockContainer'] {
-  box-shadow: 5px 5px rgb(9, 54, 112, 0.4);
+  box-shadow: 5px 5px #0004;
+}
+
+.menu > .menu__list {
+  padding-bottom: 10vh;
 }
 
 .menu__link {
   align-items: center;
+  font-size: 0.8em;
+  line-height: 1.15;
+}
+
+.menu__list .menu__list {
+  border-left: 4px solid var(--color-primary);
+}
+
+.menu__list-item-collapsible {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-bottom: 1px solid #0001;
 }
 
 /*
@@ -209,6 +261,10 @@ button.copyButton_node_modules-\@docusaurus-theme-classic-src-theme-CodeBlock- {
   display: block;
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
+}
+
+.token.comment {
+  color: #baa586 !important;
 }
 
 .token.keyword {

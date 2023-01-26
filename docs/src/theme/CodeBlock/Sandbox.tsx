@@ -4,7 +4,14 @@ import Prism from 'prismjs'
 import 'prismjs/components/prism-jsx'
 import 'prismjs/components/prism-typescript'
 import 'prismjs/components/prism-tsx'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  MutableRefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   Text,
   createEditor,
@@ -106,9 +113,10 @@ const decorate = ([node, path]: NodeEntry) => {
 const evalCode = (
   code: string,
   resultVarName: string,
+  ecosystemIdRef?: MutableRefObject<string>,
   extraScope?: Record<string, any>
 ) => {
-  const resultStr = `var ${resultVarName}; ${code}; var _$_$res = typeof ${resultVarName} === 'function' ? React.createElement(${resultVarName}) : ${resultVarName};`
+  const resultStr = `var ${resultVarName}; ${code}; var _$_$res = typeof ${resultVarName} === 'function' ? React.createElement(${resultVarName}) : typeof ${resultVarName} === 'string' ? ${resultVarName} : React.createElement('pre', null, JSON.stringify(${resultVarName}, null, 2));`
   const wrapped = `${resultStr} return _$_$res`
 
   const extraScopeKeys = extraScope ? [...Object.keys(extraScope)] : []
@@ -120,7 +128,17 @@ const evalCode = (
   // eslint-disable-next-line no-new-func
   const fn = new Function('React', ...keys, wrapped)
 
-  return fn.call(null, React, ...vals)
+  const ecosystemsBefore = ReactZedux.zeduxGlobalStore.getState().ecosystems
+  const result = fn.call(null, React, ...vals)
+  const ecosystemsAfter = ReactZedux.zeduxGlobalStore.getState().ecosystems
+
+  if (!ecosystemIdRef.current) {
+    Object.keys(ecosystemsAfter).forEach(key => {
+      if (!ecosystemsBefore[key]) ecosystemIdRef.current = key
+    })
+  }
+
+  return result
 }
 
 const parse = (text: string): Descendant[] =>
@@ -178,7 +196,7 @@ export const Sandbox = ({
   resultVar = 'Result',
 }: {
   children: string
-  ecosystemId: string
+  ecosystemId?: string
   extraScope?: string | Record<string, any>
   resultVar?: string
 }) => {
@@ -188,6 +206,7 @@ export const Sandbox = ({
   const [value, setValue] = useState(initialValue)
   const [result, setResult] = useState('')
   const theme = usePrismTheme()
+  const ecosystemIdRef = useRef(ecosystemId)
   const lastLoggedErrorTimeRef = useRef<number | undefined>()
   const isMountedRef = useRef(true)
 
@@ -206,7 +225,7 @@ export const Sandbox = ({
 
         if (!jsCode) return
 
-        const ecosystem = Zedux.getEcosystem(ecosystemId)
+        const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
         if (Object.keys(ecosystem?._instances || {}).length) {
           ecosystem?.wipe()
           ecosystem?.setOverrides([])
@@ -215,6 +234,7 @@ export const Sandbox = ({
         const evalResult = evalCode(
           jsCode,
           resultVar,
+          ecosystemIdRef,
           typeof extraScope === 'string' ? undefined : extraScope
         )
 
@@ -243,55 +263,59 @@ export const Sandbox = ({
     runCode(value)
   }, [runCode])
 
-  return (
-    <Zedux.EcosystemProvider id={ecosystemId}>
-      <Slate
-        editor={editor}
-        onChange={newValue => {
-          if (newValue === value) return
+  const slate = (
+    <Slate
+      editor={editor}
+      onChange={newValue => {
+        if (newValue === value) return
 
-          setValue(newValue)
-          runCode(newValue)
-        }}
-        value={value}
-      >
-        <Wrapper>
-          <Header>
-            <img src={`${baseUrl}img/zedux-icon-75x75.png`} />
-            <HeaderText>Live Sandbox</HeaderText>
-            <HeaderActions>
-              <LogActions ecosystemId={ecosystemId} Zedux={Zedux} />
-              <ResetButton
-                onClick={() => {
-                  setValue(initialValue)
-                  runCode(initialValue)
-                  editor.children = initialValue
-                }}
-              >
-                Reset
-              </ResetButton>
-            </HeaderActions>
-          </Header>
-          <EditorWrapper>
-            <Gutter>
-              {value.map((_, i) => (
-                <span key={i}>{i + 1}</span>
-              ))}
-            </Gutter>
-            <StyledEditable
-              decorate={decorate}
-              onKeyDown={event => onKeyDown(editor, event)}
-              placeholder="Write some code..."
-              renderLeaf={Leaf}
-              scrollSelectionIntoView={scrollSelectionIntoView}
-              $theme={theme}
-            />
-          </EditorWrapper>
-          <Result>
-            <ErrorBoundary>{result}</ErrorBoundary>
-          </Result>
-        </Wrapper>
-      </Slate>
-    </Zedux.EcosystemProvider>
+        setValue(newValue)
+        runCode(newValue)
+      }}
+      value={value}
+    >
+      <Wrapper>
+        <Header>
+          <img src={`${baseUrl}img/zedux-icon-75x75.png`} />
+          <HeaderText>Live Sandbox</HeaderText>
+          <HeaderActions>
+            <LogActions ecosystemIdRef={ecosystemIdRef} Zedux={Zedux} />
+            <ResetButton
+              onClick={() => {
+                setValue(initialValue)
+                runCode(initialValue)
+                editor.children = initialValue
+              }}
+            >
+              Reset
+            </ResetButton>
+          </HeaderActions>
+        </Header>
+        <EditorWrapper>
+          <Gutter>
+            {value.map((_, i) => (
+              <span key={i}>{i + 1}</span>
+            ))}
+          </Gutter>
+          <StyledEditable
+            decorate={decorate}
+            onKeyDown={event => onKeyDown(editor, event)}
+            placeholder="Write some code..."
+            renderLeaf={Leaf}
+            scrollSelectionIntoView={scrollSelectionIntoView}
+            $theme={theme}
+          />
+        </EditorWrapper>
+        <Result>
+          <ErrorBoundary>{result}</ErrorBoundary>
+        </Result>
+      </Wrapper>
+    </Slate>
+  )
+
+  return ecosystemIdRef.current ? (
+    <Zedux.EcosystemProvider id={ecosystemId}>{slate}</Zedux.EcosystemProvider>
+  ) : (
+    slate
   )
 }

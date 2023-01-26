@@ -3,13 +3,15 @@ id: injectInvalidate
 title: injectInvalidate
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectInvalidate } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that returns an `invalidate()` function. This `invalidate()` function can be used to force a reevaluation of the current atom instance.
+An [unrestricted injector](../glossary#unrestricted-injector) that returns an `invalidate()` function. This `invalidate()` function can be used to force a reevaluation of the current atom instance.
 
-In general, try to avoid impure, mutation-oriented, or generally non-reactive patterns that might require manual invalidation. However, there are some use cases for it.
+In general, try to avoid impure, mutation-oriented, or generally non-reactive patterns that might require manual invalidation. However, there are some use cases for it. Specifically when using [Query Atoms](../../walkthrough/query-atoms), this injector may be a key piece of your state flow.
 
 ## Examples
 
@@ -49,14 +51,26 @@ invalidate()
 
 ## Signature
 
-```ts
-injectInvalidate() => invalidate
-```
+<Tabs>
+  {tab1(`injectInvalidate = () => invalidate`)}
+  {tab2(`declare const injectInvalidate: () => () => void`)}
+</Tabs>
 
-Returns the `invalidate()` function whose signature is
+<Legend>
+  <Item name="Returns">
+    <p>
+      A function that can be called to force a reevaluation of the current atom
+      instance. Signature:
+    </p>
+    <Ts>{`invalidate = () => void`}</Ts>
+    <p>Only use in callbacks or certain conditions of an effect.</p>
+    <Ts>{`// Don't do this! (would trigger an infinite evaluation loop):
+const invalidate = injectInvalidate()
+invalidate()`}</Ts>
+  </Item>
+</Legend>
 
-```ts
-invalidate() => void
-```
+## See Also
 
-Nuthin' special.
+- [`instance.invalidate()`](../classes/AtomInstance#invalidate)
+- [The Query Atoms walkthrough](../../walkthrough/query-atoms)

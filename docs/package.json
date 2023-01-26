@@ -10,19 +10,19 @@
     "deploy": "USE_SSH=true docusaurus deploy"
   },
   "dependencies": {
-    "@docusaurus/core": "^2.0.0-beta.20",
-    "@docusaurus/preset-classic": "^2.0.0-beta.20",
-    "@docusaurus/theme-live-codeblock": "^2.0.0-beta.20",
-    "prism-react-renderer": "^1.3.1",
-    "prismjs": "^1.28.0",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0",
-    "react-simple-code-editor": "^0.11.0",
-    "redux": "^4.1.0",
-    "slate": "^0.78.0",
-    "slate-history": "^0.66.0",
-    "slate-react": "^0.79.0",
-    "styled-components": "^5.3.5"
+    "@docusaurus/core": "^2.2.0",
+    "@docusaurus/preset-classic": "^2.2.0",
+    "@docusaurus/theme-live-codeblock": "^2.2.0",
+    "framer-motion": "^7.10.3",
+    "prism-react-renderer": "^1.3.5",
+    "prismjs": "^1.29.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "redux": "^4.2.0",
+    "slate": "^0.87.0",
+    "slate-history": "^0.86.0",
+    "slate-react": "^0.87.1",
+    "styled-components": "^5.3.6"
   },
   "browserslist": {
     "production": [
@@ -40,6 +40,7 @@
     "@docusaurus/module-type-aliases": "^2.0.0-beta.20",
     "@tsconfig/docusaurus": "^1.0.4",
     "@types/prismjs": "^1.26.0",
+    "@types/react": "^18.0.26",
     "@types/styled-components": "^5.1.9"
   },
   "resolutions": {

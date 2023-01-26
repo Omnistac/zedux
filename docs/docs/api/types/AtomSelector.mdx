@@ -111,6 +111,12 @@ const limitedUpdates = useAtomSelector({
 })
 ```
 
+:::tip
+While passing an inline config object like this is fine, you should try to avoid it when possible.
+
+Zedux caches selectors by reference. If the selector function or AtomSelectorConfig object reference change every evaluation/render, Zedux has to do extra work to reconfigure the dependency graph every time. While this is usually fine, be mindful of it in larger apps.
+:::
+
 ## When Not to Use
 
 AtomSelectors aren't atoms. As such, you can't use [injectors](../glossary#injector) in them. [Ions](../classes/Ion) (or other atoms) should be preferred when you need:
@@ -118,6 +124,7 @@ AtomSelectors aren't atoms. As such, you can't use [injectors](../glossary#injec
 - To memoize anything - use an atom with [`injectMemo()`](../injectors/injectMemo)
 - To create and update a new store - use an atom with [`injectStore()`](../injectors/injectStore)
 - To run side effects based on state updates - use an atom with [`injectEffect()`](../injectors/injectEffect)
+- To manage promises or trigger React suspense - use [`AtomApi#setPromise()`](../classes/AtomApi#setpromise) in an atom.
 
 ### Converting AtomSelectors
 
@@ -136,7 +143,7 @@ const sortedList = ion('sortedList', ({ get }) => {
 })
 
 // after (as injector):
-const injectTruthy = ({ get }: AtomGetters) => {
+const injectSortedList = ({ get }: AtomGetters) => {
   const list = get(listAtom)
   return injectMemo(() => [...list].sort(), [list])
 }
@@ -164,55 +171,31 @@ const sortedList = useAtomValue(getSortedList)
 
 ## Generic AtomSelectors
 
-In TypeScript, AtomSelectors that take a generic may need to be called directly to get correct type inference.
+Since Zedux calls your atom selector, there are some special considerations to take into account if your selector function takes generics. In TypeScript 4.7+, you can use an instantiation expression to capture the desired generics. In earlier TS versions, however, you may need to call the selector directly to get correct type inference:
 
 ```ts
-// with this AtomSelector:
-const addExtraData = <T>({ get }: AtomGetters, list: T[]) => {
+// this AtomSelector takes a generic (T):
+const addExtraData = <T extends any[]>({ get }: AtomGetters, list: T) => {
   return list.map(item => ({
-    ...item,
-    extraData: get(extraDataAtom)[item.id],
+    initialData: item,
+    extraData: get(extraDataAtom),
   }))
 }
 
-// it would be nice if you could:
-const withExtraData = useAtomSelector(addExtraData, list)
+const list = [{ name: 'a' }, { name: 'b' }]
 
-// but you probably need to:
-const withExtraData = useAtomSelector(getters => addExtraData(getters, list))
+// Using instantiation expressions (TS versions >= 4.7):
+const withExtraData = useAtomSelector(addExtraData<typeof list>, list)
+
+// With TS versions < 4.7, you'll need to call the selector directly:
+const withExtraData2 = useAtomSelector(getters => addExtraData(getters, list))
 ```
 
-## AtomSelectorConfig
+Note that these are not exactly equivalent. Calling the selector directly essentially merges the called selector into the current selector or atom instance - the selector won't get its own node in the graph and will instead update the dependency graph of the current selector or atom instance. The above example works around that by wrapping the call in an inline selector, but that is undesirable in its own right.
 
-Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig object. This object has a required `selector` field and optional `argsComparator` and `resultsComparator` fields.
+While this is certainly undesirable, it isn't necessarily a problem. Still, prefer using instantiation expressions if they're available for you.
 
-- `selector` - The AtomSelector whose args and result we're configuring.
+## See Also
 
-- `argsComparator` - A function that accepts two parameters - the new args and old args - and should return a boolean. This function is called during component render (when used in `useAtomSelector`) or atom evaluation (when used in `injectAtomSelector` or Ion/AtomGetter `select` calls). This function is not called on the first render/evaluation. On subsequent renders/evaluations, if this function returns true, Zedux will not run the AtomSelector again. The selector will still run when its own dependencies update. Such runs will use the args from the previous run. If no `argsComparator` is set, Zedux will still prevent the AtomSelector from running if all args reference-match the previous args and the selector function reference is the same.
-
-- `resultsComparator` - A function that accepts two parameters - the new result and old result - and should return a boolean. If this function returns true, Zedux will not trigger a component rerender (when used in `useAtomSelector`) or an atom reevaluation (when used in `injectAtomSelector` or Ion/AtomGetter `select` calls). This function is not called on the first run. After that, it's called during render/evaluation after the selector runs due to args changing (according to the `argsComparator` logic described above). It will also run after the selector runs due to any of its own dependencies updating.
-
-:::note
-AtomSelectorConfig options (other than `selector`) are ignored when passed to `ecosystem.select()` and nested `select()` calls. They're accepted overloads simply for interop convenience.
-:::
-
-```tsx live ecosystemId=AtomSelector/example resultVar=CountBy5
-const counterAtom = atom('counter', 0)
-
-function CountBy5() {
-  const { setState } = useAtomInstance(counterAtom)
-  const counter = useAtomSelector({
-    resultsComparator: newCount => newCount % 5,
-    selector: ({ get }) => get(counterAtom),
-  })
-
-  return (
-    <>
-      <div>Value: {counter}</div>
-      <button onClick={() => setState(state => state + 1)}>
-        Increment (click me 5 times)
-      </button>
-    </>
-  )
-}
-```
+- [The Selectors walkthrough](../../walkthrough/selectors)
+- [The `AtomSelectorConfig` type](AtomSelectorConfig)

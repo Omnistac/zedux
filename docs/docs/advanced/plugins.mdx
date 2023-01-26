@@ -1,0 +1,14 @@
+---
+id: plugins
+title: Plugins
+---
+
+While Zedux is designed to be extremely useful out of the box, that doesn't mean it handles everything. Plugins satisfy the extremes of hackability.
+
+We know Zedux stores don't take middleware and we already know how to hook into a store's side effects layer using effects subscribers. But these are passive hooks. Sometimes you need more active control over state flow.
+
+Zedux doesn't offer a dedicated plugin system at the store level at all. In Zedux, plugins live on the ecosystem.
+
+:::tip you will learn:
+How to make a Zedux plugin and use it to implement global time travel
+:::

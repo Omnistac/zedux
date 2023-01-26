@@ -3,13 +3,28 @@ id: useAtomState
 title: useAtomState
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+import { InjectAtomStateLegend } from '../injectors/injectAtomState.mdx'
+
 ```ts
 import { useAtomState } from '@zedux/react'
 ```
 
 A React hook that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning a tuple of the current value and a state setter.
 
+This hook's return type is very similar to React's `useState()` hook.
+
+```ts
+const [val, setVal] = useState()
+// compare:
+const [state, setState] = useAtomState(myAtom, [...params])
+```
+
 The component that uses this hook will rerender whenever the resolved atom instance's state changes.
+
+If the resolved atom instance doesn't exist yet, `useAtomState()` creates it.
+
+The returned state setter is "export-infused" meaning it has all the exports of the resolved atom instance attached to it. This facilitates using exports to update the atom's state, rather than updating the state directly.
 
 ## Example
 
@@ -42,35 +57,29 @@ function Seconds() {
 Miscellaneous:
 
 ```ts
-const [val, setVal] = useAtomState(myAtom)
-const [withParams, setter] = useAtomState(myAtom, ['param 1', 'param 2'])
-const [fromInstance, setter] = useAtomState(instance)
+const [state, setState] = useAtomState(myAtom)
+const withParams = useAtomState(myAtom, ['param 1', 'param 2'])
+const fromInstance = useAtomState(myAtomInstance)
+const [, setterOnly] = useAtomState(myAtom)
+const [, { exports, only }] = useAtomState(myAtom)
 ```
 
 ## Signature
 
-```ts
-useAtomState(atom, params?) => [state, setState]
-```
+<Tabs>
+  {tab1(`useAtomState = (atomOrInstance, params?) => [state, setState]`)}
+  {tab2(`declare const useAtomState: {
+  <A extends StandardAtomBase<any, [], any, any>>(atom: A): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
+  <A extends StandardAtomBase<any, [...any], any, any>>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
+  <AI extends AtomInstance<any, [...any], any, any>>(instance: AI, params?: [], config?: ZeduxHookConfig): StateHookTuple<AtomInstanceStateType<AI>, AtomInstanceExportsType<AI>>;
+}`)}
+</Tabs>
 
-Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns a tuple of the resolved atom instance's current state and [state setter](../classes/AtomInstance#setstate).
+<InjectAtomStateLegend name="useAtomState" type="hook" />
 
-### Overloads
+## See Also
 
-```ts
-useAtomState(instance) => [state, setState]
-```
-
-### `atom`
-
-Required. The [atom](../classes/Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
-
-### `params`
-
-Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
-
-TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
-
-### `instance`
-
-Required (in this overload). An [atom instance](../classes/AtomInstance). Will register a dynamic dependency on the passed instance and return a tuple of the atom instance's current state and `.setState` function.
+- [`injectAtomState()`](../injectors/injectAtomState)
+- [`useAtomValue()`](useAtomValue)
+- [The Atom APIs walkthrough](../../walkthrough/atom-apis)
+- [`instance.setState()`](../classes/AtomInstance#setstate)

@@ -3,13 +3,17 @@ id: injectAtomSelector
 title: injectAtomSelector
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectAtomSelector } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that accepts an [AtomSelector](../types/AtomSelector) and registers graph dependencies on any atom instances the AtomSelector uses. Returns whatever the AtomSelector returns.
+An [injector](../glossary#injector) that accepts an [AtomSelector](../types/AtomSelector) and registers a dynamic graph dependency on the selector's cache.
 
-The selector will rerun every time the state of any of the dependencies it creates change. The atom instance that uses this injector will only reevaluate when the selector result changes.
+The selector will rerun every time any of its own dynamic dependencies update. The atom instance that uses this injector will only reevaluate when the selector result changes.
+
+Caches the selector's result in the ecosystem's [`.selectorCache`](../classes/SelectorCache) if it hasn't been cached yet. If this selector has been cached before with the exact same arguments, the selector doesn't run, and `injectAtomSelector()` returns the cached result.
 
 ## Example
 
@@ -25,7 +29,7 @@ const wrapperAtom = atom('wrapper', () => {
 
   return api({
     counterA,
-    counterB: instance.store.getState().counterB,
+    counterB: instance.getState().counterB,
   }).setExports({
     incrementA: () =>
       setState(state => ({ ...state, counterA: state.counterA + 1 })),
@@ -67,28 +71,88 @@ const selectorComposition = injectAtomSelector(
 )
 
 const staticVal = injectAtomSelector(
-  ({ getInstance }) => getInstance(myAtom).store.getState().someField
+  ({ getInstance }) => getInstance(myAtom).getState().someField
 )
 
 const staticValUsingEcosystem = injectAtomSelector(
   ({ ecosystem }) => ecosystem.get(myAtom).someField
 )
+
+// passing a selector cache directly:
+const cache = ecosystem.selectorCache.getCache(mySelector) // doesn't subscribe
+const value = injectAtomSelector(cache) // subscribes
 ```
 
 ## Signature
 
-```ts
-injectAtomSelector(atomSelectorOrConfig, ...args) => result
-```
+<Tabs>
+  {tab1(`injectAtomSelector = (selectable, ...args) => result`)}
+  {tab2(
+    `declare const injectAtomSelector: <T, Args extends any[]>(selectable: Selectable<T, Args>, ...args: Args) => T`
+  )}
+</Tabs>
 
-### `atomSelectorOrConfig`
+export const InjectAtomSelectorLegend = ({
+  name = 'injectAtomSelector',
+  type = 'injector',
+}) => (
+  <Legend>
+    <Item name="selectable">
+      <p>
+        Required. An <Link to="../types/AtomSelector">AtomSelector</Link>,{' '}
+        <Link to="../types/AtomSelectorConfig">AtomSelectorConfig</Link> object,
+        or a{' '}
+        <Link to="../classes/SelectorCacheInstance">SelectorCacheInstance</Link>{' '}
+        instance.
+      </p>
+      <p>
+        It's recommended to pass a stable function/object reference whenever
+        possible for best performance.
+      </p>
+      <p>
+        If an AtomSelector or AtomSelectorConfig object is passed,{' '}
+        <code>{name}()</code> runs the selector and caches the value if it
+        hasn't been cached yet. If the selector has been cached before with the
+        exact params (deep equality), Zedux doesn't run the selector and returns
+        the cached value.
+      </p>
+      <p>
+        If an SelectorCacheInstance is passed, <code>{name}()</code> simply
+        returns the cached value.
+      </p>
+      <p>
+        In all cases, <code>{name}()</code> registers a dynamic dependency on
+        the resolved selector cache - the current{' '}
+        {type === 'hook' ? 'React component' : 'atom instance'} will reevaluate
+        whenever the selector result changes
+      </p>
+    </Item>
+    <Item name="args">
+      <p>
+        Required if the selector takes arguments. Must not be passed otherwise.
+      </p>
+      <p>
+        Selector arguments should always be serializable values (no functions).
+        You can remove this requirement via the{' '}
+        <Link to="../types/EcosystemConfig#complexselectorparams">
+          <code>complexSelectorParams</code>
+        </Link>{' '}
+        ecosystem config option (not recommended).
+      </p>
+    </Item>
+    <Item name="Returns">
+      <p>
+        The result of running the selector. If the given selector + args combo
+        has been cached before, <code>{name}()</code> returns the cached value.
+      </p>
+    </Item>
+  </Legend>
+)
 
-The [AtomSelector](../types/AtomSelector) to run or an [AtomSelectorConfig object](../types/AtomSelector#atomselectorconfig) with the AtomSelector as the `selector` property.
+<InjectAtomSelectorLegend />
 
-### `args`
+## See Also
 
-The extra arguments to pass to the AtomSelector (besides the first AtomGetters arg, which Zedux passes for you). In TypeScript, all of the AtomSelector's required arguments are required here.
-
-### `result`
-
-Whatever the AtomSelector returns.
+- [The Selectors walkthrough](../../walkthrough/selectors)
+- [`useAtomSelector()`](../hooks/useAtomSelector)
+- [The `select` AtomGetter](../types/AtomGetters#select)

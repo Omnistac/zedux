@@ -3,6 +3,8 @@ id: createStore
 title: createStore
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { createStore } from '@zedux/react'
 ```
@@ -47,22 +49,61 @@ const bigComposedStore = createStore({
 
 ## Signature
 
+<Tabs>
+  {tab1(`createStore = (initialHierarchy?, initialState?) => store`)}
+  {tab2(`declare const createStore: {
+  <State = any>(initialHierarchy?: HierarchyDescriptor<State>, initialState?: State): Store<State>;
+  <State = any>(initialHierarchy: null | undefined, initialState: State): Store<State>;
+}`)}
+</Tabs>
+
+<Legend>
+  <Item name="initialHierarchy">
+    <p>
+      Optional. A{' '}
+      <Link to="../types/HierarchyDescriptor">HierarchyDescriptor</Link>{' '}
+      detailing the shape of the store.
+    </p>
+    <p>
+      This is not passed for zero-config stores. For configured stores (stores
+      with a reducer hierarchy), you don't have to pass this initially. You can
+      configure the store after creation via{' '}
+      <Link to="../classes/Store#use">store.use()</Link>.
+    </p>
+    <p>
+      If an object is passed, <code>createStore()</code> will spider through it
+      and create a reducer hierarchy. <code>createStore()</code> will then call
+      the generated root reducer to get the initial state of the store.
+    </p>
+    <p>
+      For TS users, it is most convenient to pass this up-front with configured
+      stores for automatic typing.
+    </p>
+  </Item>
+  <Item name="initialState">
+    <p>Optional. The initial state of the store.</p>
+    <p>
+      This can be passed for configured or zero-config stores. You don't have to
+      pass this initially. You can set the state after creation via{' '}
+      <Link to="../classes/Store#setstate">store.setState()</Link>.
+    </p>
+    <p>
+      For TS users, it is most convenient to pass this for automatic typing.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      A <Link to="../classes/Store">Zedux Store</Link>.
+    </p>
+  </Item>
+</Legend>
+
 ```ts
 createStore(initialHierarchy?, initialState?) => Store
 ```
 
-### `initialHierarchy`
+## See Also
 
-A [HierarchyDescriptor](../types/HierarchyDescriptor) that defines the shape of the store. The descriptor can be another store, a [reducer](../types/Reducer), or an object containing stores and/or reducers, nested indefinitely.
-
-If an object is passed, Zedux will spider through it and create a reducer hierarchy. Zedux will then call the generated root reducer to get the initial state of the store.
-
-If an initialState is also passed, Zedux will set that as the state before calling the root reducer.
-
-### `initialState`
-
-The initial state of the store. Stores can hold anything. If using the [zero-config pattern](../../walkthrough/stores#zero-config), pass `null` as the initialHierarchy.
-
-```ts
-const zeroConfigStore = createStore(null, 'initial state')
-```
+- [The Stores walkthrough](../../walkthrough/stores)
+- [The `HierarchyDescriptor` type](../types/HierarchyDescriptor)
+- [`injectStore()`](../injectors/injectStore)

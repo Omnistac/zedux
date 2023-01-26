@@ -3,11 +3,13 @@ id: injectStore
 title: injectStore
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectStore } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that creates a stable [Zedux store](../classes/Store). This reference will not change on subsequent evaluations of this atom instance.
+An [injector](../glossary#injector) that creates and returns a stable [Zedux store](../classes/Store). This reference will not change on subsequent evaluations of this atom instance.
 
 `injectStore` is the injector equivalent of both `useState` and `useReducer`, since Zedux stores cover both use cases (and more).
 
@@ -49,43 +51,129 @@ const composedStore = injectStore(() =>
   })
 )
 
-const nonSubscribingStore = injectStore('state', { shouldSubscribe: false })
+const nonSubscribingStore = injectStore('state', { subscribe: false })
+const hydratedStore = injectStore('default', { hydrate: true })
+const hydratedManually = injectStore(
+  hydration => createStore(hydration ?? 'default'),
+  { hydrate: true }
+)
+```
+
+## Prefer `store.use()`
+
+When creating a store composed of child stores and/or reducers, you may think to do it like this:
+
+```ts
+const store = injectStore(() => createStore({ a: storeA, b: storeB }))
+```
+
+This is fine **if** the child store references are stable. A common case where store references are technically unstable is when using stores injected from other atoms:
+
+```ts
+const storeA = injectAtomInstance(atomA).store
+const storeB = injectAtomInstance(atomB).store
+```
+
+Since atom instances can be force-destroyed, these stores are technically unstable references. To keep these references up-to-date in the parent store, prefer [`store.use()`](../classes/Store#use):
+
+```ts
+
 ```
 
 ## Signature
 
-```ts
-injectStore(initialValue?, config?) => Store
-```
+<Tabs>
+  {tab1(`injectStore = (valueOrFactory?, config?) => store`)}
+  {tab2(`declare const injectStore: {
+  <State = any>(
+    storeFactory: State | ((hydration?: State) => Store<State>),
+    config?: InjectStoreConfig
+  ): Store<State>
+  <State = undefined>(): Store<State>
+}`)}
+</Tabs>
 
-### Overloads
+<Legend>
+  <Item name="valueOrFactory">
+    <p>
+      Optional. The initial value of the store or a factory function that
+      returns a store using{' '}
+      <Link to="../factories/createStore">
+        <code>createStore()</code>
+      </Link>
+      .
+    </p>
+    <p>
+      This value will be ignored after the first evaluation of the current atom
+      instance.
+    </p>
+  </Item>
+  <Item name="config">
+    <p>Optional. An object with the following optional properties:</p>
+    <Tabs>
+      {tab1(`{ hydrate, subscribe }`)}
+      {tab2(`interface InjectStoreConfig {
+  hydrate?: boolean
+  subscribe?: boolean
+}`)}
+    </Tabs>
+    <Legend>
+      <Item name="hydrate">
+        <p>
+          Optional. Boolean. Default <code>false</code>. Whether to use a
+          hydration passed to{' '}
+          <Link to="../classes/Ecosystem#hydrate">
+            <code>ecosystem.hydrate()</code>
+          </Link>{' '}
+          as the initial state of the store.
+        </p>
+        <p>
+          Does nothing if no hydration exists in the ecosystem that matches the
+          current atom instance.
+        </p>
+        <p>
+          If true, calls this atom's{' '}
+          <Link to="../classes/Atom#hydrate">
+            <code>hydrate</code>
+          </Link>{' '}
+          config option (if any) to transform the hydrated value, then sets the
+          transformed value as the initial state of the store.
+        </p>
+        <p>
+          If the factory function overload is used, the transformed hydration
+          will be passed to the factory. It's up to you to use the hydrated
+          value to initialize your store's state.
+        </p>
+      </Item>
+      <Item name="subscribe">
+        <p>
+          Optional. Boolean. Default <code>true</code>. Whether state updates in
+          this store should trigger reevaluations of the current atom.
+        </p>
+        <p>
+          You should leave this alone unless you absolutely need to fine-tune
+          performance in your app. Messing with reactivity can lead to
+          hard-to-find bugs.
+        </p>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="Returns">
+    <p>
+      A <Link to="../classes/Store">Zedux store</Link>. If using the function
+      overload, this will be the store you returned.
+    </p>{' '}
+    <p>
+      This store is a stable reference - the reference will not change on
+      subsequent evaluations.
+    </p>
+  </Item>
+</Legend>
 
-```ts
-injectStore(createStore?, config?) => Store
-```
+## See Also
 
-### `initialValue`
-
-Optional. Can be anything but a function. This value will be set as the initial state of the store.
-
-```ts
-injectStore('initial store value!')
-```
-
-To set a function as the value, you must use the [`createStore`](#createstore) overload:
-
-```ts
-injectStore(() => createStore(null, myFunctionHere))
-```
-
-Typically it isn't recommended to set a function as a store's value. But there are certainly use cases.
-
-### `config`
-
-Optional. An object. Currently only accepts one property:
-
-- `shouldSubscribe` boolean. Default `true`. Indicates whether the current atom instance should subscribe to this store. Pass `false` to prevent this atom instance from reevaluating when the injected store's state changes (use sparingly!).
-
-### `createStore`
-
-Optional. A function that returns a manually-created store by calling [`createStore()`](../factories/createStore). This function will only be called once - when the atom instance is created. You should use this overload when creating a configured store (a reducer-driven store).
+- [`createStore()`](../factories/createStore)
+- [The `Store` class](../classes/Store)
+- Injectors that create specialized stores:
+  - [`injectMachineStore()`](injectMachineStore)
+  - [`injectPromise()`](injectPromise)

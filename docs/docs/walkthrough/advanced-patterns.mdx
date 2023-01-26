@@ -1,0 +1,190 @@
+---
+id: advanced-patterns
+title: Advanced Patterns
+---
+
+## Circular Dependencies
+
+It is always possible to design an atom graph without any circular dependencies. That said, sometimes it can be very hard to do so - requirements change, the new guy comes in, or sometimes the state is just very complex.
+
+Zedux' atomic model can't support circular dependencies ... or can it?
+
+Alright, strictly speaking, direct circular dependencies are not allowed:
+
+```ts
+const atomA = atom('a', () => {
+  injectAtomValue(atomB)
+})
+
+const atomB = atom('b', () => {
+  injectAtomValue(atomA) // <- circular dep! This will always break everything
+})
+```
+
+But there are a couple workarounds. The basic idea for all of them is: Create one of the dependencies asynchronously
+
+### Workaround 1
+
+Only make one dependency, e.g. `a -> b` (a depends on b). Load the other atom when needed, e.g. (in b) `get(atomA)`.
+
+```ts
+import {
+  api,
+  atom,
+  injectAtomGetters,
+  injectAtomInstance,
+  injectStore,
+} from '@zedux/react'
+
+const connectionAtom = atom('connection', () => {
+  const { getInstance } = injectAtomGetters()
+
+  // instead of calling getInstance during atom evaluation like this:
+  // const login = getInstance(loginAtom)
+  // we call it only when we need to (inside an exported callback):
+  // highlight-next-line
+  const logout = () => getInstance(loginAtom).exports.reset()
+
+  const post = (url: string, data: any) =>
+    fetch(url, { body: JSON.stringify(data), method: 'POST' }).then(data =>
+      data.json()
+    )
+
+  return api().setExports({ logout, post })
+})
+
+const loginAtom = atom('login', () => {
+  // highlight-next-line
+  const { post } = injectAtomInstance(connectionAtom).exports
+  const store = injectStore({ email: '', password: '' })
+
+  const reset = () => store.setState({ email: '', password: '' })
+  const setEmail = (email: string) => store.setStateDeep({ email })
+  const setPassword = (password: string) => store.setStateDeep({ password })
+  const submit = () => post('/login', store.getState())
+
+  return api(store).setExports({ reset, setEmail, setPassword, submit })
+})
+```
+
+(Note that the better solution is to move the `logout` function somewhere else - e.g. inside `loginAtom` - completely avoiding the circular dependency in the first place).
+
+### Workaround 2
+
+Use [manual graphing](destruction#manual-graphing) to add a dependency later.
+
+```ts
+const atomA = atom('a', () => {
+  const b = injectAtomValue(atomB)
+
+  return 'a' + b
+})
+
+const atomB = atom('b', () => {
+  const { getInstance } = injectAtomGetters
+  const store = injectStore('b')
+
+  injectEffect(() => {
+    const a = getInstance(atomA)
+    const cleanup = a.addDependent()
+    store.setState(a)
+
+    return cleanup
+  }, [])
+
+  return store
+})
+```
+
+In this case, these two atoms have real dependencies on each other. As such, they prevent each other from being cleaned up. You'll need to account for that by destroying the manually created edge or force destroying if destruction is needed.
+
+## Atom Instance Factories
+
+Zedux creates atom instances dynamically whenever they're first used. This is very convenient but takes some control out of your hands. Pro Tip: You can use Atom Selectors to get that control back.
+
+Remember that Atom Selectors can return absolutely anything. Well, that means they can also return atom instances. Also remember that atoms can export anything. Well, that means they can also export something that indicates if the atom instance was just created or is missing some ref value or ... anything!
+
+```ts
+const formFieldAtom = atom('formField', (fieldName: string) => {
+  const store = injectStore('')
+  const isValidRef = injectRef()
+
+  return api(store).setExports({ isValidRef })
+})
+
+const getFormFieldInstance = (
+  { getInstance }: AtomGetters,
+  fieldName: string,
+  isValid: (val: string) => boolean
+) => {
+  const instance = getInstance(formFieldAtom, [fieldName])
+
+  // if the formField doesn't have its validator set yet, set it
+  if (!instance.exports.isValidRef) {
+    instance.exports.isValidRef.current = isValid
+  }
+
+  return instance
+}
+
+function Form() {
+  // now instead of `useAtomInstance(formFieldAtom, 'email')`, do:
+  const emailFieldInstance = useAtomSelector(
+    getFormFieldInstance,
+    'email',
+    isValidEmail
+  )
+
+  // and instead of `useAtomInstance(formFieldAtom, 'password')`, do:
+  const passwordFieldInstance = useAtomSelector(
+    getFormFieldInstance,
+    'password',
+    isValidPassword
+  )
+  ...
+}
+```
+
+(Note that this is a contrived example. There may be better ways to do per-field form validation).
+
+## Params Are Constant
+
+Since Zedux creates a different atom instance if it detects different atom params, params are essentially constant; the params received by an atom instance can never change for the entire lifetime of that instance.
+
+This means you _can_ conditionally add/remove injectors based on params. We definitely don't recommend doing this, especially if you're new to Zedux. But we have found some situations where it's convenient.
+
+It also means that you don't need to pass params as deps to `injectMemo`, `injectEffect`, `injectCallback`, `injectPromise`, and similar injectors.
+
+```ts
+const requestAtom = atom('request', (endpoint: string) => {
+  let prefix = ''
+
+  if (!endpoint.startsWith('http')) {
+    prefix = injectAtomValue(protocolAtom) // not recommended...
+  }
+
+  injectEffect(() => {
+    fetch(`${prefix}${endpoint}`).then(...)
+  }, []) // <- don't need to pass endpoint or prefix
+})
+```
+
+## Updating other atoms during evaluation
+
+There shouldn't be a need for this, but it is actually fine to update other atom instances during atom evaluation **if** this is not the first evaluation:
+
+```ts
+const rogueAtom = atom('rogue', () => {
+  const reasons = injectWhy()
+  const victimInstance = injectAtomInstance(victimAtom)
+
+  victimInstance.setState('sadness') // <- Bad! Don't do this
+
+  // use injectWhy to determine if this is the initial evaluation (reasons is
+  // empty if it is):
+  if (reasons.length) {
+    victimInstance.setState('mwahahaha') // <- fine... but still probably don't
+  }
+  ...
+})
+```

@@ -1,0 +1,92 @@
+---
+id: custom-injectors
+title: Custom Injectors
+---
+
+If you use React, you've probably written custom hooks. These are functions whose names start with `use` and that compose other hooks.
+
+In Zedux, we have the same thing but for injectors. Custom injectors are just functions whose names start with `inject` and that compose other injectors.
+
+:::tip you will learn
+How to create, compose, and use custom injectors
+:::
+
+## Rules
+
+Custom injectors can do almost anything you want. They're Just JavaScript. Remember these rules:
+
+- Injectors should start with the word "inject" - e.g. `injectUserStream` or `injectFetchUser`.
+- Injectors contain calls to other injectors. Those can be built-in injectors or other custom ones. If the function doesn't call other injectors, it isn't an injector.
+- Injectors are composable. Your injector should be able to be used by other injectors. You'll probably never need to worry about this; most logic you might put in an injector should be fine.
+
+## An Example
+
+In the [quick start](quick-start), we referenced a theoretical custom `injectFetch` injector. Let's create it for real:
+
+```ts
+const injectFetch = (url: string) => {
+  const store = injectStore({ status: 'loading' })
+
+  injectEffect(async () => {
+    try {
+      const result = await fetch(url)
+      const data = await result.json()
+
+      store.setState({ data, status: 'success' })
+    } catch (err) {
+      store.setState({ error: err, status: 'error' })
+    }
+  }, [url])
+
+  return api(store).setPromise(promise)
+}
+```
+
+Now we can use this injector to fetch data in any other atom:
+
+```ts
+const usersAtom = atom('users', () => {
+  const { store } = injectFetch('/api/users')
+
+  return store
+})
+
+const friendsAtom = atom('friends', () => {
+  return injectFetch('/api/friends')
+})
+```
+
+Notice that in `usersAtom` we returned only the store, while in `friendsAtom` we returned the entire Atom API from `injectFetch`. Let's take a closer look at this flexibility afforded by Atom APIs:
+
+## Using Atom APIs
+
+Atom instances have 3 "meta data types" that you'll find yourself working with a lot in your state factories and custom injectors:
+
+- State (usually inside stores)
+- Exports
+- Promises
+
+The [Atom API](atom-apis) is a standard way to pass these 3 things around.
+
+```ts
+// This Atom API is essentially a container for the 3 meta data types:
+const myApi = api(myStore).setExports(myExports).setPromise(myPromise)
+
+// we can access all 3 easily:
+const { exports, promise, store } = myApi
+```
+
+Atom APIs are designed to be passed around between injectors and ultimately composed together into a single Atom API that gets returned from your state factory. You can of course pass stuff around however you want, but the Atom API is a useful standard for this.
+
+:::tip
+[`injectPromise()`](../api/injectors/injectPromise) itself uses this pattern - returning an Atom API with a store and promise attached.
+:::
+
+## Recap
+
+- Custom injectors can encapsulate any logic you want
+- Atom APIs are a convenient standard for passing stores, exports, and promises around
+
+## Next Steps
+
+Custom injectors have many uses. Let's look at using them to [reset atoms](resets).

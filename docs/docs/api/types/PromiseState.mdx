@@ -1,0 +1,68 @@
+---
+id: PromiseState
+title: PromiseState
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+The state shape that query atoms and `injectPromise` use. This shape is based off React Query's [queries](https://tanstack.com/query/v4/docs/react/reference/useQuery).
+
+## Definition
+
+```ts
+interface PromiseState<T> {
+  data?: T
+  error?: Error
+  isError: boolean
+  isLoading: boolean
+  isSuccess: boolean
+  status: PromiseStatus
+}
+
+type PromiseStatus = 'error' | 'loading' | 'success'
+```
+
+<Legend>
+  <Item name="data">
+    <p>
+      The promise's resolved value when the promise completes.{' '}
+      <code>undefined</code> until then.
+    </p>
+  </Item>
+  <Item name="error">
+    <p>
+      The promise's rejection value if the promise errors.{' '}
+      <code>undefined</code> until then.
+    </p>
+  </Item>
+  <Item name="isError">
+    <p>
+      A boolean. An alias for <code>state.status === 'error'</code>. Is set to
+      true if the promise rejects.
+    </p>
+  </Item>
+  <Item name="isLoading">
+    <p>
+      A boolean. An alias for <code>state.status === 'loading'</code>.{' '}
+      <code>true</code> initially. Is set to <code>false</code> when the promise
+      is fulfilled (resolved or rejected).
+    </p>
+  </Item>
+  <Item name="isSuccess">
+    <p>
+      A boolean. An alias for <code>state.status === 'success'</code>. Is set to
+      true when the promise resolves.
+    </p>
+  </Item>
+  <Item name="status">
+    <p>
+      A string. One of <code>'error'</code>, <code>'loading'</code>, or{' '}
+      <code>'success'</code>, reflecting the promise's current in-flight status.
+    </p>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Query Atoms walkthrough](../../walkthrough/query-atoms)
+- [`injectPromise()`](../injectors/injectPromise)

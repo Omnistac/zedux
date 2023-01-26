@@ -153,9 +153,9 @@ export const injectStore: {
       }
     },
     (prevInjector, instance) => {
-      const prevShouldSubscribe = !!prevInjector.cleanup
+      const prevsubscribe = !!prevInjector.cleanup
 
-      if (prevShouldSubscribe === subscribe) return prevInjector
+      if (prevsubscribe === subscribe) return prevInjector
 
       // we were subscribed, now we're not
       if (!subscribe) {
