@@ -1,0 +1,517 @@
+---
+id: persistence
+title: Persistence
+---
+
+There are many ways to persist and restore state "snapshots" in Zedux. It can be done at the atom instance, ecosystem, or plugin level.
+
+:::tip you will learn:
+
+- How to persist and restore a single atom instance's state
+- How to dehydrate and rehydrate an entire ecosystem
+- How to transform non-serializable atom values
+- One of many ways to accomplish this with plugins
+
+:::
+
+## Single Atom
+
+Let's start simple. We'll use `localStorage` for these examples, but you can use whatever means of storage you want.
+
+To persist the state of a single atom, we could use a separate atom to handle the persist/restore functionality.
+
+Here's an example using a separate `localStorageAtom` that we give a `key` param, creating a different `localStorageAtom` instance for every localStorage key we want to persist data to/from:
+
+```tsx live ecosystemId=persistence/separate-atom resultVar=Username
+const localStorageAtom = atom('localStorage', (key: string) => {
+  const val = localStorage.getItem(key)
+
+  // we're using the function overload of `injectStore` to prevent JSON.parse
+  // from running unnecesarily on reevaluations:
+  const store = injectStore(() =>
+    createStore(null, val ? JSON.parse(val) : undefined)
+  )
+
+  const update = (newVal: any) => {
+    store.setState(newVal)
+    localStorage.setItem(key, JSON.stringify(newVal))
+  }
+
+  return api(store).setExports({ update })
+})
+
+// this atom's state now persists across page reloads:
+const usernameAtom = atom('username', () => {
+  const [storedName, { update }] = injectAtomState(localStorageAtom, [
+    'username1', // <- the localStorage key
+  ])
+
+  return api(storedName || '').setExports({ update })
+})
+
+function Username() {
+  const [state, { update }] = useAtomState(usernameAtom)
+
+  return (
+    <div>
+      <input onChange={event => update(event.target.value)} value={state} />
+      <button onClick={() => location.reload()}>Refresh page</button>
+    </div>
+  )
+}
+```
+
+We could also use an injector.
+
+```tsx live ecosystemId=persistence/injector resultVar=Username
+const injectLocalStorage = (key: string, defaultVal: any) => {
+  const val = localStorage.getItem(key)
+
+  // we're using the function overload of `injectStore` to prevent JSON.parse
+  // from running unnecesarily on reevaluations:
+  const store = injectStore(() =>
+    createStore(null, val ? JSON.parse(val) : defaultVal)
+  )
+
+  const update = (newVal: any) => {
+    store.setState(newVal)
+    localStorage.setItem(key, JSON.stringify(newVal))
+  }
+
+  return [store, update] as const
+}
+
+// this atom's state now persists across page reloads:
+const usernameAtom = atom('username', () => {
+  const [store, update] = injectLocalStorage('username2', '')
+
+  return api(store).setExports({ update })
+})
+
+function Username() {
+  const [state, { update }] = useAtomState(usernameAtom)
+
+  return (
+    <div>
+      <input onChange={event => update(event.target.value)} value={state} />
+      <button onClick={() => location.reload()}>Refresh page</button>
+    </div>
+  )
+}
+```
+
+Yep, these approaches are very similar.
+
+## Ecosystem Persistence
+
+You can get a snapshot of the state of all atoms in an ecosystem with `ecosystem.inspectInstanceValues()`
+
+```ts
+import { atom, createEcosystem } from '@zedux/react'
+
+const exampleAtom = atom('example', () => 'Hello, world!')
+const ecosystem = createEcosystem({ id: 'root' })
+ecosystem.getInstance(exampleAtom)
+
+const snapshot = ecosystem.inspectInstanceValues() // { example: 'Hello, world!' }
+const serialized = JSON.stringify(snapshot)
+```
+
+This may be all you need. However, `inspectInstanceValues` is very "dumb" - it doesn't do anything special to transform the state, it just returns it as-is. Since atoms can hold anything, you may have a situation where you're storing non-serializable values (namely functions) in atoms. Data types from Immutable.js, for example, require an extra step to serialize/deserialize values.
+
+For these atoms you have two options:
+
+- Skip the non-serializable atom
+- Transform the atom's value to something that can be serialized.
+
+Ecosystems have a method that's better suited for both of these:
+
+### `ecosystem.dehydrate()`
+
+Like `.inspectInstanceValues()`, `.dehydrate()` returns an object mapping atom instance keyHashes to their current value. But `.dehydrate()` does a little more magic.
+
+You can blacklist atoms you don't want to dehydrate by passing `exclude` and/or `excludeFlags` options:
+
+```ts live ecosystemId=excludes-example resultVar=snapshot
+const skippedAtom = atom('skipped', ':(', { flags: ['no-persist'] })
+const alsoSkippedAtom = atom('alsoSkipped', ':O')
+const persistedAtom = atom('persisted', ':)')
+
+const ecosystem = createEcosystem({ id: 'exludes-example' })
+ecosystem.getInstance(skippedAtom)
+ecosystem.getInstance(alsoSkippedAtom)
+ecosystem.getInstance(persistedAtom)
+
+const snapshot = ecosystem.dehydrate({
+  exclude: [alsoSkippedAtom],
+  excludeFlags: ['no-persist'],
+})
+```
+
+Similarly, you can specify a whitelist of atoms you want to be dehydrated by passing `include` and/or `includeFlags` options:
+
+```ts live ecosystemId=includes-example resultVar=snapshot
+const skippedAtom = atom('skipped', ':(')
+const persistedAtom = atom('persisted', ':)', { flags: ['persist'] })
+const alsoPersistedAtom = atom('alsoPersisted', ':D')
+
+const ecosystem = createEcosystem({ id: 'includes-example' })
+ecosystem.getInstance(skippedAtom)
+ecosystem.getInstance(persistedAtom)
+ecosystem.getInstance(alsoPersistedAtom)
+
+const snapshot = ecosystem.dehydrate({
+  include: [alsoPersistedAtom],
+  includeFlags: ['persist'],
+})
+```
+
+Excludes take precedence over includes if you pass both.
+
+### `dehydrate` Atom Config
+
+Atoms can be configured with a `dehydrate` config option:
+
+```ts
+const exampleAtom = atom('example', () => initialState, {
+  dehydrate: state => transform(state),
+})
+```
+
+`ecosystem.dehydrate()` calls `dehydrate` when specified to transform the state of individual atom instances.
+
+Here's an example of an atom whose value is a JS Map, which can't be directly stringified. We use the `dehydrate` atom config option to tell Zedux how to transform this atom instance's state to a serializable value for dehydration:
+
+```tsx live ecosystemId=persistence/dehydrate resultVar=Dehydrator
+const transformingAtom = atom(
+  'transforming',
+  () => {
+    const store = injectStore(new Map([['counter', 0]]))
+
+    injectEffect(() => {
+      const handle = setInterval(() => {
+        store.setState(state =>
+          new Map(state).set('counter', state.get('counter') + 1)
+        )
+      }, 1000)
+
+      return () => clearInterval(handle)
+    })
+
+    return store
+  },
+  // turn the map into a JS object for serialization:
+  { dehydrate: state => Object.fromEntries(state.entries()) }
+)
+
+function Dehydrator() {
+  useAtomValue(transformingAtom) // just to instantiate it for this example
+  const ecosystem = useEcosystem()
+  const [dehydration, setDehydration] = useState()
+
+  return (
+    <>
+      <pre>{dehydration}</pre>
+      <button
+        onClick={() =>
+          setDehydration(JSON.stringify(ecosystem.dehydrate(), null, 2))
+        }
+      >
+        Dehydrate!
+      </button>
+    </>
+  )
+}
+```
+
+Now calls to `ecosystem.dehydrate()` call the `dehydrate` atom config function to transform the state of all instances of the `transforming` atom.
+
+### `ecosystem.hydrate()`
+
+The inverse of `ecosystem.dehydrate()`. After you get a state snapshot, use `ecosystem.hydrate()` to restore it.
+
+```ts live ecosystemId=hydrate-example resultVar=output
+const fooAtom = atom('foo', 1)
+const barAtom = atom('bar', 2)
+
+const ecosystem = createEcosystem({ id: 'hydrate-example' })
+const fooInstance = ecosystem.getInstance(fooAtom)
+const barInstance = ecosystem.getInstance(barAtom)
+
+const snapshot1 = ecosystem.dehydrate()
+
+fooInstance.setState(3) // change foo's state from 1 to 3
+const snapshot2 = ecosystem.dehydrate()
+
+ecosystem.hydrate(snapshot1) // restore the initial snapshot
+const snapshot3 = ecosystem.dehydrate()
+
+const output = { snapshot1, snapshot2, snapshot3 }
+```
+
+After hydration, any newly-initialized atom instances that have a matching key in the hydrated snapshot will receive their hydrated state after initializing.
+
+```ts live ecosystemId=atom-hydrate-example resultVar=snapshot
+const hydrateMe = atom('hydrateMe', (id: number) => {
+  return injectStore('non-hydrated state')
+})
+
+const ecosystem = createEcosystem({ id: 'atom-hydrate-example' })
+ecosystem.hydrate({ 'hydrateMe-[0]': 'hydrated state' })
+
+// these instances are created after hydration:
+ecosystem.getInstance(hydrateMe, [0])
+ecosystem.getInstance(hydrateMe, [1])
+
+const snapshot = ecosystem.inspectInstanceValues()
+```
+
+Hydration will also immediately update any existing atom instances with keyHashes in the snapshot. Pass `{ retroactive: false }` as the second parameter to `ecosystem.hydrate()` to disable this. With this option, only instances that are created after hydration will have their state hydrated.
+
+```ts live ecosystemId=no-retroactive-example resultVar=snapshot
+const hydrateMe = atom('hydrateMe', (id: number) => {
+  return injectStore('non-hydrated state')
+})
+
+const ecosystem = createEcosystem({ id: 'no-retroactive-example' })
+
+// these instances are created before hydration, so won't be updated:
+ecosystem.getInstance(hydrateMe, [0])
+ecosystem.getInstance(hydrateMe, [1])
+
+ecosystem.hydrate({ 'hydrateMe-[0]': 'hydrated state' }, { retroactive: false })
+
+const snapshot = ecosystem.inspectInstanceValues()
+```
+
+### `hydrate` Atom Config
+
+Atoms can be configured with a `hydrate` transformation function:
+
+```ts
+const exampleAtom = atom('example', initialState, {
+  hydrate: rawVal => transform(rawVal),
+})
+```
+
+This can be used to transform dehydrated values back to non-serializable form. Let's return to our JS Map example:
+
+```tsx live ecosystemId=persistence/hydrate resultVar=Dehydrator
+const transformingAtom = atom(
+  'transforming',
+  () => {
+    const store = injectStore(new Map([['counter', 0]]))
+
+    injectEffect(() => {
+      const handle = setInterval(() => {
+        store.setState(state =>
+          new Map(state).set('counter', state.get('counter') + 1)
+        )
+      }, 1000)
+
+      return () => clearInterval(handle)
+    })
+
+    return store
+  },
+  // transform the map to and from a JS object:
+  {
+    dehydrate: state => Object.fromEntries(state.entries()),
+    hydrate: rawState => new Map(Object.entries(rawState)),
+  }
+)
+
+function Counter() {
+  const map = useAtomValue(transformingAtom)
+
+  return <div>Counter: {map.get('counter')}</div>
+}
+
+function Dehydrator() {
+  const ecosystem = useEcosystem()
+  const [dehydration, setDehydration] = useState()
+
+  return (
+    <>
+      <Counter />
+      <pre>{dehydration}</pre>
+      <button
+        onClick={() =>
+          setDehydration(JSON.stringify(ecosystem.dehydrate(), null, 2))
+        }
+      >
+        Dehydrate!
+      </button>
+      {dehydration && (
+        <button onClick={() => ecosystem.hydrate(JSON.parse(dehydration))}>
+          Hydrate!
+        </button>
+      )}
+    </>
+  )
+}
+```
+
+## Store Hydration
+
+The default hydration flow hydrates the store after the atom instance's initial evaluation ends. This means that if your state factory's main store was injected without `subscribe: false`, it will immediately trigger a second evaluation.
+
+This is usually fine. But of course you can control this behavior with 2 steps:
+
+1. Hydrate the injected store's state yourself.
+2. Tell Zedux not to automatically hydrate this atom.
+
+To hydrate the store's state, use the `hydrate` option of [`injectStore`](../api/injectors/injectStore):
+
+```ts
+const store = injectStore(defaultValue, { hydrate: true })
+```
+
+The store's state will be set to the hydration matching the current atom instance, after passing it to the `hydrate` atom config option (if any) to transform the value. If there is no hydration for the current atom instance, passing `{ hydrate: true }` does nothing.
+
+```ts live resultVar=output
+const myAtom = atom(
+  'myKey',
+  () => {
+    const store = injectStore('default', { hydrate: true })
+  },
+  { hydrate: hydration => `${hydration} and transformed!` }
+)
+
+const ecosystem = createEcosystem({ id: 'hydrate-flow-example' })
+ecosystem.hydrate({ myKey: 'hydrated' })
+
+const output = ecosystem.get(myAtom)
+```
+
+When the function overload is used, the hydration will be passed to your `storeFactory` function. It's up to you to use the hydration to set your store's initial state.
+
+```ts
+const store = injectStore(
+  hydration => createStore(null, hydration ?? defaultValue),
+  { hydrate: true }
+)
+// (this specific example is exactly equivalent to:)
+const store = injectStore(defaultValue, { hydrate: true })
+```
+
+If there is no hydration, this parameter will be undefined.
+
+Now for the 2nd step:
+
+## `manualHydration`
+
+Set this atom config option to `true` to prevent Zedux from automatically hydrating instances of the atom. You'll usually want to pair this with passing `hydrate: true` to a single `injectStore` in the atom's state factory.
+
+```ts
+const exampleAtom = atom(
+  'example',
+  () => {
+    const store = injectStore(defaultValue, { hydrate: true })
+    const internalStore = injectStore() // can inject other, non-hydrated stores
+
+    return store // Zedux won't hydrate this store's state after init now
+  },
+  {
+    manualHydration: true, // prevent automatic hydration
+  }
+)
+```
+
+## `consumeHydrations`
+
+By default, once a hydration has been set, it stays in the ecosystem forever. You can override the hydration with a new one. For example:
+
+```ts
+ecosystem.hydrate({ key: 'hydrated value' })
+ecosystem.hydrate({ key: 'different value' }) // overrides the first hydration
+```
+
+But there's no way to undo the hydration (currently). This means that every time an atom instance is destroyed/recreated it will be hydrated again. Sometimes you'll only want to hydrate once and then never again. You can accomplish this with the ecosystem-level and atom-level `consumeHydrations` config option:
+
+```tsx
+const ecosystem = createEcosystem({
+  consumeHydrations: true,
+  id: 'root',
+})
+
+// or
+<EcosystemProvider consumeHydrations id="root">
+  {children}
+</EcosystemProvider>
+```
+
+With this set at the ecosystem level, all atoms in the ecosystem will "consume" their hydration the first time they hydration is used, removing the hydration from the ecosystem. Set it at the atom level to override the ecosystem's behavior for a particular atom.
+
+```ts live resultVar=output
+const exampleAtom = atom(
+  'example',
+  () => injectStore('no hydration', { hydrate: true }), // consume the hydration
+  { consumeHydrations: true }
+)
+
+const ecosystem = createEcosystem({ id: 'consume-hydration-example' })
+ecosystem.hydrate({ example: 'hydrated state!' })
+
+let instance = ecosystem.getInstance(exampleAtom)
+const firstState = instance.getState()
+
+instance.destroy()
+instance = ecosystem.getInstance(exampleAtom) // hydration is now gone
+
+const secondState = instance.getState()
+const output = { firstState, secondState }
+```
+
+:::note
+Even though we're not using `manualHydration`, this example atom will not evaluate twice. The `injectStore` call will consume the hydration immediately, so it won't be there when Zedux tries to hydrate the store after the initial evaluation.
+:::
+
+With this flag set, hydrations will also be consumed for atom instances that are hydrated immediately when calling `ecosystem.hydrate()` without `{ retroactive: false }`.
+
+## Reactivity Via Plugins
+
+The `localStorage` single atom examples we gave at the beginning of this page were beautifully reactive - they would persist the atom's state immediately on state change. None of our ecosystem examples do that. We have to manually call `ecosystem.dehydrate()` e.g. in response to a button press or on an interval.
+
+By default, ecosystems don't receive any kind of update when individual atom instances change state. This is by design, for performance reasons. However, it is possible to turn this behavior on with plugins.
+
+Make sure your plugin turns on the `stateChanged` mod.
+
+```ts
+import { createEcosystem, ZeduxPlugin } from '@zedux/react'
+
+const plugin = new ZeduxPlugin({
+  registerEcosystem: ecosystem => {
+    const subscription = ecosystem.modsMessageBus.subscribe({
+      effects: ({ action }) => {
+        if (action.type !== ZeduxPlugin.actions.stateChanged.type) return
+
+        const snapshot = ecosystem.dehydrate({ includeFlags: ['persist'] })
+        localStorage.setItem('snapshot', snapshot)
+      },
+    })
+
+    return () => subscription.unsubscribe()
+  },
+})
+
+plugin.modsStore.setState({ stateChanged: true })
+
+const ecosystem = createEcosystem({ id: 'root' })
+ecosystem.registerPlugin(plugin)
+```
+
+## Recap
+
+- Use `ecosystem.dehydrate()` to get a state snapshot of all or some of the atoms in the ecosystem.
+  - Use the `dehydrate` atom config option to transform the state of individual atoms to a serializable or shortened form.
+- Use `ecosystem.hydrate()` to restore a state snapshot.
+  - Use the `hydrate` atom config option to transform hydrations for individual atoms.
+- The `{ hydrate: true }` `injectStore` option sets the store's initial state to the hydrated value.
+- Use the `manualHydration` atom config option to prevent Zedux from automatically hydrating individual atoms.
+- Use the `consumeHydrations` atom config or ecosystem config options to prevent atoms from being hydrated again after being destroyed and recreated.
+- Use a plugin with the `stateChanged` mod to reactively persist snapshots.
+
+## Next Steps
+
+Now we know the basics of persistence. Let's use these tools to implement [SSR](ssr).

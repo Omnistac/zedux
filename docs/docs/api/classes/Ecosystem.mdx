@@ -144,7 +144,7 @@ Destroys all atom instances in the ecosystem, cleans up the ecosystem itself (e.
 
 Optional. A boolean. Default: `false`. If true, will destroy the ecosystem even if it's currently being provided over React context (via `<EcosystemProvider>`).
 
-### `.findInstances`
+### `.inspectInstances`
 
 Returns a list of instances that match the given atom.
 
@@ -156,22 +156,22 @@ const myAtom = atom('my', (param: string) => param)
 myEcosystem.getInstance(myAtom, ['a'])
 myEcosystem.getInstance(myAtom, ['b'])
 
-myEcosystem.findInstances(myAtom)
+myEcosystem.inspectInstances(myAtom)
 // [<AtomInstance with params ['a']>, <AtomInstance with params ['b']>]
-myEcosystem.findInstances('my')
+myEcosystem.inspectInstances('my')
 // [<AtomInstance with params ['a']>, <AtomInstance with params ['b']>]
 ```
 
 #### Signature
 
 ```ts
-.findInstances(atom)
+.inspectInstances(atom)
 ```
 
 #### Overloads
 
 ```ts
-.findInstances(key)
+.inspectInstances(key)
 ```
 
 #### `atom`
@@ -210,7 +210,7 @@ TS users will be required to pass this for atoms that take params. If you don't 
 
 #### `instance`
 
-Required. An atom instance whose value we're getting. This overload is just an alias for [`instance.store.getState()`](AtomInstance#store).
+Required. An atom instance whose value we're getting. This overload is just an alias for [`instance.getState()`](AtomInstance#getstate).
 
 #### Example
 
@@ -245,7 +245,7 @@ TS users will be required to pass this for atoms that take params. If you don't 
 const instance = rootEcosystem.getInstance(myAtom)
 const withParams = rootEcosystem.getInstance(paramsAtom, ['param 1', 'param 2'])
 
-instance.store.getState()
+instance.getState()
 instance.setState('new state')
 ```
 

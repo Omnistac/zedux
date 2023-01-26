@@ -203,17 +203,19 @@ We expect Zedux to grow a little and Recoil to shrink if it drops support for ol
 
 ## Synchronous Evaluation
 
-Recoil atoms handle promises implicitly. The goal is to make it so you "don't have to think about it", but in our experience that isn't the case. A big asynchronous graph can get very difficult to reason about and we found ourselves using the `waitForAll`/`waitForAllSettled`/`waitForNone`/`waitForAny` helpers more and more and wanting more advanced control e.g. with RxJS.
+Recoil atoms handle promises implicitly. The goal is to make it so you "don't have to think about it", but in our experience that isn't the case. A big asynchronous graph can get very difficult to reason about and we found ourselves using the `waitForAll`/`waitForAllSettled`/`waitForNone`/`waitForAny` helpers more and more and wanting more advanced control e.g. using RxJS to buffer socket messages and flush on an interval.
 
 Zedux atoms always evaluate synchronously. While Zedux has several helpers for handling promises, state factories themselves can't be asynchronous. This means you always get the default value when using an atom that may be waiting for its data. That in turn means you may need to explicitly:
 
 - handle `null`/`undefined`/`isLoading` states until data comes in.
 - control asynchronous flows using `Promise.all`/`Promise.race` or any async helper library like RxJS.
 
+Zedux does have React suspense support. But as far as managing asynchronous state between atoms, Zedux suffers from all the age-old async difficulties - imperative state, race conditions, etc. But this was a conscious decision we made because it gives you full control. Modern tooling and some of Zedux' own helpers should make async state manageable.
+
 While this seems like it would be undesirable, we've come to prefer it. Zedux' initial atom PoC used implicit suspense-like promise handling and we really didn't like it. Our key takeaways:
 
 - Explicit is good
-- Rewriting the async wheel is bad
+- Reinventing the async wheel is bad
 
 Specifically the ability to use observables inside atoms is a real game changer:
 
@@ -316,6 +318,41 @@ const TodoResetButton = () => {
 }
 ```
 
+Zedux (using a seperate reset stream):
+
+```tsx
+const resetAtom = atom('reset')
+const injectReset = callback => {
+  const resetInstance = injectAtomInstance(resetAtom)
+
+  injectEffect(() => {
+    const subscription = resetInstance.store.subscribe({
+      effects: () => callback(),
+    })
+
+    return () => subscription.unsubscribe()
+  }, [resetInstance])
+}
+
+const todoListAtom = atom('todoList', () => {
+  const store = injectStore([])
+
+  injectReset(() => store.setState([]))
+
+  return store
+})
+
+const GlobalResetButton = () => {
+  const instance = useAtomInstance(resetAtom)
+
+  return (
+    <button onClick={() => instance.dispatch({ type: 'reset' })}>Reset</button>
+  )
+}
+```
+
 ## Conclusion
 
-Most of these differences are honestly not that significant and come down to personal preference. Recoil's promise handling can be very cool if it works for you. Recoil's out-of-the-box snapshots can also give some quick gains. But the power and simplicity of Zedux' side effects model is unrivaled.
+Most of these differences are honestly not that significant and come down to personal preference. Recoil's promise handling can be very cool if it works for you. The ability to attach exports to atoms in Zedux is very powerful. There are tons of little differences, but:
+
+Overall, we designed Zedux to handle _more_ use cases. Everything, in fact. If you're worried about Recoil becoming too restrictive as your app scales, Zedux might be a good fit for you.

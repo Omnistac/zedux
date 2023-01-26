@@ -3,13 +3,15 @@ id: injectAtomInstance
 title: injectAtomInstance
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectAtomInstance } from '@zedux/react'
 ```
 
 An [injector](../glossary#injector) that accepts an atom and its params and registers a [static graph dependency](../glossary#static-graph-dependency) on the resolved atom instance. Returns the resolved [atom instance object](../classes/AtomInstance).
 
-Since the dependency is static, the atom instance that uses this injector will not reevaluate when the resolved atom instance's state changes.
+Since the dependency is static, the atom instance that uses this injector will not reevaluate when the resolved atom instance's state changes. However, it will reevaluate when the atom instance's promise changes or when the atom instance is destroyed.
 
 You can also pass an atom instance directly to register a static graph dependency on instances received from other sources, e.g. an [atom instance param](../classes/AtomInstance#params).
 
@@ -24,7 +26,7 @@ const secondsAtom = atom('seconds', () => {
 
   injectEffect(() => {
     const intervalId = setInterval(() => {
-      const shouldCount = shouldCountInstance.store.getState()
+      const shouldCount = shouldCountInstance.getState()
       if (!shouldCount) return
 
       store.setState(val => val + 1)
@@ -61,62 +63,81 @@ const withParams = injectAtomInstance(myAtom, ['param 1', 'param 2'])
 const injectCustomStuff = () => {
   const instance = injectAtomInstance(myAtom, [], 'injectCustomStuff')
 }
-
-// you can bypass the graph registration by passing `false` as the 4th param:
-// (you won't typically use this)
-injectAtomInstance(myAtom, [], 'myOperation', false)
 ```
 
 ## Signature
 
-```ts
-injectAtomInstance(
-  atom,
-  params?,
-  operation?,
-  shouldRegisterDependency?
-) => AtomInstance
-```
+<Tabs>
+  {tab1(
+    `injectAtomInstance = (atomOrInstance, params?, operation?) => instance`
+  )}
+  {tab2(`declare const injectAtomInstance: {
+  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>;
+  <A extends AtomBase<any, [...any], any>>(atom: A, params: AtomParamsType<A>, operation?: string): AtomInstanceType<A>;
+  <AI extends AtomInstanceBase<any, [...any], any>>(instance: AI, params?: [], operation?: string): AI;
+}`)}
+</Tabs>
 
-Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns the resolved [atom instance](../classes/AtomInstance).
+export const InjectAtomInstanceLegend = ({
+  name = 'injectAtomInstance',
+  thirdParam,
+}) => (
+  <Legend>
+    <Item name="atomOrInstance">
+      <p>
+        Required. An <Link to="../classes/Atom">Atom</Link> or{' '}
+        <Link to="../classes/AtomInstance">atom instance</Link>.
+      </p>
+      <p>
+        If an atom is passed, you must also pass any required params of the
+        atom.
+      </p>
+      <p>
+        If an atom instance is passed, the params are ignored. In this case,{' '}
+        <code>{name}()</code> returns the passed instance as-is.
+      </p>
+      <p>
+        In all cases, <code>{name}()</code> registers a static dependency on the
+        resolved instance.
+      </p>
+    </Item>
+    <Item name="params">
+      <p>Required if the passed atom takes required params. Optional if not.</p>
+      <p>
+        Don't pass this or pass an empty array if the atom does not take params
+        or if passing an atom instance.
+      </p>
+    </Item>
+    {thirdParam}
+    <Item name="Returns">
+      <p>The resolved atom instance.</p>
+      <p>
+        Uses the passed atom + params combo to find an existing atom instance.
+        If no instance is found, creates one and returns it.
+      </p>
+    </Item>
+  </Legend>
+)
 
-### Overloads
+<InjectAtomInstanceLegend
+  thirdParam={
+    <Item name="operation">
+      <p>
+        Optional. A string (default <code>'injectAtomInstance'</code>).
+      </p>
+      <p>
+        You usually won't need to worry about this. Passing an operation string
+        can help with debugging e.g. if the instance throws an error or when
+        inspecting the instance's list of injectors (
+        <code>instance._injectors</code> - don't use this unless you know what
+        you're doing!)
+      </p>
+    </Item>
+  }
+/>
 
-```ts
-injectAtomInstance(
-  instance,
-  params?,
-  operation?,
-  shouldRegisterDependency?
-) => AtomInstance
-```
+## See Also
 
-### `atom`
-
-Required. The [atom](../classes/Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
-
-### `params`
-
-Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
-
-TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
-
-Pass an empty array if the atom doesn't take params but you're passing `operation` and/or `shouldRegisterDependency`.
-
-### `operation`
-
-Optional. A string. Default `'injectAtomInstance'`. Identifies this usage of `injectAtomInstance` for debugging purposes. Specifically, this will identify the [graph edge](../glossary#graph-edge) Zedux creates for this dependency.
-
-As an example, when using this injector inside a custom injector, this may be the custom injector's name.
-
-You typically won't need to pass this.
-
-### `shouldRegisterDependency`
-
-Optional. A boolean. Default `true`. Whether this call should register a static graph dependency on the resolved atom instance.
-
-You typically won't pass this.
-
-### `instance`
-
-Required (in this overload). An [atom instance](../classes/AtomInstance). Will register a static dependency on the passed instance and return it.
+- [The Atom Instances walkthrough](../../walkthrough/atom-instances)
+- [`useAtomInstance()`](../hooks/useAtomInstance)
+- [The `getInstance()` AtomGetter](../types/AtomGetters#getinstance)

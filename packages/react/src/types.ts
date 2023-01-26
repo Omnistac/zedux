@@ -7,7 +7,7 @@ import {
   StandardAtomBase,
 } from './classes'
 import { AtomApi } from './classes/AtomApi'
-import { AtomSelectorCache } from './classes/SelectorCache'
+import { SelectorCacheInstance } from './classes/SelectorCache'
 
 export type ActiveState = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
 
@@ -407,7 +407,7 @@ export interface RefObject<T = any> {
 export type Selectable<T = any, Args extends any[] = []> =
   | AtomSelector<T, Args>
   | AtomSelectorConfig<T, Args>
-  | AtomSelectorCache<T, Args>
+  | SelectorCacheInstance<T, Args>
 
 export type SetStateInterceptor<State = any> = (
   settable: Settable<State>,

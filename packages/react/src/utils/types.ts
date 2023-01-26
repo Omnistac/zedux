@@ -6,7 +6,7 @@ import {
 } from '@zedux/react/types'
 import { MachineStore, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
-import { AtomSelectorCache } from '../classes/SelectorCache'
+import { SelectorCacheInstance } from '../classes/SelectorCache'
 
 export interface AtomInjectorDescriptor<
   InstanceType extends AtomInstanceBase<any, any[], any>
@@ -122,7 +122,7 @@ export interface InstanceStackItem extends StackItemBase {
 }
 
 export interface SelectorStackItem extends StackItemBase {
-  cache: AtomSelectorCache
+  cache: SelectorCacheInstance
 }
 
 export type StackItem = InstanceStackItem | SelectorStackItem

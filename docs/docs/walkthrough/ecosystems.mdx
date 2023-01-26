@@ -5,22 +5,34 @@ title: Ecosystems
 
 All atoms live in an atom ecosystem. An ecosystem is like an isolated group of atoms. Atoms in an ecosystem can interact with each other, but are unaware of atoms in other ecosystems.
 
+Ecosystems are a huge part of Zedux. We call Zedux a "molecular state engine for React". Ecosystems are the molecular part.
+
+:::tip you will learn:
+
+- How to create and configure an ecosystem.
+- How to provide an ecosystem to your app.
+- What ecosystems look like
+
+:::
+
 There are 2 types of ecosystems:
 
 - Global
 - Custom
 
-### Global
+## Global
 
 There is exactly one global atom ecosystem. You don't need to create it; it is created automatically if you don't create an ecosystem.
 
-Zedux is designed to allow an app to use only the global ecosystem. And for small apps and simple examples, that's fine. However, this approach can only get you so far. The global ecosystem is not configurable. Thus it lacks some advanced features like [dependency injection](dependency-injection) and [preloading](../api/classes/Ecosystem#onready). The global ecosystem can also be unruly in tests, since it requires manual cleanup.
+Zedux is designed to allow an app to use only the global ecosystem. And for small apps and simple examples, that's fine. However, this approach can only get you so far. The global ecosystem is not configurable. Thus it lacks some advanced features like [dependency injection overrides](overrides) and [preloading](../api/classes/Ecosystem#onready). The global ecosystem can also be unruly in tests, since it requires manual cleanup.
 
-### Custom
+## Custom
 
-There are 2 ways to create custom ecosystems
+The most common. You will probably want to create exactly one custom ecosystem in your app.
 
-#### `EcosystemProvider`
+There are 2 ways to create custom ecosystems:
+
+### `EcosystemProvider`
 
 The simplest way to create an ecosystem is by rendering an [EcosystemProvider](../api/components/EcosystemProvider):
 
@@ -46,7 +58,7 @@ Nesting EcosystemProviders currently has no special functionality. Rendering an 
 
 Most apps will want to use custom ecosystems.
 
-#### `createEcosystem()`
+### `createEcosystem()`
 
 For even more control, you can can create an ecosystem using the exported `createEcosystem()` factory.
 
@@ -66,57 +78,200 @@ function App() {
 
 Ecosystems created this way can be controlled outside React. This means you can preload atoms, manipulate atoms, analyze the graph, and destroy the ecosystem without ever rendering a component. This is extremely useful for testing and for isomorphic codebases.
 
+## Getting the Ecosystem
+
+### `useEcosystem()`
+
+Every component below an `<EcosystemProvider>` in the tree can access the ecosystem via [`useEcosystem()`](../api/hooks/useEcosystem).
+
+```tsx
+import { EcosystemProvider, useEcosystem } from '@zedux/react'
+
+function Child() {
+  const ecosystem = useEcosystem()
+}
+
+function App() {
+  return (
+    <EcosystemProvider id="main">
+      <Child />
+    </EcosystemProvider>
+  )
+}
+```
+
+### `injectAtomGetters()`
+
+All atom instances created in an ecosystem can access the ecosystem via [`injectAtomGetters()`](../api/injectors/injectAtomGetters).
+
+```ts
+import { atom, injectAtomGetters } from '@zedux/react'
+
+const myAtom = atom('my', () => {
+  const { ecosystem } = injectAtomGetters()
+})
+```
+
+More on this hook in [the Atom Getters walkthrough](atom-getters).
+
+### `getEcosystem()`
+
+You can get an ecosystem completely outside React or atoms with the exported `getEcosystem` function:
+
+```ts
+import { getEcosystem } from '@zedux/react'
+
+// get the ecosystem we created via `createEcosystem({ id: 'root' })`
+const ecosystem = getEcosystem('root')
+```
+
 ## Configuring Ecosystems
 
-Ecosystems created manually (via the `createEcosystem()` factory) can take configuration options.
+Ecosystems created manually can take configuration options. We'll touch on a few here. See [the `Ecosystem` API](../api/classes/Ecosystem) for more info.
+
+All config options are optional, but it's recommended to at least pass an `id`.
+
+### `id`
+
+A string that uniquely identifies the ecosystem. The string `'global'` is reserved for the global ecosystem.
+
+```tsx
+return <EcosystemProvider id="root">...</EcosystemProvider>
+// or
+const ecosystem = createEcosystem({ id: 'root' })
+```
+
+### `context`
+
+An object containing absolutely anything. This can be used to supply some outside data to the atoms universe. For example, if you're migrating to Zedux from a different state management tool, you could pass a reference to the other library's state container (e.g. a Redux store).
+
+This will be set as the `.context` property on the ecosystem. It's also passed as the 2nd param to the [`onReady` function](#onready).
+
+```tsx
+return <EcosystemProvider context={{ reduxStore }}>...</EcosystemProvider>
+// or
+const ecosystem = createEcosystem({ context: { reduxStore } })
+```
+
+Context is also useful when resetting the ecosystem. More on that in [the resets walkthrough](resets).
 
 ### `onReady`
 
-A function that will run immediately - as soon as the ecosystem is created. Used to bootstrap the initial state of the app, kick off initial side effects, set up state hydration, and other startup-y things.
+A function that will run immediately (when the ecosystem is created) and whenever the ecosystem is reset. Used to bootstrap the initial state of the app, kick off initial side effects, alleviate render waterfalls, set up state hydration, and other startup-y things.
 
-See [the `Ecosystem` API](../api/classes/Ecosystem#onready) for more info.
+```tsx
+const onReady = (ecosystem, context) => {
+  if (context.reduxStore) {
+    // preload a theoretical atom that hooks into a Redux store
+    ecosystem.getInstance(reduxAtom)
+  }
+}
 
-### `overrides`
+return <EcosystemProvider onReady={onReady}>...</EcosystemProvider>
+// or
+const ecosystem = createEcosystem({ onReady })
+```
 
-A list of atoms that will override any atoms with matching keys used in this ecosystem. More on this in the [dependency injection walkthrough](dependency-injection).
+## Methods & Properties
 
-## Ecosystem Design Patterns
+The ecosystem object itself has many useful methods. You can use these to inspect the dependency graph, get the current state of all atoms, set atom overrides, and a lot more. We'll get to most of these throughout the walkthrough. See the [`Ecosystem` API](../api/classes/Ecosystem) for all the goodness.
 
-There are 3 main design patterns around atom ecosystems. Choose the most appropriate for your app.
+### `getInstance`
 
-### Single Ecosystem
+Returns the atom instance for the given atom + params combo. Creates the instance if it doesn't exist yet. This is the simplest way to preload atoms.
 
-![](/img/diagrams/atom-ecosystems-single-ecosystem.png)
+```ts
+const rootEcosystem = createEcosystem({
+  id: 'root',
+  onReady: ecosystem => {
+    ecosystem.getInstance(myAtom)
+    ecosystem.getInstance(myAtom, ['with', 'params'])
+  },
+})
+```
 
-The most common. In the single ecosystem approach, you render one EcosystemProvider - creating a single custom ecosystem. The global ecosystem is not used.
+### `inspectInstances`
 
-Most apps will only need one ecosystem, though more can be created to purposefully create isolated groups of atoms. Tests will typically each create their own ecosystem to take advantage of DI and the automatic cleanup on unmount.
+Returns an object of all atom instances in the ecosystem, each instance keyed by a string that consists of its atom key + its serialized parameters.
 
-Most apps will want to make use of the powerful features of EcosystemProviders. This approach is recommended in most situations.
+```tsx live ecosystemId=ecosystems/inspectInstances resultVar=Inspect
+const ecosystem = createEcosystem({ id: 'inspectInstances-test' })
+const testAtom = atom('test', (key?: number) => null)
 
-### Global Only
+ecosystem.getInstance(testAtom)
+ecosystem.getInstance(testAtom, [1])
 
-![](/img/diagrams/atom-ecosystems-global-only.png)
+function Inspect() {
+  const instances = ecosystem.inspectInstances()
 
-In the global only approach, all atoms live in the global ecosystem. This is done by never rendering an EcosystemProvider. If no EcosystemProvider is rendered, all atoms are added to the global ecosystem by default.
+  return (
+    <button onClick={() => console.log('Instances:', instances)}>
+      Log Instances
+    </button>
+  )
+}
+```
+
+### `inspectInstanceValues`
+
+Returns an object of all atom instances in the ecosystem, each instance keyed by a string that consists of its atom key + its serialized parameters.
+
+```tsx live ecosystemId=ecosystems/inspectInstanceValues resultVar=Inspect
+const ecosystem = createEcosystem({ id: 'inspectInstanceValues-test' })
+const testAtom = atom('test', (key?: number) => 'testing!!')
+
+ecosystem.getInstance(testAtom)
+ecosystem.getInstance(testAtom, [1])
+
+function Inspect() {
+  const instances = ecosystem.inspectInstanceValues()
+
+  return (
+    <button onClick={() => console.log('Instance Values:', instances)}>
+      Log Instance Values
+    </button>
+  )
+}
+```
+
+### `context`
+
+A reference to the context object passed to `createEcosystem` or `<EcosystemProvider>` (if any).
+
+```tsx
+import { atom, injectAtomGetters } from '@zedux/react'
+
+const reduxAtom = atom('redux', () => {
+  const { reduxStore } = injectAtomGetters().ecosystem.context
+})
+```
+
+:::note
+Sadly, when accessing ecosystem context like this, it can't be strongly typed for TS users :(. This is because atoms don't know what ecosystem they'll be used in.
+
+You'll have to cast it (make sure to add type guards) or use a different approach like exporting a callback that you call in `ecosystem.onReady`:
+
+```ts
+const onReady = (ecosystem, context) => {
+  ecosystem.getInstance(reduxAtom).exports.setStore(context.reduxStore)
+}
+```
+
+:::
+
+## Global Only
+
+It's possible to use nothing but the global ecosystem. This is done by never rendering an EcosystemProvider. If no EcosystemProvider is rendered, all atoms are added to the global ecosystem by default.
 
 The global ecosystem can be nice for simplicity. Some apps don't need any of the features custom ecosystems offer. And that's fine!
 
-### Mixed
+## Isolation Example
 
-![](/img/diagrams/atom-ecosystems-mixed.png)
-
-In this approach, you create one or more custom ecosystems. You might also use some atoms outside any EcosystemProvider - utilizing the global ecosystem.
-
-Use cases for this approach are very niche. Outside of testing, you probably won't find yourself using multiple ecosystems.
-
-## A Note On Params
-
-In the quick start, we learned that atom instances can be reused by passing the same params to certain hooks/injectors. Since atom instances live in an ecosystem, reuse can only happen inside that ecosystem.
+Ecosystems are completely isolated atom environments. In the quick start, we learned that atom instances can be reused by passing the same params to certain hooks/injectors. Since atom instances live in an ecosystem, reuse can only happen inside that ecosystem.
 
 In the following example, the `counterAtom` doesn't take any params. But since it's used in two different ecosystems, two different instances are created.
 
-```tsx live ecosystemId=ecosystems/instances resultVar=Apps
+```tsx live ecosystemId=ecosystems/isolation resultVar=Apps
 const counterAtom = atom('counter', 0)
 
 function Counter() {
@@ -146,49 +301,13 @@ function Apps() {
 }
 ```
 
-## Using the Ecosystem
-
-The ecosystem object itself has many useful methods. You can use these to inspect the dependency graph, get the current state of all atoms, set atom overrides, and a lot more. We'll cover most of these as we go through the rest of the walkthrough. See the [`Ecosystem` class API doc](../api/classes/Ecosystem) for all the goodness.
-
-### Getting It
-
-Every component below an `<EcosystemProvider>` in the tree can access the ecosystem via [`useEcosystem()`](../api/hooks/useEcosystem).
-
-```tsx
-import { EcosystemProvider, useEcosystem } from '@zedux/react'
-
-function Child() {
-  const ecosystem = useEcosystem()
-}
-
-function App() {
-  return (
-    <EcosystemProvider id="main">
-      <Child />
-    </EcosystemProvider>
-  )
-}
-```
-
-All atom instances created in an ecosystem can access the ecosystem via [`injectAtomGetters()`](../api/injectors/injectAtomGetters).
-
-```ts
-import { atom, injectAtomGetters } from '@zedux/react'
-
-const myAtom = atom('my', () => {
-  const { ecosystem } = injectAtomGetters()
-})
-```
-
 ## Recap
 
-- All atoms live in atom ecosystems.
-- Atom instances can only be reused in the ecosystem they were created in.
-- There is a default ("global") ecosystem, but you can create your own.
-- Most apps will use the "Single Ecosystem Approach" - rendering a single `<EcosystemProvider>`.
+- All atom instances live in an isolated atom ecosystem.
+- There is a default ("global") ecosystem, but you'll usually want to create your own.
 - Ecosystems can be configured with various options passed to the `createEcosystem()` factory or as props to `<EcosystemProvider>`.
 - The current ecosystem can be retrieved with `useEcosystem()` in components and `injectAtomGetters()` in atoms.
 
 ## Next Steps
 
-Ecosystems are capable of some pretty cool stuff. With these equipped, it's time to look at one of the coolest features of Zedux: [Dependency Injection](dependency-injection).
+Ecosystems are capable of some pretty cool stuff. One of the coolest of these stuffs is [the graph](the-graph).

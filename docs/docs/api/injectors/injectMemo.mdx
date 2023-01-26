@@ -3,11 +3,13 @@ id: injectMemo
 title: injectMemo
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectMemo } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that memoizes a value. You control whether the value changes on subsequent evaluations.
+An [injector](../glossary#injector) that memoizes a value. This is the injector equivalent of React's `useMemo()` hook. Like `useMemo()`, `injectMemo()` will return the same value on subsequent evaluations unless any items in the dependency array change.
 
 ## Example
 
@@ -55,18 +57,46 @@ const changesEveryTimeButJustWhy = injectMemo(getExpensiveVal)
 
 ## Signature
 
-```ts
-injectMemo(factory, deps?)
-```
+<Tabs>
+  {tab1(`injectMemo = (valueFactory, deps?)`)}
+  {tab2(`declare const injectMemo: <Value = any>(
+  valueFactory: () => Value,
+  deps?: InjectorDeps
+) => Value`)}
+</Tabs>
 
-Returns the result of `factory`.
+<Legend>
+  <Item name="valueFactory">
+    <p>Required. A function that should return the value to memoize.</p>
+    <p>
+      This function is called on initial evaluation and again every time any
+      dependencies change on subsequent evaluations
+    </p>
+  </Item>
+  <Item name="deps">
+    <p>
+      Optional (though you'll always want to pass it). An array containing
+      absolutely anything.
+    </p>
+    <p>
+      If any items in this array change on a subsequent evaluation, the
+      previously memoized value will be discarded and the{' '}
+      <code>valueFactory</code> will be called again to produce a new value.
+    </p>
+    <p>
+      Pass an empty array to prevent the value from ever changing, as long as
+      this atom instance is alive.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      The memoized value returned from the <code>valueFactory</code>.
+    </p>
+  </Item>
+</Legend>
 
-### `factory`
+## See Also
 
-A function that returns the memoized value. This function will only be called when the atom is created and whenever any passed `deps` change.
-
-This is a good place to run expensive calculations that you don't want to run on every atom instance evaluation. It can also be used to ensure references are stable across evaluations. Depending on the use case, [`injectStore`](injectStore), [`injectRef`](injectRef), or [`injectCallback`](injectCallback) may be a better choice.
-
-### `deps`
-
-Optional (but you should probably pass it). An array of values that will cause the `factory` function to rerun and calculate a new value every time they change.
+- [React's `useMemo()` reference](https://reactjs.org/docs/hooks-reference.html#usememo)
+- [`injectCallback()`](injectCallback)
+- [`injectPromise()`](injectPromise)

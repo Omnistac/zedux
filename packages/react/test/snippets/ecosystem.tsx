@@ -14,7 +14,7 @@ const testEcosystem = createEcosystem({ id: 'test' })
 
 const atom1 = atom('atom1', () => {
   console.log('evaluating atom1')
-  const store = injectStore('1', { shouldSubscribe: false })
+  const store = injectStore('1', { subscribe: false })
 
   return store
 })

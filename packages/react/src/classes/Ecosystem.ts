@@ -32,7 +32,7 @@ import { Graph } from './Graph'
 import { IdGenerator } from './IdGenerator'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
-import { AtomSelectorCache, SelectorCache } from './SelectorCache'
+import { SelectorCacheInstance, SelectorCache } from './SelectorCache'
 import { Mod, ZeduxPlugin } from './ZeduxPlugin'
 
 const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
@@ -617,8 +617,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     selectable: Selectable<T, Args>,
     ...args: Args
   ): T {
-    if (is(selectable, AtomSelectorCache)) {
-      return (selectable as AtomSelectorCache<T, Args>).result as T
+    if (is(selectable, SelectorCacheInstance)) {
+      return (selectable as SelectorCacheInstance<T, Args>).result as T
     }
 
     const atomSelector = selectable as AtomSelectorOrConfig<T, Args>

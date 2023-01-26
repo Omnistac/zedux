@@ -11,7 +11,7 @@ import { InstanceStackItem, SelectorStackItem, StackItem } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { AtomBase } from './atoms/AtomBase'
 import { Ecosystem } from './Ecosystem'
-import { AtomSelectorCache } from './SelectorCache'
+import { SelectorCacheInstance } from './SelectorCache'
 
 /**
  * A stack of AtomInstances and AtomSelectors that are currently evaluating -
@@ -132,7 +132,7 @@ export class EvaluationStack {
       }).instance = (item as InstanceStackItem).instance
     } else if ((item as SelectorStackItem).cache) {
       ;(action as {
-        cache: AtomSelectorCache
+        cache: SelectorCacheInstance
       }).cache = (item as SelectorStackItem).cache
     }
 
@@ -145,15 +145,15 @@ export class EvaluationStack {
     return stack[stack.length - 1]
   }
 
-  public start(item: AnyAtomInstance | AtomSelectorCache<any, any>) {
+  public start(item: AnyAtomInstance | SelectorCacheInstance<any, any>) {
     const newItem = {} as StackItem
 
     if ((item as AnyAtomInstance).keyHash) {
       newItem.key = (item as AnyAtomInstance).keyHash
       ;(newItem as InstanceStackItem).instance = item as AnyAtomInstance
     } else {
-      newItem.key = (item as AtomSelectorCache).cacheKey
-      ;(newItem as SelectorStackItem).cache = item as AtomSelectorCache
+      newItem.key = (item as SelectorCacheInstance).cacheKey
+      ;(newItem as SelectorStackItem).cache = item as SelectorCacheInstance
     }
 
     if (this.ecosystem._mods.evaluationFinished) {

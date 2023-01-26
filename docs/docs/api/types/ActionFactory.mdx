@@ -1,0 +1,58 @@
+---
+id: ActionFactory
+title: ActionFactory
+---
+
+The function returned from [the `actionFactory()` factory](../factories/actionFactory).
+
+An action factory is just a function that has a `.type` property and returns [action objects](Action) with that type.
+
+## Example
+
+```ts
+import { actionFactory } from '@zedux/react'
+
+actionFactory('test')('payload') // { type: 'test', payload: 'payload' }
+
+interface Todo {
+  text: string
+}
+
+const addTodo = actionFactory<Todo>('todos/add')
+
+store.dispatch(addTodo({ text: 'be awesome' }))
+```
+
+You can also manually create an action factory:
+
+```ts
+const addTodo = payload => ({
+  type: addTodo.type,
+  payload,
+})
+
+addTodo.type = 'addTodo'
+```
+
+## Definition
+
+```ts
+type ActionFactory = {
+  (payload?) => Action
+  type: string
+}
+```
+
+Returns an [action object](Action) for [dispatching](../classes/Store#dispatch) to [stores](../classes/Store).
+
+### `payload`
+
+Optional. For TS users, it will be required if a Payload generic was passed to `actionFactory`.
+
+This will be set as the `payload` property of the returned action object.
+
+## See Also
+
+- [The Stores walkthrough](../../walkthrough/stores)
+- [The `actionFactory()` factory](../factories/actionFactory)
+- [The `Action` type](Action)

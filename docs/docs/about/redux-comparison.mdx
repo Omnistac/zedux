@@ -20,20 +20,20 @@ In this comparison, we won't use Zedux' React or atomic APIs. Zedux' React usage
 
 - Both Redux and Zedux stores can be given reducers to drive state creation and updates.
 - Zedux has zero config stores.
-- State should not be mutated.
+- In both, state should not be mutated.
 - RTK wraps reducers in immer producers. Zedux does not (we may implement this someday. Not for now).
 - Both have similar reducer splitting APIs
-- Both have similar action creator and reducer creation APIs
+- Both have similar action creator and reducer creation APIs.
 - In both, actions and reducers have a many-to-many relationship.
 - In both, dispatched actions can be observed, saved, and replayed for a time travel debugging experience.
 - RTK uses `createSlice()` to create state slices. Zedux uses store composition 🤯.
 - Redux apps typically have one store. Zedux apps typically create many stores.
-- Both have similar state hydration APIs
+- Both have similar state hydration APIs.
 - Redux uses middleware to manage side effects. Zedux uses effects subscribers.
 - Redux uses middleware for plugins. Zedux doesn't offer a dedicated plugin system at the store level (plugins are at the ecosystem level).
-- In both, stores are observables (streams) of state
+- In both, stores are observables (streams) of state.
 - In Zedux, stores are also observables of actions.
-- In Zedux, store dispatches are completely synchronous.
+- In Zedux, store dispatches are completely synchronous. In Redux, synchrony depends on your middleware.
 
 ## Comparables
 
@@ -128,14 +128,14 @@ const counterReducer = createReducer(initialState, builder => {
 })
 ```
 
-Zedux - use `createActor()` and `createReducer()`. No immer (for now).
+Zedux - use `actionFactory()` and `createReducer()`. No immer (for now).
 
 ```ts
-import { createActor, createReducer } from '@zedux/react'
+import { actionFactory, createReducer } from '@zedux/react'
 
-const increment = createActor('counter/increment')
-const decrement = createActor('counter/decrement')
-const incrementByAmount = createActor<number>('counter/incrementByAmount')
+const increment = actionFactory('counter/increment')
+const decrement = actionFactory('counter/decrement')
+const incrementByAmount = actionFactory<number>('counter/incrementByAmount')
 
 const initialState = { value: 0 }
 
@@ -144,8 +144,6 @@ const counterReducer = createReducer(initialState)
   .reduce(decrement, state => state.value - 1)
   .reduce(incrementByAmount, (state, action) => state.value + action.payload)
 ```
-
-Zedux also exports a `createActorFactory()` factory that we could have used to auto-attach the `counter/` namespace to these action creators.
 
 ### State Slices
 

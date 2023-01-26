@@ -229,7 +229,7 @@ See [the Dependency Injection walkthrough](../walkthrough/dependency-injection).
 An atom's value can be a store.
 
 ```tsx live ecosystemId=overview/stores resultVar=BigComponent
-const goBig = createActor('goBig')
+const goBig = actionFactory('goBig')
 
 const bigAtom = atom('big', () => {
   const store = injectStore()
@@ -259,9 +259,9 @@ See [the stores walkthrough](../walkthrough/stores) and [the `Store` class](../a
 Stores can be configured with Redux-style reducers.
 
 ```tsx
-import { createActor, createReducer, createStore } from '@zedux/react'
+import { actionFactory, createReducer, createStore } from '@zedux/react'
 
-const addTodo = createActor<string>('addTodo')
+const addTodo = actionFactory<string>('addTodo')
 
 const todosReducer = createReducer<string[]>([]).reduce(
   addTodo,
@@ -271,16 +271,16 @@ const todosReducer = createReducer<string[]>([]).reduce(
 const todosStore = createStore({ todos: todosReducer })
 ```
 
-See [the stores walkthrough](../walkthrough/stores), [`createActor()`](../api/factories/createActor), [`createReducer()`](../api/factories/createReducer), and [`createStore()`](../api/factories/createStore).
+See [the stores walkthrough](../walkthrough/stores), [`actionFactory()`](../api/factories/actionFactory), [`createReducer()`](../api/factories/createReducer), and [`createStore()`](../api/factories/createStore).
 
 ### State Machines
 
 Stores can be configured with simple state machines.
 
 ```tsx
-import { createActor, createMachine, createStore, states } from '@zedux/react'
+import { actionFactory, createMachine, createStore, states } from '@zedux/react'
 
-const timer = createActor('timer')
+const timer = actionFactory('timer')
 const [green, yellow, red] = states('green', 'yellow', 'red')
 
 const stopLightMachine = createMachine(
@@ -304,10 +304,10 @@ See [the state machines walkthrough](../walkthrough/state-machines).
 One of the superpowers of Zedux stores is that they can be consumed as streams of actions.
 
 ```tsx
-import { atom, createActor } from '@zedux/react'
+import { atom, actionFactory } from '@zedux/react'
 import { filterByActor, useAction$ } from '@zedux/react/rx'
 
-const updateRow = createActor<RowUpdateEvent>('updateRow')
+const updateRow = actionFactory<RowUpdateEvent>('updateRow')
 const messageBusAtom = atom('messageBus', null)
 
 function BigTable() {
@@ -365,7 +365,7 @@ const deathStarAtom = atom('deathStar', 'All the Sith', {
 })
 ```
 
-See [the lifecycles walkthrough](/not-done)
+See [the destruction walkthrough](/not-done)
 
 ### Atom Instances
 
@@ -394,7 +394,7 @@ function SomeChild() {
 }
 ```
 
-See the [using atoms](../walkthrough/using-atoms#instances) and [context](../walkthrough/context) walkthroughs.
+See the [using atoms](../walkthrough/using-atoms#instances) and [context](../walkthrough/react-context) walkthroughs.
 
 ### Invalidation
 
@@ -422,7 +422,7 @@ function App() {
 }
 ```
 
-See [`injectInvalidate()`](../api/injectors/injectInvalidate) and [the cache management walkthrough](/not-done)
+See [`injectInvalidate()`](../api/injectors/injectInvalidate) and [the resets walkthrough](/not-done)
 
 ## Side Effects
 
@@ -520,10 +520,6 @@ const rootEcosystem = createEcosystem({
 See [the persistence walkthrough](/not-done).
 
 ### Preloading
-
-:::note
-🚧 Molecules are under construction
-:::
 
 Atoms can be preloaded to kickstart hydration, alleviate render waterfalls, and bootstrap data from outside Zedux.
 

@@ -28,33 +28,37 @@ Zedux actions must contain a string `type` property and may contain optional `me
 ```ts
 const normalAction: Action = {
   type: 'todos/add',
-  payload: { text: 'be awesome' }
+  payload: { text: 'be awesome' },
 }
 
 const withMeta: Action = {
   type: 'todos/add',
   meta: {
-    dispatchedFrom: 'MyComponent'
-  }
+    dispatchedFrom: 'MyComponent',
+  },
 }
 
 const typeOnly: Action = {
-  type: 'dropdown/toggle'
+  type: 'dropdown/toggle',
 }
 ```
 
 ## Creation
 
-Zedux provides high-level APIs for action creation. You typically won't create action objects manually.
+You don't need to create action objects manually. Zedux provides a high-level [`actionFactory()`](../factories/actionFactory) "factory factory" for action creation:
 
 ```ts
-import { createActor } from '@zedux/react'
+import { actionFactory } from '@zedux/react'
 
-createActor('test')('payload') // { type: 'test', payload: 'payload' }
+const test = actionFactory('test')
+test('payload') // { type: 'test', payload: 'payload' }
 
-const addTodo = createActor<Todo>('todos/add')
+const addTodo = actionFactory<Todo>('todos/add')
 
 store.dispatch(addTodo({ text: 'be awesome' }))
 ```
 
-See [`createActor()`](../factories/createActor).
+## See Also
+
+- [The Stores walkthrough](../../walkthrough/stores)
+- [`actionFactory()`](../factories/actionFactory)

@@ -3,6 +3,9 @@ id: useAtomValue
 title: useAtomValue
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+import { InjectAtomValueLegend } from '../injectors/injectAtomValue.mdx'
+
 ```ts
 import { useAtomValue } from '@zedux/react'
 ```
@@ -10,6 +13,8 @@ import { useAtomValue } from '@zedux/react'
 A React hook that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning the value.
 
 The component that uses this hook will rerender whenever the resolved atom instance's state changes.
+
+If the resolved atom instance doesn't exist yet, `useAtomValue()` creates it.
 
 ## Example
 
@@ -43,28 +48,13 @@ const fromInstance = useAtomValue(instance)
 
 ## Signature
 
-```ts
-useAtomValue(atom, params?) => state
-```
+<Tabs>
+  {tab1(`useAtomValue = (atomOrInstance, params?) => state`)}
+  {tab2(`declare const useAtomValue: {
+  <A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>;
+  <A extends AtomBase<any, [...any], any>>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): AtomStateType<A>;
+  <AI extends AtomInstanceBase<any, [...any], any>>(instance: AI, params?: [], config?: ZeduxHookConfig): AtomInstanceStateType<AI>;
+}`)}
+</Tabs>
 
-Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns the resolved atom instance's current state.
-
-### Overloads
-
-```ts
-useAtomValue(instance) => state
-```
-
-### `atom`
-
-Required. The [atom](../classes/Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
-
-### `params`
-
-Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
-
-TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
-
-### `instance`
-
-Required (in this overload). An [atom instance](../classes/AtomInstance). Will register a dynamic dependency on the passed instance and return the instance's current value.
+<InjectAtomValueLegend name="useAtomValue" />

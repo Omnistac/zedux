@@ -24,6 +24,7 @@ Edges can be static or dynamic, internal or external, and async or synchronous. 
 Zedux builds an internal graph to manage atom dependencies and propagate updates in an optimal way. There are two types of nodes in this graph:
 
 - [Atom instances](classes/AtomInstance)
+- [AtomSelectors](types/AtomSelector)
 - External dependents (usually React components).
 
 ### Injector
@@ -48,16 +49,6 @@ An action created by Zedux to represent a state change. The key to time travel d
 
 Zedux translates all of these state updating operations into "pseudo-actions" - action objects with metadata containing all the info needed to reproduce the state change.
 
-### Restricted Dynamic Graph Dependency
-
-When one [graph node](#graph-node) depends on another, Zedux draws an edge between those two nodes in its internal graph algorithm.
-
-A "restricted dynamic" dependency is really just a [dynamic dependency](#dynamic-graph-dependency) that will only trigger updates in the dependent node when the dependency node's state updates and some other condition is met. This is used for selectors.
-
-If the dependent is a React component, it will rerender when the dependency atom instance's state changes and the selector's result changes.
-
-If the dependent is another atom instance, it will reevaluate when the dependency atom instance's state changes and the selector's result changes.
-
 ### State Factory
 
 A function passed to [`atom()`](factories/atom) (or other atom factory functions like [`ion()`](factories/ion)). This function is called to produce the initial value of the atom instance. It also runs every time an atom instance reevaluates.
@@ -69,3 +60,11 @@ When one [graph node](#graph-node) depends on another, Zedux draws an edge betwe
 A "static" dependency is a dependency that does not trigger updates in the dependent node when the dependency node's state updates. Contrast this to [dynamic dependencies](#dynamic-graph-dependency), which do trigger updates.
 
 While they don't trigger updates, static dependencies are still useful for informing Zedux that an atom instance is in use. Zedux won't try to clean up atom instances that still have dependents.
+
+### Unrestricted Injector
+
+An [injector](#injector) whose use isn't restricted like normal injectors. An unrestricted injector still must be used inside an atom state factory (called synchronously during evaluation). However, unlike normal injectors, unrestricted injectors can be used in control flow statements (`if`, `for`, `while`) or after early returns.
+
+You usually won't need to worry about this distinction. Just use them like normal injectors and you'll be fine.
+
+Examples of unrestricted injectors include [`injectAtomGetters()`](injectors/injectAtomGetters), [`injectInvalidate()`](injectors/injectInvalidate), and [`injectWhy()`](injectors/injectWhy).

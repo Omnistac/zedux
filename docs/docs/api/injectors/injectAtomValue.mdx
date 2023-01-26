@@ -3,13 +3,24 @@ id: injectAtomValue
 title: injectAtomValue
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectAtomValue } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning the value.
+An [injector](../glossary#injector) that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance. Returns the current value of the injected atom instance's store.
 
-The atom instance that uses this injector will reevaluate whenever the resolved atom instance's state changes.
+The atom instance that uses this injector will reevaluate every time the resolved atom instance's state changes.
+
+This injector is essentially an alias for:
+
+```ts
+const { get } = injectAtomGetters()
+const value = get(otherAtom)
+```
+
+Except more restrictive since this is a normal injector while [`injectAtomGetters()`](injectAtomGetters) is [unrestricted](../glossary#unrestricted-injector) and [`get`](../types/AtomGetters#get) is not an injector at all.
 
 ## Example
 
@@ -44,36 +55,66 @@ Miscellaneous:
 ```ts
 const currentState = injectAtomValue(myAtom)
 
-const withParams = injectAtomValue(myAtom, ['param 1', 'param 2'])
+const passingParams = injectAtomValue(myAtom, ['param 1', 'param 2'])
 
 // passing an atom instance registers a dynamic dependency on that instance
-const withInstance = injectAtomValue(instance)
+const passingAnInstance = injectAtomValue(instance)
 ```
 
 ## Signature
 
-```ts
-injectAtomValue(atom, params?) => state
-```
+<Tabs>
+  {tab1(`injectAtomValue = (atomOrInstance, params?) => state`)}
+  {tab2(`{
+  <A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>;
+  <A extends AtomBase<any, [...any], any>>(atom: A, params: AtomParamsType<A>): AtomStateType<A>;
+  <AI extends AtomInstanceBase<any, [...any], any>>(instance: AI): AtomInstanceStateType<AI>;
+}`)}
+</Tabs>
 
-Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns the resolved atom instance's current state.
+export const InjectAtomValueLegend = ({ name = 'injectAtomValue' }) => (
+  <Legend>
+    <Item name="atomOrInstance">
+      <p>
+        Required. An <Link to="../classes/Atom">Atom</Link> or{' '}
+        <Link to="../classes/AtomInstance">atom instance</Link>.
+      </p>
+      <p>
+        If an atom is passed, you must also pass any required params of the
+        atom.
+      </p>
+      <p>
+        If an atom instance is passed, the params are ignored. In this case,{' '}
+        <code>{name}()</code> returns the current value of the passed instance
+        (essentially <code>instance.getState()</code>).
+      </p>
+      <p>
+        In all cases, <code>{name}()</code> adds a dynamic dependency on the
+        resolved atom instance.
+      </p>
+    </Item>
+    <Item name="params">
+      <p>Required if the passed atom takes required params. Optional if not.</p>
+      <p>
+        Don't pass this or pass an empty array if the atom does not take params
+        or if passing an atom instance.
+      </p>
+    </Item>
+    <Item name="Returns">
+      <p>The current value of the resolved atom instance's store.</p>
+      <p>
+        Uses the passed atom + params combo to find an existing atom instance.
+        If no instance is found, <code>{name}()</code> creates one and returns
+        its initial value.
+      </p>
+    </Item>
+  </Legend>
+)
 
-### Overloads
+<InjectAtomValueLegend />
 
-```ts
-injectAtomValue(instance) => state
-```
+## See Also
 
-### `atom`
-
-Required. The [atom](../classes/Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
-
-### `params`
-
-Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
-
-TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
-
-### `instance`
-
-Required (in this overload). An [atom instance](../classes/AtomInstance). Will register a dynamic dependency on the passed instance and return the instance's current value.
+- [`useAtomValue()`](../hooks/useAtomValue)
+- [The `get` AtomGetter](../types/AtomGetters#get)
+- [`injectAtomState()`](injectAtomState)

@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { MutableRefObject, useState } from 'react'
 import { useMemo } from 'react'
 import styled from 'styled-components'
 import * as ReactZedux from '../../../../packages/react/src'
 
 const options = {
   AtomState: 'Atom State',
+  SelectorCache: 'Selector Cache',
   Ecosystem: 'Ecosystem',
   Graph: 'Graph',
   ReactScope: 'React Scope',
@@ -94,10 +95,10 @@ const CaretDownIcon = () => (
 )
 
 export const LogActions = ({
-  ecosystemId,
+  ecosystemIdRef,
   Zedux,
 }: {
-  ecosystemId: string
+  ecosystemIdRef: MutableRefObject<string>
   Zedux: typeof ReactZedux
 }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -107,22 +108,36 @@ export const LogActions = ({
     () => ({
       AtomState: () => {
         console.group('Current state of all atom instances:')
-        console.log(Zedux.getEcosystem(ecosystemId).inspectInstanceValues())
+        console.log(
+          Zedux.getEcosystem(ecosystemIdRef.current).inspectInstanceValues()
+        )
         console.groupEnd()
       },
       Ecosystem: () => {
         console.group('Ecosystem:')
-        console.log(Zedux.getEcosystem(ecosystemId))
+        console.log(Zedux.getEcosystem(ecosystemIdRef.current))
         console.groupEnd()
       },
       Graph: () => {
+        const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
         console.group('Current graph:')
-        console.log(Zedux.getEcosystem(ecosystemId)._graph.nodes)
+        console.log('Flat:', ecosystem.inspectGraph('flat'))
+        console.log('Top-Down:', ecosystem.inspectGraph('top-down'))
+        console.log('Bottom-Up:', ecosystem.inspectGraph('bottom-up'))
         console.groupEnd()
       },
       ReactScope: () => {
         console.group('React exports available in the sandbox:')
         console.log(React)
+        console.groupEnd()
+      },
+      SelectorCache: () => {
+        console.group('Cached selectors:')
+        console.log(
+          Zedux.getEcosystem(
+            ecosystemIdRef.current
+          ).selectorCache.inspectCacheValues()
+        )
         console.groupEnd()
       },
       ZeduxScope: () => {

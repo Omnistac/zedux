@@ -3,13 +3,25 @@ id: injectAtomState
 title: injectAtomState
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectAtomState } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning a tuple of the current value and a state setter.
+An [injector](../glossary#injector) that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance. Returns a tuple of the instance's store's current value and an export-infused state setter function.
+
+This injector's return type is very similar to React's `useState()` hook.
+
+```ts
+const [val, setVal] = useState()
+// compare:
+const [state, setState] = injectAtomState(myAtom, [...params])
+```
 
 The atom instance that uses this injector will reevaluate whenever the resolved atom instance's state changes.
+
+The returned state setter function has all the atom instance's exports attached to it. This facilitates using exports to update the atom's state, rather than updating the state directly.
 
 ## Example
 
@@ -47,30 +59,150 @@ function Seconds() {
 }
 ```
 
+Destructuring the exports from the state setter:
+
+```ts
+import { api, atom, injectAtomState } from '@zedux/react'
+
+const passwordAtom = atom('password', () => {
+  const store = injectStore('')
+
+  return api(store).setExports({
+    clear: () => store.setState(''),
+    setPassword: (newPassword: string) => store.setState(newPassword),
+  })
+})
+
+const formAtom = atom('form', () => {
+  // destructure the exports directly off the state setter:
+  const [password, { clear, setPassword }] = injectAtomState(passwordAtom)
+  // this is a convenient alternative to the following:
+  const passwordInstance = injectAtomInstance(passwordAtom)
+  const password = injectAtomValue(passwordInstance)
+  const { clear, setPassword } = passwordInstance.exports
+})
+```
+
+Miscellaneous:
+
+```ts
+const [state, setState] = injectAtomState(myAtom)
+const withParams = injectAtomState(myAtom, ['param 1', 'param 2'])
+const fromInstance = injectAtomState(myAtomInstance)
+const [, setterOnly] = injectAtomState(myAtom)
+const [, { exports, only }] = injectAtomState(myAtom)
+```
+
 ## Signature
 
-```ts
-injectAtomState(atom, params?) => [state, setState]
-```
+<Tabs>
+  {tab1(`injectAtomState = (atomOrInstance, params?) => [state, setState]`)}
+  {tab2(`declare const injectAtomState: {
+  <A extends StandardAtomBase<any, [], any, any>>(atom: A): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
+  <A extends StandardAtomBase<any, [...any], any, any>>(atom: A, params: AtomParamsType<A>): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
+  <AI extends AtomInstance<any, [...any], any, any>>(instance: AI): StateHookTuple<AtomInstanceStateType<AI>, AtomInstanceExportsType<AI>>;
+}`)}
+</Tabs>
 
-Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns a tuple of the resolved atom instance's current state and [state setter](../classes/AtomInstance#setstate).
+export const InjectAtomStateLegend = ({
+  name = 'injectAtomState',
+  type = 'injector',
+}) => (
+  <Legend>
+    <Item name="atomOrInstance">
+      <p>
+        Required. An <Link to="../classes/Atom">Atom</Link> or{' '}
+        <Link to="../classes/AtomInstance">atom instance</Link>.
+      </p>
+      <p>
+        If an atom is passed, you must also pass any required params of the
+        atom.
+      </p>
+      <p>
+        If an atom instance is passed, the params are ignored. In this case, the
+        returned state value will be the current value of this atom instance.
+        The returned state setter will have all the exports of the given
+        instance attached.
+      </p>
+      <p>
+        In all cases, <code>{name}()</code> adds a dynamic dependency on the
+        resolved instance.
+      </p>
+    </Item>
+    <Item name="params">
+      <p>Required if the passed atom takes required params. Optional if not.</p>
+      <p>
+        Don't pass this or pass an empty array if the atom does not take params
+        or if passing an atom instance.
+      </p>
+    </Item>
+    <Item name="Returns">
+      <p>
+        A <code>[state, setState]</code> tuple:
+      </p>
+      <ul>
+        <li>
+          <code>state</code> - The current value of the resolved atom instance's
+          store.
+        </li>
+        <li>
+          <code>setState</code> - An export-infused state setter function.
+        </li>
+      </ul>
+      <p>
+        Uses the passed atom + params combo to find an existing atom instance.
+        If no instance is found, creates one.
+      </p>
+      <p>
+        The returned state setter is a direct wrapper around{' '}
+        <Link to="../classes/AtomInstance#setstate">
+          <code>instance.setState()</code>
+        </Link>
+        . It accepts either the full new state or a function that receives the current
+        state and returns the new state.
+      </p>
+      <p>
+        Note that this is not a deep setter like{' '}
+        <Link to="../classes/Store#setstatedeep">
+          <code>store.setStateDeep()</code>
+        </Link>
+        .
+      </p>
+      <p>
+        The returned state setter is "export-infused" meaning it has all the
+        exports of the resolved atom instance spread onto it (yes, onto the
+        function itself).
+      </p>
+      <Ts>{`const [state, setState] = ${name}(myAtom)
+const { export1, export2 } = setState
+// or simply:
+const [state, { export1, export2 }] = ${name}(myAtom)`}</Ts>
+      <p>
+        Yes, this means that if your exports have name collisions with the
+        function's own properties, the exports will overwrite stuff on the
+        function. TS users will see this, as the types correctly indicate this.
+      </p>
+      <p>
+        If this feels janky or hacky to you, just remember that this {type} is
+        provided for convenience. You don't have to use it if it inconveniences
+        you. There are other ways to accomplish everything this {type} does. For
+        example:
+      </p>
+      <Ts>{`const instance = ${
+        type === 'hook' ? 'use' : 'inject'
+      }AtomInstance(myAtom)
+const state = ${type === 'hook' ? 'use' : 'inject'}AtomValue(instance)
+const { setState } = instance
+const { export1, export2 } = instance.exports`}</Ts>
+    </Item>
+  </Legend>
+)
 
-### Overloads
+<InjectAtomStateLegend />
 
-```ts
-injectAtomState(instance) => [state, setState]
-```
+## See Also
 
-### `atom`
-
-Required. The [atom](../classes/Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
-
-### `params`
-
-Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
-
-TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
-
-### `instance`
-
-Required (in this overload). An [atom instance](../classes/AtomInstance). Will register a dynamic dependency on the passed instance and return a tuple of the instance's current value and `setState` function.
+- [`useAtomState()`](../hooks/useAtomState)
+- [`injectAtomValue()`](injectAtomValue)
+- [The Atom APIs walkthrough](../../walkthrough/atom-apis)
+- [`instance.setState()`](../classes/AtomInstance#setstate)

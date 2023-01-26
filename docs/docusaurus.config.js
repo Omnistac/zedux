@@ -43,7 +43,7 @@ module.exports = {
   /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
   themeConfig: {
     navbar: {
-      title: 'Zedux',
+      title: 'Home',
       logo: {
         alt: 'Zedux Logo',
         src: 'img/logo.png',

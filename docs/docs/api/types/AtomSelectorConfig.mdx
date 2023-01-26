@@ -1,0 +1,169 @@
+---
+id: AtomSelectorConfig
+title: AtomSelectorConfig
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig object. This object has a required `selector` field and a few optional fields used to configure the selector.
+
+## Examples
+
+```tsx live ecosystemId=AtomSelector/example resultVar=CountBy5
+const counterAtom = atom('counter', 0)
+
+function CountBy5() {
+  const { setState } = useAtomInstance(counterAtom)
+  const counter = useAtomSelector({
+    resultsComparator: newCount => newCount % 5,
+    selector: ({ get }) => get(counterAtom),
+  })
+
+  return (
+    <>
+      <div>Value: {counter}</div>
+      <button onClick={() => setState(state => state + 1)}>
+        Increment (click me 5 times)
+      </button>
+    </>
+  )
+}
+```
+
+:::tip
+AtomSelectors sometimes have config that's inherent to how they operate. Rather than exporting the selector function and requiring consumers to specify the config, export the config object directly (tightly coupling the selector to its mandatory config):
+:::
+
+```ts
+// instead of:
+export const getUserSnapshot = ({ get }: AtomGetters) => get(currentUserAtom)
+...
+select({
+  resultsComparator: (a, b) => a.id === b.id,
+  selector: getUserSnapshot,
+})
+
+// do:
+export const getUserSnapshot = {
+  name: 'getUserSnapshot', // recommended if using an anonymous function
+  resultsComparator: (a, b) => a.id === b.id,
+  selector: ({ get }) => get(currentUserAtom)
+}
+...
+select(getUserSnapshot)
+```
+
+Miscellaneous:
+
+```ts
+// Inline:
+useAtomSelector({
+  argsComparator: (newVal, oldVal) => Math.abs(newVal - oldVal) > 5,
+  name: 'timesTwo',
+  selector: ({ get }: AtomGetters) => get(myAtom) * 2,
+})
+
+// Extracted:
+const timesTwo = {
+  argsComparator: (newVal, oldVal) => Math.abs(newVal - oldVal) > 5,
+  name: 'timesTwo',
+  selector: ({ get }) => get(myAtom) * 2,
+}
+useAtomSelector(timesTwo)
+
+// With arguments:
+const timesTwoPlusWhatever = {
+  argsComparator: (newVal, oldVal) => Math.abs(newVal - oldVal) > 5,
+  name: 'timesTwo',
+  selector: ({ get }, whatever: number) => get(myAtom) * 2 + whatever,
+}
+useAtomSelector(timesTwoPlusWhatever, 3)
+```
+
+## Definition
+
+<Tabs>
+  {tab1(
+    `atomSelectorConfig = { argsComparator?, name?, resultsComparator?, selector }`
+  )}
+  {tab2(`interface AtomSelectorConfig<T = any, Args extends any[] = []> {
+  argsComparator?: (newArgs: Args, oldArgs: Args) => boolean
+  name?: string
+  resultsComparator?: (newResult: T, oldResult: T) => boolean
+  selector: AtomSelector<T, Args>
+}`)}
+</Tabs>
+
+<Legend>
+  <Item name="argsComparator">
+    <p>
+      <b>Important!</b> This config option is only respected in{' '}
+      <Link to="../hooks/useAtomSelector">
+        <code>useAtomSelector()</code>
+      </Link>
+      . It is ignored in all other AtomSelector-related APIs. This is because selectors
+      are given completely different cache entries when different args are passed.
+      However <code>useAtomSelector()</code> does some special optimizations. Regardless,
+      because of this limitation, this config option is rarely useful.
+    </p>
+    <p>Optional. A function. Signature:</p>
+    <Ts>{`(newArgs, oldArgs) => areEqual`}</Ts>
+    <p>
+      Accepts two arrays - the list of arguments most recently passed and the
+      list of arguments passed previously.
+    </p>
+    <p>
+      Return true if <code>useAtomSelector()</code> should consider both lists
+      the "same", preventing the selector from reevaluating. Return false to
+      force the selector to reevaluate.
+    </p>
+    <p>
+      This function is only called after the selector has already run once -
+      otherwise there wouldn't be any <code>oldArgs</code>.
+    </p>
+  </Item>
+  <Item name="name">
+    <p>Optional. A string.</p>
+    <p>
+      It is highly recommended to pass this when passing an anonymous function
+      as the <code>selector</code>.
+    </p>
+    <p>
+      Zedux uses this name to create the node's key in the graph. For your
+      debugging pleasure, always try to make sure selectors are named functions
+      or specify this config option.
+    </p>
+  </Item>
+  <Item name="resultsComparator">
+    <p>Optional. A function. Signature:</p>
+    <Ts>{`(newResult, oldResult) => areEqual`}</Ts>
+    <p>
+      Accepts the previously-cached result of running this selector and the new
+      result that Zedux is about to cache.
+    </p>
+    <p>
+      Return true if Zedux should consider both results equal, preventing the
+      cache from updating and all dependents from reevaluating. Return false to
+      force all dependents to reevaluate.
+    </p>
+    <p>
+      This function is only called after the selector has already run once -
+      otherwise there wouldn't be any <code>oldResult</code>.
+    </p>
+  </Item>
+  <Item name="selector">
+    <p>
+      Required. The actual <Link to="AtomSelector">AtomSelector</Link> function
+      you're configuring.
+    </p>
+    <p>
+      If passing an anonymous function, it's recommended to also specify the{' '}
+      <code>name</code> property.
+    </p>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Selectors walkthrough](../../walkthrough/selectors)
+- [The `AtomSelector` type](AtomSelector)

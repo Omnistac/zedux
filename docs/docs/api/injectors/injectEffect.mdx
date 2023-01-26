@@ -3,11 +3,42 @@ id: injectEffect
 title: injectEffect
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { injectEffect } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that attaches a side effect to an atom instance.
+An [injector](../glossary#injector) that attaches a side effect to an atom instance. Runs the effect on initial atom evaluation and again every time the passed dependencies change on subsequent evaluations.
+
+This is _almost_ exactly equivalent to React's [`useEffect()`](https://reactjs.org/docs/hooks-reference.html#useeffect) hook. The only difference being that `injectEffect()` accepts async functions (a function that returns a promise).
+
+```ts
+injectEffect(async () => {
+  const val = await fetchVal()
+}, [])
+```
+
+This is only for convenience in cases where you don't have any cleanup. When you do have cleanup tasks to perform, the basically ugly `useEffect` workarounds are still what we use:
+
+```ts
+injectEffect(() => {
+  const controller = new AbortController()
+
+  const asyncFn = async () => {
+    const data = await fetch(url, { signal: controller.signal })
+    ...
+  }
+
+  return () => controller.abort()
+})
+```
+
+:::note
+We may make `useEffect` callbacks take an [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController) to hook into to perform cleanup tasks. If that sounds useful for you, open an issue and let's discuss!
+:::
+
+This injector does not run the callback when the [`ssr` ecosystem config option](../types/EcosystemConfig#ssr) is set to true.
 
 ## Examples
 
@@ -56,20 +87,74 @@ injectEffect(() => {
 
   return () => subscription.unsubscribe()
 }, [depA, depB])
+
+// async functions supported (can't return a cleanup function if you do this)
+injectEffect(async () => {
+  const val = await fetchVal()
+})
 ```
 
 ## Signature
 
-```ts
-injectEffect(sideEffect, deps?) => void
-```
+<Tabs>
+  {tab1(`injectEffect = (effect, deps?) => void`)}
+  {tab2(
+    `declare const injectEffect: (effect: EffectCallback, deps?: InjectorDeps) => void`
+  )}
+</Tabs>
 
-### `sideEffect`
+<Legend>
+  <Item name="effect">
+    <p>Required. A function.</p>
+    <p>
+      The effect can do anything but it shouldn't reference unstable variables
+      outside the effect, unless those variables are added to the{' '}
+      <code>deps</code> array.
+    </p>
+    <p>Signature:</p>
+    <Tabs>
+      {tab1(`effect = () => cleanup`)}
+      {tab2(`effect: () => (() => void) | void | Promise<any>`)}
+    </Tabs>
+    <Legend>
+      <Item name="Returns">
+        <p>A cleanup function, a promise, or nothing.</p>
+        <p>
+          Return a function to clean up subscriptions, clear timeouts, destroy
+          resources, and generally prevent memory leaks.
+        </p>
+        <p>
+          If a cleanup function is returned, it will be called when the effect
+          reruns due to deps changing or when the current atom instance is
+          destroyed. On deps change, this is called before the effect function
+          is rerun.
+        </p>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="deps">
+    <p>
+      Optional (though you'll always want to pass it). An array containing
+      absolutely anything.
+    </p>
+    <p>
+      If any items in this array change on a subsequent evaluation, the previous
+      effect's cleanup function will be called (if you returned one) and the
+      effect will be rerun.
+    </p>
+    <p>
+      Pass an empty array to prevent the effect from ever rerunning, as long as
+      this atom instance is alive:
+    </p>
+    <Ts>{`injectEffect(oneOffEffect, [])`}</Ts>
+    <p>
+      If not passed, the effect will rerun on every evaluation. This is almost
+      never what you want.
+    </p>
+  </Item>
+  <Item name="Returns">Nothing. Void. Emptiness.</Item>
+</Legend>
 
-Required. A function that will be run asynchronously, after this atom instance has been created. The effect can do anything but it shouldn't reference unstable variables outside the effect, unless those variables are added to the `deps` array.
+## See Also
 
-This function can return a cleanup function that will be called every time the effect is rerun due to the `deps` changing. The cleanup function will also be run when the atom instance is destroyed. Use this to clean up subscriptions, clear timeouts, destroy resources, and generally prevent memory leaks.
-
-### `deps`
-
-Optional (but you should probably pass it). An array of values that will cause this effect to rerun when they change. All outside, unstable variables referenced in the effect function should be passed in this array.
+- [The Side Effects walkthrough](../../walkthrough/side-effects)

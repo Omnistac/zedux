@@ -13,7 +13,7 @@ import { Ecosystem } from './Ecosystem'
 
 const defaultResultsComparator = (a: any, b: any) => a === b
 
-export class AtomSelectorCache<T = any, Args extends any[] = any[]> {
+export class SelectorCacheInstance<T = any, Args extends any[] = any[]> {
   public static $$typeof = Symbol.for('@@react/zedux/SelectorCache')
   public isDestroyed?: true
   public nextEvaluationReasons: EvaluationReason[] = []
@@ -40,7 +40,7 @@ export class SelectorCache {
    * Map selectorKey+params keyHash strings to the cached params and result for
    * the selector
    */
-  public _caches: Record<string, AtomSelectorCache<any, any>> = {}
+  public _caches: Record<string, SelectorCacheInstance<any, any>> = {}
 
   /**
    * Map selectors (or selector config objects) to a base selectorKey that can
@@ -52,7 +52,7 @@ export class SelectorCache {
   constructor(private readonly ecosystem: Ecosystem) {}
 
   public addDependent(
-    cache: AtomSelectorCache<any, any>,
+    cache: SelectorCacheInstance<any, any>,
     {
       callback,
       operation = 'addDependent',
@@ -94,15 +94,15 @@ export class SelectorCache {
     args?: Args,
     force?: boolean
   ) {
-    const cacheKey = is(selectable, AtomSelectorCache)
-      ? (selectable as AtomSelectorCache).cacheKey
+    const cacheKey = is(selectable, SelectorCacheInstance)
+      ? (selectable as SelectorCacheInstance).cacheKey
       : this.getCacheKey(
           selectable as AtomSelectorOrConfig<T, Args>,
           args as Args
         )
 
-    const cache = is(selectable, AtomSelectorCache)
-      ? (selectable as AtomSelectorCache<T, Args>)
+    const cache = is(selectable, SelectorCacheInstance)
+      ? (selectable as SelectorCacheInstance<T, Args>)
       : this._caches[cacheKey]
 
     if (!cache) return
@@ -116,12 +116,12 @@ export class SelectorCache {
 
   public getCache<T = any, Args extends [] = []>(
     selectable: Selectable<T, Args>
-  ): AtomSelectorCache<T, Args>
+  ): SelectorCacheInstance<T, Args>
 
   public getCache<T = any, Args extends any[] = []>(
     selectable: Selectable<T, Args>,
     args: Args
-  ): AtomSelectorCache<T, Args>
+  ): SelectorCacheInstance<T, Args>
 
   /**
    * Get the cached args and result for the given AtomSelector (or
@@ -129,22 +129,22 @@ export class SelectorCache {
    * initial value if this selector hasn't been cached before.
    */
   public getCache<T = any, Args extends any[] = []>(
-    selectable: Selectable<T, Args> | AtomSelectorCache<T, Args>,
+    selectable: Selectable<T, Args> | SelectorCacheInstance<T, Args>,
     args: Args = ([] as unknown) as Args
   ) {
-    if (is(selectable, AtomSelectorCache)) {
+    if (is(selectable, SelectorCacheInstance)) {
       return selectable
     }
 
     const selectorOrConfig = selectable as AtomSelectorOrConfig<T, Args>
     const cacheKey = this.getCacheKey(selectorOrConfig, args as Args)
-    let cache = this._caches[cacheKey] as AtomSelectorCache<T, Args>
+    let cache = this._caches[cacheKey] as SelectorCacheInstance<T, Args>
 
     if (cache) return cache
 
     // create the cache; it doesn't exist yet
-    cache = new AtomSelectorCache(cacheKey, selectorOrConfig, args)
-    this._caches[cacheKey] = cache as AtomSelectorCache<any, any[]>
+    cache = new SelectorCacheInstance(cacheKey, selectorOrConfig, args)
+    this._caches[cacheKey] = cache as SelectorCacheInstance<any, any[]>
     this.ecosystem._graph.addNode(cacheKey, true)
 
     this.runSelector(cacheKey, args as Args, true)
@@ -208,12 +208,12 @@ export class SelectorCache {
    * weakly matches the passed selector name.
    */
   public inspectCaches(selectableOrName?: Selectable<any, any> | string) {
-    const hash: Record<string, AtomSelectorCache> = {}
+    const hash: Record<string, SelectorCacheInstance> = {}
     const filterKey =
       !selectableOrName || typeof selectableOrName === 'string'
         ? selectableOrName
-        : is(selectableOrName, AtomSelectorCache)
-        ? (selectableOrName as AtomSelectorCache).cacheKey
+        : is(selectableOrName, SelectorCacheInstance)
+        ? (selectableOrName as SelectorCacheInstance).cacheKey
         : this.getBaseKey(
             selectableOrName as AtomSelectorOrConfig<any, any>,
             true
@@ -291,19 +291,19 @@ export class SelectorCache {
    */
   public weakGetCache<T = any, Args extends [] = []>(
     selectable: Selectable<T, Args>
-  ): AtomSelectorCache<T, Args> | undefined
+  ): SelectorCacheInstance<T, Args> | undefined
 
   public weakGetCache<T = any, Args extends any[] = []>(
     selectable: Selectable<T, Args>,
     args: Args
-  ): AtomSelectorCache<T, Args> | undefined
+  ): SelectorCacheInstance<T, Args> | undefined
 
   public weakGetCache<T = any, Args extends any[] = []>(
     selectable: Selectable<T, Args>,
     args?: Args
   ) {
-    if (is(selectable, AtomSelectorCache)) {
-      return selectable as AtomSelectorCache
+    if (is(selectable, SelectorCacheInstance)) {
+      return selectable as SelectorCacheInstance
     }
 
     const cacheKey = this.getCacheKey(
@@ -440,7 +440,7 @@ export class SelectorCache {
     isInitializing?: boolean
   ) {
     this.ecosystem._graph.bufferUpdates(cacheKey)
-    const cache = this._caches[cacheKey] as AtomSelectorCache<T, Args>
+    const cache = this._caches[cacheKey] as SelectorCacheInstance<T, Args>
     this.ecosystem._evaluationStack.start(cache)
     const selector =
       typeof cache.selectorRef === 'function'
@@ -472,7 +472,7 @@ export class SelectorCache {
               newState: result,
               oldState: cache.result,
               reasons: cache.nextEvaluationReasons,
-              selectorCache: cache as AtomSelectorCache<any, any[]>,
+              selectorCache: cache as SelectorCacheInstance<any, any[]>,
             })
           )
         }

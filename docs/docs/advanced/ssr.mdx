@@ -1,0 +1,210 @@
+---
+id: ssr
+title: SSR
+---
+
+In [the persistence guide](persistence), we learned how to get an ecosystem's state snapshot and use it to rehydrate the entire ecosystem. There is only a little more to learn to get a full-fledged SSR setup going.
+
+:::tip you will learn:
+How to use Zedux in a server-rendered app
+:::
+
+## SSR Setup
+
+Use the `ssr` ecosystem config option to turn on SSR mode for the entire ecosystem:
+
+```ts
+const ecosystem = createEcosystem({
+  id: 'root',
+  ssr: true,
+})
+```
+
+In SSR mode, effects created via `injectEffect` don't run. This exactly mimics the behavior of React's `useEffect` on the server. The vague wisdom behind this is that SSR is meant to only capture the initial render, while effects only have ... effect ... on subsequent renders.
+
+## Server Dehydration
+
+As you've probably guessed, use `ecosystem.dehydrate()` to grab the initial state snapshot from the server. An example using an Express-esque route handler:
+
+```tsx
+import { createEcosystem } from '@zedux/react'
+import { renderToString } from 'react-dom/server'
+
+function renderRoute(req, res) {
+  const ecosystem = createEcosystem({
+    id: 'root',
+    ssr: true
+  })
+
+  const output = renderApp(ecosystem)
+  const snapshot = ecosystem.dehydrate({ excludeFlags: ['unserializable'] })
+
+  // destroy the ecosystem, just to be safe:
+  ecosystem.destroy(true)
+
+  res.send(`
+    <div id="root">${output}</div>
+    <script>
+      window.__SNAPSHOT = ${JSON.stringify(snapshot)}
+    </script>
+    <script src="/my/app.js"></script>
+  `)
+}
+
+function renderApp(ecosystem) {
+  return renderToString(
+    <EcosystemProvider ecosystem={ecosystem}>
+      <App />
+    </Provider>
+  )
+}
+```
+
+### Promises
+
+The promises of query atoms - e.g. inline promises or promises created via `injectPromise`/`injectMemo` - still run during SSR. This enables the double-rendering technique (which may or may not work for you). Simply render again after awaiting all promises:
+
+```ts
+async function renderRoute(req, res) {
+  const ecosystem = createEcosystem({
+    id: 'root',
+    ssr: true,
+  })
+
+  // highlight-next-line
+  renderApp(ecosystem) // render once and discard the result
+
+  // grab the promise from every atom instance that has one:
+  // highlight-start
+  const promises = Object.values(ecosystem.inspectInstances())
+    .map(instance => instance.promise)
+    .filter(Boolean)
+  // highlight-end
+
+  // highlight-next-line
+  await Promise.all(promises) // contrived warning - remember error handling
+
+  // all promises resolved! Render again
+  // highlight-next-line
+  const output = renderApp(ecosystem)
+  const snapshot = ecosystem.dehydrate({ excludeFlags: ['unserializable'] })
+
+  ecosystem.destroy(true)
+
+  res.send(`
+    <div id="root">${output}</div>
+    <script>
+      window.__SNAPSHOT = ${JSON.stringify(snapshot)}
+    </script>
+    <script src="/my/app.js"></script>
+  `)
+}
+```
+
+### Prefetching
+
+You can also "prefetch" specific atoms before rendering:
+
+```ts
+async function renderRoute(req, res) {
+  const ecosystem = createEcosystem({
+    id: 'root',
+    ssr: true,
+  })
+
+  await prefetchAtoms(ecosystem)
+
+  const output = renderApp(ecosystem)
+  const snapshot = ecosystem.dehydrate({ excludeFlags: ['unserializable'] })
+
+  ecosystem.destroy(true)
+
+  res.send(`
+    <div id="root">${output}</div>
+    <script>
+      window.__SNAPSHOT = ${JSON.stringify(snapshot)}
+    </script>
+    <script src="/my/app.js"></script>
+  `)
+}
+
+function prefetchAtoms(ecosystem) {
+  const fooInstance = ecosystem.getInstance(fooAtom)
+  const barInstance = ecosystem.getInstance(barAtom)
+
+  return Promise.all([fooInstance.promise, barInstance.promise])
+}
+```
+
+### Other Techniques
+
+Zedux gives you very transparent control over your state. There are many ways you can use this transparency to optimize SSR.
+
+For example, it's possible to analyze your dependency graph and prefetch only highly-demanded atoms.
+
+```ts
+renderApp(ecosystem)
+
+const instancesByWeight = Object.values(ecosystem._instances)
+  .filter(instance => instance.promise) // only compare instances with promises
+  .sort(
+    (instanceA, instanceB) =>
+      ecosystem._graph.nodes[instanceA.keyHash].weight -
+      ecosystem._graph.nodes[instanceB.keyHash].weight
+  )
+
+// instances with lower weight are typically used more:
+const mostUsedInstances = instancesByWeight.slice(
+  0,
+  Math.floor(instancesByWeight.length / 2)
+)
+
+// wait for half of all the suspending atoms (the most-used half):
+await Promise.all(mostUsedInstances.map(instance => instance.promise))
+```
+
+Many other techniques are possible. Some ideas:
+
+- Using `react-ssr-prepass` to drill into nested suspense boundaries
+- Prefetching only atoms with at least X dependents
+- Using a fake user to periodically render routes during server downtime, caching lists of atoms that should be prefetched for that type of user on that route.
+
+## Client Hydration
+
+When you have a snapshot of initial state on the server, you'll usually send it to the client be e.g. embedding it in the page's HTML output:
+
+```ts
+res.send(`
+  <div id="root">${output}</div>
+  <script>
+    window.__SNAPSHOT = ${JSON.stringify(snapshot)}
+  </script>
+  <script src="/my/app.js"></script>
+`)
+```
+
+Now the client app can pass that to `ecosystem.hydrate()`:
+
+```tsx
+import { createEcosystem, EcosystemProvider } from '@zedux/react'
+
+const ecosystem = createEcosystem({ id: 'root' })
+ecosystem.hydrate(window.__SNAPSHOT)
+
+function App() {
+  return (
+    <EcosystemProvider ecosystem={ecosystem}>
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+All atom instances created by rendering `<Routes />` will now have their initial state hydrated from the server snapshot.
+
+## Recap
+
+- Use the `ssr` ecosystem config option to turn on SSR mode, preventing effects from running.
+- Dehydrate the state on the server with `ecosystem.dehydrate()`.
+- There are many ways to prefetch query atoms. Await many promises by grabbing the `.promise` off of each instance.
+- Hydrate the state on the client with `ecosystem.hydrate()`.

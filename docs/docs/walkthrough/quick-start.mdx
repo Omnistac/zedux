@@ -3,7 +3,7 @@ id: quick-start
 title: Quick Start
 ---
 
-Zedux is a state management tool for React.
+Zedux is a powerful state management tool for React.
 
 Its React architecture is atomic - similar to [Recoil](https://recoiljs.org/) and [Jotai](https://github.com/pmndrs/jotai).
 
@@ -17,15 +17,17 @@ yarn add @zedux/react
 
 ## Meet the Atoms
 
+Atoms are your building blocks. Create them with the `atom()` factory:
+
 ```ts
 import { atom } from '@zedux/react'
 
 const greetingAtom = atom('greeting', 'Hello, world!')
 ```
 
-The atom is the basic unit in Zedux. Here we created an atom by giving it a key, `greeting`, and an initial value, `Hello, world!`.
+Here we created an atom with the key `greeting` and initial value `'Hello, world!'`.
 
-But this atom is a mere shell. To make the magic happen, we need to use the atom. We can do this with hooks:
+Atoms themselves don't hold any state. Atoms are state templates. To make the magic happen, we need to actually use the atom. We can do this with hooks:
 
 ```tsx
 import { useAtomState } from '@zedux/react'
@@ -36,7 +38,9 @@ function Greet() {
 }
 ```
 
-The first time we use the atom, Zedux creates a new "atom instance" loaded with stateful goodies. This atom instance contains a powerful store that holds its state.
+The first time we use the atom, Zedux creates a new "atom instance" (similar to a class instance). Every atom instance has a store that holds its state.
+
+Our `greetingAtom` instance contains a single store whose state is the string `'Hello, world!'`. Zedux created this store automatically. We'll learn how to manually create stores later.
 
 ### Setting State
 
@@ -78,12 +82,12 @@ These live playgrounds have every React and Zedux export in scope. Click `Log > 
 
 Super In-Depth Technical Breakdown Here:
 
-- We create an atom with the key `greeting`
-- The `<Greeting>` component renders 2 children: `<GreetingPreview>` and `<EditGreeting>`
-- `<GreetingPreview>` renders first and calls `useAtomState` to get the state of the `greeting` atom instance
-- Zedux sees that the `greeting` atom has never been used before, so it creates an atom instance with a store whose initial state is `'Hello, world!'` and `useAtomState` returns that state to `<GreetingPreview>`
-- `<EditGreeting>` renders next and also calls `useAtomState`
-- Zedux sees that the `greeting` atom has a cached atom instance, so this time `useAtomState` returns the current state of the cached atom instance's store
+- We create an atom with the key `greeting`.
+- The `<Greeting>` component renders 2 children: `<GreetingPreview>` and `<EditGreeting>`.
+- `<GreetingPreview>` renders first and calls `useAtomState` to get the state of the `greeting` atom instance.
+- Zedux sees that the `greeting` atom has never been used before, so it creates an atom instance with a store whose initial state is `'Hello, world!'`. `useAtomState` returns that state to `<GreetingPreview>`.
+- `<EditGreeting>` renders next and also calls `useAtomState`.
+- Zedux sees that the `greeting` atom has a cached atom instance, so this time `useAtomState` returns the current state of the cached atom instance's store.
 
 Notice that the atom instance's state is shared between both components. This state reuse is one of the main features of atoms.
 
@@ -121,11 +125,11 @@ Here we used an "injector" - `injectAtomState` - to create a dependency on `text
 
 ### Injectors Are Like Hooks
 
-Writing an atom should feel like writing a React component. Zedux exports injectors like `injectEffect` and `injectMemo` that behave like React's `useEffect` and `useMemo`.
+Atom state factories look very similar to React function components. Zedux exports injectors like `injectEffect` and `injectMemo` that behave like React's `useEffect` and `useMemo`.
 
 There are many advantages to this approach:
 
-- Atoms are reactive by default. Just like React components, they reevaluate when their state updates.
+- Atoms are reactive by default. Just like React components, they rerender (we say "reevaluate") when their state updates.
 
 - Atoms have a small learning curve if you know hooks.
 
@@ -143,7 +147,12 @@ const initialPriceAtom = atom('initialPrice', () => {
 })
 ```
 
-In this example, `initialPriceAtom` will be reevaluated every time `stockPriceAtom`'s state changes. But the `initialPrice` it returns won't change, thanks to `injectMemo()`. Therefore components and atoms that use `initialPriceAtom` won't reevaluate.
+If you know React's `useMemo` hook, you should already be able to understand this example. But to break it down:
+
+- `initialPriceAtom` (or rather the "atom instance" Zedux creates) is reevaluated every time the injected `stockPriceAtom` instance's state changes.
+- Since `injectMemo()` doesn't have any dependencies, it never recalculate its value. So:
+- The `initialPrice` we return never changes, meaning the `initialPriceAtom`'s state never changes. So:
+- Components that use `initialPriceAtom` won't rerender and other atoms that use it won't reevaluate.
 
 :::important
 Injectors have the same caveats as hooks too! E.g. don't put injectors in if statements or use them outside atom state factories.
@@ -157,9 +166,11 @@ In general, the simple rule is: Replace the word "use" with "inject" inside atom
 
 Let's review what we have so far.
 
-When we create an atom, Zedux waits until the atom is used (e.g. by a component or another atom) to create an atom instance + store. This means that when we pass a state factory to `atom()`, that function won't be called until Zedux instantiates the atom. When the atom is used for the first time, Zedux creates an atom instance and calls the state factory to produce the initial value of the instance's store.
+When we create an atom, Zedux waits until the atom is used (e.g. by a component or another atom) to create an atom instance + store. When we pass a state factory to `atom()`, that function won't be called until Zedux instantiates the atom. When the atom is used for the first time, Zedux creates an atom instance and calls the state factory to produce the initial value of the instance's store.
 
 You can think of atoms like classes, but you never instantiate the class yourself - Zedux does it for you.
+
+Atoms can inject other atoms. When injected dependencies update, Zedux calls the state factory again to produce a new value (similar to a rerender in React). If a different value is returned, Zedux will update this atom instance's dependents, and so on down the graph tree.
 
 ```tsx
 function Greeting() {
@@ -175,7 +186,7 @@ const SomeGreetings = () => (
 )
 ```
 
-Here, the first `<Greeting />` renders and Zedux creates an instance of `greetingAtom`. The next `<Greeting />` then renders and reuses that same instance.
+Here, the first `<Greeting />` renders and Zedux creates an instance of `greetingAtom`. The next `<Greeting />` then renders and reuses that same atom instance.
 
 Usually this just works and you don't have to worry about it. But sometimes you'll need to create multiple instances of an atom. To make Zedux create more instances, we use params.
 
@@ -186,7 +197,8 @@ We can pass parameters to atoms:
 ```ts
 // This atom accepts a single `id` param
 const userDataAtom = atom('userData', (id: string) => {
-  // a hypothetical injector for simplicity (sends the request and tracks state):
+  // a hypothetical injector for simplicity (sends the request and tracks state).
+  // we'll look at handling promises later:
   return injectFetch(`/users/${id}`)
 })
 
@@ -214,13 +226,19 @@ This example creates two instances of the `userData` atom - one that fetches the
 Atom parameters must be serializable. Zedux converts them to a single, predictable string that uniquely identifies each atom instance. You shouldn't need params much, but when you do need them, make them as small as possible.
 :::
 
+:::tip
+Atoms that don't take params are called singletons. Atoms that take params are called families (based on Recoil's terminology).
+
+If you know Recoil and React Query, think of Zedux atoms as a cross between Recoil's atom, atomFamily, selector, and selectorFamily, and React Query's queries and mutations.
+:::
+
 ## Recap
 
-- Atoms are the basic unit in Zedux.
+- Atoms are like classes that Zedux instantiates for you.
 
-- Atoms can be used in React components with hooks like `useAtomState`.
+- Atom instances can be used in React components with hooks like `useAtomState`.
 
-- Atoms can be injected into other atoms using "injectors" like `injectAtomState`.
+- Atom instances can be injected into other atom instances using "injectors" like `injectAtomState`.
 
 - Injectors are like hooks. State factories are like React components that return state instead of UI.
 
@@ -237,8 +255,9 @@ const todosAtom = atom('todos', () => [
 
 const filteredTodosAtom = atom('filteredTodos', (isDone: boolean) => {
   const [todos] = injectAtomState(todosAtom)
+  const filteredTodos = todos.filter(todo => todo.isDone === isDone)
 
-  return todos.filter(todo => todo.isDone === isDone).map(({ text }) => text)
+  return filteredTodos.map(({ text }) => text)
 })
 
 // These 2 components pass different params to the filteredTodos atom:
@@ -251,7 +270,7 @@ function FinishedTodos() {
 function UnfinishedTodos() {
   const [todos] = useAtomState(filteredTodosAtom, [false])
 
-  return <div>Unfinished Todos: {todos}</div>
+  return <div>Unfinished Todos: {todos.join`, `}</div>
 }
 
 const Todos = () => (
@@ -268,4 +287,4 @@ At this point you should know more than enough to start using Zedux. But there i
 
 The rest of this walkthrough will cover every major feature. You can also play with the [examples](/not-done), skip ahead to the [API Docs](../api/classes/Atom), or take a step back and read [introduction stuff](../about/introduction).
 
-Next, we'll cover more ways to [create atoms](creating-atoms).
+Next, we'll learn how to give atoms control of [their own state](atom-state).

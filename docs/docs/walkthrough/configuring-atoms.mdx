@@ -1,0 +1,234 @@
+---
+id: configuring-atoms
+title: Configuring Atoms
+---
+
+We've learned how to use [Atom APIs](atom-apis) to configure an atom instance's promise and exports. But there are a few more configuration options we haven't covered.
+
+:::tip you will learn:
+
+- How to give an atom instance a Time To Live (`ttl`).
+- How to use flags to mark atoms that need to be overridden.
+
+:::
+
+## Config Objects
+
+The [`atom()`](../api/factories/api) factory takes a config object as its optional 3rd parameter.
+
+```ts
+atom(key, stateOrStateFactory, config)
+```
+
+Some config options are simple enough, they don't need the flexibility of an Atom API. We'll look at some of these now.
+
+### `ttl`
+
+When an atom instance is no longer used, we sometimes want to destroy it - allowing its data to be garbage collected.
+
+By default, standard atoms live forever. But they can be given a `ttl` to configure how long instances should stick around when they're no longer in use.
+
+```ts
+const zombieAtom = atom('zombie', null, {
+  // keep stale zombieAtom instances in memory for 10 minutes:
+  ttl: 1000 * 60 * 10,
+})
+// if anyone uses the instance within 10 minutes, cleanup is cancelled
+```
+
+`ttl` is a number in milliseconds. Zedux sets a timeout for `ttl` milliseconds when the atom instance goes "stale". If the atom instance is still stale when the timeout ends, Zedux destroys it.
+
+:::tip
+`ttl` can be set to `0` to clean up stale atom instances immediately, without a timeout. This is very common.
+:::
+
+We'll learn more about stale atom instances in [the destruction walkthrough](destruction).
+
+### `flags`
+
+Any atom can be given an array of string flags.
+
+```ts
+const scrollListenerAtom = atom(
+  'scrollListener',
+  () => {
+    injectEffect(() => {
+      window.addEventListener('scroll', myScrollHandler)
+
+      return () => window.removeEventListener('scroll', myScrollHandler)
+    }, [])
+
+    return null
+  },
+  {
+    flags: ['browser-only'],
+  }
+)
+```
+
+Here we created an atom that uses the `window` object without checking that it exists. This atom would throw an error if it was run, e.g., in a Node environment, so we gave it a flag to indicate this - `'browser-only'`.
+
+:::tip
+The flags can be any strings; you decide what they are.
+:::
+
+One purpose of flags is to tell Zedux to log a warning when an atom is used in an unsafe environment. To tell Zedux which flags are safe, use the `flags` option on your ecosystem:
+
+```tsx
+return (
+  <EcosystemProvider flags={['browser-only']} id="root">
+    <Child />
+  </EcosystemProvider>
+)
+
+// or
+
+const rootEcosystem = createEcosystem({
+  flags: ['browser-only'],
+  id: 'root',
+})
+```
+
+Here we told Zedux that atoms with the flag `'browser-only'` are safe in this ecosystem. That includes our `scrollListenerAtom` from above.
+
+Now say we want to run our code in Node (e.g. for SSR). We can tell Zedux that atoms with the flag `'browser-only'` are not safe by _not_ including it in the ecosystem's list of flags:
+
+```tsx
+return (
+  <EcosystemProvider flags={[]} id="root">
+    <Child />
+  </EcosystemProvider>
+)
+
+// or
+
+const rootEcosystem = createEcosystem({
+  flags: [],
+  id: 'root',
+})
+```
+
+Now if we try to use `scrollListenerAtom` in this ecosystem, Zedux will log a warning.
+
+```tsx live ecosystemId=configuring-atoms/flags resultVar=Parent
+const scrollListenerAtom = atom(
+  'scrollListener',
+  () => {
+    const store = injectStore(window.scrollY)
+
+    injectEffect(() => {
+      const myScrollHandler = () => store.setState(window.scrollY)
+
+      window.addEventListener('scroll', myScrollHandler)
+
+      return () => window.removeEventListener('scroll', myScrollHandler)
+    }, [])
+
+    return store
+  },
+  {
+    flags: ['browser-only'],
+  }
+)
+
+function Child() {
+  const scrollY = useAtomValue(scrollListenerAtom)
+
+  return <div>Scroll Y: {scrollY}</div>
+}
+
+function Parent() {
+  return (
+    <EcosystemProvider flags={[]} id="flags-example">
+      <Child />
+    </EcosystemProvider>
+  )
+}
+```
+
+Open your browser console and reset the above sandbox to see Zedux log a warning. This warning tells you that you should [override](overrides) the `scrollListener` atom in the current ecosystem.
+
+To turn off flag warnings, just don't give your ecosystem a `flags` prop.
+
+```ts
+ecosystem({ flags: [] }) // warns on every flag
+ecosystem({}) // never warns
+```
+
+## `api.setTtl()`
+
+Atom config objects are for simple config. But sometimes you want more than just a number timeout. You can also configure an atom instance's ttl with an [Atom API](atom-apis):
+
+```ts
+api().setTtl(10000) // set ttl to 10 seconds
+api().setTtl(myPromise) // wait until myPromise resolves before destroying
+api().setTtl(myObservable) // wait until myObservable emits before destroying
+
+// function overload to defer creating the promise until the instance goes stale
+api().setTtl(() => createPromise())
+api().setTtl(() => createObservable()) // same thing for observables
+
+// number also allowed, e.g. for reading dynamically from config
+api().setTtl(() => 10000)
+```
+
+As you can imagine, this is extremely powerful. Some ideas for how to use this:
+
+- Configure a global killswitch to clean up atom instances on-demand.
+- Create a plugin that implements a FIFO queue to clean up the oldest instances when the cache reaches a certain size.
+
+## Default TTL
+
+By default, all atom instances live forever. This default is fine for most apps. But in some cases, a default ttl of `0` or a short timeout might make more sense. Ecosystems have a config option for this, `defaultTtl`:
+
+```tsx live ecosystemId=configuring-atoms/defaultTtl resultVar=Parent
+const ttlTestAtom = atom('ttlTest', () => {
+  injectEffect(() => {
+    // use the effect cleanup function to detect when this atom instance dies
+    return () => {
+      alert('destroying atom instance!')
+    }
+  }, []) // no params = effect cleanup can only run on destruction
+
+  return null
+}) // no ttl = use the ecosystem default
+
+function Child() {
+  useAtomInstance(ttlTestAtom)
+
+  return null
+}
+
+function Parent() {
+  const [isShowing, setIsShowing] = useState(false)
+
+  return (
+    <EcosystemProvider defaultTtl={0} id="defaultTtl-example">
+      <button onClick={() => setIsShowing(state => !state)}>
+        {isShowing ? 'destroy' : 'create'}
+      </button>
+      {isShowing ? <Child /> : null}
+    </EcosystemProvider>
+  )
+}
+```
+
+`defaultTtl` is a number in milliseconds.
+
+## Config Priority
+
+We've learned that ecosystems have a `defaultTtl`, atoms have a `ttl` config option, and Atom APIs have a `setTtl` function. If you set ttl in multiple places, the "most specific" will take priority. Here's a little visual:
+
+![ecosystems -> atoms -> atom instances](/img/diagrams/config-specificity.png)
+
+Ecosystem-level config is the most general, atom-level config is more specific, and atom instance-level config is the most specific. Thus `api().setTtl()` takes priority over everything and `ttl` takes priority over `defaultTtl`.
+
+## Recap
+
+- Set TTL using `.setTtl()` on an Atom API returned from a state factory, `ttl` on an atom config object, or `defaultTtl` in an ecosystem's config.
+- Set an atom's flags using the `flags` property on an atom config object.
+- Configure the currently-allowed flags with the `flags` property of an ecosystem's config.
+
+## Next Steps
+
+You now know all the basics of creating and using atoms. It's time to learn some of the [convenient tools](atom-getters) that Zedux provides to make creating and using atoms even easier.

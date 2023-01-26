@@ -3,13 +3,15 @@ id: useEcosystem
 title: useEcosystem
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { useEcosystem } from '@zedux/react'
 ```
 
 A React hook that returns a reference to the nearest [ecosystem](../classes/Ecosystem) that's been provided over React context via [`<EcosystemProvider>`](../components/EcosystemProvider). If no ecosystem has been provided, Zedux will return the global ecosystem. If the global ecosystem hasn't been created yet, Zedux will create it.
 
-See [the ecosystems walkthrough](../../walkthrough/ecosystems) for more info about when Zedux uses which ecosystem.
+[The ecosystems walkthrough](../../walkthrough/ecosystems) details when Zedux uses which ecosystem.
 
 ## Examples
 
@@ -109,8 +111,30 @@ function App() {
 
 ## Signature
 
-```ts
-useEcosystem() => Ecosystem
-```
+<Tabs>
+  {tab1(`useEcosystem = () => ecosystem`)}
+  {tab2(`declare const useEcosystem: () => Ecosystem<any>`)}
+</Tabs>
 
-Returns an [ecosytem object](../classes/Ecosystem).
+<Legend>
+  <Item name="Returns">
+    <p>
+      An <Link to="../classes/Ecosystem">ecosystem</Link> object.
+    </p>
+    <p>
+      This is the <code>global</code> ecosystem if no ecosystem has been
+      provided above this component via an{' '}
+      <Link to="../components/EcosystemProvider">
+        <code>&lt;EcosystemProvider&gt;</code>
+      </Link>
+      . If an ecosystem has been provided, this is a reference to that ecosystem.
+    </p>
+  </Item>
+</Legend>
+
+## See Also
+
+- [`injectAtomGetters()`](../injectors/injectAtomGetters)
+- [The Ecosystems walkthrough](../../walkthrough/ecosystems)
+- [The `<EcosystemProvider>` component](../components/EcosystemProvider)
+- [The `Ecosystem` class](../classes/Ecosystem)

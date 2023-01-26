@@ -1,0 +1,60 @@
+---
+id: actionFactory
+title: actionFactory
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { actionFactory } from '@zedux/react'
+```
+
+A factory for creating [action factories](../types/ActionFactory).
+
+## Example
+
+```ts live resultVar=output
+const test = actionFactory('test')
+const output = test({ some: 'data' })
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`actionFactory = (type) => factory`)}
+  {tab2(
+    `declare const actionFactory: <Payload = undefined, Type extends string = string>(actionType: Type) => Payload extends undefined ? ActionFactory<undefined, Type> : ActionFactory<Payload, Type>`
+  )}
+</Tabs>
+
+<Legend>
+  <Item name="type">
+    <p>Required. A string.</p>
+    <p>
+      Will be set as the ActionFactory's <code>.type</code> property.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      An <Link to="../types/ActionFactory">ActionFactory</Link> function. This
+      factory accepts action payloads and returns valid action objects ready to
+      be dispatched to{' '}
+      <Link to="../classes/Store#dispatch">
+        <code>store.dispatch()</code>
+      </Link>
+      .
+    </p>
+    <p>
+      The action objects returned by this factory will have their{' '}
+      <code>.type</code> and <code>.payload</code> properties set like so:
+    </p>
+    <Ts>{`const action = actionFactory('type')('payload')
+action // { type: 'type', payload: 'payload' }`}</Ts>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Stores walkthrough](../../walkthrough/stores)
+- [The `ActionFactory` type](../types/ActionFactory)
+- [The `Action` type](../types/Action)

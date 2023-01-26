@@ -25,7 +25,7 @@ const asyncAtom = atom('async', () => {
         myReducer: () => 2,
         asyncStuff: promiseApi.store,
       }),
-    { shouldSubscribe: false }
+    { subscribe: false }
   )
 
   return api(store).setPromise(promiseApi.promise as Promise<any>)

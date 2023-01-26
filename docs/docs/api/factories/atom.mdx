@@ -3,6 +3,7 @@ id: atom
 title: atom
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { AtomKeyDesc } from '../classes/Atom.mdx'
 
 ```ts
@@ -50,74 +51,150 @@ function App() {
 }
 ```
 
-## Signature
+<Tabs>
+  {tab1(`atom = (key, valueOrFactory, config?) => newAtom`)}
+  {tab2(`declare const atom: {
+  // Query Atoms
+  <
+    State = any,
+    Params extends any[] = [],
+    Exports extends Record<string, any> = Record<string, never>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    key: string,
+    value: (
+      ...params: Params
+    ) => AtomApi<Promise<State>, Exports, undefined, PromiseType>,
+    config?: AtomConfig<State>
+  ): Atom<
+    PromiseState<State>,
+    Params,
+    Exports,
+    Store<PromiseState<State>>,
+    PromiseType
+  >\n
+  // Custom Stores
+  <
+    StoreType extends Store<any> = Store<any>,
+    Params extends any[] = [],
+    Exports extends Record<string, any> = Record<string, never>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    key: string,
+    value: (
+      ...params: Params
+    ) =>
+      | StoreType
+      | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
+    config?: AtomConfig<StoreStateType<StoreType>>
+  ): Atom<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>\n
+  // Catch-all
+  <
+    State = any,
+    Params extends any[] = [],
+    Exports extends Record<string, any> = Record<string, never>,
+    StoreType extends Store<State> = Store<State>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    key: string,
+    value: AtomValueOrFactory<State, Params, Exports, StoreType, PromiseType>,
+    config?: AtomConfig<State>
+  ): Atom<State, Params, Exports, StoreType, PromiseType>
+} = <
+  State = any,
+  Params extends any[] = [],
+  Exports extends Record<string, any> = Record<string, never>,
+  StoreType extends Store<State> = Store<State>,
+  PromiseType extends AtomApiPromise = undefined
+>(
+  key: string,
+  value: AtomValueOrFactory<State, Params, Exports, StoreType, PromiseType>,
+  config?: AtomConfig<State>
+)`)}
+</Tabs>
 
-```ts
-atom(key, value, config?) => Atom
-```
+<Legend>
+  <Item name="key">
+    <p>Required. A string.</p>
+    <p>
+      This key must be unique <b>except</b> when creating{' '}
+      <Link to="../../walkthrough/overrides">atom overrides</Link>.
+    </p>
+    <p>
+      <AtomKeyDesc />
+    </p>
+  </Item>
+  <Item name="valueOrFactory">
+    <p>Required. Can be any of the following:</p>
+    <ul className="spaced">
+      <li>
+        A raw value. When the atom is instantiated, Zedux will create a new
+        store with this value as its initial state.
+      </li>
+      <li>
+        A <Link to="../classes/Store">Zedux store</Link>. This will be the store
+        of this atom's instance - "instance" singular because such an atom will
+        naturally be a singleton (meaning it doesn't take params, since a state
+        factory function wasn't passed).
+      </li>
+      <li>
+        A state factory function that returns a raw value. Zedux will create a
+        new store with the returned value as its initial state.
+      </li>
+      <li>
+        A state factory function that returns a Zedux store. The returned store
+        will be the instance's <code>.store</code>.
+      </li>
+      <li>
+        <p>
+          A state factory function that returns an{' '}
+          <Link to="../classes/AtomApi">AtomApi</Link> instance.
+        </p>
+        <p>The Atom API's value can be any of the following:</p>
+        <p>
+          <ul>
+            <li>
+              A raw value. Zedux will create a new store with this value as its
+              initial state.
+            </li>
+            <li>
+              A Zedux store. This will be the instance's <code>.store</code>.
+            </li>
+            <li>
+              A promise. This will turn the atom into a{' '}
+              <Link to="../../walkthrough/query-atoms">query atom</Link>.
+            </li>
+          </ul>
+        </p>
+        <p>
+          The Atom API's exports will be set as the atom instance's{' '}
+          <code>.exports</code>.
+        </p>
+        <p>
+          The Atom API's promise will be set as the atom instance's{' '}
+          <code>.promise</code>.
+        </p>
+      </li>
+    </ul>
+  </Item>
+  <Item name="config">
+    <p>
+      Optional. An <Link to="../types/AtomConfig">AtomConfig</Link> object.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      An atom. This atom is actually an instance of the{' '}
+      <Link to="../classes/Atom">Atom</Link> class.
+    </p>
+    <p>
+      Zedux will manage creating and maintaining instances of the atom as you
+      use it.
+    </p>
+  </Item>
+</Legend>
 
-### Overloads
+## See Also
 
-```ts
-atom(key, value, config?) => Atom
-atom(key, store, config?) => Atom
-atom(key, api, config?) => Atom
-atom(key, (...params) => value, config?) => Atom
-atom(key, (...params) => store, config?) => Atom
-atom(key, (...params) => api, config?) => Atom
-```
-
-### `key`
-
-Required. A string. The key should typically be unique, though there are cases (e.g. for DI) where you won't make them unique. The key identifies the atom in ecosystems where it's used.
-
-<AtomKeyDesc />
-
-### `value`
-
-Required. Can be one of:
-
-- A raw value
-- A [store](../classes/Store) that holds the value
-- An [AtomApi](../classes/AtomApi) that wraps either a store or raw value
-- An evaluator function that returns a raw value
-- An evaluator function that returns a store
-- An evaluator function that returns an AtomApi
-
-### `config`
-
-Optional. An [AtomConfig](../types/AtomConfig) object. If it isn't passed, `ttl` will default to -1, which means the atom instance never dies.
-
-```ts
-atom('key', getter, { ttl: 0 })
-```
-
-## Typescript
-
-`atom` can be given 3 generics:
-
-- State - the type of the state this atom holds. Can be absolutely anything. Does not have to be serializable.
-- Params - the tuple of parameters the evaluator function accepts. Must be an array or tuple type.
-- Exports - the object of properties this atom exports. Must be a record (object) type.
-
-You typically shouldn't need to specify any of these. They're all inferred.
-
-```ts
-import { api, atom, injectStore } from '@zedux/react'
-
-const inferredAtom = atom('inferred', (one: string, two: number) => {
-  const store = injectStore(one + two) // string + number = string
-
-  return api(store).setExports({
-    getOne: () => one,
-    getTwo: () => two,
-  })
-})
-
-inferredAtom
-// Atom<
-//   string,
-//   [one: string, two: number],
-//   { getOne: () => string; getTwo: () => number }
-// >
-```
+- [The Quick Start](../../walkthrough/quick-start)
+- [The Configuring Atoms walkthrough](../../walkthrough/configuring-atoms)

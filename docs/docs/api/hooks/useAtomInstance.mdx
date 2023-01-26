@@ -3,6 +3,9 @@ id: useAtomInstance
 title: useAtomInstance
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+import { InjectAtomInstanceLegend } from '../injectors/injectAtomInstance.mdx'
+
 ```ts
 import { useAtomInstance } from '@zedux/react'
 ```
@@ -11,7 +14,7 @@ A React hook that accepts an atom and its params and registers a [static graph d
 
 Since the dependency is static, the component that uses this hook will not rerender when the resolved atom instance's state changes.
 
-To make the dependency dynamic, pass the returned atom instance to a dynamic hook like [`useAtomValue`](useAtomValue), [`useAtomState`](useAtomState), or [`useAtomSelector`](useAtomSelector).
+To make the dependency dynamic, pass the returned atom instance to a dynamic hook like [`useAtomValue()`](useAtomValue), [`useAtomState()`](useAtomState), or [`useAtomSelector()`](useAtomSelector).
 
 You can also pass an atom instance directly to register a static graph dependency on instances received from other sources, e.g. from [useAtomConsumer](useAtomConsumer). You typically won't need to do this.
 
@@ -52,28 +55,50 @@ const withParams = useAtomInstance(myAtom, ['param 1', 'param 2'])
 
 ## Signature
 
-```ts
-useAtomInstance(atom, params?) => AtomInstance
-```
+<Tabs>
+  {tab1(`useAtomInstance = (atomOrInstance, params?, config?) => atomInstance`)}
+  {tab2(`declare const useAtomInstance: {
+  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>;
+  <A extends AtomBase<any, [...any], any>>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): AtomInstanceType<A>;
+  <AI extends AtomInstance<any, [...any], any, any>>(instance: AI, params?: [], config?: ZeduxHookConfig): AI;
+}`)}
+</Tabs>
 
-Uses the atom + params combo to find an existing atom instance. If no instance is found, creates one. Returns the resolved [atom instance](../classes/AtomInstance).
+<InjectAtomInstanceLegend
+  name="useAtomInstance"
+  thirdParam={
+    <Item name="config">
+      <p>Optional. An object with the following optional properties:</p>
+      <Ts>{`{ operation, suspend }`}</Ts>
+      <Legend>
+        <Item name="operation">
+          <p>
+            Optional. A string. Default <code>'useAtomInstance'</code>
+          </p>
+          <p>
+            You usually won't need to worry about this. Passing an operation
+            string can help with debugging e.g. if the instance throws an error
+            or when inspecting the instance's list of injectors.
+          </p>
+        </Item>
+        <Item name="suspend">
+          <p>
+            Optional. A boolean. Default <code>true</code>
+          </p>
+          <p>
+            Pass <code>false</code> to prevent React from suspending until the
+            resolved instance's{' '}
+            <Link to="../classes/AtomInstance#promise">promise</Link> is
+            resolved.
+          </p>
+        </Item>
+      </Legend>
+    </Item>
+  }
+/>
 
-### Overloads
+## See Also
 
-```ts
-useAtomInstance(instance) => AtomInstance
-```
-
-### `atom`
-
-Required. The [atom](../classes/Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
-
-### `params`
-
-Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
-
-TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
-
-### `instance`
-
-Required (in this overload). An [atom instance](../classes/AtomInstance). Will register a static dependency on the passed instance and return it.
+- [The Atom Instances walkthrough](../../walkthrough/atom-instances)
+- [`injectAtomInstance()`](../injectors/injectAtomInstance)
+- [The `getInstance()` AtomGetter](../types/AtomGetters#getinstance)

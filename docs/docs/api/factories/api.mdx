@@ -3,6 +3,8 @@ id: api
 title: api
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { api } from '@zedux/react'
 ```
@@ -11,44 +13,93 @@ A factory for creating [AtomApis](../classes/AtomApi).
 
 ## Examples
 
+Miscellaneous:
+
 ```ts
 import { api } from '@zedux/react'
 
 const myApi = api()
 const withValue = api('some value')
-const withStore = api(createStore())
+const withStore = api(injectStore())
 const withExports = api(val).setExports({ ...myExports })
 const withPromise = api(val).setPromise(myPromise)
-const fromApi = api(myApi)
+const cloningApis = api(myApi).addExports(withExports.exports)
 const addingExports = api(withExports).addExports({ ...moreExports })
 const overwritingExports = api(withExports).setExports({ ...newExports })
+const settingTtl = api().setTtl(0)
+const ttlPromise = api().setTtl(myPromise)
+const ttlObservable = api().setTtl(my$)
+
+// query atoms:
+return api(myPromise)
 ```
 
 ## Signature
 
-```ts
-api(value?) => AtomApi
-```
+<Tabs>
+  {tab1(`api = (value?) => atomApi`)}
+  {tab2(`declare const api: {
+  // Custom Stores
+  <
+    StoreType extends Store<any> = Store<any>,
+    Exports extends Record<string, any> = Record<string, any>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    value:
+      | StoreType
+      | AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
+  ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>\n
+  // No Value
+  <
+    State = undefined,
+    Exports extends Record<string, any> = Record<string, any>,
+    PromiseType extends AtomApiPromise = undefined
+  >(): AtomApi<State, Exports, undefined, PromiseType>\n
+  // No Store
+  <
+    State = undefined,
+    Exports extends Record<string, any> = Record<string, any>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    value: State | AtomApi<State, Exports, undefined, PromiseType>
+  ): AtomApi<State, Exports, undefined, PromiseType>\n
+  // Catch-all
+  <
+    State = undefined,
+    Exports extends Record<string, any> = Record<string, any>,
+    StoreType extends Store<State> = Store<State>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    value: State | StoreType | AtomApi<State, Exports, StoreType, PromiseType>
+  ): AtomApi<State, Exports, StoreType, PromiseType>
+}`)}
+</Tabs>
 
-### Overloads
+<Legend>
+  <Item name="value">
+    <p>Optional. Can be absolutely anything.</p>
+    <p>
+      If a <Link to="../classes/Store">Zedux store</Link> is passed, it will be
+      set as the returned api's <code>.store</code> property. Otherwise,{' '}
+      <code>.store</code> will be undefined.
+    </p>
+    <p>
+      If a promise is passed and this api is returned from an atom state
+      factory, the atom will become a{' '}
+      <Link to="../../walkthrough/query-atoms">query atom</Link>.
+    </p>
+    <p>
+      If another Atom API is passed, <code>api()</code> clones it - returning a
+      new AtomApi instance with all the properties of the passed api copied over
+      (shallowly).
+    </p>
+  </Item>
+  <Item name="Returns">
+    An <Link to="../classes/AtomApi">AtomApi</Link> instance.
+  </Item>
+</Legend>
 
-```ts
-api(store?) => AtomApi
-api(atomApi?) => AtomApi
-```
+## See Also
 
-### `value`
-
-Any raw value. If this AtomApi is returned from an [evaluator function](../glossary#evaluator), this value will be set as the atom instance's state.
-
-### `store`
-
-A [Zedux store](../classes/Store). If this AtomApi is returned from an evaluator function, this store will be set as the [atom instance's store](../classes/AtomInstance#store). It should therefore be a stable reference that won't change across reevaluations, e.g. by using [`injectStore()`](../injectors/injectStore).
-
-### `atomApi`
-
-Another AtomApi. The returned AtomApi will be a shallow clone of the one passed - all properties will be copied over (exports, the promise, all interceptors).
-
-## Notes
-
-See [the AtomApi class](../classes/AtomApi) for more info.
+- [The Atom APIs walkthrough](../../walkthrough/atom-apis)
+- [The `AtomApi` class](../classes/AtomApi)

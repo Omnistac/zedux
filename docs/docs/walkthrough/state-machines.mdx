@@ -5,201 +5,538 @@ title: State Machines
 
 The state machine is one of the most important tools a statesmith can have in his belt. [XState](https://xstate.js.org/) is the current king of the JavaScript state machine world. Zedux is not out to change that, in fact we may build an official XState Zedux integration soon.
 
-However, Zedux does provide a minimal state machine implementation out of the box. Machines are just reducers and interpreters are just stores. Zedux state machines do not cover every use case of state machines. But they should be enough for most situations.
+However, Zedux does provide a minimal state machine implementation out of the box. These state machines use a high-level, TypeScript-first design that's meant to handle simple cases extremely well. For more power, use XState.
 
 ## Creating a machine
 
-To create a state machine, we create any number of states, tie them together in a machine, and rig up a store with that machine.
+Zedux provides a single high-level injector for creating automatically-typed state machines: `injectMachineStore`.
+
+Pass a function to `injectMachineStore` that accepts a single `state` factory function and returns an array of states. The first state in the array becomes the initial state.
 
 ```ts
-import { createMachine, createState, createStore } from '@zedux/react'
+import { atom, injectMachineStore } from '@zedux/react'
 
-const red = createState('red')
-const yellow = createState('yellow')
-const green = createState('green')
+const trafficLightAtom = atom('trafficLight', () => {
+  const store = injectMachineStore(state => [
+    state('green'), // <- the initial state
+    state('yellow'),
+    state('red'),
+  ])
 
-const lightMachine = createMachine(
-  green.on('timer', yellow),
-  yellow.on('timer', red),
-  red.on('timer', green)
+  return store
+})
+```
+
+Here we create a state machine with 3 states: `green`, `yellow`, and `red`. `green` is the initial state. But this machine is stuck in `green` forever! We need to add transitions to the machine:
+
+```ts
+const store = injectMachineStore(state => [
+  state('green').on('timer', 'yellow'),
+  state('yellow').on('timer', 'red'),
+  state('red').on('timer', 'green'),
+])
+```
+
+We use `.on(action, nextState)` to add transitions to the machine's states. Now the machine can transition from `green` -> `yellow` -> `red` -> `green` -> etc. in a loop. The machine will transition when it receives the `timer` signal.
+
+Now ... how do we send that signal to the machine?
+
+## MachineStore
+
+`injectMachineStore()` returns a special store called a MachineStore. MachineStore extends the Zedux Store class and adds some state machine functionality.
+
+```ts
+import { injectMachineStore, MachineStore } from '@zedux/react'
+
+const exampleAtom = atom('example', () => {
+  const store = injectMachineStore(() => [])
+
+  store instanceof MachineStore // true
+})
+```
+
+:::tip
+While you can instantiate the MachineStore class yourself, it's highly recommended to use helpers like `injectMachineStore()` for the automatic TS types.
+:::
+
+### `.send()`
+
+Use this to send signals to the store, triggering state transitions:
+
+```ts live ecosystemId=send-example resultVar=output
+const trafficLightAtom = atom('trafficLight', () => {
+  const store = injectMachineStore(state => [
+    state('green').on('timer', 'yellow'),
+    state('yellow').on('timer', 'red'),
+    state('red').on('timer', 'green'),
+  ])
+
+  // .send is a bound function property, so exporting like this is fine:
+  return api(store).setExports({ send: store.send })
+})
+
+const ecosystem = createEcosystem({ id: 'send-example' })
+const instance = ecosystem.getInstance(trafficLightAtom)
+const { send } = instance.exports
+
+const initialState = instance.getState()
+send('timer')
+const nextState = instance.getState()
+const output = { initialState, nextState }
+```
+
+For TS users, `.send()` only accepts strings that were specified as signal names during machine creation. In this example, passing anything but the string `'timer'` gives a TS error:
+
+```ts
+send('time') // Argument of type '"time"' is not assignable to parameter of type '"timer"'
+```
+
+The machine will only transition if the current state has a transition specified for the passed signal.
+
+```ts
+const store = injectMachineStore(state => [
+  state('idle').on('move', 'animating')
+  state('animating').on('finish', 'idle')
+])
+
+store.getValue() // idle
+store.send('finish') // does nothing
+store.getValue() // idle
+store.send('move')
+store.getValue() // animating
+```
+
+### `.is()`
+
+Returns true if the machine's current state is the passed state string.
+
+```ts live ecosystemId=is-example resultVar=output
+const trafficLightAtom = atom('trafficLight', () => {
+  const store = injectMachineStore(state => [
+    state('green').on('timer', 'yellow'),
+    state('yellow').on('timer', 'red'),
+    state('red').on('timer', 'green'),
+  ])
+
+  // both .is and .send are bound function properties:
+  return api(store).setExports({ is: store.is, send: store.send })
+})
+
+const ecosystem = createEcosystem({ id: 'is-example' })
+const { is, send } = ecosystem.getInstance(trafficLightAtom).exports
+
+send('timer')
+send('timer')
+const output = is('red')
+```
+
+For TS users, `.is()` only accepts strings that were specified as state names during machine creation. In this example, passing anything but the strings `'green'`, `'yellow'`, or `'red'` gives a TS error:
+
+```ts
+is('yello') // Argument of type '"yello"' is not assignable to parameter of type '"green" | "yellow" | "red"'
+```
+
+### `.getValue()`
+
+Returns the machine's current string value:
+
+```ts
+store.getValue() // green
+store.send('timer')
+store.getValue() // yellow
+```
+
+### State Shape
+
+The MachineStore's state is an object like the following:
+
+```ts
+store.getState()
+// {
+//   context: undefined,
+//   value: 'green',
+// }
+```
+
+`.value` is the current string state of the machine.
+
+```ts
+// These two lines are equivalent:
+machineStore.getState().value === 'green'
+machineStore.is('green')
+```
+
+We'll look at `.context` next:
+
+## Context
+
+MachineStores can hold extra state, besides the value string. This extra state is called context. Context must be an object (or `undefined`).
+
+You can pass the initial context as the 2nd param to `injectMachineStore()`:
+
+```ts
+const store = injectMachineStore(statesFactory, initialContext)
+```
+
+### `.getContext()`
+
+Returns the current context value. An alias for `machineStore.getState().context`:
+
+```ts
+// These two lines are equivalent:
+machineStore.getState().context
+machineStore.getContext()
+```
+
+### `.setContext()`
+
+Sets the store's context value. Accepts function overloads.
+
+```ts
+// These are equivalent:
+machineStore.setState(state => ({ ...state, context: newContext }))
+machineStore.setContext(newContext)
+machineStore.setContext(context => newContext)
+```
+
+### `.setContextDeep()`
+
+Deeply merges the passed context value into the existing context. Accepts function overloads.
+
+```ts
+// These are equivalent:
+machineStore.setStateDeep({ context: newContext })
+machineStore.setContextDeep(newContext)
+machineStore.setContextDeep(context => newContext)
+```
+
+:::warning
+Just like `.setStateDeep()`, `.setContextDeep()` is only for updating state - it cannot be used to delete keys. Use `.setContext` for that.
+:::
+
+### Example
+
+Here's an example using context to keep track of how many times a theme toggler toggles:
+
+```tsx live ecosystemId=state-machines/context resultVar=Theme
+const themeAtom = atom('theme', () => {
+  const store = injectMachineStore(
+    state => [
+      state('light').on('toggle', 'dark'),
+      state('dark').on('toggle', 'light'),
+    ],
+    { count: 0 },
+    {
+      onTransition: machine =>
+        machine.setContext(context => ({ count: context.count + 1 })),
+    }
+  )
+
+  return api(store).setExports({ send: store.send })
+})
+
+function Theme() {
+  const [{ context, value }, { send }] = useAtomState(themeAtom)
+
+  return (
+    <div style={value === 'dark' ? { background: '#444', color: '#fff' } : {}}>
+      <label>
+        <input
+          checked={value === 'dark'}
+          onChange={() => send('toggle')}
+          type="checkbox"
+        />
+        <span>{value} mode</span>
+      </label>
+      <div>Toggle Count: {context.count}</div>
+    </div>
+  )
+}
+```
+
+In this example we also made use of the `onTransition` listener. We'll look at listeners now:
+
+## Listeners
+
+Listeners can be used to run side effects when the state machine transitions to a new state. There are 3 kinds: `onEnter`, `onLeave`, and the universal `onTransition`.
+
+### `onEnter`
+
+This listener is attached to individual states via `state.onEnter()`. Here's an example using `.onEnter()` to send a request when the machine enters the 'fetching' state:
+
+```ts
+const requestStore = injectMachineStore(
+  state => [
+    state('idle').on('fetch', 'fetching'),
+    state('fetching')
+      .on('success', 'success')
+      .on('failure', 'failure')
+      .onEnter(async machine => {
+        try {
+          const data = await fetch('/todos').then(data => data.json())
+          machine.setContextDeep({ data })
+          machine.send('success')
+        } catch (error) {
+          machine.setContextDeep({ error })
+          machine.send('failure')
+        }
+      }),
+  ],
+  { data: null, error: null }
 )
-
-const store = createStore(lightMachine) // the machine is just a reducer!
-
-store.getState() // 'green'
-store.dispatch({ type: 'timer' }) // 'yellow'
-store.dispatch({ type: 'timer' }) // 'red'
 ```
 
-The first state passed to `createMachine` is the initial state of the machine.
+:::note
+For TS users: `.onEnter()` has limited type support, since the machine's full type hasn't been inferred yet. The above example will work because `.onEnter()` is placed after the two `.on()` calls for the 'fetching' state. When you need access to better types, use `onTransition` instead.
+:::
 
-## Using Actors
+### `onLeave`
 
-Actors can be used directly, instead of strings. And strings can be used instead of passing state objects to `state.on()`.
+This listener is attached to individual states via `state.onLeave()`. Here's an example using both `.onEnter()` and `.onLeave()` to set and clear a timeout:
 
 ```ts
-import { createActor, createState, createMachine } from '@zedux/react'
+const timeoutStore = injectMachineStore(
+  state => [
+    state('idle').on('startTimer', 'waiting'),
+    state('waiting')
+      .on('cancel', 'idle')
+      .on('timeout', 'idle')
+      .onEnter(machine => {
+        const handle = setTimeout(() => {
+          machine.setContext({ handle: null })
+          machine.send('timeout')
+        }, 1000)
 
-const resolve = createActor('resolve')
-const reject = createActor('reject')
+        machine.setContext({ handle })
+      })
+      .onLeave(async machine => {
+        const { handle } = machine.getContext()
 
-const pending = createState('pending')
+        if (!handle) return
 
-const promiseMachine = createMachine(
-  pending.on(resolve, 'resolved').on(reject, 'rejected')
+        clearTimeout(handle)
+        machine.setContext({ handle: null })
+      }),
+  ],
+  { handle: null }
 )
 ```
 
-## Lots of States
+:::note
+For TS users: `.onLeave()` has limited type support (like `.onEnter()`), since the machine's full type hasn't been inferred yet. When you need access to better types, use `onTransition` instead.
+:::
 
-Zedux exports a special `states()` factory that can be used to create several states at once.
+### `onTransition`
+
+This is the catch-all listener that will be called every time the state machine transitions. This listener has full type support, so use this when `onEnter` and `onLeave` types are insufficient.
+
+The 3rd parameter to `injectMachineStore()` is a config object:
 
 ```ts
-import { createMachine, states } from '@zedux/react'
-
-const [a, b, c, d] = states('a', 'b', 'c', 'd')
-
-const machine = createMachine(
-  a.on('next', b),
-  b.on('next', c),
-  c.on('next', d),
-  d.on('next', a)
-)
+const store = injectMachineStore(statesFactory, initialContext, config)
 ```
 
-## Side Effects
-
-One of [`when()`](/not-done)'s main features is registering `enter` and `leave` hooks for state machines:
+Pass `onTransition` as part of this config
 
 ```ts
-when(myStore)
-  .machine(({ activeState }) => activeState) // locate state machine
-  .enters(ActiveState.Inactive, scheduleCleanup) // register onEnter hook
-  .leaves(ActiveState.Inactive, destroy) // register onLeave hook
-  .enters([stateA, stateB], doSomething) // multiple states
-```
-
-If the store contains only a state machine reducer, pass nothing to `.machine()`:
-
-```ts
-const myStore = createStore(machine)
-
-when(myStore).machine().enters(state, invoke)
+const toggleMachine = injectMachineStore(state => [
+  state('on').on('toggle', 'off'),
+  state('off').on('toggle', 'on'),
+])
 ```
 
 ## Contrived Example
+
+The obligatory garage door state machine example:
 
 ```tsx live ecosystemId=state-machines/door resultVar=Machine
 const doorAtom = atom('door', () => {
   const store = injectMachineStore(
     state => {
-      const startTimeout = ({ store }) => {
-        store.setContext()
+      const startTimeout = machine => {
+        const { handle } = machine.getContext()
+
+        if (handle) clearTimeout(handle)
+
+        const newHandle = setTimeout(() => {
+          machine.setContext({ handle: null })
+          machine.send('timeout')
+        }, 1000)
+
+        machine.setContext({ handle: newHandle })
       }
 
       return [
         state('open').on('click', 'closing'),
-        state('opening').on('click', 'closing').on('timeout', 'open'),
+        state('opening')
+          .on('click', 'closing')
+          .on('timeout', 'open')
+          .onEnter(startTimeout),
         state('closed').on('click', 'opening'),
-        state('closing').on('click', 'opening').on('timeout', 'closed'),
+        state('closing')
+          .on('click', 'opening')
+          .on('timeout', 'closed')
+          .onEnter(startTimeout),
       ]
     },
-    { timeoutId: null }
+    { handle: null }
   )
 
-  injectEffect(() => {
-    const { subscription } = when(store)
-      .enters(['closing', 'opening'], ({ store }) => {
-        const timeoutId = setTimeout(() => {
-          store.send.timeout()
-        }, 1000)
-
-        store.setContext({ timeoutId })
-      })
-      .leaves(['closing', 'opening'], ({ oldState }) => {
-        if (oldState.context.timeoutId) {
-          clearTimeout(oldState.context.timeoutId)
-          store.setContext('timeoutId', null)
-        }
-      })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  return api(store).setExports(store.send)
+  return api(store).setExports({ send: store.send })
 })
 
 function Machine() {
   const { value } = useAtomValue(doorAtom)
-  const { click } = useAtomInstance(doorAtom).exports
+  const { send } = useAtomInstance(doorAtom).exports
 
   return (
     <>
       <div>State: {value}</div>
-      <button onClick={() => click()}>Fire Click</button>
+      <button onClick={() => send('click')}>Fire Click</button>
     </>
   )
 }
 ```
 
-## `useReducer`
+## Guards
 
-Since state machines are just reducers, they can be used directly in `useReducer()`
+Guards are functions that conditionally prevent the machine from performing a valid transition. Guards can be set per-transition via the 3rd param to `state.on()`:
 
-```tsx live ecosystemId=state-machine/theme resultVar=Theme
-// const buttonStyle = {
-//   appearance: 'none',
-//   border: '1px solid #ccc',
-//   cursor: 'pointer',
-//   fontSize: '20px',
-//   padding: '12px',
-// }
+```ts
+const maybeMoveStore = injectMachineStore(
+  state => [state('idle').on('move', 'moving', context => !context.isFrozen)],
+  { isFrozen: false }
+)
+```
 
-// const getStyle = theme => {
-//   switch (theme) {
-//     case 'light':
-//       return { ...buttonStyle, background: '#f7f7f7' }
-//     case 'dark':
-//       return { ...buttonStyle, background: '#333542', color: '#fff' }
-//     case 'classic':
-//       return {
-//         ...buttonStyle,
-//         background: '#fed',
-//         borderRadius: '20px',
-//         fontStyle: 'italic',
-//       }
-//   }
-// }
+These guards receive the machine's context as their only parameter. Return `true` to allow the transition or any falsy value to prevent it. The above machine will only transition from `idle` to `moving` if `context.isFrozen` is falsy.
 
-// const cycle = createActor('cycle')
-// const [light, dark, classic] = states('light', 'dark', 'classic')
+```tsx live ecosystemId=state-machines/guards resultVar=Controls
+const maybeMovingAtom = atom('maybeMoving', () => {
+  const store = injectMachineStore(
+    state => [
+      // the guard! Prevent this transition if we're frozen:
+      state('idle').on('move', 'moving', context => !context.isFrozen),
+      state('moving')
+        .on('stop', 'idle')
+        .onEnter(machine => {
+          setTimeout(() => machine.send('stop'), 1000)
+        }),
+    ],
+    { isFrozen: false }
+  )
 
-// const machine = createMachine(
-//   light.on(cycle, dark),
-//   dark.on(cycle, classic),
-//   classic.on(cycle, light)
-// )
+  // .send and .setContext are both bound function properties:
+  return api(store).setExports({
+    toggleFreeze: () =>
+      store.setContext(context => ({ isFrozen: !context.isFrozen })),
+    is: store.is,
+    move: () => store.send('move'),
+  })
+})
 
-// function Theme() {
-//   const [theme, dispatch] = useReducer(machine, light.type)
+function Controls() {
+  const [{ context }, { toggleFreeze, is, move }] = useAtomState(
+    maybeMovingAtom
+  )
 
-//   return (
-//     <button onClick={() => dispatch(cycle())} style={getStyle(theme)}>
-//       Cycle Theme
-//     </button>
-//   )
-// }
+  return (
+    <div>
+      <div>- {context.isFrozen ? 'Frozen' : 'All Systems Go'} -</div>
+      <div
+        style={{
+          background: 'cyan',
+          height: 50,
+          left: 0,
+          position: 'relative',
+          transition: 'all 1s',
+          width: 50,
+          ...(is('moving') && { left: 50 }),
+        }}
+      />
+      <button onClick={toggleFreeze}>
+        {context.isFrozen ? 'Unfreeze' : 'Freeze'}
+      </button>
+      <button onClick={move}>
+        Move {context.isFrozen ? '(Does Nothing)' : ''}
+      </button>
+    </div>
+  )
+}
+```
+
+You can also configure the MachineStore with a universal guard via the config object:
+
+```ts
+...
+const guard = (state, nextValue) => {
+  // use the current state object and/or nextValue string to determine if the
+  // transition should be allowed (return true if yes)
+}
+const store = injectMachineStore(statesFactory, initialContext, { guard })
+```
+
+This guard receives the full current state (`{ context, value }`) and the name of the pending transition state. Here's an example using a universal guard to pause the machine after allowing it to cycle back to the start:
+
+```tsx live ecosystemId=state-machines/guard resultVar=Cycler
+const cyclingAtom = atom('cycling', () => {
+  const store = injectMachineStore(
+    state => [
+      state('a').on('cycle', 'b'),
+      state('b').on('cycle', 'c'),
+      state('c').on('cycle', 'a'),
+    ],
+    { isPaused: false },
+    {
+      guard: (state, nextValue) => !state.context.isPaused || nextValue !== 'b',
+    }
+  )
+
+  injectEffect(() => {
+    const handle = setInterval(() => store.send('cycle'), 1000)
+
+    return () => clearInterval(handle)
+  }, [])
+
+  return api(store).setExports({
+    togglePause: () =>
+      store.setContext(context => ({ isPaused: !context.isPaused })),
+  })
+})
+
+function Cycler() {
+  const [{ context, value }, { togglePause }] = useAtomState(cyclingAtom)
+
+  return (
+    <div>
+      <div>
+        {value}{' '}
+        {context.isPaused
+          ? value === 'a'
+            ? '(paused)'
+            : '(finishing cycle...)'
+          : null}
+      </div>
+      <button onClick={togglePause}>
+        {context.isPaused ? 'Resume' : 'Pause'}
+      </button>
+    </div>
+  )
+}
 ```
 
 ## Recap
 
-- `createState()` creates a state for a state machine.
-- `states()` creates many states at once.
-- `createMachine()` creates a reducer.
-- A machine reducer can be used in stores or in `useReducer`.
-- `when(store).machine().enters(...)` registers an onEnter hook.
-- `when(store).machine().leaves(...)` registers an onLeave hook.
+- Use `injectMachineStore()` to create a MachineStore.
+  - `state.on()` adds transitions between states.
+  - `state.onEnter()` and `state.onLeave()` add listeners to individual states.
+- Context is the MachineStore's "extra state". It must be an object (or `undefined`).
+  - Set initial context with the 2nd param to `injectMachineStore`.
+  - Get context with `machineStore.getContext()`
+  - Set context with `machineStore.setContext()` or `machineStore.setContextDeep()`
+- Use guards to prevent valid transitions.
+- Add a universal guard and `onTransition` listener via the 3rd param to `injectMachineStore`.
 
 ## Next Steps
 
-We have a solid grip on atoms and stores at this point. It's time to look at some more advanced React usage. We'll start with [React context patterns](context).
+That's about it for the key features of Zedux. You're ready to jump in and get building! Check out the [advanced guides](../advanced/complex-params) and [API docs](../api/classes/Atom) as needed. Happy coding!
