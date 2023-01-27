@@ -1,7 +1,7 @@
 import Link from '@docusaurus/Link'
 import useBaseUrl from '@docusaurus/useBaseUrl'
 import React from 'react'
-import styled from 'styled-components'
+import styled from '@site/src/ssc'
 
 const PathDesc = styled.div`
   text-align: center;
@@ -102,7 +102,13 @@ const Title = styled.div`
 
 const Wrapper = styled.section`
   align-items: center;
-  background: var(--color-primary) radial-gradient(#ff821c, transparent 30%);
+  background: var(--color-primary)
+    repeating-radial-gradient(
+      circle at 100% 0,
+      transparent,
+      transparent 14.142136rem,
+      #fff5 28.284272rem
+    );
   display: flex;
   flex-direction: column;
   gap: 2rem;

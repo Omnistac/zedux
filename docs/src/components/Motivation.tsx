@@ -1,5 +1,5 @@
 import React from 'react'
-import styled from 'styled-components'
+import styled from '@site/src/ssc'
 
 const P = styled.p`
   margin: 0;

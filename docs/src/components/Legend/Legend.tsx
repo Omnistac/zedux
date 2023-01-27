@@ -1,5 +1,5 @@
 import React, { createContext, PropsWithChildren, useContext } from 'react'
-import styled from 'styled-components'
+import styled from '@site/src/ssc'
 
 const ItemDesc = styled.div`
   padding: 1rem;

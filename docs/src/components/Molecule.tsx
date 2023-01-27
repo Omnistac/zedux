@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import React, { useEffect, useState } from 'react'
-import styled from 'styled-components'
+import styled from '@site/src/ssc'
 
 const Circle = motion(styled.circle`
   box-shadow: inset -5 -5 8 rgba(0, 0, 0, 0.5);

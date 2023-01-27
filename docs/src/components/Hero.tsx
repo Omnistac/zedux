@@ -5,7 +5,7 @@ import logoUrl from '@site/static/img/logo.png'
 import textureUrl from '@site/static/img/bg-texture.png'
 import { motion } from 'framer-motion'
 import React from 'react'
-import styled, { css } from 'styled-components'
+import styled, { css } from '@site/src/ssc'
 import { GraphAnimation } from './GraphAnimation'
 
 const link = (color: string) => css`

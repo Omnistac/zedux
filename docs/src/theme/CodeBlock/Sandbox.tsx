@@ -303,7 +303,7 @@ export const Sandbox = ({
             placeholder="Write some code..."
             renderLeaf={Leaf}
             scrollSelectionIntoView={scrollSelectionIntoView}
-            $theme={theme}
+            $sscProps={theme}
           />
         </EditorWrapper>
         <Result>
