@@ -1,6 +1,12 @@
 import Layout from '@theme/Layout'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
+import styled from '@site/src/ssc'
 import React from 'react'
+
+const Text = styled.div`
+  font-size: 2em;
+  margin: auto;
+`
 
 export default function Tutorial() {
   const { siteConfig } = useDocusaurusContext()
@@ -10,7 +16,7 @@ export default function Tutorial() {
       title={`${siteConfig.title} Tutorial`}
       description="Zedux is a molecular state engine for React"
     >
-      <div>🚧 This page is under construction</div>
+      <Text>🚧 This page is under construction</Text>
     </Layout>
   )
 }
