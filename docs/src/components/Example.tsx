@@ -4,11 +4,6 @@ import React from 'react'
 import styled from '@site/src/ssc'
 import CodeBlock from '../theme/CodeBlock'
 
-const StyledCodeBlock = styled(CodeBlock)`
-  box-shadow: 5px 5px 5px 1px #0004;
-  padding: 1rem;
-`
-
 const Text = styled.div`
   align-items: center;
   display: flex;
@@ -42,7 +37,7 @@ export const Example = () => {
     <Wrapper>
       <Text>
         <Title>As Simple As</Title>
-        <StyledCodeBlock language="tsx">{`import { atom, useAtomState } from '@zedux/react'
+        <CodeBlock language="tsx">{`import { atom, useAtomState } from '@zedux/react'
 
 const greetingAtom = atom('greeting', 'Hello, World!')
 
@@ -50,7 +45,7 @@ function Greeting() {
   const [greeting] = useAtomState(greetingAtom)
 
   return <div>{greeting}</div>
-}`}</StyledCodeBlock>
+}`}</CodeBlock>
         <p>
           More examples on{' '}
           <Link to={useBaseUrl('examples')}>The examples page</Link>

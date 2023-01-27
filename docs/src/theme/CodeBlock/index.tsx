@@ -17,6 +17,8 @@ import React from 'react'
 import { Sandbox } from './Sandbox'
 
 const Code = styled.code<{ $sscProps: ReturnType<typeof usePrismTheme> }>`
+  display: block;
+
   .token {
     color: #d7dfec;
 
@@ -96,7 +98,7 @@ const withLiveEditor = (Component: typeof CodeBlock) => {
                 {renderTokens(tokens)}
               </Code>
             </pre>
-            <div className="buttonGroup_node_modules-@docusaurus-theme-classic-lib-theme-CodeBlock-Content-styles-module">
+            {/* <div className="buttonGroup_node_modules-@docusaurus-theme-classic-lib-theme-CodeBlock-Content-styles-module">
               <button
                 type="button"
                 className="clean-btn"
@@ -138,7 +140,7 @@ const withLiveEditor = (Component: typeof CodeBlock) => {
                   </svg>
                 </span>
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </>

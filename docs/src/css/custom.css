@@ -25,7 +25,6 @@
   --ifm-menu-color-active: var(--ifm-color-primary);
 
   --ifm-menu-link-sublist-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><path stroke="rgba(0,0,0,0.3)" fill="none" d="M6 16l6-4l6 4"></path></svg>');
-  
 }
 
 html[data-theme='dark'] {
@@ -101,10 +100,6 @@ pre {
 .main-wrapper {
   display: flex;
   flex-flow: column nowrap;
-}
-
-.markdown > [class^='codeBlockContainer'] {
-  box-shadow: 5px 5px #0004;
 }
 
 .menu > .menu__list {
@@ -280,4 +275,23 @@ input {
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   padding: 0.3rem 0.5rem;
+}
+
+pre {
+  background-color: var(--prism-background-color);
+  border-radius: var(--ifm-pre-border-radius);
+  box-shadow: 5px 5px #0004;
+  color: var(--prism-color);
+  font: var(--ifm-code-font-size) / var(--ifm-pre-line-height)
+    var(--ifm-font-family-monospace);
+  margin: 0 0 var(--ifm-spacing-vertical);
+  overflow: auto;
+}
+
+pre code {
+  background-color: transparent;
+  border: none;
+  font-size: 100%;
+  line-height: inherit;
+  padding: 0;
 }
