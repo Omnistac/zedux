@@ -107,7 +107,7 @@ const Wrapper = styled.section`
       circle at 100% 0,
       transparent,
       transparent 14.142136rem,
-      #fff5 28.284272rem
+      #fff3 28.284272rem
     );
   display: flex;
   flex-direction: column;

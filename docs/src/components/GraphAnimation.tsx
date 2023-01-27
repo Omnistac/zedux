@@ -182,7 +182,7 @@ const graphAnimation = atom(
       ctx.lineCap = 'round'
       ctx.lineWidth = 2
       ctx.strokeStyle = '#fff'
-      ctx.fillStyle = '#0004'
+      ctx.fillStyle = '#fff4'
       const rotationOffset = Math.sin(lastFrameTime / 1500)
 
       Object.values(nodes).forEach(node => {
@@ -261,8 +261,6 @@ const graphAnimation = atom(
         ctx.closePath()
         ctx.fill()
       })
-
-      ctx.fillStyle = '#fff4'
 
       Array.from(
         { length: 4 },
