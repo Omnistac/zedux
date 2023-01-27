@@ -9,7 +9,7 @@ const head =
     : document.head
 
 export default function LayoutWrapper(props) {
-  const [isHidden, setIsHidden] = useState(head.querySelector('[data-ssc]'))
+  const [isHidden, setIsHidden] = useState(!head.querySelector('[data-ssc]'))
 
   useLayoutEffect(() => {
     if (head.querySelector('[data-ssc]')) {
