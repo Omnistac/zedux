@@ -1,6 +1,6 @@
 import { usePrismTheme } from '@docusaurus/theme-common'
 import { Editable } from 'slate-react'
-import styled, { css } from 'styled-components'
+import styled, { css } from '@site/src/ssc'
 
 export const EditorWrapper = styled.div`
   display: flex;
@@ -84,7 +84,7 @@ export const Result = styled.div`
 `
 
 export const StyledEditable = styled(Editable)<{
-  $theme: ReturnType<typeof usePrismTheme>
+  $sscProps: ReturnType<typeof usePrismTheme>
 }>`
   background: #2b313a;
   flex: 1;
@@ -102,14 +102,14 @@ export const StyledEditable = styled(Editable)<{
   .token {
     color: #d7dfec;
 
-    ${({ $theme }) =>
-      $theme.styles
+    ${({ $sscProps }) =>
+      $sscProps.styles
         .map(({ style, types }) =>
           types
             .map(
               type =>
                 `&.${type} { ${css(
-                  style as any /* this basically works for some reason */
+                  style as any /* Prism font-weight type is wrong */
                 )} }`
             )
             .join('\n')

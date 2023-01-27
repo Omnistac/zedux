@@ -1,5 +1,5 @@
 import React from 'react'
-import styled from 'styled-components'
+import styled from '@site/src/ssc'
 import { Cog } from './Cog'
 import { Molecule } from './Molecule'
 import { Atom } from './Atom'

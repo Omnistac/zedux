@@ -2,7 +2,7 @@ import React from 'react'
 import { translate } from '@docusaurus/Translate'
 import { PageMetadata } from '@docusaurus/theme-common'
 import Layout from '@theme/Layout'
-import styled from 'styled-components'
+import styled from '@site/src/ssc'
 
 const Header = styled.div`
   font-size: 3rem;

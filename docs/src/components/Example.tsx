@@ -1,7 +1,7 @@
 import Link from '@docusaurus/Link'
 import useBaseUrl from '@docusaurus/useBaseUrl'
 import React from 'react'
-import styled from 'styled-components'
+import styled from '@site/src/ssc'
 import CodeBlock from '../theme/CodeBlock'
 
 const StyledCodeBlock = styled(CodeBlock)`

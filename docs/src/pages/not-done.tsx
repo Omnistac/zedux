@@ -1,7 +1,7 @@
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
 import Layout from '@theme/Layout'
 import React from 'react'
-import styled from 'styled-components'
+import styled from '@site/src/ssc'
 
 const Main = styled.main`
   flex: 1;
