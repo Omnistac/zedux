@@ -205,11 +205,7 @@ class Parser {
   }
 }
 
-const createStyleManager = (
-  root: Pick<Element, 'appendChild'> = typeof window === 'undefined'
-    ? { appendChild: n => n }
-    : document.head
-) => {
+let createStyleManager = (root: Element = document.head) => {
   let idCounter = 0
   let styleTag: HTMLStyleElement
   const id = Math.random().toString(16).slice(2, 14)
@@ -333,6 +329,8 @@ const createStyleManager = (
     return [cache.className, rawStr]
   }
 }
+if (typeof document === 'undefined')
+  createStyleManager = (() => () => []) as any
 
 let currentProps: Record<string, any> = {}
 let globalIdCounter = 0
@@ -524,7 +522,7 @@ export const ThemeProvider = ({
   root,
   theme,
 }: PropsWithChildren<{
-  root?: Pick<Element, 'appendChild'>
+  root?: Element
   theme: DefaultTheme
 }>) => {
   const getClassName = useMemo(() => createStyleManager(root), [root])
