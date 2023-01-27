@@ -37,7 +37,12 @@ const Wrapper = styled.section`
   }
 `
 
-const example = `import { atom, useAtomState } from '@zedux/react'
+export const Example = () => {
+  return (
+    <Wrapper>
+      <Text>
+        <Title>As Simple As</Title>
+        <StyledCodeBlock language="tsx">{`import { atom, useAtomState } from '@zedux/react'
 
 const greetingAtom = atom('greeting', 'Hello, World!')
 
@@ -45,14 +50,7 @@ function Greeting() {
   const [greeting] = useAtomState(greetingAtom)
 
   return <div>{greeting}</div>
-}`
-
-export const Example = () => {
-  return (
-    <Wrapper>
-      <Text>
-        <Title>As Simple As</Title>
-        <StyledCodeBlock language="tsx">{example}</StyledCodeBlock>
+}`}</StyledCodeBlock>
         <p>
           More examples on{' '}
           <Link to={useBaseUrl('examples')}>The examples page</Link>

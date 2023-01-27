@@ -120,9 +120,9 @@ function App() {
       This key must be unique <b>except</b> when creating{' '}
       <Link to="../../walkthrough/overrides">atom overrides</Link>.
     </p>
-    <p>
+    <div>
       <AtomKeyDesc />
-    </p>
+    </div>
   </Item>
   <Item name="valueOrFactory">
     <p>Required. Can be any of the following:</p>
@@ -151,7 +151,7 @@ function App() {
           <Link to="../classes/AtomApi">AtomApi</Link> instance.
         </p>
         <p>The Atom API's value can be any of the following:</p>
-        <p>
+        <div>
           <ul>
             <li>
               A raw value. Zedux will create a new store with this value as its
@@ -165,7 +165,7 @@ function App() {
               <Link to="../../walkthrough/query-atoms">query atom</Link>.
             </li>
           </ul>
-        </p>
+        </div>
         <p>
           The Atom API's exports will be set as the atom instance's{' '}
           <code>.exports</code>.
