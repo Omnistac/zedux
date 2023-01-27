@@ -4,9 +4,6 @@
   "description": "A Molecular State Engine for React",
   "main": "./dist/react/zedux-react.umd.js",
   "module": "./dist/react/zedux-react.es.js",
-  "publishConfig": {
-    "registry": "https://omnistac.jfrog.io/omnistac/api/npm/npm-local/"
-  },
   "types": "./dist/react/src/index.d.ts",
   "sideEffects": false,
   "files": [
