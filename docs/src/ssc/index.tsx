@@ -205,10 +205,12 @@ class Parser {
   }
 }
 
-let createStyleManager = (root: Element = document.head) => {
+const createStyleManager = (
+  root?: Element,
+  id = Math.random().toString(16).slice(2, 14)
+) => {
   let idCounter = 0
   let styleTag: HTMLStyleElement
-  const id = Math.random().toString(16).slice(2, 14)
   const generateClassName = () => `s${id}${idCounter++}`
   const managerKeyframes = {}
   const replaceStr = `REPLACEWITHCLASS${id}`
@@ -267,12 +269,14 @@ let createStyleManager = (root: Element = document.head) => {
       )
       .join('\n')
 
+    if (typeof document === 'undefined') return
+
     if (!styleTag) {
       styleTag = document.createElement('style')
       styleTag.dataset.ssc = 'active'
 
       if (typeof window !== 'undefined') {
-        root.appendChild(styleTag)
+        ;(root || document.head).appendChild(styleTag)
       }
     }
 
@@ -329,8 +333,6 @@ let createStyleManager = (root: Element = document.head) => {
     return [cache.className, rawStr]
   }
 }
-if (typeof document === 'undefined')
-  createStyleManager = (() => () => []) as any
 
 let currentProps: Record<string, any> = {}
 let globalIdCounter = 0
@@ -519,13 +521,15 @@ export interface DefaultTheme {}
 
 export const ThemeProvider = ({
   children,
+  id,
   root,
   theme,
 }: PropsWithChildren<{
+  id?: string
   root?: Element
   theme: DefaultTheme
 }>) => {
-  const getClassName = useMemo(() => createStyleManager(root), [root])
+  const getClassName = useMemo(() => createStyleManager(root, id), [])
   const value = useMemo(() => ({ getClassName, theme }), [getClassName, theme])
 
   return (
