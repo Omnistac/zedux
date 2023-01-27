@@ -71,21 +71,23 @@ const trafficLightAtom = atom('trafficLight', () => {
     state('red').on('timer', 'green'),
   ])
 
-  // .send is a bound function property, so exporting like this is fine:
-  return api(store).setExports({ send: store.send })
+  return store
 })
 
 const ecosystem = createEcosystem({ id: 'send-example' })
-const instance = ecosystem.getInstance(trafficLightAtom)
-const { send } = instance.exports
+const { store } = ecosystem.getInstance(trafficLightAtom)
 
-const initialState = instance.getState()
-send('timer')
-const nextState = instance.getState()
+const initialState = store.getState()
+store.send('timer')
+const nextState = store.getState()
 const output = { initialState, nextState }
 ```
 
-For TS users, `.send()` only accepts strings that were specified as signal names during machine creation. In this example, passing anything but the string `'timer'` gives a TS error:
+:::tip
+The store returned from the state factory _is_ the atom instance's `.store`. Since this example returned a MachineStore, you can access the machine's methods directly on the instance's store - e.g. `instance.store.send('timer')`. This has full TypeScript support too!
+:::
+
+For TypeScript users, `.send()` only accepts strings that were specified as signal names during machine creation. In this example, passing anything but the string `'timer'` gives a TS error:
 
 ```ts
 send('time') // Argument of type '"time"' is not assignable to parameter of type '"timer"'
@@ -99,11 +101,11 @@ const store = injectMachineStore(state => [
   state('animating').on('finish', 'idle')
 ])
 
-store.getValue() // idle
+store.getValue() // 'idle'
 store.send('finish') // does nothing
-store.getValue() // idle
+store.getValue() // 'idle'
 store.send('move')
-store.getValue() // animating
+store.getValue() // 'animating'
 ```
 
 ### `.is()`
@@ -118,12 +120,13 @@ const trafficLightAtom = atom('trafficLight', () => {
     state('red').on('timer', 'green'),
   ])
 
-  // both .is and .send are bound function properties:
-  return api(store).setExports({ is: store.is, send: store.send })
+  return store
 })
 
 const ecosystem = createEcosystem({ id: 'is-example' })
-const { is, send } = ecosystem.getInstance(trafficLightAtom).exports
+
+// both .is and .send are bound function properties (destructuring is fine):
+const { is, send } = ecosystem.getInstance(trafficLightAtom).store
 
 send('timer')
 send('timer')
@@ -232,6 +235,7 @@ const themeAtom = atom('theme', () => {
     }
   )
 
+  // you can alias store methods on exports for use in `useAtomState`:
   return api(store).setExports({ send: store.send })
 })
 
@@ -382,12 +386,12 @@ const doorAtom = atom('door', () => {
     { handle: null }
   )
 
-  return api(store).setExports({ send: store.send })
+  return store
 })
 
 function Machine() {
   const { value } = useAtomValue(doorAtom)
-  const { send } = useAtomInstance(doorAtom).exports
+  const { send } = useAtomInstance(doorAtom).store
 
   return (
     <>
@@ -426,7 +430,6 @@ const maybeMovingAtom = atom('maybeMoving', () => {
     { isFrozen: false }
   )
 
-  // .send and .setContext are both bound function properties:
   return api(store).setExports({
     toggleFreeze: () =>
       store.setContext(context => ({ isFrozen: !context.isFrozen })),
