@@ -337,6 +337,7 @@ const createStyleManager = (
 let currentProps: Record<string, any> = {}
 let globalIdCounter = 0
 let keyframesCache: Record<string, Record<string, string>> = {}
+const cachedManagers: Record<string, ReturnType<typeof createStyleManager>> = {}
 const groupStartTokens = '.#>+~[:'
 const reservedProp = '$sscProps'
 const specialProps = { children: 1, htmlFor: 1, key: 1, ref: 1, theme: 1 }
@@ -529,7 +530,10 @@ export const ThemeProvider = ({
   root?: Element
   theme: DefaultTheme
 }>) => {
-  const getClassName = useMemo(() => createStyleManager(root, id), [])
+  const getClassName = useMemo(() => {
+    const manager = cachedManagers[id] || createStyleManager(root, id)
+    return (cachedManagers[id] = manager)
+  }, [])
   const value = useMemo(() => ({ getClassName, theme }), [getClassName, theme])
 
   return (
