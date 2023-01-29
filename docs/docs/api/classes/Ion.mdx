@@ -7,13 +7,9 @@ Extends [Atom](Atom).
 
 Ions are a specialized atom type. They excel at selector-type operations.
 
-Ions extend the Atom class and provide just a little extra functionality and utility to your [evaluator function](../glossary#evaluator).
+Ions extend the Atom class. An ion's [state factory](../glossary#state-factory) receives a special [AtomGetters object](../types/AtomGetters) as its first parameter..
 
-Unlike atoms, ions must be given an evaluator function. That's the whole point! We call ion evaluators "getters". Ions can also be given a "setter".
-
-An ion getter is really just an evaluator that receives a special [AtomGetters object](../types/AtomGetters) as its first parameter.
-
-An ion setter is similar to a [SetStateInterceptor](../types/SetStateInterceptor). But it receives a special [AtomSetters object](../types/AtomSetters) as its first parameter and the value passed to [`instance.setState()`](AtomInstance#setstate) as its second parameter. Unlike SetStateInterceptors, ion setters do not need to return the new state.
+Unlike atoms, ions must be given a state factory function. That's the whole point!
 
 ## Creation
 
@@ -36,8 +32,9 @@ const withInjectors = ion('withInjectors', ({ get }) => {
   return val
 })
 
-const withSetter = ion('withSetter', getter, ({ get, set }, newValue) => {
-  set(otherAtom, newValue) // forward state setting on to another atom
+const withConfig = ion('withConfig', stateFactory, {
+  flags: ['my-flag'],
+  ttl: 0,
 })
 ```
 

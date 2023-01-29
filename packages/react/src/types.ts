@@ -269,11 +269,6 @@ export interface DependentEdge {
   task?: () => void // for external edges - so they can unschedule jobs
 }
 
-export type DispatchInterceptor<State = any> = (
-  action: ActionChain,
-  next: (action: ActionChain) => State
-) => State
-
 export interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
 > {
@@ -359,7 +354,7 @@ export interface InjectStoreConfig {
   subscribe?: boolean
 }
 
-export type IonGet<
+export type IonStateFactory<
   State,
   Params extends any[],
   Exports extends Record<string, any>,
@@ -369,17 +364,6 @@ export type IonGet<
   getters: AtomGetters,
   ...params: Params
 ) => AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
-
-export type IonSet<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>,
-  StoreType extends Store<State>,
-  PromiseType extends AtomApiPromise
-> = (
-  setters: AtomSetters<State, Params, Exports, StoreType, PromiseType>,
-  settable: Settable<State>
-) => State | void
 
 export type MaybeCleanup = Cleanup | void
 
@@ -408,11 +392,6 @@ export type Selectable<T = any, Args extends any[] = []> =
   | AtomSelector<T, Args>
   | AtomSelectorConfig<T, Args>
   | SelectorCacheInstance<T, Args>
-
-export type SetStateInterceptor<State = any> = (
-  settable: Settable<State>,
-  next: (settable: Settable<State>) => State
-) => State
 
 export type StateHookTuple<S, E> = [
   S,

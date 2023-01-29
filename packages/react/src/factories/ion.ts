@@ -5,8 +5,7 @@ import {
   AtomConfig,
   AtomGetters,
   AtomApiPromise,
-  IonGet,
-  IonSet,
+  IonStateFactory,
   PromiseState,
 } from '../types'
 
@@ -73,21 +72,7 @@ export const ion: {
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    get: IonGet<State, Params, Exports, StoreType, PromiseType>,
-    config?: AtomConfig<State>
-  ): Ion<State, Params, Exports, StoreType, PromiseType>
-
-  // Catch-all with deprecated setter overload
-  <
-    State = any,
-    Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>,
-    StoreType extends Store<State> = Store<State>,
-    PromiseType extends AtomApiPromise = undefined
-  >(
-    key: string,
-    get: IonGet<State, Params, Exports, StoreType, PromiseType>,
-    set?: IonSet<State, Params, Exports, StoreType, PromiseType>,
+    get: IonStateFactory<State, Params, Exports, StoreType, PromiseType>,
     config?: AtomConfig<State>
   ): Ion<State, Params, Exports, StoreType, PromiseType>
 } = <
@@ -98,14 +83,6 @@ export const ion: {
   PromiseType extends AtomApiPromise = undefined
 >(
   key: string,
-  get: IonGet<State, Params, Exports, StoreType, PromiseType>,
-  setIn?:
-    | IonSet<State, Params, Exports, StoreType, PromiseType>
-    | AtomConfig<State>,
-  configIn?: AtomConfig<State>
-) => {
-  const set = typeof setIn === 'function' ? setIn : undefined
-  const config = set ? configIn : (setIn as AtomConfig<State>)
-
-  return new Ion(key, get, set, config)
-}
+  get: IonStateFactory<State, Params, Exports, StoreType, PromiseType>,
+  config?: AtomConfig<State>
+) => new Ion(key, get, config)

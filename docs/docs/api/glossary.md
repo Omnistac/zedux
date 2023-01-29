@@ -53,6 +53,8 @@ Zedux translates all of these state updating operations into "pseudo-actions" - 
 
 A function passed to [`atom()`](factories/atom) (or other atom factory functions like [`ion()`](factories/ion)). This function is called to produce the initial value of the atom instance. It also runs every time an atom instance reevaluates.
 
+These are similar to render functions in React. Except of course they return state instead of UI.
+
 ### Static Graph Dependency
 
 When one [graph node](#graph-node) depends on another, Zedux draws an edge between those two nodes in its internal graph algorithm.

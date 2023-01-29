@@ -117,21 +117,18 @@ describe('graph', () => {
     const testEcosystem = createEcosystem({ id: 'test2' })
     const evaluations: number[] = []
 
-    const ion1 = ion(
-      'ion1',
-      ({ getInstance }) => {
-        const instance1 = getInstance(atom1)
-        const instance2 = getInstance(atom2)
+    const ion1 = ion('ion1', ({ getInstance }) => {
+      const instance1 = getInstance(atom1)
+      const instance2 = getInstance(atom2)
 
-        evaluations.push(instance1.store.getState())
+      evaluations.push(instance1.store.getState())
 
-        return instance1.store.getState() + instance2.store.getState()
-      },
-      ({ getInstance, set }, newVal) => {
-        getInstance(atom1).setState(newVal)
-        set(atom1, 12)
-      }
-    )
+      return api(
+        instance1.store.getState() + instance2.store.getState()
+      ).setExports({
+        set: (val: number) => getInstance(atom1).setState(val + 1),
+      })
+    })
 
     const ionInstance = testEcosystem.getInstance(ion1)
 
@@ -178,7 +175,7 @@ describe('graph', () => {
 
     expect(evaluations).toEqual([1])
 
-    ionInstance.setState(11)
+    ionInstance.exports.set(11)
 
     expect(evaluations).toEqual([1])
     expect(ionInstance.store.getState()).toBe(3)

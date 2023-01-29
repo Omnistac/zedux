@@ -202,36 +202,26 @@ store.setStateDeep(state => ({ someKey: state.someKey + 1 }))
 
 ### `setState()`
 
-The most common way to set the state of an atom instance's store. This is the `setState` function returned by `useAtomState`. Function overload supported.
+The most common way to set the state of an atom instance's store. An alias for [`.store.setState()`](../api/classes/Store#setstate). Function overload supported.
 
 ```ts
-const instance = useAtomInstance(myAtom)
-...
+const instance = getInstance(myAtom)
 instance.setState(newState)
 instance.setState(currentState => newState)
 ```
 
-This `.setState()` function is **not** a reference to the instance's store's `.setState()` function. `instance.setState()` is a wrapper around `instance.store.setState()`. This is important because `instance.setState()` allows interceptors to run before calling `.store.setState()`.
-
 :::tip
-Always prefer calling `instance.setState()` over `instance.store.setState()`
+The `setState` function returned by [`useAtomState()`](../api/hooks/useAtomState) and [`injectAtomState()`](../api/injectors/injectAtomState) is a wrapper around this function.
 :::
 
-### `dispatch()`
+### `.dispatch()`
 
-The recommended way to dispatch actions to the instance's store.
+Dispatches an action to the instance's store. An alias for [`.store.dispatch()`](../api/classes/Store#dispatch).
 
 ```ts
-const instance = useAtomInstance(myAtom)
-...
-instance.dispatch({ type: 'some-type' })
+const instance = getInstance(myAtom)
+instance.dispatch({ type: 'some-type', payload: 'some-payload' })
 ```
-
-Similar to `instance.setState()`, `instance.dispatch()` is a wrapper around `instance.store.dispatch()`. The difference is that `instance.dispatch()` allows dispatch interceptors to run before calling `.store.dispatch()`.
-
-:::tip
-Always prefer calling `instance.dispatch()` over `instance.store.dispatch()`
-:::
 
 ### `invalidate()`
 

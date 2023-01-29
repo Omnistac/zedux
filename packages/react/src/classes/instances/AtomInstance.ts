@@ -1,9 +1,11 @@
 import {
   ActionChain,
   createStore,
+  Dispatchable,
   isZeduxStore,
   metaTypes,
   Observable,
+  RecursivePartial,
   removeAllMeta,
   Settable,
   Store,
@@ -174,18 +176,9 @@ export class AtomInstance<
   }
 
   /**
-   * Call `store.dispatch()` on this atom instance's store. Run any `dispatch`
-   * interceptors from this atom's AtomApi (if any) first.
+   * An alias for `.store.dispatch()`
    */
-  public dispatch = (action: ActionChain) => {
-    const val = this.api?.dispatchInterceptors?.length
-      ? this.api._interceptDispatch(action, (newAction: ActionChain) =>
-          this.store.dispatch(newAction)
-        )
-      : this.store.dispatch(action)
-
-    return val
-  }
+  public dispatch = (action: Dispatchable) => this.store.dispatch(action)
 
   /**
    * An alias for `instance.store.getState()`. Returns the current state of this
@@ -196,18 +189,18 @@ export class AtomInstance<
   }
 
   /**
-   * Call `store.setState()` on this atom instance's store. Run any `setState`
-   * interceptors from this atom's AtomApi (if any) first.
+   * An alias for `.store.setState()`
    */
-  public setState = (settable: Settable<State>, meta?: any) => {
-    const val = this.api?.setStateInterceptors?.length
-      ? this.api._interceptSetState(settable, (newSettable: Settable<State>) =>
-          this.store.setState(newSettable, meta)
-        )
-      : this.store.setState(settable, meta)
+  public setState = (settable: Settable<State>, meta?: any) =>
+    this.store.setState(settable, meta)
 
-    return val
-  }
+  /**
+   * An alias for `.store.setStateDeep()`
+   */
+  public setStateDeep = (
+    settable: Settable<RecursivePartial<State>, State>,
+    meta?: any
+  ) => this.store.setStateDeep(settable, meta)
 
   public _init() {
     const factoryResult = this._doEvaluate()
