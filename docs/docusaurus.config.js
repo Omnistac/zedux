@@ -91,7 +91,7 @@ module.exports = {
               href: 'https://github.com/Omnistac/zedux',
             },
             {
-              label: 'Twitter',
+              label: "Lead Maintainer's Twitter (DMs open!)",
               href: 'https://twitter.com/josh_claunch',
             },
           ],

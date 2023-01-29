@@ -30,11 +30,12 @@ module.exports = {
     ],
     Advanced: [
       'advanced/complex-params',
-      'advanced/time-travel',
+      'advanced/more-patterns',
       'advanced/plugins',
       'advanced/persistence',
       'advanced/ssr',
       'advanced/store-composition',
+      'advanced/time-travel',
     ],
     API: [
       {
@@ -120,13 +121,11 @@ module.exports = {
           'api/types/AtomSelector',
           'api/types/AtomSelectorConfig',
           'api/types/AtomSetters',
-          'api/types/DispatchInterceptor',
           'api/types/EcosystemConfig',
           'api/types/EvaluationReason',
           'api/types/HierarchyDescriptor',
           'api/types/Reducer',
           'api/types/ReducerBuilder',
-          'api/types/SetStateInterceptor',
           'api/types/Settable',
           'api/types/Subscriber',
           'api/types/Subscription',
