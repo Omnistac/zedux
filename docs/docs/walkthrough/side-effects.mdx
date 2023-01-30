@@ -157,149 +157,7 @@ function App() {
 }
 ```
 
-See the full effect subscriber definition [here](/not-done). Effects subscribers are simple and powerful. But you shouldn't need to rig them up manually. Zedux exposes a high-level API that does this for you:
-
-## WhenBuilder
-
-`when()` is a declarative and simple way to hook into stores. It has several methods for tying into certain events and status updates in stores.
-
-### `.receivesAction()`
-
-Calls an effect handler every time the store receives an action.
-
-```ts
-import { useAtomInstance, when } from '@zedux/react'
-
-function App() {
-  const { store } = useAtomInstance(myAtom)
-
-  useEffect(() => {
-    // highlight-next-line
-    const { subscription } = when(store).receivesAction(
-      ({ action, newState, oldState }) => {
-        console.log('store received action', { action, newState, oldState })
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [store])
-  ...
-}
-```
-
-`.receivesAction()` can be given a specific [ActionFactory](../api/types/ActionFactory) or action type:
-
-```ts
-import { actionFactory, when } from '@zedux/react'
-
-const login = actionFactory('login')
-when(myStore).receivesAction(login, doStuffOnLogin)
-```
-
-In this way, stores can easily be consumed as streams of actions.
-
-#### `.setState()`
-
-When `store.setState()` is called, Zedux translates that into a dispatch of the special `HYDRATE` action. To listen to only this action, import the `actionTypes` object and use the `.HYDRATE` property:
-
-```ts
-import { actionTypes, when } from '@zedux/react'
-
-when(store).receivesAction(actionTypes.HYDRATE, handleSetState)
-```
-
-### `.stateChanges()`
-
-Calls an effect handler every time the store's state changes in response to an action (which includes every time `.setState()` is called).
-
-```ts
-when(myStore).stateChanges(({ action, newState, oldState }) => {
-  console.log('store state changed', { action, newState, oldState })
-})
-```
-
-### `.stateMatches()`
-
-Calls an effect handler every time the store's state updates to match the passed predicate. Does not call the handler if the previous state also matched the predicate.
-
-```ts
-const counterStore = createStore(null, 0)
-
-when(counterStore).stateMatches(
-  num => num > 1,
-  ({ newState, oldState }) => {
-    console.log('triggered!', { newState, oldState })
-  }
-)
-
-counterStore.setState(1)
-counterStore.setState(2) // triggered! { newState: 2, oldState: 1 }
-counterStore.setState(3)
-counterStore.setState(0)
-counterStore.setState(4) // triggered! { newState: 4, oldState: 0 }
-```
-
-To perform a side effect on every action or every state change while the predicate is matched, regardless of previous state, use `.receivesAction()` or `.stateChanges()` with a normal if statement:
-
-```ts
-when(counterStore).receivesAction(({ newState, oldState }) => {
-  if (newState > 1) {
-    console.log('triggered!', { newState, oldState })
-  }
-})
-
-counterStore.setState(1)
-counterStore.setState(2) // triggered! { newState: 2, oldState: 1 }
-counterStore.setState(3) // triggered! { newState: 3, oldState: 2 }
-counterStore.setState(0)
-counterStore.setState(4) // triggered! { newState: 4, oldState: 0 }
-```
-
-### Chaining
-
-Multiple handlers can be chained together.
-
-```ts
-when(myStore).receivesAction(logAction).stateChanges(persistStateChange)
-
-// Or
-const whenMyStore = when(myStore)
-
-whenMyStore.receivesAction(logAction)
-whenMyStore.stateChanges(persistStateChange)
-```
-
-### Cleanup
-
-As with all subscriptions, it's important to clean up effects subscribers when their context is destroyed (e.g. the component is unmounted or the atom instance is destroyed).
-
-`when()` builders have a `subscription` property, which is a reference to the store subscription created by the `when()` call. Remember to call `subscription.unsubscribe()` in `useEffect` and `injectEffect`:
-
-```tsx live ecosystemId=side-effects/cleanup resultVar=Button
-const triggerAlert = actionFactory('triggerAlert')
-
-const buttonPressAtom = atom('buttonPress', () => {
-  const store = injectStore()
-
-  injectEffect(() => {
-    const { subscription } = when(store).receivesAction(triggerAlert, () =>
-      alert('consider it done')
-    )
-
-    return () => subscription.unsubscribe()
-  }, [store]) // don't have to pass store since it's a stable reference
-
-  return store
-})
-
-function Button() {
-  const { dispatch } = useAtomInstance(buttonPressAtom)
-
-  return <button onClick={() => dispatch(triggerAlert())}>Do It</button>
-}
-```
-
-For the full API, see [`when()`](/not-done).
+See the full effect subscriber definition [here](/not-done).
 
 ## Odd-Looking Actions
 
@@ -311,12 +169,6 @@ If you don't care about the metadata, you can get the wrapped action with `remov
 
 ```ts
 import { removeAllMeta, when } from '@zedux/react'
-
-when(store).receivesAction(({ action }) => {
-  const unwrappedAction = removeAllMeta(action)
-
-  switch (unwrappedAction.type) { ... }
-})
 
 store.subscribe((newState, oldState, actionChain) => {
   const action = removeAllMeta(actionChain)
@@ -376,10 +228,7 @@ const userAtom = atom('user', () => {
 
 - `injectEffect()` is a simple tool for running side effects on changes that trigger atom reevaluation. It's also good for managing cleanup.
 - BUT you may not need `injectEffect()`.
-- `when(store).receivesAction()` runs a side effect on every action.
-- `when(store).stateChanges()` runs a side effect on every state change.
-- `when(store).stateMatches()` runs a side effect when the store's new state passes the predicate function, but the old state did not.
-- `when(store).subscription.unsubscribe()` cleans up the subscription.
+- `injectWhy()` can help reduce side effects.
 - Zedux can handle every possible asynchronous flow, e.g. RxJS streams, generators, promises, sockets, etc
 
 ## Next Steps
