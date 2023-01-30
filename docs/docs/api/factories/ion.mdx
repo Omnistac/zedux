@@ -52,59 +52,146 @@ function TempCelsius() {
 
 ## Signature
 
-```ts
-ion(key, get, set?, config?) => Ion
-```
+<Tabs>
+  {tab1(`ion = (key, stateFactory, config?) => newIon`)}
+  {tab2(`declare const ion: {
+  // Query Atoms
+  <
+    State = any,
+    Params extends any[] = [],
+    Exports extends Record<string, any> = Record<string, never>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    key: string,
+    value: (
+      getters: AtomGetters,
+      ...params: Params
+    ) => AtomApi<Promise<State>, Exports, undefined, PromiseType>,
+    config?: AtomConfig<State>
+  ): Ion<
+    PromiseState<State>,
+    Params,
+    Exports,
+    Store<PromiseState<State>>,
+    PromiseType
+  >\n
+  // Custom Stores
+  <
+    StoreType extends Store<any> = Store<any>,
+    Params extends any[] = [],
+    Exports extends Record<string, any> = Record<string, never>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    key: string,
+    get: (
+      getters: AtomGetters,
+      ...params: Params
+    ) =>
+      | StoreType
+      | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
+    config?: AtomConfig<StoreStateType<StoreType>>
+  ): Ion<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>\n
+  // No Store
+  <
+    State = any,
+    Params extends any[] = [],
+    Exports extends Record<string, any> = Record<string, never>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    key: string,
+    get: (
+      getters: AtomGetters,
+      ...params: Params
+    ) => AtomApi<State, Exports, undefined, PromiseType> | State,
+    config?: AtomConfig<State>
+  ): Ion<State, Params, Exports, Store<State>, PromiseType>
+  // Catch-all
+  <
+    State = any,
+    Params extends any[] = [],
+    Exports extends Record<string, any> = Record<string, never>,
+    StoreType extends Store<any> = Store<any>,
+    PromiseType extends AtomApiPromise = undefined
+  >(
+    key: string,
+    get: IonStateFactory<State, Params, Exports, StoreType, PromiseType>,
+    config?: AtomConfig<State>
+  ): Ion<State, Params, Exports, StoreType, PromiseType>
+}`)}
+</Tabs>
 
-### Overloads
+<Legend>
+  <Item name="key">
+    <p>Required. A string.</p>
+    <p>
+      This key must be unique <b>except</b> when creating{' '}
+      <Link to="../../walkthrough/overrides">atom overrides</Link>.
+    </p>
+    <div>
+      <AtomKeyDesc />
+    </div>
+  </Item>
+  <Item name="stateFactory">
+    <p>
+      Required. A function that receives an{' '}
+      <Link to="../types/AtomGetters">AtomGetters</Link> object as its first
+      param and any params of the ion as its rest params. Can return any of the
+      following:
+    </p>
+    <ul className="spaced">
+      <li>
+        A raw value. When the atom is instantiated, Zedux will create a new
+        store with this value as its initial state.
+      </li>
+      <li>
+        A <Link to="../classes/Store">Zedux store</Link>. This will become the
+        atom instance's <code>.store</code>.
+      </li>
+      <li>
+        <p>
+          An <Link to="../classes/AtomApi">AtomApi</Link> instance.
+        </p>
+        <p>The Atom API's value can be any of the following:</p>
+        <div>
+          <ul>
+            <li>
+              A raw value. Zedux will create a new store with this value as its
+              initial state.
+            </li>
+            <li>
+              A Zedux store. This will be the instance's <code>.store</code>.
+            </li>
+            <li>
+              A promise. This will turn the atom into a{' '}
+              <Link to="../../walkthrough/query-atoms">query atom</Link>.
+            </li>
+          </ul>
+        </div>
+        <p>
+          The Atom API's exports will be set as the atom instance's{' '}
+          <code>.exports</code>.
+        </p>
+        <p>
+          The Atom API's promise will be set as the atom instance's{' '}
+          <code>.promise</code>.
+        </p>
+      </li>
+    </ul>
+  </Item>
+  <Item name="config">
+    <p>
+      Optional. An <Link to="../types/AtomConfig">AtomConfig</Link> object.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      An <Link to="../classes/Ion">Ion instance</Link>.
+    </p>
+  </Item>
+</Legend>
 
-```ts
-ion(key, get, set?) => Ion
-ion(key, get, config?) => Ion
-```
+## See Also
 
-### `key`
-
-Required. A string. The key should typically be unique, though there are cases (e.g. for DI) where you won't make them unique. The key identifies the ion in ecosystems where it's used.
-
-<AtomKeyDesc />
-
-### `get`
-
-Required. Can be one of:
-
-- An evaluator function that returns a raw value
-- An evaluator function that returns a [store](../classes/Store)
-- An evaluator function that returns an [AtomApi](../classes/AtomApi)
-
-The first parameter passed to `get` will be a special [AtomGetters object](../types/AtomGetters). Any parameters after that will be the actual params of the atom instance.
-
-```ts
-ion('key', ({ ecosystem, get, getInstance }, param) => {
-  const otherVal = get(otherAtom)
-  const otherInstance = getInstance(otherAtom)
-
-  // injectors can be used
-  injectEffect(someEffect, [])
-
-  return otherVal ** 2
-})
-```
-
-### `set`
-
-Optional. A function that receives a special [AtomSetters object](../types/AtomSetters) and returns either void or the new state of this ion atom instance.
-
-```ts
-ion('key', getter, ({ set }, newVal) => {
-  set(otherAtom, newVal) // forward setState call to another atom instance
-})
-```
-
-### `config`
-
-Optional. An [AtomConfig](../types/AtomConfig) object. If it isn't passed, `ttl` will default to -1, which means the atom never dies.
-
-```ts
-ion('key', getter, { ttl: 0 })
-```
+- [The `atom()` factory](atom)
+- [The Selectors walkthrough](../../walkthrough/selectors)
+- [The `Ion` class](../classes/Ion)

@@ -50,20 +50,20 @@ parentStore.getState() // { child: 'new state' }
 Dispatching an action wrapped in `DELEGATE` to a parent store tells Zedux to "delegate" the action to the child store. This is the key to time travel! By tracking all actions dispatched to child stores, a parent store can effectively reverse engineer all of its state changes.
 
 ```ts
-// this action mimics a `.setState('different state')` call in the child store:
+// this is exactly the same as calling `.setState('new state')` in the child store:
 const action = {
-  metaType: '@@zedux/delegate',
+  metaType: '@@zedux/delegate', // metaTypes.DELEGATE
   metaData: ['child'],
   payload: {
-    type: '@@zedux/hydrate',
-    payload: 'different state',
+    type: '@@zedux/hydrate', // actionTypes.HYDRATE
+    payload: 'new state',
   },
 }
 
 parentStore.dispatch(action)
 
-childStore.getState() // 'different state'
-parentStore.getState() // { child: 'different state' }
+childStore.getState() // 'new state'
+parentStore.getState() // { child: 'new state' }
 ```
 
 ### `INHERIT`

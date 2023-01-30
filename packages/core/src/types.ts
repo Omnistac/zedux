@@ -1,6 +1,6 @@
 import { Store } from './api/createStore'
 import { MachineStore } from './api/MachineStore'
-import { MachineEffectHandler, MachineStateType } from './utils/types'
+import { MachineStateType } from './utils/types'
 
 // Same workaround rxjs uses for Symbol.observable:
 declare global {
@@ -157,14 +157,6 @@ export type MachineHook<
   >
 ) => void
 
-export type MachineStoreEffectHandler<
-  M extends MachineStore<any, any, any> = MachineStore<string, string, any>
-> = MachineEffectHandler<
-  MachineStoreStateNamesType<M>,
-  MachineStoreEventNamesType<M>,
-  MachineStoreContextType<M>
->
-
 export type MachineStoreContextType<
   M extends MachineStore
 > = M extends MachineStore<any, any, infer C> ? C : never
@@ -218,11 +210,6 @@ export type Settable<State = any, StateIn = State> =
   | ((state: StateIn) => State)
   | State
 
-export type SideEffectHandler<
-  State = any,
-  S extends Store<State> = Store<State>
-> = (storeEffect: StoreEffect<State, S>) => any
-
 export type StateSetter<State = any> = (settable: Settable<State>) => State
 
 export type StoreStateType<S extends Store> = S extends Store<infer T>
@@ -255,49 +242,6 @@ export interface SubscriberObject<
 
 export interface Subscription {
   unsubscribe(): void
-}
-
-export interface WhenBuilder<
-  State = any,
-  S extends Store<State> = Store<State>
-> {
-  receivesAction: {
-    (
-      reactable: Reactable,
-      sideEffect: SideEffectHandler<State, S>
-    ): WhenBuilder<State, S>
-    (sideEffect: SideEffectHandler<State, S>): WhenBuilder<State, S>
-  }
-  stateChanges: (
-    sideEffect: SideEffectHandler<State, S>
-  ) => WhenBuilder<State, S>
-  stateMatches: (
-    predicate: (state?: State) => boolean,
-    sideEffect: SideEffectHandler<State, S>
-  ) => WhenBuilder<State, S>
-  subscription: Subscription
-}
-
-export interface WhenMachineBuilder<
-  StateNames extends string = string,
-  EventNames extends string = string,
-  Context extends Record<string, any> | undefined = undefined
-> extends WhenBuilder<
-    MachineStateType<StateNames, Context>,
-    MachineStore<StateNames, EventNames, Context>
-  > {
-  enters: (
-    state: StateNames | StateNames[],
-    sideEffect: MachineStoreEffectHandler<
-      MachineStore<StateNames, EventNames, Context>
-    >
-  ) => WhenMachineBuilder<StateNames, EventNames, Context>
-  leaves: (
-    state: StateNames | StateNames[],
-    sideEffect: MachineStoreEffectHandler<
-      MachineStore<StateNames, EventNames, Context>
-    >
-  ) => WhenMachineBuilder<StateNames, EventNames, Context>
 }
 
 export interface ReducerBuilder<State = any> extends Reducer<State> {

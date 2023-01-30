@@ -235,9 +235,11 @@ const bigAtom = atom('big', () => {
   const store = injectStore()
 
   injectEffect(() => {
-    const { subscription } = when(store).receivesAction(goBig, () =>
-      alert('go home')
-    )
+    const subscription = store.subscribe({
+      effects: ({ action }) => {
+        if (action?.type === goBig.type) alert('go home')
+      },
+    })
 
     return () => subscription.unsubscribe()
   }, [])
@@ -464,20 +466,6 @@ const usersStreamAtom = ion('usersStream', ({ get }) => {
 
   return users$
 })
-```
-
-See [the side effects walkthrough](../walkthrough/side-effects).
-
-### `when()`
-
-`when` is a powerful API for hooking into stores.
-
-```tsx
-import { when } from '@zedux/react'
-
-const { subscription } = when(someStore)
-  .stateMatches(state => state.someKey === 'someVal', doSomething)
-  .receivesAction(someAction, logSomething)
 ```
 
 See [the side effects walkthrough](../walkthrough/side-effects).
