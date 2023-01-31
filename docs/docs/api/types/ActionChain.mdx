@@ -5,7 +5,7 @@ title: ActionChain
 
 The object accepted by [`store.dispatch()`](../classes/Store#dispatch), thus also the object passed to [`instance.dispatch()`](../classes/AtomInstance#dispatch).
 
-The ActionChain is the key to Zedux' [store composition model](/not-done). ActionChains are just nested objects.
+The ActionChain is the key to Zedux' [store composition model](../../advanced/store-composition). ActionChains are just nested objects.
 
 All objects except the innermost contain metadata. Zedux uses certain meta types to know whether actions came from a parent or child store.
 
@@ -55,4 +55,4 @@ const fromChild: ActionChain = {
 }
 ```
 
-See [Zedux's `metaTypes`](../constants/metaTypes).
+See [Zedux's `internalTypes`](../constants/internalTypes).

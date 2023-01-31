@@ -1,4 +1,4 @@
-import { metaTypes } from '@zedux/core/api/constants'
+import { internalTypes } from '@zedux/core/api/constants'
 import {
   getHierarchyType,
   wrapStoreInReducer,
@@ -16,7 +16,7 @@ import { createStore } from '@zedux/core'
 
 describe('delegate()', () => {
   const action1 = {
-    metaType: metaTypes.DELEGATE,
+    metaType: internalTypes.delegate,
     metaData: ['a'],
     payload: {
       type: 'b',
@@ -24,7 +24,7 @@ describe('delegate()', () => {
   }
 
   const action2 = {
-    metaType: metaTypes.DELEGATE,
+    metaType: internalTypes.delegate,
     metaData: ['a', 'b'],
     payload: {
       type: 'c',
@@ -32,10 +32,10 @@ describe('delegate()', () => {
   }
 
   const action3 = {
-    metaType: metaTypes.DELEGATE,
+    metaType: internalTypes.delegate,
     metaData: ['a', 'b', 'c'],
     payload: {
-      metaType: metaTypes.DELEGATE,
+      metaType: internalTypes.delegate,
       metaData: ['d', 'e'],
       payload: {
         type: 'f',
@@ -43,7 +43,7 @@ describe('delegate()', () => {
     },
   }
 
-  test('does nothing and returns false if the action does not contain the special DELEGATE meta node', () => {
+  test('does nothing and returns false if the action does not contain the special `delegate` meta node', () => {
     // @ts-expect-error null isn't a valid node
     expect(delegate(null, { type: 'a' })).toBe(false)
   })

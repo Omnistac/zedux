@@ -2,8 +2,8 @@ import {
   ActionChain,
   createStore,
   Dispatchable,
+  internalTypes,
   isZeduxStore,
-  metaTypes,
   Observable,
   RecursivePartial,
   removeAllMeta,
@@ -492,14 +492,7 @@ export class AtomInstance<
       false
     )
 
-    // Set the action's meta field to `metaTypes.SKIP_EVALUATION` to prevent
-    // plugins from receiving it. The Zedux StateHub has to do this to prevent
-    // infinite state update loops when inspecting the state of the StateHub
-    // itself.
-    if (
-      this.ecosystem._mods.stateChanged &&
-      removeAllMeta(action).meta !== metaTypes.SKIP_EVALUATION
-    ) {
+    if (this.ecosystem._mods.stateChanged) {
       this.ecosystem.modBus.dispatch(
         pluginActions.stateChanged({
           action,

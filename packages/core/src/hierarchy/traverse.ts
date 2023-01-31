@@ -1,4 +1,4 @@
-import { metaTypes } from '../api/constants'
+import { internalTypes } from '../api/constants'
 import { ActionChain, HierarchyConfig } from '../types'
 import { HierarchyType } from '../utils/general'
 import { getMetaData, removeMeta } from '../api/meta'
@@ -33,12 +33,12 @@ const findChild = (diffTree: DiffNode, nodePath: string[]) => {
 /**
   Delegates an action to a child store.
 
-  Does nothing if the special DELEGATE meta node is not present
-  in the action meta chain.
+  Does nothing if the special `delegate` meta node is not present in the action
+  meta chain.
 
-  This expects the `metaData` of the DELEGATE meta node to be
-  an array containing a path of nodes describing the child store's
-  location in the parent store's current hierarchy descriptor.
+  This expects the `metaData` of the `delegate` meta node to be an array
+  containing a path of nodes describing the child store's location in the parent
+  store's current hierarchy descriptor.
 
   Delegated actions will not be handled by the parent store at all.
 */
@@ -46,7 +46,7 @@ export const delegate = (
   diffTree: DiffNode | undefined,
   action: ActionChain
 ) => {
-  const subStorePath = getMetaData(action, metaTypes.DELEGATE)
+  const subStorePath = getMetaData(action, internalTypes.delegate)
 
   if (!subStorePath || !diffTree) return false
 
@@ -56,7 +56,9 @@ export const delegate = (
     throw new TypeError(getErrorMessage(subStorePath))
   }
 
-  ;(child as StoreNode).store.dispatch(removeMeta(action, metaTypes.DELEGATE))
+  ;(child as StoreNode).store.dispatch(
+    removeMeta(action, internalTypes.delegate)
+  )
 }
 
 /**

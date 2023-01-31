@@ -1,4 +1,4 @@
-import { actionTypes, createStore } from '@zedux/core/index'
+import { createStore, internalTypes } from '@zedux/core/index'
 
 describe('zero-configuration', () => {
   test('setState() can set the initial state of the store', () => {
@@ -15,7 +15,7 @@ describe('zero-configuration', () => {
     expect(state).toBe(initialState)
   })
 
-  test('setState() dispatches the special HYDRATE action to the store', () => {
+  test('setState() dispatches the special `hydrate` action to the store', () => {
     const effectSubscriber = jest.fn()
     const store = createStore(null, 1)
 
@@ -25,14 +25,14 @@ describe('zero-configuration', () => {
     expect(effectSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
-          type: actionTypes.HYDRATE,
+          type: internalTypes.hydrate,
           payload: 2,
         },
       })
     )
   })
 
-  test('setState functions dispatch the special HYDRATE action to the store', () => {
+  test('setState functions dispatch the special `hydrate` action to the store', () => {
     const effectSubscriber = jest.fn()
     const store = createStore(null, 1)
 
@@ -42,7 +42,7 @@ describe('zero-configuration', () => {
     expect(effectSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
-          type: actionTypes.HYDRATE,
+          type: internalTypes.hydrate,
           payload: 2,
         },
       })

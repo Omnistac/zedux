@@ -185,12 +185,12 @@ const newState = instance.dispatch(myActor()) // same as instance.store.dispatch
 const { dispatch } = instance
 ```
 
-To prevent this atom instance from reevaluating, set [`metaTypes.SKIP_EVALUATION`](../constants/metaTypes#skip_evaluation) as the `meta` property of the dispatched action:
+To prevent this atom instance from reevaluating, set [`internalTypes.ignore`](../constants/internalTypes#ignore) as the `meta` property of the dispatched action:
 
 ```ts
-import { metaTypes } from '@zedux/react'
+import { internalTypes } from '@zedux/react'
 
-instance.dispatch({ type: 'action-type', meta: metaTypes.SKIP_EVALUATION })
+instance.dispatch({ type: 'action-type', meta: internalTypes.ignore })
 ```
 
 #### Signature
@@ -246,12 +246,12 @@ const newState = instance.setState('new state')
 const { setState } = instance
 ```
 
-To prevent this atom instance from reevaluating, pass [`metaTypes.SKIP_EVALUATION`](../constants/metaTypes#skip_evaluation) as the `meta` property:
+To prevent this atom instance from reevaluating, pass [`internalTypes.ignore`](../constants/internalTypes#ignore) as the `meta` property:
 
 ```ts
-import { metaTypes } from '@zedux/react'
+import { internalTypes } from '@zedux/react'
 
-instance.setState(newState, metaTypes.SKIP_EVALUATION)
+instance.setState(newState, internalTypes.ignore)
 ```
 
 ### `.setStateDeep`
@@ -266,12 +266,12 @@ const newState = instance.setStateDeep('new state')
 const { setStateDeep } = instance
 ```
 
-To prevent this atom instance from reevaluating, pass [`metaTypes.SKIP_EVALUATION`](../constants/metaTypes#skip_evaluation) as the `meta` property:
+To prevent this atom instance from reevaluating, pass [`internalTypes.ignore`](../constants/internalTypes#ignore) as the `meta` property:
 
 ```ts
-import { metaTypes } from '@zedux/react'
+import { internalTypes } from '@zedux/react'
 
-instance.setStateDeep(newState, metaTypes.SKIP_EVALUATION)
+instance.setStateDeep(newState, internalTypes.ignore)
 ```
 
 ## Extending

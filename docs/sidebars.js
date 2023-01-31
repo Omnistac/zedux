@@ -30,12 +30,12 @@ module.exports = {
     ],
     Advanced: [
       'advanced/complex-params',
-      'advanced/more-patterns',
-      'advanced/plugins',
       'advanced/persistence',
       'advanced/ssr',
-      'advanced/store-composition',
       'advanced/time-travel',
+      'advanced/plugins',
+      'advanced/store-composition',
+      'advanced/more-patterns',
     ],
     API: [
       {
@@ -61,7 +61,7 @@ module.exports = {
       {
         type: 'category',
         label: 'Constants',
-        items: ['api/constants/metaTypes', 'api/constants/zeduxGlobalStore'],
+        items: ['api/constants/internalTypes', 'api/constants/internalStore'],
       },
       {
         type: 'category',

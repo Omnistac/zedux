@@ -1,4 +1,4 @@
-import { actionTypes, metaTypes } from '../api/constants'
+import { internalTypes } from '../api/constants'
 import { Store } from '../api/createStore'
 import { addMeta } from '../api/meta'
 import { Action, Branch, HierarchyDescriptor, Reducer } from '../types'
@@ -124,8 +124,9 @@ export function hierarchyDescriptorToDiffTree(
 
   This reducer will propagate actions down the child store's reducers.
 
-  Wraps all actions in the special INHERIT meta node to inform the child store's
-  effects subscribers that this action was received from its parent store.
+  Wraps all actions in the special `inherit` meta node to inform the child
+  store's effects subscribers that this action was received from its parent
+  store.
 
   Since the parent store also registers an effects subscriber on this child
   store, it will know not to propagate the inherited action from the child
@@ -137,17 +138,17 @@ export function wrapStoreInReducer<State>(store: Store<State>) {
     // If this is the special hydrate or partial hydrate action, re-create the
     // action's payload using the current state slice
     if (
-      action.type === actionTypes.HYDRATE ||
-      action.type === actionTypes.PARTIAL_HYDRATE
+      action.type === internalTypes.hydrate ||
+      action.type === internalTypes.merge
     ) {
       action = {
-        type: actionTypes.HYDRATE,
+        type: internalTypes.hydrate,
         payload: state,
       }
     }
 
     // Tell the child store's effect subscribers that this action is inherited
-    const inheritedAction = addMeta(action, metaTypes.INHERIT)
+    const inheritedAction = addMeta(action, internalTypes.inherit)
 
     return store.dispatch(inheritedAction)
   }

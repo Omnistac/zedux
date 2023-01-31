@@ -278,7 +278,6 @@ input {
 }
 
 pre {
-  background-color: var(--prism-background-color);
   border-radius: var(--ifm-pre-border-radius);
   box-shadow: 5px 5px #0004;
   color: var(--prism-color);
@@ -289,7 +288,7 @@ pre {
 }
 
 pre code {
-  background-color: transparent;
+  background-color: var(--prism-background-color);
   border: none;
   font-size: 100%;
   line-height: inherit;

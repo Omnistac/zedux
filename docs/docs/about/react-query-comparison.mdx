@@ -13,7 +13,7 @@ Structurally, Zedux [atoms](../api/classes/Atom) are very similar to React Query
 
 - For destroying stale instances: Atoms have [`ttl`](../api/classes/Atom#ttl). Queries have `cacheTime`.
 - For suspense: Atoms have [`.setPromise()`](../api/classes/AtomApi#setpromise). Queries have `suspense`.
-- For tracking promise state: Zedux has query atoms and [`injectPromise()`]. Queries track promise state by default.
+- For tracking promise state: Zedux has query atoms and [`injectPromise()`](../api/injectors/injectPromise). Queries track promise state by default.
 
 ## QueryClient
 

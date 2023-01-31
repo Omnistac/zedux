@@ -1,0 +1,186 @@
+---
+id: internalTypes
+title: internalTypes
+---
+
+```ts
+import { internalTypes } from '@zedux/react'
+```
+
+An object containing action type and meta type strings that Zedux uses internally in its [ActionChain objects](../types/ActionChain). You may encounter these in actions and action chains passed to [effects subscribers](../classes/Store#subscribe), especially in composed stores. Use this object to identify them.
+
+## Definition
+
+```ts
+const internalTypes = {
+  delegate: `${PREFIX}delegate`, // a meta type
+  hydrate: `${PREFIX}hydrate`, // an action type
+  ignore: `${PREFIX}ignore`, // a meta type
+  inherit: `${PREFIX}inherit`, // a meta type
+  merge: `${PREFIX}merge`, // an action type
+  prime: `${PREFIX}prime`, // an action type
+}
+```
+
+## Action Types
+
+Zedux uses the following `internalTypes` as action `type` properties:
+
+### `hydrate`
+
+Zedux dispatches this action to the store when [`store.setState()`](../classes/Store#setstate) is called.
+
+```ts
+const store = injectStore('state')
+
+// these 2 calls are exactly the same:
+store.setState('new state')
+store.dispatch({
+  type: internalTypes.hydrate,
+  payload: 'new state',
+})
+```
+
+:::tip
+Combined with the `delegate` and `inherit` meta nodes, this and the `merge` action type are the key to reproducing all state updates in all child stores.
+:::
+
+### `merge`
+
+Zedux dispatches this action to the store when [`store.setStateDeep()`](../classes/Store#setstatedeep) is called.
+
+```ts
+const store = injectStore({ a: 1, b: 2 })
+
+// these 2 calls are exactly the same:
+store.setStateDeep({ b: 3 })
+store.dispatch({
+  type: internalTypes.merge,
+  payload: { b: 3 },
+})
+```
+
+:::tip
+Combined with the `delegate` and `inherit` meta nodes, this and the `hydrate` action type are the key to reproducing all state updates in all child stores.
+:::
+
+### `prime`
+
+Zedux dispatches this action to configured stores when they're first created (if they have initial configuration) or when their hierarchy changes (if they still have a hierarchy). This "primes" the reducer hierarchy to get the initial state of the store or the new state for the new hierarchy.
+
+```ts
+const store = createStore((state, action) => {
+  // this reducer is called immediately with:
+  // state: undefined
+  // action: { type: internalTypes.prime }
+})
+```
+
+## Meta Types
+
+Zedux uses the following `internalTypes` as meta node `metaType` properties:
+
+### `delegate`
+
+Zedux attaches this meta node to actions when a child store informs a parent store of a state change.
+
+```ts
+const childStore = createStore(null, 'initial state')
+const parentStore = createStore({ child: childStore })
+
+parentStore.subscribe({
+  effects: ({ action }) => {
+    console.log('action:', action)
+  },
+})
+
+childStore.setState('new state')
+// action: {
+//   metaType: '@@zedux/delegate',
+//   metaData: ['child'],
+//   payload: {
+//     type: '@@zedux/hydrate',
+//     payload: 'new state'
+//   }
+// }
+
+childStore.getState() // 'new state'
+parentStore.getState() // { child: 'new state' }
+```
+
+Dispatching an action wrapped in `delegate` to a parent store tells Zedux to "delegate" the action to the child store. This is the key to time travel! By tracking all actions dispatched to child stores, a parent store can effectively reverse engineer all of its state changes.
+
+```ts
+// this is exactly the same as calling `.setState('new state')` in the child store:
+const action = {
+  metaType: '@@zedux/delegate', // internalTypes.delegate
+  metaData: ['child'],
+  payload: {
+    type: '@@zedux/hydrate', // internalTypes.hydrate
+    payload: 'new state',
+  },
+}
+
+parentStore.dispatch(action)
+
+childStore.getState() // 'new state'
+parentStore.getState() // { child: 'new state' }
+```
+
+### `inherit`
+
+Zedux wraps actions in this meta node when passing an action dispatched in a parent store down to its children.
+
+```ts
+const childStore = createStore(null, 'initial state')
+const parentStore = createStore({ child: childStore })
+
+childStore.subscribe({
+  effects: ({ action }) => {
+    console.log('action:', action)
+  },
+})
+
+parentStore.dispatch({ type: 'test' })
+// action: {
+//   metaType: '@@zedux/inherit',
+//   payload: {
+//     type: 'test'
+//   }
+// }
+```
+
+### `ignore`
+
+For use with stores that belong to atom instances. Set this string to an action's `meta` property to tell Zedux not to reevaluate the atom instance:
+
+```ts
+const store = injectStore() // { subscribe: true } is the default
+store.dispatch({ type: 'my-action-type', meta: internalTypes.ignore })
+```
+
+This meta property can also be set when calling [`instance.setState()`](../classes/AtomInstance#setstate) or [`store.setState()`](../classes/Store#setstate) by passing it as the second parameter:
+
+```ts
+store.setState(newState, internalTypes.ignore)
+```
+
+It is not necessary to use this when updating an injected store's state synchronously during atom evaluation. Zedux always prevents these cases from causing a reevaluation, as that would lead to an evaluation loop.
+
+```ts
+const testAtom = atom('test', () => {
+  const store = injectStore(initialState)
+
+  store.setState(newState) // won't cause an evaluation loop
+})
+```
+
+## Removing Meta Nodes
+
+Sometimes we don't care about this metadata. Zedux exports a `removeAllMeta` function that unwraps all meta nodes around an action object.
+
+```ts
+import { removeAllMeta } from '@zedux/react'
+
+const unwrappedAction = removeAllMeta(inheritedAction) // { type: 'test' }
+```
