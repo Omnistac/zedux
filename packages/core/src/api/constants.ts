@@ -1,14 +1,11 @@
 const PREFIX = '@@zedux/'
 
-export const actionTypes = {
-  HYDRATE: `${PREFIX}hydrate`,
-  PARTIAL_HYDRATE: `${PREFIX}partialHydrate`,
-  RECALCULATE: `${PREFIX}recalculate`,
-}
-
-export const metaTypes = {
-  DELEGATE: `${PREFIX}delegate`,
-  INHERIT: `${PREFIX}inherit`,
+export const internalTypes = {
+  delegate: `${PREFIX}delegate`,
+  hydrate: `${PREFIX}hydrate`,
   // for use with atoms in the @zedux/react package:
-  SKIP_EVALUATION: `${PREFIX}skipEvaluation`,
+  ignore: `${PREFIX}ignore`,
+  inherit: `${PREFIX}inherit`,
+  merge: `${PREFIX}merge`,
+  prime: `${PREFIX}prime`,
 }

@@ -1,4 +1,4 @@
-import { actionTypes, createStore, metaTypes } from '@zedux/core/index'
+import { createStore, internalTypes } from '@zedux/core/index'
 
 import { createMockReducer } from '@zedux/core-test/utils'
 
@@ -45,10 +45,10 @@ describe('store composition', () => {
 
     const getExpectedAction = (payload: string) => ({
       metaData: [],
-      metaType: metaTypes.DELEGATE,
+      metaType: internalTypes.delegate,
       payload: {
         payload,
-        type: actionTypes.HYDRATE,
+        type: internalTypes.hydrate,
       },
     })
 
@@ -63,7 +63,7 @@ describe('store composition', () => {
 
     expect(parentSubscriber).toHaveBeenLastCalledWith('b', 'a', {
       metaData: [],
-      metaType: metaTypes.DELEGATE,
+      metaType: internalTypes.delegate,
       payload: getExpectedAction('b'),
     })
     expect(parentSubscriber).toHaveBeenCalledTimes(2)
@@ -90,10 +90,10 @@ describe('store composition', () => {
     expect(parentEffectSubscriber).toHaveBeenLastCalledWith(
       expect.objectContaining({
         action: {
-          metaType: metaTypes.DELEGATE,
+          metaType: internalTypes.delegate,
           metaData: ['a'],
           payload: {
-            type: actionTypes.HYDRATE,
+            type: internalTypes.hydrate,
             payload: 1,
           },
         },
@@ -107,17 +107,17 @@ describe('store composition', () => {
     expect(parentEffectSubscriber).toHaveBeenLastCalledWith(
       expect.objectContaining({
         action: {
-          metaType: metaTypes.DELEGATE,
+          metaType: internalTypes.delegate,
           metaData: ['a'],
           payload: {
-            type: actionTypes.RECALCULATE,
+            type: internalTypes.prime,
           },
         },
       })
     )
   })
 
-  test('delegates a DELEGATE action to the child store', () => {
+  test('delegates a delegate action to the child store', () => {
     const parent = createStore()
     const child = createStore()
     const grandchild = createStore()
@@ -133,10 +133,10 @@ describe('store composition', () => {
     })
 
     const testAction = {
-      metaType: metaTypes.DELEGATE,
+      metaType: internalTypes.delegate,
       metaData: ['a'],
       payload: {
-        metaType: metaTypes.DELEGATE,
+        metaType: internalTypes.delegate,
         metaData: ['b'],
         payload: {
           type: 'f',
@@ -264,7 +264,7 @@ describe('store composition', () => {
     expect(childEffectsSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
-          type: actionTypes.HYDRATE,
+          type: internalTypes.hydrate,
           payload: {
             c: 3,
           },

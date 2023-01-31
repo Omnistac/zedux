@@ -5,8 +5,8 @@ title: Store Composition
 
 ## ActionChains
 
-Zedux' store composition model works by making actions themselves composable objects called ActionChains. The ActionChain contains needed metadata for Zedux to perform its store composition magic. ActionChains consist of any number of "meta nodes" and the wrapped action. The action is always the last node in the chain.
+Zedux' store composition model works by making actions themselves composable objects called [ActionChains](../api/types/ActionChain). The ActionChain contains needed metadata for Zedux to perform its store composition magic. ActionChains consist of any number of "meta nodes" and the wrapped action. The action is always the last node in the chain.
 
-An action dispatched to a parent store will be wrapped in an INHERIT meta node before being passed to child stores. If the child has children, it will wrap the wrapped action again in another INHERIT meta node. This recurses indefinitely down through the store tree.
+An action dispatched to a parent store will be wrapped in an [`inherit`](../api/constants/internalTypes#inherit) meta node before being passed to child stores. If the child has children, it will wrap the wrapped action again in another `inherit` meta node. This recurses indefinitely down through the store tree.
 
-Child stores don't dispatch actions to their parent. But they will inform their parent of state updates and the action that caused them. When this happens, the action will be wrapped in a DELEGATE meta node before being passed to the parent's subscription. If that parent has parents, it will wrap the wrappedd action again in another DELEGATE meta node. This recurses indefinitely up through the store tree.
+Child stores don't dispatch actions to their parent. But they will inform their parent of state updates and the action that caused them. When this happens, the action will be wrapped in a [`delegate`](../api/constants/internalTypes#delegate) meta node before being passed to the parent's subscription. If that parent has parents, it will wrap the wrappedd action again in another `delegate` meta node. This recurses indefinitely up through the store tree.

@@ -22,15 +22,15 @@ const withInitialState = createStore(null, initialState)
 const withBoth = createStore(rootReducer, initialState)
 const splittingReducers = createStore({
   a: reducerA,
-  b: reducerB
+  b: reducerB,
 })
 const childStores = createStore({
   a: storeA,
-  b: storeB
+  b: storeB,
 })
 const mixed = createStore({
   a: reducerA,
-  b: storeB
+  b: storeB,
 })
 ```
 
@@ -59,10 +59,10 @@ const testAtom = atom('test', () => {
   storeFromInjector.setState(newState)
 
   // compose stores together to get a single store you can return:
-  const combinedStore = injectStore(
-    () => createStore({
+  const combinedStore = injectStore(() =>
+    createStore({
       otherState: storeFromInjector,
-      state: localStore
+      state: localStore,
     })
   )
 
@@ -78,7 +78,6 @@ See [the stores walkthrough](../../walkthrough/stores) for a better high-level p
 
 ```ts
 class Store<State = any> {
-  
   public use(newHierarchy: HierarchyDescriptor<State>): Store<State>
 }
 ```
@@ -101,9 +100,9 @@ const { dispatch } = myStore
 
 Returns the new state of the store.
 
-| Param | Type | Required | Description |
-| --- | --- | --- | --- |
-| `action` | Dispatchable - either an [ActionChain](../types/ActionChain) or a normal [Action object](../types/Action) | Yes | The action to dispatch to the store. Will be passed to all the store's reducers. Will also be wrapped in the [INHERIT meta type](../constants/metaTypes#inherit) and passed to any child stores. |
+| Param    | Type                                                                                                      | Required | Description                                                                                                                                                                                            |
+| -------- | --------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `action` | Dispatchable - either an [ActionChain](../types/ActionChain) or a normal [Action object](../types/Action) | Yes      | The action to dispatch to the store. Will be passed to all the store's reducers. Will also be wrapped in the [`inherit` meta type](../constants/internalTypes#inherit) and passed to any child stores. |
 
 ### `.getState`
 
@@ -127,10 +126,10 @@ const { setState } = myStore
 
 Returns the new state of the store.
 
-| Param | Type | Required | Description |
-| --- | --- | --- | --- |
-| `settable` | [Settable](../types/Settable) - either the new state or a function that accepts the current state and returns the new state | Yes | The new state of the store. Will be translated into a special HYDRATE pseudo-action and dispatched to the store's reducers. Any relevant pieces of state will also be set on child stores |
-| `meta` | any | No (no default) | Will be set as the `meta` property of the created HYDRATE pseudo-action. Set to [`metaTypes.SKIP_EVALUATION`](../constants/metaTypes#skip_evaluation) |
+| Param      | Type                                                                                                                        | Required        | Description                                                                                                                                                                                 |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `settable` | [Settable](../types/Settable) - either the new state or a function that accepts the current state and returns the new state | Yes             | The new state of the store. Will be translated into a special `hydrate` pseudo-action and dispatched to the store's reducers. Any relevant pieces of state will also be set on child stores |
+| `meta`     | any                                                                                                                         | No (no default) | Will be set as the `meta` property of the created `hydrate` pseudo-action. Set to [`internalTypes.ignore`](../constants/internalTypes#ignore)                                               |
 
 ### `.setStateDeep`
 
@@ -140,10 +139,10 @@ public setStateDeep(settable: Settable<RecursivePartial<State>>, meta?: any): St
 
 Deeply merges an object into the current state of the store. Returns the new state of the store. Note that there is no way to remove state with this method. Use `.setState` for that.
 
-| Param | Type | Required | Description |
-| --- | --- | --- | --- |
-| `settable` | [Settable](../types/Settable) - either a partial state object or a function that accepts the current state and returns a partial state object | Yes | The new state of the store. Will be translated into a special HYDRATE pseudo-action and dispatched to the store's reducers. Any relevant pieces of state will also be set on child stores |
-| `meta` | any | No (no default) | Will be set as the `meta` property of the created HYDRATE pseudo-action. Set to [`metaTypes.SKIP_EVALUATION`](../constants/metaTypes#skip_evaluation) to prevent the atom instance that created this store from evaluating. |
+| Param      | Type                                                                                                                                          | Required        | Description                                                                                                                                                                                                         |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `settable` | [Settable](../types/Settable) - either a partial state object or a function that accepts the current state and returns a partial state object | Yes             | The new state of the store. Will be translated into a special `hydrate` pseudo-action and dispatched to the store's reducers. Any relevant pieces of state will also be set on child stores                         |
+| `meta`     | any                                                                                                                                           | No (no default) | Will be set as the `meta` property of the created `hydrate` pseudo-action. Set to [`internalTypes.ignore`](../constants/internalTypes#ignore) to prevent the atom instance that created this store from evaluating. |
 
 ### `.subscribe`
 
@@ -155,9 +154,9 @@ Registers a [subscriber](../types/Subscriber).
 
 Returns a [Subscription object](../types/Subscription).
 
-| Param | Type | Required | Description |
-| --- | --- | --- | --- |
-| `subscriber` | [Subscriber](../types/Subscriber) - either a function that will be called every time the state updates or an object with `next`, `error`, and/or `effects` keys | Yes | The function(s) that will be called when certain events happen in the store. If a single function is passed, it will be called every time the store's state changes. An object can also be passed to register multiple different types of subscribers. |
+| Param        | Type                                                                                                                                                            | Required | Description                                                                                                                                                                                                                                            |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `subscriber` | [Subscriber](../types/Subscriber) - either a function that will be called every time the state updates or an object with `next`, `error`, and/or `effects` keys | Yes      | The function(s) that will be called when certain events happen in the store. If a single function is passed, it will be called every time the store's state changes. An object can also be passed to register multiple different types of subscribers. |
 
 ### `.use`
 
@@ -172,21 +171,24 @@ The first parameter to [`createStore()`](../factories/createStore) is a [Hierarc
 ```ts
 const myStore = createStore(rootReducer)
 myStore.use(anotherStore) // completely replace the store's state
-myStore.use({ // completely replace the store's state
+myStore.use({
+  // completely replace the store's state
   a: storeA,
-  b: storeB
+  b: storeB,
 })
-myStore.use({ // merge this hierarchy into the previous hierarchy
+myStore.use({
+  // merge this hierarchy into the previous hierarchy
   b: null, // remove `b` from the store
-  c: { // add `c` and its nested nodes to the store
-    d: reducerD
-  }
+  c: {
+    // add `c` and its nested nodes to the store
+    d: reducerD,
+  },
 })
 myStore.use(null) // wipe everything
 ```
 
 Returns the store for chaining.
 
-| Param | Type | Required | Description |
-| --- | --- | --- | --- |
-| `newDescriptor` | [HierarchyDescriptor](../types/HierarchyDescriptor) - A store, a reducer, `null`, or an object hierarchy containing those | Yes | This param describes the hierarchy update. The new hierarchy will be deeply merged into the existing hierarchy. Passing `null` for any node (including the root) removes everything below that point in the tree. |
+| Param           | Type                                                                                                                      | Required | Description                                                                                                                                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `newDescriptor` | [HierarchyDescriptor](../types/HierarchyDescriptor) - A store, a reducer, `null`, or an object hierarchy containing those | Yes      | This param describes the hierarchy update. The new hierarchy will be deeply merged into the existing hierarchy. Passing `null` for any node (including the root) removes everything below that point in the tree. |

@@ -17,4 +17,4 @@ export const wipe = () => {
   globalStore.dispatch(wipeAction())
 }
 
-export const zeduxGlobalStore = globalStore
+export const internalStore = globalStore

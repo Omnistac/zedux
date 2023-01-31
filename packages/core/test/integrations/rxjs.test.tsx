@@ -1,4 +1,4 @@
-import { ActionChain, actionTypes, createStore } from '@zedux/core'
+import { ActionChain, internalTypes, createStore } from '@zedux/core'
 import { from, map } from 'rxjs'
 
 describe('rxjs integration', () => {
@@ -47,7 +47,7 @@ describe('rxjs integration', () => {
     store.setState('d')
 
     expect(emissions).toEqual([
-      { type: actionTypes.HYDRATE, payload: 'b' },
+      { type: internalTypes.hydrate, payload: 'b' },
       { type: 'c', payload: 1 },
     ])
     expect((store as any)._subscribers.length).toBe(0)
@@ -66,7 +66,7 @@ describe('rxjs integration', () => {
     store.setState('d')
 
     expect(emissions).toEqual([
-      { type: actionTypes.HYDRATE, payload: 'b' },
+      { type: internalTypes.hydrate, payload: 'b' },
       { type: 'c', payload: 1 },
     ])
     expect((store as any)._subscribers.length).toBe(0)
@@ -85,7 +85,7 @@ describe('rxjs integration', () => {
     store.setState('d')
 
     expect(emissions).toEqual([
-      { type: actionTypes.HYDRATE, payload: 'b' },
+      { type: internalTypes.hydrate, payload: 'b' },
       { type: 'c', payload: 1 },
     ])
     expect((store as any)._subscribers.length).toBe(0)
@@ -106,7 +106,7 @@ describe('rxjs integration', () => {
     store.setState('d')
 
     expect(emissions).toEqual([
-      [{ type: actionTypes.HYDRATE, payload: 'b' }, 'b'],
+      [{ type: internalTypes.hydrate, payload: 'b' }, 'b'],
       [{ type: 'c', payload: 1 }, 'b'],
     ])
     expect((store as any)._subscribers.length).toBe(0)

@@ -1,4 +1,4 @@
-import { actionTypes, createStore, metaTypes, Store } from '@zedux/core/index'
+import { createStore, internalTypes, Store } from '@zedux/core/index'
 import {
   dispatchables,
   nonDispatchables,
@@ -19,11 +19,11 @@ describe('Store.dispatch()', () => {
     )
   })
 
-  test('short-circuits, hydrates, and returns the new state if the action has the special HYDRATE type', () => {
+  test('short-circuits, hydrates, and returns the new state if the action has the special `hydrate` type', () => {
     const store = createStore()
 
     const action = {
-      type: actionTypes.HYDRATE,
+      type: internalTypes.hydrate,
       payload: { a: 1 },
     }
 
@@ -34,11 +34,11 @@ describe('Store.dispatch()', () => {
     expect(state).toBe(action.payload)
   })
 
-  test('short-circuits, hydrates, and returns the new state if the action has the special PARTIAL_HYDRATE type', () => {
+  test('short-circuits, hydrates, and returns the new state if the action has the special `merge` type', () => {
     const store = createStore()
 
     const action = {
-      type: actionTypes.PARTIAL_HYDRATE,
+      type: internalTypes.merge,
       payload: { a: 1 },
     }
 
@@ -49,7 +49,7 @@ describe('Store.dispatch()', () => {
     expect(state).toBe(action.payload)
   })
 
-  test('short-circuits and returns the new state if the action contains the special DELEGATE meta node', () => {
+  test('short-circuits and returns the new state if the action contains the special `delegate` meta node', () => {
     const reactor = createMockReducer(1)
     const child = createStore().use(reactor)
     const parent = createStore().use({
@@ -57,7 +57,7 @@ describe('Store.dispatch()', () => {
     })
 
     const action = {
-      metaType: metaTypes.DELEGATE,
+      metaType: internalTypes.delegate,
       metaData: ['a'],
       payload: {
         type: 'b',
@@ -282,7 +282,7 @@ describe('Store.setState()', () => {
     expect(store.getState()).toBe(prevState)
   })
 
-  test('informs effect subscribers of the special HYDRATE action', () => {
+  test('informs effect subscribers of the special hydrate action', () => {
     const effectsSubscriber = jest.fn()
     const store = createStore()
     const hydratedState = { a: 1 }
@@ -293,7 +293,7 @@ describe('Store.setState()', () => {
     expect(effectsSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
-          type: actionTypes.HYDRATE,
+          type: internalTypes.hydrate,
           payload: hydratedState,
         },
       })
@@ -310,7 +310,7 @@ describe('Store.setState()', () => {
 
     expect(subscriber).toHaveBeenCalledWith(hydratedState, undefined, {
       payload: hydratedState,
-      type: actionTypes.HYDRATE,
+      type: internalTypes.hydrate,
     })
   })
 
@@ -338,7 +338,7 @@ describe('Store.setState()', () => {
     expect(subscriber).toHaveBeenCalledWith('a', undefined, {
       meta: 'b',
       payload: 'a',
-      type: actionTypes.HYDRATE,
+      type: internalTypes.hydrate,
     })
   })
 })

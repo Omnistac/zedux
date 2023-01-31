@@ -25,10 +25,10 @@ import {
 } from '../utils/general'
 import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
 import { DiffNode } from '../utils/types'
-import { actionTypes, metaTypes } from './constants'
+import { internalTypes } from './constants'
 import { addMeta, removeAllMeta } from './meta'
 
-const RECALCULATE_ACTION = { type: actionTypes.RECALCULATE }
+const primeAction = { type: internalTypes.prime }
 
 // When an action is dispatched to a parent store and delegated to a child
 // store, the child store needs to wait until the update propagates everywhere
@@ -122,7 +122,7 @@ export class Store<State = any> {
     Dispatches an action to the store.
 
     The action will be sent through this store's reducer hierarchy (if any) and
-    passed on to any child stores after being wrapped in INHERIT meta nodes
+    passed on to any child stores after being wrapped in `inherit` meta nodes
 
     The resulting state will be returned synchronously from this call.
 
@@ -150,10 +150,10 @@ export class Store<State = any> {
     Accepts either the new state or a function that accepts the current state
     and returns the new state.
 
-    Dispatches the special HYDRATE action to the store's reducers. Effects
+    Dispatches the special `hydrate` action to the store's reducers. Effects
     subscribers can inspect and record this action to implement time travel.
 
-    The HYDRATE action's `payload` property will be set to the new state. The
+    The `hydrate` action's `payload` property will be set to the new state. The
     action's `meta` property will be set to the passed meta, if any.
 
     Throws an error if called from the reducer layer.
@@ -173,11 +173,11 @@ export class Store<State = any> {
     Accepts either a deep partial state object or a function that accepts the
     current state and returns a deep partial state object.
 
-    Dispatches the special PARTIAL_HYDRATE action to the store's reducers.
+    Dispatches the special `merge` action to the store's reducers.
     Effects subscribers can inspect and record this action to implement time
     travel.
 
-    The PARTIAL_HYDRATE action's `payload` property will be set to the partial
+    The `merge` action's `payload` property will be set to the partial
     state update.
 
     Note that deep setting cannot remove properties from the state tree. If that
@@ -265,7 +265,7 @@ export class Store<State = any> {
     Intelligently diffs the two hierarchies and only creates/recreates the
     necessary reducers.
 
-    Dispatches the special RECALCULATE action to the store.
+    Dispatches the special `prime` action to the store.
   */
   public use(newHierarchy: HierarchyDescriptor<State>) {
     const newDiffTree = hierarchyDescriptorToDiffTree(
@@ -281,11 +281,7 @@ export class Store<State = any> {
     this._rootReducer = this._currentDiffTree.reducer
 
     if (this._rootReducer) {
-      this._dispatchAction(
-        RECALCULATE_ACTION,
-        RECALCULATE_ACTION,
-        this._currentState
-      )
+      this._dispatchAction(primeAction, primeAction, this._currentState)
     }
 
     return this // for chaining
@@ -366,8 +362,8 @@ export class Store<State = any> {
   /**
     "Hydrates" the store with the given state.
 
-    Dispatches the special HYDRATE action to the store's inspectors
-    and reducers. The HYDRATE action's `payload` property will be
+    Dispatches the special `hydrate` action to the store's inspectors
+    and reducers. The `hydrate` action's `payload` property will be
     set to the new store state, allowing inspectors to pick up on
     the changes and implement time travel and whatnot.
 
@@ -379,7 +375,7 @@ export class Store<State = any> {
     meta?: any
   ) {
     const newState =
-      actionType === actionTypes.HYDRATE
+      actionType === internalTypes.hydrate
         ? state
         : mergeStateTrees(
             this._currentState,
@@ -419,7 +415,7 @@ export class Store<State = any> {
     } catch (error) {
       this._informSubscribers(
         this._currentState,
-        { type: actionTypes.PARTIAL_HYDRATE },
+        { type: internalTypes.merge },
         undefined,
         error
       )
@@ -429,7 +425,7 @@ export class Store<State = any> {
 
     return this._dispatchHydration(
       newState,
-      deep ? actionTypes.PARTIAL_HYDRATE : actionTypes.HYDRATE,
+      deep ? internalTypes.merge : internalTypes.hydrate,
       meta
     )
   }
@@ -524,7 +520,7 @@ export class Store<State = any> {
       // If this store's reducer layer dispatched this action to this
       // substore in the first place, ignore the propagation; this store
       // will receive it anyway.
-      // const isInherited = hasMeta(action, metaTypes.INHERIT)
+      // const isInherited = hasMeta(action, internalTypes.inherit)
       if (this._isDispatching || this._isIgnoringPropagations) return
 
       const newOwnState =
@@ -539,13 +535,13 @@ export class Store<State = any> {
 
       // Tell the subscribers what child store this effect came from.
       const wrappedEffect =
-        effect && addMeta(effect, metaTypes.DELEGATE, childStorePath)
+        effect && addMeta(effect, internalTypes.delegate, childStorePath)
 
       // Tell the subscribers what child store this action came from.
       // This store (the parent) can use this info to determine how to
       // recreate this state update.
       const wrappedAction =
-        action && addMeta(action, metaTypes.DELEGATE, childStorePath)
+        action && addMeta(action, internalTypes.delegate, childStorePath)
 
       this._informSubscribers(newOwnState, wrappedAction, wrappedEffect, error)
     }
@@ -568,8 +564,8 @@ export class Store<State = any> {
     }
 
     if (
-      unwrappedAction.type === actionTypes.HYDRATE ||
-      unwrappedAction.type === actionTypes.PARTIAL_HYDRATE
+      unwrappedAction.type === internalTypes.hydrate ||
+      unwrappedAction.type === internalTypes.merge
     ) {
       return this._dispatchHydration(
         unwrappedAction.payload,
@@ -592,7 +588,7 @@ export class Store<State = any> {
 
     return this._dispatchHydration(
       settable,
-      deep ? actionTypes.PARTIAL_HYDRATE : actionTypes.HYDRATE,
+      deep ? internalTypes.merge : internalTypes.hydrate,
       meta
     )
   }

@@ -1,4 +1,4 @@
-import { createStore, metaTypes, Store } from '@zedux/core'
+import { createStore, internalTypes, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes'
 import { AnyAtomInstance, InjectStoreConfig } from '../types'
 import { split, StoreInjectorDescriptor, InjectorType } from '../utils'
@@ -16,7 +16,7 @@ const doSubscribe = <State>(
       if (
         newState === oldState ||
         instance.ecosystem._evaluationStack.isEvaluating(instance.keyHash) ||
-        action?.meta === metaTypes.SKIP_EVALUATION
+        action?.meta === internalTypes.ignore
       ) {
         return
       }
