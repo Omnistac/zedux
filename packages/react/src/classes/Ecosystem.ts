@@ -258,12 +258,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const ecosystem = globalStore.getState().ecosystems[this.id]
     if (!ecosystem) return
 
-    if (this._mods.ecosystemDestroyed) {
-      this.modBus.dispatch(
-        pluginActions.ecosystemDestroyed({ ecosystem: this })
-      )
-    }
-
     this.plugins.forEach(({ cleanup }) => cleanup())
     this.plugins = []
 
@@ -564,7 +558,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (cleanupRegistration) cleanupRegistration()
     }
 
-    this.plugins.push({ plugin, cleanup })
+    this.plugins.push({ cleanup, plugin })
     this.recalculateMods(plugin.modsStore.getState())
   }
 
