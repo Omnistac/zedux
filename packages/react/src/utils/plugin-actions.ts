@@ -17,10 +17,6 @@ export const pluginActions = {
     },
     'activeStateChanged'
   >('activeStateChanged'),
-  ecosystemDestroyed: actionFactory<
-    { ecosystem: Ecosystem },
-    'ecosystemDestroyed'
-  >('ecosystemDestroyed'),
   ecosystemWiped: actionFactory<{ ecosystem: Ecosystem }, 'ecosystemWiped'>(
     'ecosystemWiped'
   ),
