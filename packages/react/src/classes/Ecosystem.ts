@@ -66,7 +66,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public consumeHydrations?: boolean
   public context: Context
   public defaultTtl?: number
-  public ecosystemId: string
+  public id: string
   public flags?: string[]
   public hydration?: Record<string, any>
   public modBus = createStore() // use an empty store as a message bus
@@ -100,7 +100,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       )
     }
 
-    this.ecosystemId = id || this._idGenerator.generateEcosystemId()
+    this.id = id || this._idGenerator.generateEcosystemId()
 
     if (overrides) {
       this.setOverrides(overrides)
@@ -255,7 +255,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.wipe()
 
     // Check if this ecosystem has been destroyed already
-    const ecosystem = globalStore.getState().ecosystems[this.ecosystemId]
+    const ecosystem = globalStore.getState().ecosystems[this.id]
     if (!ecosystem) return
 
     if (this._mods.ecosystemDestroyed) {
@@ -269,7 +269,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     globalStore.dispatch(
       removeEcosystem({
-        ecosystemId: this.ecosystemId,
+        id: this.id,
       })
     )
   }
