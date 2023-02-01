@@ -6,7 +6,7 @@ export const addEcosystem = actionFactory<Ecosystem>(
 )
 
 export const removeEcosystem = actionFactory<{
-  ecosystemId: string
+  id: string
 }>('removeEcosystem')
 
 export const wipe = actionFactory('wipe')

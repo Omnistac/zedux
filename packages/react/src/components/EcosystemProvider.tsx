@@ -44,7 +44,7 @@ export const EcosystemProvider = ({
   const ecosystem = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 
   return (
-    <ecosystemContext.Provider value={ecosystem.ecosystemId}>
+    <ecosystemContext.Provider value={ecosystem.id}>
       {children}
     </ecosystemContext.Provider>
   )

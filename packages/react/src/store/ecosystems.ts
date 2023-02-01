@@ -5,15 +5,15 @@ import { addEcosystem, removeEcosystem, wipe } from './actions'
 const initialState = {}
 
 export const ecosystemsReducer = createReducer<{
-  [ecosystemId: string]: Ecosystem
+  [id: string]: Ecosystem
 }>(initialState)
   .reduce(addEcosystem, (state, newEcosystem) => ({
     ...state,
-    [newEcosystem.ecosystemId]: newEcosystem,
+    [newEcosystem.id]: newEcosystem,
   }))
-  .reduce(removeEcosystem, (state, { ecosystemId }) => {
+  .reduce(removeEcosystem, (state, { id }) => {
     const newState = { ...state }
-    delete newState[ecosystemId]
+    delete newState[id]
 
     return newState
   })
