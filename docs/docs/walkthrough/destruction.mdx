@@ -266,7 +266,7 @@ The manual way. You'll probably never need this in a normal app. It's mostly for
 
 Ecosystems also keep a "ref count" of sorts to track how often they're provided in [`<EcosystemProvider>`s](../api/components/EcosystemProvider). Destruction will bail out by default if the ref count is `> 0`. Pass `true` to force destruction anyway.
 
-:::important
+:::info important
 Unlike force-destroying atom instances and selector caches, force-destroying ecosystems is not at all recommended (and not really tested). There shouldn't ever be a need to force-destroy an ecosystem. We may remove the ability.
 :::
 

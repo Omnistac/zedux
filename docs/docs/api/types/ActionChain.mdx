@@ -11,7 +11,7 @@ All objects except the innermost contain metadata. Zedux uses certain meta types
 
 The last node in the chain is a normal [Action object](Action). An ActionChain that doesn't contain any metadata is thus simply an Action.
 
-:::important
+:::info important
 ActionChains are **not** sent to [reducers](Reducer). Zedux unwraps the ActionChain before passing the unwrapped action to the reducer layer.
 :::
 

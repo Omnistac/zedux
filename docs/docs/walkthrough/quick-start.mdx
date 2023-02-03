@@ -154,7 +154,7 @@ If you know React's `useMemo` hook, you should already be able to understand thi
 - The `initialPrice` we return never changes, meaning the `initialPriceAtom`'s state never changes. So:
 - Components that use `initialPriceAtom` won't rerender and other atoms that use it won't reevaluate.
 
-:::important
+:::info important
 Injectors have the same caveats as hooks too! E.g. don't put injectors in if statements or use them outside atom state factories.
 :::
 
@@ -222,7 +222,7 @@ function UserOverview() {
 
 This example creates two instances of the `userData` atom - one that fetches the `joe` user and one that fetches `bob`. Each of these instances controls its own, distinct state.
 
-:::important
+:::info important
 Atom parameters must be serializable. Zedux converts them to a single, predictable string that uniquely identifies each atom instance. You shouldn't need params much, but when you do need them, make them as small as possible.
 :::
 

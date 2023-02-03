@@ -23,14 +23,14 @@ To create an Atom API, we simply wrap state in a call to `api()` before we retur
 ```ts
 import { api, atom } from '@zedux/react'
 
-const myAtom = atom('my', () => 'initial state') // before
-const myAtom = atom('my', () => api('initial state')) // after
+const exampleAtom = atom('example', () => 'initial state') // before
+const exampleAtom = atom('example', () => api('initial state')) // after
 ```
 
 This works with stores too:
 
 ```ts
-const myAtom = atom('my', () => {
+const exampleAtom = atom('example', () => {
   const store = injectStore()
 
   return store // before
@@ -73,7 +73,7 @@ We learned in the [atom instances walkthrough](atom-instances) that atom instanc
 
 Exports must be an object and can contain anything. As you can imagine, exports are another big feature that sets Zedux apart from other atom libraries.
 
-:::important
+:::info important
 Exports are constant! This means exported variables should be stable references. Zedux won't update them on subsequent evaluations. In this example, `increment` and `decrement` are not stable references, but they don't reference anything except the store, which is stable.
 :::
 
@@ -118,13 +118,20 @@ const mockFetch = data =>
   })
 
 const userNameAtom = atom('userName', () => {
-  const store = injectStore('Joe')
+  const store = injectStore({
+    isLoading: false,
+    name: 'Joe',
+  })
 
   const toggleUser = injectCallback(() => {
-    const isJoe = store.getState() === 'Joe'
-    store.setState('loading...') // lol, yes this is contrived
+    const { isLoading, name } = store.getState()
+    if (isLoading) return
 
-    mockFetch(isJoe ? 'Bob' : 'Joe').then(val => store.setState(val))
+    store.setStateDeep({ isLoading: true })
+
+    mockFetch(name === 'Joe' ? 'Bob' : 'Joe').then(val =>
+      store.setState({ isLoading: false, name: val })
+    )
   }, [])
 
   return api(store).setExports({ toggleUser })
@@ -132,11 +139,11 @@ const userNameAtom = atom('userName', () => {
 
 function Age() {
   const { toggleUser } = useAtomInstance(userNameAtom).exports
-  const userName = useAtomValue(userNameAtom)
+  const { isLoading, name } = useAtomValue(userNameAtom)
 
   return (
     <>
-      <div>Current User's Name: {userName}</div>
+      <div>Current User's Name: {isLoading ? 'Loading...' : name}</div>
       <button onClick={toggleUser}>Change User</button>
     </>
   )
@@ -147,7 +154,7 @@ function Age() {
 `injectCallback` is the injector equivalent of `useCallback`. We used it here with empty deps (`[]`) to remind us that this is an export and its reference can't change. This means we can't use any dynamic values inside the callback - notice that we call `store.getState()` inside the callback instead of setting it to a variable outside the callback and passing that as a dep.
 :::
 
-This is poor man's async handling (there are several bugs in the above example). Let's upgrade to Suspense.
+This is poor man's async handling. Let's upgrade to Suspense.
 
 ## Suspense
 
@@ -278,7 +285,7 @@ const myApi = api('some state').setExports({ something })
 const clonedApi = api(myApi) // has the same value and exports
 ```
 
-Atom APIs are a convenient way to pass stores + exports around. You may find yourself working with multiple Atom APIs when using custom injectors. Atom APIs have a `.addExports()` method specifically for merging exports together from multiple sources:
+Atom APIs are a convenient way to pass stores, exports, and promises around. You may find yourself working with multiple Atom APIs when using custom injectors. Atom APIs have a `.addExports()` method specifically for merging exports together from multiple sources:
 
 ```ts
 const complexAtom = atom('complex', () => {
@@ -298,9 +305,8 @@ If these custom injectors return Atom APIs with stores, you can also use store c
 const apiA = injectA()
 const apiB = injectB()
 
-const composedStore = injectStore(() =>
-  createStore({ a: apiA.store, b: apiB.store })
-)
+const composedStore = injectStore()
+composedStore.use({ a: apiA.store, b: apiB.store })
 
 return api(composedStore).setExports({
   ...apiA.exports,
@@ -359,7 +365,7 @@ const App = () => (
 ```
 
 :::tip
-Click `Reset` in the above sandbox and watch
+Click "Reset" in the above sandbox.
 :::
 
 ## Recap

@@ -35,7 +35,7 @@ Stores are the secret sauce of Zedux. And luckily, they're extremely simple to c
 ```ts
 import { atom, injectStore } from '@zedux/react'
 
-const myAtom = atom('my', () => {
+const exampleAtom = atom('example', () => {
   const store = injectStore('initial state')
 })
 ```
@@ -185,7 +185,7 @@ function Greeting() {
 
 By returning the store from the state factory, we essentially tell Zedux, "Don't create a store for me! I created my own. Use this one."
 
-:::important
+:::info important
 When returning a store from a state factory, ensure that the exact same store reference is returned every time the atom evaluates - e.g. by using `injectStore` (recommended) or `injectMemo`.
 :::
 

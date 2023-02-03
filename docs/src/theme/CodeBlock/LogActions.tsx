@@ -8,8 +8,7 @@ const options = {
   SelectorCache: 'Selector Cache',
   Ecosystem: 'Ecosystem',
   Graph: 'Graph',
-  ReactScope: 'React Scope',
-  ZeduxScope: 'Zedux Scope',
+  Scope: 'Zedux Scope',
 }
 
 const Backdrop = styled.div`
@@ -109,7 +108,9 @@ export const LogActions = ({
       AtomState: () => {
         console.group('Current state of all atom instances:')
         console.log(
-          Zedux.getEcosystem(ecosystemIdRef.current).inspectInstanceValues()
+          Zedux.getEcosystem(ecosystemIdRef.current).dehydrate({
+            transform: false,
+          })
         )
         console.groupEnd()
       },
@@ -126,11 +127,6 @@ export const LogActions = ({
         console.log('Bottom-Up:', ecosystem.inspectGraph('bottom-up'))
         console.groupEnd()
       },
-      ReactScope: () => {
-        console.group('React exports available in the sandbox:')
-        console.log(React)
-        console.groupEnd()
-      },
       SelectorCache: () => {
         console.group('Cached selectors:')
         console.log(
@@ -140,9 +136,10 @@ export const LogActions = ({
         )
         console.groupEnd()
       },
-      ZeduxScope: () => {
+      Scope: () => {
         console.group('Zedux exports available in the sandbox:')
-        console.log(Zedux)
+        console.log('Zedux:', Zedux)
+        console.log('React:', React)
         console.groupEnd()
       },
     }),
