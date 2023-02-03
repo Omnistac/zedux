@@ -104,7 +104,11 @@ Yep, these approaches are very similar.
 
 ## Ecosystem Persistence
 
-You can get a snapshot of the state of all atoms in an ecosystem with `ecosystem.inspectInstanceValues()`
+There are a few ways to get a state snapshot of an entire ecosystem. For example, you could call `ecosystem.inspectInstances()` and map each instance to a value yourself. But ecosystems have a method that's specifically designed for persistence:
+
+### `ecosystem.dehydrate()`
+
+You can get a snapshot of the state of all atoms in an ecosystem with `ecosystem.dehydrate({ transform: false })`
 
 ```ts
 import { atom, createEcosystem } from '@zedux/react'
@@ -113,22 +117,19 @@ const exampleAtom = atom('example', () => 'Hello, world!')
 const ecosystem = createEcosystem({ id: 'root' })
 ecosystem.getInstance(exampleAtom)
 
-const snapshot = ecosystem.inspectInstanceValues() // { example: 'Hello, world!' }
-const serialized = JSON.stringify(snapshot)
+const snapshot = ecosystem.dehydrate({ transform: false })
 ```
 
-This may be all you need. However, `inspectInstanceValues` is very "dumb" - it doesn't do anything special to transform the state, it just returns it as-is. Since atoms can hold anything, you may have a situation where you're storing non-serializable values (namely functions) in atoms. Data types from Immutable.js, for example, require an extra step to serialize/deserialize values.
+This may be all you need. However, passing `{ transform: false }` makes `ecosystem.dehydrate()` very "dumb" - it doesn't do anything special to transform the state, it just returns it as-is. Since atoms can hold anything, you may have a situation where you're storing non-serializable values (namely functions) in atoms. Data types from Immutable.js, for example, require an extra step to serialize/deserialize values.
 
 For these atoms you have two options:
 
-- Skip the non-serializable atom
+- Skip the non-serializable atom.
 - Transform the atom's value to something that can be serialized.
 
-Ecosystems have a method that's better suited for both of these:
+First things first:
 
-### `ecosystem.dehydrate()`
-
-Like `.inspectInstanceValues()`, `.dehydrate()` returns an object mapping atom instance keyHashes to their current value. But `.dehydrate()` does a little more magic.
+### Skipping Atoms
 
 You can blacklist atoms you don't want to dehydrate by passing `exclude` and/or `excludeFlags` options:
 
@@ -168,6 +169,8 @@ const snapshot = ecosystem.dehydrate({
 
 Excludes take precedence over includes if you pass both.
 
+Now for transforming values:
+
 ### `dehydrate` Atom Config
 
 Atoms can be configured with a `dehydrate` config option:
@@ -178,7 +181,11 @@ const exampleAtom = atom('example', () => initialState, {
 })
 ```
 
-`ecosystem.dehydrate()` calls `dehydrate` when specified to transform the state of individual atom instances.
+To enable value transforming, simply omit `{ transform: false }` in the `ecosystem.dehydrate()` call. Transforms are enabled by default.
+
+`ecosystem.dehydrate()` returns an object mapping atom instance keyHashes to their current value. But with transforms enabled, `.dehydrate()` does a little more magic.
+
+`ecosystem.dehydrate()` calls the `dehydrate` atom config option (when specified) to transform the state of individual atom instances.
 
 Here's an example of an atom whose value is a JS Map, which can't be directly stringified. We use the `dehydrate` atom config option to tell Zedux how to transform this atom instance's state to a serializable value for dehydration:
 
@@ -263,7 +270,7 @@ ecosystem.hydrate({ 'hydrateMe-[0]': 'hydrated state' })
 ecosystem.getInstance(hydrateMe, [0])
 ecosystem.getInstance(hydrateMe, [1])
 
-const snapshot = ecosystem.inspectInstanceValues()
+const snapshot = ecosystem.dehydrate()
 ```
 
 Hydration will also immediately update any existing atom instances with keyHashes in the snapshot. Pass `{ retroactive: false }` as the second parameter to `ecosystem.hydrate()` to disable this. With this option, only instances that are created after hydration will have their state hydrated.
@@ -281,7 +288,7 @@ ecosystem.getInstance(hydrateMe, [1])
 
 ecosystem.hydrate({ 'hydrateMe-[0]': 'hydrated state' }, { retroactive: false })
 
-const snapshot = ecosystem.inspectInstanceValues()
+const snapshot = ecosystem.dehydrate()
 ```
 
 ### `hydrate` Atom Config

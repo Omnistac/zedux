@@ -46,7 +46,7 @@ const mapOverrides = (overrides: AtomBase<any, any, any>[]) =>
     return map
   }, {} as Record<string, AtomBase<any, any, any>>)
 
-export const ecosystemContext = createContext('global')
+export const ecosystemContext = createContext('@@global')
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements AtomGettersBase {
@@ -142,8 +142,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   /**
    * Retrieve an object mapping atom instance keyHashes to their current values.
-   * Uses the `dehydrate` atom config option when specified to transform state
-   * to a serializable form.
+   *
+   * Calls the `dehydrate` atom config option (on atoms that have one) to
+   * transform state to a serializable form. Pass `transform: false` to prevent
+   * this.
    *
    * Atoms can be excluded from dehydration by passing `exclude` and/or
    * `excludeFlags` options:
@@ -180,11 +182,13 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     excludeFlags,
     include,
     includeFlags,
+    transform = true,
   }: {
     exclude?: (AnyAtomBase | string)[]
     excludeFlags?: string[]
     include?: (AnyAtomBase | string)[]
     includeFlags?: string[]
+    transform?: boolean
   } = {}) {
     const instances = Object.values(this._instances).filter(instance => {
       if (
@@ -234,7 +238,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
         return [
           instance.keyHash,
-          instance.atom.dehydrate ? instance.atom.dehydrate(state) : state,
+          transform && instance.atom.dehydrate
+            ? instance.atom.dehydrate(state)
+            : state,
         ]
       })
     )
@@ -517,24 +523,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   /**
-   * Get an object mapping all atom instance keyHashes in this ecosystem to
-   * their current values.
-   *
-   * Pass an atom or atom key string to only return instances whose keyHash
-   * weakly matches the passed key.
-   */
-  public inspectInstanceValues(atom?: AnyAtomBase | string) {
-    const hash = this.inspectInstances(atom)
-
-    // We just created the object. Just mutate it.
-    Object.keys(hash).forEach(key => {
-      hash[key] = hash[key].store.getState()
-    })
-
-    return hash
-  }
-
-  /**
    * Add a ZeduxPlugin to this ecosystem. This ecosystem will subscribe to the
    * plugin's modStore, whose state can be changed to reactively update the mods
    * of this ecosystem.
@@ -544,6 +532,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    *
    * The plugin will remain part of this ecosystem until it is unregistered or
    * this ecosystem is destroyed. `.wipe()` and `.reset()` don't remove plugins.
+   * However, a plugin _can_ set the `ecosystemWiped` mod and react to those
+   * events.
    */
   public registerPlugin(plugin: ZeduxPlugin) {
     if (this.plugins.some(descriptor => descriptor.plugin === plugin)) return

@@ -60,11 +60,6 @@ module.exports = {
       },
       {
         type: 'category',
-        label: 'Constants',
-        items: ['api/constants/internalTypes', 'api/constants/internalStore'],
-      },
-      {
-        type: 'category',
         label: 'Factories',
         items: [
           'api/factories/actionFactory',
@@ -106,6 +101,14 @@ module.exports = {
           'api/injectors/injectRef',
           'api/injectors/injectStore',
           'api/injectors/injectWhy',
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Miscellaneous',
+        items: [
+          'api/miscellaneous/internalTypes',
+          'api/miscellaneous/internalStore',
         ],
       },
       {

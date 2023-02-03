@@ -97,7 +97,9 @@ function Child() {
       <button onClick={() => console.log(testEcosystem)}>log ecosystem</button>
       <button onClick={() => testEcosystem.wipe()}>wipe ecosystem</button>
       <button
-        onClick={() => console.log(testEcosystem.inspectInstanceValues())}
+        onClick={() =>
+          console.log(testEcosystem.dehydrate({ transform: false }))
+        }
       >
         inspect instance values
       </button>

@@ -3,21 +3,44 @@ id: Ecosystem
 title: Ecosystem
 ---
 
-The ecosystem is an isolated atom environment. It creates a scheduler for running atom-related tasks and a graph that manages atom dependencies.
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-This class defines many methods for creating, destroying, and inspecting atom instances and the graph they form.
+The ecosystem is an isolated atom environment. Every ecosystem creates:
+
+- A scheduler for intelligently running atom-related tasks.
+- A graph that manages atom dependencies.
+- A [SelectorCache](SelectorCache) for managing cached [Atom Selectors](../types/AtomSelector).
+- An id generator that generates unique ids for unnamed Atom Selectors and external graph nodes.
+
+The Ecosystem class itself defines many methods for creating, destroying, and inspecting atom instances and the graph they form.
 
 Ecosystems can be used completely outside of React. This can be helpful for testing atoms.
 
 ## Creation
 
-Create ecosystems with [the `createEcosystem` factory](../factories/createEcosystem).
+Create ecosystems with [the `createEcosystem()` factory](../factories/createEcosystem).
 
 ```ts
 import { createEcosystem } from '@zedux/react'
 
 const rootEcosystem = createEcosystem({ id: 'root' })
 ```
+
+Ecosystems are also created automatically when using an [`<EcosystemProvider>`](../components/EcosystemProvider) without passing an `ecosystem` prop:
+
+```tsx
+import { EcosystemProvider } from '@zedux/react'
+
+function App() {
+  return (
+    <EcosystemProvider id="root">
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+Additionally, the [global ecosystem](../../walkthrough/ecosystems#global) will be created automatically if atoms are used in React outside any `<EcosystemProvider>`.
 
 ## Providing
 
@@ -151,12 +174,12 @@ Returns a list of instances that match the given atom.
 #### Example
 
 ```ts
-const myAtom = atom('my', (param: string) => param)
+const exampleAtom = atom('example', (param: string) => param)
 
-myEcosystem.getInstance(myAtom, ['a'])
-myEcosystem.getInstance(myAtom, ['b'])
+myEcosystem.getInstance(exampleAtom, ['a'])
+myEcosystem.getInstance(exampleAtom, ['b'])
 
-myEcosystem.inspectInstances(myAtom)
+myEcosystem.inspectInstances(exampleAtom)
 // [<AtomInstance with params ['a']>, <AtomInstance with params ['b']>]
 myEcosystem.inspectInstances('my')
 // [<AtomInstance with params ['a']>, <AtomInstance with params ['b']>]

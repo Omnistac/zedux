@@ -37,7 +37,7 @@ AtomApis can be passed to `atom()` as the value. They can also be returned from 
 ```ts
 import { api, atom, injectStore } from '@zedux/react'
 
-const myAtom = atom('my', api('initial state'))
+const exampleAtom = atom('example', api('initial state'))
 
 const withEvaluator = atom('withEvaluator', () => {
   return api('initial state')

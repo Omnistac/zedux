@@ -12,7 +12,22 @@ Zedux creates a store internally to keep track of all ecosystems. Ecosystems are
 Plugins can subscribe to this store to see when ecosystems are created and destroyed. You can also use this to inspect the internal state of Zedux. Readonly!
 
 ```ts
-import { internalStore } from '@zedux/react'
+import { createEcosystem, internalStore } from '@zedux/react'
 
-internalStore.getState() // { ecosystems: <a record of all ecosystems> }
+const rootEcosystem = createEcosystem({ id: 'root' })
+
+internalStore.getState()
+// {
+//   ecosystems: {
+//     root: rootEcosystem
+//   }
+// }
+
+const subscription = internalStore.subscribe((newState, oldState) => {
+  const newKeys = Object.keys(newState)
+  const oldKeys = oldState ? Object.keys(oldState) : []
+
+  const newEcosystems = newKeys.filter(key => !oldKeys.includes(key))
+  const destroyedEcosystems = oldKeys.filter(key => !newKeys.includes(key))
+})
 ```
