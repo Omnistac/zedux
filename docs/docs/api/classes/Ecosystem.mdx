@@ -84,56 +84,154 @@ function Swapper() {
 
 All properties are readonly!
 
-### `.context`
-
-An object. May be undefined. A reference to the `context` object passed to [the `createEcosystem()` factory](../factories/createEcosystem) (if any) or the latest [`.reset()`](#reset) call. This object should be constant until the ecosystem is reset via `.reset()`.
-
-When `.reset()` is called, the previous context (if any) will be passed as the second parameter to [the `onReady` function](../types/EcosystemConfig#onready) as part of the reset.
-
-### `.defaultForwardPromises`
-
-A boolean. May be undefined. Set this via the [EcosystemConfig option](../types/EcosystemConfig#defaultforwardpromises) passed to [the `createEcosystem()` factory](../factories/createEcosystem).
-
-This value will be used as the default [`forwardPromises` config value](Atom#forwardpromises) for all atoms used in this ecosystem that don't set their own. If set to `true`, all atoms used in this ecosystem will default to forwarding promises. If not set or if set to `false`, atoms will not forward promises by default.
-
-Setting an atom's [`forwardPromises` option](Atom#forwardpromises) will override this default.
-
-### `.defaultTtl`
-
-A number. Default `-1` (which means atom instances never die). Set this via the [EcosystemConfig option](../types/EcosystemConfig#defaultttl) passed to [the `createEcosystem()` factory](../factories/createEcosystem).
-
-This value will be used as the default [`ttl` config value](Atom#ttl) for all atoms used in this ecosystem that don't set their own.
-
-- Set to `0` to make all atom instances in this ecosystem die by default as soon as they go stale.
-- Set to any positive integer to make atoms live in a stale state for that many milliseconds before being cleaned up.
-
-### `.id`
-
-A string. The id of the ecosystem. Zedux will generate a simple, incrementing id for the ecosystem if one isn't supplied to `createEcosystem()`. It is always recommended to set your own id.
-
-### `.flags`
-
-An array of strings. These work in conjunction with [atom flags](Atom#flags) to raise warnings when unsafe atoms are not overridden in certain environments.
-
-If an atom has a flag that is not present in this array, Zedux will log a warning.
-
-Flag checking is off by default - simply don't pass a flags array to `createEcosystem()` and Zedux will ignore all flags. To turn it on, but with no flags, pass an empty array.
-
-```ts
+<Legend>
+  <Item name="selectorCache">
+    <p>
+      The <Link to="SelectorCache">SelectorCache</Link> class instance that
+      tracks all cached atom selectors in this ecosystem.
+    </p>
+  </Item>
+  <Item name="complexAtomParams">
+    <p>
+      A boolean. This is set to the <code>complexAtomParams</code> value you
+      passed via <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when
+      creating this ecosystem. If not specified, defaults to false.
+    </p>
+    <p>
+      Whether to allow non-serializable values as atom params. See{' '}
+      <Link to="../../advanced/complex-params">the complex params guide</Link>.
+    </p>
+  </Item>
+  <Item name="complexSelectorParams">
+    <p>
+      A boolean. This is set to the <code>complexSelectorParams</code> value you
+      passed via <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when
+      creating this ecosystem. If not specified, defaults to false.
+    </p>
+    <p>
+      Whether to allow non-serializable values as atom selector arguments. See{' '}
+      <Link to="../../advanced/complex-params">the complex params guide</Link>.
+    </p>
+  </Item>
+  <Item name="consumeHydrations">
+    <p>
+      A boolean. This is set to the <code>consumeHydrations</code> value you
+      passed via <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when
+      creating this ecosystem. If not specified, defaults to false.
+    </p>
+    <p>
+      Whether a key-value pair passed to <code>ecosystem.hydrate()</code> should
+      be removed from the ecosystem's hydration the first time it's used.
+    </p>
+  </Item>
+  <Item name="context">
+    <p>
+      An object. May be undefined. A reference to the `context` object passed to
+      <Link to="../factories/createEcosystem">
+        the <code>createEcosystem()</code> factory
+      </Link> (if any) or the latest <Link to="#reset">
+        <code>.reset</code>
+      </Link> call. This object should be constant until the ecosystem is reset via
+      <code>.reset()</code>.
+    </p>
+    <p>
+      When <code>.reset()</code> is called, the previous context (if any) will
+      be passed as the second parameter to{' '}
+      <Link to="../types/EcosystemConfig#onready">
+        the <code>onReady</code> function
+      </Link>{' '}
+      as part of the reset.
+    </p>
+  </Item>
+  <Item name="defaultTtl">
+    <p>
+      A number. May be undefined. The default ttl to use for all atom instances
+      in the ecosystem.
+    </p>
+    <p>
+      The default is <code>undefined</code>, which means all atom instances will
+      live forever.
+    </p>
+  </Item>
+  <Item name="id">
+    <p>
+      A string. The id of this ecosystem as set via{' '}
+      <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when creating
+      this ecosystem. The string <code>'@@global'</code> is reserved for the
+      global ecosystem.
+    </p>
+    <p>
+      If you didn't specify an id when creating this ecosystem, this will be a
+      randomly-generated string.
+    </p>
+  </Item>
+  <Item name="flags">
+    <p>
+      An array of strings. These work in conjunction with{' '}
+      <Link to="Atom#flags">atom flags</Link> to raise warnings when unsafe
+      atoms are not overridden in certain environments.
+    </p>
+    <p>
+      If an atom has a flag that is not present in this array, Zedux will log a
+      warning.
+    </p>
+    <p>
+      Flag checking is off by default - simply don't pass a flags array to{' '}
+      <code>createEcosystem()</code> and Zedux will ignore all flags. To turn it
+      on, but with no flags, pass an empty array.
+    </p>
+    <Ts>{`
 createEcosystem() // flag checking disabled. Zedux will ignore all atom flags.
 createEcosystem({ flags: [] }) // flag checking enabled! All flags will log warnings
 createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
-```
-
-Which atoms, which flags, and which environments, is all up to you. You may want to flag atoms that run side effects you don't want to run in tests. Or you may want to flag atoms that use APIs that only work in the browser or in electron or any other environment.
-
-### `.overrides`
-
-An array of [atom](Atom) objects. Atoms in this list will override any atoms with the same key used in this ecosystem.
-
-Set this list via the [EcosystemConfig](../types/EcosystemConfig#overrides) passed to the `createEcosystem()` factory or via [`.setOverrides()`](#setoverrides).
-
-See [the Dependency Injection walkthrough](../../walkthrough/dependency-injection) for more info.
+`}</Ts>
+    <p>
+      Which atoms, which flags, and which environments, is all up to you. You
+      may want to flag atoms that run side effects you don't want to run in
+      tests. Or you may want to flag atoms that use APIs that only work in the
+      browser or in electron or any other environment.
+    </p>
+  </Item>
+  <Item name="hydration">
+    <p>
+      An object. May be undefined. The shallowly merged result of all calls to{' '}
+      <code>ecosystem.hydrate()</code>.
+    </p>
+  </Item>
+  <Item name="modBus">
+    <p>
+      A <Link to="Store">Zedux Store</Link>. This store has no state. It serves
+      only as a message bus for notifying plugins of mod events.
+    </p>
+    <p>
+      See <Link to="../../advanced/plugins">the plugins guide</Link>.
+    </p>
+  </Item>
+  <Item name="overrides">
+    <p>
+      An object mapping atom keys to atoms. These are the currently-overridden
+      atoms in this ecosystem. Modify this list by calling{' '}
+      <code>ecosystem.setOverrides()</code>,{' '}
+      <code>ecosystem.addOverrides()</code>, and{' '}
+      <code>ecosystem.removeOverrides()</code>.
+    </p>
+  </Item>
+  <Item name="ssr">
+    <p>
+      A boolean. Whether the ecosystem is being used on the server to generate
+      SSR content.{' '}
+    </p>
+    <p>
+      This is set to the <code>ssr</code> value you passed via{' '}
+      <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when creating
+      this ecosystem. If not specified, defaults to false.
+    </p>
+    <p>
+      Currently the only thing this affects is <code>injectEffect()</code> - SSR
+      mode prevents effects from running at all in this ecosystem.
+    </p>
+  </Item>
+</Legend>
 
 ## Methods
 
