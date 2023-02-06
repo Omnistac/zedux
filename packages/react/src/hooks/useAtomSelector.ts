@@ -4,7 +4,7 @@ import { haveDepsChanged } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
 import { Ecosystem } from '../classes/Ecosystem'
-import { SelectorCacheInstance } from '../classes/SelectorCache'
+import { SelectorCacheItem } from '../classes/SelectorCache'
 
 const glob = ((typeof globalThis !== 'undefined' && globalThis) || {}) as any
 const INVALIDATE_REACT = `INVALIDATE_REACT_${Math.random()}`
@@ -35,7 +35,7 @@ const OPERATION = 'useAtomSelector'
 const isRefDifferent = (
   ecosystem: Ecosystem,
   newSelector: AtomSelectorOrConfig<any, any>,
-  cacheRef: MutableRefObject<SelectorCacheInstance<any, any> | undefined>
+  cacheRef: MutableRefObject<SelectorCacheItem<any, any> | undefined>
 ) => {
   if (!cacheRef.current) return true
 
@@ -107,7 +107,7 @@ export const useAtomSelector = <T, Args extends any[]>(
 ): T => {
   const ecosystem = useEcosystem()
   const dependentKey = useReactComponentId()
-  const cacheRef = useRef<SelectorCacheInstance<T, Args>>()
+  const cacheRef = useRef<SelectorCacheItem<T, Args>>()
   const skipState = useRef<T>()
   const isConfig = typeof selectorOrConfig !== 'function'
 
@@ -132,7 +132,7 @@ export const useAtomSelector = <T, Args extends any[]>(
     )
   }
 
-  const cache = cacheRef.current as SelectorCacheInstance<T, Args>
+  const cache = cacheRef.current as SelectorCacheItem<T, Args>
 
   const [subscribe, getSnapshot] = useMemo(() => {
     let isInvalidated = false

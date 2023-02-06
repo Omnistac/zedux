@@ -32,7 +32,7 @@ import { Graph } from './Graph'
 import { IdGenerator } from './IdGenerator'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
-import { SelectorCacheInstance, SelectorCache } from './SelectorCache'
+import { SelectorCacheItem, SelectorCache } from './SelectorCache'
 import { Mod, ZeduxPlugin } from './ZeduxPlugin'
 
 const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
@@ -402,6 +402,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     {
       dependencies: { key: string; operation: string }[]
       dependents: { key: string; operation: string }[]
+      weight: number
     }
   >
   public inspectGraph(view: 'top-down'): GraphViewRecursive
@@ -427,6 +428,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         {
           dependencies: { key: string; operation: string }[]
           dependents: { key: string; operation: string }[]
+          weight: number
         }
       > = {}
 
@@ -442,6 +444,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
             key,
             operation: node.dependents[key].operation,
           })),
+          weight: node.weight,
         }
       })
 
@@ -601,8 +604,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     selectable: Selectable<T, Args>,
     ...args: Args
   ): T {
-    if (is(selectable, SelectorCacheInstance)) {
-      return (selectable as SelectorCacheInstance<T, Args>).result as T
+    if (is(selectable, SelectorCacheItem)) {
+      return (selectable as SelectorCacheItem<T, Args>).result as T
     }
 
     const atomSelector = selectable as AtomSelectorOrConfig<T, Args>
@@ -814,19 +817,16 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this._refCount++
   }
 
-  private recalculateMods(
-    newState?: Record<Mod, boolean>,
-    oldState?: Record<Mod, boolean>
-  ) {
+  private recalculateMods(newState?: Mod[], oldState?: Mod[]) {
     if (oldState) {
-      Object.entries(oldState).forEach(([key, isModded]) => {
-        if (isModded) this._mods[key as Mod]-- // fun fact, undefined-- is fine
+      oldState.forEach(key => {
+        this._mods[key as Mod]-- // fun fact, undefined-- is fine
       })
     }
 
     if (newState) {
-      Object.entries(newState).forEach(([key, isModded]) => {
-        if (isModded) this._mods[key as Mod]++
+      newState.forEach(key => {
+        this._mods[key as Mod]++
       })
     }
   }
