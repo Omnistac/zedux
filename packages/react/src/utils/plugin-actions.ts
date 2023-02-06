@@ -6,7 +6,7 @@ import {
   DependentEdge,
   EvaluationReason,
 } from '../types'
-import { SelectorCacheInstance } from '../classes/SelectorCache'
+import { SelectorCacheItem } from '../classes/SelectorCache'
 
 export const pluginActions = {
   activeStateChanged: actionFactory<
@@ -34,8 +34,8 @@ export const pluginActions = {
   >('edgeCreated'),
   edgeRemoved: actionFactory<
     {
-      dependency: AnyAtomInstance | SelectorCacheInstance<any, any[]>
-      dependent: AnyAtomInstance | SelectorCacheInstance<any, any[]> | string // string if edge is External
+      dependency: AnyAtomInstance | SelectorCacheItem<any, any[]>
+      dependent: AnyAtomInstance | SelectorCacheItem<any, any[]> | string // string if edge is External
       edge: DependentEdge
     },
     'edgeRemoved'
@@ -46,7 +46,7 @@ export const pluginActions = {
         time: number
       }
     | {
-        cache: SelectorCacheInstance
+        cache: SelectorCacheItem
         time: number
       },
     'evaluationFinished'
@@ -59,7 +59,7 @@ export const pluginActions = {
       newState: any
       oldState: any
       reasons: EvaluationReason[]
-      selectorCache?: SelectorCacheInstance
+      selectorCache?: SelectorCacheItem
     },
     'stateChanged'
   >('stateChanged'),
