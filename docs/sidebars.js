@@ -47,7 +47,11 @@ module.exports = {
           'api/classes/AtomInstance',
           'api/classes/Ecosystem',
           'api/classes/Ion',
+          'api/classes/MachineStore',
+          'api/classes/SelectorCache',
+          'api/classes/SelectorCacheItem',
           'api/classes/Store',
+          'api/classes/ZeduxPlugin',
         ],
       },
       {

@@ -30,7 +30,6 @@ export default function DocItemTOCDesktop() {
     })
   })
 
-  console.log('the toc:', toc)
   return (
     <TOC
       toc={clonedToc}

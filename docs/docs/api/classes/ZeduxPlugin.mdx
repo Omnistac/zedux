@@ -1,0 +1,112 @@
+---
+id: ZeduxPlugin
+title: ZeduxPlugin
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+The base class of Zedux [ecosystem](Ecosystem) plugins.
+
+A plugin can turn on ecosystem mods and hook into mod events.
+
+This class also has a single static property - `actions`. This is an object mapping every available mod to an [action factory](../types/ActionFactory) that Zedux uses to dispatch mod events to plugins.
+
+```ts live resultVar=allMods
+// Easy way to see all available mods:
+const allMods = Object.keys(ZeduxPlugin.actions)
+```
+
+## Creating
+
+Plugins are a little lower-level. This is the only class in Zedux that you insantiate using the `new` keyword.
+
+```ts
+const myPlugin = new ZeduxPlugin()
+```
+
+The constructor takes an optional config object:
+
+<Ts>{`{ initialMods, registerEcosystem }`}</Ts>
+
+<Legend>
+  <Item name="initialMods">
+    <p>Optional. An array of mod strings.</p>
+    <p>
+      These don't need to be set initially. You can modify this list at any time
+      by changing the state of your plugin's <code>modsStore</code>:
+    </p>
+    <Ts>{`const plugin = new ZeduxPlugin()
+plugin.modsStore.setState({ stateChanged: true })
+// This is equivalent to:
+const plugin = new ZeduxPlugin({ initialMods: ['stateChanged'] })`}</Ts>
+  </Item>
+  <Item name="registerEcosystem">
+    <p>
+      Optional. A function that receives the ecosystem and can do anything with
+      it.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`registerEcosystem = (ecosystem) => optionalCleanup`}</Ts>
+    <p>
+      You can return a cleanup function to clean up subscriptions when the
+      plugin is unregistered.
+    </p>
+    <p>
+      This is where you do all the plugin magic. Almost all plugins will pass
+      this.
+    </p>
+    <p>
+      If your plugin turns on any mods, you'll likely want to subscribe to the
+      ecosystem's{' '}
+      <Link to="Ecosystem#modbus">
+        <code>modBus</code>
+      </Link>{' '}
+      to handle those mod events.
+    </p>
+  </Item>
+</Legend>
+
+## Example
+
+```ts
+const plugin = new ZeduxPlugin({
+  initialMods: ['stateChanged'],
+  registerEcosystem: ecosystem => {
+    const subscription = ecosystem.modBus.subscribe({
+      effects: ({ action }) => {
+        if (action.type === ZeduxPlugin.actions.stateChanged.type) {
+          // handle stateChanged mod event
+        }
+      },
+    })
+  },
+})
+
+const ecosystem = createEcosystem({ id: 'root' })
+ecosystem.registerPlugin(plugin)
+```
+
+## Properties
+
+Every ZeduxPlugin has just two properties:
+
+<Legend>
+  <Item name="modsStore">
+    <p>
+      A <Link to="Store">Zedux store</Link>.
+    </p>
+    <p>
+      This store's state is an array of mod names. If a mod is in this list, it
+      will be turned on in ecosystems where this plugin is registered. By
+      default, this array is empty, unless you pass a list of initialMods.
+    </p>
+  </Item>
+  <Item name="registerEcosystem">
+    A reference to the <code>registerEcosystem</code> function passed to the
+    ZeduxPlugin constructor or a no-op function if none was passed.
+  </Item>
+</Legend>
+
+## See Also
+
+- [The plugins guide](../../advanced/plugins)

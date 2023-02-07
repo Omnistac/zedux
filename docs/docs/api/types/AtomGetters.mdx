@@ -160,8 +160,7 @@ const instance = maybeInstance ? getInstance(maybeInstance) : undefined`}</Ts>
       A function that returns an <Link to="AtomSelector">atom selector's</Link>{' '}
       value. Pass an atom selector, an{' '}
       <Link to="AtomSelectorConfig">AtomSelectorConfig</Link> object, or an{' '}
-      <Link to="../classes/SelectorCacheInstance">SelectorCacheInstance</Link>{' '}
-      instance.
+      <Link to="../classes/SelectorCacheItem">SelectorCacheItem</Link> instance.
     </p>
     <Ts>{`value = select(atomSelector, arg1, arg2)
 value = select(atomSelectorConfig, arg1, arg2)
@@ -182,7 +181,7 @@ value = select(atomSelectorCache)`}</Ts>
       exists).
     </p>
     <p>
-      If an SelectorCacheInstance is passed, <code>select()</code> registers a
+      If an SelectorCacheItem is passed, <code>select()</code> registers a
       dynamic dependency on the cache and returns the cache's current result.
     </p>
     <p>
@@ -210,7 +209,7 @@ const val = cache ? select(cache) : defaultVal`}</Ts>
     <p>
       Stable references can also make your graph look better, since Zedux
       defaults to using the selector function's name as part of its{' '}
-      <Link to="../classes/SelectorCacheInstance#cachekey">
+      <Link to="../classes/SelectorCacheItem#cachekey">
         <code>cacheKey</code>
       </Link>
       .
