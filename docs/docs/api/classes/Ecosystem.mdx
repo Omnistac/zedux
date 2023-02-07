@@ -85,12 +85,6 @@ function Swapper() {
 All properties are readonly!
 
 <Legend>
-  <Item name="selectorCache">
-    <p>
-      The <Link to="SelectorCache">SelectorCache</Link> class instance that
-      tracks all cached atom selectors in this ecosystem.
-    </p>
-  </Item>
   <Item name="complexAtomParams">
     <p>
       A boolean. This is set to the <code>complexAtomParams</code> value you
@@ -216,6 +210,12 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
       <code>ecosystem.removeOverrides()</code>.
     </p>
   </Item>
+  <Item name="selectorCache">
+    <p>
+      The <Link to="SelectorCache">SelectorCache</Link> class instance that
+      tracks all cached atom selectors in this ecosystem.
+    </p>
+  </Item>
   <Item name="ssr">
     <p>
       A boolean. Whether the ecosystem is being used on the server to generate
@@ -235,240 +235,372 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
 
 ## Methods
 
-The ecosystem class has the following public methods:
-
-### `.addOverrides`
-
-Adds new overrides to the current list of overrides and/or swaps out currently-overridden atoms with different implementations. All existing instances of atoms in the passed list will be force-destroyed, allowing their dependents to recreate them.
-
-#### Signature
-
-```ts
-.addOverrides(overrides) => void
-```
-
-#### `overrides`
-
-Required. An array of [atoms](Atom).
-
-### `.destroy`
-
-Destroys all atom instances in the ecosystem, cleans up the ecosystem itself (e.g. by removing all currently scheduled tasks), and removes it from the [internalStore](../constants/internalStore).
-
-#### Signature
-
-```ts
-.destroy(force?) => void
-```
-
-#### `force`
-
-Optional. A boolean. Default: `false`. If true, will destroy the ecosystem even if it's currently being provided over React context (via `<EcosystemProvider>`).
-
-### `.inspectInstances`
-
-Returns a list of instances that match the given atom.
-
-#### Example
-
-```ts
-const exampleAtom = atom('example', (param: string) => param)
-
-myEcosystem.getInstance(exampleAtom, ['a'])
-myEcosystem.getInstance(exampleAtom, ['b'])
-
-myEcosystem.inspectInstances(exampleAtom)
-// [<AtomInstance with params ['a']>, <AtomInstance with params ['b']>]
-myEcosystem.inspectInstances('my')
-// [<AtomInstance with params ['a']>, <AtomInstance with params ['b']>]
-```
-
-#### Signature
-
-```ts
-.inspectInstances(atom)
-```
-
-#### Overloads
-
-```ts
-.inspectInstances(key)
-```
-
-#### `atom`
-
-Required. An atom, all instances of which will be returned.
-
-#### `key`
-
-Required (in this overload). A string. Instances whose [atom's `key`](Atom#key) match this string will be returned.
-
-### `.get`
-
-Returns the current state of an atom instance. Creates the atom instance if it doesn't exist yet. The atom instance to use will be resolved based on the passed atom and params.
-
-#### Signature
-
-```ts
-.get(atom, params?) => value
-```
-
-#### Overloads
-
-```ts
-.get(instance) => value
-```
-
-#### `atom`
-
-Required. The [atom](Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
-
-#### `params`
-
-Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
-
-TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
-
-#### `instance`
-
-Required. An atom instance whose value we're getting. This overload is just an alias for [`instance.getState()`](AtomInstance#getstate).
-
-#### Example
-
-```ts
-const currentValue = rootEcosystem.get(myAtom)
-const withParams = rootEcosystem.get(paramsAtom, ['param 1', 'param 2'])
-```
-
-### `.getInstance`
-
-Returns an atom instance. Creates the atom instance if it doesn't exist yet. The atom instance to use will be resolved based on the passed atom and params.
-
-#### Signature
-
-```ts
-.getInstance(atom, params?) => value
-```
-
-#### `atom`
-
-Required. The [atom](Atom) object whose key will be used to find an existing atom instance and whose definition will be used to create an atom instance if none exist yet.
-
-#### `params`
-
-Optional. An array of parameters that identify this atom instance. These params will be passed to the atom's [evaluator function](../glossary#evaluator).
-
-TS users will be required to pass this for atoms that take params. If you don't use TS ... just don't forget to pass them.
-
-#### Example
-
-```ts
-const instance = rootEcosystem.getInstance(myAtom)
-const withParams = rootEcosystem.getInstance(paramsAtom, ['param 1', 'param 2'])
-
+<Legend>
+  <Item name="addOverrides">
+    <p>
+      Adds new overrides to the ecosystem's current list of overrides and/or
+      updates existing overrides - swapping them out with different
+      implementations. All existing instances of atoms in the passed list will
+      be force-destroyed, allowing their dependents to recreate them.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`addOverrides = (overrides) => void`}</Ts>
+    <Legend>
+      <Item name="overrides">
+        Required. An array of <Link to="Atom">atoms</Link>.
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="dehydrate">
+    <p>
+      Returns a snapshot of the current state of instances in the ecosystem.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`dehydrate = ({
+  exclude?,
+  excludeFlags?,
+  include?,
+  includeFlags?,
+  transform?
+}) => snapshot`}</Ts>
+    <Legend>
+      <Item name="exclude">
+        <p>
+          Optional. An array of atoms and/or case-insensitive fuzzy-search
+          strings.
+        </p>
+        <p>
+          Any atom instances of the passed atoms or whose keyHash matches any of
+          the passed strings will be excluded from the snapshot.
+        </p>
+      </Item>
+      <Item name="excludeFlags">
+        <p>Optional. An array of strings.</p>
+        <p>
+          Any atom instance whose atom's <Link to="Atom#flags">flags</Link>{' '}
+          contain any of the passed strings will be excluded from the snapshot.
+        </p>
+      </Item>
+      <Item name="include">
+        <p>
+          Optional. An array of atoms and/or case-insensitive fuzzy-search
+          strings.
+        </p>
+        <p>
+          Only atom instances of the passed atoms or whose keyHashes match any
+          of the passed strings will be included in the snapshot.
+        </p>
+        <p>
+          Excludes take priority over includes - if an atom instance is excluded
+          via <code>excludes</code> or <code>excludeFlags</code> <i>and</i>{' '}
+          included here, it will still be excluded.
+        </p>
+      </Item>
+      <Item name="includeFlags">
+        <p>Optional. An array of strings.</p>
+        <p>
+          Only atom instance whose atom's <Link to="Atom#flags">flags</Link>{' '}
+          contain any of the passed strings will be included in the snapshot.
+        </p>
+        <p>
+          Excludes take priority over includes - if an atom instance is excluded
+          via <code>excludes</code> or <code>excludeFlags</code> <i>and</i>{' '}
+          included here, it will still be excluded.
+        </p>
+      </Item>
+      <Item name="transform">
+        <p>
+          Optional. A boolean. Default: <code>true</code>.
+        </p>
+        <p>
+          Whether to transform state by passing it to{' '}
+          <Link to="../types/AtomConfig#dehydrate">
+            <code>dehydrate</code> atom config options
+          </Link>
+          .
+        </p>
+      </Item>
+      <Item name="Returns">
+        <p>
+          An object mapping atom instance keyHashes to the transformed form
+          (unless <code>transform: false</code>) of their current state.
+        </p>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="destroy">
+    <p>
+      Destroys all atom instances in the ecosystem, cleans up the ecosystem
+      itself (e.g. by removing all currently scheduled tasks), and removes it
+      from the <Link to="../miscellaneous/internalStore">internalStore</Link>.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`destroy = (force?) => void`}</Ts>
+    <Legend>
+      <Item name="force">
+        <p>
+          Optional. A boolean. Default: <code>false</code>.
+        </p>
+        <p>
+          By default, destruction will bail out if this ecosystem is currently
+          being used in any{' '}
+          <Link to="../components/EcosystemProvider">
+            <code>&lt;EcosystemProvider&gt;s</code>
+          </Link>
+          . Pass true to force destruction anyway. It is not recommended to pass
+          this in a normal app.
+        </p>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="get">
+    <p>
+      Gets the current value of an atom instance's store. Creates the atom
+      instance if it doesn't exist yet. See{' '}
+      <Link to="../types/AtomGetters#get">
+        the <code>get</code> AtomGetter
+      </Link>
+      .
+    </p>
+    <Ts>{`const currentValue = myEcosystem.get(myAtom)
+const withParams = myEcosystem.get(paramsAtom, ['param 1', 'param 2'])`}</Ts>
+    <p>
+      Note that this method - like all AtomGetters on the ecosystem - never
+      registers graph dependencies, no matter where it's used.
+    </p>
+  </Item>
+  <Item name="getInstance">
+    <p>
+      Gets an atom instance. Creates it if it doesn't exist yet. Set{' '}
+      <Link to="../types/AtomGetters#getinstance">
+        the <code>getInstance</code> AtomGetter
+      </Link>
+      .
+    </p>
+    <Ts>{`const instance = rootEcosystem.getInstance(myAtom)
+const withParams = rootEcosystem.getInstance(paramsAtom, ['param 1', 'param 2'])\n
 instance.getState()
-instance.setState('new state')
-```
-
-### `.inspectInstanceValues`
-
-Returns an object mapping the [keyHash](AtomInstance#keyhash) of all atom instances in the ecosystem to their current values.
-
-#### Signature
-
-```ts
-.inspectInstanceValues(atom?) => object
-```
-
-#### Overloads
-
-```ts
-.inspectInstanceValues(searchKey?) => object
-```
-
-#### `atom`
-
-Optional. An atom object to filter results by. Only instances of the atom will included in the result.
-
-#### `searchKey`
-
-Optional. A string to filter results by. Only atom instances whose [atom's key](Atom#key) or whose own [keyHash](AtomInstance#keyhash) match the searchKey will be included in the result.
-
-### `.reset`
-
-The preferred way to clear an ecosystem's state. Calling `.reset` will call [`.wipe()`](#wipe) but will also rerun [the `onReady` function](../types/EcosystemConfig#onready).
-
-#### Signature
-
-```ts
-.reset(newContext?) => void
-```
-
-#### `newContext`
-
-Optional. An object. The new context to set on this ecosystem. If not passed, the existing context (if any) will be reused. The ecosystem's `context` property will be set to this before `onReady` is called. The previous context will be passed to `onReady` as the second parameter.
-
-```ts
-const myEcosystem = createEcosystem({
+instance.setState('new state')`}</Ts>
+    <p>
+      Note that this method - like all AtomGetters on the ecosystem - never
+      registers graph dependencies, no matter where it's used.
+    </p>
+  </Item>
+  <Item name="hydrate">
+    <p>
+      Hydrates the state of atom instances in this ecosystem, usually using a
+      previous state snapshot from{' '}
+      <Link to="#dehydrate">
+        <code>ecosystem.dehydrate()</code>
+      </Link>
+      .
+    </p>
+    <p>
+      If <code>.hydrate()</code> has been called before, the new hydration will
+      be shallowly merged into the existing hydration.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`hydrate = (snapshot, config?) => void`}</Ts>
+    <Legend>
+      <Item name="snapshot">
+        <p>
+          Required. An object. The keys of this object are keyHashes
+          corresponding to atom instance that may or may not exist in the
+          ecosystem yet.
+        </p>
+      </Item>
+      <Item name="config">
+        <p>Optional. An object containing the following optional property:</p>
+        <Ts>{`{ retroactive }`}</Ts>
+        <p>
+          By default, Zedux will update the state of all existing atom instances
+          that have an entry in the passed snapshot. To disable this, pass{' '}
+          <code>{`{ retroactive: false }`}</code>.
+        </p>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="inspectGraph">
+    <p>
+      See what the ecosystem's atom graph currently looks like. There are 3 ways
+      to view the graph:
+    </p>
+    <ul>
+      <li>Top-down</li>
+      <li>Bottom-up</li>
+      <li>Flat</li>
+    </ul>
+    <p>
+      Flat is the default and is the most useful. It returns a normalized object
+      containing every node in the graph. Each node points to its dependencies
+      and dependents in the top-level object.
+    </p>
+    <p>
+      Top-down and bottom-up are mostly just for fun, to quickly gain some
+      insight into what your dependency graph actually looks like. However,
+      these views don't show "pseudo-nodes" (nodes that Zedux creates to
+      represent external dependents like React components).
+    </p>
+    <p>Signature:</p>
+    <Ts>{`inspectGraph = (view) => graph`}</Ts>
+    <Legend>
+      <Item name="view">
+        Optional. One of <code>'flat'</code>, <code>'top-down'</code>, or{' '}
+        <code>'bottom-up'</code>. Default: <code>'flat'</code>.
+      </Item>
+      <Item name="Returns">
+        An object whose structure depends on the requested view. See{' '}
+        <Link to="../../walkthrough/the-graph#getting-the-graph">
+          the graph walkthrough
+        </Link>
+        .
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="inspectInstances">
+    <p>Get all atom instances in the ecosystem.</p>
+    <p>Signature:</p>
+    <Ts>{`inspectInstances = (atom?) => instances`}</Ts>
+    <Legend>
+      <Item name="atom">
+        An atom or fuzzy search string. If an atom is passed,{' '}
+        <code>.inspectInstances()</code> returns only instances of the passed
+        atom. If a string is passed, <code>.inspectInstances()</code> returns
+        only instances whose keyHash includes the passed string
+        (case-insensitive).
+      </Item>
+      <Item name="Returns">
+        An object of all Active and Stale atom instances in the ecosystem, keyed
+        by the instance's keyHash.
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="registerPlugin">
+    <p>
+      Registers a plugin with this ecosystem. Does nothing if the plugin has
+      already been registered. See{' '}
+      <Link to="../../advanced/plugins">the plugins guide</Link>.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`registerPlugin = (plugin) => void`}</Ts>
+    <p>
+      Accepts a single <Link to="ZeduxPlugin">ZeduxPlugin</Link> instance.
+    </p>
+  </Item>
+  <Item name="removeOverrides">
+    <p>
+      Removes overrides previously set via <code>.addOverrides()</code> or{' '}
+      <code>.setOverrides()</code>. All existing instances of atoms in the
+      passed list will be force-destroyed, allowing their dependents to recreate
+      them using the original, non-overridden atom.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`removeOverrides = (overrides) => void`}</Ts>
+    <Legend>
+      <Item name="overrides">
+        Required. An array of <Link to="Atom">atoms</Link>. If any haven't been
+        set as overrides previously, they'll be ignored.
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="reset">
+    <p>
+      Wipes the ecosystem - force destroying all atom instances and cached
+      selectors - calls the cleanup function returned from{' '}
+      <Link to="../types/EcosystemConfig#onready">
+        the <code>onReady</code> function
+      </Link>{' '}
+      (if any), and calls <code>onReady</code> again to reinitialize the
+      ecosystem.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`reset = (newContext?) => void`}</Ts>
+    <p>
+      Takes an optional <code>newContext</code> object that will be passed to{' '}
+      <code>onReady</code> and set as the new{' '}
+      <Link to="#context">
+        <code>.context</code>
+      </Link>{' '}
+      value of the ecosystem.
+    </p>
+    <Ts>{`const myEcosystem = createEcosystem({
   context: { someField: 'some val' },
   id: 'my',
   onReady: (ecosystem, prevContext) =>
     console.log('old context:', prevContext, 'new context:', ecosystem.context),
 })
-// old context: undefined new context: { someField: 'some val' }
-
+// old context: undefined new context: { someField: 'some val' }\n
 myEcosystem.reset({ someField: 'new val' })
-// old context: { someField: 'some val' } new context: { someField: 'new val' }
-```
-
-### `.removeOverrides`
-
-Removes atoms from the ecosystem's list of overrides. All instances of atoms in the passed list will be force-destroyed, allowing their dependencies to recreate them using the no-longer-overridden implementations.
-
-#### Signature
-
-```ts
-.removeOverrides(overrides) => void
-```
-
-#### `overrides`
-
-Required. An array of [atoms](Atom) and/or string keys.
-
-### `.select`
-
-Runs an [AtomSelector](../types/AtomSelector) statically (without creating any dependencies). Returns the result. Will create any atom instances used in the AtomSelector that haven't been created yet.
-
-#### Signature
-
-```ts
-.select(atomSelectorOrConfig, ...args) => result
-```
-
-#### `atomSelectorOrConfig`
-
-The [AtomSelector](../types/AtomSelector) to run or an [AtomSelectorConfig object](../types/AtomSelector#atomselectorconfig) with the AtomSelector as the `selector` property.
-
-#### `args`
-
-The extra arguments to pass to the AtomSelector (besides the first AtomGetters arg, which Zedux passes for you). In TypeScript, all of the AtomSelector's required arguments are required here.
-
-#### `result`
-
-Whatever the AtomSelector returns.
-
-### `.setOverrides`
-
-Replaces the ecosystem's list of overridden atoms with the passed overrides. All instances of atoms in either the new or old lists will be force-destroyed, allowing their dependencies to recreate them.
-
-To selectively update only certain atoms in the list, use [`.addOverrides`](#addoverrides) or [`.removeOverrides`](#removeoverrides).
-
-#### Signature
-
-```ts
-.setOverrides(newOverrides) => void
-```
-
-#### `newOverrides`
-
-Required. An array of [atoms](Atom). Will be set as the new [`.overrides`](#overrides) property.
+// old context: { someField: 'some val' } new context: { someField: 'new val' }`}</Ts>
+  </Item>
+  <Item name="select">
+    <p>
+      Gets the current value of a cached atom selector. If the atom selector
+      hasn't been cached yet, runs the selector but does _not_ cache the result.
+      Use{' '}
+      <Link to="SelectorCache">
+        <code>ecosystem.selectorCache.getCache()</code>
+      </Link>{' '}
+      to create and cache a selector. See{' '}
+      <Link to="../types/AtomGetters#select">
+        the <code>select</code> AtomGetter
+      </Link>
+      .
+    </p>
+    <Ts>{`const selection = myEcosystem.select(myAtomSelector)
+const withArgs = myEcosystem.select(myAtomSelector, 'param 1', 'param 2')`}</Ts>
+    <p>
+      Note that this method - like all AtomGetters on the ecosystem - never
+      registers graph dependencies, no matter where it's used.
+    </p>
+  </Item>
+  <Item name="setOverrides">
+    <p>
+      Replaces the ecosystem's list of overridden atoms with the passed
+      overrides. All instances of atoms in either the new or old lists will be
+      force-destroyed, allowing their dependencies to recreate them.
+    </p>
+    <p>
+      To selectively update only certain atoms, use{' '}
+      <Link to="#addoverrides">
+        <code>.addOverrides</code>
+      </Link>{' '}
+      or{' '}
+      <Link to="#removeoverrides">
+        <code>.removeOverrides</code>
+      </Link>
+    </p>
+    <p>Signature:</p>
+    <Ts>{`setOverrides = (newOverrides) => void`}</Ts>
+    <p>
+      Accepts an array of atoms. This will be set as the new{' '}
+      <Link to="#overrides">
+        <code>.overrides</code>
+      </Link>{' '}
+      property.
+    </p>
+  </Item>
+  <Item name="unregisterPlugin">
+    <p>
+      Removes a plugin from the ecosystem. Calls the cleanup returned from the
+      plugin's{' '}
+      <Link to="ZeduxPlugin#registerecosystem">
+        <code>registerEcosystem</code>
+      </Link>{' '}
+      function (if any), and turns off any mods the plugin enabled in the
+      ecosystem that are not also requested by any other plugins.
+    </p>
+  </Item>
+  <Item name="weakGet">
+    <p></p>
+  </Item>
+  <Item name="weakGetInstance">
+    <p></p>
+  </Item>
+  <Item name="why">
+    <p></p>
+  </Item>
+  <Item name="wipe">
+    <p></p>
+  </Item>
+</Legend>

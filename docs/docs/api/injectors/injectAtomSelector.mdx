@@ -101,8 +101,7 @@ export const InjectAtomSelectorLegend = ({
       <p>
         Required. An <Link to="../types/AtomSelector">AtomSelector</Link>,{' '}
         <Link to="../types/AtomSelectorConfig">AtomSelectorConfig</Link> object,
-        or a{' '}
-        <Link to="../classes/SelectorCacheInstance">SelectorCacheInstance</Link>{' '}
+        or a <Link to="../classes/SelectorCacheItem">SelectorCacheItem</Link>{' '}
         instance.
       </p>
       <p>
@@ -117,8 +116,8 @@ export const InjectAtomSelectorLegend = ({
         the cached value.
       </p>
       <p>
-        If an SelectorCacheInstance is passed, <code>{name}()</code> simply
-        returns the cached value.
+        If an SelectorCacheItem is passed, <code>{name}()</code> simply returns
+        the cached value.
       </p>
       <p>
         In all cases, <code>{name}()</code> registers a dynamic dependency on
