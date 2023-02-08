@@ -590,17 +590,61 @@ const withArgs = myEcosystem.select(myAtomSelector, 'param 1', 'param 2')`}</Ts>
       function (if any), and turns off any mods the plugin enabled in the
       ecosystem that are not also requested by any other plugins.
     </p>
+    <p>Signature:</p>
+    <Ts>{`unregisterPlugin = (plugin) => void`}</Ts>
+    <p>
+      Accepts a single <Link to="ZeduxPlugin">ZeduxPlugin</Link> instance. If
+      the plugin hasn't previously been registered via{' '}
+      <Link to="#registerplugin">
+        <code>.registerPlugin()</code>
+      </Link>
+      , it will be ignored.
+    </p>
   </Item>
   <Item name="weakGet">
-    <p></p>
+    <p>
+      Works exactly like{' '}
+      <Link to="#get">
+        <code>ecosystem.get()</code>
+      </Link>{' '}
+      except it does NOT create the atom if it doesn't exist. In that case,{' '}
+      <code>.weakGet()</code> returns undefined
+    </p>
+    <Ts>{`val = ecosystem.get(myAtom, [...params]) // creates the atom instance if needed
+val = ecosystem.weakGet(myAtom, [...params]) // never creates an atom instance`}</Ts>
   </Item>
   <Item name="weakGetInstance">
-    <p></p>
+    <p>
+      Works exactly like{' '}
+      <Link to="#getinstance">
+        <code>ecosystem.getInstance()</code>
+      </Link>{' '}
+      except it does NOT create the atom if it doesn't exist. In that case,{' '}
+      <code>.weakGetInstance()</code> returns undefined
+    </p>
+    <Ts>{`val = ecosystem.getInstance(myAtom, [...params]) // creates the atom instance if needed
+val = ecosystem.weakGetInstance(myAtom, [...params]) // never creates an atom instance`}</Ts>
   </Item>
   <Item name="why">
-    <p></p>
-  </Item>
-  <Item name="wipe">
-    <p></p>
+    <p>
+      Returns a list of{' '}
+      <Link to="../types/EvaluationReason">EvaluationReasons</Link> detailing
+      why the current atom instance or selector is evaluating.
+    </p>
+    <p>
+      If called outside a selector or atom state factory,{' '}
+      <code>ecosystem.why()</code> always returns undefined.
+    </p>
+    <p>
+      If this is the first evaluation of the current atom instance or selector,{' '}
+      <code>ecosystem.why()</code> returns an empty array.
+    </p>
   </Item>
 </Legend>
+
+## See Also
+
+- [the Ecosystems walkthrough](../../walkthrough/ecosystems)
+- [the `createEcosystem()` factory](../factories/createEcosystem)
+- [the Overrides walkthrough](../../walkthrough/overrides)
+- [the Plugins guide](../../advanced/plugins)
