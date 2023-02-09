@@ -9,7 +9,7 @@ Ions are a specialized atom type. They excel at selector-type operations.
 
 Ions extend the Atom class. An ion's [state factory](../glossary#state-factory) receives a special [AtomGetters object](../types/AtomGetters) as its first parameter..
 
-Unlike atoms, ions must be given a state factory function. That's the whole point!
+Unlike atoms, ions _must_ be given a state factory function. That's the whole point!
 
 ## Creation
 
@@ -39,3 +39,8 @@ const withConfig = ion('withConfig', stateFactory, {
 ```
 
 Ions expose no unique properties or methods besides those exposed by [Atom](Atom).
+
+## See Also
+
+- [the `Atom` class](Atom)
+- [the Selectors walkthrough](../../walkthrough/selectors)
