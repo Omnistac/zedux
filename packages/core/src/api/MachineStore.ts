@@ -39,7 +39,7 @@ export class MachineStore<
 
   public is = (stateName: StateNames) => this.getState().value === stateName
 
-  public send = (eventName: EventNames) => {
+  public send = (eventName: EventNames, meta?: any) =>
     this.setState(currentState => {
       const nextValue = this.states[currentState.value][eventName]
 
@@ -52,22 +52,29 @@ export class MachineStore<
       }
 
       return { context: currentState.context, value: nextValue.name }
-    })
-  }
+    }, meta)
 
-  public setContext = (context: Settable<Context>) =>
-    this.setState(state => ({
-      context: typeof context === 'function' ? context(state.context) : context,
-      value: state.value,
-    }))
+  public setContext = (context: Settable<Context>, meta?: any) =>
+    this.setState(
+      state => ({
+        context:
+          typeof context === 'function' ? context(state.context) : context,
+        value: state.value,
+      }),
+      meta
+    )
 
   public setContextDeep = (
-    partialContext: Settable<RecursivePartial<Context>, Context>
+    partialContext: Settable<RecursivePartial<Context>, Context>,
+    meta?: any
   ) =>
-    this.setStateDeep(state => ({
-      context:
-        typeof partialContext === 'function'
-          ? partialContext(state.context)
-          : partialContext,
-    }))
+    this.setStateDeep(
+      state => ({
+        context:
+          typeof partialContext === 'function'
+            ? partialContext(state.context)
+            : partialContext,
+      }),
+      meta
+    )
 }
