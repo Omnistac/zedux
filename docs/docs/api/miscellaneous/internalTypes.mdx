@@ -13,10 +13,10 @@ An object containing action type and meta type strings that Zedux uses internall
 
 ```ts
 const internalTypes = {
-  delegate: `${PREFIX}delegate`, // a meta type
+  delegate: `${PREFIX}delegate`, // a meta node metaType
   hydrate: `${PREFIX}hydrate`, // an action type
   ignore: `${PREFIX}ignore`, // a meta type
-  inherit: `${PREFIX}inherit`, // a meta type
+  inherit: `${PREFIX}inherit`, // a meta node metaType
   merge: `${PREFIX}merge`, // an action type
   prime: `${PREFIX}prime`, // an action type
 }
@@ -76,7 +76,7 @@ const store = createStore((state, action) => {
 })
 ```
 
-## Meta Types
+## Meta Node Types
 
 Zedux uses the following `internalTypes` as meta node `metaType` properties:
 
@@ -149,6 +149,8 @@ parentStore.dispatch({ type: 'test' })
 //   }
 // }
 ```
+
+## Meta Types
 
 ### `ignore`
 

@@ -3,6 +3,164 @@ id: MachineStore
 title: MachineStore
 ---
 
-:::note
-🚧 This page is under construction
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+Extends [Store](Store). [`injectMachineStore()`](../injectors/injectMachineStore) returns an instance of this class.
+
+This class controls the store's state shape and exposes simple methods for working with the state machine. It is recommended to only use these methods to manipulate the state of the store, rather than using [`machineStore.setState()`](Store#setstate) or [`machineStore.setStateDeep()`](Store#setstatedeep). You can dispatch actions to the store via [`machineStore.dispatch()`](Store#dispatch), but the only use for that is to use the store as a message bus.
+
+These state machines have relative type safety. Type generics must be passed manually for full TS support, so it's recommended to use a higher-level factory (like `injectMachineStore()`) that does that for you to instantiate this class.
+
+:::tip
+MachineStore state machines are very simple. We're probably not going to support any advanced state machine features. Use XState or a similar lib if more power is needed.
 :::
+
+## State Shape
+
+All machine stores store an object with the following properties:
+
+<Ts>{`{ context, value }`}</Ts>
+
+**`context`** can be either `undefined` or an object containing anything. This object is used to hold extra state related to the state machine.
+
+**`value`** is a string. This is the actual state the machine is currently in.
+
+## Creation
+
+Create using [`injectMachineStore()`](../injectors/injectMachineStore). It is so not recommended to instantiate this class yourself that we're not even documenting it here 😛
+
+## Methods
+
+<Legend>
+  <Item name="getContext">
+    <p>
+      Returns the current state of the machine store's <code>.context</code>{' '}
+      property.
+    </p>
+    <Ts>{`// these 2 lines are equivalent:
+machineStore.getContext()
+machineStore.getState().context`}</Ts>
+  </Item>
+  <Item name="getValue">
+    <p>
+      Returns the string state that the machine is currently in. This is the
+      value of the machine store's <code>.value</code> property.
+    </p>
+    <Ts>{`// these 2 lines are equivalent:
+machineStore.getValue()
+machineStore.getState().value`}</Ts>
+  </Item>
+  <Item name="is">
+    <p>
+      Checks if the machine store's current <code>.value</code> matches a given
+      string
+    </p>
+    <p>Signature:</p>
+    <Ts>{`is = (stateName) => boolean`}</Ts>
+    <p>
+      Accepts a single string and returns true if the machine store is currently
+      in that state.
+    </p>
+    <Ts>{`// these 2 lines are equivalent:
+machineStore.getValue() === 'some-state'
+machineStore.is('some-state')`}</Ts>
+  </Item>
+  <Item name="send">
+    <p>This is how you transition the machine to a new state.</p>
+    <p>Signature:</p>
+    <Ts>{`send = (eventName, meta?) => newState`}</Ts>
+    <Legend>
+      <Item name="eventName">
+        Required. A string. This must be one of the recognized event names of
+        the store.
+      </Item>
+      <Item name="meta">
+        Optional. Can be anything, including the special{' '}
+        <Link to="../miscellaneous/internalTypes#ignore">
+          <code>ignore</code>
+        </Link>{' '}
+        meta type.
+      </Item>
+      <Item name="Returns">
+        The new state of the store (an object with <code>context</code> and{' '}
+        <code>value</code> properties), or the existing state if there was no
+        valid transition for the passed event.
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="setContext">
+    <p>
+      Replaces the <code>.context</code> of the store with the passed object.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`setContext = (contextOrFactory, meta?) => newState`}</Ts>
+    <Legend>
+      <Item name="contextOrFactory">
+        Either the new context or a function that accepts the current context
+        and returns a new context object.
+      </Item>
+      <Item name="meta">
+        Optional. Can be anything, including the special{' '}
+        <Link to="../miscellaneous/internalTypes#ignore">
+          <code>ignore</code>
+        </Link>{' '}
+        meta type.
+      </Item>
+      <Item name="Returns">
+        The new state of the store (an object with <code>context</code> and{' '}
+        <code>value</code> properties).
+      </Item>
+    </Legend>
+    <p>Examples:</p>
+    <Ts>{`// these 2 lines are equivalent:
+machineStore.setState(state => ({ ...state, context: { key: 'val' } }))
+machineStore.setContext({ key: 'val' })
+// and these 2 lines are equivalent:
+machineStore.setState(state => ({ ...state, context: { ...state.context, key: 'val' } }))
+machineStore.setContext(context => ({ ...context, key: 'val' }))`}</Ts>
+  </Item>
+  <Item name="setContextDeep">
+    <p>
+      Deeply merges an object into the existing <code>.context</code> of the
+      store.
+    </p>
+    <p>
+      This cannot be used to delete keys, only to add/update. Use{' '}
+      <Link to="#setcontext">
+        <code>.setContext()</code>
+      </Link>{' '}
+      to delete.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`setContextDeep = (contextOrFactory, meta?) => newState`}</Ts>
+    <Legend>
+      <Item name="contextOrFactory">
+        Either the new deep-partial context or a function that accepts the
+        current context and returns a deep-partial context object.
+      </Item>
+      <Item name="meta">
+        Optional. Can be anything, including the special{' '}
+        <Link to="../miscellaneous/internalTypes#ignore">
+          <code>ignore</code>
+        </Link>{' '}
+        meta type.
+      </Item>
+      <Item name="Returns">
+        The new state of the store (an object with <code>context</code> and{' '}
+        <code>value</code> properties).
+      </Item>
+    </Legend>
+    <p>Examples:</p>
+    <Ts>{`// these 2 lines are equivalent:
+machineStore.setStateDeep({ context: { key: 'val' } })
+machineStore.setContextDeep({ key: 'val' })
+// and these 2 lines are equivalent:
+machineStore.setStateDeep(state => ({ context: { key: state.key + 1 } }))
+machineStore.setContext(context => ({ key: state.key + 1 }))`}</Ts>
+  </Item>
+</Legend>
+
+## See Also
+
+- [`injectMachineStore()`](../injectors/injectMachineStore)
+- [The State Machines walkthrough](../../walkthrough/state-machines)
