@@ -30,7 +30,7 @@ export class SelectorCacheItem<T = any, Args extends any[] = any[]> {
 
 /**
  * Since AtomSelectors are meant to feel lightweight, they don't have to be
- * instances of a class - they'll often be freestanding or even inline
+ * instances of a class - they'll often be standalone or even inline
  * functions. This class handles all the logic that AtomSelectors would handle
  * themselves if they were classes - creation, cache management, and
  * destruction.
