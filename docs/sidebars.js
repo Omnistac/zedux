@@ -127,7 +127,6 @@ module.exports = {
           'api/types/AtomInstanceTtl',
           'api/types/AtomSelector',
           'api/types/AtomSelectorConfig',
-          'api/types/AtomSetters',
           'api/types/EcosystemConfig',
           'api/types/EvaluationReason',
           'api/types/HierarchyDescriptor',

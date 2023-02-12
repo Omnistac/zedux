@@ -201,27 +201,6 @@ export type AtomSelectorOrConfig<T = any, Args extends any[] = []> =
   | AtomSelector<T, Args>
   | AtomSelectorConfig<T, Args>
 
-export interface AtomSetters<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>,
-  StoreType extends Store<State>,
-  PromiseType extends AtomApiPromise
-> extends AtomGetters {
-  instance: AtomInstance<State, Params, Exports, StoreType, PromiseType>
-
-  set<A extends AtomBase<any, [], any>>(
-    atom: A,
-    settable: Settable<AtomStateType<A>>
-  ): AtomStateType<A>
-
-  set<A extends AtomBase<any, [...any], any>>(
-    atom: A,
-    params: AtomParamsType<A>,
-    settable: Settable<AtomStateType<A>>
-  ): AtomStateType<A>
-}
-
 export type AtomStateFactory<
   State = any,
   Params extends any[] = [],
