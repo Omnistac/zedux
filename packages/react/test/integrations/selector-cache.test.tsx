@@ -27,7 +27,7 @@ describe('selector cache', () => {
 
     expect(cache).toEqual(cache3)
 
-    expect(ecosystem.selectorCache._caches).toEqual({
+    expect(ecosystem.selectorCache._items).toEqual({
       '@@selector-selector1': {
         args: [],
         cacheKey: '@@selector-selector1',

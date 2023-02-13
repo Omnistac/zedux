@@ -208,10 +208,10 @@ export class Graph {
         pluginActions.edgeRemoved({
           dependency:
             this.ecosystem._instances[dependencyKey] ||
-            this.ecosystem.selectorCache._caches[dependencyKey],
+            this.ecosystem.selectorCache._items[dependencyKey],
           dependent:
             this.ecosystem._instances[dependentKey] ||
-            this.ecosystem.selectorCache._caches[dependentKey] ||
+            this.ecosystem.selectorCache._items[dependentKey] ||
             dependentKey,
           edge: dependentEdge,
         })
@@ -277,7 +277,7 @@ export class Graph {
     scheduleStaticDeps = false
   ) {
     const instance = this.ecosystem._instances[nodeKey]
-    const cache = this.ecosystem.selectorCache._caches[nodeKey]
+    const cache = this.ecosystem.selectorCache._items[nodeKey]
     const node = this.nodes[nodeKey]
 
     Object.keys(node.dependents).forEach(dependentKey => {
@@ -381,10 +381,10 @@ export class Graph {
         pluginActions.edgeCreated({
           dependency:
             this.ecosystem._instances[dependencyKey] ||
-            this.ecosystem.selectorCache._caches[dependencyKey],
+            this.ecosystem.selectorCache._items[dependencyKey],
           dependent:
             this.ecosystem._instances[dependentKey] ||
-            this.ecosystem.selectorCache._caches[dependentKey] ||
+            this.ecosystem.selectorCache._items[dependentKey] ||
             dependentKey, // unfortunate but not changing for now UPDATE: shouldn't be needed anymore. Double check
           edge: newEdge,
         })
