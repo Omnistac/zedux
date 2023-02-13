@@ -40,19 +40,19 @@ export class SelectorCache {
    * Map selectorKey+params keyHash strings to the cached params and result for
    * the selector
    */
-  public _caches: Record<string, SelectorCacheItem<any, any>> = {}
+  public _items: Record<string, SelectorCacheItem<any, any>> = {}
 
   /**
    * Map selectors (or selector config objects) to a base selectorKey that can
    * be used to predictably create selectorKey+params keyHashes to look up the
-   * cache in `this._caches`
+   * cache in `this._items`
    */
   public _refBaseKeys = new WeakMap<AtomSelectorOrConfig<any, any>, string>()
 
   constructor(private readonly ecosystem: Ecosystem) {}
 
   public addDependent(
-    cache: SelectorCacheItem<any, any>,
+    cacheItem: SelectorCacheItem<any, any>,
     {
       callback,
       operation = 'addDependent',
@@ -64,13 +64,13 @@ export class SelectorCache {
     const id = this.ecosystem._idGenerator.generateNodeId()
     this.ecosystem._graph.addEdge(
       id,
-      cache.cacheKey,
+      cacheItem.cacheKey,
       operation,
       EdgeFlag.Explicit | EdgeFlag.External,
       callback
     )
 
-    return () => this.ecosystem._graph.removeEdge(id, cache.cacheKey)
+    return () => this.ecosystem._graph.removeEdge(id, cacheItem.cacheKey)
   }
 
   public destroyCache<T = any, Args extends [] = []>(
@@ -103,7 +103,7 @@ export class SelectorCache {
 
     const cache = is(selectable, SelectorCacheItem)
       ? (selectable as SelectorCacheItem<T, Args>)
-      : this._caches[cacheKey]
+      : this._items[cacheKey]
 
     if (!cache) return
 
@@ -138,13 +138,13 @@ export class SelectorCache {
 
     const selectorOrConfig = selectable as AtomSelectorOrConfig<T, Args>
     const cacheKey = this.getCacheKey(selectorOrConfig, args as Args)
-    let cache = this._caches[cacheKey] as SelectorCacheItem<T, Args>
+    let cache = this._items[cacheKey] as SelectorCacheItem<T, Args>
 
     if (cache) return cache
 
     // create the cache; it doesn't exist yet
     cache = new SelectorCacheItem(cacheKey, selectorOrConfig, args)
-    this._caches[cacheKey] = cache as SelectorCacheItem<any, any[]>
+    this._items[cacheKey] = cache as SelectorCacheItem<any, any[]>
     this.ecosystem._graph.addNode(cacheKey, true)
 
     this.runSelector(cacheKey, args as Args, true)
@@ -207,7 +207,7 @@ export class SelectorCache {
    * Pass a selector reference or string to filter by caches whose cacheKey
    * weakly matches the passed selector name.
    */
-  public inspectCaches(selectableOrName?: Selectable<any, any> | string) {
+  public inspectItems(selectableOrName?: Selectable<any, any> | string) {
     const hash: Record<string, SelectorCacheItem> = {}
     const filterKey =
       !selectableOrName || typeof selectableOrName === 'string'
@@ -219,7 +219,7 @@ export class SelectorCache {
             true
           ) || this.getIdealCacheKey(selectableOrName as AtomSelectorOrConfig)
 
-    Object.values(this._caches)
+    Object.values(this._items)
       .sort((a, b) => a.cacheKey.localeCompare(b.cacheKey))
       .forEach(instance => {
         if (filterKey && !instance.cacheKey.includes(filterKey)) {
@@ -239,8 +239,8 @@ export class SelectorCache {
    * Pass an atom or atom key string to only return instances whose keyHash
    * weakly matches the passed key.
    */
-  public inspectCacheValues(selectableOrName?: Selectable<any, any> | string) {
-    const hash = this.inspectCaches(selectableOrName)
+  public inspectItemValues(selectableOrName?: Selectable<any, any> | string) {
+    const hash = this.inspectItems(selectableOrName)
 
     // We just created the object. Just mutate it.
     Object.keys(hash).forEach(cacheKey => {
@@ -313,7 +313,7 @@ export class SelectorCache {
     )
     if (!cacheKey) return
 
-    return this._caches[cacheKey]
+    return this._items[cacheKey]
   }
 
   /**
@@ -321,7 +321,7 @@ export class SelectorCache {
    * Prefer `ecosystem.reset()`.
    */
   public wipe() {
-    Object.keys(this._caches).forEach(cacheKey => {
+    Object.keys(this._items).forEach(cacheKey => {
       this._destroySelector(cacheKey)
     })
 
@@ -333,7 +333,7 @@ export class SelectorCache {
    * the graph
    */
   public _destroySelector(cacheKey: string) {
-    const cache = this._caches[cacheKey]
+    const cache = this._items[cacheKey]
 
     if (!cache) return // shouldn't happen
 
@@ -343,7 +343,7 @@ export class SelectorCache {
 
     this.ecosystem._graph.removeDependencies(cacheKey)
     this.ecosystem._graph.removeNode(cacheKey)
-    delete this._caches[cacheKey]
+    delete this._items[cacheKey]
     cache.isDestroyed = true
     this._refBaseKeys.delete(cache.selectorRef)
   }
@@ -357,7 +357,7 @@ export class SelectorCache {
     flags: number,
     shouldSetTimeout?: boolean
   ) {
-    const cache = this._caches[cacheKey]
+    const cache = this._items[cacheKey]
 
     // TODO: Any calls in this case probably indicate a memory leak on the
     // user's part. Notify them.
@@ -416,7 +416,7 @@ export class SelectorCache {
 
     const idealKey = this.getIdealCacheKey(selectorOrConfig)
     const prefixedKey = `@@selector-${idealKey}`
-    const keyExists = this._caches[prefixedKey]
+    const keyExists = this._items[prefixedKey]
 
     // if the ideal key is taken, generate a new hash prefixed with the ideal key
     const key =
@@ -440,7 +440,7 @@ export class SelectorCache {
     isInitializing?: boolean
   ) {
     this.ecosystem._graph.bufferUpdates(cacheKey)
-    const cache = this._caches[cacheKey] as SelectorCacheItem<T, Args>
+    const cache = this._items[cacheKey] as SelectorCacheItem<T, Args>
     this.ecosystem._evaluationStack.start(cache)
     const selector =
       typeof cache.selectorRef === 'function'
