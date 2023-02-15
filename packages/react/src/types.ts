@@ -236,12 +236,14 @@ export type AtomValueOrFactory<
 
 export type Cleanup = () => void
 
+export type DependentCallback = (
+  signal: GraphEdgeSignal,
+  val?: any,
+  reason?: EvaluationReason
+) => any
+
 export interface DependentEdge {
-  callback?: (
-    signal: GraphEdgeSignal,
-    val?: any,
-    reason?: EvaluationReason
-  ) => any
+  callback?: DependentCallback
   createdAt: number
   flags: number // calculated from EdgeFlag enum
   operation: string

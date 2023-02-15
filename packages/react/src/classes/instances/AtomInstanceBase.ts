@@ -1,10 +1,10 @@
 import {
   ActiveState,
-  DependentEdge,
   EvaluationReason,
   Cleanup,
   EdgeFlag,
   PromiseStatus,
+  DependentCallback,
 } from '@zedux/react/types'
 import { InjectorDescriptor } from '@zedux/react/utils'
 import { AtomBase } from '../atoms/AtomBase'
@@ -42,7 +42,7 @@ export abstract class AtomInstanceBase<
     callback,
     operation = 'addDependent',
   }: {
-    callback?: DependentEdge['callback']
+    callback?: DependentCallback
     operation?: string
   } = {}): Cleanup {
     const id = this.ecosystem._idGenerator.generateNodeId()

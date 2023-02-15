@@ -1,5 +1,6 @@
 import {
   AnyAtomInstance,
+  DependentCallback,
   DependentEdge,
   EdgeFlag,
   EvaluationReason,
@@ -29,7 +30,7 @@ export class Graph {
     dependencyKey: string,
     operation: string,
     flags: number,
-    callback?: DependentEdge['callback']
+    callback?: DependentCallback
   ) {
     const newEdge: DependentEdge = {
       callback,

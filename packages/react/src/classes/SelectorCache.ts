@@ -2,7 +2,7 @@ import {
   AtomSelectorConfig,
   AtomSelectorOrConfig,
   Cleanup,
-  DependentEdge,
+  DependentCallback,
   EdgeFlag,
   EvaluationReason,
   Selectable,
@@ -57,7 +57,7 @@ export class SelectorCache {
       callback,
       operation = 'addDependent',
     }: {
-      callback?: DependentEdge['callback']
+      callback?: DependentCallback
       operation?: string
     } = {}
   ): Cleanup {
