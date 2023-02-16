@@ -13,20 +13,19 @@ export const atom: {
   <
     State = any,
     Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>,
-    PromiseType extends AtomApiPromise = undefined
+    Exports extends Record<string, any> = Record<string, never>
   >(
     key: string,
     value: (
       ...params: Params
-    ) => AtomApi<Promise<State>, Exports, undefined, PromiseType>,
+    ) => AtomApi<Promise<State>, Exports, undefined, any>,
     config?: AtomConfig<State>
   ): Atom<
     PromiseState<State>,
     Params,
     Exports,
     Store<PromiseState<State>>,
-    PromiseType
+    Promise<State>
   >
 
   // Custom Stores
