@@ -53,8 +53,8 @@ const isRefDifferent = (
 
   if (newIsFunction !== oldIsFunction) return true
 
-  const newKey = ecosystem.selectorCache.getIdealCacheKey(newSelector)
-  const oldKey = ecosystem.selectorCache.getIdealCacheKey(oldSelector)
+  const newKey = ecosystem.selectorCache._getIdealCacheKey(newSelector)
+  const oldKey = ecosystem.selectorCache._getIdealCacheKey(oldSelector)
 
   if (newKey !== oldKey) return true
 
