@@ -186,22 +186,6 @@ export class SelectorCache {
   }
 
   /**
-   * Get the string key we would ideally use as the cacheKey of the given
-   * AtomSelector function or AtomSelectorConfig object - doesn't necessarily
-   * mean we end up caching using this key.
-   */
-  public getIdealCacheKey(
-    selectorOrConfig: AtomSelectorOrConfig<any, any>
-  ): string | undefined {
-    const idealKey =
-      selectorOrConfig.name ||
-      (selectorOrConfig as AtomSelectorConfig).selector?.name
-
-    // 'selector' is too generic (it's the key in AtomSelectorConfig objects)
-    return (idealKey !== 'selector' && idealKey) || undefined
-  }
-
-  /**
    * Get an object of all currently-cached AtomSelectors.
    *
    * Pass a selector reference or string to filter by caches whose cacheKey
@@ -217,7 +201,7 @@ export class SelectorCache {
         : this.getBaseKey(
             selectableOrName as AtomSelectorOrConfig<any, any>,
             true
-          ) || this.getIdealCacheKey(selectableOrName as AtomSelectorOrConfig)
+          ) || this._getIdealCacheKey(selectableOrName as AtomSelectorOrConfig)
 
     Object.values(this._items)
       .sort((a, b) => a.cacheKey.localeCompare(b.cacheKey))
@@ -248,41 +232,6 @@ export class SelectorCache {
     })
 
     return hash
-  }
-
-  public invalidateCache<T = any, Args extends [] = []>(
-    selectable: Selectable<T, Args>
-  ): void
-
-  public invalidateCache<T = any, Args extends any[] = []>(
-    selectable: Selectable<T, Args>,
-    args: Args,
-    flushScheduler?: boolean
-  ): void
-
-  /**
-   * Tell Zedux the data for the given selector + args combo is stale - the
-   * AtomSelector needs to be rerun.
-   *
-   * Zedux uses this internally. AtomSelectors usually subscribe to anything
-   * that should make them rerun. You shouldn't need to call this yourself.
-   */
-  public invalidateCache(selectable: Selectable<any, any[]>, args?: any[]) {
-    const cache = this.weakGetCache(selectable, args as any[])
-    if (!cache) return
-
-    this._scheduleEvaluation(
-      cache.cacheKey,
-      {
-        operation: 'invalidateCache',
-        type: 'cache invalidated',
-        sourceType: 'External',
-      },
-      0,
-      false
-    )
-
-    this.ecosystem._scheduler.flush()
   }
 
   /**
@@ -317,18 +266,6 @@ export class SelectorCache {
   }
 
   /**
-   * Destroy all cached selectors. Should probably only be used internally.
-   * Prefer `ecosystem.reset()`.
-   */
-  public wipe() {
-    Object.keys(this._items).forEach(cacheKey => {
-      this._destroySelector(cacheKey)
-    })
-
-    this._refBaseKeys = new WeakMap()
-  }
-
-  /**
    * Should only be used internally. Removes the selector from the cache and
    * the graph
    */
@@ -346,6 +283,22 @@ export class SelectorCache {
     delete this._items[cacheKey]
     cache.isDestroyed = true
     this._refBaseKeys.delete(cache.selectorRef)
+  }
+
+  /**
+   * Get the string key we would ideally use as the cacheKey of the given
+   * AtomSelector function or AtomSelectorConfig object - doesn't necessarily
+   * mean we end up caching using this key.
+   */
+  public _getIdealCacheKey(
+    selectorOrConfig: AtomSelectorOrConfig<any, any>
+  ): string | undefined {
+    const idealKey =
+      selectorOrConfig.name ||
+      (selectorOrConfig as AtomSelectorConfig).selector?.name
+
+    // 'selector' is too generic (it's the key in AtomSelectorConfig objects)
+    return (idealKey !== 'selector' && idealKey) || undefined
   }
 
   /**
@@ -403,6 +356,18 @@ export class SelectorCache {
   }
 
   /**
+   * Destroy all cached selectors. Should probably only be used internally.
+   * Prefer `ecosystem.reset()`.
+   */
+  public _wipe() {
+    Object.keys(this._items).forEach(cacheKey => {
+      this._destroySelector(cacheKey)
+    })
+
+    this._refBaseKeys = new WeakMap()
+  }
+
+  /**
    * Get a base key that can be used to generate consistent cacheKeys for the
    * given selector
    */
@@ -414,7 +379,7 @@ export class SelectorCache {
 
     if (existingId || weak) return existingId
 
-    const idealKey = this.getIdealCacheKey(selectorOrConfig)
+    const idealKey = this._getIdealCacheKey(selectorOrConfig)
     const prefixedKey = `@@selector-${idealKey}`
     const keyExists = this._items[prefixedKey]
 

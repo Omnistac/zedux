@@ -773,7 +773,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     })
 
     this.hydration = undefined
-    this.selectorCache.wipe()
+    this.selectorCache._wipe()
 
     this._scheduler.wipe()
     this._scheduler.flush()
