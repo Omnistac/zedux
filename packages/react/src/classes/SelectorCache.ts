@@ -15,7 +15,7 @@ const defaultResultsComparator = (a: any, b: any) => a === b
 
 export class SelectorCacheItem<T = any, Args extends any[] = any[]> {
   public static $$typeof = Symbol.for('@@react/zedux/SelectorCache')
-  public isDestroyed?: true
+  public isDestroyed?: boolean
   public nextEvaluationReasons: EvaluationReason[] = []
   public prevEvaluationReasons?: EvaluationReason[]
   public result?: T
