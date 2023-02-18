@@ -27,10 +27,6 @@ export enum HierarchyType {
 export const observableSymbol =
   (typeof Symbol === 'function' && (Symbol as any).observable) || '@@observable'
 
-// Identifies Zedux subscribers - used when Zedux subscribes
-// to a child store from a parent store
-export const INTERNAL_SUBSCRIBER_ID = Symbol.for('zedux.subscriber')
-
 // Used to check if something is a Zedux store
 export const STORE_IDENTIFIER = Symbol.for('zedux.store')
 

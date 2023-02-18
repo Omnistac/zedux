@@ -19,7 +19,6 @@ import {
 } from '../types'
 import {
   detailedTypeof,
-  INTERNAL_SUBSCRIBER_ID,
   isPlainObject,
   STORE_IDENTIFIER,
 } from '../utils/general'
@@ -70,7 +69,11 @@ export class Store<State = any> {
   static readonly hierarchyConfig: HierarchyConfig = defaultHierarchyConfig
   static readonly $$typeof = STORE_IDENTIFIER
 
-  public _isIgnoringPropagations?: boolean
+  /**
+   * Used internally to halt propagations temporarily while flushing a composed
+   * store update queue
+   */
+  public _halt?: boolean
   private _currentDiffTree?: DiffNode
   private _currentState: State
   private _isDispatching?: boolean
@@ -242,7 +245,7 @@ export class Store<State = any> {
 
     // as any - this "id" field is hidden from the outside world
     // so it doesn't exist on the Subscriber type
-    if ((subscriberObj as any).id === INTERNAL_SUBSCRIBER_ID) {
+    if ((subscriberObj as any).id === STORE_IDENTIFIER) {
       this._subscribers.unshift(subscriberObj as SubscriberObject)
     } else {
       this._subscribers.push(subscriberObj as SubscriberObject)
@@ -500,9 +503,9 @@ export class Store<State = any> {
     }
 
     if (queue) {
-      queue.forEach(([store]) => (store._isIgnoringPropagations = true))
+      queue.forEach(([store]) => (store._halt = true))
       queue.forEach(([, callback]) => callback?.())
-      queue.forEach(([store]) => (store._isIgnoringPropagations = false))
+      queue.forEach(([store]) => (store._halt = false))
     }
   }
 
@@ -521,7 +524,7 @@ export class Store<State = any> {
       // substore in the first place, ignore the propagation; this store
       // will receive it anyway.
       // const isInherited = hasMeta(action, internalTypes.inherit)
-      if (this._isDispatching || this._isIgnoringPropagations) return
+      if (this._isDispatching || this._halt) return
 
       const newOwnState =
         newState === oldState
@@ -548,7 +551,7 @@ export class Store<State = any> {
 
     return childStore.subscribe({
       effects: effectsSubscriber,
-      id: INTERNAL_SUBSCRIBER_ID,
+      id: STORE_IDENTIFIER,
     } as any).unsubscribe
   }
 
