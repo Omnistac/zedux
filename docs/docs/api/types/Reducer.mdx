@@ -3,6 +3,8 @@ id: Reducer
 title: Reducer
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 In Zedux, reducers are exactly the same as in Redux and React. A reducer is just a function that receives the current state and an [action](Action) and returns the new state.
 
 [Stores](../classes/Store) can be configured with reducers by passing a reducer to [`createStore()`](../factories/createStore) or [`store.use()`](../classes/Store#use).
@@ -34,7 +36,7 @@ store.dispatch({ type: 'decrement' }) // 1
 
 ## Creation
 
-While you can create reducers manually like we just did, Zedux exports a high-level [`createReducer()`] factory for creating them easily:
+While you can create reducers manually like we just did, Zedux exports a high-level [`createReducer()`](../factories/createReducer) factory for creating them easily:
 
 ```ts
 import { createReducer, createStore } from '@zedux/react'
@@ -54,15 +56,32 @@ store.dispatch({ type: 'decrement' }) // 1
 ## Definition
 
 ```ts
-(currentState, action) => newState
+type Reducer<State = any> = (state: State | undefined, action: Action) => State
 ```
 
-Return the new state or the currentState if no change.
+<Legend>
+  <Item name="state">
+    <p>
+      The current state of this reducer or <code>undefined</code> if this is the
+      first time the reducer is run. Note that reducers should never return
+      undefined. This ensures that the state is never undefined after the first
+      run.
+    </p>
+    <p>Common practice is to assign this parameter to a default value.</p>
+  </Item>
+  <Item name="action">
+    An <Link to="Action">Action</Link> object. Note that this will never be an{' '}
+    <Link to="ActionChain">ActionChain</Link> object - Zedux unwraps all meta
+    nodes before passing actions to the reducer layer.
+  </Item>
+  <Item name="Returns">
+    The new state or, if the action did not cause a change, the existing state.
+    Don't return undefined from reducers. To return an "empty" value, use{' '}
+    <code>null</code>.
+  </Item>
+</Legend>
 
-### `currentState`
+## See Also
 
-Just exactly what it says... Can be any type. If creating reducers manually, be sure to default this value.
-
-### `action`
-
-An [action object](Action). The reducer should look at this action's `type` property to determine what to do.
+- [The `Action` type](Action).
+- [`createReducer()`](../factories/createReducer).

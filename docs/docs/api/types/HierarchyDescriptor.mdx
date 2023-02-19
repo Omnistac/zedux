@@ -19,7 +19,7 @@ type HierarchyDescriptor<State = any> =
   | null
 ```
 
-A HierarchyDescriptor can be a store, a reducer, or an object containing stores, reducers, or more objects nested indefinitely.
+In English: A HierarchyDescriptor can be a store, a reducer, or an object containing stores, reducers, or more objects nested indefinitely.
 
 ```ts
 import { createStore } from '@zedux/react'
@@ -28,7 +28,7 @@ const withStore = createStore(myStore)
 const withReducer = createStore(myReducer)
 const withObject = createStore({
   storeState: myStore,
-  reducerState: myReducer
+  reducerState: myReducer,
 })
 const nested = createStore({
   a: {
@@ -36,9 +36,9 @@ const nested = createStore({
     c: storeC,
     d: {
       e: reducerE,
-      f: storeF
-    }
-  }
+      f: storeF,
+    },
+  },
 })
 ```
 
@@ -51,6 +51,6 @@ const myStore = createStore({
 })
 
 myStore.use({
-  b: null // remove `b` from myStore
+  b: null, // remove `b` from myStore
 })
 ```

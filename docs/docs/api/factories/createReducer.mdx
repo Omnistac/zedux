@@ -27,7 +27,7 @@ const multipleActions = createReducer([]).reduce(
 
 const addTodo = actionFactory<Todo>('todos/add')
 const removeTodo = actionFactory<Todo>('todos/add')
-const withActors = createReducer([])
+const withActionFactories = createReducer([])
   .reduce(addTodo, (state, newTodo) => [...state, newTodo])
   .reduce(removeTodo, (state, id) => state.filter(todo => todo.id !== id))
 

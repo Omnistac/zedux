@@ -210,7 +210,7 @@ const cleanup = instance.addDependent() // increments ref count
 cleanup()
 ```
 
-It's that simple! When you call `instance.addDependent()`, Zedux creates a new "pseudo-node" in the graph and draws an edge between the instance and the new pseudo-node. This dependent means the instance's ref count can never hit 0 until we call the cleanup function.
+It's that simple! When you call `instance.addDependent()`, Zedux creates a new "pseudo-node" in the graph and draws an edge between the instance and the new pseudo-node. This dependent means the instance's ref count can never hit 0 until you call the cleanup function.
 
 `.addDependent()` takes an optional config object that allows you to give the new edge a dev-friendly name and a callback function for handling some real low-level details about the new dependency.
 

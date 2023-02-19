@@ -157,14 +157,17 @@ parentStore.dispatch({ type: 'test' })
 For use with stores that belong to atom instances. Set this string to an action's `meta` property to tell Zedux not to reevaluate the atom instance:
 
 ```ts
+import { internalTypes } from '@zedux/react'
+
 const store = injectStore() // { subscribe: true } is the default
 store.dispatch({ type: 'my-action-type', meta: internalTypes.ignore })
 ```
 
-This meta property can also be set when calling [`instance.setState()`](../classes/AtomInstance#setstate) or [`store.setState()`](../classes/Store#setstate) by passing it as the second parameter:
+This meta property can also be set when calling [`instance.setState()`](../classes/AtomInstance#setstate)/[`store.setState()`](../classes/Store#setstate) or [`instance.setStateDeep()`](../classes/AtomInstance#setstatedeep)/[`store.setStateDeep()`](../classes/Store#setstatedeep) by passing it as the second parameter:
 
 ```ts
 store.setState(newState, internalTypes.ignore)
+store.setStateDeep(partialState, internalTypes.ignore)
 ```
 
 It is not necessary to use this when updating an injected store's state synchronously during atom evaluation. Zedux always prevents these cases from causing a reevaluation, as that would lead to an evaluation loop.

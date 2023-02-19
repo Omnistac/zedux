@@ -9,7 +9,9 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { createStore } from '@zedux/react'
 ```
 
-Creates a [Zedux store](../classes/Store).
+Creates a [Zedux store](../classes/Store). Prefer using [`injectStore()`](../injectors/injectStore) to create stores inside atoms.
+
+Stores can be either zero-config or configured with a reducer hierarchy.
 
 ## Examples
 
@@ -22,11 +24,11 @@ zeroConfigStore.setState('initial state')
 const zeroConfigStoreWithInitialState = createStore(null, 'initial state')
 zeroConfigStoreWithInitialState.setState('new state')
 
-const reducerStore = createStore(rootReducer)
-reducerStore.dispatch(myActor())
+const reducerStore = createStore(myRootReducer)
+reducerStore.dispatch({ type: 'my-action-type' })
 
 const machineStore = createStore(stateMachine)
-machineStore.dispatch(myActor())
+machineStore.dispatch({ type: 'my-action-type' })
 
 const composedStore = createStore({
   zeroConfig: zeroConfigStore,
@@ -97,10 +99,6 @@ const bigComposedStore = createStore({
     </p>
   </Item>
 </Legend>
-
-```ts
-createStore(initialHierarchy?, initialState?) => Store
-```
 
 ## See Also
 
