@@ -16,9 +16,16 @@ ReducerBuilders also have a `.reduce()` method that can be used to extend the re
 ```ts
 import { createReducer } from '@zedux/react'
 
-const builder = createReducer('initial state')
+const reducer = createReducer([1, 3])
+  .reduce('add', (state, payload) => [...state, payload])
+  .reduce('remove', (state, payload) =>
+    state.filter(num => num !== payload)
+  )
 
-builder.reduce('myActionType', (state, payload) => )
+function Numbers() {
+  const [numbers, dispatch] = useReducer(builder)
+  ...
+}
 ```
 
 ## Definition
@@ -64,6 +71,11 @@ interface ReducerBuilder<State = any> extends Reducer<State> {
       new state or the current state if no change.
     </p>
     <Ts>{`.reduce([myActionFactory, 'myActionType'], (state, payload, action) => newState)`}</Ts>
+    <p>
+      Most sub-reducers will only need the current state and action payload, so
+      for convenience those are the first 2 parameters. Some sub-reducers need
+      access to the full action object, so Zedux passes that as the 3rd param.
+    </p>
   </Item>
 </Legend>
 

@@ -347,14 +347,6 @@ const maybeCache = ecosystem.selectorCache.weakGetCache(getUserById, [userId])
 This is different from `ecosystem.select()`. `weakGetCache` never runs the selector - it just returns the cache object if it exists. `ecosystem.select()` returns the cached _result_ if a cache exists. Otherwise it runs the selector statically (without registering graph dependencies) and returns that result.
 :::
 
-### `invalidateCache`
-
-Forces Zedux to reevaluate a cached Atom Selector.
-
-```ts
-ecosystem.selectorCache.invalidateCache(getUserById, [userId])
-```
-
 ### `destroyCache`
 
 Destroys an Atom Selector cache (if it exists).
