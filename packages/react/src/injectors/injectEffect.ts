@@ -1,6 +1,11 @@
+import { createInjector } from '../factories'
 import { EffectCallback, InjectorDeps } from '../types'
-import { haveDepsChanged, split } from '../utils'
-import { EffectInjectorDescriptor, InjectorType, JobType } from '../utils/types'
+import { haveDepsChanged, InjectorDescriptor, prefix } from '../utils'
+import { JobType } from '../utils/types'
+
+interface EffectInjectorDescriptor extends InjectorDescriptor<undefined> {
+  deps: InjectorDeps
+}
 
 const getTask = (
   effect: EffectCallback,
@@ -31,56 +36,72 @@ const getTask = (
  * don't have anything to cleanup, as you'll be unable to clean up resources if
  * you return a promise.
  */
-export const injectEffect = (effect: EffectCallback, deps?: InjectorDeps) => {
-  split<EffectInjectorDescriptor>(
-    'injectEffect',
-    InjectorType.Effect,
-    instance => {
-      const descriptor: EffectInjectorDescriptor = {
-        deps,
-        type: InjectorType.Effect,
+export const injectEffect = createInjector(
+  'injectEffect',
+  (
+    instance,
+    effect: EffectCallback,
+    deps?: InjectorDeps,
+    config?: { synchronous?: boolean }
+  ) => {
+    const descriptor: EffectInjectorDescriptor = {
+      deps,
+      type: `${prefix}/effect`,
+    }
+
+    if (!instance.ecosystem.ssr) {
+      const task = getTask(effect, descriptor)
+      descriptor.cleanup = () => {
+        instance.ecosystem._scheduler.unscheduleJob(task)
+        descriptor.cleanup = undefined
       }
 
-      if (!instance.ecosystem.ssr) {
-        const task = getTask(effect, descriptor)
-        descriptor.cleanup = () => {
-          instance.ecosystem._scheduler.unscheduleJob(task)
-          descriptor.cleanup = undefined
-        }
-
+      if (config?.synchronous) {
+        task()
+      } else {
         instance.ecosystem._scheduler.scheduleJob({
           task,
           type: JobType.RunEffect,
         })
       }
+    }
 
-      return descriptor
-    },
-    (prevDescriptor, instance) => {
-      if (instance.ecosystem.ssr) return prevDescriptor
+    return descriptor
+  },
+  (
+    prevDescriptor,
+    instance,
+    effect: EffectCallback,
+    deps?: InjectorDeps,
+    config?: { synchronous?: boolean }
+  ) => {
+    if (instance.ecosystem.ssr) return prevDescriptor
 
-      const depsHaveChanged = haveDepsChanged(prevDescriptor?.deps, deps)
+    const depsHaveChanged = haveDepsChanged(prevDescriptor?.deps, deps)
 
-      if (!depsHaveChanged) return prevDescriptor
+    if (!depsHaveChanged) return prevDescriptor
 
-      prevDescriptor.cleanup?.()
+    prevDescriptor.cleanup?.()
 
-      const task = getTask(effect, prevDescriptor)
-      // this cleanup should be unnecessary since effects run immediately every
-      // time except init. Leave this though in case we add a way to update an
-      // atom instance without flushing the scheduler
-      prevDescriptor.cleanup = () => {
-        instance.ecosystem._scheduler.unscheduleJob(task)
-        prevDescriptor.cleanup = undefined
-      }
-      prevDescriptor.deps = deps
+    const task = getTask(effect, prevDescriptor)
+    // this cleanup should be unnecessary since effects run immediately every
+    // time except init. Leave this though in case we add a way to update an
+    // atom instance without flushing the scheduler
+    prevDescriptor.cleanup = () => {
+      instance.ecosystem._scheduler.unscheduleJob(task)
+      prevDescriptor.cleanup = undefined
+    }
+    prevDescriptor.deps = deps
 
+    if (config?.synchronous) {
+      task()
+    } else {
       instance.ecosystem._scheduler.scheduleJob({
         task,
         type: JobType.RunEffect,
       })
-
-      return prevDescriptor
     }
-  )
-}
+
+    return prevDescriptor
+  }
+)

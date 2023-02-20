@@ -83,8 +83,9 @@ export const injectPromise: {
     ...storeConfig
   }: { dataOnly?: boolean; initialState?: T } & InjectStoreConfig = {}
 ) => {
-  const controllerRef = injectRef<AbortController>()
-  const promiseRef = injectRef<Promise<T>>()
+  const refs = injectRef(
+    {} as { controller?: AbortController; promise: Promise<T> }
+  )
 
   const store = injectStore(
     dataOnly ? initialState : getInitialPromiseState<T>(initialState),
@@ -92,13 +93,13 @@ export const injectPromise: {
   )
 
   // setting a ref during evaluation is perfectly fine in Zedux
-  promiseRef.current = injectMemo(() => {
-    const prevController = controllerRef.current
+  refs.current.promise = injectMemo(() => {
+    const prevController = refs.current.controller
     const nextController =
       typeof AbortController !== 'undefined' ? new AbortController() : undefined
 
-    controllerRef.current = nextController
-    const promise = promiseFactory(controllerRef.current)
+    refs.current.controller = nextController
+    const promise = promiseFactory(refs.current.controller)
 
     if (DEV && typeof promise?.then !== 'function') {
       throw new TypeError(
@@ -108,7 +109,7 @@ export const injectPromise: {
       )
     }
 
-    if (promise === promiseRef.current) return promiseRef.current
+    if (promise === refs.current.promise) return refs.current.promise
     ;(prevController?.abort as ((reason?: any) => void) | undefined)?.(
       'updated'
     )
@@ -135,9 +136,9 @@ export const injectPromise: {
   }, deps)
 
   injectEffect(
-    () => () => (controllerRef.current?.abort as any)?.('destroyed'),
+    () => () => (refs.current.controller?.abort as any)?.('destroyed'),
     []
   )
 
-  return api(store).setPromise(promiseRef.current)
+  return api(store).setPromise(refs.current.promise)
 }
