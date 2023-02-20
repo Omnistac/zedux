@@ -1,18 +1,14 @@
-import {
-  AtomInjectorDescriptor,
-  haveDepsChanged,
-  InjectorType,
-  is,
-  split,
-} from '../utils'
+import { haveDepsChanged, InjectorDescriptor, is, prefix } from '../utils'
 import {
   AnyAtomInstanceBase,
   AtomInstanceType,
   AtomParamsType,
   EdgeFlag,
 } from '../types'
-import { injectAtomGetters } from './injectAtomGetters'
 import { AtomBase, AtomInstanceBase } from '../classes'
+import { createInjector } from '../factories'
+
+const defaultOperation = 'injectAtomInstance'
 
 /**
  * injectAtomInstance
@@ -50,57 +46,55 @@ export const injectAtomInstance: {
     params?: [],
     operation?: string
   ): AI
-} = <A extends AtomBase<any, [...any], any>>(
-  atom: A | AnyAtomInstanceBase,
-  params?: AtomParamsType<A>,
-  operation = 'injectAtomInstance'
-) => {
-  const { getInstance } = injectAtomGetters()
+} = createInjector(
+  defaultOperation,
+  <A extends AtomBase<any, [...any], any>>(
+    instance: AnyAtomInstanceBase,
+    atom: A | AnyAtomInstanceBase,
+    params?: AtomParamsType<A>,
+    operation = defaultOperation
+  ) => {
+    const injectedInstance = instance.ecosystem._evaluationStack.atomGetters.getInstance(
+      atom as A,
+      params as AtomParamsType<A>,
+      [EdgeFlag.Static, operation]
+    )
 
-  const { instance } = split<AtomInjectorDescriptor<AtomInstanceType<A>>>(
-    'injectAtomInstance',
-    InjectorType.Atom,
-    () => {
-      const instance = getInstance(atom as A, params as AtomParamsType<A>, [
-        EdgeFlag.Static,
-        operation,
-      ])
+    return {
+      result: injectedInstance as AtomInstanceType<A>,
+      type: `${prefix}/atom`,
+    } as InjectorDescriptor<AtomInstanceType<A>>
+  },
+  <A extends AtomBase<any, [...any], any>>(
+    prevDescriptor: InjectorDescriptor<AtomInstanceType<A>>,
+    instance: AnyAtomInstanceBase,
+    atom: A | AnyAtomInstanceBase,
+    params?: AtomParamsType<A>,
+    operation = defaultOperation
+  ) => {
+    const resolvedAtom = is(atom, AtomInstanceBase)
+      ? (atom as AnyAtomInstanceBase).atom
+      : (atom as A)
 
-      return {
-        instance: instance as AtomInstanceType<A>,
-        type: InjectorType.Atom,
-      }
-    },
-    prevDescriptor => {
-      const resolvedAtom = is(atom, AtomInstanceBase)
-        ? (atom as AnyAtomInstanceBase).atom
-        : (atom as A)
+    const atomHasChanged = resolvedAtom !== prevDescriptor.result.atom
 
-      const atomHasChanged = resolvedAtom !== prevDescriptor.instance.atom
+    const paramsHaveChanged = haveDepsChanged(
+      prevDescriptor.result.params,
+      params,
+      true
+    )
 
-      const paramsHaveChanged = haveDepsChanged(
-        prevDescriptor.instance.params,
-        params,
-        true
-      )
+    // make sure the dependency gets registered for this evaluation
+    const injectedInstance = instance.ecosystem._evaluationStack.atomGetters.getInstance(
+      atom as A,
+      params as AtomParamsType<A>,
+      [EdgeFlag.Static, operation]
+    )
 
-      if (!atomHasChanged && !paramsHaveChanged) {
-        // make sure the dependency gets registered for this evaluation
-        getInstance(atom as A, params as AtomParamsType<A>)
+    if (!atomHasChanged && !paramsHaveChanged) return prevDescriptor
 
-        return prevDescriptor
-      }
+    prevDescriptor.result = injectedInstance as AtomInstanceType<A>
 
-      const instance = getInstance(atom as A, params as AtomParamsType<A>, [
-        EdgeFlag.Static,
-        operation,
-      ])
-
-      prevDescriptor.instance = instance as AtomInstanceType<A>
-
-      return prevDescriptor
-    }
-  )
-
-  return instance
-}
+    return prevDescriptor
+  }
+)

@@ -18,12 +18,7 @@ import {
   PromiseState,
   PromiseStatus,
 } from '@zedux/react/types'
-import {
-  InjectorDescriptor,
-  InjectorType,
-  is,
-  JobType,
-} from '@zedux/react/utils'
+import { InjectorDescriptor, is, JobType } from '@zedux/react/utils'
 import {
   getErrorPromiseState,
   getInitialPromiseState,
@@ -158,7 +153,7 @@ export class AtomInstance<
     // Clean up effect injectors first, then everything else
     const nonEffectInjectors: InjectorDescriptor[] = []
     this._injectors?.forEach(injector => {
-      if (injector.type !== InjectorType.Effect) {
+      if (injector.type !== '@@zedux/effect') {
         nonEffectInjectors.push(injector)
         return
       }

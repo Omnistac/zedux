@@ -20,10 +20,6 @@ export type AnyAtomInstanceBase = AtomInstanceBase<
   AtomBase<any, any, any>
 >
 
-export type AsyncEffectCallback<T = any> = (
-  cleanup: (fn: Cleanup) => void
-) => Promise<T> | void
-
 export type AtomApiPromise = Promise<any> | undefined
 
 export interface AtomConfig<State = any> {

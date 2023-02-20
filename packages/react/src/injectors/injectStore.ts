@@ -1,9 +1,10 @@
 import { createStore, internalTypes, Store } from '@zedux/core'
 import { AtomInstanceBase } from '../classes'
+import { createInjector } from '../factories'
 import { AnyAtomInstance, InjectStoreConfig } from '../types'
-import { split, StoreInjectorDescriptor, InjectorType } from '../utils'
+import { InjectorDescriptor, prefix } from '../utils'
 
-const doSubscribe = <State>(
+export const doSubscribe = <State>(
   instance: AtomInstanceBase<any, [...any], any>,
   store: Store<State>
 ) =>
@@ -48,7 +49,7 @@ const doSubscribe = <State>(
     },
   })
 
-const getHydration = (instance: AnyAtomInstance) => {
+export const getHydration = (instance: AnyAtomInstance) => {
   const hydratedValue = instance.ecosystem.hydration?.[instance.keyHash]
 
   if (typeof hydratedValue === 'undefined') return
@@ -124,53 +125,52 @@ export const injectStore: {
     config?: InjectStoreConfig
   ): Store<State>
   <State = undefined>(): Store<State>
-} = <State = any>(
-  storeFactory?: State | ((hydration?: State) => Store<State>),
-  config?: InjectStoreConfig
-) => {
-  const subscribe = config?.subscribe ?? true
+} = createInjector(
+  'injectStore',
+  <State = any>(
+    instance: AnyAtomInstance,
+    storeFactory?: State | ((hydration?: State) => Store<State>),
+    config?: InjectStoreConfig
+  ) => {
+    const subscribe = config?.subscribe ?? true
+    const getStore =
+      typeof storeFactory === 'function'
+        ? (storeFactory as () => Store<State>)
+        : (hydration?: State) =>
+            createStore<State>(null, hydration || storeFactory)
 
-  const { store } = split<StoreInjectorDescriptor<State>>(
-    'injectStore',
-    InjectorType.Store,
-    instance => {
-      const getStore =
-        typeof storeFactory === 'function'
-          ? (storeFactory as () => Store<State>)
-          : (hydration?: State) =>
-              createStore<State>(null, hydration || storeFactory)
+    const store = getStore(config?.hydrate ? getHydration(instance) : undefined)
 
-      const store = getStore(
-        config?.hydrate ? getHydration(instance) : undefined
-      )
+    const subscription = subscribe && doSubscribe(instance, store)
 
-      const subscription = subscribe && doSubscribe(instance, store)
+    return {
+      cleanup: subscription ? () => subscription.unsubscribe() : undefined,
+      result: store,
+      type: `${prefix}/store`,
+    } as InjectorDescriptor<Store<State>>
+  },
+  <State = any>(
+    prevDescriptor: InjectorDescriptor<Store<State>>,
+    instance: AnyAtomInstance,
+    storeFactory?: State | ((hydration?: State) => Store<State>),
+    config?: InjectStoreConfig
+  ) => {
+    const subscribe = config?.subscribe ?? true
+    const prevsubscribe = !!prevDescriptor.cleanup
 
-      return {
-        cleanup: subscription ? () => subscription.unsubscribe() : undefined,
-        store,
-        type: InjectorType.Store,
-      }
-    },
-    (prevInjector, instance) => {
-      const prevsubscribe = !!prevInjector.cleanup
+    if (prevsubscribe === subscribe) return prevDescriptor
 
-      if (prevsubscribe === subscribe) return prevInjector
-
-      // we were subscribed, now we're not
-      if (!subscribe) {
-        prevInjector.cleanup?.()
-        prevInjector.cleanup = undefined
-        return prevInjector
-      }
-
-      // we weren't subscribed, now we are
-      const subscription = doSubscribe(instance, prevInjector.store)
-      prevInjector.cleanup = () => subscription.unsubscribe()
-
-      return prevInjector
+    // we were subscribed, now we're not
+    if (!subscribe) {
+      prevDescriptor.cleanup?.()
+      prevDescriptor.cleanup = undefined
+      return prevDescriptor
     }
-  )
 
-  return store
-}
+    // we weren't subscribed, now we are
+    const subscription = doSubscribe(instance, prevDescriptor.result)
+    prevDescriptor.cleanup = () => subscription.unsubscribe()
+
+    return prevDescriptor
+  }
+)
