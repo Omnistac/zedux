@@ -323,6 +323,11 @@ export interface GraphViewRecursive {
   [key: string]: GraphViewRecursive
 }
 
+export interface InjectAtomInstanceConfig {
+  operation?: string
+  subscribe?: boolean
+}
+
 export type InjectorDeps = any[] | undefined
 
 export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
