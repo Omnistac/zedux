@@ -1,4 +1,4 @@
-import { haveDepsChanged, InjectorDescriptor, is, prefix } from '../utils'
+import { InjectorDescriptor, prefix } from '../utils'
 import {
   AnyAtomInstanceBase,
   AtomInstanceType,
@@ -72,26 +72,12 @@ export const injectAtomInstance: {
     params?: AtomParamsType<A>,
     operation = defaultOperation
   ) => {
-    const resolvedAtom = is(atom, AtomInstanceBase)
-      ? (atom as AnyAtomInstanceBase).atom
-      : (atom as A)
-
-    const atomHasChanged = resolvedAtom !== prevDescriptor.result.atom
-
-    const paramsHaveChanged = haveDepsChanged(
-      prevDescriptor.result.params,
-      params,
-      true
-    )
-
     // make sure the dependency gets registered for this evaluation
     const injectedInstance = instance.ecosystem._evaluationStack.atomGetters.getInstance(
       atom as A,
       params as AtomParamsType<A>,
       [EdgeFlag.Static, operation]
     )
-
-    if (!atomHasChanged && !paramsHaveChanged) return prevDescriptor
 
     prevDescriptor.result = injectedInstance as AtomInstanceType<A>
 
