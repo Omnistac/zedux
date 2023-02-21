@@ -1,6 +1,5 @@
 export * from './injectAtomGetters'
 export * from './injectAtomInstance'
-export * from './injectAtomInstanceDynamic'
 export * from './injectAtomSelector'
 export * from './injectAtomState'
 export * from './injectAtomValue'

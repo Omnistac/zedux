@@ -4,6 +4,7 @@ import {
   AtomInstanceType,
   AtomParamsType,
   EdgeFlag,
+  InjectAtomInstanceConfig,
 } from '../types'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import { createInjector } from '../factories'
@@ -38,13 +39,13 @@ export const injectAtomInstance: {
   <A extends AtomBase<any, [...any], any>>(
     atom: A,
     params: AtomParamsType<A>,
-    operation?: string
+    config?: InjectAtomInstanceConfig
   ): AtomInstanceType<A>
 
   <AI extends AtomInstanceBase<any, [...any], any>>(
     instance: AI,
     params?: [],
-    operation?: string
+    config?: InjectAtomInstanceConfig
   ): AI
 } = createInjector(
   defaultOperation,
@@ -52,12 +53,15 @@ export const injectAtomInstance: {
     instance: AnyAtomInstanceBase,
     atom: A | AnyAtomInstanceBase,
     params?: AtomParamsType<A>,
-    operation = defaultOperation
+    config?: InjectAtomInstanceConfig
   ) => {
     const injectedInstance = instance.ecosystem._evaluationStack.atomGetters.getInstance(
       atom as A,
       params as AtomParamsType<A>,
-      [EdgeFlag.Static, operation]
+      [
+        config?.subscribe ? 0 : EdgeFlag.Static,
+        config?.operation || defaultOperation,
+      ]
     )
 
     return {
@@ -70,13 +74,16 @@ export const injectAtomInstance: {
     instance: AnyAtomInstanceBase,
     atom: A | AnyAtomInstanceBase,
     params?: AtomParamsType<A>,
-    operation = defaultOperation
+    config?: InjectAtomInstanceConfig
   ) => {
     // make sure the dependency gets registered for this evaluation
     const injectedInstance = instance.ecosystem._evaluationStack.atomGetters.getInstance(
       atom as A,
       params as AtomParamsType<A>,
-      [EdgeFlag.Static, operation]
+      [
+        config?.subscribe ? 0 : EdgeFlag.Static,
+        config?.operation || defaultOperation,
+      ]
     )
 
     prevDescriptor.result = injectedInstance as AtomInstanceType<A>

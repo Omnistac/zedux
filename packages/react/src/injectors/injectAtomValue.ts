@@ -1,6 +1,6 @@
 import { AtomBase, AtomInstanceBase } from '../classes'
 import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
-import { injectAtomInstanceDynamic } from './injectAtomInstanceDynamic'
+import { injectAtomInstance } from './injectAtomInstance'
 
 export const injectAtomValue: {
   <A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
@@ -17,11 +17,10 @@ export const injectAtomValue: {
   atom: A,
   params?: AtomParamsType<A>
 ) => {
-  const instance = injectAtomInstanceDynamic(
-    atom,
-    params as AtomParamsType<A>,
-    'injectAtomValue'
-  ) as AtomInstanceBase<AtomStateType<A>, [...any], any>
+  const instance = injectAtomInstance(atom, params as AtomParamsType<A>, {
+    operation: 'injectAtomValue',
+    subscribe: true,
+  }) as AtomInstanceBase<AtomStateType<A>, [...any], any>
 
   return instance.store.getState()
 }
