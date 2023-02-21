@@ -205,7 +205,10 @@ export type AtomStateFactory<
   PromiseType extends AtomApiPromise = undefined
 > = (
   ...params: Params
-) => AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
+) =>
+  | AtomApi<State, Exports, StoreType | undefined, PromiseType>
+  | StoreType
+  | State
 
 export type AtomStateType<
   AtomType extends AnyAtomBase
