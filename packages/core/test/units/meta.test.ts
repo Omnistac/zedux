@@ -57,7 +57,7 @@ const repeated = {
 }
 
 describe('addMeta()', () => {
-  test('adds a meta node at the beginning of the meta chain', () => {
+  test('adds a meta node at the beginning of the action chain', () => {
     const twoLayers = addMeta(oneLayer, 'c')
 
     expect(oneLayer.metaType).toBe('a')
@@ -65,7 +65,7 @@ describe('addMeta()', () => {
     expect(twoLayers.payload).toBe(oneLayer)
   })
 
-  test('creates the meta chain on a plain action', () => {
+  test('creates the action chain on a plain action', () => {
     const wrappedAction = addMeta(plainAction, 'a')
 
     expect(wrappedAction.metaType).toBe('a')
@@ -88,16 +88,16 @@ describe('getMetaData()', () => {
     expect(() =>
       // @ts-expect-error payload can't be null
       getMetaData({ metaType: 'a', payload: null }, 'b')
-    ).toThrowError(/invalid meta chain/i)
+    ).toThrowError(/invalid action chain/i)
   })
 
-  test('retrieves the metaData property from the first meta node with the given metaType in the meta chain', () => {
+  test('retrieves the metaData property from the first meta node with the given metaType in the action chain', () => {
     expect(getMetaData(threeLayers, 'c')).toBe(1)
     expect(getMetaData(repeated, 'a')).toBe(1)
     expect(getMetaData(repeated, 'b')).toBe(2)
   })
 
-  test('returns undefined if the given metaType is not found in the meta chain', () => {
+  test('returns undefined if the given metaType is not found in the action chain', () => {
     expect(getMetaData(plainAction, 'a')).not.toBeDefined()
     expect(getMetaData(oneLayer, 'b')).not.toBeDefined()
     expect(getMetaData(threeLayers, 'e')).not.toBeDefined()
@@ -111,22 +111,22 @@ describe('hasMeta()', () => {
     expect(hasMeta(threeLayers, 'e')).toBe(false)
   })
 
-  test('finds a node at the top of the meta chain', () => {
+  test('finds a node at the top of the action chain', () => {
     expect(hasMeta(oneLayer, 'a')).toBe(true)
     expect(hasMeta(threeLayers, 'a')).toBe(true)
   })
 
-  test('finds a node in the middle of the meta chain', () => {
+  test('finds a node in the middle of the action chain', () => {
     expect(hasMeta(threeLayers, 'b')).toBe(true)
   })
 
-  test('finds a node at the end of the meta chain', () => {
+  test('finds a node at the end of the action chain', () => {
     expect(hasMeta(threeLayers, 'c')).toBe(true)
   })
 })
 
 describe('removeAllMeta()', () => {
-  test('removes all meta nodes from the meta chain, returning the wrapped action', () => {
+  test('removes all meta nodes from the action chain, returning the wrapped action', () => {
     expect(removeAllMeta(oneLayer)).toBe(oneLayer.payload)
     expect(removeAllMeta(threeLayers)).toBe(threeLayers.payload.payload.payload)
   })
@@ -141,7 +141,7 @@ describe('removeMeta()', () => {
     expect(removeMeta(plainAction, 'a')).toBe(plainAction)
   })
 
-  test('returns the given meta chain as-is if no meta node is found with the given metaType', () => {
+  test('returns the given action chain as-is if no meta node is found with the given metaType', () => {
     expect(removeMeta(oneLayer, 'b')).toBe(oneLayer)
     expect(removeMeta(threeLayers, 'e')).toBe(threeLayers)
   })
@@ -182,7 +182,7 @@ describe('removeMeta()', () => {
     expect(newChain.payload.payload).toBe(threeLayers.payload.payload.payload)
   })
 
-  test('removes only the first meta node with the given metaType in the meta chain', () => {
+  test('removes only the first meta node with the given metaType in the action chain', () => {
     const newChain = removeMeta(repeated, 'a')
     const newChain2 = removeMeta(newChain, 'a')
 
