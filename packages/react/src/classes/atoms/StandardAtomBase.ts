@@ -18,7 +18,6 @@ export abstract class StandardAtomBase<
   Params,
   AtomInstance<State, Params, Exports, StoreType, PromiseType>
 > {
-  public readonly consumeHydrations?: boolean
   public readonly dehydrate?: AtomConfig<State>['dehydrate']
   public readonly flags?: string[]
   public readonly hydrate?: AtomConfig<State>['hydrate']
@@ -38,7 +37,6 @@ export abstract class StandardAtomBase<
     config?: AtomConfig<State>
   ) {
     super()
-    this.consumeHydrations = config?.consumeHydrations
     this.dehydrate = config?.dehydrate
     this.flags = config?.flags
     this.hydrate = config?.hydrate
