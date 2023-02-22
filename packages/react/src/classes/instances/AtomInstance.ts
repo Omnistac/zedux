@@ -214,21 +214,13 @@ export class AtomInstance<
     this._setActiveState('Active')
 
     // hydrate if possible
-    if (this.ecosystem.hydration && !this.atom.manualHydration) {
-      const hydration = this.ecosystem.hydration[this.keyHash]
+    if (!this.ecosystem.hydration || this.atom.manualHydration) return
 
-      if (typeof hydration !== 'undefined') {
-        const transformed = this.atom.hydrate
-          ? this.atom.hydrate(hydration)
-          : hydration
+    const hydration = this.ecosystem._consumeHydration(this)
 
-        this.store.setState(transformed)
+    if (typeof hydration === 'undefined') return
 
-        if (this.atom.consumeHydrations ?? this.ecosystem.consumeHydrations) {
-          delete this.ecosystem.hydration[this.keyHash]
-        }
-      }
-    }
+    this.store.setState(hydration)
   }
 
   /**

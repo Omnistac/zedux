@@ -107,17 +107,6 @@ All properties are readonly!
       <Link to="../../advanced/complex-params">the complex params guide</Link>.
     </p>
   </Item>
-  <Item name="consumeHydrations">
-    <p>
-      A boolean. This is set to the <code>consumeHydrations</code> value you
-      passed via <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when
-      creating this ecosystem. If not specified, defaults to false.
-    </p>
-    <p>
-      Whether a key-value pair passed to <code>ecosystem.hydrate()</code> should
-      be removed from the ecosystem's hydration the first time it's used.
-    </p>
-  </Item>
   <Item name="context">
     <p>
       An object. May be undefined. A reference to the `context` object passed to
@@ -189,7 +178,8 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
   <Item name="hydration">
     <p>
       An object. May be undefined. The shallowly merged result of all calls to{' '}
-      <code>ecosystem.hydrate()</code>.
+      <code>ecosystem.hydrate()</code> minus any keys that have been consumed
+      already.
     </p>
   </Item>
   <Item name="modBus">

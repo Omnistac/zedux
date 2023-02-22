@@ -363,7 +363,7 @@ function Dehydrator() {
 
 The default hydration flow hydrates the store after the atom instance's initial evaluation ends. This means that if your state factory's main store was injected without `subscribe: false`, it will immediately trigger a second evaluation.
 
-This is usually fine. But of course you can control this behavior with 2 steps:
+This is usually fine. But you can change this behavior in 2 steps:
 
 1. Hydrate the injected store's state yourself.
 2. Tell Zedux not to automatically hydrate this atom.
@@ -380,7 +380,7 @@ The store's state will be set to the hydration matching the current atom instanc
 const myAtom = atom(
   'myKey',
   () => {
-    const store = injectStore('default', { hydrate: true })
+    return injectStore('default', { hydrate: true })
   },
   { hydrate: hydration => `${hydration} and transformed!` }
 )
@@ -391,7 +391,7 @@ ecosystem.hydrate({ myKey: 'hydrated' })
 const output = ecosystem.get(myAtom)
 ```
 
-When the function overload is used, the hydration will be passed to your `storeFactory` function. It's up to you to use the hydration to set your store's initial state.
+When `injectStore()`'s function overload is used, the hydration will be passed to your `storeFactory` function. It's up to you to use the hydration to set your store's initial state.
 
 ```ts
 const store = injectStore(
@@ -425,56 +425,54 @@ const exampleAtom = atom(
 )
 ```
 
-## `consumeHydrations`
+## Hydration consumption
 
-By default, once a hydration has been set, it stays in the ecosystem forever. You can override the hydration with a new one. For example:
-
-```ts
-ecosystem.hydrate({ key: 'hydrated value' })
-ecosystem.hydrate({ key: 'different value' }) // overrides the first hydration
-```
-
-But there's no way to undo the hydration (currently). This means that every time an atom instance is destroyed/recreated it will be hydrated again. Sometimes you'll only want to hydrate once and then never again. You can accomplish this with the ecosystem-level and atom-level `consumeHydrations` config option:
-
-```tsx
-const ecosystem = createEcosystem({
-  consumeHydrations: true,
-  id: 'root',
-})
-
-// or
-<EcosystemProvider consumeHydrations id="root">
-  {children}
-</EcosystemProvider>
-```
-
-With this set at the ecosystem level, all atoms in the ecosystem will "consume" their hydration the first time they hydration is used, removing the hydration from the ecosystem. Set it at the atom level to override the ecosystem's behavior for a particular atom.
+When Zedux hydrates an atom instance, it deletes the hydration from the ecosystem. This makes it easy to see which hydrations have been "consumed" by simply accessing the ecosystem's [`.hydration`](../api/classes/Ecosystem#hydration) property:
 
 ```ts live resultVar=output
-const exampleAtom = atom(
-  'example',
-  () => injectStore('no hydration', { hydrate: true }), // consume the hydration
-  { consumeHydrations: true }
-)
+const fooAtom = atom('foo', 1)
 
-const ecosystem = createEcosystem({ id: 'consume-hydration-example' })
-ecosystem.hydrate({ example: 'hydrated state!' })
+const ecosystem = createEcosystem({ id: 'hydration-consumption-example' })
+ecosystem.hydrate({ foo: 2, bar: 3 })
 
-let instance = ecosystem.getInstance(exampleAtom)
-const firstState = instance.getState()
+// "consume" the hydration for `foo`:
+const fooInstance = ecosystem.getInstance(fooAtom)
 
-instance.destroy()
-instance = ecosystem.getInstance(exampleAtom) // hydration is now gone
-
-const secondState = instance.getState()
-const output = { firstState, secondState }
+const output = {
+  fooValue: fooInstance.getState(),
+  unusedHydrations: ecosystem.hydration,
+}
 ```
 
 :::note
-Even though we're not using `manualHydration`, this example atom will not evaluate twice. The `injectStore` call will consume the hydration immediately, so it won't be there when Zedux tries to hydrate the store after the initial evaluation.
+Hydrations will also be consumed for retroactively-hydrated atom instances.
 :::
 
-With this flag set, hydrations will also be consumed for atom instances that are hydrated immediately when calling `ecosystem.hydrate()` without `{ retroactive: false }`.
+This also means that if an atom instance is destroyed and recreated, the new atom instance will not be hydrated again. This is usually the desired behavior, but if you do need this you can accomplish it by "rehydrating" the ecosystem before the instance is destroyed:
+
+```ts
+const rehydratingAtom = atom(
+  'rehydrating',
+  (...params: any[]) => {
+    const { ecosystem } = injectAtomGetters()
+    const store = injectStore('default state', { hydrate: true })
+    const hydrationRef = injectRef(store.getState()) // capture the hydrated state
+
+    injectEffect(() => {
+      // this effect does nothing but setup cleanup
+      return () => {
+        // one way to get the current atom instance's keyHash:
+        const instance = ecosystem.getInstance(rehydratingAtom, [...params])
+        // rehydrate!
+        ecosystem.hydrate({ [instance.keyHash]: hydrationRef.current })
+      }
+    }, []) // [] - cleanup will only run on instance destruction
+
+    return store
+  },
+  { ttl: 0 }
+)
+```
 
 ## Reactivity Via Plugins
 
@@ -482,12 +480,14 @@ The `localStorage` single atom examples we gave at the beginning of this page we
 
 By default, ecosystems don't receive any kind of update when individual atom instances change state. This is by design, for performance reasons. However, it is possible to turn this behavior on with plugins.
 
-Make sure your plugin turns on the `stateChanged` mod.
+Just turn on the `stateChanged` mod.
 
 ```ts
 import { createEcosystem, ZeduxPlugin } from '@zedux/react'
 
 const plugin = new ZeduxPlugin({
+  initialMods: ['stateChanged'],
+
   registerEcosystem: ecosystem => {
     const subscription = ecosystem.modsMessageBus.subscribe({
       effects: ({ action }) => {
@@ -502,8 +502,6 @@ const plugin = new ZeduxPlugin({
   },
 })
 
-plugin.modsStore.setState({ stateChanged: true })
-
 const ecosystem = createEcosystem({ id: 'root' })
 ecosystem.registerPlugin(plugin)
 ```
@@ -516,7 +514,6 @@ ecosystem.registerPlugin(plugin)
   - Use the `hydrate` atom config option to transform hydrations for individual atoms.
 - The `{ hydrate: true }` `injectStore` option sets the store's initial state to the hydrated value.
 - Use the `manualHydration` atom config option to prevent Zedux from automatically hydrating individual atoms.
-- Use the `consumeHydrations` atom config or ecosystem config options to prevent atoms from being hydrated again after being destroyed and recreated.
 - Use a plugin with the `stateChanged` mod to reactively persist snapshots.
 
 ## Next Steps

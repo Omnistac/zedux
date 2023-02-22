@@ -23,7 +23,6 @@ export type AnyAtomInstanceBase = AtomInstanceBase<
 export type AtomApiPromise = Promise<any> | undefined
 
 export interface AtomConfig<State = any> {
-  consumeHydrations?: boolean
   dehydrate?: <D>(state: State) => D
   flags?: string[]
   hydrate?: <D>(dehydratedState: D) => State
@@ -254,7 +253,6 @@ export interface EcosystemConfig<
 > {
   complexAtomParams?: boolean
   complexSelectorParams?: boolean
-  consumeHydrations?: boolean
   context?: Context
   defaultTtl?: number
   destroyOnUnmount?: boolean

@@ -63,7 +63,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public selectorCache: SelectorCache = new SelectorCache(this)
   public complexAtomParams: boolean
   public complexSelectorParams: boolean
-  public consumeHydrations?: boolean
   public context: Context
   public defaultTtl?: number
   public id: string
@@ -79,7 +78,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   constructor({
     complexAtomParams,
     complexSelectorParams,
-    consumeHydrations,
     context,
     defaultTtl,
     destroyOnUnmount,
@@ -106,7 +104,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       this.setOverrides(overrides)
     }
 
-    this.consumeHydrations = consumeHydrations
     this.flags = flags
     this.complexAtomParams = !!complexAtomParams
     this.complexSelectorParams = !!complexSelectorParams
@@ -388,9 +385,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         instance.atom.hydrate ? instance.atom.hydrate(val) : val
       )
 
-      if (this.consumeHydrations) {
-        delete this.hydration?.[key]
-      }
+      delete this.hydration?.[key]
     })
   }
 
@@ -783,7 +778,24 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
   }
 
-  // Should only be used internally
+  /**
+   * Should only be used internally
+   */
+  public _consumeHydration(instance: AnyAtomInstance) {
+    const hydratedValue = this.hydration?.[instance.keyHash]
+
+    if (typeof hydratedValue === 'undefined') return
+
+    delete this.hydration?.[instance.keyHash]
+
+    return instance.atom.hydrate
+      ? instance.atom.hydrate(hydratedValue)
+      : hydratedValue
+  }
+
+  /**
+   * Should only be used internally
+   */
   public _decrementRefCount() {
     this._refCount--
     if (!this._destroyOnUnmount) return
@@ -791,7 +803,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.destroy() // only destroys if _refCount === 0
   }
 
-  // Should only be used internally
+  /**
+   * Should only be used internally
+   */
   public _destroyAtomInstance(keyHash: string) {
     // try to destroy instance (if not destroyed - this fn is called as part of
     // that destruction process too)
@@ -800,7 +814,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
   }
 
-  // Should only be used internally
+  /**
+   * Should only be used internally
+   */
   public _getReactContext(atom: AnyAtomBase) {
     const existingContext = this._reactContexts[atom.key]
 
@@ -812,7 +828,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     return newContext as React.Context<any>
   }
 
-  // Should only be used internally
+  /**
+   * Should only be used internally
+   */
   public _incrementRefCount() {
     this._refCount++
   }

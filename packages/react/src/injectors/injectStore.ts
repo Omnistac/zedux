@@ -49,20 +49,6 @@ export const doSubscribe = <State>(
     },
   })
 
-export const getHydration = (instance: AnyAtomInstance) => {
-  const hydratedValue = instance.ecosystem.hydration?.[instance.keyHash]
-
-  if (typeof hydratedValue === 'undefined') return
-
-  if (instance.atom.consumeHydrations ?? instance.ecosystem.consumeHydrations) {
-    delete instance.ecosystem.hydration?.[instance.keyHash]
-  }
-
-  return instance.atom.hydrate
-    ? instance.atom.hydrate(hydratedValue)
-    : hydratedValue
-}
-
 /**
  * injectStore()
  *
@@ -139,7 +125,11 @@ export const injectStore: {
         : (hydration?: State) =>
             createStore<State>(null, hydration || storeFactory)
 
-    const store = getStore(config?.hydrate ? getHydration(instance) : undefined)
+    const store = getStore(
+      config?.hydrate
+        ? instance.ecosystem._consumeHydration(instance)
+        : undefined
+    )
 
     const subscription = subscribe && doSubscribe(instance, store)
 
