@@ -3,7 +3,7 @@ import { MachineStateType } from '@zedux/core/utils/types'
 import { createInjector } from '../factories'
 import { AnyAtomInstance, InjectStoreConfig } from '../types'
 import { InjectorDescriptor, prefix } from '../utils'
-import { doSubscribe, getHydration } from './injectStore'
+import { doSubscribe } from './injectStore'
 
 type ArrToUnion<S extends string[]> = S extends [infer K, ...infer Rest]
   ? Rest extends string[]
@@ -232,7 +232,8 @@ export const injectMachineStore: <
     }
 
     const [initialState] = statesFactory(createState)
-    const hydration = config?.hydrate && getHydration(instance)
+    const hydration =
+      config?.hydrate && instance.ecosystem._consumeHydration(instance)
 
     const store = new MachineStore<StateNames, EventNames, Context>(
       hydration?.value ?? (initialState.stateName as StateNames),
