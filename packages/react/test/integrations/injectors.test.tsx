@@ -1,8 +1,13 @@
 import {
+  api,
   atom,
   createEcosystem,
+  injectAtomInstance,
+  injectAtomState,
+  injectAtomValue,
   injectCallback,
   injectEffect,
+  injectInvalidate,
   injectMemo,
   injectRef,
   injectStore,
@@ -68,5 +73,116 @@ describe('injectors', () => {
     expect(effects).toEqual(['b', 'c'])
     expect(cleanups).toEqual(['c'])
     expect(refs).toEqual([ref, ref, ref])
+  })
+
+  test('dynamic injectors subscribe to updates', () => {
+    const vals: [string, number, number][] = []
+
+    const atom1 = atom('1', () => 1)
+    const atom2 = atom('2', () => {
+      const store = injectStore(2)
+
+      return api(store).setExports({
+        set2: (val: number) => store.setState(val),
+      })
+    })
+
+    const atom3 = atom('3', () => {
+      const invalidate = injectInvalidate()
+      const store = injectStore('a')
+      const one = injectAtomValue(atom1)
+      const [two, setTwo] = injectAtomState(atom2)
+      const { set2 } = setTwo
+
+      vals.push([store.getState(), one, two])
+
+      return api(store).setExports({ invalidate, set2, setTwo })
+    })
+
+    const instance = ecosystem.getInstance(atom3)
+
+    expect(vals).toEqual([['a', 1, 2]])
+
+    instance.setState('b')
+
+    expect(vals).toEqual([
+      ['a', 1, 2],
+      ['b', 1, 2],
+    ])
+
+    instance.exports.set2(22)
+
+    expect(vals).toEqual([
+      ['a', 1, 2],
+      ['b', 1, 2],
+      ['b', 1, 22],
+    ])
+
+    instance.exports.setTwo(222)
+
+    expect(vals).toEqual([
+      ['a', 1, 2],
+      ['b', 1, 2],
+      ['b', 1, 22],
+      ['b', 1, 222],
+    ])
+  })
+
+  test("static injectors don't subscribe to updates", () => {
+    const vals: [string, boolean, number][] = []
+
+    const atom1 = atom('1', () => true)
+    const atom2 = atom('2', () => 2)
+
+    const atom3 = atom('3', () => {
+      const invalidate = injectInvalidate()
+      const instance1 = injectAtomInstance(atom1)
+      const [subscribe, setSubscribe] = injectAtomState(instance1)
+      const store = injectStore('a', { subscribe })
+      const instance2 = injectAtomInstance(atom2)
+
+      vals.push([store.getState(), subscribe, instance2.getState()])
+
+      return api(store).setExports({
+        invalidate,
+        setSubscribe,
+        setTwo: instance2.setState,
+      })
+    })
+
+    const instance = ecosystem.getInstance(atom3)
+
+    expect(vals).toEqual([['a', true, 2]])
+
+    instance.exports.setSubscribe(false)
+
+    expect(vals).toEqual([
+      ['a', true, 2],
+      ['a', false, 2],
+    ])
+
+    instance.exports.setTwo(22)
+
+    expect(vals).toEqual([
+      ['a', true, 2],
+      ['a', false, 2],
+    ])
+
+    instance.exports.setSubscribe(true)
+
+    expect(vals).toEqual([
+      ['a', true, 2],
+      ['a', false, 2],
+      ['a', true, 22],
+    ])
+
+    instance.exports.invalidate()
+
+    expect(vals).toEqual([
+      ['a', true, 2],
+      ['a', false, 2],
+      ['a', true, 22],
+      ['a', true, 22],
+    ])
   })
 })
