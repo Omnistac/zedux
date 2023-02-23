@@ -13,6 +13,9 @@ import {
   useAtomInstance,
   useAtomValue,
   EdgeFlag,
+  AtomInstanceType,
+  injectAtomInstance,
+  injectRef,
 } from '@zedux/react'
 import React from 'react'
 
@@ -39,11 +42,17 @@ const atom4 = atom('atom4', () => {
   })
 })
 
+const ecosystem = createEcosystem({ id: 'test' })
+
+afterEach(() => {
+  ecosystem.reset()
+})
+
 describe('graph', () => {
   test('injectAtomGetters', async () => {
     jest.useFakeTimers()
 
-    const testEcosystem = createEcosystem({ id: 'test1' })
+    const ecosystem = createEcosystem({ id: 'test1' })
 
     function Test() {
       const { sum } = useAtomValue(atom4)
@@ -58,7 +67,7 @@ describe('graph', () => {
     }
 
     const { findByTestId, findByText } = render(
-      <EcosystemProvider ecosystem={testEcosystem}>
+      <EcosystemProvider ecosystem={ecosystem}>
         <Test />
       </EcosystemProvider>
     )
@@ -73,17 +82,17 @@ describe('graph', () => {
       operation: 'get',
     }
 
-    expect(testEcosystem._graph.nodes.atom1.dependents).toEqual({
+    expect(ecosystem._graph.nodes.atom1.dependents).toEqual({
       atom4: expectedEdges,
     })
 
-    expect(testEcosystem._graph.nodes.atom2.dependents).toEqual({
+    expect(ecosystem._graph.nodes.atom2.dependents).toEqual({
       atom4: expectedEdges,
     })
 
-    expect(testEcosystem._graph.nodes.atom3).toBeUndefined()
+    expect(ecosystem._graph.nodes.atom3).toBeUndefined()
 
-    expect(testEcosystem._graph.nodes.atom4.dependencies).toEqual({
+    expect(ecosystem._graph.nodes.atom4.dependencies).toEqual({
       atom1: true,
       atom2: true,
     })
@@ -97,24 +106,23 @@ describe('graph', () => {
 
     expect(div).toHaveTextContent('4')
 
-    expect(testEcosystem._graph.nodes.atom1.dependents).toEqual({
+    expect(ecosystem._graph.nodes.atom1.dependents).toEqual({
       atom4: expectedEdges,
     })
 
-    expect(testEcosystem._graph.nodes.atom2.dependents).toEqual({})
+    expect(ecosystem._graph.nodes.atom2.dependents).toEqual({})
 
-    expect(testEcosystem._graph.nodes.atom3.dependents).toEqual({
+    expect(ecosystem._graph.nodes.atom3.dependents).toEqual({
       atom4: expectedEdges,
     })
 
-    expect(testEcosystem._graph.nodes.atom4.dependencies).toEqual({
+    expect(ecosystem._graph.nodes.atom4.dependencies).toEqual({
       atom1: true,
       atom3: true,
     })
   })
 
   test('getInstance(atom) returns the instance', () => {
-    const testEcosystem = createEcosystem({ id: 'test2' })
     const evaluations: number[] = []
 
     const ion1 = ion('ion1', ({ getInstance }) => {
@@ -130,15 +138,15 @@ describe('graph', () => {
       })
     })
 
-    const ionInstance = testEcosystem.getInstance(ion1)
+    const ionInstance = ecosystem.getInstance(ion1)
 
-    expect(testEcosystem._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       atom1: expect.any(Object),
       atom2: expect.any(Object),
       ion1: expect.any(Object),
     })
 
-    expect(testEcosystem._graph.nodes).toEqual({
+    expect(ecosystem._graph.nodes).toEqual({
       atom1: {
         dependencies: {},
         dependents: {
@@ -179,7 +187,7 @@ describe('graph', () => {
 
     expect(evaluations).toEqual([1])
     expect(ionInstance.store.getState()).toBe(3)
-    expect(testEcosystem.getInstance(atom1).store.getState()).toBe(12)
+    expect(ecosystem.getInstance(atom1).store.getState()).toBe(12)
   })
 
   test('on reevaluation, get() updates the graph', () => {
@@ -195,11 +203,9 @@ describe('graph', () => {
       return a + b
     })
 
-    const es = createEcosystem({ id: 'reevaluation' })
+    const instance = ecosystem.getInstance(atomD)
 
-    const instance = es.getInstance(atomD)
-
-    expect(es._graph.nodes).toEqual({
+    expect(ecosystem._graph.nodes).toEqual({
       a: {
         dependencies: {},
         dependents: {
@@ -241,7 +247,7 @@ describe('graph', () => {
     instance.invalidate()
     jest.runAllTimers()
 
-    expect(es._graph.nodes).toEqual({
+    expect(ecosystem._graph.nodes).toEqual({
       a: {
         dependencies: {},
         dependents: {
@@ -284,7 +290,39 @@ describe('graph', () => {
         weight: 3,
       },
     })
+  })
 
-    es.destroy()
+  test('atom instances can be passed as atom params', () => {
+    const instance1 = ecosystem.getInstance(atom1)
+
+    const testAtom = atom(
+      'test',
+      (instance: AtomInstanceType<typeof atom1>) => {
+        const subRef = injectRef(false)
+        const asDep = injectAtomInstance(instance) // register static dep
+        const { get } = injectAtomGetters()
+
+        if (subRef.current) get(asDep)
+
+        return api(asDep.getState()).setExports({ subRef })
+      }
+    )
+
+    const instance = ecosystem.getInstance(testAtom, [instance1])
+
+    expect(instance.getState()).toBe(1)
+
+    instance1.setState(2)
+
+    expect(instance.getState()).toBe(1)
+
+    instance.exports.subRef.current = true
+    instance.invalidate()
+
+    expect(instance.getState()).toBe(2)
+
+    instance1.setState(3)
+
+    expect(instance.getState()).toBe(3)
   })
 })

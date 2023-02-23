@@ -338,5 +338,23 @@ describe('ecosystem', () => {
     expect(instance3).toBe(instance1)
     expect(instance4).toBe(instance1)
     expect(instance5).toBeUndefined()
+
+    ecosystem.destroy()
+  })
+
+  test('flags', () => {
+    const original = console.error
+    console.error = jest.fn()
+    const atomA = atom('a', () => 1, { flags: ['a'] })
+
+    const ecosystem = createEcosystem({ flags: ['b'], id: 'flags' })
+    ecosystem.getInstance(atomA)
+
+    ecosystem.destroy()
+    expect(console.error).toHaveBeenCalledTimes(1)
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('encountered unsafe atom')
+    )
+    console.error = original
   })
 })
