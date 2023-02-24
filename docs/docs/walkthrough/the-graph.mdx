@@ -3,12 +3,12 @@ id: the-graph
 title: The Graph
 ---
 
-As you use atoms inside an ecosystem, Zedux tracks all the dependencies you create and forms a graph that it uses to efficiently propagate state updates.
+As you use atoms inside an ecosystem, Zedux tracks dependencies and forms a graph that it uses to efficiently propagate state updates.
 
 :::tip you will learn:
 
 - What the graph looks like.
-- How to get the graph.
+- How to view the graph.
 - The difference between static and dynamic graph edges.
 - How to create the different types of graph edges.
 - How to turn static graph edges into dynamic ones.
@@ -43,7 +43,7 @@ Zedux provides 3 simple graph "views" out of the box:
 
 ## Getting the Graph
 
-Call `ecosystem.inspectGraph('top-down')`, `ecosystem.inspectGraph('bottom-up')`, or `ecosystem.inspectGraph('flat')`. Flat is the default.
+Call `ecosystem.viewGraph('top-down')`, `ecosystem.viewGraph('bottom-up')`, or `ecosystem.viewGraph('flat')`. Flat is the default.
 
 ```tsx live ecosystemId=the-graph/getting resultVar=Graph
 const parentAtom = atom('parent', () => 'Hello, World!')
@@ -61,9 +61,9 @@ const grandchildAtom = atom('grandchild', () => {
 function Graph() {
   useAtomState(grandchildAtom)
   const ecosystem = useEcosystem()
-  const flatGraph = ecosystem.inspectGraph('flat') // this is the default
-  const bottomUpGraph = ecosystem.inspectGraph('bottom-up')
-  const topDownGraph = ecosystem.inspectGraph('top-down')
+  const flatGraph = ecosystem.viewGraph('flat') // this is the default
+  const bottomUpGraph = ecosystem.viewGraph('bottom-up')
+  const topDownGraph = ecosystem.viewGraph('top-down')
 
   return (
     <>
@@ -373,7 +373,7 @@ See [AtomInstance#params](../api/classes/AtomInstance#params) for more info.
 
 ## Recap
 
-- View the graph with `ecosystem.inspectGraph('top-down' | 'bottom-up' | 'flat')`
+- View the graph with `ecosystem.viewGraph('top-down' | 'bottom-up' | 'flat')`
 - Create dynamic dependencies (or "edges") with `useAtomState` or `useAtomValue` and their injector equivalents.
 - Create static dependencies with `useAtomInstance`/`injectAtomInstance`.
 - Upgrade an edge from static to dynamic by passing the instance to a dynamic hook/injector.
