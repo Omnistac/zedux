@@ -34,7 +34,7 @@ const findChild = (diffTree: DiffNode, nodePath: string[]) => {
   Delegates an action to a child store.
 
   Does nothing if the special `delegate` meta node is not present in the action
-  meta chain.
+  action chain.
 
   This expects the `metaData` of the `delegate` meta node to be an array
   containing a path of nodes describing the child store's location in the parent

@@ -13,7 +13,7 @@ const assertActionExists = DEV
       if (actionOrEffect) return
 
       throw new Error(
-        `Zedux: Invalid meta chain. The last node in the chain must be either a valid action object with a non-empty "type" property or an effect with a non-empty "effectType" property. Received ${detailedTypeof(
+        `Zedux: Invalid action chain. The last node in the chain must be either a valid action object with a non-empty "type" property or an effect with a non-empty "effectType" property. Received ${detailedTypeof(
           actionOrEffect
         )}`
       )
@@ -29,7 +29,7 @@ const getNewRoot = <T extends ActionChain | EffectChain>(
   if (!prevNode || !rootNode) return currentNode.payload
 
   // If the match is at least one layer deep, swap out the target layer
-  // and return the new root of the meta chain
+  // and return the new root of the action chain
   prevNode.payload = currentNode.payload
 
   return rootNode
@@ -116,9 +116,9 @@ export const removeAllMeta: {
 
 /**
   Removes the first found meta node with the given metaType in
-  the given meta chain
+  the given action chain
 
-  The metaType does not have to exist in the meta chain
+  The metaType does not have to exist in the action chain
   (though this'll be pretty inefficient and wasteful if it doesn't).
 */
 export const removeMeta: {
@@ -146,6 +146,6 @@ export const removeMeta: {
     rootNode || (rootNode = prevNode)
   }
 
-  // No match found; return the original meta chain
+  // No match found; return the original action chain
   return actionOrEffect
 }
