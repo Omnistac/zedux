@@ -1,38 +1,21 @@
-import { createStore, Store } from '@zedux/core'
-import { ecosystemsReducer } from './ecosystems'
+import { createStore } from '@zedux/core'
+import { Ecosystem } from '../classes'
 
-export * from './actions'
+export let internalStore = createStore(null, {} as Record<string, Ecosystem>)
 
-const eventType = '@@zedux/register-child-window'
+export const getEcosystem = (id: string): Ecosystem | undefined => {
+  const ecosystem = internalStore.getState()[id]
 
-type GlobalStore = Store<{ ecosystems: ReturnType<typeof ecosystemsReducer> }>
-
-const getGlobalStore = (): GlobalStore => {
-  if (typeof window === 'undefined') {
-    return createStore({ ecosystems: ecosystemsReducer })
-  }
-
-  if (typeof window.addEventListener !== 'undefined') {
-    window.addEventListener(eventType, event => {
-      if (typeof (event as CustomEvent).detail?.callback === 'function') {
-        ;(event as CustomEvent).detail.callback(globalStore)
-      }
-    })
-  }
-
-  if (window.opener && (window as any).dispatchEvent && window.CustomEvent) {
-    let store: Store | undefined = undefined
-    const callback = (storeFromAbove: Store) => (store = storeFromAbove)
-
-    const event = new window.CustomEvent(eventType, { detail: { callback } })
-    window.opener.dispatchEvent(event)
-
-    if (store) return store
-  }
-
-  return createStore({
-    ecosystems: ecosystemsReducer,
-  })
+  if (ecosystem) return ecosystem
 }
 
-export const globalStore = getGlobalStore()
+export const setInternalStore = (newStore: typeof internalStore) =>
+  (internalStore = newStore)
+
+export const wipe = () => {
+  const ecosystems = Object.values(internalStore.getState().ecosystems)
+
+  ecosystems.forEach(es => {
+    es.destroy(true)
+  })
+}

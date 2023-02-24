@@ -1,6 +1,5 @@
 import { Ecosystem } from '../classes/Ecosystem'
-import { addEcosystem, globalStore } from '../store'
-import { getEcosystem } from '../store/public-api'
+import { getEcosystem, internalStore } from '../store'
 import { EcosystemConfig } from '../types'
 
 export const createEcosystem = <
@@ -18,7 +17,7 @@ export const createEcosystem = <
 
   // yep. Dispatch this here. We'll make sure no component can ever be updated
   // synchronously from this call (causing update-during-render react warnings)
-  globalStore.dispatch(addEcosystem(ecosystem))
+  internalStore.setStateDeep({ [ecosystem.id]: ecosystem })
 
   return ecosystem
 }

@@ -1,6 +1,6 @@
 import { createStore } from '@zedux/core'
 import React, { createContext } from 'react'
-import { globalStore, removeEcosystem } from '../store'
+import { internalStore } from '../store'
 import {
   AnyAtomBase,
   AnyAtomInstance,
@@ -254,17 +254,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.wipe()
 
     // Check if this ecosystem has been destroyed already
-    const ecosystem = globalStore.getState().ecosystems[this.id]
+    const ecosystem = internalStore.getState()[this.id]
     if (!ecosystem) return
 
     this.plugins.forEach(({ cleanup }) => cleanup())
     this.plugins = []
 
-    globalStore.dispatch(
-      removeEcosystem({
-        id: this.id,
-      })
-    )
+    internalStore.setState(state => {
+      const newState = { ...state }
+      delete newState[this.id]
+
+      return newState
+    })
   }
 
   public get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
@@ -807,7 +808,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     // that destruction process too)
     this._graph.removeNode(keyHash)
 
-    delete this._instances[keyHash] // TODO: dispatch an action over globalStore for this mutation
+    delete this._instances[keyHash] // TODO: dispatch an action over internalStore for this mutation
   }
 
   /**
