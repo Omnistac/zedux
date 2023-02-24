@@ -13,18 +13,14 @@ import {
   AtomStateType,
   Cleanup,
   EcosystemConfig,
+  EcosystemGraphNode,
   EdgeFlag,
   GraphEdgeInfo,
   GraphViewRecursive,
   MaybeCleanup,
   Selectable,
 } from '../types'
-import {
-  EcosystemGraphNode,
-  InstanceStackItem,
-  is,
-  SelectorStackItem,
-} from '../utils'
+import { InstanceStackItem, is, SelectorStackItem } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { AtomBase } from './atoms/AtomBase'
 import { EvaluationStack } from './EvaluationStack'
@@ -389,108 +385,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     })
   }
 
-  public inspectGraph(view: 'bottom-up'): GraphViewRecursive
-  public inspectGraph(
-    view?: 'flat'
-  ): Record<
-    string,
-    {
-      dependencies: { key: string; operation: string }[]
-      dependents: { key: string; operation: string }[]
-      weight: number
-    }
-  >
-  public inspectGraph(view: 'top-down'): GraphViewRecursive
-
-  /**
-   * Get the current graph of this ecosystem. There are 3 views:
-   *
-   * Flat (default). Returns an object with all graph nodes on the top layer,
-   * each node pointing to its dependencies and dependents. No nesting.
-   *
-   * Bottom-Up. Returns an object containing all the leaf nodes of the graph
-   * (nodes that have no internal dependents), each node containing an object of
-   * its parent nodes, recursively.
-   *
-   * Top-Down. Returns an object containing all the root nodes of the graph
-   * (nodes that have no dependencies), each node containing an object of its
-   * child nodes, recursively.
-   */
-  public inspectGraph(view?: string) {
-    if (view !== 'top-down' && view !== 'bottom-up') {
-      const hash: Record<
-        string,
-        {
-          dependencies: { key: string; operation: string }[]
-          dependents: { key: string; operation: string }[]
-          weight: number
-        }
-      > = {}
-
-      Object.keys(this._graph.nodes).forEach(cacheKey => {
-        const node = this._graph.nodes[cacheKey]
-
-        hash[cacheKey] = {
-          dependencies: Object.keys(node.dependencies).map(key => ({
-            key,
-            operation: this._graph.nodes[key].dependents[cacheKey].operation,
-          })),
-          dependents: Object.keys(node.dependents).map(key => ({
-            key,
-            operation: node.dependents[key].operation,
-          })),
-          weight: node.weight,
-        }
-      })
-
-      return hash
-    }
-
-    const hash: GraphViewRecursive = {}
-
-    Object.keys(this._graph.nodes).forEach(key => {
-      const node = this._graph.nodes[key]
-      const isTopLevel =
-        view === 'bottom-up'
-          ? Object.keys(node.dependents).every(key => {
-              const dependent = node.dependents[key]
-
-              return dependent.flags & EdgeFlag.External
-            })
-          : !Object.keys(node.dependencies).length
-
-      if (isTopLevel) {
-        hash[key] = {}
-      }
-    })
-
-    const recurse = (node?: EcosystemGraphNode) => {
-      if (!node) return
-
-      const keys = Object.keys(
-        view === 'bottom-up' ? node.dependencies : node.dependents
-      )
-      const children: GraphViewRecursive = {}
-
-      keys.forEach(key => {
-        const child = recurse(this._graph.nodes[key])
-
-        if (child) children[key] = child
-      })
-
-      return children
-    }
-
-    Object.keys(hash).forEach(key => {
-      const node = this._graph.nodes[key]
-      const children = recurse(node)
-
-      if (children) hash[key] = children
-    })
-
-    return hash
-  }
-
   /**
    * Get an object of all atom instances in this ecosystem.
    *
@@ -667,6 +561,108 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.plugins[index].cleanup()
     this.plugins.splice(index, 1)
     this.recalculateMods(undefined, plugin.modsStore.getState())
+  }
+
+  public viewGraph(view: 'bottom-up'): GraphViewRecursive
+  public viewGraph(
+    view?: 'flat'
+  ): Record<
+    string,
+    {
+      dependencies: { key: string; operation: string }[]
+      dependents: { key: string; operation: string }[]
+      weight: number
+    }
+  >
+  public viewGraph(view: 'top-down'): GraphViewRecursive
+
+  /**
+   * Get the current graph of this ecosystem. There are 3 views:
+   *
+   * Flat (default). Returns an object with all graph nodes on the top layer,
+   * each node pointing to its dependencies and dependents. No nesting.
+   *
+   * Bottom-Up. Returns an object containing all the leaf nodes of the graph
+   * (nodes that have no internal dependents), each node containing an object of
+   * its parent nodes, recursively.
+   *
+   * Top-Down. Returns an object containing all the root nodes of the graph
+   * (nodes that have no dependencies), each node containing an object of its
+   * child nodes, recursively.
+   */
+  public viewGraph(view?: string) {
+    if (view !== 'top-down' && view !== 'bottom-up') {
+      const hash: Record<
+        string,
+        {
+          dependencies: { key: string; operation: string }[]
+          dependents: { key: string; operation: string }[]
+          weight: number
+        }
+      > = {}
+
+      Object.keys(this._graph.nodes).forEach(cacheKey => {
+        const node = this._graph.nodes[cacheKey]
+
+        hash[cacheKey] = {
+          dependencies: Object.keys(node.dependencies).map(key => ({
+            key,
+            operation: this._graph.nodes[key].dependents[cacheKey].operation,
+          })),
+          dependents: Object.keys(node.dependents).map(key => ({
+            key,
+            operation: node.dependents[key].operation,
+          })),
+          weight: node.weight,
+        }
+      })
+
+      return hash
+    }
+
+    const hash: GraphViewRecursive = {}
+
+    Object.keys(this._graph.nodes).forEach(key => {
+      const node = this._graph.nodes[key]
+      const isTopLevel =
+        view === 'bottom-up'
+          ? Object.keys(node.dependents).every(key => {
+              const dependent = node.dependents[key]
+
+              return dependent.flags & EdgeFlag.External
+            })
+          : !Object.keys(node.dependencies).length
+
+      if (isTopLevel) {
+        hash[key] = {}
+      }
+    })
+
+    const recurse = (node?: EcosystemGraphNode) => {
+      if (!node) return
+
+      const keys = Object.keys(
+        view === 'bottom-up' ? node.dependencies : node.dependents
+      )
+      const children: GraphViewRecursive = {}
+
+      keys.forEach(key => {
+        const child = recurse(this._graph.nodes[key])
+
+        if (child) children[key] = child
+      })
+
+      return children
+    }
+
+    Object.keys(hash).forEach(key => {
+      const node = this._graph.nodes[key]
+      const children = recurse(node)
+
+      if (children) hash[key] = children
+    })
+
+    return hash
   }
 
   /**

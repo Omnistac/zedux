@@ -221,7 +221,7 @@ const exampleAtom = atom('example', () => {
 
   const otherVal = get(myOtherAtom)
 
-  ecosystem.inspectGraph() // the dep won't be there (it doesn't exist yet!)
+  ecosystem.viewGraph() // the dep won't be there (it doesn't exist yet!)
 })
 
 // good:
@@ -231,7 +231,7 @@ const exampleAtom = atom('example', () => {
   const otherVal = get(myOtherAtom)
 
   injectEffect(() => {
-    ecosystem.inspectGraph() // effects are deferred; the dep exists now!
+    ecosystem.viewGraph() // effects are deferred; the dep exists now!
   }, [])
 })
 ```
