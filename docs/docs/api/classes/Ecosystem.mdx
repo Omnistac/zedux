@@ -410,43 +410,6 @@ instance.setState('new state')`}</Ts>
       </Item>
     </Legend>
   </Item>
-  <Item name="inspectGraph">
-    <p>
-      See what the ecosystem's atom graph currently looks like. There are 3 ways
-      to view the graph:
-    </p>
-    <ul>
-      <li>Top-down</li>
-      <li>Bottom-up</li>
-      <li>Flat</li>
-    </ul>
-    <p>
-      Flat is the default and is the most useful. It returns a normalized object
-      containing every node in the graph. Each node points to its dependencies
-      and dependents in the top-level object.
-    </p>
-    <p>
-      Top-down and bottom-up are mostly just for fun, to quickly gain some
-      insight into what your dependency graph actually looks like. However,
-      these views don't show "pseudo-nodes" (nodes that Zedux creates to
-      represent external dependents like React components).
-    </p>
-    <p>Signature:</p>
-    <Ts>{`inspectGraph = (view) => graph`}</Ts>
-    <Legend>
-      <Item name="view">
-        Optional. One of <code>'flat'</code>, <code>'top-down'</code>, or{' '}
-        <code>'bottom-up'</code>. Default: <code>'flat'</code>.
-      </Item>
-      <Item name="Returns">
-        An object whose structure depends on the requested view. See{' '}
-        <Link to="../../walkthrough/the-graph#getting-the-graph">
-          the graph walkthrough
-        </Link>
-        .
-      </Item>
-    </Legend>
-  </Item>
   <Item name="inspectInstances">
     <p>Get all atom instances in the ecosystem.</p>
     <p>Signature:</p>
@@ -590,6 +553,43 @@ const withArgs = myEcosystem.select(myAtomSelector, 'param 1', 'param 2')`}</Ts>
       </Link>
       , it will be ignored.
     </p>
+  </Item>
+  <Item name="viewGraph">
+    <p>
+      See what the ecosystem's atom graph currently looks like. There are 3 ways
+      to view the graph:
+    </p>
+    <ul>
+      <li>Top-down</li>
+      <li>Bottom-up</li>
+      <li>Flat</li>
+    </ul>
+    <p>
+      Flat is the default and is the most useful. It returns a normalized object
+      containing every node in the graph. Each node points to its dependencies
+      and dependents in the top-level object.
+    </p>
+    <p>
+      Top-down and bottom-up are mostly just for fun, to quickly gain some
+      insight into what your dependency graph actually looks like. However,
+      these views don't show "pseudo-nodes" (nodes that Zedux creates to
+      represent external dependents like React components).
+    </p>
+    <p>Signature:</p>
+    <Ts>{`viewGraph = (view) => graph`}</Ts>
+    <Legend>
+      <Item name="view">
+        Optional. One of <code>'flat'</code>, <code>'top-down'</code>, or{' '}
+        <code>'bottom-up'</code>. Default: <code>'flat'</code>.
+      </Item>
+      <Item name="Returns">
+        An object whose structure depends on the requested view. See{' '}
+        <Link to="../../walkthrough/the-graph#getting-the-graph">
+          the graph walkthrough
+        </Link>
+        .
+      </Item>
+    </Legend>
   </Item>
   <Item name="weakGet">
     <p>

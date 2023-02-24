@@ -1,12 +1,5 @@
-import { AnyAtomInstance, DependentEdge } from '@zedux/react/types'
+import { AnyAtomInstance } from '@zedux/react/types'
 import { SelectorCacheItem } from '../classes/SelectorCache'
-
-export interface EcosystemGraphNode {
-  dependencies: Record<string, true>
-  dependents: Record<string, DependentEdge>
-  isAtomSelector?: boolean
-  weight: number
-}
 
 export interface EvaluateNodeJob extends JobBase {
   flags: number

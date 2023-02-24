@@ -2,12 +2,13 @@ import {
   AnyAtomInstance,
   DependentCallback,
   DependentEdge,
+  EcosystemGraphNode,
   EdgeFlag,
   EvaluationReason,
   EvaluationType,
   GraphEdgeSignal,
 } from '../types'
-import { EcosystemGraphNode, JobType } from '../utils'
+import { JobType } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 

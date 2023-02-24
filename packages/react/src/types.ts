@@ -266,6 +266,13 @@ export interface EcosystemConfig<
   ssr?: boolean
 }
 
+export interface EcosystemGraphNode {
+  dependencies: Record<string, true>
+  dependents: Record<string, DependentEdge>
+  isAtomSelector?: boolean
+  weight: number
+}
+
 /**
  * The flag score determines job priority in the scheduler. Scores range from
  * 0-7. Lower score = higher prio. Examples:
