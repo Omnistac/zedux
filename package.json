@@ -33,12 +33,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bowheart/zedux.git"
+    "url": "git+https://github.com/Omnistac/zedux.git"
   },
   "bugs": {
-    "url": "https://github.com/bowheart/zedux/issues"
+    "url": "https://github.com/Omnistac/zedux/issues"
   },
-  "homepage": "https://github.com/bowheart/zedux#readme",
+  "homepage": "https://omnistac.github.io/zedux/",
   "devDependencies": {
     "@types/jest": "^27.0.3",
     "@types/node": "^14.14.27",

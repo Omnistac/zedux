@@ -73,7 +73,7 @@
       "default": "./dist/react/devtools/zedux-react-devtools.umd.js"
     }
   },
-  "homepage": "https://github.com/Omnistac/zedux#readme",
+  "homepage": "https://omnistac.github.io/zedux/",
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.1.1",
