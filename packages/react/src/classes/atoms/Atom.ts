@@ -37,7 +37,7 @@ export class Atom<
 
     return `${base}-${ecosystem._idGenerator.hashParams(
       params,
-      ecosystem.complexAtomParams
+      ecosystem.complexParams
     )}`
   }
 
@@ -46,7 +46,6 @@ export class Atom<
   ) {
     return atom(this.key, newValue, {
       flags: this.flags,
-      maxInstances: this.maxInstances,
       ttl: this.ttl,
     })
   }

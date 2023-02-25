@@ -3,8 +3,8 @@ import { useEcosystem } from './useEcosystem'
 
 /**
  * Get a unique id for a Zedux hook call. The exact string doesn't really
- * matter, but try to use an error stack to grab the React component's actual
- * name for a better debugging experience
+ * matter, but in dev try to use an error stack to grab the React component's
+ * actual name for a better debugging experience
  */
 export const useReactComponentId = () => {
   const ecosystem = useEcosystem()

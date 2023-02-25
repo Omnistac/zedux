@@ -180,7 +180,7 @@ export class SelectorCache {
     return args?.length
       ? `${baseKey}-${this.ecosystem._idGenerator.hashParams(
           args,
-          this.ecosystem.complexSelectorParams
+          this.ecosystem.complexParams
         )}`
       : baseKey
   }
