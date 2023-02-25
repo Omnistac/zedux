@@ -90,34 +90,15 @@ export type Dispatchable = ActionChain // Just an ActionChain for now. Could inc
 
 export type Dispatcher<State = any> = (dispatchable: Dispatchable) => State
 
-export interface Effect<Payload = any> {
-  effectType: EffectType
-  payload?: Payload
-}
-
-export type EffectChain<Payload = any> = EffectMeta<Payload> | Effect<Payload>
-
-export type EffectCreator<State = any> = (
-  state: State,
-  action: Action
-) => EffectChain[]
-
 export interface StoreEffect<
   State = any,
   S extends Store<State> = Store<State>
 > {
   action?: ActionChain
-  effect?: EffectChain
   error?: unknown
   newState: State
   oldState?: State
   store: S
-}
-
-export interface EffectMeta<Payload = any, Data = any> {
-  metaType: string
-  metaData?: Data
-  payload: EffectChain<Payload>
 }
 
 export type EffectType = string

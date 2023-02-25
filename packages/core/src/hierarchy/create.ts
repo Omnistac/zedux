@@ -1,13 +1,9 @@
 import { internalTypes } from '../api/constants'
 import { Store } from '../api/createStore'
+import { is } from '../api/is'
 import { addMeta } from '../api/meta'
 import { Action, Branch, HierarchyDescriptor, Reducer } from '../types'
-import {
-  detailedTypeof,
-  HierarchyType,
-  isPlainObject,
-  isZeduxStore,
-} from '../utils/general'
+import { detailedTypeof, HierarchyType, isPlainObject } from '../utils/general'
 import { DiffNode, DiffTree, RegisterSubStore } from '../utils/types'
 
 /**
@@ -70,7 +66,7 @@ function nonBranchToDiffNode(
 export function getHierarchyType(descriptor: HierarchyDescriptor) {
   if (typeof descriptor === 'function') return HierarchyType.Reducer
 
-  if (descriptor && isZeduxStore(descriptor)) return HierarchyType.Store
+  if (descriptor && is(descriptor, Store)) return HierarchyType.Store
 
   if (isPlainObject(descriptor)) return HierarchyType.Branch
 
