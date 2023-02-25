@@ -1,0 +1,103 @@
+---
+id: immer
+title: '@zedux/immer'
+---
+
+```sh
+yarn add @zedux/immer
+```
+
+The official [Immer](https://immerjs.github.io/immer/) bindings for Zedux. This package exports a new `ImmerStore` class and a few helpers for insantiating it.
+
+## ImmerStore
+
+This class extends [the `Store` class](../api/classes/Store) and keeps all the functionality of normal stores. On top of that, it adds a single method:
+
+### `.produce()`
+
+Accepts a callback. Invokes' Immer's [`produce()`](https://immerjs.github.io/immer/produce) function to create a mutable draft state and commit changes made in the callback to the store's current state.
+
+```ts
+const store = createImmerStore({ a: 1, b: 2 })
+
+store.produce(state => state.b++)
+```
+
+[Unlike Immer's `produce()`](https://immerjs.github.io/immer/return), it doesn't matter what the callback returns. Zedux will ignore the return value. Use `store.setState()` to overwrite the state of the store.
+
+## `injectImmerStore()`
+
+The recommended way to create immer stores. This is a normal [injector](../api/glossary#injector) for use within atoms. Accepts two parameters:
+
+- `initialState` - the initial state of the store
+- `config` - a config object with exactly the same properties and functionality as [`injectStore()`'s config](../api/injectors/injectStore#config)
+
+```tsx live ecosystemId=immer/injectImmerStore-counter resultVar=Counter
+const initialState = { count: 0 }
+
+const counterAtom = atom('counter', () => {
+  const store = injectImmerStore(initialState)
+
+  return api(store).setExports({
+    decrement: () => store.produce(state => state.count--),
+    increment: () => store.produce(state => state.count++),
+    reset: () => store.setState(initialState),
+  })
+})
+
+function Counter() {
+  const [state, { decrement, increment, reset }] = useAtomState(counterAtom)
+
+  return (
+    <>
+      <div>Count: {state.count}</div>
+      <button onClick={decrement}>Decrement</button>
+      <button onClick={increment}>Increment</button>
+      <button onClick={reset}>Reset</button>
+    </>
+  )
+}
+```
+
+An injected ImmerStore that's returned from the atom state factory will be set as the atom instance's store, exposing the `.produce()` method to consumers:
+
+```tsx live ecosystemId=immer/counter2 resultVar=Counter
+const counterAtom = atom('counter', () => {
+  return injectImmerStore({ count: 0 })
+})
+
+function Counter() {
+  const instance = useAtomInstance(counterAtom)
+  const state = useAtomValue(instance)
+
+  return (
+    <>
+      <div>Count: {state.count}</div>
+      <button onClick={() => instance.store.produce(state => state.count--)}>
+        Decrement
+      </button>
+      <button onClick={() => instance.store.produce(state => state.count++)}>
+        Increment
+      </button>
+    </>
+  )
+}
+```
+
+## `createImmerStore()`
+
+A factory for creating `ImmerStore` class instances. Accepts a single `initialState` parameter.
+
+```ts
+const store = injectStore(() => createImmerStore({ key: 'val' }))
+// is exactly the same as:
+const store = injectImmerStore({ key: 'val' })
+```
+
+## Reducers
+
+Immer stores are currently zero-config only. We can add helpers to make Immer reducers if there's a demand for it. Reducer-driven stores are rare enough in Zedux, we're hoping this won't be necessary. But feel free to open an issue if you need this functionality!
+
+:::note
+Immer stores are still stores - they can be used anywhere a store can be used, including being composed inside a parent store. However, since they're zero-config only, they can't be given child stores.
+:::
