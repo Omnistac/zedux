@@ -1,6 +1,6 @@
 import {
-  AnyAtomInstance,
   MutableRefObject,
+  PartialAtomInstance,
   RefObject,
 } from '@zedux/react/types'
 import { createInjector } from '../factories'
@@ -12,7 +12,7 @@ export const injectRef: {
   <T = undefined>(): MutableRefObject<T | undefined>
 } = createInjector(
   'injectRef',
-  <T>(instance: AnyAtomInstance, initialVal?: T) => ({
+  <T>(instance: PartialAtomInstance, initialVal?: T) => ({
     result: { current: initialVal as T },
     type: `${prefix}/ref`,
   })

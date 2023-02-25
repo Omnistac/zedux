@@ -1,7 +1,7 @@
 import { MachineHook, MachineStore } from '@zedux/core'
 import { MachineStateType } from '@zedux/core/utils/types'
 import { createInjector } from '../factories'
-import { AnyAtomInstance, InjectStoreConfig } from '../types'
+import { InjectStoreConfig, PartialAtomInstance } from '../types'
 import { InjectorDescriptor, prefix } from '../utils'
 import { doSubscribe } from './injectStore'
 
@@ -158,7 +158,7 @@ export const injectMachineStore: <
     States extends MachineState[],
     Context extends Record<string, any> | undefined = undefined
   >(
-    instance: AnyAtomInstance,
+    instance: PartialAtomInstance,
     ...[statesFactory, initialContext, config]: InjectMachineStoreParams<
       States,
       Context
@@ -304,7 +304,7 @@ export const injectMachineStore: <
         Context
       >
     > & { cleanupUpdater?: () => void },
-    instance: AnyAtomInstance,
+    instance: PartialAtomInstance,
     ...[, , config]: InjectMachineStoreParams<States, Context>
   ) => {
     const subscribe = config?.subscribe ?? true

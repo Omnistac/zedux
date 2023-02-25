@@ -1,11 +1,10 @@
 import { createStore, internalTypes, Store } from '@zedux/core'
-import { AtomInstanceBase } from '../classes'
 import { createInjector } from '../factories'
-import { AnyAtomInstance, InjectStoreConfig } from '../types'
+import { InjectStoreConfig, PartialAtomInstance } from '../types'
 import { InjectorDescriptor, prefix } from '../utils'
 
 export const doSubscribe = <State>(
-  instance: AtomInstanceBase<any, [...any], any>,
+  instance: PartialAtomInstance,
   store: Store<State>
 ) =>
   store.subscribe({
@@ -114,7 +113,7 @@ export const injectStore: {
 } = createInjector(
   'injectStore',
   <State = any>(
-    instance: AnyAtomInstance,
+    instance: PartialAtomInstance,
     storeFactory?: State | ((hydration?: State) => Store<State>),
     config?: InjectStoreConfig
   ) => {
@@ -141,7 +140,7 @@ export const injectStore: {
   },
   <State = any>(
     prevDescriptor: InjectorDescriptor<Store<State>>,
-    instance: AnyAtomInstance,
+    instance: PartialAtomInstance,
     storeFactory?: State | ((hydration?: State) => Store<State>),
     config?: InjectStoreConfig
   ) => {
