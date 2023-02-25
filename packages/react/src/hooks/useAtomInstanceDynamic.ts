@@ -6,9 +6,9 @@ import {
   AtomInstanceType,
   AtomParamsType,
   AtomStateType,
-  EdgeFlag,
   ZeduxHookConfig,
 } from '../types'
+import { External } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
 
@@ -90,7 +90,7 @@ export const useAtomInstanceDynamic: {
             dependentKey,
             instance.keyHash,
             operation,
-            EdgeFlag.External,
+            External,
             signal => {
               if (signal === 'Destroyed') {
                 // returning undefined from `getSnapshot` after we call

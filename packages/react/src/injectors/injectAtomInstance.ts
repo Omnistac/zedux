@@ -1,9 +1,8 @@
-import { InjectorDescriptor, prefix } from '../utils'
+import { InjectorDescriptor, prefix, Static } from '../utils'
 import {
   AnyAtomInstanceBase,
   AtomInstanceType,
   AtomParamsType,
-  EdgeFlag,
   InjectAtomInstanceConfig,
 } from '../types'
 import { AtomBase, AtomInstanceBase } from '../classes'
@@ -58,10 +57,7 @@ export const injectAtomInstance: {
     const injectedInstance = instance.ecosystem._evaluationStack.atomGetters.getInstance(
       atom as A,
       params as AtomParamsType<A>,
-      [
-        config?.subscribe ? 0 : EdgeFlag.Static,
-        config?.operation || defaultOperation,
-      ]
+      [config?.subscribe ? 0 : Static, config?.operation || defaultOperation]
     )
 
     return {
@@ -80,10 +76,7 @@ export const injectAtomInstance: {
     const injectedInstance = instance.ecosystem._evaluationStack.atomGetters.getInstance(
       atom as A,
       params as AtomParamsType<A>,
-      [
-        config?.subscribe ? 0 : EdgeFlag.Static,
-        config?.operation || defaultOperation,
-      ]
+      [config?.subscribe ? 0 : Static, config?.operation || defaultOperation]
     )
 
     prevDescriptor.result = injectedInstance as AtomInstanceType<A>

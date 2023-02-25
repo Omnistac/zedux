@@ -1,6 +1,6 @@
-import { AtomSelectorConfig, AtomSelectorOrConfig, EdgeFlag } from '../types'
+import { AtomSelectorConfig, AtomSelectorOrConfig } from '../types'
 import { MutableRefObject, useMemo, useRef, useSyncExternalStore } from 'react'
-import { haveDepsChanged } from '../utils'
+import { External, haveDepsChanged } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
 import { Ecosystem } from '../classes/Ecosystem'
@@ -163,7 +163,7 @@ export const useAtomSelector = <T, Args extends any[]>(
             dependentKey,
             cache.cacheKey,
             OPERATION,
-            EdgeFlag.External,
+            External,
             (signal, newState) => {
               if (newState === skipState.current) return
               if (signal === 'Destroyed') {
