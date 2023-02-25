@@ -1,6 +1,6 @@
-import { isZeduxStore, Store } from '@zedux/core'
+import { is, Store } from '@zedux/core'
 import { AtomInstanceTtl, AtomApiPromise } from '@zedux/react/types'
-import { is } from '@zedux/react/utils/general'
+import { prefix } from '@zedux/react/utils/general'
 
 export class AtomApi<
   State,
@@ -8,7 +8,7 @@ export class AtomApi<
   StoreType extends Store<State> | undefined,
   PromiseType extends AtomApiPromise
 > {
-  public static $$typeof = Symbol.for('@@react/zedux/AtomApi')
+  public static $$typeof = Symbol.for(`${prefix}/AtomApi`)
 
   public exports?: Exports
   public promise: PromiseType
@@ -21,7 +21,7 @@ export class AtomApi<
   ) {
     this.promise = undefined as PromiseType
     this.value = value as StoreType | State
-    this.store = (isZeduxStore(value) ? value : undefined) as StoreType
+    this.store = (is(value, Store) ? value : undefined) as StoreType
 
     if (is(value, AtomApi)) {
       Object.assign(

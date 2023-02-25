@@ -1,8 +1,9 @@
 import React, { ReactNode, useMemo } from 'react'
 import { useSyncExternalStore } from 'react'
-import { Ecosystem, ecosystemContext } from '../classes/Ecosystem'
+import { Ecosystem } from '../classes/Ecosystem'
 import { createEcosystem } from '../factories/createEcosystem'
 import { EcosystemConfig } from '../types'
+import { ecosystemContext } from '../utils/general'
 
 /**
  * EcosystemProvider

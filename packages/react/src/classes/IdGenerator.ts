@@ -1,5 +1,5 @@
+import { is } from '@zedux/core'
 import { isPlainObject } from '@zedux/core/utils/general'
-import { is } from '../utils'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 
 /**

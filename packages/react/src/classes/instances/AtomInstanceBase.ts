@@ -6,7 +6,7 @@ import {
   PromiseStatus,
   DependentCallback,
 } from '@zedux/react/types'
-import { InjectorDescriptor } from '@zedux/react/utils'
+import { InjectorDescriptor, prefix } from '@zedux/react/utils'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { Store } from '@zedux/core'
@@ -16,7 +16,7 @@ export abstract class AtomInstanceBase<
   Params extends any[],
   AtomType extends AtomBase<State, Params, any>
 > {
-  public static $$typeof = Symbol.for('@@react/zedux/AtomInstanceBase')
+  public static $$typeof = Symbol.for(`${prefix}/AtomInstanceBase`)
   public abstract activeState: ActiveState
   public abstract atom: AtomType
   public abstract ecosystem: Ecosystem

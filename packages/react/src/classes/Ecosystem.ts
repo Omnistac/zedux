@@ -1,4 +1,4 @@
-import { createStore } from '@zedux/core'
+import { createStore, is } from '@zedux/core'
 import React, { createContext } from 'react'
 import { internalStore } from '../store'
 import {
@@ -20,7 +20,7 @@ import {
   MaybeCleanup,
   Selectable,
 } from '../types'
-import { InstanceStackItem, is, SelectorStackItem } from '../utils'
+import { InstanceStackItem, SelectorStackItem } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { AtomBase } from './atoms/AtomBase'
 import { EvaluationStack } from './EvaluationStack'
@@ -41,8 +41,6 @@ const mapOverrides = (overrides: AtomBase<any, any, any>[]) =>
     map[atom.key] = atom
     return map
   }, {} as Record<string, AtomBase<any, any, any>>)
-
-export const ecosystemContext = createContext('@@global')
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements AtomGettersBase {

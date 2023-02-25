@@ -1,3 +1,4 @@
+import { is } from '@zedux/core'
 import {
   AtomSelectorConfig,
   AtomSelectorOrConfig,
@@ -7,14 +8,14 @@ import {
   EvaluationReason,
   Selectable,
 } from '../types'
-import { is, JobType } from '../utils'
+import { JobType, prefix } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 
 const defaultResultsComparator = (a: any, b: any) => a === b
 
 export class SelectorCacheItem<T = any, Args extends any[] = any[]> {
-  public static $$typeof = Symbol.for('@@react/zedux/SelectorCache')
+  public static $$typeof = Symbol.for(`${prefix}/SelectorCache`)
   public isDestroyed?: boolean
   public nextEvaluationReasons: EvaluationReason[] = []
   public prevEvaluationReasons?: EvaluationReason[]
