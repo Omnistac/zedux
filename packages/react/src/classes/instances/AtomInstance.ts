@@ -232,17 +232,6 @@ export class AtomInstance<
     if (this.activeState !== 'Active') return
 
     this._setActiveState('Stale')
-    const { maxInstances } = this.atom
-
-    if (maxInstances != null) {
-      if (maxInstances === 0) return this.destroy()
-
-      const currentCount = Object.keys(
-        this.ecosystem.inspectInstances(this.atom)
-      ).length
-
-      if (currentCount > maxInstances) return this.destroy()
-    }
 
     const ttl = this._getTtl()
     if (ttl == null || ttl === -1) return

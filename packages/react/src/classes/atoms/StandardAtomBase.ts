@@ -22,7 +22,6 @@ export abstract class StandardAtomBase<
   public readonly flags?: string[]
   public readonly hydrate?: AtomConfig<State>['hydrate']
   public readonly manualHydration?: boolean
-  public readonly maxInstances?: number
   public readonly ttl?: number
 
   constructor(
@@ -41,7 +40,6 @@ export abstract class StandardAtomBase<
     this.flags = config?.flags
     this.hydrate = config?.hydrate
     this.manualHydration = config?.manualHydration
-    this.maxInstances = config?.maxInstances
     this.ttl = config?.ttl
 
     // const map = new WeakMap();
