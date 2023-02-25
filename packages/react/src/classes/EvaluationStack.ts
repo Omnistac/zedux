@@ -3,11 +3,15 @@ import {
   AnyAtomInstance,
   AtomGetters,
   AtomParamsType,
-  EdgeFlag,
   GraphEdgeInfo,
   Selectable,
 } from '../types'
-import { InstanceStackItem, SelectorStackItem, StackItem } from '../utils'
+import {
+  InstanceStackItem,
+  SelectorStackItem,
+  StackItem,
+  Static,
+} from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { AtomBase } from './atoms/AtomBase'
 import { Ecosystem } from './Ecosystem'
@@ -78,7 +82,7 @@ export class EvaluationStack {
         stack[stack.length - 1].key,
         instance.keyHash,
         edgeInfo?.[1] || 'getInstance',
-        edgeInfo?.[0] ?? EdgeFlag.Static
+        edgeInfo?.[0] ?? Static
       )
 
       return instance

@@ -12,11 +12,11 @@ import {
   ion,
   useAtomInstance,
   useAtomValue,
-  EdgeFlag,
   AtomInstanceType,
   injectAtomInstance,
   injectRef,
 } from '@zedux/react'
+import { Static } from '@zedux/react/utils'
 import React from 'react'
 
 const atom1 = atom('atom1', () => 1)
@@ -153,7 +153,7 @@ describe('graph', () => {
           ion1: {
             callback: undefined,
             createdAt: expect.any(Number),
-            flags: EdgeFlag.Static,
+            flags: Static,
             operation: 'getInstance',
           },
         },
@@ -166,7 +166,7 @@ describe('graph', () => {
           ion1: {
             callback: undefined,
             createdAt: expect.any(Number),
-            flags: EdgeFlag.Static,
+            flags: Static,
             operation: 'getInstance',
           },
         },

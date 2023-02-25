@@ -14,13 +14,12 @@ import {
   Cleanup,
   EcosystemConfig,
   EcosystemGraphNode,
-  EdgeFlag,
   GraphEdgeInfo,
   GraphViewRecursive,
   MaybeCleanup,
   Selectable,
 } from '../types'
-import { InstanceStackItem, SelectorStackItem } from '../utils'
+import { External, InstanceStackItem, SelectorStackItem } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { AtomBase } from './atoms/AtomBase'
 import { EvaluationStack } from './EvaluationStack'
@@ -629,7 +628,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
           ? Object.keys(node.dependents).every(key => {
               const dependent = node.dependents[key]
 
-              return dependent.flags & EdgeFlag.External
+              return dependent.flags & External
             })
           : !Object.keys(node.dependencies).length
 

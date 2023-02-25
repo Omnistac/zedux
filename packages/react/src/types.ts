@@ -242,7 +242,7 @@ export type DependentCallback = (
 export interface DependentEdge {
   callback?: DependentCallback
   createdAt: number
-  flags: number // calculated from EdgeFlag enum
+  flags: number // calculated from the EdgeFlags
   operation: string
   task?: () => void // for external edges - so they can unschedule jobs
 }
@@ -271,21 +271,6 @@ export interface EcosystemGraphNode {
   weight: number
 }
 
-/**
- * The flag score determines job priority in the scheduler. Scores range from
- * 0-7. Lower score = higher prio. Examples:
- *
- * 0 = implicit-internal-dynamic
- * 3 = explicit-external-dynamic
- * 7 = explicit-external-static
- */
-export enum EdgeFlag {
-  Explicit = 1,
-  External = 2,
-  Static = 4,
-  // Deferred = 8,
-}
-
 export type EffectCallback = () => MaybeCleanup | Promise<any>
 
 export interface EvaluationReason<State = any> {
@@ -312,7 +297,11 @@ export type EvaluationType =
   | 'promise changed'
   | 'state changed'
 
-export type GraphEdgeInfo = [flags: number, operation: string] // flags are from EdgeFlag enum
+export type GraphEdgeInfo = [
+  // these flags are calculated from EdgeFlags:
+  flags: number,
+  operation: string
+]
 
 /**
  * A low-level detail that tells dependents what sort of event is causing the

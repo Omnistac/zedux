@@ -2,11 +2,15 @@ import {
   ActiveState,
   EvaluationReason,
   Cleanup,
-  EdgeFlag,
   PromiseStatus,
   DependentCallback,
 } from '@zedux/react/types'
-import { InjectorDescriptor, prefix } from '@zedux/react/utils'
+import {
+  Explicit,
+  External,
+  InjectorDescriptor,
+  prefix,
+} from '@zedux/react/utils'
 import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { Store } from '@zedux/core'
@@ -50,7 +54,7 @@ export abstract class AtomInstanceBase<
       id,
       this.keyHash,
       operation,
-      EdgeFlag.Explicit | EdgeFlag.External,
+      Explicit | External,
       callback
     )
 

@@ -4,11 +4,10 @@ import {
   AtomSelectorOrConfig,
   Cleanup,
   DependentCallback,
-  EdgeFlag,
   EvaluationReason,
   Selectable,
 } from '../types'
-import { JobType, prefix } from '../utils'
+import { Explicit, External, JobType, prefix } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 
@@ -67,7 +66,7 @@ export class SelectorCache {
       id,
       cacheItem.cacheKey,
       operation,
-      EdgeFlag.Explicit | EdgeFlag.External,
+      Explicit | External,
       callback
     )
 

@@ -23,10 +23,7 @@ export const pluginActions = {
   edgeCreated: actionFactory<
     {
       dependency: AnyAtomInstance
-      // string if `edge.flags & EdgeFlag.External` or the atom instance
-      // hasn't been created yet ('cause the edge was created while the
-      // instance was initializing. TODO: maybe make it so atom instances can
-      // be added to the ecosystem before being fully initialized):
+      // string if `edge.flags & External`:
       dependent: AnyAtomInstance | string
       edge: DependentEdge
     },

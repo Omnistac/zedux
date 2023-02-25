@@ -3,12 +3,11 @@ import {
   DependentCallback,
   DependentEdge,
   EcosystemGraphNode,
-  EdgeFlag,
   EvaluationReason,
   EvaluationType,
   GraphEdgeSignal,
 } from '../types'
-import { JobType } from '../utils'
+import { Explicit, External, JobType, Static } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 
@@ -125,7 +124,7 @@ export class Graph {
     Object.keys(edges).forEach(dependencyKey => {
       const existingEdge = this.nodes[dependencyKey].dependents[key]
 
-      if (existingEdge.flags & (EdgeFlag.Explicit | EdgeFlag.External)) return
+      if (existingEdge.flags & (Explicit | External)) return
 
       const edgeToAdd = dependencies[dependencyKey]
 
@@ -197,7 +196,7 @@ export class Graph {
     delete dependency.dependents[dependentKey]
 
     // static dependencies don't change a node's weight
-    if (!(dependentEdge.flags & EdgeFlag.Static)) {
+    if (!(dependentEdge.flags & Static)) {
       this.recalculateNodeWeight(dependentKey, -dependency.weight)
     }
 
@@ -251,7 +250,7 @@ export class Graph {
     Object.keys(node.dependents).forEach(dependentKey => {
       const dependentEdge = node.dependents[dependentKey]
 
-      if (!(dependentEdge.flags & EdgeFlag.Static)) {
+      if (!(dependentEdge.flags & Static)) {
         this.recalculateNodeWeight(dependentKey, -node.weight)
       }
 
@@ -296,7 +295,7 @@ export class Graph {
 
       // Static deps don't update on state change. Dynamic deps don't update on
       // promise change. Both types update on instance force-destruction
-      const isStatic = dependentEdge.flags & EdgeFlag.Static
+      const isStatic = dependentEdge.flags & Static
       if (isStatic && !scheduleStaticDeps) return
 
       const reason: EvaluationReason = {
@@ -311,7 +310,7 @@ export class Graph {
 
       // let internal dependents (other atoms and AtomSelectors) schedule their
       // own jobs
-      if (!(dependentEdge.flags & EdgeFlag.External)) {
+      if (!(dependentEdge.flags & External)) {
         if (this.nodes[dependentKey].isAtomSelector) {
           return this.ecosystem.selectorCache._scheduleEvaluation(
             dependentKey,
@@ -366,7 +365,7 @@ export class Graph {
     if (!dependency) return // happened once for some reason
 
     // draw graph edge between dependent and dependency
-    if (!(newEdge.flags & EdgeFlag.External)) {
+    if (!(newEdge.flags & External)) {
       this.nodes[dependentKey].dependencies[dependencyKey] = true
     }
     dependency.dependents[dependentKey] = newEdge
@@ -374,7 +373,7 @@ export class Graph {
     this.unscheduleNodeDestruction(dependencyKey)
 
     // static dependencies don't change a node's weight
-    if (!(newEdge.flags & EdgeFlag.Static)) {
+    if (!(newEdge.flags & Static)) {
       this.recalculateNodeWeight(dependentKey, dependency.weight)
     }
 

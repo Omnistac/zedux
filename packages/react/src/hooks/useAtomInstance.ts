@@ -1,11 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
-import {
-  AtomInstanceType,
-  AtomParamsType,
-  EdgeFlag,
-  ZeduxHookConfig,
-} from '../types'
+import { AtomInstanceType, AtomParamsType, ZeduxHookConfig } from '../types'
+import { External, Static } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
 
@@ -79,7 +75,7 @@ export const useAtomInstance: {
             dependentKey,
             instance.keyHash,
             operation,
-            EdgeFlag.External | EdgeFlag.Static,
+            External | Static,
             signal => {
               // see note in useAtomInstanceDynamic
               if (signal === 'Destroyed') cachedInstance = undefined
