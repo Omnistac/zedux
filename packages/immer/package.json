@@ -1,0 +1,47 @@
+{
+  "name": "@zedux/immer",
+  "version": "0.1.0",
+  "description": "Official Immer integration for Zedux's store and atomic APIs",
+  "main": "./dist/es/index.js",
+  "module": "./dist/es/index.js",
+  "es2015": "./dist/es/index.js",
+  "typings": "./dist/es/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && yarn build:prod && yarn build:dev",
+    "build:dev": "MODE=development vite build",
+    "build:prod": "vite build",
+    "prepublishOnly": "yarn build",
+    "test": "cd ../.. && yarn test packages/immer --collectCoverageFrom=packages/immer/src/**/*.ts"
+  },
+  "keywords": [
+    "atom",
+    "atomic",
+    "immutable",
+    "immer",
+    "store",
+    "zedux"
+  ],
+  "author": "Joshua Claunch",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Omnistac/zedux.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Omnistac/zedux/issues"
+  },
+  "homepage": "https://omnistac.github.io/zedux/",
+  "devDependencies": {
+    "@zedux/react": "^0.5.0",
+    "immer": "^9.0.19"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@zedux/react": ">=0.5.0",
+    "immer": ">=9.0.19"
+  }
+}
