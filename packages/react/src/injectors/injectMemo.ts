@@ -1,5 +1,5 @@
 import { createInjector } from '../factories'
-import { AnyAtomInstance, InjectorDeps } from '../types'
+import { InjectorDeps, PartialAtomInstance } from '../types'
 import { haveDepsChanged, prefix } from '../utils'
 
 type MemoInjectorDescriptor<T> = {
@@ -11,7 +11,7 @@ type MemoInjectorDescriptor<T> = {
 export const injectMemo = createInjector(
   'injectMemo',
   <Value = any>(
-    instance: AnyAtomInstance,
+    instance: PartialAtomInstance,
     valueFactory: () => Value,
     deps?: InjectorDeps
   ) =>
@@ -22,7 +22,7 @@ export const injectMemo = createInjector(
     } as MemoInjectorDescriptor<Value>),
   <Value = any>(
     prevDescriptor: MemoInjectorDescriptor<Value>,
-    instance: AnyAtomInstance,
+    instance: PartialAtomInstance,
     valueFactory: () => Value,
     deps?: InjectorDeps
   ) => {

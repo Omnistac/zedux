@@ -348,6 +348,16 @@ export interface MutableRefObject<T = any> {
   current: T
 }
 
+/**
+ * Part of the atom instance can be accessed during initial evaluation. The only
+ * fields that are inaccessible are those that don't exist yet 'cause the
+ * initial evaluation is supposed to create them.
+ */
+export type PartialAtomInstance = Omit<
+  AnyAtomInstance,
+  'api' | 'exports' | 'promise' | 'store'
+>
+
 export interface PromiseState<T> {
   data?: T
   error?: Error

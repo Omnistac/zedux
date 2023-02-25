@@ -1,5 +1,5 @@
 import { readInstance } from '../classes/EvaluationStack'
-import { AnyAtomInstance } from '../types'
+import { PartialAtomInstance } from '../types'
 import { InjectorDescriptor } from '../utils/types'
 
 export const createInjector = <
@@ -7,8 +7,8 @@ export const createInjector = <
   T extends InjectorDescriptor
 >(
   operation: string,
-  first: (instance: AnyAtomInstance, ...args: A) => T,
-  next?: (prevDescriptor: T, instance: AnyAtomInstance, ...args: A) => T
+  first: (instance: PartialAtomInstance, ...args: A) => T,
+  next?: (prevDescriptor: T, instance: PartialAtomInstance, ...args: A) => T
 ) => {
   let type: string
 

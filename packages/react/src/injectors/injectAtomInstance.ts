@@ -4,6 +4,7 @@ import {
   AtomInstanceType,
   AtomParamsType,
   InjectAtomInstanceConfig,
+  PartialAtomInstance,
 } from '../types'
 import { AtomBase, AtomInstanceBase } from '../classes'
 import { createInjector } from '../factories'
@@ -49,7 +50,7 @@ export const injectAtomInstance: {
 } = createInjector(
   defaultOperation,
   <A extends AtomBase<any, [...any], any>>(
-    instance: AnyAtomInstanceBase,
+    instance: PartialAtomInstance,
     atom: A | AnyAtomInstanceBase,
     params?: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig
@@ -67,7 +68,7 @@ export const injectAtomInstance: {
   },
   <A extends AtomBase<any, [...any], any>>(
     prevDescriptor: InjectorDescriptor<AtomInstanceType<A>>,
-    instance: AnyAtomInstanceBase,
+    instance: PartialAtomInstance,
     atom: A | AnyAtomInstanceBase,
     params?: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig

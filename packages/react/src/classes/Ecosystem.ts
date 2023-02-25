@@ -17,6 +17,7 @@ import {
   GraphEdgeInfo,
   GraphViewRecursive,
   MaybeCleanup,
+  PartialAtomInstance,
   Selectable,
 } from '../types'
 import { External, InstanceStackItem, SelectorStackItem } from '../utils'
@@ -776,7 +777,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   /**
    * Should only be used internally
    */
-  public _consumeHydration(instance: AnyAtomInstance) {
+  public _consumeHydration(instance: PartialAtomInstance) {
     const hydratedValue = this.hydration?.[instance.keyHash]
 
     if (typeof hydratedValue === 'undefined') return
