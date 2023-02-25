@@ -5,7 +5,6 @@ import {
   Action,
   ActionChain,
   Dispatchable,
-  EffectChain,
   StoreEffect,
   EffectsSubscriber,
   HierarchyConfig,
@@ -356,7 +355,7 @@ export class Store<State = any> {
     } finally {
       this._isDispatching = false
 
-      this._informSubscribers(newState, action, undefined, error, queue)
+      this._informSubscribers(newState, action, error, queue)
     }
 
     return newState
@@ -419,7 +418,6 @@ export class Store<State = any> {
       this._informSubscribers(
         this._currentState,
         { type: internalTypes.merge },
-        undefined,
         error
       )
 
@@ -436,7 +434,6 @@ export class Store<State = any> {
   private _informSubscribers(
     newState: State,
     action?: ActionChain,
-    effect?: EffectChain,
     error?: unknown,
     queue?: typeof notifyQueue,
     oldState = this._currentState
@@ -461,7 +458,6 @@ export class Store<State = any> {
             this._informSubscribers(
               newState,
               action,
-              effect,
               error,
               undefined,
               oldState
@@ -491,7 +487,6 @@ export class Store<State = any> {
       if (!infoObj) {
         infoObj = {
           action,
-          effect,
           error,
           newState,
           oldState,
@@ -515,7 +510,6 @@ export class Store<State = any> {
   ) {
     const effectsSubscriber: EffectsSubscriber<State> = ({
       action,
-      effect,
       error,
       newState,
       oldState,
@@ -536,17 +530,13 @@ export class Store<State = any> {
               (this.constructor as typeof Store).hierarchyConfig
             )
 
-      // Tell the subscribers what child store this effect came from.
-      const wrappedEffect =
-        effect && addMeta(effect, internalTypes.delegate, childStorePath)
-
       // Tell the subscribers what child store this action came from.
       // This store (the parent) can use this info to determine how to
       // recreate this state update.
       const wrappedAction =
         action && addMeta(action, internalTypes.delegate, childStorePath)
 
-      this._informSubscribers(newOwnState, wrappedAction, wrappedEffect, error)
+      this._informSubscribers(newOwnState, wrappedAction, error)
     }
 
     return childStore.subscribe({

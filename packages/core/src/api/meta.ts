@@ -1,26 +1,19 @@
 import { detailedTypeof, noop } from '../utils/general'
-import {
-  Action,
-  ActionChain,
-  ActionMeta,
-  Effect,
-  EffectChain,
-  EffectMeta,
-} from '../types'
+import { Action, ActionChain, ActionMeta } from '../types'
 
 const assertActionExists = DEV
-  ? (actionOrEffect: ActionChain | EffectChain) => {
-      if (actionOrEffect) return
+  ? (action: ActionChain) => {
+      if (action) return
 
       throw new Error(
         `Zedux: Invalid action chain. The last node in the chain must be either a valid action object with a non-empty "type" property or an effect with a non-empty "effectType" property. Received ${detailedTypeof(
-          actionOrEffect
+          action
         )}`
       )
     }
   : noop
 
-const getNewRoot = <T extends ActionChain | EffectChain>(
+const getNewRoot = <T extends ActionChain>(
   currentNode: T,
   prevNode: T | null,
   rootNode: T | null
@@ -36,16 +29,17 @@ const getNewRoot = <T extends ActionChain | EffectChain>(
 }
 
 /**
- * Adds a meta node of the given metaType and with the given
- * metaData at the beginning of an ActionChain/EffectChain
+ * Adds a meta node of the given metaType and with the given metaData at the
+ * beginning of an ActionChain
  */
-export const addMeta: {
-  (action: ActionChain, metaType: string, metaData?: any): ActionMeta
-  (effect: EffectChain, metaType: string, metaData?: any): EffectMeta
-} = (actionOrEffect: any, metaType: string, metaData?: any) => {
-  const wrappedAction: any = {
+export const addMeta = (
+  action: ActionChain,
+  metaType: string,
+  metaData?: any
+) => {
+  const wrappedAction: ActionMeta = {
     metaType,
-    payload: actionOrEffect,
+    payload: action,
   }
 
   if (metaData) wrappedAction.metaData = metaData
@@ -54,41 +48,35 @@ export const addMeta: {
 }
 
 /**
- * Returns the value of the metaData field of the first ActionMeta
- * or EffectMeta object in the chain with the given metaType.
+ * Returns the value of the metaData field of the first ActionMeta object in the
+ * chain with the given metaType.
  */
-export const getMetaData = (
-  actionOrEffect: ActionChain | EffectChain,
-  metaType: string
-) => {
-  while ((actionOrEffect as ActionMeta).metaType) {
-    if ((actionOrEffect as ActionMeta).metaType === metaType) {
-      return (actionOrEffect as ActionMeta).metaData
+export const getMetaData = (action: ActionChain, metaType: string) => {
+  while ((action as ActionMeta).metaType) {
+    if ((action as ActionMeta).metaType === metaType) {
+      return (action as ActionMeta).metaData
     }
 
-    actionOrEffect = actionOrEffect.payload
+    action = action.payload
 
     if (DEV) {
-      assertActionExists(actionOrEffect)
+      assertActionExists(action)
     }
   }
 }
 
 /**
- * Returns true if the given ActionChain or EffectChain contains
- * an ActionMeta or EffectMeta node with the given metaType.
+ * Returns true if the given ActionChain contains an ActionMeta node with the
+ * given metaType.
  */
-export const hasMeta = (
-  actionOrEffect: ActionChain | EffectChain,
-  metaType: string
-) => {
-  while ((actionOrEffect as ActionMeta).metaType) {
-    if ((actionOrEffect as ActionMeta).metaType === metaType) return true
+export const hasMeta = (action: ActionChain, metaType: string) => {
+  while ((action as ActionMeta).metaType) {
+    if ((action as ActionMeta).metaType === metaType) return true
 
-    actionOrEffect = actionOrEffect.payload
+    action = action.payload
 
     if (DEV) {
-      assertActionExists(actionOrEffect)
+      assertActionExists(action)
     }
   }
 
@@ -96,36 +84,29 @@ export const hasMeta = (
 }
 
 /**
- * Strips off an ActionChain or EffectChain and returns the wrapped
- * Action or Effect
+ * Strips all ActionMeta nodes off an ActionChain and returns the wrapped Action
  */
-export const removeAllMeta: {
-  (action: ActionChain): Action
-  (effect: EffectChain): Effect
-} = (actionOrEffect: any) => {
-  while (actionOrEffect.metaType) {
-    actionOrEffect = actionOrEffect.payload
+export const removeAllMeta = (action: ActionChain) => {
+  while ((action as ActionMeta).metaType) {
+    action = action.payload
 
     if (DEV) {
-      assertActionExists(actionOrEffect)
+      assertActionExists(action)
     }
   }
 
-  return actionOrEffect
+  return action as Action
 }
 
 /**
-  Removes the first found meta node with the given metaType in
-  the given action chain
-
-  The metaType does not have to exist in the action chain
-  (though this'll be pretty inefficient and wasteful if it doesn't).
-*/
-export const removeMeta: {
-  (action: ActionChain, metaType: string): ActionChain
-  (effect: EffectChain, metaType: string): EffectChain
-} = (actionOrEffect: any, metaType: string) => {
-  let currentNode = actionOrEffect as ActionChain | EffectChain
+ * Removes the first found meta node with the given metaType in the given action
+ * chain.
+ *
+ * The metaType does not have to exist in the action chain (though this'll be
+ * pretty inefficient and wasteful if it doesn't).
+ */
+export const removeMeta = (action: ActionChain, metaType: string) => {
+  let currentNode = action
   let prevNode = null
   let rootNode = null
 
@@ -147,5 +128,5 @@ export const removeMeta: {
   }
 
   // No match found; return the original action chain
-  return actionOrEffect
+  return action
 }

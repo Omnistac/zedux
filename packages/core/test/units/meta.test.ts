@@ -84,7 +84,7 @@ describe('addMeta()', () => {
 })
 
 describe('getMetaData()', () => {
-  test('throws an error if given an invalid ActionChain or EffectChain', () => {
+  test('throws an error if given an invalid ActionChain', () => {
     expect(() =>
       // @ts-expect-error payload can't be null
       getMetaData({ metaType: 'a', payload: null }, 'b')

@@ -65,13 +65,4 @@ export function isPlainObject(value: any) {
   return Object.getPrototypeOf(prototype) === null
 }
 
-/**
-  Checks whether value is a Zedux store.
-
-  All Zedux stores have a special symbol as their `$$typeof` property.
-*/
-export function isZeduxStore(value: any) {
-  return value?.constructor?.$$typeof === STORE_IDENTIFIER
-}
-
 export const noop = () => {}

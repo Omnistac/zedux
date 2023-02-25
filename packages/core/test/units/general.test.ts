@@ -1,4 +1,4 @@
-import { createStore, isZeduxStore } from '@zedux/core/index'
+import { createStore, is, Store } from '@zedux/core/index'
 import {
   ARRAY,
   COMPLEX_OBJECT,
@@ -42,11 +42,11 @@ describe('isPlainObject()', () => {
   })
 })
 
-describe('isZeduxStore()', () => {
+describe('is()', () => {
   test('returns true if the given variable is a zedux store', () => {
     const store = createStore()
 
-    expect(isZeduxStore(store)).toBe(true)
-    expect(isZeduxStore(null)).toBe(false)
+    expect(is(store, Store)).toBe(true)
+    expect(is(null, Store)).toBe(false)
   })
 })
