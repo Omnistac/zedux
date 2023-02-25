@@ -1,6 +1,6 @@
+import { is } from '@zedux/core'
 import { useContext } from 'react'
 import { AtomInstanceBase } from '../classes'
-import { is } from '../utils'
 import { AnyAtom, AtomInstanceType, AtomParamsType } from '../types'
 import { useEcosystem } from './useEcosystem'
 

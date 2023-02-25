@@ -2,7 +2,7 @@ import {
   ActionChain,
   createStore,
   Dispatchable,
-  isZeduxStore,
+  is,
   Observable,
   RecursivePartial,
   Settable,
@@ -18,7 +18,7 @@ import {
   PromiseState,
   PromiseStatus,
 } from '@zedux/react/types'
-import { InjectorDescriptor, is, JobType } from '@zedux/react/utils'
+import { InjectorDescriptor, JobType } from '@zedux/react/utils'
 import {
   getErrorPromiseState,
   getInitialPromiseState,
@@ -36,7 +36,7 @@ enum StateType {
 }
 
 const getStateType = (val: any) => {
-  if (isZeduxStore(val)) return StateType.Store
+  if (is(val, Store)) return StateType.Store
 
   return StateType.Value
 }
@@ -444,7 +444,7 @@ export class AtomInstance<
 
   private _getTtl() {
     if (this.api?.ttl == null) {
-      return this.atom.ttl != null ? this.atom.ttl : this.ecosystem.defaultTtl
+      return this.atom.ttl ?? this.ecosystem.defaultTtl
     }
 
     // this atom instance set its own ttl

@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { createEcosystem } from '../factories/createEcosystem'
-import { ecosystemContext } from '../classes/Ecosystem'
 import { getEcosystem } from '../store'
+import { ecosystemContext } from '../utils/general'
 
 export const useEcosystem = () => {
   const id = useContext(ecosystemContext)
