@@ -27,7 +27,6 @@ export interface AtomConfig<State = any> {
   flags?: string[]
   hydrate?: <D>(dehydratedState: D) => State
   manualHydration?: boolean
-  maxInstances?: number
   ttl?: number
 }
 
