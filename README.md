@@ -99,7 +99,7 @@ At this point you should have a pretty good idea of what Zedux is all about. To 
 
 All contributions on any level are so overwhelmingly welcome. Just jump right in. Open an issue. For PRs, just use prettier like a human and keep tests at 100% (branches, functions, lines, everything 100%, plz). Let's make this awesome!
 
-Bugs can be submitted to https://github.com/bowheart/zedux/issues
+Bugs can be submitted to https://github.com/Omnistac/zedux/issues
 
 ## License
 
