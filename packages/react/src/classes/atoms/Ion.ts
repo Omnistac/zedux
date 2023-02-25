@@ -55,7 +55,7 @@ export class Ion<
 
     return `${base}-${ecosystem._idGenerator.hashParams(
       params,
-      ecosystem.complexAtomParams
+      ecosystem.complexParams
     )}`
   }
 

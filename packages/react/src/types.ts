@@ -250,8 +250,7 @@ export interface DependentEdge {
 export interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
 > {
-  complexAtomParams?: boolean
-  complexSelectorParams?: boolean
+  complexParams?: boolean
   context?: Context
   defaultTtl?: number
   destroyOnUnmount?: boolean

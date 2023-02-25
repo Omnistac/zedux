@@ -57,8 +57,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
   public selectorCache: SelectorCache = new SelectorCache(this)
-  public complexAtomParams: boolean
-  public complexSelectorParams: boolean
+  public complexParams: boolean
   public context: Context
   public defaultTtl?: number
   public id: string
@@ -72,8 +71,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   private plugins: { plugin: ZeduxPlugin; cleanup: Cleanup }[] = []
 
   constructor({
-    complexAtomParams,
-    complexSelectorParams,
+    complexParams,
     context,
     defaultTtl,
     destroyOnUnmount,
@@ -101,8 +99,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
 
     this.flags = flags
-    this.complexAtomParams = !!complexAtomParams
-    this.complexSelectorParams = !!complexSelectorParams
+    this.complexParams = !!complexParams
     this.context = context as Context
     this.defaultTtl = defaultTtl ?? -1
     this.ssr = ssr
@@ -168,7 +165,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * string passed to `include` will include all instances whose keyHash
    * contains the string (case-insensitive)
    *
-   * Exclude takes precedence over include
+   * Excludes takes precedence over includes.
+   *
+   * By default, dehydration will call any configured `dehydrate` atom config
+   * options to transform atom instance state. Pass `{ transform: false }` to
+   * prevent this.
    */
   public dehydrate({
     exclude,
