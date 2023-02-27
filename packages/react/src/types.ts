@@ -1,23 +1,23 @@
 import { ActionChain, Observable, Settable, Store } from '@zedux/core'
-import {
-  AtomBase,
-  AtomInstance,
-  AtomInstanceBase,
-  Ecosystem,
-  StandardAtomBase,
-} from './classes'
+import { AtomBase, AtomInstance, AtomInstanceBase, Ecosystem } from './classes'
 import { AtomApi } from './classes/AtomApi'
 import { SelectorCacheItem } from './classes/SelectorCache'
 
 export type ActiveState = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
 
-export type AnyAtom = StandardAtomBase<any, any, any, any, any>
-export type AnyAtomBase = AtomBase<any, any, AtomInstanceBase<any, any, any>>
+export type AnyAtom = AtomBase<
+  any,
+  any,
+  any,
+  any,
+  any,
+  AtomInstance<any, any, any, any, any>
+>
 export type AnyAtomInstance = AtomInstance<any, any, any, any, any>
 export type AnyAtomInstanceBase = AtomInstanceBase<
   any,
   any,
-  AtomBase<any, any, any>
+  AtomBase<any, any, any, any, any, AtomInstance<any, any, any, any, any>>
 >
 
 export type AtomApiPromise = Promise<any> | undefined
@@ -32,7 +32,7 @@ export interface AtomConfig<State = any> {
 
 export type AtomExportsType<
   AtomType extends AnyAtom
-> = AtomType extends StandardAtomBase<any, any, infer T, any, any> ? T : never
+> = AtomType extends AtomBase<any, any, infer T, any, any, any> ? T : never
 
 /**
  * The AtomGettersBase interface. You probably won't want to use this directly.
@@ -44,9 +44,11 @@ export interface AtomGettersBase {
    * synchronously during atom or AtomSelector evaluation. When called
    * asynchronously, is just an alias for `ecosystem.get`
    */
-  get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+  get<A extends AtomBase<any, [], any, any, any, any>>(
+    atom: A
+  ): AtomStateType<A>
 
-  get<A extends AtomBase<any, [...any], any>>(
+  get<A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
@@ -60,9 +62,11 @@ export interface AtomGettersBase {
    * synchronously during atom or AtomSelector evaluation. When called
    * asynchronously, is just an alias for `ecosystem.getInstance`
    */
-  getInstance<A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+  getInstance<A extends AtomBase<any, [], any, any, any, any>>(
+    atom: A
+  ): AtomInstanceType<A>
 
-  getInstance<A extends AtomBase<any, [...any], any>>(
+  getInstance<A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
@@ -166,18 +170,27 @@ export type AtomInstanceStoreType<
   : never
 
 export type AtomInstanceType<
-  AtomType extends AtomBase<any, any, AtomInstanceBase<any, any, any>>
-> = AtomType extends AtomBase<any, any, infer T> ? T : never
+  AtomType extends AnyAtom
+> = AtomType extends AtomBase<any, any, any, any, any, infer T> ? T : never
 
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
 
 export type AtomParamsType<
-  AtomType extends AnyAtomBase
-> = AtomType extends AtomBase<any, infer T, any> ? T : never
+  AtomType extends AnyAtom
+> = AtomType extends AtomBase<any, infer T, any, any, any, any> ? T : never
 
 export type AtomPromiseType<
   AtomType extends AnyAtom
-> = AtomType extends StandardAtomBase<any, any, any, any, infer T> ? T : never
+> = AtomType extends AtomBase<
+  any,
+  any,
+  any,
+  any,
+  infer T,
+  AtomInstance<any, any, any, any, infer T>
+>
+  ? T
+  : never
 
 export type AtomSelector<T = any, Args extends any[] = []> = (
   getters: AtomGetters,
@@ -208,17 +221,29 @@ export type AtomStateFactory<
   | StoreType
   | State
 
-export type AtomStateType<
-  AtomType extends AnyAtomBase
-> = AtomType extends AtomBase<infer T, any, AtomInstanceBase<infer T, any, any>>
+export type AtomStateType<AtomType extends AnyAtom> = AtomType extends AtomBase<
+  infer T,
+  any,
+  any,
+  any,
+  any,
+  AtomInstance<infer T, any, any, any, any>
+>
   ? T
   : never
 
-export type AtomStoreType<
-  AtomType extends AnyAtom
-> = AtomType extends StandardAtomBase<any, any, any, infer T, any> ? T : never
+export type AtomStoreType<AtomType extends AnyAtom> = AtomType extends AtomBase<
+  any,
+  any,
+  any,
+  infer T,
+  any,
+  AtomInstance<infer T, any, any, infer T, any>
+>
+  ? T
+  : never
 
-export type AtomTuple<A extends AnyAtomBase> = [A, AtomParamsType<A>]
+export type AtomTuple<A extends AnyAtom> = [A, AtomParamsType<A>]
 
 export type AtomValueOrFactory<
   State = any,
@@ -260,7 +285,7 @@ export interface EcosystemConfig<
     ecosystem: Ecosystem<Context>,
     prevContext?: Context
   ) => MaybeCleanup
-  overrides?: AtomBase<any, any[], any>[]
+  overrides?: AnyAtom[]
   ssr?: boolean
 }
 

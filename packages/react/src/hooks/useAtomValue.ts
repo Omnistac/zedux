@@ -8,9 +8,9 @@ import {
 import { useAtomInstance } from './useAtomInstance'
 
 export const useAtomValue: {
-  <A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+  <A extends AtomBase<any, [], any, any, any, any>>(atom: A): AtomStateType<A>
 
-  <A extends AtomBase<any, [...any], any>>(
+  <A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A,
     params: AtomParamsType<A>,
     config?: Omit<ZeduxHookConfig, 'subscribe'>
@@ -21,7 +21,7 @@ export const useAtomValue: {
     params?: [],
     config?: Omit<ZeduxHookConfig, 'subscribe'>
   ): AtomInstanceStateType<AI>
-} = <A extends AtomBase<any, [...any], any>>(
+} = <A extends AtomBase<any, [...any], any, any, any, any>>(
   atom: A,
   params?: AtomParamsType<A>,
   config: Omit<ZeduxHookConfig, 'subscribe'> = { operation: 'useAtomValue' }

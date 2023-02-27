@@ -2,7 +2,7 @@ import { createStore, is } from '@zedux/core'
 import React, { createContext } from 'react'
 import { internalStore } from '../store'
 import {
-  AnyAtomBase,
+  AnyAtom,
   AnyAtomInstance,
   AnyAtomInstanceBase,
   AtomGettersBase,
@@ -36,11 +36,11 @@ const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
   return map
 }, {} as Record<Mod, number>)
 
-const mapOverrides = (overrides: AtomBase<any, any, any>[]) =>
+const mapOverrides = (overrides: AnyAtom[]) =>
   overrides.reduce((map, atom) => {
     map[atom.key] = atom
     return map
-  }, {} as Record<string, AtomBase<any, any, any>>)
+  }, {} as Record<string, AnyAtom>)
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements AtomGettersBase {
@@ -62,7 +62,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public flags?: string[]
   public hydration?: Record<string, any>
   public modBus = createStore() // use an empty store as a message bus
-  public overrides: Record<string, AnyAtomBase> = {}
+  public overrides: Record<string, AnyAtom> = {}
   public ssr?: boolean
   private cleanup?: MaybeCleanup
   private isInitialized = false
@@ -115,7 +115,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * This can't be used to remove overrides. Use `.setOverrides()` or
    * `.removeOverrides()` for that.
    */
-  public addOverrides(overrides: AnyAtomBase[]) {
+  public addOverrides(overrides: AnyAtom[]) {
     this.overrides = {
       ...this.overrides,
       ...mapOverrides(overrides),
@@ -176,9 +176,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     includeFlags,
     transform = true,
   }: {
-    exclude?: (AnyAtomBase | string)[]
+    exclude?: (AnyAtom | string)[]
     excludeFlags?: string[]
-    include?: (AnyAtomBase | string)[]
+    include?: (AnyAtom | string)[]
     includeFlags?: string[]
     transform?: boolean
   } = {}) {
@@ -267,9 +267,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     })
   }
 
-  public get<A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>
+  public get<A extends AtomBase<any, [], any, any, any, any>>(
+    atom: A
+  ): AtomStateType<A>
 
-  public get<A extends AtomBase<any, [...any], any>>(
+  public get<A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
@@ -282,7 +284,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Returns an atom instance's value. Creates the atom instance if it doesn't
    * exist yet. Doesn't register any graph dependencies.
    */
-  public get<A extends AtomBase<any, [...any], any>>(
+  public get<A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A | AtomInstanceBase<any, [...any], any>,
     params?: AtomParamsType<A>
   ) {
@@ -298,11 +300,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     return instance.store.getState()
   }
 
-  public getInstance<A extends AtomBase<any, [], any>>(
+  public getInstance<A extends AtomBase<any, [], any, any, any, any>>(
     atom: A
   ): AtomInstanceType<A>
 
-  public getInstance<A extends AtomBase<any, [...any], any>>(
+  public getInstance<A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
@@ -318,7 +320,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Returns an atom instance. Creates the atom instance if it doesn't exist
    * yet. Doesn't register any graph dependencies.
    */
-  public getInstance<A extends AtomBase<any, [...any], any>>(
+  public getInstance<A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A | AtomInstanceBase<any, [...any], any>,
     params?: AtomParamsType<A>
   ) {
@@ -391,9 +393,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Pass an atom or atom key string to only return instances whose keyHash
    * weakly matches the passed key.
    */
-  public inspectInstances(atom?: AnyAtomBase | string) {
-    const isAtom = (atom as AnyAtomBase)?.key
-    const filterKey = isAtom ? (atom as AnyAtomBase)?.key : (atom as string)
+  public inspectInstances(atom?: AnyAtom | string) {
+    const isAtom = (atom as AnyAtom)?.key
+    const filterKey = isAtom ? (atom as AnyAtom)?.key : (atom as string)
     const hash: Record<string, AtomInstanceBase<any, any, any>> = {}
 
     Object.values(this._instances)
@@ -452,7 +454,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * will cause dependents of those instances to recreate their dependency atom
    * instance without using an override.
    */
-  public removeOverrides(overrides: (AnyAtomBase | string)[]) {
+  public removeOverrides(overrides: (AnyAtom | string)[]) {
     this.overrides = mapOverrides(
       Object.values(this.overrides).filter(atom =>
         overrides.every(override => {
@@ -523,7 +525,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * This forced destruction will cause dependents of those instances to
    * recreate their dependency atom instance.
    */
-  public setOverrides(newOverrides: AtomBase<any, any, any>[]) {
+  public setOverrides(newOverrides: AnyAtom[]) {
     const oldOverrides = this.overrides
 
     this.overrides = mapOverrides(newOverrides)
@@ -669,16 +671,16 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Get an atom instance value. Don't create the atom instance if it doesn't
    * exist. Don't register any graph dependencies.
    */
-  public weakGet<A extends AtomBase<any, [], any>>(
+  public weakGet<A extends AtomBase<any, [], any, any, any, any>>(
     atom: A
   ): AtomStateType<A> | undefined
 
-  public weakGet<A extends AtomBase<any, [...any], any>>(
+  public weakGet<A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A> | undefined
 
-  public weakGet<A extends AtomBase<any, [...any], any>>(
+  public weakGet<A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A,
     params?: AtomParamsType<A>
   ) {
@@ -694,20 +696,20 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Get an atom instance. Don't create the atom instance if it doesn't exist.
    * Don't register any graph dependencies.
    */
-  public weakGetInstance<A extends AtomBase<any, [], any>>(
+  public weakGetInstance<A extends AtomBase<any, [], any, any, any, any>>(
     atom: A
   ): AtomInstanceType<A> | undefined
 
-  public weakGetInstance<A extends AtomBase<any, [...any], any>>(
+  public weakGetInstance<A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A> | undefined
 
-  public weakGetInstance<A extends AnyAtomBase = any>(
+  public weakGetInstance<A extends AnyAtom = any>(
     key: string
-  ): AtomInstanceType<A>
+  ): AtomInstanceType<A> | undefined
 
-  public weakGetInstance<A extends AtomBase<any, [...any], any>>(
+  public weakGetInstance<A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A | string,
     params?: AtomParamsType<A>
   ) {
@@ -718,7 +720,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       return this._instances[keyHash]
     }
 
-    return Object.values(this.inspectInstances(atom))[0]
+    return Object.values(this.inspectInstances(atom))[0] as
+      | AtomInstanceType<A>
+      | undefined
   }
 
   /**
@@ -813,7 +817,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   /**
    * Should only be used internally
    */
-  public _getReactContext(atom: AnyAtomBase) {
+  public _getReactContext(atom: AnyAtom) {
     const existingContext = this._reactContexts[atom.key]
 
     if (existingContext) return existingContext
@@ -845,7 +849,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
   }
 
-  private resolveAtom<AtomType extends AnyAtomBase>(atom: AtomType) {
+  private resolveAtom<AtomType extends AnyAtom>(atom: AtomType) {
     const override = this.overrides?.[atom.key]
     const maybeOverriddenAtom = (override || atom) as AtomType
 
