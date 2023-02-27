@@ -1,6 +1,5 @@
 export * from './useAtomConsumer'
 export * from './useAtomInstance'
-export * from './useAtomInstanceDynamic'
 export * from './useAtomSelector'
 export * from './useAtomState'
 export * from './useAtomValue'

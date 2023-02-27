@@ -15,6 +15,7 @@ import {
   Cleanup,
   EvaluationReason,
   EvaluationSourceType,
+  ExportsInfusedSetter,
   PromiseState,
   PromiseStatus,
 } from '@zedux/react/types'
@@ -181,6 +182,10 @@ export class AtomInstance<
     return this.store.getState()
   }
 
+  // a small, memory-efficient bound function property we can pass around
+  public invalidate = (operation?: string, sourceType?: EvaluationSourceType) =>
+    this._invalidate(operation, sourceType)
+
   /**
    * An alias for `.store.setState()`
    */
@@ -194,6 +199,15 @@ export class AtomInstance<
     settable: Settable<RecursivePartial<State>, State>,
     meta?: any
   ) => this.store.setStateDeep(settable, meta)
+
+  public _set?: ExportsInfusedSetter<State, Exports>
+  public get _infusedSetter() {
+    if (this._set) return this._set
+    const setState: any = (settable: any, meta?: any) =>
+      this.setState(settable, meta)
+
+    return (this._set = Object.assign(setState, this.exports))
+  }
 
   public _init() {
     const factoryResult = this._doEvaluate()
@@ -305,10 +319,6 @@ export class AtomInstance<
       shouldSetTimeout
     )
   }
-
-  // create small, memory-efficient bound function properties we can pass around
-  public invalidate = (operation?: string, sourceType?: EvaluationSourceType) =>
-    this._invalidate(operation, sourceType)
 
   private evaluationTask = () => this._evaluationTask()
 

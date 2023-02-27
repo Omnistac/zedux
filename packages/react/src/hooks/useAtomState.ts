@@ -9,7 +9,7 @@ import {
   StateHookTuple,
   ZeduxHookConfig,
 } from '../types'
-import { useAtomInstanceDynamic } from './useAtomInstanceDynamic'
+import { useAtomInstance } from './useAtomInstance'
 
 export const useAtomState: {
   <A extends StandardAtomBase<any, [], any, any, any>>(atom: A): StateHookTuple<
@@ -20,29 +20,23 @@ export const useAtomState: {
   <A extends AnyAtom>(
     atom: A,
     params: AtomParamsType<A>,
-    config?: ZeduxHookConfig
+    config?: Omit<ZeduxHookConfig, 'subscribe'>
   ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
 
   <AI extends AtomInstance<any, [...any], any, any, any>>(
     instance: AI,
     params?: [],
-    config?: ZeduxHookConfig
+    config?: Omit<ZeduxHookConfig, 'subscribe'>
   ): StateHookTuple<AtomInstanceStateType<AI>, AtomInstanceExportsType<AI>>
 } = <A extends AnyAtom>(
   atom: A,
   params?: AtomParamsType<A>,
-  config: ZeduxHookConfig = { operation: 'useAtomState' }
+  config: Omit<ZeduxHookConfig, 'subscribe'> = { operation: 'useAtomState' }
 ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>> => {
-  const [state, instance] = useAtomInstanceDynamic(
-    atom,
-    params as AtomParamsType<A>,
-    config
-  )
+  const instance = useAtomInstance(atom, params as AtomParamsType<A>, {
+    ...config,
+    subscribe: true,
+  })
 
-  const setState: any = (settable: any, meta?: any) =>
-    instance.setState(settable, meta)
-
-  Object.assign(setState, instance.exports)
-
-  return [state, setState]
+  return [instance.getState(), instance._infusedSetter]
 }

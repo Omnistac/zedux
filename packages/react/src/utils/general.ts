@@ -28,3 +28,5 @@ export const haveDepsChanged = (prevDeps?: any[], nextDeps?: any[]) =>
   prevDeps.some((dep, i) => nextDeps[i] !== dep)
 
 export const prefix = '@@zedux'
+
+export const destroyed = Symbol(`${prefix}/destroyed`)
