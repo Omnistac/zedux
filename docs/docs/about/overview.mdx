@@ -57,7 +57,7 @@ function Seconds() {
 }
 ```
 
-See [the creating atoms walkthrough](../walkthrough/creating-atoms#injectors)
+See [the quick start](../walkthrough/quick-start).
 
 ### EcosystemProvider
 
@@ -85,7 +85,7 @@ const rootEcosystem = createEcosystem({ id: 'root' })
 const myAtomInstance = rootEcosystem.getInstance(myAtom, ['a param'])
 ```
 
-See [the Dependency Injection walkthrough](../walkthrough/dependency-injection), [`<EcosystemProvider />`](../api/components/EcosystemProvider), and [the `Ecosystem` class](../api/classes/Ecosystem).
+See [the Ecosystems walkthrough](../walkthrough/ecosystems), [`<EcosystemProvider />`](../api/components/EcosystemProvider), and [the `Ecosystem` class](../api/classes/Ecosystem).
 
 ### Ions
 
@@ -104,7 +104,7 @@ const smallListAtom = ion('smallList', ({ get }) => {
 })
 ```
 
-See [the creating atoms walkthrough](../walkthrough/creating-atoms) and [the `Ion` class](../api/classes/Ion).
+See [the Selectors walkthrough](../walkthrough/selectors) and [the `Ion` class](../api/classes/Ion).
 
 ### Flags
 
@@ -170,7 +170,7 @@ function Counter() {
 }
 ```
 
-See [the creating atoms walkthrough](../walkthrough/creating-atoms) and [the `AtomApi` class](../api/classes/AtomApi).
+See [the Atom APIs walkthrough](../walkthrough/atom-apis) and [the `AtomApi` class](../api/classes/AtomApi).
 
 ## Dependency Injection
 
@@ -190,7 +190,7 @@ const smallListAtom = atom('smallList', () => {
 })
 ```
 
-See [the quick start](../walkthrough/quick-start#dependency-injection) and [the Dependency Injection walkthrough](../walkthrough/dependency-injection).
+See [the quick start](../walkthrough/quick-start#dependency-injection).
 
 ### Overrides
 
@@ -222,7 +222,7 @@ function TestApp() {
 }
 ```
 
-See [the Dependency Injection walkthrough](../walkthrough/dependency-injection).
+See [the Overrides walkthrough](../walkthrough/overrides).
 
 ## Stores
 
@@ -299,34 +299,13 @@ See [the state machines walkthrough](../walkthrough/state-machines).
 
 ### Action Streams
 
-:::note
-🚧 The `useAction$` API and `@zedux/react/rx` library are under construction.
-:::
-
-One of the superpowers of Zedux stores is that they can be consumed as streams of actions.
+One of the superpowers of Zedux stores is that they can be simultaneously consumed as streams of state _and_ streams of actions.
 
 ```tsx
-import { atom, actionFactory } from '@zedux/react'
-import { filterByActor, useAction$ } from '@zedux/react/rx'
+const store = createStore(null, 'initial state')
 
-const updateRow = actionFactory<RowUpdateEvent>('updateRow')
-const messageBusAtom = atom('messageBus', null)
-
-function BigTable() {
-  // highlight-next-line
-  const message$ = useAction$(messageBusAtom)
-  const tableRef = useRef()
-
-  useEffect(() => {
-    // highlight-next-line
-    const subscription = message$
-      .pipe(filterByActor(updateRow))
-      .subscribe(event => tableRef.current.updateRow(event.rowId, event))
-
-    return () => subscription.unsubscribe()
-  }, [])
-  ...
-}
+store.subscribe(myCallback) // stream of state
+store.actionStream().subscribe(myCallback) // stream of dispatched actions
 ```
 
 See [the side effects walkthrough](../walkthrough/side-effects).
@@ -356,12 +335,10 @@ See [the quick start](../walkthrough/quick-start#params) and [the atom instances
 
 ### Destruction
 
-Atom instances can be destroyed with `ttl` and `maxInstances`.
+Atom instances can be destroyed with `ttl`.
 
 ```tsx
 const deathStarAtom = atom('deathStar', 'All the Sith', {
-  // destroy excess instances immediately when their ref count reaches 0
-  maxInstances: 1,
   // destroy deathStarAtom instances 10 seconds after their ref count reaches 0
   ttl: 10000,
 })
@@ -488,10 +465,6 @@ See [the suspense walkthrough](../walkthrough/suspense)
 
 ### Hydration
 
-:::note
-🚧 `ecosystem.hydrate()` is not implemented yet
-:::
-
 Hydrating atom state can be done with `ecosystem.hydrate()`.
 
 ```tsx
@@ -505,7 +478,7 @@ const rootEcosystem = createEcosystem({
 })
 ```
 
-See [the persistence walkthrough](/not-done).
+See [the persistence walkthrough](../advanced/persistence).
 
 ### Preloading
 
@@ -531,7 +504,7 @@ function App() {
 }
 ```
 
-See [the persistence walkthrough](/not-done).
+See [the ecosystems walkthrough](../walkthrough/ecosystems).
 
 ## Dev Tools
 
@@ -558,46 +531,4 @@ const crazyAtom = ion('crazy', ({ get, select }) => {
 })
 ```
 
-See [`injectWhy()`](../api/injectors/injectWhy) and [the dev tools walkthrough](/not-done)
-
-### Performance
-
-:::note
-🚧 Everything in this section is under construction
-:::
-
-Use `getPerformanceSnapshot()` to discover which atoms have high reevaluations, usages, stale instances, and memory.
-
-Use the profiler to root out the cause of slowdowns.
-
-```tsx
-import { getPerformanceSnapshot, profiler } from '@zedux/react/devtools'
-
-const snapshot = getPerformanceSnapshot(ecosystem)
-
-profiler.startRecording(ecosystem)
-setTimeout(() => {
-  const diff = profiler.stopRecording(ecosystem)
-}, 15000)
-```
-
-See [the dev tools walkthrough](/not-done)
-
-### State Hub
-
-Available in the `@zedux/react/devtools` package. Provides UIs to easily make use of the dev, debugging, performance, and profiling tools. Plus it's pretty and has cool stuffs.
-
-```tsx
-import { StateHub } from '@zedux/react/devtools'
-
-function App() {
-  return (
-    <EcosystemProvider>
-      <StateHub />
-      <Routes />
-    </EcosystemProvider>
-  )
-}
-```
-
-See [the dev tools walkthrough](/not-done)
+See [`injectWhy()`](../api/injectors/injectWhy).
