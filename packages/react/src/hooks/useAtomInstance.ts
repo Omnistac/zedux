@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
 import { AtomInstanceType, AtomParamsType, ZeduxHookConfig } from '../types'
-import { External, Static } from '../utils'
+import { destroyed, External, Static } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
 
@@ -41,7 +41,7 @@ export const useAtomInstance: {
 } = <A extends AtomBase<any, [...any], any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
   params?: AtomParamsType<A>,
-  { operation = OPERATION, suspend }: ZeduxHookConfig = {
+  { operation = OPERATION, subscribe, suspend }: ZeduxHookConfig = {
     operation: OPERATION,
   }
 ) => {
@@ -52,7 +52,7 @@ export const useAtomInstance: {
   // approaches if it is too heavy sometimes. But don't memoize this call:
   const instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
 
-  const [subscribe, getSnapshot] = useMemo(() => {
+  const [subscribeFn, getSnapshot] = useMemo(() => {
     let cachedInstance: typeof instance | undefined = instance
 
     return [
@@ -75,9 +75,12 @@ export const useAtomInstance: {
             dependentKey,
             instance.keyHash,
             operation,
-            External | Static,
+            External | (subscribe ? 0 : Static),
             signal => {
-              // see note in useAtomInstanceDynamic
+              // returning a unique symbol from `getSnapshot` after we call
+              // `onStoreChange` causes the component to rerender. On rerender,
+              // instance will be set again, so `useSyncExternalStore` will
+              // never actually return that symbol.
               if (signal === 'Destroyed') cachedInstance = undefined
 
               onStoreChange()
@@ -89,13 +92,15 @@ export const useAtomInstance: {
           ecosystem._graph.removeEdge(dependentKey, instance.keyHash)
         }
       },
+      // this getSnapshot has to return a different val if either the instance
+      // or the state change (since in the case of primitive values, the new
+      // instance's state could be exactly the same (===) as the previous
+      // instance's value)
       () => {
         // This hack should work 'cause React can't use the return value unless
         // it renders this component. And when it rerenders,
         // `cachedInstance` will get defined again before this point
-        if (!cachedInstance) return cachedInstance as typeof instance
-
-        // Suspense!
+        if (!cachedInstance) return destroyed
         if (suspend !== false) {
           if (cachedInstance._promiseStatus === 'loading') {
             throw cachedInstance.promise
@@ -104,10 +109,12 @@ export const useAtomInstance: {
           }
         }
 
-        return cachedInstance
+        return subscribe ? cachedInstance.getState() : cachedInstance
       },
     ]
-  }, [ecosystem, instance, suspend])
+  }, [instance, subscribe, suspend])
 
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+  useSyncExternalStore(subscribeFn, getSnapshot, getSnapshot)
+
+  return instance
 }

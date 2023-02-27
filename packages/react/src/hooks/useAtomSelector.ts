@@ -1,6 +1,6 @@
 import { AtomSelectorConfig, AtomSelectorOrConfig } from '../types'
 import { MutableRefObject, useMemo, useRef, useSyncExternalStore } from 'react'
-import { External, haveDepsChanged } from '../utils'
+import { destroyed, External, haveDepsChanged } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
 import { Ecosystem } from '../classes/Ecosystem'
@@ -151,7 +151,7 @@ export const useAtomSelector = <T, Args extends any[]>(
           // function but after we got the cache above. Re-get the cache
           // if such unmountings destroyed it in the meantime:
           if (cache.isDestroyed) {
-            cacheRef.current = undefined
+            ;(cacheRef.current as any) = destroyed
             isInvalidated = true
 
             onStoreChange()
@@ -167,9 +167,9 @@ export const useAtomSelector = <T, Args extends any[]>(
             (signal, newState) => {
               if (newState === skipState.current) return
               if (signal === 'Destroyed') {
-                // see comment in useAtomInstanceDynamic about why returning
+                // see comment in useAtomInstance about why returning
                 // a nonsense value from `getSnapshot` works
-                cacheRef.current = undefined
+                ;(cacheRef.current as any) = destroyed
                 isInvalidated = true
               }
 

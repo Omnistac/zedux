@@ -297,6 +297,10 @@ export type EvaluationType =
   | 'promise changed'
   | 'state changed'
 
+export type ExportsInfusedSetter<State, Exports> = Exports & {
+  (settable: Settable<State>, meta?: any): State
+}
+
 export type GraphEdgeInfo = [
   // these flags are calculated from EdgeFlags:
   flags: number,
@@ -380,14 +384,13 @@ export type Selectable<T = any, Args extends any[] = []> =
   | AtomSelectorConfig<T, Args>
   | SelectorCacheItem<T, Args>
 
-export type StateHookTuple<S, E> = [
-  S,
-  E & {
-    (settable: Settable<S>, meta?: any): S
-  }
+export type StateHookTuple<State, Exports> = [
+  State,
+  ExportsInfusedSetter<State, Exports>
 ]
 
 export interface ZeduxHookConfig {
   operation?: string
+  subscribe?: boolean
   suspend?: boolean
 }
