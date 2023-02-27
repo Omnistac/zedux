@@ -61,7 +61,7 @@ export class EvaluationStack {
     }) as AtomGetters['get']
 
     const getInstance: AtomGetters['getInstance'] = <
-      A extends AtomBase<any, [...any], any>
+      A extends AtomBase<any, [...any], any, any, any, any>
     >(
       atomOrInstance: A,
       params?: AtomParamsType<A>,

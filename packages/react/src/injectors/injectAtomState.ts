@@ -1,4 +1,4 @@
-import { AtomInstance, StandardAtomBase } from '../classes'
+import { AtomInstance, AtomBase } from '../classes'
 import {
   AnyAtom,
   AtomExportsType,
@@ -11,7 +11,7 @@ import {
 import { injectAtomInstance } from './injectAtomInstance'
 
 export const injectAtomState: {
-  <A extends StandardAtomBase<any, [], any, any, any>>(atom: A): StateHookTuple<
+  <A extends AtomBase<any, [], any, any, any, any>>(atom: A): StateHookTuple<
     AtomStateType<A>,
     AtomExportsType<A>
   >

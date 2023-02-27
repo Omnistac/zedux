@@ -25,9 +25,11 @@ const OPERATION = 'useAtomInstance'
  * @param params The params for generating the instance's key.
  */
 export const useAtomInstance: {
-  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+  <A extends AtomBase<any, [], any, any, any, any>>(
+    atom: A
+  ): AtomInstanceType<A>
 
-  <A extends AtomBase<any, [...any], any>>(
+  <A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A,
     params: AtomParamsType<A>,
     config?: ZeduxHookConfig
@@ -38,7 +40,7 @@ export const useAtomInstance: {
     params?: [],
     config?: ZeduxHookConfig
   ): AI
-} = <A extends AtomBase<any, [...any], any>>(
+} = <A extends AtomBase<any, [...any], any, any, any, any>>(
   atom: A | AtomInstanceBase<any, [...any], any>,
   params?: AtomParamsType<A>,
   { operation = OPERATION, subscribe, suspend }: ZeduxHookConfig = {

@@ -28,8 +28,8 @@ import {
 import { Ecosystem } from '../Ecosystem'
 import { AtomApi } from '../AtomApi'
 import { AtomInstanceBase } from './AtomInstanceBase'
-import { StandardAtomBase } from '../atoms/StandardAtomBase'
 import { pluginActions } from '@zedux/react/utils/plugin-actions'
+import { AtomBase } from '../atoms/AtomBase'
 
 enum StateType {
   Store,
@@ -77,7 +77,14 @@ export class AtomInstance<
 > extends AtomInstanceBase<
   State,
   Params,
-  StandardAtomBase<State, Params, Exports, StoreType, PromiseType>
+  AtomBase<
+    State,
+    Params,
+    Exports,
+    StoreType,
+    PromiseType,
+    AtomInstance<State, Params, Exports, StoreType, PromiseType>
+  >
 > {
   public activeState: ActiveState = 'Initializing'
   public api?: AtomApi<State, Exports, StoreType, PromiseType>
@@ -104,12 +111,13 @@ export class AtomInstance<
 
   constructor(
     public readonly ecosystem: Ecosystem,
-    public readonly atom: StandardAtomBase<
+    public readonly atom: AtomBase<
       State,
       Params,
       Exports,
       StoreType,
-      PromiseType
+      PromiseType,
+      AtomInstance<State, Params, Exports, StoreType, PromiseType>
     >,
     public readonly keyHash: string,
     public readonly params: Params

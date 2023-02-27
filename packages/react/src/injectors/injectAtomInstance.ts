@@ -34,9 +34,11 @@ const defaultOperation = 'injectAtomInstance'
  * @returns An atom instance, keyed based on the passed params.
  */
 export const injectAtomInstance: {
-  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>
+  <A extends AtomBase<any, [], any, any, any, any>>(
+    atom: A
+  ): AtomInstanceType<A>
 
-  <A extends AtomBase<any, [...any], any>>(
+  <A extends AtomBase<any, [...any], any, any, any, any>>(
     atom: A,
     params: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig
@@ -49,7 +51,7 @@ export const injectAtomInstance: {
   ): AI
 } = createInjector(
   defaultOperation,
-  <A extends AtomBase<any, [...any], any>>(
+  <A extends AtomBase<any, [...any], any, any, any, any>>(
     instance: PartialAtomInstance,
     atom: A | AnyAtomInstanceBase,
     params?: AtomParamsType<A>,
@@ -66,7 +68,7 @@ export const injectAtomInstance: {
       type: `${prefix}/atom`,
     } as InjectorDescriptor<AtomInstanceType<A>>
   },
-  <A extends AtomBase<any, [...any], any>>(
+  <A extends AtomBase<any, [...any], any, any, any, any>>(
     prevDescriptor: InjectorDescriptor<AtomInstanceType<A>>,
     instance: PartialAtomInstance,
     atom: A | AnyAtomInstanceBase,

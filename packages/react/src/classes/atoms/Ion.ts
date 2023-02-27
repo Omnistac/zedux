@@ -1,10 +1,10 @@
 import { Store } from '@zedux/core'
-import { StandardAtomBase } from '@zedux/react/classes/atoms/StandardAtomBase'
 import { ion } from '@zedux/react/factories/ion'
 import { injectAtomGetters } from '@zedux/react/injectors'
 import { AtomConfig, IonStateFactory, AtomApiPromise } from '@zedux/react/types'
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
+import { AtomBase } from './AtomBase'
 
 export class Ion<
   State,
@@ -12,7 +12,14 @@ export class Ion<
   Exports extends Record<string, any>,
   StoreType extends Store<State>,
   PromiseType extends AtomApiPromise
-> extends StandardAtomBase<State, Params, Exports, StoreType, PromiseType> {
+> extends AtomBase<
+  State,
+  Params,
+  Exports,
+  StoreType,
+  PromiseType,
+  AtomInstance<State, Params, Exports, StoreType, PromiseType>
+> {
   private _get: IonStateFactory<State, Params, Exports, StoreType, PromiseType>
 
   constructor(
@@ -24,7 +31,7 @@ export class Ion<
       StoreType,
       PromiseType
     >,
-    private _config?: AtomConfig<State>
+    _config?: AtomConfig<State>
   ) {
     super(
       key,
