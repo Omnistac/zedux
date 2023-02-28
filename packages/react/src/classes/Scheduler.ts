@@ -1,14 +1,9 @@
-import {
-  EvaluateNodeJob,
-  Job,
-  JobType,
-  UpdateExternalDependentJob,
-} from '../utils'
+import { Job, Scheduler as SchedulerInterface } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
 
-export class Scheduler {
+export class Scheduler implements SchedulerInterface {
   // private _runStartTime?: number
-  private scheduledJobs: Job[] = []
+  private jobs: Job[] = []
   private _jobTimeoutId?: ReturnType<typeof setTimeout>
   private _isRunning?: boolean
 
@@ -18,7 +13,7 @@ export class Scheduler {
    * Kill any current timeout and run all jobs immediately.
    *
    * IMPORTANT: Setting and clearing timeouts is expensive. We need to always
-   * pass `shouldSetTimeout: false` to scheduler.scheduleJob() when we're going
+   * pass `shouldSetTimeout: false` to scheduler.schedule() when we're going
    * to immediately flush
    */
   public flush() {
@@ -35,99 +30,95 @@ export class Scheduler {
    * IMPORTANT: Setting and clearing timeouts is expensive. We need to always
    * pass `shouldSetTimeout: false` when we're going to immediately flush
    */
-  public scheduleJob(newJob: Job, shouldSetTimeout = true) {
-    if (newJob.type === JobType.RunEffect) {
-      this.scheduledJobs.push(newJob)
-    } else if (newJob.type === JobType.EvaluateNode) {
-      this.insertEvaluateNodeJob(newJob)
+  public schedule(newJob: Job, shouldSetTimeout = true) {
+    if (newJob.type === 4) {
+      // RunEffect (4) jobs run in any order, after everything else
+      this.jobs.push(newJob)
     } else {
-      this.insertUpdateExternalDependentJob(newJob)
+      const { nodes } = this.ecosystem._graph
+      const flags = newJob.flags ?? 0
+      const weight = newJob.keyHash ? nodes[newJob.keyHash].weight : 0
+
+      const index = this.findIndex(job => {
+        if (job.type !== newJob.type) return +(newJob.type - job.type > 0) || -1 // 1 or -1
+
+        // a job type can use either weight or flags comparison or neither
+        if (job.keyHash) {
+          const jobWeight = nodes[job.keyHash].weight
+
+          return weight < jobWeight ? -1 : +(weight > jobWeight) // + = 0 or 1
+        } else if (job.flags != null) {
+          return flags < job.flags ? -1 : +(flags > job.flags)
+        }
+
+        return 0
+      })
+
+      if (index === -1) {
+        this.jobs.push(newJob)
+      } else {
+        this.jobs.splice(index, 0, newJob)
+      }
     }
 
     // we just pushed the first job onto the queue
-    if (shouldSetTimeout && this.scheduledJobs.length === 1) {
+    if (shouldSetTimeout && this.jobs.length === 1) {
       this.setTimeout()
     }
   }
 
-  public unscheduleJob(task: () => void) {
-    this.scheduledJobs = this.scheduledJobs.filter(job => job.task !== task)
+  /**
+   * Some jobs (update store jobs) must run immediately but also need the
+   * scheduler to be running.
+   *
+   * Other jobs (inform subscriber jobs) must run immediately after the current
+   * task. This is done by passing `false` for the 2nd param.
+   */
+  public scheduleNow(newJob: Job, runIfRunning = true) {
+    if (this._isRunning === runIfRunning) return newJob.task()
+    this.jobs.unshift(newJob)
+    this.flush()
+  }
+
+  public unschedule(task: () => void) {
+    const index = this.jobs.findIndex(job => job.task === task)
+
+    if (index !== -1) this.jobs.splice(index, 1)
   }
 
   public wipe() {
     // allow external jobs to proceed. TODO: should we flush here?
-    this.scheduledJobs = this.scheduledJobs.filter(
-      job => job.type === JobType.UpdateExternalDependent
+    this.jobs = this.jobs.filter(
+      job => job.type === 3 // UpdateExternalDependent (3)
     )
   }
 
-  // An O(log n) replacement for this.scheduledJobs.findIndex()
-  private findInsertionIndex(
+  // An O(log n) replacement for this.jobs.findIndex()
+  private findIndex(
     cb: (job: Job) => number,
-    index = Math.ceil(this.scheduledJobs.length / 2) - 1,
+    index = Math.ceil(this.jobs.length / 2) - 1,
     iteration = 1
   ): number {
-    const job = this.scheduledJobs[index]
-    if (typeof job === 'undefined') return index
+    const job = this.jobs[index]
+    if (job == null) return index
 
     const direction = cb(job)
     if (!direction) return index
 
     const divisor = 2 ** iteration
-    const isDone = divisor > this.scheduledJobs.length
+    const isDone = divisor > this.jobs.length
 
     if (isDone) {
       return index + (direction === 1 ? 1 : 0)
     }
 
-    const effectualSize = Math.round(this.scheduledJobs.length / divisor)
+    const effectualSize = Math.round(this.jobs.length / divisor)
     const newIndex = Math.min(
-      this.scheduledJobs.length - 1,
+      this.jobs.length - 1,
       Math.max(0, index + Math.ceil(effectualSize / 2) * direction)
     )
 
-    return this.findInsertionIndex(cb, newIndex, iteration + 1)
-  }
-
-  // EvaluateNode jobs go before any other job type and are sorted amongst
-  // themselves by weight - lower weight evaluated first
-  private insertEvaluateNodeJob(newJob: EvaluateNodeJob) {
-    const { nodes } = this.ecosystem._graph
-    const newJobGraphNode = nodes[newJob.keyHash]
-
-    const index = this.findInsertionIndex(job => {
-      if (job.type !== JobType.EvaluateNode) return -1
-
-      const thatJobGraphNode = nodes[job.keyHash]
-      return newJobGraphNode.weight < thatJobGraphNode.weight
-        ? -1
-        : +(newJobGraphNode.weight > thatJobGraphNode.weight)
-    })
-
-    if (index === -1) {
-      this.scheduledJobs.push(newJob)
-      return
-    }
-
-    this.scheduledJobs.splice(index, 0, newJob)
-  }
-
-  // UpdateExternalDependent jobs go just after EvaluateNode jobs, but before
-  // anything else (there is only one other job type right now - RunEffect)
-  private insertUpdateExternalDependentJob(newJob: UpdateExternalDependentJob) {
-    const index = this.findInsertionIndex(job => {
-      if (job.type === JobType.EvaluateNode) return 1
-      if (job.type !== JobType.UpdateExternalDependent) return -1
-
-      return newJob.flags < job.flags ? -1 : +(newJob.flags > job.flags)
-    })
-
-    if (index === -1) {
-      this.scheduledJobs.push(newJob)
-      return
-    }
-
-    this.scheduledJobs.splice(index, 0, newJob)
+    return this.findIndex(cb, newIndex, iteration + 1)
   }
 
   private runJobs() {
@@ -136,10 +127,13 @@ export class Scheduler {
     // let counter = 0
 
     this._isRunning = true
-    while (this.scheduledJobs.length) {
-      const job = this.scheduledJobs.shift() as Job
+    while (this.jobs.length) {
+      const job = this.jobs.shift() as Job
       job.task()
 
+      // this "break" idea would need to only break if the next job is
+      // interruptible (store updates - the highest-prio tasks - are not
+      // interruptible)
       // if (!(++counter % 20) && performance.now() - this._runStartTime >= 100) {
       //   setTimeout(() => this.runJobs())
       //   break

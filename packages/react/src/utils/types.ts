@@ -1,12 +1,6 @@
 import { AnyAtomInstance } from '@zedux/react/types'
 import { SelectorCacheItem } from '../classes/SelectorCache'
 
-export interface EvaluateNodeJob extends JobBase {
-  flags: number
-  keyHash: string
-  type: JobType.EvaluateNode
-}
-
 export type InjectorDescriptor<T = any> = T extends undefined
   ? {
       cleanup?: () => void
@@ -18,23 +12,6 @@ export type InjectorDescriptor<T = any> = T extends undefined
       result: T
       type: string
     }
-
-export interface JobBase {
-  task: () => void
-  type: JobType
-}
-
-export type Job = EvaluateNodeJob | RunEffectJob | UpdateExternalDependentJob
-
-export enum JobType {
-  EvaluateNode = 'EvaluateNode',
-  RunEffect = 'RunEffect',
-  UpdateExternalDependent = 'UpdateExternalDependent',
-}
-
-export interface RunEffectJob extends JobBase {
-  type: JobType.RunEffect
-}
 
 export interface StackItemBase {
   /**
@@ -57,8 +34,3 @@ export interface SelectorStackItem extends StackItemBase {
 }
 
 export type StackItem = InstanceStackItem | SelectorStackItem
-
-export interface UpdateExternalDependentJob extends JobBase {
-  flags: number
-  type: JobType.UpdateExternalDependent
-}

@@ -1,7 +1,6 @@
 import { createInjector } from '../factories'
 import { EffectCallback, InjectorDeps } from '../types'
 import { haveDepsChanged, InjectorDescriptor, prefix } from '../utils'
-import { JobType } from '../utils/types'
 
 interface EffectInjectorDescriptor extends InjectorDescriptor<undefined> {
   deps: InjectorDeps
@@ -52,16 +51,16 @@ export const injectEffect = createInjector(
     if (!instance.ecosystem.ssr) {
       const task = getTask(effect, descriptor)
       descriptor.cleanup = () => {
-        instance.ecosystem._scheduler.unscheduleJob(task)
+        instance.ecosystem._scheduler.unschedule(task)
         descriptor.cleanup = undefined
       }
 
       if (config?.synchronous) {
         task()
       } else {
-        instance.ecosystem._scheduler.scheduleJob({
+        instance.ecosystem._scheduler.schedule({
           task,
-          type: JobType.RunEffect,
+          type: 4, // RunEffect (4)
         })
       }
     }
@@ -88,7 +87,7 @@ export const injectEffect = createInjector(
     // time except init. Leave this though in case we add a way to update an
     // atom instance without flushing the scheduler
     prevDescriptor.cleanup = () => {
-      instance.ecosystem._scheduler.unscheduleJob(task)
+      instance.ecosystem._scheduler.unschedule(task)
       prevDescriptor.cleanup = undefined
     }
     prevDescriptor.deps = deps
@@ -96,9 +95,9 @@ export const injectEffect = createInjector(
     if (config?.synchronous) {
       task()
     } else {
-      instance.ecosystem._scheduler.scheduleJob({
+      instance.ecosystem._scheduler.schedule({
         task,
-        type: JobType.RunEffect,
+        type: 4, // RunEffect (4)
       })
     }
 

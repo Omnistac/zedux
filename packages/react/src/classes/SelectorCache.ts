@@ -7,7 +7,7 @@ import {
   EvaluationReason,
   Selectable,
 } from '../types'
-import { Explicit, External, JobType, prefix } from '../utils'
+import { Explicit, External, prefix } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 
@@ -275,7 +275,7 @@ export class SelectorCache {
     if (!cache) return // shouldn't happen
 
     if (cache.nextEvaluationReasons.length && cache.task) {
-      this.ecosystem._scheduler.unscheduleJob(cache.task)
+      this.ecosystem._scheduler.unschedule(cache.task)
     }
 
     this.ecosystem._graph.removeDependencies(cacheKey)
@@ -307,7 +307,6 @@ export class SelectorCache {
   public _scheduleEvaluation(
     cacheKey: string,
     reason: EvaluationReason,
-    flags: number,
     shouldSetTimeout?: boolean
   ) {
     const cache = this._items[cacheKey]
@@ -326,12 +325,11 @@ export class SelectorCache {
     }
     cache.task = task
 
-    this.ecosystem._scheduler.scheduleJob(
+    this.ecosystem._scheduler.schedule(
       {
-        flags,
         keyHash: cacheKey,
         task,
-        type: JobType.EvaluateNode,
+        type: 2, // EvaluateGraphNode (2)
       },
       shouldSetTimeout
     )

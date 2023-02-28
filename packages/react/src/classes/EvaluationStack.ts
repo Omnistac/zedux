@@ -1,4 +1,4 @@
-import { ActionFactoryPayloadType } from '@zedux/core'
+import { ActionFactoryPayloadType, Store } from '@zedux/core'
 import {
   AnyAtomInstance,
   AtomGetters,
@@ -143,6 +143,8 @@ export class EvaluationStack {
     this.ecosystem.modBus.dispatch(
       pluginActions.evaluationFinished(action as any)
     )
+
+    Store._scheduler = undefined
   }
 
   public read() {
@@ -165,5 +167,8 @@ export class EvaluationStack {
     }
 
     stack.push(newItem)
+
+    // all stores created during evaluation automatically belong to the ecosystem
+    Store._scheduler = this.ecosystem._scheduler
   }
 }

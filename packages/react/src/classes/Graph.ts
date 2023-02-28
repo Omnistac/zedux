@@ -7,7 +7,7 @@ import {
   EvaluationType,
   GraphEdgeSignal,
 } from '../types'
-import { Explicit, External, JobType, Static } from '../utils'
+import { Explicit, External, Static } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 
@@ -201,7 +201,7 @@ export class Graph {
     }
 
     if (dependentEdge.task) {
-      this.ecosystem._scheduler.unscheduleJob(dependentEdge.task)
+      this.ecosystem._scheduler.unschedule(dependentEdge.task)
     }
 
     if (this.ecosystem._mods.edgeRemoved) {
@@ -290,7 +290,7 @@ export class Graph {
 
         // destruction jobs supersede update jobs; cancel the existing job so we
         // can create a new one for the destruction
-        this.ecosystem._scheduler.unscheduleJob(dependentEdge.task)
+        this.ecosystem._scheduler.unschedule(dependentEdge.task)
       }
 
       // Static deps don't update on state change. Dynamic deps don't update on
@@ -315,14 +315,12 @@ export class Graph {
           return this.ecosystem.selectorCache._scheduleEvaluation(
             dependentKey,
             reason,
-            dependentEdge.flags,
             shouldSetTimeout
           )
         }
 
         return this.ecosystem._instances[dependentKey]._scheduleEvaluation(
           reason,
-          dependentEdge.flags,
           shouldSetTimeout
         )
       }
@@ -337,11 +335,11 @@ export class Graph {
         )
       }
 
-      this.ecosystem._scheduler.scheduleJob(
+      this.ecosystem._scheduler.schedule(
         {
           flags: dependentEdge.flags,
           task,
-          type: JobType.UpdateExternalDependent,
+          type: 3, // UpdateExternalDependent (3)
         },
         shouldSetTimeout
       )

@@ -1,9 +1,8 @@
 import {
-  AnyAtomInstance,
-  AnyAtomInstanceBase,
   createInjector,
   InjectStoreConfig,
   internalTypes,
+  PartialAtomInstance,
   Store,
 } from '@zedux/react'
 import { createImmerStore } from './createImmerStore'
@@ -12,7 +11,7 @@ import { ImmerStore } from './ImmerStore'
 const operation = 'injectImmerStore'
 
 const doSubscribe = <State>(
-  instance: AnyAtomInstanceBase,
+  instance: PartialAtomInstance,
   store: Store<State>
 ) =>
   store.subscribe({
@@ -47,7 +46,6 @@ const doSubscribe = <State>(
           sourceType: 'Injector',
           type: 'state changed',
         },
-        0,
         false
       )
 
@@ -62,7 +60,7 @@ export const injectImmerStore: {
 } = createInjector(
   operation,
   <State = any>(
-    instance: AnyAtomInstance,
+    instance: PartialAtomInstance,
     state?: State,
     config?: InjectStoreConfig
   ) => {
@@ -84,7 +82,7 @@ export const injectImmerStore: {
       result: ImmerStore<State>
       type: string
     },
-    instance: AnyAtomInstance,
+    instance: PartialAtomInstance,
     state?: State,
     config?: InjectStoreConfig
   ) => {

@@ -15,6 +15,8 @@ import {
   Settable,
   Subscriber,
   SubscriberObject,
+  Scheduler,
+  Job,
 } from '../types'
 import {
   detailedTypeof,
@@ -26,15 +28,17 @@ import { DiffNode } from '../utils/types'
 import { internalTypes } from './constants'
 import { addMeta, removeAllMeta } from './meta'
 
-const primeAction = { type: internalTypes.prime }
-
 // When an action is dispatched to a parent store and delegated to a child
 // store, the child store needs to wait until the update propagates everywhere
 // and the parent store finishes its dispatch before notifying its subscribers.
-// This queue is a simple "scheduler" of sorts that lets all child stores of the
-// currently-dispatching parent store wait to notify their subscribers until all
-// stores in the hierarchy are done dispatching.
-let notifyQueue: [Store, (() => void) | undefined][] | undefined
+// A proper scheduler will allow all child stores of the currently-dispatching
+// parent store to wait to notify their subscribers until all stores in the
+// hierarchy are done dispatching.
+const defaultScheduler: Scheduler = {
+  scheduleNow: (job: Job) => job.task(),
+}
+
+const primeAction = { type: internalTypes.prime }
 
 /**
   Creates a new Zedux store.
@@ -69,14 +73,16 @@ export class Store<State = any> {
   static readonly $$typeof = STORE_IDENTIFIER
 
   /**
-   * Used internally to halt propagations temporarily while flushing a composed
-   * store update queue
+   * This is set by atom ecosystems to automaticallly tie stores created during
+   * atom evaluation to the ecosystem.
    */
-  public _halt?: boolean
+  static _scheduler?: Scheduler
   private _currentDiffTree?: DiffNode
   private _currentState: State
   private _isDispatching?: boolean
+  private _parents?: EffectsSubscriber[]
   private _rootReducer?: Reducer<State>
+  private _scheduler: Scheduler
   private _subscribers: SubscriberObject[] = []
 
   constructor(
@@ -84,6 +90,7 @@ export class Store<State = any> {
     initialState?: State
   ) {
     this._currentState = initialState as State
+    this._scheduler = Store._scheduler || defaultScheduler
 
     if (initialHierarchy) this.use(initialHierarchy)
   }
@@ -131,7 +138,14 @@ export class Store<State = any> {
     This is a bound function property. Every store recreates this small
     function. But it's always bound and can be passed around easily.
   */
-  public dispatch = (action: Dispatchable) => this._dispatch(action)
+  public dispatch = (action: Dispatchable) => {
+    this._scheduler.scheduleNow({
+      task: () => this._dispatch(action),
+      type: 0, // UpdateStore (0)
+    })
+
+    return this._currentState
+  }
 
   /**
     Returns the current state of the store.
@@ -166,8 +180,18 @@ export class Store<State = any> {
     recreates this small function. But it's always bound and can be passed
     around easily.
   */
-  public setState = (settable: Settable<State>, meta?: any) =>
-    this._setState(settable as Settable<RecursivePartial<State>, State>, meta)
+  public setState = (settable: Settable<State>, meta?: any) => {
+    this._scheduler.scheduleNow({
+      task: () =>
+        this._setState(
+          settable as Settable<RecursivePartial<State>, State>,
+          meta
+        ),
+      type: 0, // UpdateStore (0)
+    })
+
+    return this._currentState
+  }
 
   /**
     Applies a partial state update to the store.
@@ -197,7 +221,17 @@ export class Store<State = any> {
     settable: Settable<RecursivePartial<State>, State>,
     meta?: any
   ) {
-    return this._setState(settable, meta, true)
+    this._scheduler.scheduleNow({
+      task: () =>
+        this._setState(
+          settable as Settable<RecursivePartial<State>, State>,
+          meta,
+          true
+        ),
+      type: 0, // UpdateStore (0)
+    })
+
+    return this._currentState
   }
 
   /**
@@ -242,13 +276,7 @@ export class Store<State = any> {
       }
     }
 
-    // as any - this "id" field is hidden from the outside world
-    // so it doesn't exist on the Subscriber type
-    if ((subscriberObj as any).id === STORE_IDENTIFIER) {
-      this._subscribers.unshift(subscriberObj as SubscriberObject)
-    } else {
-      this._subscribers.push(subscriberObj as SubscriberObject)
-    }
+    this._subscribers.push(subscriberObj as SubscriberObject)
 
     return {
       unsubscribe: () => {
@@ -287,6 +315,20 @@ export class Store<State = any> {
     }
 
     return this // for chaining
+  }
+
+  /**
+   * Only for internal use.
+   */
+  public _register(effects: EffectsSubscriber) {
+    const parents = this._parents || (this._parents = [])
+    parents.push(effects)
+
+    return () => {
+      const index = parents.indexOf(effects)
+
+      if (index > -1) parents.splice(index, 1)
+    }
   }
 
   public [Symbol.observable]() {
@@ -338,11 +380,6 @@ export class Store<State = any> {
 
     let error: unknown
     let newState = rootState
-    let queue: typeof notifyQueue | undefined
-
-    if (!notifyQueue) {
-      queue = notifyQueue = [[this, undefined]]
-    }
 
     try {
       if (this._rootReducer) {
@@ -355,7 +392,7 @@ export class Store<State = any> {
     } finally {
       this._isDispatching = false
 
-      this._informSubscribers(newState, action, error, queue)
+      this._informSubscribers(newState, action, error)
     }
 
     return newState
@@ -431,77 +468,60 @@ export class Store<State = any> {
     )
   }
 
-  private _informSubscribers(
-    newState: State,
-    action?: ActionChain,
-    error?: unknown,
-    queue?: typeof notifyQueue,
-    oldState = this._currentState
-  ) {
-    // Update the stored state
-    this._currentState = newState
-
-    // defer this call if a parent store is currently dispatching
-    if (notifyQueue) {
-      if (queue) {
-        // this is the parent store that is now done dispatching
-        notifyQueue = undefined
-      } else {
-        notifyQueue.unshift([
-          this,
-          () => {
-            // skip informing subscribers if the state has already been changed
-            // by a parent store's subscriber (which state change is already
-            // propagated to this store's subscribers by this point):
-            if (this._currentState !== newState) return
-
-            this._informSubscribers(
-              newState,
-              action,
-              error,
-              undefined,
-              oldState
-            )
-          },
-        ])
-        return
-      }
-    }
-
-    let infoObj: StoreEffect<State, this> | undefined
-
+  private _finishInforming(effect: StoreEffect<State, this>) {
     // Clone the subscribers in case of mutation mid-iteration
     const subscribers = [...this._subscribers]
 
     for (let i = 0; i < subscribers.length; i++) {
       const subscriber = subscribers[i]
 
-      if (error && subscriber.error) subscriber.error(error)
+      if (effect.error && subscriber.error) subscriber.error(effect.error)
 
-      if (newState !== oldState && subscriber.next) {
-        subscriber.next(newState, oldState, action as ActionChain)
+      if (effect.newState !== effect.oldState && subscriber.next) {
+        subscriber.next(
+          effect.newState,
+          effect.oldState,
+          effect.action as ActionChain
+        )
       }
 
-      if (!subscriber.effects) continue
+      if (subscriber.effects) subscriber.effects(effect)
+    }
+  }
 
-      if (!infoObj) {
-        infoObj = {
-          action,
-          error,
-          newState,
-          oldState,
-          store: this,
-        }
-      }
-
-      subscriber.effects(infoObj)
+  private _informSubscribers(
+    newState: State,
+    action?: ActionChain,
+    error?: unknown
+  ) {
+    const effect: StoreEffect<State, this> = {
+      action,
+      error,
+      newState,
+      oldState: this._currentState,
+      store: this,
     }
 
-    if (queue) {
-      queue.forEach(([store]) => (store._halt = true))
-      queue.forEach(([, callback]) => callback?.())
-      queue.forEach(([store]) => (store._halt = false))
-    }
+    // Update the stored state
+    this._currentState = newState
+
+    // defer informing if a parent store is currently dispatching
+    this._scheduler.scheduleNow(
+      {
+        task: () => {
+          // skip informing subscribers if the state has already been changed
+          // by a parent store's subscriber (which state change is already
+          // propagated to this store's subscribers by this point):
+          if (this._currentState !== newState) return
+
+          this._finishInforming(effect)
+        },
+        type: 1, // InformSubscribers (1)
+      },
+      false
+    )
+
+    this._parents?.forEach(parent => parent(effect))
   }
 
   private _registerChildStore<State = any>(
@@ -518,7 +538,7 @@ export class Store<State = any> {
       // substore in the first place, ignore the propagation; this store
       // will receive it anyway.
       // const isInherited = hasMeta(action, internalTypes.inherit)
-      if (this._isDispatching || this._halt) return
+      if (this._isDispatching) return
 
       const newOwnState =
         newState === oldState
@@ -539,10 +559,7 @@ export class Store<State = any> {
       this._informSubscribers(newOwnState, wrappedAction, error)
     }
 
-    return childStore.subscribe({
-      effects: effectsSubscriber,
-      id: STORE_IDENTIFIER,
-    } as any).unsubscribe
+    return childStore._register(effectsSubscriber)
   }
 
   private _routeAction(action: ActionChain) {
