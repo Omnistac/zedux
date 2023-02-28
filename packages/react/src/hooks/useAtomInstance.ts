@@ -56,6 +56,7 @@ export const useAtomInstance: {
 
   const [subscribeFn, getSnapshot] = useMemo(() => {
     let cachedInstance: typeof instance | undefined = instance
+    let hasSubscribed = false
 
     return [
       (onStoreChange: () => void) => {
@@ -88,6 +89,8 @@ export const useAtomInstance: {
               onStoreChange()
             }
           )
+
+          hasSubscribed = true
         }
 
         return () => {
@@ -102,7 +105,7 @@ export const useAtomInstance: {
         // This hack should work 'cause React can't use the return value unless
         // it renders this component. And when it rerenders,
         // `cachedInstance` will get defined again before this point
-        if (!cachedInstance) return destroyed
+        if (!cachedInstance || !hasSubscribed) return destroyed
         if (suspend !== false) {
           if (cachedInstance._promiseStatus === 'loading') {
             throw cachedInstance.promise
