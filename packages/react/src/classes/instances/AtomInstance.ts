@@ -19,7 +19,7 @@ import {
   PromiseState,
   PromiseStatus,
 } from '@zedux/react/types'
-import { InjectorDescriptor, JobType } from '@zedux/react/utils'
+import { InjectorDescriptor } from '@zedux/react/utils'
 import {
   getErrorPromiseState,
   getInitialPromiseState,
@@ -156,7 +156,7 @@ export class AtomInstance<
     this._setActiveState('Destroyed')
 
     if (this._nextEvaluationReasons.length) {
-      this.ecosystem._scheduler.unscheduleJob(this.evaluationTask)
+      this.ecosystem._scheduler.unschedule(this.evaluationTask)
     }
 
     // Clean up effect injectors first, then everything else
@@ -304,7 +304,6 @@ export class AtomInstance<
 
   public _scheduleEvaluation = (
     reason: EvaluationReason,
-    flags = 0,
     shouldSetTimeout?: boolean
   ) => {
     // TODO: Any calls in this case probably indicate a memory leak on the
@@ -317,12 +316,11 @@ export class AtomInstance<
 
     if (this._nextEvaluationReasons.length > 1) return // job already scheduled
 
-    this.ecosystem._scheduler.scheduleJob(
+    this.ecosystem._scheduler.schedule(
       {
-        flags,
         keyHash: this.keyHash,
         task: this.evaluationTask,
-        type: JobType.EvaluateNode,
+        type: 2, // EvaluateGraphNode (2)
       },
       shouldSetTimeout
     )
@@ -510,7 +508,6 @@ export class AtomInstance<
         sourceType,
         type: 'cache invalidated',
       },
-      0,
       false
     )
 

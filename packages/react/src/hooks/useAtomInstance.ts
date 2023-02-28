@@ -55,8 +55,7 @@ export const useAtomInstance: {
   const instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
 
   const [subscribeFn, getSnapshot] = useMemo(() => {
-    let cachedInstance: typeof instance | undefined = instance
-    let hasSubscribed = false
+    let tuple = [instance, instance.getState()]
 
     return [
       (onStoreChange: () => void) => {
@@ -68,7 +67,7 @@ export const useAtomInstance: {
           // function but after we got the instance above. Re-get the instance
           // if such unmountings destroyed it in the meantime:
           if (instance.activeState === 'Destroyed') {
-            cachedInstance = undefined
+            tuple[1] = destroyed
             onStoreChange()
 
             return () => {} // let the next render register the graph edge
@@ -84,13 +83,11 @@ export const useAtomInstance: {
               // `onStoreChange` causes the component to rerender. On rerender,
               // instance will be set again, so `useSyncExternalStore` will
               // never actually return that symbol.
-              if (signal === 'Destroyed') cachedInstance = undefined
+              if (signal === 'Destroyed') tuple[1] = destroyed
 
               onStoreChange()
             }
           )
-
-          hasSubscribed = true
         }
 
         return () => {
@@ -104,22 +101,27 @@ export const useAtomInstance: {
       () => {
         // This hack should work 'cause React can't use the return value unless
         // it renders this component. And when it rerenders,
-        // `cachedInstance` will get defined again before this point
-        if (!cachedInstance || !hasSubscribed) return destroyed
+        // `tuple[1]` will get defined again before this point
+        if (tuple[1] === destroyed) return destroyed as any
+
         if (suspend !== false) {
-          if (cachedInstance._promiseStatus === 'loading') {
-            throw cachedInstance.promise
-          } else if (cachedInstance._promiseStatus === 'error') {
-            throw cachedInstance._promiseError
+          if (tuple[0]._promiseStatus === 'loading') {
+            throw tuple[0].promise
+          } else if (tuple[0]._promiseStatus === 'error') {
+            throw tuple[0]._promiseError
           }
         }
 
-        return subscribe ? cachedInstance.getState() : cachedInstance
+        if (!subscribe) return tuple
+
+        const state = tuple[0].getState()
+
+        if (state === tuple[1]) return tuple
+
+        return (tuple = [tuple[0], state])
       },
     ]
   }, [instance, subscribe, suspend])
 
-  useSyncExternalStore(subscribeFn, getSnapshot, getSnapshot)
-
-  return instance
+  return useSyncExternalStore(subscribeFn, getSnapshot, getSnapshot)[0]
 }

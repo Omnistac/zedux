@@ -126,6 +126,20 @@ export type HierarchyDescriptor<State = any> =
   | Reducer<State>
   | null
 
+export interface Job {
+  flags?: number
+  keyHash?: string
+  task: () => void
+  /**
+   * 0 - UpdateStore
+   * 1 - InformSubscribers
+   * 2 - EvaluateGraphNode
+   * 3 - UpdateExternalDependent
+   * 4 - RunEffect
+   */
+  type: 0 | 1 | 2 | 3 | 4
+}
+
 export type MachineHook<
   StateNames extends string,
   EventNames extends string,
@@ -178,6 +192,10 @@ export type Reducer<State = any> = (
   state: State | undefined,
   action: Action
 ) => State
+
+export interface Scheduler {
+  scheduleNow(newJob: Job, runIfRunning?: boolean): void
+}
 
 export type Selector<State = any, Derivation = any> = (
   state: State

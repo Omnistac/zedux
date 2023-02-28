@@ -324,11 +324,11 @@ describe('store composition', () => {
     })
 
     expect(calls).toEqual([
-      'parent',
-      'child1',
-      'grandchild12',
-      'grandchild11',
       'greatGrandchild111',
+      'grandchild11',
+      'grandchild12',
+      'child1',
+      'parent',
     ])
   })
 })

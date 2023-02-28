@@ -39,7 +39,6 @@ export const doSubscribe = <State>(
           sourceType: 'Injector',
           type: 'state changed',
         },
-        0,
         false
       )
 
