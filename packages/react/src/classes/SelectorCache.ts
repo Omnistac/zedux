@@ -432,10 +432,10 @@ export class SelectorCache {
         if (this.ecosystem._mods.stateChanged) {
           this.ecosystem.modBus.dispatch(
             pluginActions.stateChanged({
+              cache: cache as SelectorCacheItem<any, any[]>,
               newState: result,
               oldState: cache.result,
               reasons: cache.nextEvaluationReasons,
-              selectorCache: cache as SelectorCacheItem<any, any[]>,
             })
           )
         }
