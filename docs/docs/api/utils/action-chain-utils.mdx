@@ -1,0 +1,160 @@
+---
+id: action-chain-utils
+title: Action Chain Utils
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import {
+  addMeta,
+  getMetaData,
+  hasMeta,
+  removeAllMeta,
+  removeMeta,
+} from '@zedux/react'
+```
+
+Zedux exports a few functions that it uses internally when working with [ActionChain objects](../types/ActionChain). The only one you should probably ever use is [`removeAllMeta()`](#removeallmeta).
+
+## `addMeta`
+
+Wraps the given action or ActionChain in an [ActionMeta node](../types/ActionChain#actionmeta) with the given type and metadata.
+
+Signature:
+
+```ts
+addMeta = (actionChain, metaType, metaData?) => actionChain
+```
+
+<Legend>
+  <Item name="actionChain">
+    <p>Required. The action or ActionChain object to wrap.</p>
+  </Item>
+  <Item name="metaType">
+    <p>
+      Required. A string. Will be set as the ActionMeta node's{' '}
+      <code>.metaType</code> property.
+    </p>
+  </Item>
+  <Item name="metaData">
+    <p>
+      Optional. Can be anything. Will be set as the ActionMeta node's{' '}
+      <code>.metaData</code> property.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      A new ActionChain wrapping the given ActionChain in a new ActionMeta node.
+    </p>
+  </Item>
+</Legend>
+
+## `getMetaData`
+
+Finds a `.metaData` value in the given ActionChain.
+
+Signature:
+
+```ts
+getMetaData = (actionChain, metaType) => metaData
+```
+
+<Legend>
+  <Item name="actionChain">
+    <p>Required. The ActionChain object to search.</p>
+  </Item>
+  <Item name="metaType">
+    <p>
+      Required. A string that matches (===) the <code>.metaType</code> property
+      of a node in the ActionChain.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      The <code>.metaData</code> value of the first node with the given{' '}
+      <code>.metaType</code>.
+    </p>
+  </Item>
+</Legend>
+
+## `hasMeta`
+
+Checks if the given ActionChain contains an ActionMeta node with the given `.metaType`.
+
+Signature:
+
+```ts
+hasMeta = (actionChain, metaType) => boolean
+```
+
+<Legend>
+  <Item name="actionChain">
+    <p>Required. The ActionChain object to check.</p>
+  </Item>
+  <Item name="metaType">
+    <p>Required. A string.</p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      True if the given ActionChain contains an ActionMeta node with the given{' '}
+      <code>metaType</code>.
+    </p>
+  </Item>
+</Legend>
+
+## `removeAllMeta`
+
+Returns the action wrapped by the given ActionChain object.
+
+This is the one you might find useful. [Effects subscribers](../types/Subscriber#effects) of composed stores receive ActionChain objects that you won't usually care about, except when implementing time travel. Use this to remove the ActionMeta nodes and get the raw action.
+
+Signature:
+
+```ts
+removeAllMeta = actionChain => action
+```
+
+<Legend>
+  <Item name="actionChain">
+    <p>Required. The ActionChain object to unwrap.</p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      The wrapped <Link to="../types/Action">action</Link> object.
+    </p>
+  </Item>
+</Legend>
+
+## `removeMeta`
+
+Removes a single ActionMeta node in the given ActionChain by `metaType`.
+
+Signature:
+
+```ts
+removeMeta = (actionChain, metaType) => newChain
+```
+
+<Legend>
+  <Item name="actionChain">
+    <p>Required. The ActionChain object to modify.</p>
+  </Item>
+  <Item name="metaType">
+    <p>
+      Required. A string matching a <code>.metaType</code> property of an
+      ActionMeta node in the given ActionChain.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      A brand new ActionChain object with the first matched ActionMeta node
+      removed.
+    </p>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Store Composition guide](../../advanced/store-composition)
+- [The Time Travel guide](../../advanced/time-travel)

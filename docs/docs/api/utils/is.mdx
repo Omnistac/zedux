@@ -1,0 +1,62 @@
+---
+id: is
+title: is
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+A utility function that Zedux uses internally to identify class instances.
+
+Zedux uses this instead of `instanceof`. Zedux can't use JavaScript's `instanceof` because Zedux is designed to work across windows, with other instances of itself. `instanceof` can't recognize classes that are instances of a different class reference, even if they're the same "class" in Zedux's eyes.
+
+`is()` works by checking if a value's `.$$typeof` property matches a static property with the same name on the given class. These `$$typeof` properties are JavaScript Symbols, which are properly shared across windows.
+
+## Example
+
+```ts
+import { createStore, is, Store } from '@zedux/react'
+
+const store = createStore()
+is(store, Store) // true
+
+class MyCustomStore extends Store {}
+
+const customStore = new MyCustomStore()
+is(customStore, Store) // true
+```
+
+## Accepted Classes
+
+Here's the full list of Zedux classes that can be checked with `is()`:
+
+- [`Store`](../classes/Store)
+- [`AtomApi`](../classes/AtomApi)
+- [`SelectorCacheItem`](../classes/SelectorCacheItem)
+- [`AtomInstance`](../classes/AtomInstance)
+
+You can of course make your own too but just why.
+
+## Definition
+
+```ts
+is = (value, classToCheck) => boolean
+```
+
+<Legend>
+  <Item name="value">
+    <p>
+      The value that may or may not be an instance of <code>classToCheck</code>.
+      Can be anything.
+    </p>
+  </Item>
+  <Item name="classToCheck">
+    <p>
+      A class that contains a public, static <code>$$typeof</code> symbol.
+    </p>
+  </Item>
+  <Item name="Returns">
+    <p>
+      True if <code>value</code> is an instance of <code>classToCheck</code>.
+    </p>
+  </Item>
+</Legend>
