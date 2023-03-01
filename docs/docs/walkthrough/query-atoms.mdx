@@ -3,6 +3,299 @@ id: query-atoms
 title: Query Atoms
 ---
 
-:::note
-🚧 This page is under construction
+The [Atom APIs](atom-apis) and [Suspense](suspense) walkthroughs taught how to set an atom instance's promise. But promises themselves innately carry state like:
+
+- Is the promise resolved?
+- What's the resolved value?
+- If the promise rejected, what was the error?
+
+Rather than translating this "promise state" into state yourself, you can make Zedux do it for you.
+
+:::tip you will learn
+
+- How to create "query atoms"
+- How to get more control with `injectPromise()`
+
 :::
+
+## Query Atoms
+
+To recap [the Atom APIs walkthrough](atom-apis): A query atom is just an atom whose state factory returns `api(promise)`.
+
+```ts
+const fetcherAtom = atom('fetcher', (url: string) => {
+  const promise = fetch(url).then(result => result.json())
+
+  return api(promise)
+})
+```
+
+Compared to the `fetcherAtom` in [the suspense walkthrough](suspense#quick-overview), this simplified a lot:
+
+- We no longer have to inject a store and track state manually.
+- We don't have to `.setPromise` anymore - the promise passed to `api()` serves as both the atom's state source and suspense promise.
+
+### State Shape
+
+Query atoms have their state set to an object with the following shape:
+
+```ts
+interface PromiseState<T> {
+  data?: T
+  error?: Error
+  isError: boolean
+  isLoading: boolean
+  isSuccess: boolean
+  status: PromiseStatus
+}
+
+type PromiseStatus = 'error' | 'loading' | 'success'
+```
+
+:::tip
+They're called "query atoms" because they mimic React Query queries.
+:::
+
+The resolved promise value will be set as the `.data` property:
+
+```ts
+function UsersList() {
+  const { data } = useAtomValue(fetcherAtom, ['/users'])
+
+  return (
+    <ul>
+      {data.map(user => (
+        <li key={user}>{user}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+Here's the `fetcherAtom` example from the suspense walkthrough refactored to use query atoms:
+
+```tsx live ecosystemId=query-atoms/example resultVar=Users
+// mock stuff for example:
+const mockUsers = ['Joe', 'Jim', 'Sally', 'Jill', 'Bob', 'Jamie']
+const mockFetch = () =>
+  new Promise(resolve =>
+    setTimeout(
+      () => resolve([...mockUsers].sort(() => Math.random() - 0.5)),
+      1500
+    )
+  )
+
+// start here:
+const fetcherAtom = atom('fetcher', (url: string) => {
+  const promise = mockFetch(url)
+
+  return api(promise)
+})
+
+function RefreshUsers() {
+  const instance = useAtomInstance(fetcherAtom, ['/users'], {
+    suspend: false,
+  })
+
+  return <button onClick={() => instance.invalidate()}>Refresh</button>
+}
+
+function UsersList() {
+  const { data } = useAtomValue(fetcherAtom, ['/users'])
+
+  return (
+    <ul>
+      {data.map(user => (
+        <li key={user}>{user}</li>
+      ))}
+    </ul>
+  )
+}
+
+function Users() {
+  return (
+    <>
+      <Suspense fallback={<div>fetching users...</div>}>
+        <UsersList />
+      </Suspense>
+      <RefreshUsers />
+    </>
+  )
+}
+```
+
+## `injectPromise`
+
+So far we've been creating our promise inline in the state factory. While this is certainly a supported pattern, there are downsides:
+
+- A side effect is running immediately when the atom instance is initialized. Since atoms are often initialized during a React render, this means we're kicking off side effects during render 😮. Especially when using SSR, this can be a problem.
+
+- The fetch will run every time this `fetcherAtom` instance is reevaluated. In Zedux, we typically do have more control over when evaluations happen than we do over rerenders in React components. But relying on this pattern still makes code more brittle. For example, it's easy for someone to add code later that causes this atom to reevaluate in new cases and voila we have a bug.
+
+We could use `injectMemo` to at least prevent the fetch from running unnecessarily on reevaluations.
+
+```ts
+const promise = injectMemo(() => fetch(url), [url])
+```
+
+But we still have the first problem of the side effect running immediately. A separate injector to isolate these side effects during SSR would be nice. Fortunately there is an injector that solves all of the above: `injectPromise`.
+
+```ts
+const fetcherAtom = atom('fetcher', (url: string) => {
+  const queryApi = injectPromise(() => fetch(url).then(data => data.json()), [
+    url,
+  ])
+
+  return queryApi
+})
+```
+
+`injectPromise` gives you the skeleton of a query atom. The first param is a promise factory function that returns your promise. The second param is a dependency array, just like other injectors like `injectEffect` and `injectMemo`. Zedux will only rerun the promise factory when deps change.
+
+`injectPromise` returns an [AtomApi](../api/classes/AtomApi) with:
+
+- A `.store` whose state looks like a query atom's state (see the above `PromiseState` interface).
+- An attached `.promise` set to the promise returned from your promise factory.
+
+### AtomApi Composition
+
+The AtomApi can then be returned directly from your state factory as your atom's api. Or you can use the returned store and promise however you want - e.g. to compose them together with other stores/promises:
+
+```ts
+import {
+  atom,
+  createStore,
+  injectMemo,
+  injectPromise,
+  injectStore,
+} from '@zedux/react'
+
+// an atom that fetches a blog post and all its comments:
+const blogPostAtom = atom('blogPost', (id: string) => {
+  const commentsApi = injectPromise(
+    () => fetch(`/comments/${id}`).then(data => data.json()),
+    [id],
+    // the parent store will subscribe - these child stores don't need to:
+    { subscribe: false }
+  )
+
+  const postApi = injectPromise(
+    () => fetch(`/post/${id}`).then(data => data.json()),
+    [id],
+    { subscribe: false }
+  )
+
+  // compose both stores together:
+  const store = injectStore()
+  store.use({ comments: commentsApi.store, post: postApi.store })
+
+  const promise = injectMemo(
+    () => Promise.all([commentsApi.promise, postApi.promise]),
+    [commentsApi.promise, postApi.promise]
+  )
+
+  return api(store).setPromise(promise)
+})
+```
+
+### Cleanup
+
+Zedux passes an [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController) to the promise factory. Hook into this to cancel fetches or otherwise clean up your async flow.
+
+```ts
+const fetcherAtom = atom('fetcher', (url: string) => {
+  const queryApi = injectPromise(
+    controller =>
+      fetch(url, { signal: controller.signal }).then(data => data.json()),
+    [url]
+  )
+
+  return queryApi
+})
+```
+
+Just like `injectEffect`'s cleanup, Zedux will abort the signal whenever the promise factory runs again due to deps changing and when the atom instance is destroyed.
+
+### Example
+
+Let's see `injectPromise` plugged into the `fetcherAtom` example:
+
+```tsx live ecosystemId=suspense/injectPromise resultVar=Users
+// mock stuff for example:
+const mockUsers = ['Joe', 'Jim', 'Sally', 'Jill', 'Bob', 'Jamie']
+const mockFetch = () =>
+  new Promise(resolve =>
+    setTimeout(
+      () => resolve([...mockUsers].sort(() => Math.random() - 0.5)),
+      1500
+    )
+  )
+
+// start here:
+const fetcherAtom = atom('fetcher', (url: string) => {
+  const queryApi = injectPromise(() => mockFetch(url), [url])
+
+  return queryApi
+})
+
+function RefreshUsers() {
+  const [isPending, startTransition] = useTransition()
+  const instance = useAtomInstance(fetcherAtom, ['/users'], {
+    suspend: false,
+  })
+
+  return (
+    <button onClick={() => instance.invalidate()}>
+      Refresh (does nothing!)
+    </button>
+  )
+}
+
+function UsersList() {
+  const { data } = useAtomValue(fetcherAtom, ['/users'])
+
+  return (
+    <ul>
+      {data.map(user => (
+        <li key={user}>{user}</li>
+      ))}
+    </ul>
+  )
+}
+
+function Users() {
+  return (
+    <>
+      <Suspense fallback={<div>fetching users...</div>}>
+        <UsersList />
+      </Suspense>
+      <RefreshUsers />
+    </>
+  )
+}
+```
+
+Clicking the button now does nothing because `injectPromise` prevents the promise from being recreated. The params we pass it (`[url]`) aren't changing, so Zedux doesn't rerun the promise factory.
+
+:::tip challenge!
+Try modifying the above sandbox to make the button work again while still using `injectPromise` (tip: As with most things in Zedux, there are several ways to go about it).
+:::
+
+## Not React Query
+
+If you know React Query, you've surely noticed that these "query atoms" lack tons of features that React Query has. This is primarily because Zedux's objective is different from React Query's: React Query is a server cache manager. Zedux is _good_ at managing server caches and is extensible enough to at least match React Query in that regard, but Zedux is primarily a client state manager like Recoil and Redux.
+
+At Omnistac, we use lots of sockets and observables to shuttle highly-volatile state around. Zedux is specifically designed for this use case, so may even be the better server cache manager for similar apps.
+
+While we could add pagination, infinite query helpers, window focus refetching, etc, etc to Zedux core, it would bloat the codebase significantly. Query atoms should be sufficient promise handling for most apps. For everything else, we may create a `@zedux/query` package someday that adds injectors/helpers for more niche query operations. In the meantime:
+
+You can use both. In fact we designed Zedux in a way that allowed us to dual-wield Redux and Zedux for years. It's easily possible to provide a QueryClient to an ecosystem via [ecosystem context](../api/classes/Ecosystem#context) or creating a `reactQueryAtom`.
+
+## Recap
+
+- Create query atoms with `return api(promise)`
+- Gain more control over query atom state with `injectPromise()`.
+
+## Next Steps
+
+Atoms drive Zedux's powerful DI model, and stores are the backbone of atoms. It's time to learn all about [the Zedux store](stores).
