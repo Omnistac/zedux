@@ -256,17 +256,28 @@ myStore.setState(() => {
 
 ### Effects Subscribers
 
-These effects subscribers are meant to kick off side effects, including running observables, generators, or other async flows.
+These effects subscribers are meant to kick off side effects, including logging or running observables, generators, or other async flows.
 
 ```ts
-myStore.subscribe({
-  effects: ({ action, effect, error, newState, oldState, store }) => ...
+const subscription = myStore.subscribe({
+  effects: ({ action, newState, oldState }) => {
+    console.log('state changed', { action, newState, oldState })
+  },
 })
 ```
 
 :::tip unlimited power!!!
 Effects subscribers receive all the info needed to implement time travel for the store. This includes all info needed to undo and replicate all state changes in all child stores 😮. More on this in [the time travel walkthrough](../advanced/time-travel).
 :::
+
+These subscribers receive a special "StoreEffect" object. See the full definition [here](../api/types/StoreEffect).
+
+There are 2 differences between effects subscribers and normal subscribers:
+
+- Effects subscribers are called every time an action is dispatched to the store, regardless of whether it triggered a state update.
+- Effects subscribers are called whether the dispatch completed successfully or threw an error.
+
+These distinctions give effects subscribers one special superpower in particular: They can be used to turn a store into an observable "message bus". We call these buses "action streams". That's right, Zedux stores can be simultaneously consumed as streams of actions and streams of state.
 
 ### Combined Subscribers
 
@@ -356,7 +367,7 @@ Sometimes you will encounter an asynchronous evaluation loop, e.g. with `injectE
 
 Since the above only applies during synchronous evaluation, these situations require something extra. It may be possible in some cases to fix this by narrowing your effect's dependency so that only a piece of state causes the effect to rerun. Or you may be able to reorganize your state so that the effect updates a separate store than the one it depends on.
 
-If all else fails, you can pass [`internalTypes.ignore`](../api/constants/internalTypes#ignore) as an action's `meta` property to prevent Zedux from reevaluating this atom on this particular state change.
+If all else fails, you can pass [`internalTypes.ignore`](../api/utils/internalTypes#ignore) as an action's `meta` property to prevent Zedux from reevaluating this atom on this particular state change.
 
 ```ts
 import { internalTypes } from '@zedux/react'
@@ -368,7 +379,7 @@ myStore.setState(newState, internalTypes.ignore)
 ```
 
 :::info anti-pattern warning
-Use this _extremely_ sparingly. It can cause hard-to-find bugs.
+Use this _extremely_ sparingly (or just don't!). It can cause hard-to-find bugs.
 :::
 
 ### Replacing Store References
