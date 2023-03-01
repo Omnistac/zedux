@@ -3,7 +3,7 @@ id: resets
 title: Resets
 ---
 
-There are many situations where you may want to reset the state of one or more atoms. Zedux has several ways to accomplish state resets.
+There are many situations where you may want to reset the state of one or more atoms. While Zedux doesn't have any built-in atom reset helpers like Recoil or Jotai, there are many ways to go about resetting state.
 
 :::tip you will learn:
 
@@ -13,6 +13,346 @@ There are many situations where you may want to reset the state of one or more a
 
 :::
 
-:::note
-🚧 This page is under construction
+## Invalidation
+
+For atoms that don't inject their own stores, including [query atoms](query-atoms), you can use `instance.invalidate()` to essentially "reset" an atom instance's state:
+
+```tsx
+// this atom never reevaluates unless someone calls `instance.invalidate()`:
+const todoListAtom = atom('todoList', () => [])
+
+const TodoResetButton = () => {
+  const { invalidate } = useAtomInstance(todoListAtom)
+
+  return <button onClick={invalidate}>Reset</button>
+}
+```
+
+Here's another example using the ecosystem to prevent registering a static dependency on the atom instance:
+
+```tsx
+const todoListAtom = atom('todoList', () => [])
+
+const TodoResetButton = () => {
+  const ecosystem = useEcosystem()
+
+  return (
+    <button
+      onClick={() => ecosystem.weakGetInstance(todoListAtom)?.invalidate()}
+    >
+      Reset
+    </button>
+  )
+}
+```
+
+## Exports
+
+Atoms can export anything. This means they can export a function that selectively "resets" whatever you want:
+
+```tsx
+const todoListAtom = atom('todoList', () => {
+  const store = injectStore([])
+
+  return api(store).setExports({
+    reset: () => store.setState([]),
+  })
+})
+
+const TodoResetButton = () => {
+  const { reset } = useAtomInstance(todoListAtom).exports
+
+  return <button onClick={reset}>Reset</button>
+}
+```
+
+Here's that example expanded in a live sandbox:
+
+```tsx live ecosystemId=resets/exports resultVar=Todos
+const todoListAtom = atom('todoList', () => {
+  const store = injectStore<string[]>([])
+
+  const addTodo = (text: string) =>
+    store.setState(state => Array.from(new Set([...state, text])))
+
+  const reset = () => store.setState([])
+
+  return api(store).setExports({
+    addTodo,
+    reset,
+  })
+})
+
+function Controls() {
+  const [text, setText] = useState('')
+  const { addTodo, reset } = useAtomInstance(todoListAtom).exports
+
+  return (
+    <div>
+      <input onChange={event => setText(event.target.value)} value={text} />
+      <button
+        onClick={() => {
+          addTodo(text)
+          setText('')
+        }}
+      >
+        + Add Todo
+      </button>
+      <button onClick={reset}>Reset</button>
+    </div>
+  )
+}
+
+function TodoList() {
+  const todos = useAtomValue(todoListAtom)
+
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo}>{todo}</li>
+      ))}
+    </ul>
+  )
+}
+
+function Todos() {
+  return (
+    <>
+      <TodoList />
+      <Controls />
+    </>
+  )
+}
+```
+
+## Force Destruction
+
+As seen in the [destruction walkthrough](destruction), every atom instance can be force-destroyed. This destroys the atom instance regardless of whether it has dependents.
+
+If the atom instance does have dependents, those dependents will immediately recreate the instance. This resurrected instance is a completely new instance - fresh state, exports, promise, everything.
+
+Just pass `true` to [`instance.destroy()`](../api/classes/AtomInstance#destroy):
+
+```tsx
+const todoListAtom = atom('todoList', () => [])
+
+const TodoResetButton = () => {
+  // don't destructure the `destroy` AtomInstance class method:
+  const instance = useAtomInstance(todoListAtom)
+
+  return <button onClick={() => instance.destroy(true)}>Reset</button>
+}
+```
+
+This is probably the most generally useful method of resetting state.
+
+## Multiple Atoms
+
+So far we've looked at ways to reset a single atom instance. To reset several atom instances at once, there are many ways to go about it. For example:
+
+- Create a [custom injector](custom-injectors) that hooks into global "reset" events and runs a callback.
+- Create a "resetStream" atom that exposes an RxJS observable that can be piped off of to perform resets.
+- Create an [ecosystem plugin](../advanced/plugins) or external helper with access to the ecosystem that invalidates or force-destroys multiple instances.
+
+### Using A Stream
+
+Here's an example using a custom `injectReset` injector to hook into a universal "reset stream":
+
+```tsx
+// reset helpers:
+const resetAtom = atom('reset', null)
+const injectReset = callback => {
+  const resetInstance = injectAtomInstance(resetAtom)
+
+  injectEffect(() => {
+    const subscription = resetInstance.store.subscribe({
+      effects: () => callback(),
+    })
+
+    return () => subscription.unsubscribe()
+  }, [resetInstance])
+}
+
+// example usage:
+const todoListAtom = atom('todoList', () => {
+  const store = injectStore([])
+
+  // highlight-next-line
+  injectReset(() => store.setState([]))
+
+  return store
+})
+
+const GlobalResetButton = () => {
+  const instance = useAtomInstance(resetAtom)
+
+  return (
+    <button onClick={() => instance.dispatch({ type: 'reset' })}>Reset</button>
+  )
+}
+```
+
+And here's that example expanded in a live sandbox:
+
+```tsx live ecosystemId=resets/using-a-stream resultVar=Todos
+// reset helpers:
+const resetAtom = atom('reset', () => {
+  const store = injectStore()
+
+  const reset = () => store.dispatch({ type: 'reset' })
+
+  return api(store).setExports({ reset })
+})
+
+const injectReset = callback => {
+  const resetInstance = injectAtomInstance(resetAtom)
+
+  injectEffect(() => {
+    const subscription = resetInstance.store.subscribe({
+      effects: () => callback(),
+    })
+
+    return () => subscription.unsubscribe()
+  }, [resetInstance])
+}
+
+// todos app:
+const todoListAtom = atom('todoList', () => {
+  const store = injectStore<string[]>([])
+
+  const addTodo = (text: string) =>
+    store.setState(state => Array.from(new Set([...state, text])))
+
+  injectReset(() => store.setState([]))
+
+  return api(store).setExports({ addTodo })
+})
+
+function Controls() {
+  const [text, setText] = useState('')
+  const { addTodo } = useAtomInstance(todoListAtom).exports
+  const { reset } = useAtomInstance(resetAtom).exports
+
+  return (
+    <div>
+      <input onChange={event => setText(event.target.value)} value={text} />
+      <button
+        onClick={() => {
+          addTodo(text)
+          setText('')
+        }}
+      >
+        + Add Todo
+      </button>
+      <button onClick={reset}>Reset</button>
+    </div>
+  )
+}
+
+function TodoList() {
+  const todos = useAtomValue(todoListAtom)
+
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo}>{todo}</li>
+      ))}
+    </ul>
+  )
+}
+
+function Todos() {
+  return (
+    <>
+      <TodoList />
+      <Controls />
+    </>
+  )
+}
+```
+
+## Ecosystem Resets
+
+To surgically reset the state of every atom instance in the ecosystem, you'd have to follow one of the above approaches. But for a basic global reset, you can use [`ecosystem.reset()`](../api/classes/Ecosystem#reset).
+
+A single `ecosystem.reset()` call will:
+
+- Force-destroy every atom instance and cached atom selector in the ecosystem.
+- Run the previous [`onReady` function](../api/types/EcosystemConfig#onready)'s cleanup function (if any).
+- Rerun the `onReady` function (if any).
+- Allow all external dependents (e.g. React components) to recreate their dependencies. These are the "leaf nodes" of the graph.
+- The leaf nodes will recreate their own dependencies and so on up the graph tree.
+
+The final result should contain every non-stale atom instance and every cached selector that existed before the reset, but of course as freshly initialized new references.
+
+```tsx live ecosystemId=resets/ecosystem-resets resultVar=Todos
+const todoListAtom = atom('todoList', () => {
+  const store = injectStore<string[]>([])
+
+  const addTodo = (text: string) =>
+    store.setState(state => Array.from(new Set([...state, text])))
+
+  return api(store).setExports({ addTodo })
+})
+
+function Controls() {
+  const [text, setText] = useState('')
+  const { addTodo } = useAtomInstance(todoListAtom).exports
+  // just grab the ecosystem:
+  const ecosystem = useEcosystem()
+
+  return (
+    <div>
+      <input onChange={event => setText(event.target.value)} value={text} />
+      <button
+        onClick={() => {
+          addTodo(text)
+          setText('')
+        }}
+      >
+        + Add Todo
+      </button>
+      <button onClick={() => ecosystem.reset()}>Reset</button>
+    </div>
+  )
+}
+
+function TodoList() {
+  const todos = useAtomValue(todoListAtom)
+
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo}>{todo}</li>
+      ))}
+    </ul>
+  )
+}
+
+function Todos() {
+  return (
+    <>
+      <TodoList />
+      <Controls />
+    </>
+  )
+}
+```
+
+The ecosystem can be reset anywhere - whether above or below an [`EcosystemProvider`](../api/components/EcosystemProvider) or completely outside React.
+
+:::tip
+While `ecosystem.reset()` is incredibly effective, you probably won't find yourself using it in most apps. An approach like the `injectReset()` example adds more boilerplate, but is more powerful.
 :::
+
+## Recap
+
+- Use `instance.invalidate()` to "reset" atoms that don't use stores in their state factory.
+- Use `instance.destroy(true)` to "reset" any atom by fully destroying and recreating it.
+- Use atom exports to gain more control over precisely what is reset.
+- Hook into another atom or external stream for the most control.
+- Reset an entire ecosystem with `ecosystem.reset()`
+
+## Next Steps
+
+There remains but [one solitary concept](state-machines) to master ere thou be crowned king of the state. For now.
