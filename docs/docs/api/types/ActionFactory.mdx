@@ -43,13 +43,9 @@ type ActionFactory = {
 }
 ```
 
-Returns an [action object](Action) for [dispatching](../classes/Store#dispatch) to [stores](../classes/Store).
+Returns an [action object](Action) ready to be [dispatched](../classes/Store#dispatch) to a [store](../classes/Store).
 
-### `payload`
-
-Optional. For TS users, it will be required if a Payload generic was passed to `actionFactory`.
-
-This will be set as the `payload` property of the returned action object.
+Passing the payload is required if a Payload generic was passed to `actionFactory` (this is obviously only enforced for TS users). This will be set as the `payload` property of the returned action object.
 
 ## See Also
 

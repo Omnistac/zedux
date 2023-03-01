@@ -3,51 +3,172 @@ id: EcosystemConfig
 title: EcosystemConfig
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 The config object passed to [the `createEcosystem()` factory](../factories/createEcosystem).
 
 ## Definition
 
 ```ts
-interface EcosystemConfig<Context extends Record<string, any> = any> {
+interface EcosystemConfig<
+  Context extends Record<string, any> | undefined = any
+> {
+  complexParams?: boolean
   context?: Context
+  defaultTtl?: number
   destroyOnUnmount?: boolean
   flags?: string[]
   id?: string
-  overrides?: Atom[]
-  onReady?: (ecosystem: Ecosystem, prevContext?: Context) => void
+  onReady?: (
+    ecosystem: Ecosystem<Context>,
+    prevContext?: Context
+  ) => MaybeCleanup
+  overrides?: AtomBase<any, any[], any>[]
+  ssr?: boolean
 }
 ```
 
 All fields are optional. It is recommended to at least pass an id.
 
-### `context`
+<Legend>
+  <Item name="complexParams">
+    <p>
+      A boolean. Default <code>false</code>. Whether{' '}
+      <Link to="../../advanced/complex-params">
+        "complex" atom and selector params
+      </Link>{' '}
+      should be allowed.
+    </p>
+  </Item>
+  <Item name="context">
+    <p>
+      An object. The initial{' '}
+      <Link to="../classes/Ecosystem#context">context</Link> for the ecosystem.
+    </p>
+  </Item>
+  <Item name="defaultTtl">
+    <p>
+      A number. Default <code>-1</code> (meaning infinite). Will be set as the{' '}
+      <Link to="../classes/Atom#ttl">
+        <code>ttl</code>
+      </Link>{' '}
+      or all atoms that don't specify one.
+    </p>
+  </Item>
+  <Item name="destroyOnUnmount">
+    <p>
+      A boolean. Defaults to <code>false</code> for ecosystems created via{' '}
+      <Link to="../factories/createEcosystem">
+        <code>createEcosystem()</code>
+      </Link>
+      . Defaults to <code>true</code> for ecosystems created automatically by rendering
+      an <Link to="../components/EcosystemProvider">
+        <code>&lt;EcosystemProvider&gt;</code>
+      </Link>.
+    </p>
+    <p>
+      Whether the ecosystem should destroy itself when its last{' '}
+      <code>&lt;EcosystemProvider&gt;</code> unmounts. Can be useful for
+      testing.
+    </p>
+  </Item>
+  <Item name="flags">
+    <p>
+      An array of strings. Will be set as the{' '}
+      <Link to="../classes/Ecosystem#flags">ecosystem's flags</Link>.
+    </p>
+  </Item>
+  <Item name="id">
+    <p>
+      A string. Identifies the ecosystem in the{' '}
+      <Link to="../utils/internal-store-utils">
+        <code>internalStore</code>
+      </Link>{' '}
+      and in dev tools. If no id is specified when creating the ecosystem, one
+      will be generated randomly.
+    </p>
+  </Item>
+  <Item name="onReady">
+    <p>
+      A function. Will be called as soon as the ecosystem has initialized. Is
+      also called every time the ecosystem is{' '}
+      <Link to="../classes/Ecosystem#reset">reset</Link>.
+    </p>
+    <p>
+      This is the ideal place to bootstrap data and preload atoms. Since this
+      function is called on reset, it can be used to ensure the ecosystem's
+      "necessary data" is always loaded.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`(ecosystem, prevContext?) => maybeCleanup`}</Ts>
+    <Legend>
+      <Item name="ecosystem">A reference to this ecosystem</Item>
+      <Item name="prevContext">
+        <p>
+          A reference to the previous context value of the ecosystem.{' '}
+          <code>ecosystem.reset()</code> can be optionally given a new context
+          object. If that happens, the ecosystem's context will be updated
+          before this function is called. So a reference to the old context is
+          passed here.
+        </p>
+        <p>
+          This parameter will be undefined the first time <code>onReady</code>{' '}
+          runs. Thus you can use this to check if this is the initial run.
+        </p>
+        <Ts>{`const ecosystem = createEcosystem({
+  context: { redux: reduxStore },
+  onReady: (ecosystem, prevContext) => {
+    if (!prevContext) {
+      // this is the initial run
+    } else {
+      // onReady is running after an ecosystem reset
+      const nextContext = ecosystem.context
+      
+      if (prevContext.redux !== nextContext.redux) {
+        // ecosystem.reset() changed the redux store reference
+      }
+    }
+  }
+})\n
+ecosystem.reset() // doesn't change context (prevContext === ecosystem.context)
+ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
+        <p>
+          Note that replacing context is an all-or-nothing deal. Spread{' '}
+          <code>ecosystem.context</code> into a new object to update only part
+          of the context:
+        </p>{' '}
+        <Ts>{`ecosystem.reset({ ...ecosystem.context, specialField: 'new val' })`}</Ts>
+      </Item>
+      <Item name="Returns">
+        Either <code>undefined</code> or a cleanup function that will be called
+        when the ecosystem is reset or destroyed.
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="overrides">
+    <p>
+      An array of <Link to="../classes/Atom">atoms</Link>. Will be set as the{' '}
+      <Link to="../classes/Ecosystem#overrides">ecosystem's overrides</Link>.
+    </p>
+    <p>
+      Used for{' '}
+      <Link to="../../walkthrough/overrides">Dependency Injection</Link>.
+    </p>
+  </Item>
+  <Item name="ssr">
+    <p>
+      A boolean. Default <code>false</code>. Turns on SSR mode for the entire
+      ecosystem.
+    </p>
+    <p>
+      See <Link to="../../advanced/ssr">the SSR guide</Link>.
+    </p>
+  </Item>
+</Legend>
 
-An object. The initial [context](../classes/Ecosystem#context) for the ecosystem.
+## See Also
 
-### `destroyOnUnmount`
-
-A boolean. Whether the ecosystem should destroy itself when its last [`<EcosystemProvider>`](../components/EcosystemProvider) unmounts. Useful for testing.
-
-### `flags`
-
-An array of strings. Will be set as the [ecosystem's flags](../classes/Ecosystem#flags).
-
-### `id`
-
-A string. Identifies the ecosystem in the [internalStore](../constants/internalStore) and in dev tools.
-
-### `onReady`
-
-A function. Will be called as soon as the ecosystem has initialized. Can be used to bootstrap data and preload atoms.
-
-Signature:
-
-```ts
-(ecosystem, prevContext?) => void
-```
-
-Receives the freshly initialized or reset ecosystem. On [reset](../classes/Ecosystem#reset) also receives the previous context object as the second parameter.
-
-### `overrides`
-
-An array of [atoms](../classes/Atom). Will be set as the [ecosystem's overrides](../classes/Ecosystem#overrides). Used for [Dependency Injection](../../walkthrough/dependency-injection).
+- [The Ecosystems walkthrough](../../walkthrough/ecosystems)
+- [The `Ecosystem` class](../classes/Ecosystem)
+- [`createEcosystem()`](../factories/createEcosystem)
+- [`<EcosystemProvider>`](../components/EcosystemProvider)

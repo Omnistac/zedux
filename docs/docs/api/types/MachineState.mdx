@@ -3,6 +3,132 @@ id: MachineState
 title: MachineState
 ---
 
-:::note
-🚧 This page is under construction
-:::
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+The object returned from [`injectMachineStore()`](../injectors/injectMachineStore)'s `createState` factory. The MachineState's API is used to define the state machine's transitions, listeners, and guards.
+
+## Creation
+
+```ts
+const machineStore = injectMachineStore(createState => {
+  const onState = createState('on')
+  const offState = createState('off')
+
+  return [onState.on('toggle', 'off'), offState.on('toggle', 'on')]
+})
+```
+
+## Definition
+
+```ts
+interface MachineState<
+  Context extends Record<string, any> | undefined = any,
+  Name extends string = string,
+  Events extends string[] = [],
+  ChildStates extends string[] = []
+> {
+  on: <E extends string, S extends string>(
+    eventName: E,
+    nextState: S,
+    guard?: (context: Context) => boolean
+  ) => MachineState<Context, Name, [...Events, E], [...ChildStates, S]>
+  onEnter: (
+    listener: MachineHook<ArrToUnion<ChildStates>, ArrToUnion<Events>, Context>
+  ) => MachineState<Context, Name, Events, ChildStates>
+  onLeave: (
+    listener: MachineHook<ArrToUnion<ChildStates>, ArrToUnion<Events>, Context>
+  ) => MachineState<Context, Name, Events, ChildStates>
+  stateName: Name
+}
+```
+
+<Legend>
+  <Item name="on">
+    <p>
+      Defines a transition for the machine from the current state to another
+      state in the machine.
+    </p>
+    <p>
+      Can be given a guard function to conditionally prevent the transition from
+      occurring.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`on = (eventName, nextState, guard?) => machineState`}</Ts>
+    <Legend>
+      <Item name="eventName">
+        <p>
+          Required. A string. Represents an event name that will be sent to the
+          machine store via{' '}
+          <Link to="../classes/MachineStore#send">
+            <code>machineStore.send(eventName)</code>
+          </Link>
+          .
+        </p>
+      </Item>
+      <Item name="nextState">
+        <p>
+          Required. A string. Will usually exactly match another MachineState's{' '}
+          <code>stateName</code>.
+        </p>
+      </Item>
+      <Item name="guard">
+        <p>
+          Optional. A function that's called every time the machine is about to
+          take this transition. Receives the machine store's current{' '}
+          <Link to="../classes/MachineStore#context">
+            <code>.context</code>
+          </Link>{' '}
+          value and must return <code>true</code> to allow the transition.
+        </p>
+      </Item>
+      <Item name="Returns">
+        <p>The MachineState for chaining.</p>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="onEnter">
+    <p>
+      Registers an <code>enter</code> listener with the machine store. This
+      listener will be called every time the machine enters this state (after
+      entering it).
+    </p>
+    <p>The listener's signature is:</p>
+    <Ts>{`(store, storeEffect) => void`}</Ts>
+    <p>
+      It receives a reference to the machine store and the{' '}
+      <Link to="StoreEffect">StoreEffect</Link> object that triggered the state
+      change.
+    </p>
+  </Item>
+  <Item name="onLeave">
+    <p>
+      Registers a <code>leave</code> listener with the machine store. This
+      listener will be called every time the machine exits this state (after
+      transitioning to the next state).
+    </p>
+    <p>The listener's signature is:</p>
+    <Ts>{`(store, storeEffect) => void`}</Ts>
+    <p>
+      It receives a reference to the machine store and the{' '}
+      <Link to="StoreEffect">StoreEffect</Link> object that triggered the state
+      change.
+    </p>
+  </Item>
+  <Item name="stateName">
+    <p>
+      A string. Will be set to the string passed to{' '}
+      <code>injectMachineStore()</code>'s <code>createState()</code> factory.
+    </p>
+    <Ts>{`injectMachineStore(state => {
+  const stateA = state('a')
+  stateA.stateName === 'a' // true
+  ...
+})`}</Ts>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The State Machines walkthrough](../../walkthrough/state-machines)
+- [`injectMachineStore()`](../injectors/injectMachineStore)
+- [The `MachineStore` class](../classes/MachineStore)

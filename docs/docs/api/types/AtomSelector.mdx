@@ -12,9 +12,9 @@ AtomSelectors define a blueprint for pulling data from atoms. Similar to [resele
 - [`useAtomSelector()`](../hooks/useAtomSelector)
 - [`injectAtomSelector()`](../injectors/injectAtomSelector)
 - [`ecosystem.select()`](../classes/Ecosystem#select)
-- The `select` function of other AtomSelectors (composition!)
+- [The `select` AtomGetter function](AtomGetters#select) of other AtomSelectors (selector composition!)
 
-You can also call them directly, passing an AtomGetters object. There is [one situation](#generic-atomselectors) where this can be necessary
+You can also call them directly, passing an AtomGetters object. There is [one situation](#generic-atomselectors) where this can be necessary.
 
 :::tip
 Use AtomSelectors for:
@@ -35,6 +35,7 @@ type AtomSelector<T = any, Args extends any[] = []> = (
 
 interface AtomSelectorConfig<T = any, Args extends any[] = []> {
   argsComparator?: (newArgs: Args, oldArgs: Args) => boolean
+  name?: string
   resultsComparator?: (newResult: T, oldResult: T) => boolean
   selector: AtomSelector<T, Args>
 }
@@ -43,6 +44,8 @@ type AtomSelectorOrConfig<T = any, Args extends any[] = []> =
   | AtomSelector<T, Args>
   | AtomSelectorConfig<T, Args>
 ```
+
+Everywhere Zedux accepts an AtomSelector, it also accepts an [AtomSelectorConfig](AtomSelectorConfig) object. `AtomSelectorOrConfig` is the type you'll see for this.
 
 ## Examples
 
@@ -193,7 +196,7 @@ const withExtraData2 = useAtomSelector(getters => addExtraData(getters, list))
 
 Note that these are not exactly equivalent. Calling the selector directly essentially merges the called selector into the current selector or atom instance - the selector won't get its own node in the graph and will instead update the dependency graph of the current selector or atom instance. The above example works around that by wrapping the call in an inline selector, but that is undesirable in its own right.
 
-While this is certainly undesirable, it isn't necessarily a problem. Still, prefer using instantiation expressions if they're available for you.
+While undesirable, it isn't necessarily a problem. Still, prefer using instantiation expressions if they're available for you.
 
 ## See Also
 

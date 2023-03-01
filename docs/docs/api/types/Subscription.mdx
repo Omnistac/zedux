@@ -3,6 +3,8 @@ id: Subscription
 title: Subscription
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 The object returned from [`Store#subscribe()`](../classes/Store#subscribe).
 
 ## Definition
@@ -15,12 +17,17 @@ interface Subscription {
 
 ## Methods
 
-Subscription objects have a single method:
+<Legend>
+  <Item name="unsubscribe">
+    <p>
+      Removes the subscription. Can be called with no context - e.g. in FP
+      paradigms like:
+    </p>
+    <Ts>{`useEffect(() => myStore.subscribe(subscriber).unsubscribe, [myStore])`}</Ts>
+  </Item>
+</Legend>
 
-### `.unsubscribe`
+## See Also
 
-Removes the subscription. Can be called with no context - e.g. in FP paradigms like:
-
-```ts
-injectEffect(() => myStore.subscribe(subscriber).unsubscribe, [myStore])
-```
+- [`store.subscribe()`](../classes/Store#subscribe)
+- [The `Subscriber` type](Subscriber)

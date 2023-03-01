@@ -3,6 +3,8 @@ id: EvaluationReason
 title: EvaluationReason
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 Every update that causes an atom instance to reevaluate produces an EvaluationReason. You can get the list of reasons that caused an atom instance to reevaluate using [`injectWhy()`](../injectors/injectWhy).
 
 ## Definition
@@ -14,7 +16,7 @@ interface EvaluationReason<State = any> {
   oldState?: State
   operation: string // e.g. a function like "injectAtomValue"
   sourceType: EvaluationSourceType
-  sourceKey?: string // e.g. an atom like "myAtom"
+  sourceKey?: string // e.g. an atom key like "todos" or "userList"
   reasons?: EvaluationReason[]
   type: EvaluationType
 }
@@ -33,34 +35,84 @@ type EvaluationType =
   | 'state changed'
 ```
 
-### `action`
+<Legend>
+  <Item name="action">
+    <p>
+      If this EvaluationReason was a store's state updating, then this will be a
+      reference to the <Link to="ActionChain">ActionChain object</Link> that
+      caused the update. Otherwise, will be undefined.
+    </p>
+  </Item>
+  <Item name="newState">
+    <p>
+      The source's new state after updating. If the source is a store, this is
+      the new state of the store. If the source is an atom instance, it's the
+      new state of the atom instance's store. If the source is external (e.g. an
+      invalidation from a React component), this will be undefined.
+    </p>
+  </Item>
+  <Item name="oldState">
+    <p>
+      The source's state before updating. If the source is a store, this is the
+      previous state of the store. If the source is an atom instance, it's the
+      old state of the atom instance's store. If the source is external, this
+      will be undefined.
+    </p>
+  </Item>
+  <Item name="operation">
+    <p>
+      The name of the function triggering this evaluation. If the source is an
+      atom, injector, or store, <code>operation</code> will be the function name
+      you called to create the{' '}
+      <Link to="../glossary#dynamic-graph-dependency">
+        dynamic graph dependency
+      </Link>{' '}
+      - e.g. an injector name like "injectStore" or "injectAtomValue". If the
+      source is external, the operation name will be "invalidate".
+    </p>
+  </Item>
+  <Item name="sourceKey">
+    <p>
+      If the source dependency was another atom instance, this will be the key
+      of that atom instance's atom. Otherwise, this will be undefined.
+    </p>
+  </Item>
+  <Item name="sourceType">
+    <p>
+      What changed. Could be a store we're subscribed to via{' '}
+      <Link to="../injectors/injectStore">
+        <code>injectStore()</code>
+      </Link>
+      , or an atom instance that we injected, or an{' '}
+      <Link to="../classes/AtomInstance#invalidate">
+        <code>.invalidate()</code>
+      </Link>{' '}
+      call from a dependent.
+    </p>
+  </Item>
+  <Item name="reasons">
+    <p>
+      An array of EvaluationReasons. If the source dependency itself was updated
+      in response to one of its dependencies updating, those EvaluationReasons
+      will be listed here.
+    </p>
+    <p>
+      This is recursive! With this, you can see an update that originated many
+      layers deep in the dependency tree and ultimately led to this atom
+      reevaluating. If the source dependency was the instigator of the change,
+      then this will be undefined.
+    </p>
+  </Item>
+  <Item name="type">
+    <p>
+      The type of update that occurred. Could be a store's state changing, an
+      atom instance being destroyed, an atom instance's promise changing, or an
+      invalidation triggered externally.
+    </p>
+  </Item>
+</Legend>
 
-If this EvaluationReason was a store's state updating, then this will be a reference to the [ActionChain object](ActionChain) that caused the update. Otherwise, will be undefined.
+## See Also
 
-### `newState`
-
-The source's new state after updating. If the source is a store, this is the new state of the store. If the source is an atom instance, it's the new state of the atom instance's store. If the source is external (e.g. an invalidation from a React component), this will be undefined.
-
-### `oldState`
-
-The source's state before updating. If the source is a store, this is the previous state of the store. If the source is an atom instance, it's the old state of the atom instance's store. If the source is external, this will be undefined.
-
-### `operation`
-
-The name of the function triggering this evaluation. If the source is an atom, injector, or store, `operation` will be the function name you called to create the [dynamic graph dependency](../glossary#dynamic-graph-dependency) - e.g. an injector name like "injectStore" or "injectAtomValue". If the source is external, the operation name will be "invalidate".
-
-### `sourceType`
-
-What changed. Could be a store we're subscribed to via [`injectStore()`](../injectors/injectStore), or an atom instance that we injected, or an [`.invalidate()`](../classes/AtomInstance#invalidate) call from a dependent.
-
-### `sourceKey`
-
-If the source dependency was another atom instance, this will be the key of that atom instance's atom. Otherwise, this will be undefined.
-
-### `reasons`
-
-If the source dependency itself was updated in response to one of its dependencies updating, those EvaluationReasons will be listed here. This is recursive! With this, you can see an update that originated many layers deep in the dependency tree and ultimately led to this atom reevaluating. If the source dependency was the instigator of the change, then this will be undefined.
-
-### `type`
-
-The type of update that occurred. Could be a store's state changing, an atom instance being destroyed, or an invalidation triggered externally.
+- [`injectWhy()`](../injectors/injectWhy)
+- [`ecosystem.why()`](../classes/Ecosystem#why)

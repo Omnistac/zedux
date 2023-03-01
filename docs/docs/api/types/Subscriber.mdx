@@ -3,19 +3,19 @@ id: Subscriber
 title: Subscriber
 ---
 
-A function passed to [`store.subscribe()`](../classes/Store#subscribe). Zedux will call the function when certain events happen.
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-## Subscriber Types
+A function passed to [`store.subscribe()`](../classes/Store#subscribe). Zedux will call the function when certain events happen.
 
 There are 3 types of subscribers:
 
 - normal (or "next") - will be called on state change.
 - error - will be called whenever a dispatch or setState call throws an error.
-- effects - will be called every time an action is dispatched to the store, regardless of whether the action triggered a state update.
+- effects - will be called every time an action is dispatched to the store, regardless of whether the action triggered a state update or threw an error.
 
 Passing a function to `store.subscribe()` registers a normal subscriber. To register error and effect subscribers, pass an object with optional `next`, `error`, and `effects` properties.
 
-### Normal
+## Normal
 
 ```ts
 store.subscribe((newState, oldState, action) => {
@@ -33,24 +33,35 @@ Also called "next" subscribers. These subscribers receive 3 parameters:
 ```ts
 type NextSubscriber<State = any> = (
   newState: State,
-  prevState: State | undefined,
+  oldState: State | undefined,
   action: ActionChain
 ) => void
 ```
 
-#### `newState`
+<Legend>
+  <Item name="newState">
+    <p>
+      The current state of the store, after the latest operation changed it.
+    </p>
+  </Item>
+  <Item name="oldState">
+    <p>
+      The state of the store before the latest operation changed it. Can be
+      undefined if the subscriber is registered before the store's state is set.
+    </p>
+  </Item>
+  <Item name="action">
+    <p>
+      The action that triggered the state change. If the state change was due to
+      a <code>.setState()</code> call or an action dispatched in a parent or
+      child store, this action will be an{' '}
+      <Link to="ActionChain">ActionChain</Link> containing metadata that can be
+      used to reproduce the state update from this store for time travel.
+    </p>
+  </Item>
+</Legend>
 
-The current state of the store, after the latest operation changed it.
-
-#### `oldState`
-
-The state of the store before the latest operation changed it. Can be `undefined` if the subscriber is registered before the store's state is set.
-
-#### `action`
-
-The action that triggered the state change. If the state change was due to a `setState` call or an action dispatched in a parent or child store, this action will be an [ActionChain](ActionChain) containing metadata that can be used to reproduce the state update from this store for time travel.
-
-### Error
+## Error
 
 ```ts
 store.subscribe({
@@ -74,11 +85,16 @@ Error subscribers receive a single parameter:
 type ErrorSubscriber = (error: Error) => void
 ```
 
-#### `error`
+<Legend>
+  <Item name="error">
+    <p>
+      The error thrown by the store's reducer layer or by the function passed to{' '}
+      <code>store.setState()</code> or <code>store.setStateDeep()</code>.
+    </p>
+  </Item>
+</Legend>
 
-The error that was thrown.
-
-### Effects
+## Effects
 
 ```ts
 store.subscribe({
@@ -100,41 +116,7 @@ store.setState(state => !state) // hits effects subscribers
 store.setState(state => state) // doesn't hit effects subscribers
 ```
 
-Effects subscribers receive an object with the following properties:
-
-```ts
-interface StoreEffect<State = any> {
-  action?: ActionChain
-  error?: Error
-  newState: State
-  oldState?: State
-  store: Store<State>
-}
-
-type EffectsSubscriber<State = any> = (storeEffect: StoreEffect<State>) => void
-```
-
-#### `action`
-
-The action or pseudo-action that triggered the effect. If the state change was due to a `setState` call or an action dispatched in a parent or child store, this action will be an [ActionChain](ActionChain) containing metadata that can be used to reproduce the state update from this store for time travel.
-
-#### `error`
-
-The error that was thrown, if any.
-
-#### `newState`
-
-The current state of the store, after passing the action through the reducer layer or applying any state updates from a `setState()` call.
-
-#### `oldState`
-
-The previous state of the store, before the action was dispatched. Can be `undefined` if the subscriber is registered before the store's state is set.
-
-#### `store`
-
-A reference to the store this effects subscriber is subscribed to.
-
-####
+Effects subscribers receive a single [StoreEffect object](StoreEffect).
 
 ## Example
 
@@ -156,7 +138,7 @@ function Subscribers() {
             })}\n\n`
         ),
       error: (...params) => setLog(log => `${log}Error - ${params}\n\n`),
-      effects: (...params) =>
+      effects: ({ store, ...params }) =>
         setLog(log => `${log}Effect - ${JSON.stringify(params)}\n\n`),
     })
 
