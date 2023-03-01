@@ -1,0 +1,69 @@
+---
+id: DependentCallback
+title: DependentCallback
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+A low-level function used when manually graphing e.g. with [`ecosystem.selectorCache.addDependent()`](../classes/SelectorCache#adddependent) or [`atomInstance.addDependent()`](../classes/AtomInstance#adddependent). This function is called with special "GraphEdgeSignals" when Zedux needs to push some new information about the dependency to the dependent.
+
+## Example
+
+```ts
+const exampleAtom = atom('example', () => 'test')
+let instance = ecosystem.getInstance(exampleAtom)
+
+// keep the local `instance` reference up-to-date in case of force destruction:
+const cleanup = instance.addDependent({
+  callback: (signal, val, reason) => {
+    if (signal === 'Destroyed') {
+      instance = ecosystem.getInstance(exampleAtom)
+    }
+  },
+})
+```
+
+## Definition
+
+```ts
+type DependentCallback = (
+  signal: GraphEdgeSignal,
+  val?: any,
+  reason?: EvaluationReason
+) => void
+```
+
+<Legend>
+  <Item name="signal">
+    <p>A string. One of:</p>
+    <Ts>{`'Destroyed' | 'Updated'`}</Ts>
+    <p>
+      A dependent can only receive the "Destroyed" signal when the dependency is
+      force-destroyed, since this dependent would prevent destruction otherwise.
+    </p>
+    <p>
+      The "Updated" signal can mean either the dependency's state changed or its
+      promise reference changed.
+    </p>
+  </Item>
+  <Item name="val">
+    <p>
+      The current state of the dependency. If the dependency is an atom
+      instance, this is the current state of the atom instance's store. If the
+      dependency is an atom selector, this is the current <code>.result</code>{' '}
+      property of the atom selector's cache item.
+    </p>
+  </Item>
+  <Item name="reason">
+    <p>
+      The single <Link to="EvaluationReason">EvaluationReason</Link> that
+      triggered this signal. Note that if multiple updates were batched, only
+      the first reason will be passed here - this callback will never receive
+      the others.
+    </p>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Graph walkthrough](../../walkthrough/the-graph).

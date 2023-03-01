@@ -3,6 +3,68 @@ id: StoreEffect
 title: StoreEffect
 ---
 
-:::note
-🚧 This page is under construction
-:::
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+An object that describes a state change in a [store](../classes/Store). Zedux creates one of these every time a store's state changes. This is the object passed to [effects subscribers](Subscriber#effects) and [state machine listeners](MachineState#onenter).
+
+## Definition
+
+```ts
+interface StoreEffect<State = any, S extends Store<State> = Store<State>> {
+  action?: ActionChain
+  error?: unknown
+  newState: State
+  oldState?: State
+  store: S
+}
+```
+
+<Legend>
+  <Item name="action">
+    <p>
+      A reference to the <Link to="Action">action</Link> (or{' '}
+      <Link to="ActionChain">ActionChain</Link>) object that triggered the state
+      change.
+    </p>
+    <p>
+      Every state update in Zedux is triggered by an action. Even{' '}
+      <Link to="../classes/Store#setstate">store.setState()</Link> and similar
+      APIs always generate "psuedo actions" representing the change.
+    </p>
+  </Item>
+  <Item name="error">
+    <p>
+      If the dispatch or setState call errored, this will be a reference to the
+      error that was thrown.
+    </p>
+  </Item>
+  <Item name="newState">
+    <p>
+      The store's new state after passing the action through this store's
+      reducer layer and to all child stores.
+    </p>
+    <p>
+      Note that effects subscribers run after the state has been completely
+      updated, so this value will be exactly equal to{' '}
+      <code>store.getState()</code>.
+    </p>
+  </Item>
+  <Item name="oldState">
+    <p>
+      The state of the store before this action changed it. Can be undefined if
+      this is the first time this store's state has ever been set.
+    </p>
+  </Item>
+  <Item name="store">
+    <p>
+      A reference to the store itself. Useful when external or general-purpose
+      effects subscribers are registered without having a reference to the store
+      they were registered in.
+    </p>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Stores walkthrough](../../walkthrough/stores)
+- [The `Store` class](../classes/Store)

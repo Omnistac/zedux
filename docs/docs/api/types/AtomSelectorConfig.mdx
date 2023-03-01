@@ -7,6 +7,8 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
 Everywhere Zedux accepts an AtomSelector, it also accepts an AtomSelectorConfig object. This object has a required `selector` field and a few optional fields used to configure the selector.
 
+It is recommended to set the `name` field for optimal debugging when viewing the atom graph since Zedux can't derive a useful name from AtomSelectorConfig objects like it can with named AtomSelector functions. You can also make the `selector` field a named function instead of using an anonymous function.
+
 ## Examples
 
 ```tsx live ecosystemId=AtomSelector/example resultVar=CountBy5
@@ -15,6 +17,7 @@ const counterAtom = atom('counter', 0)
 function CountBy5() {
   const { setState } = useAtomInstance(counterAtom)
   const counter = useAtomSelector({
+    name: 'getCounter',
     resultsComparator: newCount => newCount % 5,
     selector: ({ get }) => get(counterAtom),
   })
@@ -31,7 +34,7 @@ function CountBy5() {
 ```
 
 :::tip
-AtomSelectors sometimes have config that's inherent to how they operate. Rather than exporting the selector function and requiring consumers to specify the config, export the config object directly (tightly coupling the selector to its mandatory config):
+AtomSelectors sometimes have config that's inherent to how they operate. Rather than exporting the selector function and requiring consumers to specify the config, export the config object itself (tightly coupling the selector to its mandatory config):
 :::
 
 ```ts
@@ -118,8 +121,8 @@ useAtomSelector(timesTwoPlusWhatever, 3)
       force the selector to reevaluate.
     </p>
     <p>
-      This function is only called after the selector has already run once -
-      otherwise there wouldn't be any <code>oldArgs</code>.
+      This function is only called after the selector has already run once
+      (otherwise there wouldn't be any <code>oldArgs</code>).
     </p>
   </Item>
   <Item name="name">
@@ -147,8 +150,8 @@ useAtomSelector(timesTwoPlusWhatever, 3)
       force all dependents to reevaluate.
     </p>
     <p>
-      This function is only called after the selector has already run once -
-      otherwise there wouldn't be any <code>oldResult</code>.
+      This function is only called after the selector has already run once
+      (otherwise there wouldn't be any <code>oldResult</code>).
     </p>
   </Item>
   <Item name="selector">
