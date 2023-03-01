@@ -108,6 +108,7 @@ The `registerEcosystem` function usually subscribes to this bus and returns a cl
 ```ts
 const plugin = new ZeduxPlugin({
   registerEcosystem: ecosystem => {
+    // highlight-next-line
     const subscription = ecosystem.modBus.subscribe({
       effects: ({ action }) => {
         console.log('got mod event!', action)
@@ -118,6 +119,8 @@ const plugin = new ZeduxPlugin({
   },
 })
 ```
+
+Typically you'll want to register a single [effects subscriber](../api/types/Subscriber#effects) with the ecosystem's `modBus`.
 
 Now the plugin is ready to receive mod events. But it won't actually receive any yet because the ecosystem doesn't know what the plugin wants. To make the ecosystem push mod events to the plugin, we need to turn on mods.
 
@@ -142,7 +145,7 @@ const myPlugin = new ZeduxPlugin({
   initialMods: ['stateChanged'],
 })
 
-myPlugin.modStore.getState() // ['statechanged']
+myPlugin.modStore.getState() // ['stateChanged']
 
 myPlugin.modStore.setState([]) // turn off all mods
 
@@ -173,6 +176,7 @@ const plugin = new ZeduxPlugin({
   registerEcosystem: ecosystem => {
     const subscription = ecosystem.modBus.subscribe({
       effects: ({ action }) => {
+        // highlight-next-line
         if (action.type === ZeduxPlugin.actions.stateChanged.type) {
           console.log('got stateChanged mod event!', action)
         }
