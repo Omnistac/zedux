@@ -75,9 +75,9 @@ const guaranteed = useAtomConsumer(myAtom, true)
 <Tabs>
   {tab1(`useAtomConsumer = (atom, defaultParamsOrThrow?) => atomInstance`)}
   {tab2(`declare const useAtomConsumer: {
-  <A extends StandardAtomBase<any, [...any], any, any>>(atom: A): AtomInstanceType<A> | Record<string, never>;
-  <A extends StandardAtomBase<any, [...any], any, any>>(atom: A, defaultParams: AtomParamsType<A>): AtomInstanceType<A>;
-  <A extends StandardAtomBase<any, [...any], any, any>>(atom: A, throwIfNotProvided: true): AtomInstanceType<A>;
+  <A extends AtomBase<any, [...any], any, any, any, any>>(atom: A): AtomInstanceType<A> | Record<string, never>;
+  <A extends AtomBase<any, [...any], any, any, any, any>>(atom: A, defaultParams: AtomParamsType<A>): AtomInstanceType<A>;
+  <A extends AtomBase<any, [...any], any, any, any, any>>(atom: A, throwIfNotProvided: true): AtomInstanceType<A>;
 }`)}
 </Tabs>
 

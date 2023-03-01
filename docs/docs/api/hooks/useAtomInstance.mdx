@@ -66,35 +66,19 @@ const withParams = useAtomInstance(myAtom, ['param 1', 'param 2'])
 
 <InjectAtomInstanceLegend
   name="useAtomInstance"
-  thirdParam={
-    <Item name="config">
-      <p>Optional. An object with the following optional properties:</p>
-      <Ts>{`{ operation, suspend }`}</Ts>
-      <Legend>
-        <Item name="operation">
-          <p>
-            Optional. A string. Default <code>'useAtomInstance'</code>
-          </p>
-          <p>
-            You usually won't need to worry about this. Passing an operation
-            string can help with debugging e.g. if the instance throws an error
-            or when inspecting the instance's list of injectors.
-          </p>
-        </Item>
-        <Item name="suspend">
-          <p>
-            Optional. A boolean. Default <code>true</code>
-          </p>
-          <p>
-            Pass <code>false</code> to prevent React from suspending until the
-            resolved instance's{' '}
-            <Link to="../classes/AtomInstance#promise">promise</Link> is
-            resolved.
-          </p>
-        </Item>
-      </Legend>
+  extraConfig={
+    <Item name="suspend">
+      <p>
+        A boolean. Default <code>true</code>
+      </p>
+      <p>
+        Pass <code>false</code> to prevent React from throwing the resolved atom
+        instance's <Link to="../classes/AtomInstance#promise">promise</Link>,
+        triggering React suspense. Suspense is enabled by default.
+      </p>
     </Item>
   }
+  extraConfigDef={', suspend'}
 />
 
 ## See Also
