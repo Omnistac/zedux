@@ -207,6 +207,8 @@ function App() {
 Unlike exports, the promise can change! Be sure to return a stable reference if you don't want the atom instance to kick off suspense again on reevaluations.
 :::
 
+We'll cover much more about suspense in [the suspense walkthrough](suspense).
+
 ### Query Atoms
 
 You can also pass a promise directly to `api()`. This tells Zedux to take control over the atom's state and update it based on the promise. The state shape is similar to React Query queries. Because of this, we call such atoms "query atoms":
@@ -254,7 +256,7 @@ In Zedux, atoms always evaluate synchronously. This allows Zedux' DI to be as dy
 Since returning a promise and declaring an async function are essentially the same thing (especially in Typescript's eyes), we found it better to disallow returning a promise directly. Just wrap your promise in `api(promise)`.
 :::
 
-We'll cover much more about suspense in [the suspense walkthrough](suspense).
+Query atoms get [their own walkthrough](query-atoms).
 
 ## Properties
 

@@ -27,7 +27,7 @@ const trafficLightAtom = atom('trafficLight', () => {
 })
 ```
 
-Here we create a state machine with 3 states: `green`, `yellow`, and `red`. `green` is the initial state. But this machine is stuck in `green` forever! We need to add transitions to the machine:
+This creates a state machine with 3 states: `green`, `yellow`, and `red`. `green` is the initial state. But this machine is stuck in `green` forever! Let's give it transitions:
 
 ```ts
 const store = injectMachineStore(state => [
@@ -37,9 +37,9 @@ const store = injectMachineStore(state => [
 ])
 ```
 
-We use `.on(action, nextState)` to add transitions to the machine's states. Now the machine can transition from `green` -> `yellow` -> `red` -> `green` -> etc. in a loop. The machine will transition when it receives the `timer` signal.
+We use `.on(event, nextState)` to add transitions to the machine's states. Now the machine can transition from `green` -> `yellow` -> `red` -> `green` -> etc. in a loop. The machine will transition when it receives the `timer` event.
 
-Now ... how do we send that signal to the machine?
+Now ... how do we send that event to the machine?
 
 ## MachineStore
 
@@ -61,7 +61,7 @@ While you can instantiate the MachineStore class yourself, it's highly recommend
 
 ### `.send()`
 
-Use this to send signals to the store, triggering state transitions:
+Use this to send events to the store, triggering state transitions:
 
 ```ts live ecosystemId=send-example resultVar=output
 const trafficLightAtom = atom('trafficLight', () => {
@@ -87,13 +87,13 @@ const output = { initialState, nextState }
 The store returned from the state factory _is_ the atom instance's `.store`. Since this example returned a MachineStore, you can access the machine's methods directly on the instance's store - e.g. `instance.store.send('timer')`. This has full TypeScript support too!
 :::
 
-For TypeScript users, `.send()` only accepts strings that were specified as signal names during machine creation. In this example, passing anything but the string `'timer'` gives a TS error:
+For TypeScript users, `.send()` only accepts strings that were specified as event names during machine creation. In this example, passing anything but the string `'timer'` gives a TS error:
 
 ```ts
 send('time') // Argument of type '"time"' is not assignable to parameter of type '"timer"'
 ```
 
-The machine will only transition if the current state has a transition specified for the passed signal.
+The machine will only transition if the current state has a transition specified for the passed event.
 
 ```ts
 const store = injectMachineStore(state => [
@@ -258,7 +258,7 @@ function Theme() {
 }
 ```
 
-In this example we also made use of the `onTransition` listener. We'll look at listeners now:
+This example also made use of an `onTransition` function. This is called a listener.
 
 ## Listeners
 
@@ -273,16 +273,16 @@ const requestStore = injectMachineStore(
   state => [
     state('idle').on('fetch', 'fetching'),
     state('fetching')
-      .on('success', 'success')
-      .on('failure', 'failure')
+      .on('succeed', 'success')
+      .on('fail', 'failure')
       .onEnter(async machine => {
         try {
           const data = await fetch('/todos').then(data => data.json())
           machine.setContextDeep({ data })
-          machine.send('success')
+          machine.send('succeed')
         } catch (error) {
           machine.setContextDeep({ error })
-          machine.send('failure')
+          machine.send('fail')
         }
       }),
   ],
@@ -327,7 +327,7 @@ const timeoutStore = injectMachineStore(
 ```
 
 :::note
-For TS users: `.onLeave()` has limited type support (like `.onEnter()`), since the machine's full type hasn't been inferred yet. When you need access to better types, use `onTransition` instead.
+For TS users: Like `.onEnter()`, `.onLeave()` has limited type support, since the machine's full type hasn't been inferred yet. When you need access to better types, use `onTransition` instead.
 :::
 
 ### `onTransition`
@@ -343,10 +343,10 @@ const store = injectMachineStore(statesFactory, initialContext, config)
 Pass `onTransition` as part of this config
 
 ```ts
-const toggleMachine = injectMachineStore(state => [
-  state('on').on('toggle', 'off'),
-  state('off').on('toggle', 'on'),
-])
+const toggleMachine = injectMachineStore(
+  state => [state('on').on('toggle', 'off'), state('off').on('toggle', 'on')],
+  { onTransition }
+)
 ```
 
 ## Contrived Example

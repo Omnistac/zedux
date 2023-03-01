@@ -136,36 +136,13 @@ const sortedUsersAtom = ion('sortedUsers', () => {
 
 We'll learn more about `injectWhy` in [the dev tools walkthrough](../advanced/dev-tools).
 
-## Effects Subscribers
-
-In [the stores walkthrough](stores), we learned that stores can be given an effects subscriber:
-
-```ts
-function App() {
-  const { store } = useAtomInstance(myAtom)
-
-  useEffect(() => {
-    const subscription = store.subscribe({
-      effects: ({ action, newState, oldState }) => {
-        console.log('running effect', { action, newState, oldState })
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [store])
-  ...
-}
-```
-
-See the full effect subscriber definition [here](/not-done).
-
 ## Odd-Looking Actions
 
 Zedux' store composition model works by making actions themselves composable objects called ActionChains. The ActionChain contains needed metadata for Zedux to perform its store composition magic. ActionChains consist of any number of "meta nodes" with the wrapped action being the last node in the chain.
 
-We'll go over the specifics of Zedux' store composition model in [the time travel walkthrough](../advanced/time-travel). For now you just need to know that, depending on your store setup, you may see these ActionChain objects as the `action` property in your effects handlers. Zedux doesn't unwrap the action because sometimes you will need to observe the metadata the action is wrapped in.
+We'll go over the specifics of Zedux' store composition model in [the store composition guide](../advanced/store-composition). For now you just need to know that, depending on your store setup, you may see these ActionChain objects as the `action` property in your effects handlers. Zedux doesn't unwrap the action because sometimes you will need to observe the metadata the action is wrapped in.
 
-If you don't care about the metadata, you can get the wrapped action with `removeAllMeta`
+If you don't care about the metadata, you can get the wrapped action with [`removeAllMeta`](/not-done)
 
 ```ts
 import { removeAllMeta, when } from '@zedux/react'
@@ -177,9 +154,31 @@ store.subscribe((newState, oldState, actionChain) => {
 
 ## Observables
 
-Zedux stores are a type of observable. However, Zedux doesn't have any built-in helpers (currently) for integrating with observable libraries such as [RxJS](https://github.com/ReactiveX/rxjs). But Zedux' extreme flexibility makes working with observables easy.
+Zedux stores are a type of observable. They can be passed directly to [RxJS](https://github.com/ReactiveX/rxjs)'s `from()` to create full-fledged streams of state:
 
-For example, any atom's value can be an observable:
+```ts
+const filterUsersAtom = atom('filterUsers', 'User Joe')
+
+const instance = ecosystem.getInstance(filterUsersAtom)
+const state$ = from(instance.store)
+
+const subscription = state$
+  .pipe(filter(state => state.length >= 3))
+  .subscribe(currentState => {
+    fetchUsers({ filter: currentState })
+  })
+```
+
+You'll often want the first emission to be the current state. For that, the following pattern can be helpful:
+
+```ts
+import { defer, from, merge, of } from 'rxjs'
+
+export const getState$ = <T>(store: Store<T>) =>
+  defer(() => merge(of(store.getState()), from(store)))
+```
+
+There are many ways that the extreme flexibility of RxJS and Zedux work together beautifully. For example, any atom's value can be an observable:
 
 ```ts
 import { atom } from '@zedux/react'
@@ -190,7 +189,7 @@ const observableValue = atom('observableValue', of('hello, world'))
 
 This can be useful for taking advantage of Zedux' caching abilities to share observable references.
 
-You can export an observable from any atom:
+You can also export an observable from any atom:
 
 ```ts
 import { api, atom, injectMemo } from '@zedux/react'
@@ -224,12 +223,46 @@ const userAtom = atom('user', () => {
 })
 ```
 
+## Action Streams
+
+One of the superpowers of Zedux stores is that they can be consumed as streams of actions. Call `store.actionStream()` to get an "observable"-like object that you can subscribe to to receive notifications for every action dispatched to the store.
+
+This observable-like object is compatible with RxJS' `from()`:
+
+```tsx
+import { from } from 'rxjs'
+import { filter } from 'rxjs/operators'
+import { atom, actionFactory } from '@zedux/react'
+
+const updateRow = actionFactory<RowUpdateEvent>('updateRow')
+const messageBusAtom = atom('messageBus', null)
+
+function BigGrid() {
+  const busInstance = useAtomInstance(messageBusAtom)
+  const gridRef = useRef()
+
+  useEffect(() => {
+    // highlight-next-line
+    const subscription = from(busInstance.store.actionStream())
+      .pipe(filter(action => action.type === updateRow.type))
+      .subscribe(action =>
+        gridRef.current.updateRow(action.payload.rowId, action.payload)
+      )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return <ThirdPartyGridComponent ref={gridRef} />
+}
+```
+
 ## Recap
 
 - `injectEffect()` is a simple tool for running side effects on changes that trigger atom reevaluation. It's also good for managing cleanup.
 - BUT you may not need `injectEffect()`.
 - `injectWhy()` can help reduce side effects.
-- Zedux can handle every possible asynchronous flow, e.g. RxJS streams, generators, promises, sockets, etc
+- Stores can be consumed directly as streams of state or as streams of actions via `store.actionStream()`.
+- Zedux can handle every possible asynchronous flow, e.g. RxJS streams, generators, promises, sockets, etc.
 
 ## Next Steps
 

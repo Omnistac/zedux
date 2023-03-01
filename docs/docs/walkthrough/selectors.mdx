@@ -400,7 +400,7 @@ Using [`injectMemo`](../api/injectors/injectMemo) in an ion gives us maximum sel
 import { injectMemo, ion, useAtomValue } from '@zedux/react'
 
 const expensiveAtom = ion('expensive', ({ get }) => {
-  const someState = get(someAtom)
+  const someState = get(otherAtom)
 
   return injectMemo(() => threadHogger(someState), [someState])
 })
@@ -410,9 +410,9 @@ function MyComponent() {
 }
 ```
 
-An `expensiveAtom` instance is created the first time it's used, then cached forever in the current ecosystem.
+An `expensiveAtom` instance is created the first time it's used, then cached in the current ecosystem.
 
-You may have noticed in the above very specific example that the `injectMemo` is redundant. Since `expensiveAtom` has only one dependency, it will only reevaluate when `someAtom`'s value changes. And since we pass that value straight to `injectMemo`'s deps array, we're effectively running `threadHogger` every single time this atom evaluates anyway. Let's do away with it:
+You may have noticed in the above very specific example that the `injectMemo` is redundant. Since `expensiveAtom` has only one dependency, it will only reevaluate when `otherAtom`'s value changes. And since we pass that value straight to `injectMemo`'s deps array, we're effectively running `threadHogger` every single time this atom evaluates anyway. Let's do away with it:
 
 ```ts
 // highlight-next-line
@@ -522,7 +522,7 @@ Now our Atom Selector will only run exactly as often as it needs to. But there i
 
 ### Passing Arguments
 
-AtomSelectors take the AtomGetters object as their first argument, but they can also take any number of additional arguments. These can be passed as the rest params of `useAtomSelector`, `injectAtomSelector`, `ecosystem.select`, and other `select` AtomGetters.
+AtomSelectors take an AtomGetters object as their first argument, but they can also take any number of additional arguments. These can be passed as the rest params of `useAtomSelector`, `injectAtomSelector`, `ecosystem.select`, and other `select` AtomGetters.
 
 Thanks to params, we can move the Atom Selector back outside the component:
 
@@ -541,9 +541,10 @@ function MyComponent() {
 }
 
 // more examples:
-useAtomSelector(getOneOrTwo, shouldUse1) // in components
 injectAtomSelector(getOneOrTwo, shouldUse1) // in atoms
-ecosystem.select(getOneOrTwo, shouldUse1) // anywhere
+
+ecosystem.select(getOneOrTwo, shouldUse1) // anywhere (but static)
+
 select(getOneOrTwo, shouldUse1) // in ions or other Atom Selectors
 ```
 
@@ -553,7 +554,7 @@ We can also use special [AtomSelectorConfig](../api/types/AtomSelector#atomselec
 
 Everywhere Zedux accepts an Atom Selector, it also accepts an AtomSelectorConfig object. This object has the following properties:
 
-- `argsComparator` - Optional. A function that runs when the component rerenders and calls `useAtomSelector` (doesn't run on the first render). This function receives the new args list and the previous args list and determines whether args have "changed". When args change, the selector reevaluates. Return true if the args are the same.
+- `argsComparator` - Optional. A function that runs when the component rerenders and calls `useAtomSelector` (doesn't run on the first render). This function receives the new args list and the previous args list and determines whether args have "changed". When args change, the selector reevaluates. Return true if the args are the same. This config option is only respected in the `useAtomSelector` hook - it's ignored everywhere else.
 
 - `name` - Optional. A string to help identify the selector in the cache and the graph.
 
@@ -574,8 +575,11 @@ We could add support for `argsComparator` in `injectAtomSelector`. But as of now
 const getUserByFilters = {
   argsComparator: ([newFilters], [oldFilters]) =>
     newFilters.name === oldFilters.name,
+
   name: 'getUserByFilters',
+
   resultsComparator: (newUser, oldUser) => newUser.name === oldUser.name,
+
   selector: ({ get }: AtomGetters, filters: { name: string }) =>
     get(usersAtom).find(user => user.name === filters.name),
 }

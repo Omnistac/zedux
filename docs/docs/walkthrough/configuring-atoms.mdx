@@ -151,8 +151,8 @@ Open your browser console and reset the above sandbox to see Zedux log a warning
 To turn off flag warnings, just don't give your ecosystem a `flags` prop.
 
 ```ts
-ecosystem({ flags: [] }) // warns on every flag
-ecosystem({}) // never warns
+createEcosystem({ flags: [] }) // warns on every flag
+createEcosystem({}) // never warns
 ```
 
 ## `api.setTtl()`
