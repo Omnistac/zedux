@@ -2,7 +2,7 @@ import Link from '@docusaurus/Link'
 import useBaseUrl from '@docusaurus/useBaseUrl'
 import React from 'react'
 import styled from '@site/src/ssc'
-import CodeBlock from '../theme/CodeBlock'
+import CodeBlock from '@theme/CodeBlock'
 
 const Text = styled.div`
   align-items: center;

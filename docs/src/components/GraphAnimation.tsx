@@ -1,6 +1,5 @@
 import React, { useId } from 'react'
 import styled from '@site/src/ssc'
-import { Store } from '../../../packages/core/src'
 import {
   api,
   atom,
@@ -11,167 +10,160 @@ import {
   useAtomInstance,
 } from '../../../packages/react/src'
 
+interface Edge {
+  from: [number, number]
+  to: [number, number]
+  progress: number
+}
+
 interface Node {
+  anchor: [number, number]
   direction: number
   id: number
-  size: number
   position: [number, number]
   radius: number
   velocity: number
 }
 
-const CONNECTION_DISTANCE = 100
-const EDGE_DRAW_INTERVAL = 4000
-const ENTRANCE_DURATION = 500
-const MAX_NODES = 16
-const NODE_SPAWN_RATE = 600 // spawn a node on average every NODE_SPAWN_RATE ms
+const SPACING = 100
 
 const Canvas = styled.canvas`
   grid-column: 1;
   grid-row: 1 / span 4;
   height: 100%;
   max-height: calc(80vh - 60px);
-  opacity: 0.2;
+  opacity: 0.3;
   width: 100%;
 `
 
-const translatePosition = (
-  delta: number,
-  [x, y]: [number, number],
-  direction: number,
-  velocity: number
-) => {
-  const distance = velocity * delta
+const getTarget = (nodes: Node[][], [x, y]: [number, number]) => {
+  const possibleNodes = [
+    x > 0 && [x - 1, y],
+    x < nodes[0].length - 1 && [x + 1, y],
+    y > 0 && [x, y - 1],
+    y < nodes.length - 1 && [x, y + 1],
+  ].filter(Boolean) as [number, number][]
 
-  return [
-    x + distance * Math.sin(direction),
-    y + distance * Math.cos(direction),
-  ] as [number, number]
+  return possibleNodes[Math.floor(Math.random() * possibleNodes.length)]
 }
+
+// const translatePosition = (
+//   delta: number,
+//   [x, y]: [number, number],
+//   direction: number,
+//   velocity: number
+// ) => {
+//   const distance = velocity * delta
+
+//   return [
+//     x + distance * Math.sin(direction),
+//     y + distance * Math.cos(direction),
+//   ] as [number, number]
+// }
 
 const graphAnimation = atom(
   'graphAnimation',
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (id: string) => {
     const canvasRef: MutableRefObject<HTMLCanvasElement> = injectRef<HTMLCanvasElement>()
     const cleanupRef = injectRef<() => void>()
     const idCounterRef = injectRef(0)
-    const store: Store<{
-      edges: [number, number][]
+    const store = injectStore<{
+      edges: Edge[]
       lastFrameTime: number
-      nodes: Record<string, Node>
+      nodes: Node[][]
       timeSinceLastEdgeDraw: number
-    }> = injectStore(
+    }>(
       {
         edges: [],
         lastFrameTime: 0,
-        nodes: {},
+        nodes: [],
         timeSinceLastEdgeDraw: 0,
       },
       { subscribe: false }
     )
 
-    const drawEdges = () => {
-      const { nodes } = store.getState()
-      const keys = Object.keys(nodes)
-      const edges = []
-
-      for (let i = 0; i < keys.length; i++) {
-        for (let j = i + 1; j < keys.length; j++) {
-          const a = nodes[keys[i]]
-          const b = nodes[keys[j]]
-
-          if (
-            Math.abs(a.position[0] - b.position[0]) < CONNECTION_DISTANCE &&
-            Math.abs(a.position[1] - b.position[1]) < CONNECTION_DISTANCE
-          ) {
-            edges.push([a.id, b.id])
-          }
-        }
-      }
-
-      store.setStateDeep({ edges })
-    }
-
-    const maybeUpdateEdges = (delta: number) => {
-      const timeSinceLastEdgeDraw =
-        store.getState().timeSinceLastEdgeDraw + delta
-
-      if (timeSinceLastEdgeDraw < EDGE_DRAW_INTERVAL) {
-        store.setStateDeep({ timeSinceLastEdgeDraw })
-        return
-      }
-
-      store.setStateDeep({ timeSinceLastEdgeDraw: 0 })
-      drawEdges()
-    }
-
-    const maybeSpawnNode = (delta: number) => {
-      const isSpawning = delta / NODE_SPAWN_RATE > Math.random()
+    const maybeGenerateGraph = () => {
+      const { height, width } = canvasRef.current
+      const currentNodes = store.getState().nodes
+      const numRows = Math.floor((height + SPACING) / SPACING)
+      const numCols = Math.floor((width + SPACING) / SPACING)
 
       if (
-        !isSpawning ||
-        Object.keys(store.getState().nodes).length >= MAX_NODES
+        (currentNodes.length &&
+          currentNodes.length === numRows &&
+          currentNodes[0].length === numCols) ||
+        !height ||
+        !width
       ) {
         return
       }
 
-      const newNode: Node = {
-        direction: Math.random() * (2 * Math.PI),
-        id: idCounterRef.current++,
-        position: [
-          Math.random() * canvasRef.current.width,
-          Math.random() * canvasRef.current.height,
-        ],
-        radius: Math.random() * 16 + 8,
-        size: 0,
-        velocity: Math.random() * 0.02 + 0.005,
-      }
+      const nodes: Node[][] = Array.from({ length: numRows }, (_, i) =>
+        Array.from({ length: numCols }, (_, j) => ({
+          direction: 0,
+          id: idCounterRef.current++,
+          anchor: [j * SPACING + SPACING / 2, i * SPACING + SPACING / 2],
+          position: [0, 0],
+          radius: 16,
+          velocity: 0.01,
+        }))
+      )
 
+      const edges: Edge[] = Array.from({ length: 9 }).map(() => {
+        const initialFrom = [
+          Math.floor(Math.random() * nodes[0].length),
+          Math.floor(Math.random() * nodes.length),
+        ] as [number, number]
+
+        return {
+          from: initialFrom,
+          progress: 0,
+          to: getTarget(nodes, initialFrom),
+        }
+      })
+
+      store.setStateDeep({ edges, nodes })
+    }
+
+    const moveEdges = (delta: number) => {
+      const { edges, nodes } = store.getState()
+
+      const newEdges = edges.map((edge: Edge) => {
+        let newProgress = edge.progress + delta / 4000
+        let newFrom = edge.from
+        let newTo = edge.to
+
+        if (newProgress > 1) {
+          newProgress = 0
+          newFrom = edge.to
+          newTo = getTarget(nodes, edge.to)
+        }
+
+        return {
+          from: newFrom,
+          progress: newProgress,
+          to: newTo,
+        }
+      })
+
+      store.setStateDeep({ edges: newEdges })
+    }
+
+    const moveNodes = () => {
       store.setStateDeep(state => ({
-        nodes: { ...state.nodes, [newNode.id]: newNode },
+        nodes: state.nodes.map((row, i) =>
+          row.map((node, j) => ({
+            ...node,
+            position: [
+              node.anchor[0] +
+                Math.sin(state.lastFrameTime / 4000 + i * 200) * 10,
+              node.anchor[1] +
+                Math.sin(state.lastFrameTime / 4000 + j * 400) * 10,
+            ],
+          }))
+        ),
       }))
-    }
-
-    const moveNodes = (delta: number) => {
-      const nodes = { ...store.getState().nodes }
-
-      Object.values(nodes).forEach(node => {
-        const newNode = { ...node }
-        newNode.position = translatePosition(
-          delta,
-          node.position,
-          node.direction,
-          node.velocity
-        )
-
-        if (newNode.size < 1) {
-          newNode.size = Math.min(1, newNode.size + delta / ENTRANCE_DURATION)
-        }
-
-        nodes[node.id] = newNode
-      })
-
-      store.setStateDeep({ nodes })
-    }
-
-    const removeNodes = () => {
-      const nodes = { ...store.getState().nodes }
-
-      Object.values(nodes).forEach(node => {
-        const [x, y] = node.position
-        const r = node.radius
-
-        if (
-          x + r < 0 ||
-          y + r < 0 ||
-          x - r > canvasRef.current.width ||
-          y - r > canvasRef.current.height
-        ) {
-          delete nodes[node.id]
-        }
-      })
-
-      store.setState(state => ({ ...state, nodes }))
     }
 
     const render = () => {
@@ -181,107 +173,75 @@ const graphAnimation = atom(
       ctx.clearRect(0, 0, width, height)
       ctx.lineCap = 'round'
       ctx.lineWidth = 2
-      ctx.strokeStyle = '#fff'
-      ctx.fillStyle = '#fff4'
-      const rotationOffset = Math.sin(lastFrameTime / 1500)
+      ctx.strokeStyle = `#dffffd`
+      const rotationOffset = Math.sin(lastFrameTime / 3000)
 
-      Object.values(nodes).forEach(node => {
-        ctx.beginPath()
-        ctx.ellipse(
-          node.position[0],
-          node.position[1],
-          node.radius * node.size,
-          (node.radius / 4) * node.size,
-          rotationOffset,
-          0,
-          2 * Math.PI
-        )
-        ctx.stroke()
-
-        ctx.beginPath()
-        ctx.ellipse(
-          node.position[0],
-          node.position[1],
-          node.radius * node.size,
-          (node.radius / 4) * node.size,
-          (2 * Math.PI) / 3 + rotationOffset,
-          0,
-          2 * Math.PI
-        )
-        ctx.stroke()
-
-        ctx.beginPath()
-        ctx.ellipse(
-          node.position[0],
-          node.position[1],
-          node.radius * node.size,
-          (node.radius / 4) * node.size,
-          Math.PI / 3 + rotationOffset,
-          0,
-          2 * Math.PI
-        )
-        ctx.stroke()
-      })
-
-      ctx.lineWidth = 4
-      ctx.strokeStyle = '#fff4'
-
-      edges.forEach(([id1, id2]) => {
-        const node1 = nodes[id1]
-        const node2 = nodes[id2]
-
-        if (!node1 || !node2) return
-
-        const [x1, y1] = node1.position
-        const [x2, y2] = node2.position
-
+      edges.forEach((edge: Edge) => {
+        const [fromX, fromY] = nodes[edge.from[1]][edge.from[0]].position
+        const [toX, toY] = nodes[edge.to[1]][edge.to[0]].position
+        const xDiff = toX - fromX
+        const yDiff = toY - fromY
+        const x1 =
+          edge.progress < 0.4
+            ? fromX
+            : fromX + (xDiff * (edge.progress - 0.4)) / 0.6
+        const y1 =
+          edge.progress < 0.4
+            ? fromY
+            : fromY + (yDiff * (edge.progress - 0.4)) / 0.6
+        const x2 = fromX + xDiff * Math.min(1, edge.progress * 1.4)
+        const y2 = fromY + yDiff * Math.min(1, edge.progress * 1.4)
         ctx.beginPath()
         ctx.moveTo(x1, y1)
         ctx.lineTo(x2, y2)
+        // ctx.moveTo(edge.from[0], edge.from[1])
+        // ctx.lineTo(edge.to[0], edge.to[1])
         ctx.stroke()
       })
 
-      Array.from(
-        { length: 4 },
-        (_, i) =>
-          ((lastFrameTime / (i < 2 ? 60 : 30)) % width) - width * (i % 2)
-      ).forEach(xOffset => {
-        ctx.beginPath()
-        ctx.moveTo(xOffset, height * 0.8)
-        ctx.bezierCurveTo(
-          xOffset + width / 2,
-          height / 2,
-          xOffset + width / 2,
-          height * 1.1,
-          xOffset + width,
-          height * 0.8
-        )
-        ctx.lineTo(xOffset + width, height)
-        ctx.lineTo(xOffset, height)
-        ctx.closePath()
-        ctx.fill()
-      })
+      ctx.lineWidth = 1
 
-      Array.from(
-        { length: 4 },
-        (_, i) =>
-          ((lastFrameTime / (i < 2 ? 40 : 20)) % width) - width * (i % 2)
-      ).forEach(xOffset => {
-        ctx.beginPath()
-        ctx.moveTo(xOffset, height * 0.2)
-        ctx.bezierCurveTo(
-          xOffset + width / 2,
-          height / 2,
-          xOffset + width / 2,
-          height * -0.1,
-          xOffset + width,
-          height * 0.2
-        )
-        ctx.lineTo(xOffset + width, 0)
-        ctx.lineTo(xOffset, 0)
-        ctx.closePath()
-        ctx.fill()
-      })
+      nodes.forEach(row =>
+        row.forEach((node: Node) => {
+          const [x, y] = node.position
+
+          ctx.beginPath()
+          ctx.ellipse(
+            x,
+            y,
+            node.radius,
+            node.radius / 4,
+            rotationOffset,
+            0,
+            2 * Math.PI
+          )
+          ctx.stroke()
+
+          ctx.beginPath()
+          ctx.ellipse(
+            x,
+            y,
+            node.radius,
+            node.radius / 4,
+            (2 * Math.PI) / 3 + rotationOffset,
+            0,
+            2 * Math.PI
+          )
+          ctx.stroke()
+
+          ctx.beginPath()
+          ctx.ellipse(
+            x,
+            y,
+            node.radius,
+            node.radius / 4,
+            Math.PI / 3 + rotationOffset,
+            0,
+            2 * Math.PI
+          )
+          ctx.stroke()
+        })
+      )
     }
 
     const start = (canvas: HTMLCanvasElement) => {
@@ -306,7 +266,8 @@ const graphAnimation = atom(
       const callback: FrameRequestCallback = time => {
         if (!canvasRef.current) return
 
-        const delta = time - store.getState().lastFrameTime
+        const lastFrameTime = store.getState().lastFrameTime
+        const delta = lastFrameTime ? time - lastFrameTime : 0
 
         update(delta)
         render()
@@ -324,10 +285,9 @@ const graphAnimation = atom(
     }
 
     const update = (delta: number) => {
-      maybeSpawnNode(delta)
-      moveNodes(delta)
-      removeNodes()
-      maybeUpdateEdges(delta)
+      maybeGenerateGraph()
+      moveNodes()
+      moveEdges(delta)
     }
 
     injectEffect(() => {

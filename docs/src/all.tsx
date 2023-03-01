@@ -1,11 +1,12 @@
 import React, { ReactNode } from 'react'
-import CodeBlock from './theme/CodeBlock'
+import CodeBlock from '@theme/CodeBlock'
 import RawTabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 
 export { TabItem }
 
 export * from './components/Legend/Legend'
+export * from './theme/CodeBlock/Sandbox'
 export { default as Link } from '@docusaurus/Link'
 
 export const Tsx = (props: any) => <CodeBlock language="tsx" {...props} />

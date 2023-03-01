@@ -25,6 +25,7 @@ import {
 } from 'slate'
 import { withHistory } from 'slate-history'
 import { Slate, withReact, ReactEditor, RenderLeafProps } from 'slate-react'
+import * as ReactImmer from '../../../../packages/immer/src'
 import * as ReactZedux from '../../../../packages/react/src'
 import { LogActions } from './LogActions'
 import { onKeyDown, scrollSelectionIntoView } from './editorUtils'
@@ -50,7 +51,7 @@ declare module 'slate' {
   }
 }
 
-const Zedux = { ...ReactZedux } // resolves all the getters
+const Zedux = { ...ReactZedux, ...ReactImmer } // resolves all the getters
 
 const scope = {
   ...Zedux,
@@ -128,9 +129,9 @@ const evalCode = (
   // eslint-disable-next-line no-new-func
   const fn = new Function('React', ...keys, wrapped)
 
-  const ecosystemsBefore = ReactZedux.internalStore.getState().ecosystems
+  const ecosystemsBefore = ReactZedux.internalStore.getState()
   const result = fn.call(null, React, ...vals)
-  const ecosystemsAfter = ReactZedux.internalStore.getState().ecosystems
+  const ecosystemsAfter = ReactZedux.internalStore.getState()
 
   if (!ecosystemIdRef.current) {
     Object.keys(ecosystemsAfter).forEach(key => {

@@ -7,7 +7,7 @@
 
 import { usePrismTheme } from '@docusaurus/theme-common'
 import styled, { css } from '@site/src/ssc'
-import CodeBlock, { Props } from '@theme-init/CodeBlock'
+import CodeBlock from '@theme-init/CodeBlock'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-jsx'
 import 'prismjs/components/prism-typescript'
@@ -69,6 +69,8 @@ const withLiveEditor = (Component: typeof CodeBlock) => {
     if (props.live) {
       return <Sandbox {...props} />
     }
+
+    return <Component {...props} />
 
     const tokens = Prism.tokenize(
       props.children,
