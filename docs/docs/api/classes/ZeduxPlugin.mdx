@@ -7,7 +7,12 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
 The base class of Zedux [ecosystem](Ecosystem) plugins.
 
-A plugin can turn on ecosystem mods and hook into mod events.
+A plugin can turn on ecosystem mods and hook into mod events. Mod events are just [action objects](../types/Action) containing info about stuff happening inside the ecosystem.
+
+Plugins set up a sort of bidirectional stream with ecosystems:
+
+- Plugins expose a `modStore` for ecosystems to subscribe to. This allows plugins to dynamically turn the mods they need on and off.
+- Ecosystems expose a `modBus` for plugins to subscribe to.
 
 This class also has a single static property - `actions`. This is an object mapping every available mod to an [action factory](../types/ActionFactory) that Zedux uses to dispatch mod events to plugins.
 
@@ -15,6 +20,35 @@ This class also has a single static property - `actions`. This is an object mapp
 // Easy way to see all available mods:
 const allMods = Object.keys(ZeduxPlugin.actions)
 ```
+
+:::note
+Mods have some overhead. That's why they're disabled by default. Turning them all on is _probably_ not recommended in production builds of bigger apps. Dev tools might want them all on and that's _probably_ fine in development.
+:::
+
+## Example
+
+```ts
+const plugin = new ZeduxPlugin({
+  initialMods: ['stateChanged'],
+
+  registerEcosystem: ecosystem => {
+    const subscription = ecosystem.modBus.subscribe({
+      effects: ({ action }) => {
+        if (action.type === ZeduxPlugin.actions.stateChanged.type) {
+          // handle stateChanged mod event
+        }
+      },
+    })
+
+    return () => subscription.unsubscribe()
+  },
+})
+
+const ecosystem = createEcosystem({ id: 'root' })
+ecosystem.registerPlugin(plugin)
+```
+
+This should seem a little busy compared to most of Zedux's APIs. There is lots of room for abstracting some functionality, but for now we're keeping plugins intentionally low-level.
 
 ## Creating
 
@@ -33,10 +67,10 @@ The constructor takes an optional config object:
     <p>Optional. An array of mod strings.</p>
     <p>
       These don't need to be set initially. You can modify this list at any time
-      by changing the state of your plugin's <code>modsStore</code>:
+      by changing the state of your plugin's <code>modStore</code>:
     </p>
     <Ts>{`const plugin = new ZeduxPlugin()
-plugin.modsStore.setState({ stateChanged: true })
+plugin.modStore.setState({ stateChanged: true })
 // This is equivalent to:
 const plugin = new ZeduxPlugin({ initialMods: ['stateChanged'] })`}</Ts>
   </Item>
@@ -66,32 +100,12 @@ const plugin = new ZeduxPlugin({ initialMods: ['stateChanged'] })`}</Ts>
   </Item>
 </Legend>
 
-## Example
-
-```ts
-const plugin = new ZeduxPlugin({
-  initialMods: ['stateChanged'],
-  registerEcosystem: ecosystem => {
-    const subscription = ecosystem.modBus.subscribe({
-      effects: ({ action }) => {
-        if (action.type === ZeduxPlugin.actions.stateChanged.type) {
-          // handle stateChanged mod event
-        }
-      },
-    })
-  },
-})
-
-const ecosystem = createEcosystem({ id: 'root' })
-ecosystem.registerPlugin(plugin)
-```
-
 ## Properties
 
 Every ZeduxPlugin has just two properties:
 
 <Legend>
-  <Item name="modsStore">
+  <Item name="modStore">
     <p>
       A <Link to="Store">Zedux store</Link>.
     </p>
@@ -100,10 +114,153 @@ Every ZeduxPlugin has just two properties:
       will be turned on in ecosystems where this plugin is registered. By
       default, this array is empty, unless you pass a list of initialMods.
     </p>
+    <p>
+      You can change this store's state at any time to turn mods on/off in the
+      ecosystem. When no plugins depend on a given mod, Zedux turns it off.
+    </p>
   </Item>
   <Item name="registerEcosystem">
     A reference to the <code>registerEcosystem</code> function passed to the
     ZeduxPlugin constructor or a no-op function if none was passed.
+  </Item>
+</Legend>
+
+## Mod Details
+
+<Legend>
+  <Item name="activeStateChanged">
+    <p>
+      Turn this mod on to receive mod events every time an atom instance's{' '}
+      <Link to="AtomInstance#activestate">
+        <code>activeState</code>
+      </Link>{' '}
+      property transitions to a new state (e.g. from Initializing to Active or
+      from Active to Stale).
+    </p>
+    <p>Payload shape:</p>
+    <Ts>{`{
+  instance: AnyAtomInstance
+  newActiveState: ActiveState
+  oldActiveState: ActiveState
+}`}</Ts>
+  </Item>
+  <Item name="ecosystemWiped">
+    <p>
+      Turn this mod on to receive a mod event when the ecosystem is wiped
+      (usually as part of a <Link to="Ecosystem#reset">reset</Link>).
+    </p>
+    <p>Payload shape:</p>
+    <Ts>{`{
+  ecosystem: Ecosystem
+}`}</Ts>
+  </Item>
+  <Item name="edgeCreated">
+    <p>
+      Turn this mod on to receive a mod event every time an edge is created in
+      the ecosystem's graph. This edge represents a dependency between two nodes
+      in the graph.
+    </p>
+    <p>Payload shape:</p>
+    <Ts>{`{
+  dependency: AnyAtomInstance | SelectorCacheItem
+  dependent: AnyAtomInstance | SelectorCacheItem | string
+  edge: DependentEdge
+}`}</Ts>
+    <p>
+      <code>dependent</code> will be a string if it's a "pseudo-node" in the
+      graph, representing an external dependent like a React component.
+    </p>
+    <p>
+      You'll usually pair this mod with <code>edgeRemoved</code>.
+    </p>
+  </Item>
+  <Item name="edgeRemoved">
+    <p>
+      Turn this mod on to receive a mod event every time an edge is removed from
+      the ecosystem's graph. This edge represents a dependency between two nodes
+      in the graph.
+    </p>
+    <p>Payload shape:</p>
+    <Ts>{`{
+  dependency: AnyAtomInstance | SelectorCacheItem
+  dependent: AnyAtomInstance | SelectorCacheItem | string
+  edge: DependentEdge
+}`}</Ts>
+    <p>
+      <code>dependent</code> will be a string if it's a "pseudo-node" in the
+      graph, representing an external dependent like a React component.
+    </p>
+    <p>
+      You'll usually pair this mod with <code>edgeCreated</code>.
+    </p>
+  </Item>
+  <Item name="evaluationFinished">
+    <p>
+      Turn this mod on to receive a mod event every time an atom instance or
+      selector in the ecosystem finishes evaluating. This mod makes Zedux track
+      evaluation time of every atom instance and selector.
+    </p>
+    <p>Payload shape:</p>
+    <Ts>{`{
+  cache?: SelectorCacheItem
+  instance?: AnyAtomInstance
+  time: number
+}`}</Ts>
+    <p>
+      Either <code>cache</code> or <code>instance</code> will always be set.{' '}
+      <code>time</code> will be a DOMHighResTimestamp measured in milliseconds.
+    </p>
+    <div class="theme-admonition theme-admonition-note alert alert--secondary admonition_node_modules-@docusaurus-theme-classic-lib-theme-Admonition-styles-module">
+      <div class="admonitionHeading_node_modules-@docusaurus-theme-classic-lib-theme-Admonition-styles-module">
+        <span class="admonitionIcon_node_modules-@docusaurus-theme-classic-lib-theme-Admonition-styles-module">
+          <svg viewBox="0 0 14 16">
+            <path
+              fill-rule="evenodd"
+              d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"
+            ></path>
+          </svg>
+        </span>
+        note
+      </div>
+      <div class="admonitionContent_node_modules-@docusaurus-theme-classic-lib-theme-Admonition-styles-module">
+        <p>
+          This uses{' '}
+          <a
+            href="https://developer.mozilla.org/en-US/docs/Web/API/Performance/now"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <code>performance.now()</code>
+          </a>{' '}
+          in the browser. In other envs, it will fall back to using a
+          non-high-res timestamp via <code>Date.now()</code>.
+        </p>
+      </div>
+    </div>
+  </Item>
+  <Item name="stateChanged">
+    <p>
+      Turn this mod on to receive a mod event every time an atom instance's
+      state or an atom selector's cached result changes.
+    </p>
+    <p>Payload shape:</p>
+    <Ts>{`{
+  action?: ActionChain
+  cache?: SelectorCacheItem
+  instance?: AnyAtomInstance
+  newState: any
+  oldState: any
+  reasons: EvaluationReason[]
+}`}</Ts>
+    <p>
+      Either <code>cache</code> or <code>instance</code> will always be set.
+    </p>
+    <p>
+      If the atom or selector reevaluated due to this state change,{' '}
+      <code>reasons</code> will be set to the list of{' '}
+      <Link to="../types/EvaluationReason">EvaluationReasons</Link> explaining
+      the evaluation. Otherwise it will be empty.
+    </p>
   </Item>
 </Legend>
 
