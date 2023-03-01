@@ -6,29 +6,37 @@ export default function DocItemTOCDesktop() {
   const { toc, frontMatter } = useDoc()
   const clonedToc = [...toc]
 
-  const otherElements = document.querySelectorAll('.markdown > * > div.anchor')
+  const otherElements =
+    typeof document === 'undefined'
+      ? []
+      : document.querySelectorAll('.markdown > * > div.anchor')
 
-  ;[...otherElements].reverse().forEach(el => {
-    let prevAnchor = el.parentElement.previousElementSibling
+  // can't use [...otherElements] here for unknown crazy docusaurus reasons:
+  Array.from(otherElements)
+    .reverse()
+    .forEach(el => {
+      if (!el.parentElement) return
 
-    while (prevAnchor && !prevAnchor.classList.contains('anchor')) {
-      prevAnchor = prevAnchor.previousElementSibling
-    }
+      let prevAnchor = el.parentElement.previousElementSibling
 
-    if (!prevAnchor) return
+      while (prevAnchor && !prevAnchor.classList.contains('anchor')) {
+        prevAnchor = prevAnchor.previousElementSibling
+      }
 
-    const prevAnchorIndex = clonedToc.findIndex(
-      item => item.id === prevAnchor.id
-    )
+      if (!prevAnchor) return
 
-    if (prevAnchorIndex === -1) return
+      const prevAnchorIndex = clonedToc.findIndex(
+        item => item.id === prevAnchor.id
+      )
 
-    clonedToc.splice(prevAnchorIndex + 1, 0, {
-      id: el.id,
-      level: 3,
-      value: el.innerHTML,
+      if (prevAnchorIndex === -1) return
+
+      clonedToc.splice(prevAnchorIndex + 1, 0, {
+        id: el.id,
+        level: 3,
+        value: el.innerHTML,
+      })
     })
-  })
 
   return (
     <TOC

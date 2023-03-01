@@ -8,7 +8,7 @@ const options = {
   SelectorCache: 'Selector Cache',
   Ecosystem: 'Ecosystem',
   Graph: 'Graph',
-  Scope: 'Zedux Scope',
+  Scope: 'Sandbox Scope',
 }
 
 const Backdrop = styled.div`
@@ -122,9 +122,9 @@ export const LogActions = ({
       Graph: () => {
         const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
         console.group('Current graph:')
-        console.log('Flat:', ecosystem.inspectGraph('flat'))
-        console.log('Top-Down:', ecosystem.inspectGraph('top-down'))
-        console.log('Bottom-Up:', ecosystem.inspectGraph('bottom-up'))
+        console.log('Flat:', ecosystem.viewGraph('flat'))
+        console.log('Top-Down:', ecosystem.viewGraph('top-down'))
+        console.log('Bottom-Up:', ecosystem.viewGraph('bottom-up'))
         console.groupEnd()
       },
       SelectorCache: () => {
@@ -137,7 +137,7 @@ export const LogActions = ({
         console.groupEnd()
       },
       Scope: () => {
-        console.group('Zedux exports available in the sandbox:')
+        console.group('Exports available in the sandbox:')
         console.log('Zedux:', Zedux)
         console.log('React:', React)
         console.groupEnd()

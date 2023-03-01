@@ -14,7 +14,7 @@ const Wrapper = styled.div`
   box-shadow: 4px 4px 8px 1px #0004;
   display: grid;
   grid-template-columns: auto minmax(0, 4fr);
-  margin: 0 -0.8rem;
+  margin: 0 -0.8rem var(--ifm-paragraph-margin-bottom);
 `
 
 export const Legend = ({ children }: PropsWithChildren) => {
