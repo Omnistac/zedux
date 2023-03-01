@@ -64,7 +64,12 @@ const hydratedManually = injectStore(
 When creating a store composed of child stores and/or reducers, you may think to do it like this:
 
 ```ts
-const store = injectStore(() => createStore({ a: storeA, b: storeB }))
+const store = injectStore(() =>
+  createStore({
+    a: storeA,
+    b: storeB,
+  })
+)
 ```
 
 This is fine **if** the child store references are stable. A common case where store references are technically unstable is when using stores injected from other atoms:
@@ -77,8 +82,18 @@ const storeB = injectAtomInstance(atomB).store
 Since atom instances can be force-destroyed, these stores are technically unstable references. To keep these references up-to-date in the parent store, prefer [`store.use()`](../classes/Store#use):
 
 ```ts
-
+const store = injectStore()
+store.use({
+  a: storeA,
+  b: storeB,
+})
 ```
+
+`store.use()` does nothing if the hierarchy hasn't changed, so this will be a noop on reevaluations where the child stores are unchanged.
+
+:::note
+While it's supported and we have found use cases for composing together stores from different atom instances like this, we don't recommend it. If you can possibly avoid it, do.
+:::
 
 ## Signature
 

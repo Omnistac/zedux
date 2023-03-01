@@ -11,7 +11,12 @@ import { injectEffect } from '@zedux/react'
 
 An [injector](../glossary#injector) that attaches a side effect to an atom instance. Runs the effect on initial atom evaluation and again every time the passed dependencies change on subsequent evaluations.
 
-This is _almost_ exactly equivalent to React's [`useEffect()`](https://reactjs.org/docs/hooks-reference.html#useeffect) hook. The only difference being that `injectEffect()` accepts async functions (a function that returns a promise).
+This is _almost_ exactly equivalent to React's [`useEffect()`](https://reactjs.org/docs/hooks-reference.html#useeffect) hook. `injectEffect()` has two additional features:
+
+- `injectEffect()` accepts an async callback function (a function that returns a promise).
+- `injectEffect()` accepts a 3rd [`config`](#config) parameter.
+
+## Async Callback
 
 ```ts
 injectEffect(async () => {
@@ -38,7 +43,9 @@ injectEffect(() => {
 We may make `useEffect` callbacks take an [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController) to hook into to perform cleanup tasks. If that sounds useful for you, open an issue and let's discuss!
 :::
 
-This injector does not run the callback when the [`ssr` ecosystem config option](../types/EcosystemConfig#ssr) is set to true.
+## SSR
+
+`injectEffect()` does not run the callback when the [`ssr` ecosystem config option](../types/EcosystemConfig#ssr) is set to true. This mimics `useEffect`'s SSR behavior.
 
 ## Examples
 
@@ -97,7 +104,7 @@ injectEffect(async () => {
 ## Signature
 
 <Tabs>
-  {tab1(`injectEffect = (effect, deps?) => void`)}
+  {tab1(`injectEffect = (effect, deps?, config?) => void`)}
   {tab2(
     `declare const injectEffect: (effect: EffectCallback, deps?: InjectorDeps) => void`
   )}
@@ -150,6 +157,28 @@ injectEffect(async () => {
     <p>
       If not passed, the effect will rerun on every evaluation. This is almost
       never what you want.
+    </p>
+  </Item>
+  <Item name="config">
+    <p>Optional. An object containing a single optional boolean property:</p>
+    <Ts>{`{ synchronous }`}</Ts>
+    <p>
+      By default, <code>injectEffect()</code> defers executing the side effect
+      until the next turn of the event loop. This mimics <code>useEffect</code>
+      's behavior.
+    </p>
+    <p>
+      Passing <code>{`{ synchronous: true }`}</code> prevents{' '}
+      <code>injectEffect()</code> from deferring execution of the callback. It
+      will run immediately.
+    </p>
+    <p>
+      This can be useful for situations where you're expecting an atom to be
+      used exclusively outside React. The default behavior of deferring side
+      effects can be counterintuitive when e.g. an atom instance is created,
+      used, and destroyed synchronously in one turn of the event loop. In this
+      case, effects declared in that atom will never run. Use the{' '}
+      <code>synchronous</code> option to make sure they do.
     </p>
   </Item>
   <Item name="Returns">Nothing. Void. Emptiness.</Item>
