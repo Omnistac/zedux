@@ -1,0 +1,87 @@
+---
+id: internal-store-utils
+title: Internal Store Utils
+---
+
+```ts
+import {
+  getEcosystem,
+  internalStore,
+  setInternalStore,
+  wipe,
+} from '@zedux/react'
+```
+
+Zedux exports an `internalStore` and a few utility functions for working with it. You should almost never use these in a real app. They're mostly for testing and odd situations like supporting multiple windows.
+
+## `internalStore`
+
+Zedux creates a store internally to keep track of all ecosystems. Ecosystems are mutable objects with functions and circular references and all sorts of non-Reduxy patterns. This is by design - for performance and efficiency. But it means you can't use this global store to track state changes like in a normal, immutable flow.
+
+Plugins can subscribe to this store to see when ecosystems are created and destroyed. You can also use this to inspect the internal state of Zedux. Readonly!
+
+The state of this store is an object mapping ecosystem ids to ecosystems. When an ecosystem is destroyed, it's removed from this store.
+
+```ts
+import { createEcosystem, internalStore } from '@zedux/react'
+
+const rootEcosystem = createEcosystem({ id: 'root' })
+
+internalStore.getState()
+// {
+//   root: rootEcosystem
+// }
+
+const subscription = internalStore.subscribe((newState, oldState) => {
+  // some logic a plugin might use to detect new and destroyed ecosystems:
+  const newKeys = Object.keys(newState)
+  const oldKeys = oldState ? Object.keys(oldState) : []
+
+  const newEcosystems = newKeys.filter(key => !oldKeys.includes(key))
+  const destroyedEcosystems = oldKeys.filter(key => !newKeys.includes(key))
+})
+```
+
+## `getEcosystem`
+
+Retrieves an ecosystem given an id.
+
+```ts
+import { getEcosystem, internalStore } from '@zedux/react'
+
+const ecosystem = createEcosystem({ id: 'my-ecosystem' })
+
+getEcosystem('my-ecosystem') === ecosystem
+// this getEcosystem call is an alias for:
+internalStore.getState()['my-ecosystem']
+```
+
+## `setInternalStore`
+
+Completely replaces Zedux' `internalStore` with the passed store. This is only for use in apps that need to support multiple realms (e.g. browser windows) where each realm loads its own instance of Zedux, React, etc.
+
+To share your ecosystem setup across realms, you could share each ecosystem and manually set each Zedux instance's `internalStore`'s state yourself. But the more complete approach is to share Zedux' internalStore across the realms and use `setInternalStore` to make Zedux reuse the exact same `internalStore` in every realm.
+
+```ts
+// in main window:
+import { internalStore } from '@zedux/react'
+window.zeduxInternalStore = internalStore
+
+// in child window:
+import { setInternalStore } from '@zedux/react'
+setInternalStore(window.opener.zeduxInternalStore)
+```
+
+This effectively "replaces" the child window's Zedux instance with the parent window's. Just be sure to do this before rendering the child window's React app or using any other Zedux APIs in the child window.
+
+## `wipe`
+
+Destroys every ecosystem and resets the `internalStore`'s state to an empty object. You shouldn't ever need this, but can use it as a safety net in tests, e.g.:
+
+```ts
+import { wipe } from '@zedux/react'
+
+afterAll(() => {
+  wipe()
+})
+```
