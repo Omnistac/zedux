@@ -85,25 +85,14 @@ function Swapper() {
 All properties are readonly!
 
 <Legend>
-  <Item name="complexAtomParams">
+  <Item name="complexParams">
     <p>
-      A boolean. This is set to the <code>complexAtomParams</code> value you
-      passed via <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when
+      A boolean. This is set to the <code>complexParams</code> value you passed
+      via <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when
       creating this ecosystem. If not specified, defaults to false.
     </p>
     <p>
-      Whether to allow non-serializable values as atom params. See{' '}
-      <Link to="../../advanced/complex-params">the complex params guide</Link>.
-    </p>
-  </Item>
-  <Item name="complexSelectorParams">
-    <p>
-      A boolean. This is set to the <code>complexSelectorParams</code> value you
-      passed via <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when
-      creating this ecosystem. If not specified, defaults to false.
-    </p>
-    <p>
-      Whether to allow non-serializable values as atom selector arguments. See{' '}
+      Whether to allow non-serializable values as atom and selector params. See{' '}
       <Link to="../../advanced/complex-params">the complex params guide</Link>.
     </p>
   </Item>
@@ -322,7 +311,11 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
     <p>
       Destroys all atom instances in the ecosystem, cleans up the ecosystem
       itself (e.g. by removing all currently scheduled tasks), and removes it
-      from the <Link to="../miscellaneous/internalStore">internalStore</Link>.
+      from the{' '}
+      <Link to="../utils/internal-store-utils#internalstore">
+        internalStore
+      </Link>
+      .
     </p>
     <p>Signature:</p>
     <Ts>{`destroy = (force?) => void`}</Ts>

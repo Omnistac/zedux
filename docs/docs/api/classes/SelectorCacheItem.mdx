@@ -3,6 +3,105 @@ id: SelectorCacheItem
 title: SelectorCacheItem
 ---
 
-:::note
-🚧 This page is under construction
-:::
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+Every time an [ecosystem](Ecosystem)'s [`.selectorCache`](SelectorCache) caches an atom selector, the "cached selector" is really just an instance of this class. Thus, an instance of this class is what's returned from various SelectorCache methods like [`.getCache()`](SelectorCache#getcache) and [`.inspectCacheItems()`](SelectorCache#inspectcacheitems).
+
+This class has no special functionality. It just stores data. It has to be a class (not any old object) so that Zedux can detect instances of it for certain APIs.
+
+## Example
+
+```ts live resultVar=cacheItem
+const ecosystem = createEcosystem({ id: 'selector-cache-item-example' })
+const numbersAtom = atom('numbers', () => [1, 2, 3, 4, 5, 6, 7])
+
+const getOddNumbers = ({ get }: AtomGetters) =>
+  get(numbersAtom).filter(num => num % 2)
+
+const cacheItem = ecosystem.selectorCache.getCache(getOddNumbers)
+```
+
+## Properties
+
+<Legend>
+  <Item name="args">
+    <p>
+      An array or undefined if this selector wasn't given args. This array
+      contains references to the actual args passed, in the order passed.
+    </p>
+  </Item>
+  <Item name="cacheKey">
+    <p>
+      A string. The key Zedux uses to refer to this SelectorCacheItem in the
+      SelectorCache and the ecosystem graph.
+    </p>
+    <p>
+      Contains a deterministic hash of all the selector's args and a name
+      generated from the selector's function name if possible or the{' '}
+      <Link to="../types/AtomSelectorConfig">AtomSelectorConfig</Link>'s{' '}
+      <code>.name</code> property if given.
+    </p>
+  </Item>
+  <Item name="isDestroyed">
+    <p>
+      A boolean or undefined. Cached atom selectors don't have a real lifecycle
+      like [atom instances](AtomInstance#activestate). This is all they get.
+    </p>
+    <p>
+      This will be set to true when the selector's ref count goes from 1 to 0
+      and Zedux will discard all references to this object, allowing it to be
+      garbage collected. If you're ever using an instance of this class where{' '}
+      <code>isDestroyed</code> is true, you're doing something wrong. Consider
+      using{' '}
+      <Link to="../../walkthrough/destruction#manual-graphing">
+        manual graphing
+      </Link>{' '}
+      to prevent automatic destruction and handle force destruction of
+      SelectorCacheItems you're using outside React/atoms.
+    </p>
+  </Item>
+  <Item name="nextEvaluationReasons">
+    <p>
+      An array that tracks the batched{' '}
+      <Link to="../types/EvaluationReason">EvaluationReasons</Link> that will
+      lead to the selector reevaluating.
+    </p>
+    <p>
+      If the selector is currently evaluating, this is the list of reasons
+      explaining why and is what{' '}
+      <Link to="Ecosystem#why">
+        <code>ecosystem.why()</code>
+      </Link>{' '}
+      will return.
+    </p>
+    <p>
+      This will be empty if no reevaluation is currently scheduled or if this is
+      the first evaluation of the selector.
+    </p>
+  </Item>
+  <Item name="prevEvaluationReasons">
+    <p>
+      An array that tracks the batched{' '}
+      <Link to="../types/EvaluationReason">EvaluationReasons</Link> describing
+      why the selector last evaluated. This will be empty if the last evaluation
+      was the first.
+    </p>
+  </Item>
+  <Item name="result">
+    <p>
+      The cached return value of the atom selector. Selectors don't use{' '}
+      <Link to="Store">stores</Link>, this mutable value just sits right here.
+    </p>
+  </Item>
+  <Item name="selectorRef">
+    <p>
+      A reference to the actual selector function or AtomSelectorConfig object
+      used to generate this selector cache item
+    </p>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Selectors walkthrough](../../walkthrough/selectors)
+- [The `SelectorCache` class](SelectorCache)

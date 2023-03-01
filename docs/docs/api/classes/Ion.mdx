@@ -5,9 +5,7 @@ title: Ion
 
 Extends [Atom](Atom).
 
-Ions are a specialized atom type. They excel at selector-type operations.
-
-Ions extend the Atom class. An ion's [state factory](../glossary#state-factory) receives a special [AtomGetters object](../types/AtomGetters) as its first parameter..
+Ions are a specialized atom type. They excel at selector-type operations. The only difference is that an ion's [state factory](../glossary#state-factory) receives an [AtomGetters object](../types/AtomGetters) as its first parameter. All other params work exactly the same as normal atom params.
 
 Unlike atoms, ions _must_ be given a state factory function. That's the whole point!
 

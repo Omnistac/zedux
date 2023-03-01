@@ -3,9 +3,14 @@ id: Atom
 title: Atom
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 export const AtomKeyDesc = () => (
   <div>
-    The key is the key to Dependency Injection - it's how ecosystems know which atoms to override. It also aids development - many errors will log the key of the atom they originated in. Keys also help with a codebase's grepability.
+    The key is the key to Dependency Injection - it's how ecosystems know which
+    atoms to override. It also aids development - many errors will log the key
+    of the atom they originated in. Keys also help with a codebase's
+    grepability.
   </div>
 )
 
@@ -25,75 +30,162 @@ const exampleAtom = atom('example', 'initial state')
 exampleAtom instanceof Atom // true
 ```
 
-## Properties
-
-This class exposes the following properties:
-
-### `.key`
-
-A string. Will always be set. This is the first parameter passed to [the `atom()` factory](../factories/atom).
-
-<AtomKeyDesc />
-
-### `.flags`
-
-An array of strings. May be undefined. The flags that will be checked alongside an [ecosystem's flags](Ecosystem#flags) to warn about unsafe atoms being used in certain environments.
-
-Set this via the [AtomConfig option](../types/AtomConfig#flags) passed to [the `atom()` factory](../factories/atom).
-
-### `.forwardPromises`
-
-A boolean. May be undefined. If not set, the [ecosystem's `.defaultForwardPromises` property](Ecosystem#defaultforwardpromises) will be used. If set to `true`, this atom's instances will create a default [`promise` property](AtomInstance#promise) that is effectively a `Promise.all()` of the atom instance's initial dependencies' promises.
-
-No default promise will be created if:
-
-- None of the initial dependencies have promises.
-- A promise is set manually via [AtomApi's `.setPromise()`](AtomApi#setpromise).
-
-Setting this option overrides the `.defaultForwardPromises` config option set at [the ecosystem level](Ecosystem#defaultforwardpromises).
-
-See [the suspense walkthrough](../../walkthrough/suspense) for examples.
-
-Set this via the [AtomConfig option](../types/AtomConfig#forwardpromises) passed to [the `atom()` factory](../factories/atom).
-
-### `.maxInstances`
-
-A number. May be undefined. Indicates the largest ideal cache size of the atom.
-
-When more than `maxInstances` number of atom instances of this atom are created in an ecosystem, Zedux' behavior will change regarding the cleanup of those instances. Zedux will ignore `ttl` and instantly clean up instances when they go stale until the number of instances is back within `maxInstances`.
-
-Set this via the [AtomConfig option](../types/AtomConfig#maxinstances) passed to [the `atom()` factory](../factories/atom).
-
-### `.ttl`
-
-A number. May be undefined. If not set, the [ecosystem's `defaultTtl`](Ecosystem#defaultttl) will be used. If the ecosystem doesn't set a default, instances of this atom will live forever by default. Setting this value will override any default.
-
-- Set to `-1` to make this atom's instances live forever.
-- Set to `0` to make all atom instances in this ecosystem die by default as soon as they go stale.
-- Set to any positive integer to make atoms live in a stale state for `<ttl>` milliseconds before being cleaned up.
-
-This option can be overridden and configured more granularly by the atom instances themselves via [AtomApi#setTtl](AtomApi#setttl).
-
-Set this via the [AtomConfig option](../types/AtomConfig#ttl) passed to [the `atom()` factory](../factories/atom).
-
-## Methods
-
-This class exposes the following methods:
-
-### `.override`
-
-Creates an exact clone of this atom, but with a different value.
-
-```ts
-.override(newValue) => Atom
-```
-
-Returns the new atom.
-
-#### `newValue`
-
-Can be any of the same [six value types](../factories/atom#value) that `atom()` accepts.
-
 ## Extending
 
 When creating your own, custom atom types, you'll usually want to extend this class. Creating your own atom types is an advanced feature and we're not currently documenting it as the internals of these classes may change.
+
+## Properties
+
+<Legend>
+  <Item name="dehydrate">
+    <p>A function. Can be undefined.</p>
+    <p>
+      A reference to the{' '}
+      <Link to="../types/AtomConfig#dehydrate">
+        <code>dehydrate</code>
+      </Link>{' '}
+      atom config option passed to{' '}
+      <Link to="../factories/atom">
+        <code>atom()</code>
+      </Link>
+      , if any.
+    </p>
+  </Item>
+  <Item name="flags">
+    <p>An array of strings. Can be undefined.</p>
+    <p>
+      A reference to the{' '}
+      <Link to="../types/AtomConfig#flags">
+        <code>flags</code>
+      </Link>{' '}
+      atom config option passed to{' '}
+      <Link to="../factories/atom">
+        <code>atom()</code>
+      </Link>
+      , if any.
+    </p>
+    <p>
+      The flags that will be checked alongside an{' '}
+      <Link to="Ecosystem#flags">ecosystem's flags</Link> to warn about unsafe
+      atoms being used in certain environments.
+    </p>
+  </Item>
+  <Item name="hydrate">
+    <p>A function. Can be undefined.</p>
+    <p>
+      A reference to the{' '}
+      <Link to="../types/AtomConfig#hydrate">
+        <code>hydrate</code>
+      </Link>{' '}
+      atom config option passed to{' '}
+      <Link to="../factories/atom">
+        <code>atom()</code>
+      </Link>
+      , if any.
+    </p>
+  </Item>
+  <Item name="key">
+    <p>A string.</p>
+    <p>
+      This is the key string passed as the first param to{' '}
+      <Link to="../factories/atom">
+        <code>atom()</code>
+      </Link>
+      .
+    </p>
+    <AtomKeyDesc />
+  </Item>
+  <Item name="manualHydration">
+    <p>A boolean. Can be undefined.</p>
+    <p>
+      This is the{' '}
+      <Link to="../types/AtomConfig#manualHydration">
+        <code>manualHydration</code>
+      </Link>{' '}
+      atom config option passed to{' '}
+      <Link to="../factories/atom">
+        <code>atom()</code>
+      </Link>
+      , if any.
+    </p>
+  </Item>
+  <Item name="ttl">
+    <p>A number. Can be undefined.</p>
+    <p>
+      This is the{' '}
+      <Link to="../types/AtomConfig#ttl">
+        <code>ttl</code>
+      </Link>{' '}
+      atom config option passed to{' '}
+      <Link to="../factories/atom">
+        <code>atom()</code>
+      </Link>
+      , if any.
+    </p>
+    <p>
+      If not set, the{' '}
+      <Link to="Ecosystem#defaultttl">
+        ecosystem's <code>defaultTtl</code>
+      </Link>{' '}
+      will be used. If the ecosystem doesn't set a default, instances of this
+      atom will live forever by default. Setting this value will override any
+      default.
+    </p>
+    <ul>
+      <li>Set to `-1` to make this atom's instances live forever.</li>
+      <li>
+        Set to `0` to destroy all instances of this atom as soon as they go
+        stale.
+      </li>
+      <li>
+        Set to any positive integer to make atoms live in a stale state for{' '}
+        <code>&lt;ttl&gt;</code> milliseconds before being cleaned up.
+      </li>
+    </ul>
+    <p>
+      This option can be overridden and configured more granularly by the atom
+      instances themselves via{' '}
+      <Link to="AtomApi#setttl">
+        <code>AtomApi#setTtl()</code>
+      </Link>
+      .
+    </p>
+  </Item>
+</Legend>
+
+## Methods
+
+<Legend>
+  <Item name="getKeyHash">
+    <p>Gets a string keyHash for a specific instance of this atom.</p>
+    <p>Signature:</p>
+    <Ts>{`getKeyHash = (ecosystem, params?) => keyhash`}</Ts>
+    <p>
+      Accepts an ecosystem and an array of atom params (required if the atom
+      takes params, <code>undefined</code> if not). Uses the ecosystem's id
+      generator to generate a predictable hash of the atom's key + params combo.
+    </p>
+    <p>
+      Zedux uses this internally to generate atom instance keyHashes. You won't
+      typically call this.
+    </p>
+  </Item>
+  <Item name="override">
+    <p>Creates a clone of this atom, but with a different value.</p>
+    <p>Signature:</p>
+    <Ts>{`override = (newValue) => newAtom`}</Ts>
+    <p>
+      Accepts any of the same{' '}
+      <Link to="../factories/atom#value">value types</Link> that{' '}
+      <code>atom()</code> accepts. The state, promise, and exports type of the
+      new value should match the corresponding types in the overridden atom.
+      TypeScript will enforce this.
+    </p>
+    <p>Returns the new atom</p>
+  </Item>
+</Legend>
+
+## See Also
+
+- [`atom()`](../factories/atom)
+- [The Configuring Atoms walkthrough](../../walkthrough/configuring-atoms)

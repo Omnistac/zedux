@@ -3,7 +3,9 @@ id: AtomApi
 title: AtomApi
 ---
 
-Atom APIs Dynamically define certain integral properties of an atom. These properties do not fit well in the [injector paradigm](../glossary#injector), as they define key characteristics of the atom itself.
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+Atom APIs dynamically define certain integral properties of an atom. These properties do not fit well in the [injector paradigm](../glossary#injector), as they define key characteristics of the atom itself.
 
 These properties include an atom's exports, suspense promise, and custom TTL configuration.
 
@@ -32,12 +34,10 @@ const overwritingExports = api(withExports).setExports({ ...newExports })
 
 ## Usage
 
-AtomApis can be passed to `atom()` as the value. They can also be returned from an evaluator function.
+AtomApis can be used to pass stores, promises, and exports around. Ultimately, you'll return only one AtomApi from the state factory.
 
 ```ts
 import { api, atom, injectStore } from '@zedux/react'
-
-const exampleAtom = atom('example', api('initial state'))
 
 const withEvaluator = atom('withEvaluator', () => {
   return api('initial state')
@@ -68,64 +68,143 @@ const composingApis = atom('composingApis', () => {
 
 ## Properties
 
-AtomApis expose the following properties:
+AtomApis expose the following **readonly** properties:
 
-### `.exports`
-
-The object of the exports added to this AtomApi via [`.setExports()`](#setexports) and/or [`.addExports()`](#addexports). May be undefined.
-
-### `.promise`
-
-A promise that Zedux will use to cause React to suspend everywhere this atom instance is used until the promise resolves. Set this via [`.setPromise()`](#setpromise).
-
-### `.ttl`
-
-An [AtomInstanceTtl](../types/AtomInstanceTtl) or a function that returns an AtomInstanceTtl. If a function, it will be called when Zedux schedules this atom instance's destruction. Will override any ecosystem- or atom-level ttl for this atom instance.
-
-### `.value`
-
-A reference to the value passed to [the `api()` factory](../factories/api). Can be either a raw value or a [Zedux store](Store).
-
-If it's a store and this AtomApi is returned from an evaluator function, the store should be a stable reference that won't change on subsequent evaluations, e.g. by using [`injectStore()`](../injectors/injectStore).
+<Legend>
+  <Item name="exports">
+    <p>
+      An object, or <code>undefined</code> if no exports were set.
+    </p>
+    <p>
+      These are the exports added to this AtomApi via{' '}
+      <Link to="#setexports">
+        <code>.setExports()</code>
+      </Link>{' '}
+      and/or{' '}
+      <Link to="#addexports">
+        <code>.addExports()</code>
+      </Link>
+      .
+    </p>
+  </Item>
+  <Item name="promise">
+    <p>
+      The promise set via{' '}
+      <Link to="#setpromise">
+        <code>.setPromise()</code>
+      </Link>
+      .
+    </p>
+    <p>
+      Unless the AtomApi's <code>.value</code> is a promise (creating a "query
+      atom"), this promise will be set as the atom instance's suspense{' '}
+      <code>.promise</code> (if this AtomApi is returned from the state
+      factory). For query atoms, this property is ignored.
+    </p>
+  </Item>
+  <Item name="store">
+    <p>
+      If this AtomApi's <code>.value</code> is a store, the store will also be
+      assigned to this property. This is mostly for convenience when working
+      with TypeScript, since the <code>.value</code> property won't retain all
+      the type information of the exact store used.
+    </p>
+  </Item>
+  <Item name="ttl">
+    <p>
+      The value set via{' '}
+      <Link to="#setttl">
+        <code>.setTtl()</code>
+      </Link>{' '}
+      (if any). An <Link to="../types/AtomInstanceTtl">AtomInstanceTtl</Link> or
+      a function that returns an AtomInstanceTtl. If a function, it will be
+      called when Zedux schedules this atom instance's destruction. Will
+      override any ecosystem- or atom-level ttl for this atom instance (if this
+      AtomApi is returned from the state factory).
+    </p>
+  </Item>
+  <Item name="value">
+    <p>
+      A reference to the value passed to{' '}
+      <Link to="../factories/api">
+        the <code>api()</code> factory
+      </Link>
+      . Can be any raw value or a <Link to="Store">Zedux store</Link>.
+    </p>
+    <p>
+      If it's a store and this AtomApi is returned from a state factory, the
+      store should be a stable reference that won't change on subsequent
+      evaluations, e.g. by using{' '}
+      <Link to="../injectors/injectStore">
+        <code>injectStore()</code>
+      </Link>
+      .
+    </p>
+  </Item>
+</Legend>
 
 ## Methods
 
-AtomApis expose the following methods:
+<Legend>
+  <Item name="addExports">
+    <p>
+      Accepts an object. The object can contain anything, though all properties
+      should be stable references - memoized functions or ref objects that won't
+      change on subsequent evaluations.
+    </p>
+    <p>
+      Merges the passed object into any already-set [exports](#exports) on this
+      AtomApi. If no exports have been set yet on this AtomApi,{' '}
+      <code>.addExports()</code> sets the exports.
+    </p>
+    <p>Returns the AtomApi for chaining.</p>
+    <Ts>{`api('val')
+  .addExports({ a: 1 })
+  .addExports({ b: 2 })
+  .addExports({ a: 3 })
+  .exports // { a: 3, b: 2 }`}</Ts>
+  </Item>
+  <Item name="setExports">
+    <p>
+      The main way to set an AtomApi's exports. Accepts an object. The object
+      can contain anything, though all properties should be stable references -
+      memoized functions or ref objects that won't change on subsequent
+      evaluations.
+    </p>
+    <p>Overwrites any previously-set exports on this AtomApi.</p>
+    <p>Returns the AtomApi for chaining.</p>
+    <Ts>{`const initialExports = api(val).setExports({ ...myExports })
+const overwriteExports = api(initialExports).setExports({ ...newExports })`}</Ts>
+  </Item>
+  <Item name="setPromise">
+    <p>
+      Accepts a promise. Sets the{' '}
+      <Link to="#promise">
+        <code>.promise</code>
+      </Link>{' '}
+      property of this AtomApi. If this AtomApi is returned from a state
+      factory, the promise will be set as the atom instance's promise and will
+      be used to cause React to suspend.
+    </p>
+    <p>
+      This promise does not have to be a stable reference, though you should be
+      conscious of when its reference changes since any components using the
+      atom instance will re-suspend when the promise changes (if this AtomApi is
+      returned from the state factory).
+    </p>
+    <p>Returns the AtomApi for chaining.</p>
+  </Item>
+  <Item name="setTtl">
+    <p>
+      Accepts an <Link to="../types/AtomInstanceTtl">AtomInstanceTtl</Link> or a
+      function that returns an AtomInstanceTtl. This will be set as the
+      AtomApi's <code>.ttl</code> property.
+    </p>
+    <p>Returns the AtomApi for chaining.</p>
+  </Item>
+</Legend>
 
-### `.addExports`
+## See Also
 
-Accepts an object. The object can contain anything, though all properties should be stable references - memoized functions or ref objects that won't change on subsequent evaluations. Returns the AtomApi for chaining.
-
-Merges the passed object into any already-set [exports](#exports) on this AtomApi. If no exports have been set on this AtomApi, sets the exports.
-
-```ts
-const initialExports = api(val).addExports({ ...myExports })
-const addedExports = api(val)
-  .setExports({ ...myExports })
-  .addExports({ ...moreExports })
-```
-
-### `.setExports`
-
-Accepts an object. The object can contain anything, though all properties should be stable references - memoized functions or ref objects that won't change on subsequent evaluations. Returns the AtomApi for chaining.
-
-Overwrites any previously-set exports on this AtomApi
-
-```ts
-const initialExports = api(val).setExports({ ...myExports })
-const overwriteExports = api(initialExports).setExports({ ...newExports })
-```
-
-### `.setPromise`
-
-Accepts a promise. Returns the AtomApi for chaining.
-
-Sets the [`.promise`](#promise) property of this AtomApi. If this AtomApi is returned from an evaluator, the promise will be set as the atom instance's promise and will be used to cause React to suspend.
-
-This promise should be a stable reference. If you create a new promise on a subsequent reevaluation, Zedux will ignore it.
-
-### `.setTtl`
-
-Accepts an [AtomInstanceTtl](../types/AtomInstanceTtl) or a function that returns an AtomInstanceTtl. If a function, it will be called when Zedux schedules this atom instance's destruction.
-
-Sets the [`.ttl`](#ttl) property of this AtomApi. Overrides any `ttl` set on this [atom](Atom#ttl) or any default ttl on this [ecosystem](Ecosystem#defaultttl).
+- [The Atom APIs walkthrough](../../walkthrough/atom-apis)
+- [`api()`](../factories/api)
