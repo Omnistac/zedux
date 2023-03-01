@@ -3,23 +3,23 @@ id: complex-params
 title: Complex Params
 ---
 
-Atom params and Atom Selector params must be serializable (with the exception of atom instances). Though it isn't recommended, you can disable this requirement.
+Atom params and atom selector params must be serializable (with the exception of atom instances). Though it isn't recommended, you can disable this requirement.
 
 :::tip you will learn
-How to make Zedux map non-serializable objects to serializable ids when creating atom instance and Atom Selector cache keys
+How to make Zedux map non-serializable objects to serializable ids when creating atom instance and atom selector cache keys
 :::
 
-## `complexAtomParams`
+## `complexParams`
 
-This ecosystem config option turns on param mapping for atom params.
+This ecosystem config option turns on param mapping for atom and atom selector params.
 
 ```tsx
 const ecosystem = createEcosystem({
-  complexAtomParams: true,
+  complexParams: true,
   id: 'root',
 })
 // or
-<EcosystemProvider complexAtomParams id="root">
+<EcosystemProvider complexParams id="root">
   {children}
 </EcosystemProvider>
 ```
@@ -34,7 +34,7 @@ const numbers = Array(10)
 const numbersAtom = atom('numbers', filter => numbers.filter(filter))
 
 const ecosystem = createEcosystem({
-  complexAtomParams: true,
+  complexParams: true,
   id: 'atom-params-example',
 })
 
@@ -49,6 +49,44 @@ const output = {
   oddNumbers: oddNumbersInstance.getState(),
 }
 ```
+
+An example with atom selectors:
+
+```tsx live ecosystemId=blues resultVar=App
+const colorsAtom = atom('colors', () => [
+  { name: 'azure', base: 'blue' },
+  { name: 'navy', base: 'blue' },
+  { name: 'burgundy', base: 'red' },
+])
+
+// an atom selector:
+const getByFilter = ({ get }, filter) => get(colorsAtom).filter(filter)
+
+// a nice helper function we made
+const filterByBlues = item => item.base === 'blue'
+
+function Blues() {
+  // the `filterByBlues` param isn't serializable but we can pass it now thanks
+  // to `complexParams`:
+  const blues = useAtomSelector(getByFilter, filterByBlues)
+
+  return (
+    <ul>
+      {blues.map(item => (
+        <li key={item.name}>{item.name}</li>
+      ))}
+    </ul>
+  )
+}
+
+const App = () => (
+  <EcosystemProvider complexParams id="blues">
+    <Blues />
+  </EcosystemProvider>
+)
+```
+
+Try clicking `Log > Graph` to see that Zedux generated an id for the `getByFilter` atom selector node's param.
 
 ### Referential Equality
 
@@ -66,61 +104,6 @@ const getEvenNumbers = num => num % 2
 getInstance(numbersAtom, [getEvenNumbers])
 getInstance(numbersAtom, [getEvenNumbers])
 ```
-
-## `complexSelectorParams`
-
-This ecosystem config option turns on param mapping for atom selector params.
-
-```tsx
-const ecosystem = createEcosystem({
-  complexSelectorParams: true,
-  id: 'root',
-})
-// or
-<EcosystemProvider complexSelectorParams id="root">
-  {children}
-</EcosystemProvider>
-```
-
-:::info important
-As with atom params, when passing non-serializable params to Atom Selectors, make sure the object references are stable so Zedux can recognize them.
-:::
-
-```tsx live ecosystemId=blues resultVar=App
-const colorsAtom = atom('colors', () => [
-  { name: 'azure', base: 'blue' },
-  { name: 'navy', base: 'blue' },
-  { name: 'burgundy', base: 'red' },
-])
-
-// an Atom Selector:
-const getByFilter = ({ get }, filter) => get(colorsAtom).filter(filter)
-
-// a nice helper function we made
-const filterByBlues = item => item.base === 'blue'
-
-function Blues() {
-  // the `filterByBlues` param isn't serializable but we can pass it now thanks
-  // to `complexSelectorParams`:
-  const blues = useAtomSelector(getByFilter, filterByBlues)
-
-  return (
-    <ul>
-      {blues.map(item => (
-        <li key={item.name}>{item.name}</li>
-      ))}
-    </ul>
-  )
-}
-
-const App = () => (
-  <EcosystemProvider complexSelectorParams id="blues">
-    <Blues />
-  </EcosystemProvider>
-)
-```
-
-Try clicking `Log > Graph` to see that Zedux generated an id for the `getByFilter` Atom Selector node's param.
 
 ## Why not?
 

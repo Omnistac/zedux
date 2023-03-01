@@ -67,11 +67,11 @@ const loginAtom = atom('login', () => {
 })
 ```
 
-(Note that the better solution is to move the `logout` function somewhere else - e.g. inside `loginAtom` - completely avoiding the circular dependency in the first place).
+(Note that the better solution here is to move the `logout` function somewhere else - e.g. inside `loginAtom` - completely avoiding the circular dependency in the first place).
 
 ### Workaround 2
 
-Use [manual graphing](destruction#manual-graphing) to add a dependency later.
+Use [manual graphing](../walkthrough/destruction#manual-graphing) to add a dependency later.
 
 ```ts
 const atomA = atom('a', () => {
@@ -89,14 +89,16 @@ const atomB = atom('b', () => {
     const cleanup = a.addDependent()
     store.setState(a)
 
-    return cleanup
+    return cleanup // this is insufficient; see Important Note below
   }, [])
 
   return store
 })
 ```
 
-In this case, these two atoms have real dependencies on each other. As such, they prevent each other from being cleaned up. You'll need to account for that by destroying the manually created edge or force destroying if destruction is needed.
+:::note Important Note below
+In this case, these two atoms have real dependencies on each other. As such, they prevent each other from being cleaned up, so this `injectEffect` cleanup will never run. You'll need to account for that by destroying the manually created edge yourself or force destroying either instance if destruction is needed.
+:::
 
 ## Atom Instance Factories
 
@@ -145,7 +147,75 @@ function Form() {
 }
 ```
 
-(Note that this is a contrived example. There may be better ways to do per-field form validation).
+(Note that this is a contrived example. There are certainly better ways to do per-field form validation).
+
+## Recursive Atoms
+
+Zedux doesn't directly have a concept of "recursive atoms" or "atoms-in-atoms". However, Zedux' APIs are so powerful that setting up recursive atoms is easy. Here's just one of many ways to go about it:
+
+```tsx live ecosystemId=more-patterns/recursive-atoms resultVar=App
+const idGeneratorAtom = atom('idGenerator', () =>
+  api().setExports({ idCounter: injectRef(0) })
+)
+
+const nodeAtom = atom('node', (id: number) => {
+  const idGenerator = injectAtomInstance(idGeneratorAtom)
+
+  const store = injectStore({
+    children: [],
+    id,
+  })
+
+  const addChild = () => {
+    store.setStateDeep(state => ({
+      children: [...state.children, idGenerator.exports.idCounter.current++],
+    }))
+  }
+
+  const removeChild = (targetId: number) => {
+    store.setStateDeep(state => ({
+      children: state.children.filter(childId => childId !== targetId),
+    }))
+  }
+
+  return api(store).setExports({ addChild, removeChild })
+})
+
+function Node({
+  id,
+  onDelete,
+}: {
+  id: number
+  onDelete?: (id: number) => void
+}) {
+  const [{ children }, { addChild, removeChild }] = useAtomState(nodeAtom, [id])
+
+  return (
+    <div>
+      <div>
+        Node Id: {id} {onDelete && <button onClick={onDelete}>Delete</button>}
+      </div>
+      <ul>
+        {children.map(id => (
+          <li key={id}>
+            <Node id={id} onDelete={() => removeChild(id)} />
+          </li>
+        ))}
+        <li>
+          <button onClick={addChild}>+ Add Child</button>
+        </li>
+      </ul>
+    </div>
+  )
+}
+
+function App() {
+  const idGenerator = useAtomInstance(idGeneratorAtom)
+  const rootId = useMemo(() => idGenerator.exports.idCounter.current++, [])
+
+  return <Node id={rootId} />
+}
+```
 
 ## Params Are Constant
 
@@ -160,12 +230,12 @@ const requestAtom = atom('request', (endpoint: string) => {
   let prefix = ''
 
   if (!endpoint.startsWith('http')) {
-    prefix = injectAtomValue(protocolAtom) // not recommended...
+    prefix = injectAtomValue(protocolAtom) // technically fine
   }
 
   injectEffect(() => {
     fetch(`${prefix}${endpoint}`).then(...)
-  }, []) // <- don't need to pass endpoint or prefix
+  }, [prefix]) // <- don't need to pass endpoint
 })
 ```
 

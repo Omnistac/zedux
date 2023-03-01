@@ -58,8 +58,8 @@ module.exports = {
         type: 'category',
         label: 'Components',
         items: [
-          'api/components/EcosystemProvider',
           'api/components/AtomInstanceProvider',
+          'api/components/EcosystemProvider',
         ],
       },
       {
@@ -109,14 +109,6 @@ module.exports = {
       },
       {
         type: 'category',
-        label: 'Miscellaneous',
-        items: [
-          'api/miscellaneous/internalTypes',
-          'api/miscellaneous/internalStore',
-        ],
-      },
-      {
-        type: 'category',
         label: 'Types',
         items: [
           'api/types/Action',
@@ -127,17 +119,32 @@ module.exports = {
           'api/types/AtomInstanceTtl',
           'api/types/AtomSelector',
           'api/types/AtomSelectorConfig',
+          'api/types/DependentCallback',
           'api/types/EcosystemConfig',
           'api/types/EvaluationReason',
           'api/types/HierarchyDescriptor',
+          'api/types/MachineState',
+          'api/types/PromiseState',
           'api/types/Reducer',
           'api/types/ReducerBuilder',
           'api/types/Settable',
+          'api/types/StoreEffect',
           'api/types/Subscriber',
           'api/types/Subscription',
         ],
       },
+      {
+        type: 'category',
+        label: 'Utils',
+        items: [
+          'api/utils/action-chain-utils',
+          'api/utils/createInjector',
+          'api/utils/internal-store-utils',
+          'api/utils/internalTypes',
+        ],
+      },
       'api/glossary',
     ],
+    Packages: ['packages/immer'],
   },
 }
