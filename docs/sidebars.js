@@ -141,6 +141,7 @@ module.exports = {
           'api/utils/createInjector',
           'api/utils/internal-store-utils',
           'api/utils/internalTypes',
+          'api/utils/is',
         ],
       },
       'api/glossary',
