@@ -1,0 +1,59 @@
+```tsx live ecosystemId=suspense2 resultVar=App
+const testAtom = atom('test', () => {
+  const internalStore = injectStore({})
+
+  const promiseApi = injectPromise(
+    () => new Promise(resolve => setTimeout(() => resolve('the val'), 1000)),
+    [internalStore.getState()],
+    { subscribe: false }
+  )
+
+  const store = injectStore(null, { subscribe: false })
+
+  store.use({ internal: internalStore, promise: promiseApi.store })
+
+  return api(store)
+    .setPromise(promiseApi.promise)
+    .setExports({
+      changePromise: () => internalStore.setState({}),
+    })
+})
+
+function Child() {
+  const [
+    {
+      promise: { data },
+    },
+    { changePromise },
+  ] = useAtomState(testAtom)
+  const [isPending, startTransition] = useTransition()
+
+  return (
+    <>
+      <div>
+        data! {data}. Is pending: {isPending ? 'yes' : 'no'}
+      </div>
+      <div>
+        <button
+          onClick={() => {
+            startTransition(() => {
+              // React transitions don't apply to suspense. But if they ever do, this will be cool:
+              changePromise()
+            })
+          }}
+        >
+          Change Promise
+        </button>
+      </div>
+    </>
+  )
+}
+
+function App() {
+  return (
+    <Suspense fallback={<div>Fallback</div>}>
+      <Child />
+    </Suspense>
+  )
+}
+```
