@@ -7,7 +7,7 @@ Zedux' atomic model was born in 2020 shortly after Recoil started gaining tracti
 
 ## Atom/Selector Families
 
-Recoil distinguishes between `atom`, `selector`, `atomFamily`, and `selectorFamily`. Zedux' `atom` alone replaces all 4, though Zedux also provides `ion` which is more commonly used to replace `selector`/`selectorFamily`.
+Recoil distinguishes between `atom`, `selector`, `atomFamily`, and `selectorFamily`. Zedux' [`atom`](../api/factories/atom) alone replaces all 4, though Zedux also provides [`ion`](../api/factories/ion) which is more commonly used to replace `selector`/`selectorFamily`.
 
 Recoil:
 
@@ -52,7 +52,7 @@ function MyComponent() {
 }
 ```
 
-You can think of every atom as an "atom family" in Zedux. Params are used to create different atom instances ("family members"). Atoms that don't take params will be a "family" of size one.
+You can think of every atom as an "atom family" in Zedux. Params are used to create different atom instances ("family members"). Atoms that don't take params will be a "family" of size one (aka a singleton).
 
 Zedux relies on TypeScript to yell at you if you pass the wrong params or forget to pass them.
 
@@ -183,7 +183,7 @@ const currentUserIdAtom = atom('currentUserId', () => {
   const store = injectStore(savedValue != null ? JSON.parse(savedValue) : 1)
   const currentState = store.getState()
 
-  // injectEffect works just like useEffect!
+  // injectEffect works just like React's useEffect!
   injectEffect(() => {
     localStorage.setItem(key, JSON.stringify(currentState))
   }, [currentState])
@@ -199,7 +199,7 @@ Despite having many extra features like state machines, the composable store mod
 - Recoil 78kb minified
 - Zedux 45kb minified
 
-We expect Zedux to grow a little and Recoil to shrink if it drops support for older React versions, but the difference is still astounding.
+Granted, we expect Zedux to grow a little and Recoil to shrink if it drops support for older React versions.
 
 ## Synchronous Evaluation
 
@@ -225,7 +225,7 @@ const zeduxPlusRxEqualsLove = atom('❤️', () => {
   const store = injectStore([])
   const mySocket$ = injectAtomValue(mySocketAtom)
 
-  // yes, you can even abstract all this out in a custom injector!
+  // yes, you can even abstract this out to a custom `injectSocket` injector!
   injectEffect(() => {
     const subscription = mySocket$.subscribe(val =>
       store.setState(state => [...state, val])
@@ -269,87 +269,7 @@ const TodoResetButton = () => {
 }
 ```
 
-Zedux (same approach, but using the ecosystem to prevent registering a static dependency in the component):
-
-```tsx
-const todoListAtom = atom('todoList', () => [])
-
-const TodoResetButton = () => {
-  const ecosystem = useEcosystem()
-
-  return (
-    <button
-      onClick={() => ecosystem.weakGetInstance(todoListAtom)?.invalidate()}
-    >
-      Reset
-    </button>
-  )
-}
-```
-
-Zedux (using an export):
-
-```tsx
-const todoListAtom = atom('todoList', () => {
-  const store = injectStore([])
-
-  return api(store).setExports({
-    reset: () => store.setState([]),
-  })
-})
-
-const TodoResetButton = () => {
-  const { reset } = useAtomInstance(todoListAtom).exports
-
-  return <button onClick={reset}>Reset</button>
-}
-```
-
-Zedux (using [`instance.destroy(true)`](../api/classes/AtomInstance#destroy) on an atom whose dependents will recreate it):
-
-```tsx
-const todoListAtom = atom('todoList', () => [])
-
-const TodoResetButton = () => {
-  // don't destructure the `destroy` AtomInstance class method:
-  const instance = useAtomInstance(todoListAtom)
-
-  return <button onClick={() => instance.destroy(true)}>Reset</button>
-}
-```
-
-Zedux (using a seperate reset stream):
-
-```tsx
-const resetAtom = atom('reset')
-const injectReset = callback => {
-  const resetInstance = injectAtomInstance(resetAtom)
-
-  injectEffect(() => {
-    const subscription = resetInstance.store.subscribe({
-      effects: () => callback(),
-    })
-
-    return () => subscription.unsubscribe()
-  }, [resetInstance])
-}
-
-const todoListAtom = atom('todoList', () => {
-  const store = injectStore([])
-
-  injectReset(() => store.setState([]))
-
-  return store
-})
-
-const GlobalResetButton = () => {
-  const instance = useAtomInstance(resetAtom)
-
-  return (
-    <button onClick={() => instance.dispatch({ type: 'reset' })}>Reset</button>
-  )
-}
-```
+See more ways to reset state in Zedux in [the resets walkthrough](../walkthrough/resets).
 
 ## Conclusion
 

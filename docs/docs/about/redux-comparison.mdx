@@ -7,7 +7,7 @@ Zedux is more comparable to [Redux Toolkit](https://redux-toolkit.js.org/) (RTK)
 
 As its name suggests, Zedux originated from Redux. It actually started off as Redux middleware in early 2017. Zedux is now a comprehensive suite of state management tools that has several things in common with Redux Toolkit and lots of other features.
 
-The Z in Zedux is for Zero config. One of the main features of Zedux is its zero config stores. This feature alone makes Zedux feel very different from Redux.
+The Z in Zedux is for Zero-config. One of the main features of Zedux is its zero-config stores. This feature alone makes Zedux feel very different from Redux.
 
 ```ts
 const store = createStore() // no config required!
@@ -19,10 +19,10 @@ In this comparison, we won't use Zedux' React or atomic APIs. Zedux' React usage
 ## TL;DR
 
 - Both Redux and Zedux stores can be given reducers to drive state creation and updates.
-- Zedux has zero config stores.
+- Zedux has zero-config stores.
 - In both, state should not be mutated.
-- RTK wraps reducers in immer producers. Zedux does not (we may implement this someday. Not for now).
-- Both have similar reducer splitting APIs
+- RTK wraps reducers in immer producers. Zedux offers a separate [`@zedux/immer` package](../packages/immer).
+- Both have similar reducer splitting APIs.
 - Both have similar action creator and reducer creation APIs.
 - In both, actions and reducers have a many-to-many relationship.
 - In both, dispatched actions can be observed, saved, and replayed for a time travel debugging experience.
@@ -31,9 +31,8 @@ In this comparison, we won't use Zedux' React or atomic APIs. Zedux' React usage
 - Both have similar state hydration APIs.
 - Redux uses middleware to manage side effects. Zedux uses effects subscribers.
 - Redux uses middleware for plugins. Zedux doesn't offer a dedicated plugin system at the store level (plugins are at the ecosystem level).
-- In both, stores are observables (streams) of state.
-- In Zedux, stores are also observables of actions.
-- In Zedux, store dispatches are completely synchronous. In Redux, synchrony depends on your middleware.
+- In both, stores are observables (streams) of state. In Zedux, stores are also observables of actions.
+- In Redux, synchrony depends on your middleware. In Zedux, store dispatches are completely synchronous.
 
 ## Comparables
 
@@ -59,13 +58,13 @@ import { createStore } from '@zedux/react'
 const store = createStore(rootReducer)
 ```
 
-But this is optional in Zedux.
+But this is optional (and not very common) in Zedux.
 
 ```ts
 const zeroConfigStore = createStore()
 ```
 
-Due to their simplicity, zero config stores are extremely common in Zedux.
+Due to their simplicity, zero-config stores are extremely common in Zedux.
 
 ### Reducer Splitting
 
@@ -128,7 +127,7 @@ const counterReducer = createReducer(initialState, builder => {
 })
 ```
 
-Zedux - use `actionFactory()` and `createReducer()`. No immer (for now).
+Zedux - use `actionFactory()` and `createReducer()`. The `@zedux/immer` package doesn't support reducers (currently).
 
 ```ts
 import { actionFactory, createReducer } from '@zedux/react'
@@ -257,9 +256,9 @@ store.subscribe({
 
 ## No Middleware
 
-Yep. It isn't necessary. Side effects like logging or running sagas or observables can all be effectively handled by Zedux' effects subscribers. Batching and canceling actions may not be possible, but those never were necessary at the store level - they can be handled just fine outside the store.
+Yep. It isn't necessary. Side effects like logging or running sagas or observables can all be effectively handled by Zedux' effects subscribers. Batching and canceling actions may not be possible, but those never were necessary at the store level - they can be handled just fine outside the store. Batchine in particular is much less common in Zedux since the atomic model naturally makes all your state updates smaller and more granular.
 
-In Redux, middleware can also be useful for adding plugins. Zedux has atoms, which can encapsulate the state, side effects, and exports of the store. A plugin system at the store level isn't very necessary.
+In Redux, middleware can also be useful for adding plugins. Zedux has atoms, which can encapsulate the state, side effects, and exports of a "state slice". A plugin system at the store level isn't very necessary.
 
 Some operations are easier without middleware and some are harder. Those should more or less balance out.
 

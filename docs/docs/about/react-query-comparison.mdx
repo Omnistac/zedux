@@ -5,23 +5,131 @@ title: React Query Comparison
 
 While Zedux doesn't (yet!) provide helpers for query operations (infinite scrolling, pagination, etc), Zedux is currently patterned after React Query more than any other library (yes, more than Redux or Recoil). React Query's cache management is unparalleled. So Zedux' atomic model borrows a lot of ideas from it.
 
-However, the purpose of Zedux is very different from React Query. React Query is designed around promises - managing their state, side effects, and result caches. Zedux is designed to manage both application state (a la Redux/Recoil) and cached server data. Zedux isn't limited to promises.
+However, the purpose of Zedux is very different from React Query. React Query is designed around promises - managing their state, side effects, and result caches. Zedux is designed to manage both application state (a la Redux/Recoil) and cached server data. Zedux has _some_ special features for handling promises, but currently very little compared React Query.
 
 ## Queries
 
 Structurally, Zedux [atoms](../api/classes/Atom) are very similar to React Query [queries](https://react-query.tanstack.com/guides/queries).
 
+- Query keys and atom keys are constructed from a "deterministic" hash of their parameters.
 - For destroying stale instances: Atoms have [`ttl`](../api/classes/Atom#ttl). Queries have `cacheTime`.
 - For suspense: Atoms have [`.setPromise()`](../api/classes/AtomApi#setpromise). Queries have `suspense`.
 - For tracking promise state: Zedux has query atoms and [`injectPromise()`](../api/injectors/injectPromise). Queries track promise state by default.
 
+A side-by-side comparison, using suspense:
+
+```ts
+// React Query:
+function usePosts() {
+  return useQuery(
+    'posts',
+    async () => {
+      const { data } = await axios.get('/posts')
+      return data
+    },
+    { suspense: true }
+  )
+}
+// ... in a component:
+const { data } = usePosts()
+
+// Zedux:
+const postsAtom = atom('posts', () => {
+  const fetchPosts = async () => {
+    const { data } = await axios.get('/posts')
+    return data
+  }
+
+  // `return api(promise)` is how you make query atoms in Zedux
+  return api(fetchPosts())
+})
+// ... in a component:
+const { data } = useAtomValue(postsAtom)
+```
+
+Note that atom state factories can't be asynchronous functions. This is because the function body is used to dynamically inject dependencies, building Zedux' powerful DI graph.
+
+## Dependent Queries
+
+In React Query, it's up to components to specify query dependencies by passing the `enabled` option to `useQuery`.
+
+```ts
+const { data: user } = useQuery(['user', email], getUserByEmail)
+
+const userId = user?.id
+
+const { isIdle, data: projects } = useQuery(
+  ['projects', userId],
+  getProjectsByUser,
+  { enabled: !!userId }
+)
+```
+
+In Zedux, atoms are more autonomous. They specify their own dependencies.
+
+```ts
+const userProjectsAtom = atom('userProjects', (email: string) => {
+  const user = injectAtomValue(userByEmail, [email])
+
+  const userId = user?.id
+
+  return injectPromise(() => getProjectsByUser(userId), [userId])
+})
+```
+
+Zedux doesn't have an `idle` state (currently). The above example would be `success` until `userIdAtom` updates with a value. If you need an `idle` state, open an issue and let's discuss!
+
+## Mutations
+
+Zedux doesn't have a concept of mutations. Mutation functions are typically exported from atoms, but many approaches are possible. Here's an example grouping query and mutation operations together in a single atom:
+
+```ts
+const usersAtom = atom('users', () => {
+  // a "query"
+  const fetchUsers = async () => {
+    const { data } = await axios.get('/users')
+    return data
+  }
+
+  const promiseApi = injectPromise(fetchUsers, [])
+
+  // a "mutation"
+  const updateUser = (id: string, user: User) => {
+    // we could also easily add an optimistic update right here
+    await axios.post(`/users/${id}`, user)
+
+    // we can do a full refetch (this mimics React Query most closely):
+    promiseApi.store.setState(await fetchUsers()) // essentially an invalidation
+    // or just update the record we know changed:
+    promiseApi.store.setStateDeep({ [id]: user })
+    // moving that above the .post() is all it takes to do an optimistic update
+  }
+
+  // The query controls the state of this atom. The mutation is exported:
+  return promiseApi.addExports({ updateUser })
+})
+// ... in a component:
+const [{ data }, { updateUser }] = useAtomState(usersAtom)
+```
+
+## Invalidation
+
+Because of the mutation differences, Zedux and React Query also have very different concepts of invalidation. React Query is designed around invalidating caches manually with `invalidateQueries()`, especially after mutations.
+
+Zedux allows manual invalidation via [`instance.invalidate()`](../api/classes/AtomInstance#invalidate), but use cases for it are rare. Instead, the two approaches demonstrated in the above `usersAtom` example are common ways to go about it:
+
+- Precisely update state and let updates cascade through the atom graph, automatically rerunning atom state factories/`injectEffect` effects.
+- Manually rerun "query" functions like in the above `fetchUsers` example and directly "invalidate" state via `store.setState()`.
+
 ## QueryClient
 
-Zedux [ecosystems](../api/classes/Ecosystem) are patterned after React Query's [QueryClient](https://react-query.tanstack.com/reference/QueryClient). They both create autonomous environments for managing atoms/queries that can be used outside React and are especially useful for testing.
+Zedux [ecosystems](../api/classes/Ecosystem) are patterned after React Query's [QueryClient](https://react-query.tanstack.com/reference/QueryClient). They both create autonomous environments for managing [atoms|queries] that can be used outside React and are especially useful for testing.
 
 ## Stream Support
 
-Zedux atoms are designed to support any asynchronous architecture. This means that (for now) Zedux doesn't provide any promise-specific helpers like React Query's `onSuccess`, `refetchOnWindowFocus`, `retryDelay`, etc. The upside is, atoms aren't restricted to using promises.
+React Query can work with sockets without too much hassle. But React Query is designed for promises. Zedux atoms are designed to support any asynchronous architecture.
+
+This means that (for now) Zedux doesn't provide any promise-specific helpers like React Query's `onSuccess`, `refetchOnWindowFocus`, `retryDelay`, etc. The upside is, working with sockets/data streaming paradigms is more natural with Zedux.
 
 ```ts
 import { atom, injectAtomValue, injectEffect, injectStore } from '@zedux/react'
@@ -47,4 +155,4 @@ const messagesAtom = atom('messages', () => {
 })
 ```
 
-This is more flexible, but does require more boilerplate. Most functionality can be abstracted, of course. We may provide a `@zedux/query` package someday that provides a full suite of tools for handling promises.
+This is more flexible, but can require more boilerplate for promises. Most functionality can be abstracted, of course. We may provide a `@zedux/query` package someday that provides a full suite of tools for handling promises.
