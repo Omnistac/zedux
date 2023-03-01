@@ -17,6 +17,9 @@ import { AtomBase } from './atoms/AtomBase'
 import { Ecosystem } from './Ecosystem'
 import { SelectorCacheItem } from './SelectorCache'
 
+const perf =
+  typeof performance !== 'undefined' ? performance : { now: () => Date.now() }
+
 /**
  * A stack of AtomInstances and AtomSelectors that are currently evaluating -
  * innermost instance/selector (the one that's actually currently evaluating) at
@@ -125,7 +128,7 @@ export class EvaluationStack {
     const item = stack.pop()
     if (!item || !this.ecosystem._mods.evaluationFinished) return
 
-    const time = item.start ? performance.now() - item.start : 0
+    const time = item.start ? perf.now() - item.start : 0
     const action = { time } as ActionFactoryPayloadType<
       typeof pluginActions.evaluationFinished
     >
@@ -163,7 +166,7 @@ export class EvaluationStack {
     }
 
     if (this.ecosystem._mods.evaluationFinished) {
-      newItem.start = performance.now()
+      newItem.start = perf.now()
     }
 
     stack.push(newItem)
