@@ -25,7 +25,7 @@ export class ZeduxPlugin {
    */
   public static actions = pluginActions
 
-  public modsStore: Store<Mod[]>
+  public modStore: Store<Mod[]>
   public registerEcosystem: (ecosystem: Ecosystem) => MaybeCleanup
 
   constructor({
@@ -35,7 +35,7 @@ export class ZeduxPlugin {
     initialMods?: Mod[]
     registerEcosystem?: (ecosystem: Ecosystem) => MaybeCleanup
   } = {}) {
-    this.modsStore = createStore(null, initialMods)
+    this.modStore = createStore(null, initialMods)
 
     this.registerEcosystem = registerEcosystem || (() => {})
   }

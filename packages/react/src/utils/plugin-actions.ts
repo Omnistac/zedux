@@ -22,17 +22,17 @@ export const pluginActions = {
   ),
   edgeCreated: actionFactory<
     {
-      dependency: AnyAtomInstance
+      dependency: AnyAtomInstance | SelectorCacheItem
       // string if `edge.flags & External`:
-      dependent: AnyAtomInstance | string
+      dependent: AnyAtomInstance | SelectorCacheItem | string
       edge: DependentEdge
     },
     'edgeCreated'
   >('edgeCreated'),
   edgeRemoved: actionFactory<
     {
-      dependency: AnyAtomInstance | SelectorCacheItem<any, any[]>
-      dependent: AnyAtomInstance | SelectorCacheItem<any, any[]> | string // string if edge is External
+      dependency: AnyAtomInstance | SelectorCacheItem
+      dependent: AnyAtomInstance | SelectorCacheItem | string // string if edge is External
       edge: DependentEdge
     },
     'edgeRemoved'
@@ -48,15 +48,15 @@ export const pluginActions = {
       },
     'evaluationFinished'
   >('evaluationFinished'),
-  // either instance or selectorCache will always be defined, depending on the node type
+  // either cache or instance will always be defined, depending on the node type
   stateChanged: actionFactory<
     {
       action?: ActionChain
+      cache?: SelectorCacheItem
       instance?: AnyAtomInstance
       newState: any
       oldState: any
       reasons: EvaluationReason[]
-      selectorCache?: SelectorCacheItem
     },
     'stateChanged'
   >('stateChanged'),

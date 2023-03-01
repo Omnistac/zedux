@@ -432,7 +432,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public registerPlugin(plugin: ZeduxPlugin) {
     if (this.plugins.some(descriptor => descriptor.plugin === plugin)) return
 
-    const subscription = plugin.modsStore.subscribe((newState, oldState) => {
+    const subscription = plugin.modStore.subscribe((newState, oldState) => {
       this.recalculateMods(newState, oldState)
     })
 
@@ -443,7 +443,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
 
     this.plugins.push({ cleanup, plugin })
-    this.recalculateMods(plugin.modsStore.getState())
+    this.recalculateMods(plugin.modStore.getState())
   }
 
   /**
@@ -562,7 +562,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     this.plugins[index].cleanup()
     this.plugins.splice(index, 1)
-    this.recalculateMods(undefined, plugin.modsStore.getState())
+    this.recalculateMods(undefined, plugin.modStore.getState())
   }
 
   public viewGraph(view: 'bottom-up'): GraphViewRecursive
