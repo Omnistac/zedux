@@ -3,6 +3,18 @@ id: AtomInstance
 title: AtomInstance
 ---
 
+import useBaseUrl from '@docusaurus/useBaseUrl'
+import {
+  Legend,
+  Item,
+  Link,
+  Sandbox,
+  Tabs,
+  Ts,
+  tab1,
+  tab2,
+} from '@site/src/all'
+
 All standard "atom instances" are actually instances of this class. When Zedux instantiates [Ions](Ion) and [Standard Atoms](Atom), it's just creating instances of this class.
 
 ## Creation
@@ -13,6 +25,7 @@ Many hooks and injectors return instances of this class.
 
 ```ts
 import { useAtomInstance } from '@zedux/react'
+import { myAtom } from './atoms'
 
 function MyComponent() {
   // creates the instance if it doesn't exist yet
@@ -27,13 +40,14 @@ An atom instance can be provided over React context via [`<AtomInstanceProvider>
 
 ```tsx
 import { AtomInstanceProvider, useAtomInstance } from '@zedux/react'
+import { myAtom } from './atoms'
 
-function App() {
+function Parent() {
   const instance = useAtomInstance(myAtom)
 
   return (
     <AtomInstanceProvider instance={instance}>
-      <Routes />
+      <Child />
     </AtomInstanceProvider>
   )
 }
@@ -43,237 +57,238 @@ Consume provided instances with [`useAtomConsumer`](../hooks/useAtomConsumer)
 
 ```ts
 import { useAtomConsumer } from '@zedux/react'
+import { myAtom } from './atoms'
 
 function Child() {
   const instance = useAtomConsumer(myAtom)
 }
 ```
 
+## Extending
+
+There are many aspects of an atom instance's behavior you can overwrite when extending this class. This is an extremely advanced feature. We're not documenting it yet as the internals of this class may change.
+
 ## Properties
 
 Atom instances have the following **readonly** properties:
 
-### `.activeState`
-
-A string representing the status of the atom instance. Can be `Active`, `Destroyed`, `Stale`, or `Initializing`.
-
-You typically shouldn't need to look at this, but there are some cases where you might. For example, when holding a reference to an atom instance outside of React that you expect to be destroyed, you may need to check that `instance.activeState !== 'Destroyed'` before you use it (and if it is, update your local reference using [`ecosystem.getInstance()`](Ecosystem#getinstance)).
-
-### `.atom`
-
-A reference to the [atom](Atom) that this atom instance was created from.
-
-### `.ecosystem`
-
-A reference to the [ecosystem](Ecosystem) that created and controls this atom instance.
-
-### `.exports`
-
-An object. May be undefined, if nothing was exported.
-
-The exports of the atom instance, as defined by the instance's [AtomApi](AtomApi).
-
-This object is stable. It is set the first time an atom instance is created and will not change on subsequent evaluations.
-
-```ts
-import { api, atom } from '@zedux/react'
-
-const exportsAtom = atom('exports', api().setExports({ hello: 'world' }))
-
+<Legend>
+  <Item name="activeState">
+    <p>A string representing the status of the atom instance:</p>
+    <div>
+      <img
+        alt="Initializing -> Active <-> Stale -> Destroyed"
+        src={useBaseUrl('/img/diagrams/active-state-machine.png')}
+      />
+    </div>
+    <p>
+      You typically shouldn't need to look at this but you may, for example,
+      want to check that <code>instance.activeState !== 'Destroyed'</code> when
+      holding a reference to an atom instance outside of React/atoms (and if it
+      is, update your local reference using{' '}
+      <Link to="Ecosystem#getinstance">ecosystem.getInstance()</Link>).
+    </p>
+  </Item>
+  <Item name="atom">
+    <p>
+      A reference to the <Link to="Atom">atom</Link> that this atom instance was
+      created from.
+    </p>
+  </Item>
+  <Item name="ecosystem">
+    <p>
+      A reference to the <Link to="Ecosystem">ecosystem</Link> that created and
+      controls this atom instance.
+    </p>
+  </Item>
+  <Item name="exports">
+    <p>An object. May be undefined, if nothing was exported.</p>
+    <p>
+      The exports of the atom instance, as defined by the instance's returned{' '}
+      <Link to="AtomApi">AtomApi</Link>.
+    </p>
+    <p>
+      This object is stable. It is set the first time an atom instance is
+      created and will not change on subsequent evaluations.
+    </p>
+    <Ts>{`import { api, atom } from '@zedux/react'\n
+const exportsAtom = atom('exports', api().setExports({ hello: 'world' }))\n
 const importAtom = atom('import', () => {
   const { hello } = injectAtomInstance(exportsAtom).exports
-})
-```
-
-### `.keyHash`
-
-A string representing the stable, unique key of this atom instance in the ecosystem. This keyHash is the combination of the [atom's `key`](Atom#key) and a stable stringification of the [`params`](#params) of this atom instance. Zedux uses this internally for like ... everything.
-
-```ts
-useAtomInstance(atom('a', null)).keyHash // 'a'
-useAtomInstance(
+})`}</Ts>
+  </Item>
+  <Item name="keyHash">
+    <p>
+      A string representing the stable, unique key of this atom instance in the
+      ecosystem. This keyHash is the combination of the{' '}
+      <Link to="Atom#key">atom's key</Link> and a stable stringification of the{' '}
+      <Link to="#params">
+        <code>params</code>
+      </Link>{' '}
+      of this atom instance. Zedux uses this internally to identify this atom
+      instance in the graph and atom instances cache.
+    </p>
+    <Ts>{`ecosystem.getInstance(atom('a', null)).keyHash // 'a'
+ecosystem.getInstance(
   atom('b', (param: string) => param),
   ['c']
-).keyHash // 'b-["c"]'
-```
-
-### `.params`
-
-A reference to the raw, unserialized params that were used to create this atom instance. If the atom doesn't take params, this will be an empty array.
-
-```ts
-const instanceA = useAtomInstance(myAtom, ['param 1', 'param 2'])
+).keyHash // 'b-["c"]'`}</Ts>
+  </Item>
+  <Item name="params">
+    <p>
+      A reference to the raw, unserialized params that were used to create this
+      atom instance. If the atom doesn't take params, this will be an empty
+      array.
+    </p>
+    <Ts>{`const instanceA = useAtomInstance(myAtom, ['param 1', 'param 2'])
 const instanceB = useAtomInstance(myAtom, ['a', 'b'])
 instanceA.params // ['param 1', 'param 2']
-instanceB.params // ['a', 'b']
-```
-
-All params must be serializable (no functions or symbols)! This is because Zedux converts the params to a stable string representation in order to efficiently check for an existing atom instance with the "same" params.
-
-Sameness is determined by deep value comparison, not reference equality. Order matters!
-
-```ts
-// These params are the "same" in Zedux' eyes:
+instanceB.params // ['a', 'b']`}</Ts>
+    <p>
+      All params must be serializable (no functions or symbols)! This is because
+      Zedux converts the params to a stable string representation in order to
+      efficiently check for an existing atom instance with the "same" params.
+    </p>
+    <p>
+      Sameness is determined by deep value comparison, not reference equality.
+      Order matters!
+    </p>
+    <Ts>{`// These params are the "same" in Zedux' eyes:
 useAtomInstance(myAtom, ['a', { b: 'b', c: 'c' }])
-useAtomInstance(myAtom, ['a', { c: 'c', b: 'b' }])
-
+useAtomInstance(myAtom, ['a', { c: 'c', b: 'b' }])\n
 // But these are different:
 useAtomInstance(myAtom, ['a', 'b'])
-useAtomInstance(myAtom, ['b', 'a'])
-```
-
-The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`get`](../types/AtomGetters#get), [`injectAtomValue`](../injectors/injectAtomValue), or any other dynamic injector to register a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the passed atom instance.
-
-```tsx live ecosystemId=AtomInstance/shout resultVar=Shout
-const normalAtom = atom('normal', "I'm just a little, black rain cloud")
-
+useAtomInstance(myAtom, ['b', 'a'])`}</Ts>
+    <p>
+      The only exception to the serializable rule is other atom instances.
+      That's right! You can pass an atom instance to another atom instance. You
+      can then use{' '}
+      <Link to="../types/AtomGetters#get">
+        <code>get()</code>
+      </Link>
+      , <Link to="../injectors/injectAtomValue">
+        <code>injectAtomValue()</code>
+      </Link>, or any other dynamic injector to register a <Link to="../glossary#dynamic-graph-dependency">
+        dynamic graph dependency
+      </Link> on the passed atom instance.
+    </p>
+    <Sandbox
+      ecosystemId="AtomInstance/shout"
+      resultVar="Shout"
+    >{`const normalAtom = atom('normal', "I'm just a little, black rain cloud")\n
 const shoutingAtom = atom('shouting', (instance: AtomInstance<string>) => {
-  const val = injectAtomValue(instance) // subscribe to updates
-
+  const val = injectAtomValue(instance) // subscribe to updates\n
   return val.toUpperCase()
-})
-
+})\n
 function Shout() {
   const instance = useAtomInstance(normalAtom)
-  const shout = useAtomValue(shoutingAtom, [instance]) // pass the instance 😮
-
+  const shout = useAtomValue(shoutingAtom, [instance]) // pass the instance 😮\n
   return <div>(In a Singing sort of voice): {shout}</div>
-}
-```
-
-### `.promise`
-
-A promise. May be undefined if no promise was set on a returned [AtomApi](AtomApi).
-
-This promise will be used to cause React to suspend whenever this atom instance is used in a component until the promise completes. This promise reference will not change on subsequent evaluations.
-
-Setting this promise overrides any `.forwardPromises` config options set on this instance's [atom](Atom#forwardpromises) or [ecosystem](Ecosystem#forwardpromises).
-
-### `.store`
-
-A Zedux [store](Store). A reference to this atom instance's store. All atom instances have a store.
+}\n`}</Sandbox>
+  </Item>
+  <Item name="promise">
+    <p>
+      A promise. May be undefined if no promise was set on a returned{' '}
+      <Link to="AtomApi">AtomApi</Link>.
+    </p>
+    <p>
+      This promise will be used to cause React to suspend whenever this atom
+      instance is used in a component until the promise completes. This promise
+      reference will not change on subsequent evaluations.
+    </p>
+  </Item>
+  <Item name="store">
+    <p>
+      A Zedux <Link to="Store">store</Link>. A reference to this atom instance's
+      store. If the state factory returned a store, this is a reference to that
+      store.
+    </p>
+  </Item>
+</Legend>
 
 ## Methods
 
-Atom instances have the following methods:
-
-### `.destroy`
-
-Destroys the atom instance. Does nothing if the instance is already destroyed. Destruction bails out by default if the atom instance currently has dependents.
-
-Pass `true` to force destruction regardless of whether this atom instance has dependents. This will schedule a task to tell any dependents to automatically create a new instance after this one is destroyed.
-
-#### Signature
-
-```ts
-.destroy(force?) => void
-```
-
-#### `force`
-
-Optional. Default: `false`. If passed, Zedux will not prevent destruction if this atom instance has dependents.
-
-### `.dispatch`
-
-A bound function property. An alias for `.store.dispatch()`.
-
-```ts
-const instance = useAtomInstance(myAtom)
-const newState = instance.dispatch(myActor()) // same as instance.store.dispatch
-
-// since this function is bound, dereferencing is fine:
-const { dispatch } = instance
-```
-
-To prevent this atom instance from reevaluating, set [`internalTypes.ignore`](../constants/internalTypes#ignore) as the `meta` property of the dispatched action:
-
-```ts
-import { internalTypes } from '@zedux/react'
-
-instance.dispatch({ type: 'action-type', meta: internalTypes.ignore })
-```
-
-#### Signature
-
-```ts
-.dispatch(action) => newState
-```
-
-Returns the new state.
-
-#### `action`
-
-Required. An [action](../types/Action) or [action chain](../types/ActionChain) object.
-
-### `.invalidate`
-
-A bound function property. Forces a reevaluation of the atom instance.
-
-```tsx live ecosystemId=AtomInstance/invalidate resultVar=Coin
-const coinTossAtom = atom('coinToss', () => Math.random() < 0.5)
-
+<Legend>
+  <Item name="destroy">
+    <p>
+      Destroys the atom instance. Does nothing if the instance is already
+      destroyed. Destruction bails out by default if the atom instance currently
+      has dependents.
+    </p>
+    <p>
+      Pass <code>true</code> to force destruction regardless of whether this
+      atom instance has dependents. This will schedule a task to tell any
+      dependents to automatically create a new instance after this one is
+      destroyed.
+    </p>
+    <Ts>{`instance.destroy() // only destroy if not used elsewhere
+instance.destroy(true) // force destruction`}</Ts>
+    <p>
+      See{' '}
+      <Link to="../../walkthrough/destruction">
+        the Destruction walkthrough
+      </Link>
+      .
+    </p>
+  </Item>
+  <Item name="dispatch">
+    <p>
+      An alias for{' '}
+      <Link to="Store#dispatch">
+        <code>.store.dispatch()</code>
+      </Link>
+      .
+    </p>
+  </Item>
+  <Item name="getState">
+    <p>
+      An alias for{' '}
+      <Link to="Store#getstate">
+        <code>.store.getState()</code>
+      </Link>
+      .
+    </p>
+  </Item>
+  <Item name="invalidate">
+    <p>Forces the atom instance to reevaluate.</p>
+    <Sandbox
+      ecosystemId="AtomInstance/invalidate"
+      resultVar="Coin"
+    >{`const coinTossAtom = atom('coinToss', () => Math.random() < 0.5)\n
 function Coin() {
   const isHeads = useAtomValue(coinTossAtom)
-  const { invalidate } = useAtomInstance(coinTossAtom)
-
+  const { invalidate } = useAtomInstance(coinTossAtom)\n
   return <button onClick={invalidate}>{isHeads ? 'Heads' : 'Tails'}</button>
-}
-```
+}`}</Sandbox>
+    <p>
+      A reference to this functino is returned from{' '}
+      <Link to="../injectors/injectInvalidate">
+        <code>injectInvalidate()</code>
+      </Link>
+      .
+    </p>
+  </Item>
+  <Item name="setState">
+    <p>
+      An alias for{' '}
+      <Link to="Store#setstate">
+        <code>.store.setState()</code>
+      </Link>
+      .
+    </p>
+  </Item>
+  <Item name="setStateDeep">
+    <p>
+      An alias for{' '}
+      <Link to="Store#setstatedeep">
+        <code>.store.setStateDeep()</code>
+      </Link>
+      .
+    </p>
+  </Item>
+</Legend>
 
-```ts
-// since this function is bound, dereferencing is fine:
-const { invalidate } = instance
+## See Also
 
-// an exact reference to this function is returned from injectInvalidate()
-const invalidate = injectInvalidate()
-```
-
-#### Signature
-
-```ts
-.invalidate() => void
-```
-
-### `.setState`
-
-A bound function property. An alias for [`.store.setState()`](Store#setstate).
-
-```ts
-const instance = useAtomInstance(myAtom)
-const newState = instance.setState('new state')
-
-// since this function is bound, dereferencing is fine:
-const { setState } = instance
-```
-
-To prevent this atom instance from reevaluating, pass [`internalTypes.ignore`](../constants/internalTypes#ignore) as the `meta` property:
-
-```ts
-import { internalTypes } from '@zedux/react'
-
-instance.setState(newState, internalTypes.ignore)
-```
-
-### `.setStateDeep`
-
-A bound function property. An alias for [`.store.setStateDeep()`](Store#setstatedeep).
-
-```ts
-const instance = useAtomInstance(myAtom)
-const newState = instance.setStateDeep('new state')
-
-// since this function is bound, dereferencing is fine:
-const { setStateDeep } = instance
-```
-
-To prevent this atom instance from reevaluating, pass [`internalTypes.ignore`](../constants/internalTypes#ignore) as the `meta` property:
-
-```ts
-import { internalTypes } from '@zedux/react'
-
-instance.setStateDeep(newState, internalTypes.ignore)
-```
-
-## Extending
-
-There are many aspects of an atom instance's behavior you can overwrite when extending this class. This is an extremely advanced feature. We're not documenting it yet as the internals of this class may change. Someday there will probably be a nice, complex, over-detailed explanation sitting right here on this page. Or maybe not.
+- [The Atom Instances walkthrough](../../walkthrough/atom-instances)
+- [The `Store` class](Store)
