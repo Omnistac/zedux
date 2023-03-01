@@ -3,6 +3,8 @@ id: AtomInstanceProvider
 title: AtomInstanceProvider
 ---
 
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
 ```ts
 import { AtomInstanceProvider } from '@zedux/react'
 ```
@@ -54,12 +56,28 @@ Providing multiple instances:
 
 ## Props
 
-AtomInstanceProvider accepts **either** an `instance` prop with a single atom instance OR an `instances` prop with an array of instances. You must pass one or the other.
+AtomInstanceProvider accepts **either** an `instance` prop with a single atom instance OR an `instances` prop with an array of instances. You must pass one or the other but not both.
 
-### `instance`
+<Legend>
+  <Item name="instance">
+    <p>
+      A single <Link to="../classes/AtomInstance">atom instance</Link>. This
+      instance will be provided over React context.
+    </p>
+  </Item>
+  <Item name="instances">
+    <p>
+      An array of atom instances. Each instance will be provided with a separate
+      React context provider.
+    </p>
+    <p>
+      Be careful reordering this list and adding/removing items since this will
+      make React destroy/recreate the entire component subtree inside <code>{`<AtomInstanceProvider>`}</code>
+      .
+    </p>
+  </Item>
+</Legend>
 
-Optional. A single [atom instance](../classes/AtomInstance). This instance will be provided over React context.
+## See Also
 
-### `instances`
-
-Optional. An array of atom instances. Each instance will be provided with a separate React context provider.
+- [The React Context walkthrough](../../walkthrough/react-context)
