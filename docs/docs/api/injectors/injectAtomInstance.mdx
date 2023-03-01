@@ -33,7 +33,7 @@ const secondsAtom = atom('seconds', () => {
     }, 1000)
 
     return () => clearInterval(intervalId)
-  }, [shouldCountInstance])
+  }, [shouldCountInstance]) // instances are technically unstable references
 
   return store
 })
@@ -80,7 +80,8 @@ const injectCustomStuff = () => {
 
 export const InjectAtomInstanceLegend = ({
   name = 'injectAtomInstance',
-  thirdParam,
+  extraConfig = null,
+  extraConfigDef = '',
 }) => (
   <Legend>
     <Item name="atomOrInstance">
@@ -108,7 +109,48 @@ export const InjectAtomInstanceLegend = ({
         or if passing an atom instance.
       </p>
     </Item>
-    {thirdParam}
+    <Item name="config">
+      <p>Optional. An object containing the following optional properties:</p>
+      <Ts>{`{ operation, subscribe${extraConfigDef} }`}</Ts>
+      <Legend>
+        <Item name="operation">
+          <p>
+            A string. Default <code>'{name}'</code>.
+          </p>
+          <p>
+            You usually won't need to worry about this. But passing an operation
+            string can help with debugging e.g. if the instance throws an error.
+          </p>
+        </Item>
+        <Item name="subscribe">
+          <p>
+            A boolean. Default <code>false</code>.
+          </p>
+          <p>
+            Whether to subscribe to state updates in the resolved atom instance,
+            triggering a{' '}
+            {name.startsWith('use')
+              ? 'rerender of the current component'
+              : 'reevaluation of the current atom instance'}{' '}
+            every time the resolved atom instance's state changes.
+          </p>
+          <p>
+            <code>{name}()</code> is "static" by default, meaning it won't
+            subscribe to updates.
+          </p>
+          <Ts>{`const val = ${name}(
+  myAtom,
+  [],
+  { subscribe: true }
+).getState()\n
+// the above is equivalent to:
+const val = ${
+            name.startsWith('inject') ? 'inject' : 'use'
+          }AtomValue(myAtom)`}</Ts>
+        </Item>
+        {extraConfig}
+      </Legend>
+    </Item>
     <Item name="Returns">
       <p>The resolved atom instance.</p>
       <p>
@@ -119,22 +161,7 @@ export const InjectAtomInstanceLegend = ({
   </Legend>
 )
 
-<InjectAtomInstanceLegend
-  thirdParam={
-    <Item name="operation">
-      <p>
-        Optional. A string (default <code>'injectAtomInstance'</code>).
-      </p>
-      <p>
-        You usually won't need to worry about this. Passing an operation string
-        can help with debugging e.g. if the instance throws an error or when
-        inspecting the instance's list of injectors (
-        <code>instance._injectors</code> - don't use this unless you know what
-        you're doing!)
-      </p>
-    </Item>
-  }
-/>
+<InjectAtomInstanceLegend />
 
 ## See Also
 
