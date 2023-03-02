@@ -25,7 +25,11 @@ All fields are optional.
   <Item name="dehydrate">
     <p>
       A function that accepts the current state of an instance of this atom and
-      transforms it.
+      transforms it into a serializable value.
+    </p>
+    <p>
+      Note that <code>dehydrate</code> doesn't have to return a string. Any
+      serializable value will do, including JS objects and arrays.
     </p>
     <p>
       This function is called by Zedux whenever{' '}
@@ -61,8 +65,16 @@ All fields are optional.
   </Item>
   <Item name="hydrate">
     <p>
-      A function that accepts a serialized value and transforms it into the
-      proper data type expected by instances of this atom.
+      A function that accepts a serializable version of an atom instance's value
+      and transforms it into the proper data type expected by instances of this
+      atom.
+    </p>
+    <p>
+      The received value will usually be whatever was previously returned from a{' '}
+      <Link to="#dehydrate">
+        <code>dehydrate</code>
+      </Link>{' '}
+      call.
     </p>
     <p>
       This function is called by Zedux whenever an atom instance of this atom is

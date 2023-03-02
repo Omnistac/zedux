@@ -100,6 +100,30 @@ const atomB = atom('b', () => {
 In this case, these two atoms have real dependencies on each other. As such, they prevent each other from being cleaned up, so this `injectEffect` cleanup will never run. You'll need to account for that by destroying the manually created edge yourself or force destroying either instance if destruction is needed.
 :::
 
+## Atom Factories
+
+A common pattern is creating a helper function to create pre-configured atoms:
+
+```ts
+const mapAtom = <State extends Map<any, any>, Params extends any[]>(
+  key: string,
+  stateFactory: (...params: Params) => State | Store<State> | AtomApi<State>,
+  config?: AtomConfig<State>
+) => {
+  return atom(key, stateFactory, {
+    ...config,
+    dehydrate: map => Object.fromEntries(map.entries()),
+    hydrate: obj => new Map(Object.entries(obj)),
+  })
+}
+
+const exampleMapAtom = mapAtom('example', () => new Map())
+```
+
+Beyond simple config, this can be used to gain more control over types. For example, it isn't possible to change an atom instance's inferred state type based on params. Every instance of an atom is expected to have the same state type.
+
+While you can use a TypeScript union and that works well enough, you can also use an atom factory to create completely different atoms. Of course, this approach might require manual param serializing ([`atom.getKeyHash()`](../api/classes/Atom#getkeyhash) to the rescue!) and potentially lots of manual typing to create the properly-typed atoms. But it _could_ be worth it.
+
 ## Atom Instance Factories
 
 Zedux creates atom instances dynamically whenever they're first used. This is very convenient but takes some control out of your hands. Pro Tip: You can use Atom Selectors to get that control back.

@@ -55,6 +55,7 @@ const todoListAtom = atom('todoList', () => {
   const store = injectStore([])
 
   return api(store).setExports({
+    // highlight-next-line
     reset: () => store.setState([]),
   })
 })

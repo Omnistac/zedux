@@ -13,11 +13,9 @@ How to create, compose, and use custom injectors
 
 ## Rules
 
-Custom injectors can do almost anything you want. They're Just JavaScript. Remember these rules:
+Custom injectors can do almost anything you want. They're Just JavaScript. Just remember that the function name should start with the word "inject" - e.g. `injectUserStream` or `injectFetchUser`.
 
-- Injectors should start with the word "inject" - e.g. `injectUserStream` or `injectFetchUser`.
-- Injectors contain calls to other injectors. Those can be built-in injectors or other custom ones. If the function doesn't call other injectors, it isn't an injector.
-- Injectors are composable. Your injector should be able to be used by other injectors. You'll probably never need to worry about this; most logic you might put in an injector should be fine.
+An injector will also always call other injectors - if it doesn't, it isn't an injector!
 
 ## An Example
 
@@ -82,10 +80,21 @@ Atom APIs are designed to be passed around between injectors and ultimately comp
 [`injectPromise()`](../api/injectors/injectPromise) itself uses this pattern - returning an Atom API with a store and promise attached.
 :::
 
+## Native Injectors
+
+Zedux actually exposes the [`createInjector`](../api/factories/createInjector) factory it uses to create the built-in injectors like `injectEffect` and `injectMemo`. With this factory, you can create custom injectors with every capability that Zedux's own injectors have.
+
+The one capability that `createInjector` gives you that nothing else does is access to the partially-created atom instance (along with its atom definition) currently being created.
+
+This is hidden from everything else because on initial evaluation, the atom instance doesn't have many things you'd expect to exist on an instance - namely the 3 "meta data types" (store, exports, promise). These haven't been created yet. That's the purpose of the initial evaluation!
+
+This is a low-level feature. So low that it's out of the scope of this walkthrough. But if you're interested, check it out in [the API docs](../api/factories/createInjector).
+
 ## Recap
 
 - Custom injectors can encapsulate any logic you want
 - Atom APIs are a convenient standard for passing stores, exports, and promises around
+- Low-level native injectors can be created with `createInjector`.
 
 ## Next Steps
 

@@ -79,6 +79,8 @@ interface InjectorDescriptor {
   </Item>
 </Legend>
 
+On top of these, you can add any fields you want. For example, injectors that take a dependency array might want to store the previous deps list on `myInjectorDescriptor.prevDeps`.
+
 ## Definition
 
 ```ts

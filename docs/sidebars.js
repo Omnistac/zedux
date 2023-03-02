@@ -70,6 +70,7 @@ module.exports = {
           'api/factories/api',
           'api/factories/atom',
           'api/factories/createEcosystem',
+          'api/factories/createInjector',
           'api/factories/createReducer',
           'api/factories/createStore',
           'api/factories/ion',
@@ -138,7 +139,6 @@ module.exports = {
         label: 'Utils',
         items: [
           'api/utils/action-chain-utils',
-          'api/utils/createInjector',
           'api/utils/internal-store-utils',
           'api/utils/internalTypes',
           'api/utils/is',
