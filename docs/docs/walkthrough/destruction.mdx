@@ -50,14 +50,14 @@ But how do we destroy the instance?
 
 We learned about `ttl` in [the configuring atoms walkthrough](configuring-atoms). This is the simplest way to destroy atom instances.
 
-There are 4 possible TTL logic flows:
+There are 4 possible TTL flows:
 
 - When `ttl` is 0, the instance will never be Stale - Zedux transitions it straight from Active to Destroyed as soon as its ref count hits 0.
 - When `ttl` is a number greater than 0, the instance will remain Stale for `ttl` milliseconds before being destroyed.
 - When `ttl` is a promise, the instance will remain Stale until the promise resolves.
 - When `ttl` is an observable, the instance will remain Stale until the observable emits.
 
-Additionally, when you pass a function to [`atomApi.setTtl()`](configuring-atoms#apisetttl), Zedux will call that function when the instance goes Stale and then follow the appropriate logic flow for the returned value.
+Additionally, when you pass a function to [`atomApi.setTtl()`](configuring-atoms#apisetttl), Zedux will call that function when the instance goes Stale and then follow the appropriate TTL flow for the returned value.
 
 ```ts
 return api().setTtl(
@@ -89,7 +89,7 @@ myInstance.destroy()
 Since `ecosystem.getInstance()` (and all ecosystem Atom Getters) doesn't update the graph, this example doesn't change the ref count of the `myAtom` instance.
 :::
 
-This flow is not recommended in most cases. Prefer using the graph. We'll look at ways to manually update the graph [shortly](#manual-graphing).
+Using `instance.destroy()` like this is fine. It's good enough when you just need to do some quick (read synchronous), small operation. But manual graphing ([see below](#manual-graphing)) is usually better, especially for long-lived operations.
 
 ## Atom Selector Destruction
 
@@ -113,9 +113,9 @@ Just like `instance.destroy()`, this method does nothing by default if the selec
 
 ## Force Destruction
 
-We just saw that by default Zedux always tries to bail out of destruction if a node's ref count is `> 0`. But we can change this behavior.
+We just saw that by default Zedux always tries to bail out of destruction if a node's ref count is `> 0`. But you can change this behavior.
 
-`instance.destroy()` takes a single optional boolean parameter - `force`. Simply pass `true` to force destruction, ignoring ref count:
+`instance.destroy()` takes a single optional parameter - `force`. Simply pass `true` to force destruction, ignoring ref count:
 
 ```ts
 instance.destroy(true)
