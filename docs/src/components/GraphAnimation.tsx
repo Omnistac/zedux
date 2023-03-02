@@ -105,7 +105,7 @@ const graphAnimation = atom(
           id: idCounterRef.current++,
           anchor: [j * SPACING + SPACING / 2, i * SPACING + SPACING / 2],
           position: [0, 0],
-          radius: 16,
+          radius: 4,
           velocity: 0.01,
         }))
       )
@@ -167,14 +167,14 @@ const graphAnimation = atom(
     }
 
     const render = () => {
-      const { edges, lastFrameTime, nodes } = store.getState()
+      const { edges, nodes } = store.getState()
       const ctx = canvasRef.current.getContext('2d')
       const { height, width } = canvasRef.current
       ctx.clearRect(0, 0, width, height)
       ctx.lineCap = 'round'
-      ctx.lineWidth = 2
+      ctx.lineWidth = 3
       ctx.strokeStyle = `#dffffd`
-      const rotationOffset = Math.sin(lastFrameTime / 3000)
+      // const rotationOffset = Math.sin(lastFrameTime / 3000)
 
       edges.forEach((edge: Edge) => {
         const [fromX, fromY] = nodes[edge.from[1]][edge.from[0]].position
@@ -194,51 +194,20 @@ const graphAnimation = atom(
         ctx.beginPath()
         ctx.moveTo(x1, y1)
         ctx.lineTo(x2, y2)
-        // ctx.moveTo(edge.from[0], edge.from[1])
-        // ctx.lineTo(edge.to[0], edge.to[1])
         ctx.stroke()
       })
 
-      ctx.lineWidth = 1
+      ctx.fillStyle = '#fff'
+      ctx.lineWidth = 2
+      ctx.strokeStyle = `#0002`
 
       nodes.forEach(row =>
         row.forEach((node: Node) => {
           const [x, y] = node.position
 
           ctx.beginPath()
-          ctx.ellipse(
-            x,
-            y,
-            node.radius,
-            node.radius / 4,
-            rotationOffset,
-            0,
-            2 * Math.PI
-          )
-          ctx.stroke()
-
-          ctx.beginPath()
-          ctx.ellipse(
-            x,
-            y,
-            node.radius,
-            node.radius / 4,
-            (2 * Math.PI) / 3 + rotationOffset,
-            0,
-            2 * Math.PI
-          )
-          ctx.stroke()
-
-          ctx.beginPath()
-          ctx.ellipse(
-            x,
-            y,
-            node.radius,
-            node.radius / 4,
-            Math.PI / 3 + rotationOffset,
-            0,
-            2 * Math.PI
-          )
+          ctx.arc(x, y, node.radius, 0, 2 * Math.PI)
+          ctx.fill()
           ctx.stroke()
         })
       )
