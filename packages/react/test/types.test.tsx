@@ -1,12 +1,15 @@
 import { Store } from '@zedux/core'
+import { AtomBase } from '@zedux/react'
 import { api, atom, createEcosystem } from '@zedux/react/factories'
 import { injectStore } from '@zedux/react/injectors'
 import {
   AtomExportsType,
+  AtomInstanceType,
   AtomParamsType,
   AtomPromiseType,
   AtomStateType,
   AtomStoreType,
+  AtomTemplateType,
 } from '@zedux/react/types'
 import { expectTypeOf } from 'expect-type'
 
@@ -42,6 +45,9 @@ describe('types', () => {
     type AtomInstancePromise = AtomPromiseType<typeof instance>
     type AtomInstanceStore = AtomStoreType<typeof instance>
 
+    type TAtomInstance = AtomInstanceType<typeof example>
+    type TAtomTemplate = AtomTemplateType<typeof instance>
+
     expectTypeOf<AtomState>().toBeString()
     expectTypeOf<AtomState>().toEqualTypeOf<AtomInstanceState>()
 
@@ -60,5 +66,17 @@ describe('types', () => {
 
     expectTypeOf<AtomStore>().toEqualTypeOf<Store<string>>()
     expectTypeOf<AtomStore>().toEqualTypeOf<AtomInstanceStore>()
+
+    expectTypeOf<TAtomInstance>().toEqualTypeOf<typeof instance>()
+    expectTypeOf<TAtomTemplate>().toEqualTypeOf<
+      AtomBase<
+        AtomState,
+        AtomParams,
+        AtomExports,
+        AtomStore,
+        AtomPromise,
+        TAtomInstance
+      >
+    >()
   })
 })

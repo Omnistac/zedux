@@ -78,3 +78,7 @@ export type AtomStoreType<
   : A extends AtomInstance<any, any, any, infer T, any>
   ? T
   : never
+
+export type AtomTemplateType<
+  A extends AnyAtomInstanceBase
+> = A extends AtomInstanceBase<any, any, infer T> ? T : never
