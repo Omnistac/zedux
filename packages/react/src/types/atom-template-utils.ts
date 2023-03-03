@@ -1,10 +1,10 @@
 import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomInstance } from '../classes/instances/AtomInstance'
-import { AnyAtom } from './utils'
+import { AnyAtom, AnyAtomInstance } from './utils'
 
 export type AtomExportsType<
-  AtomType extends AnyAtom
-> = AtomType extends AtomBase<
+  A extends AnyAtom | AnyAtomInstance
+> = A extends AtomBase<
   any,
   any,
   infer T,
@@ -12,6 +12,8 @@ export type AtomExportsType<
   any,
   AtomInstance<any, any, infer T, any, any>
 >
+  ? T
+  : A extends AtomInstance<any, any, infer T, any, any>
   ? T
   : never
 
