@@ -1,6 +1,7 @@
 import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomInstance } from '../classes/instances/AtomInstance'
-import { AnyAtom, AnyAtomInstance } from './utils'
+import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
+import { AnyAtom, AnyAtomInstance, AnyAtomInstanceBase } from './utils'
 
 export type AtomExportsType<
   A extends AnyAtom | AnyAtomInstance
@@ -22,8 +23,16 @@ export type AtomInstanceType<
 > = AtomType extends AtomBase<any, any, any, any, any, infer T> ? T : never
 
 export type AtomParamsType<
-  AtomType extends AnyAtom
-> = AtomType extends AtomBase<any, infer T, any, any, any, any> ? T : never
+  A extends AnyAtom | AnyAtomInstanceBase
+> = A extends AtomBase<any, infer T, any, any, any, any>
+  ? T
+  : A extends AtomInstanceBase<
+      any,
+      infer T,
+      AtomBase<any, infer T, any, any, any, any>
+    >
+  ? T
+  : never
 
 export type AtomPromiseType<
   AtomType extends AnyAtom
