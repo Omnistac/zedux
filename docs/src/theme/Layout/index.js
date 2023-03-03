@@ -17,8 +17,7 @@ configure({
           "tR+='</head>",
           `var __attr=it.metaAttributes.find(attr => attr.includes('property="og:url"'))
 var __match=__attr.match(/property="og:url" content="https:\\/\\/omnistac.github.io(.*?)"/)[1]
-if (!__attr || !__match || !global.styleTags[__match]) console.log('failed to find match...', it.metaAttributes)
-else tR+='<style data-ssc="true">'+global.styleTags[__match].current.innerHTML+'</style>'
+if (__match && global.styleTags[__match]) tR+='<style data-ssc="true">'+global.styleTags[__match].current.innerHTML+'</style>'
 tR+='</head>`
         )
         return newResult
