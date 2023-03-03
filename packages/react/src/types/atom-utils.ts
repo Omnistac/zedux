@@ -7,12 +7,6 @@ export type AtomInstanceAtomType<
   AtomInstanceType extends AtomInstanceBase<any, any, any>
 > = AtomInstanceType extends AtomInstanceBase<any, any, infer T> ? T : never
 
-export type AtomInstanceExportsType<
-  AtomInstanceType extends AnyAtomInstance
-> = AtomInstanceType extends AtomInstance<any, any, infer T, any, any>
-  ? T
-  : never
-
 export type AtomInstanceParamsType<
   AtomInstanceType extends AtomInstanceBase<any, any, any>
 > = AtomInstanceType extends AtomInstanceBase<

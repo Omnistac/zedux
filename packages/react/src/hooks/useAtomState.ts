@@ -2,7 +2,6 @@ import { AtomInstance, AtomBase } from '../classes'
 import {
   AnyAtom,
   AtomExportsType,
-  AtomInstanceExportsType,
   AtomInstanceStateType,
   AtomParamsType,
   AtomStateType,
@@ -27,7 +26,7 @@ export const useAtomState: {
     instance: AI,
     params?: [],
     config?: Omit<ZeduxHookConfig, 'subscribe'>
-  ): StateHookTuple<AtomInstanceStateType<AI>, AtomInstanceExportsType<AI>>
+  ): StateHookTuple<AtomInstanceStateType<AI>, AtomExportsType<AI>>
 } = <A extends AnyAtom>(
   atom: A,
   params?: AtomParamsType<A>,
