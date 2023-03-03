@@ -3,7 +3,6 @@ import { api, atom, createEcosystem } from '@zedux/react/factories'
 import { injectStore } from '@zedux/react/injectors'
 import {
   AtomExportsType,
-  AtomInstanceStoreType,
   AtomParamsType,
   AtomPromiseType,
   AtomStateType,
@@ -41,7 +40,7 @@ describe('types', () => {
     type AtomInstanceParams = AtomParamsType<typeof instance>
     type AtomInstanceExports = AtomExportsType<typeof instance>
     type AtomInstancePromise = AtomPromiseType<typeof instance>
-    type AtomInstanceStore = AtomInstanceStoreType<typeof instance>
+    type AtomInstanceStore = AtomStoreType<typeof instance>
 
     expectTypeOf<AtomState>().toBeString()
     expectTypeOf<AtomState>().toEqualTypeOf<AtomInstanceState>()
