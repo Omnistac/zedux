@@ -35,8 +35,8 @@ export type AtomParamsType<
   : never
 
 export type AtomPromiseType<
-  AtomType extends AnyAtom
-> = AtomType extends AtomBase<
+  A extends AnyAtom | AnyAtomInstance
+> = A extends AtomBase<
   any,
   any,
   any,
@@ -44,6 +44,8 @@ export type AtomPromiseType<
   infer T,
   AtomInstance<any, any, any, any, infer T>
 >
+  ? T
+  : A extends AtomInstance<any, any, any, any, infer T>
   ? T
   : never
 
