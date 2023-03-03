@@ -1,5 +1,5 @@
 import { AtomBase, AtomInstanceBase } from '../classes'
-import { AtomInstanceStateType, AtomParamsType, AtomStateType } from '../types'
+import { AtomParamsType, AtomStateType } from '../types'
 import { injectAtomInstance } from './injectAtomInstance'
 
 export const injectAtomValue: {
@@ -12,7 +12,7 @@ export const injectAtomValue: {
 
   <AI extends AtomInstanceBase<any, [...any], any>>(
     instance: AI
-  ): AtomInstanceStateType<AI>
+  ): AtomStateType<AI>
 } = <A extends AtomBase<any, [...any], any, any, any, any>>(
   atom: A,
   params?: AtomParamsType<A>

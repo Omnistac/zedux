@@ -2,7 +2,6 @@ import { AtomInstance, AtomBase } from '../classes'
 import {
   AnyAtom,
   AtomExportsType,
-  AtomInstanceStateType,
   AtomParamsType,
   AtomStateType,
   StateHookTuple,
@@ -22,7 +21,7 @@ export const injectAtomState: {
 
   <AI extends AtomInstance<any, [...any], any, any, any>>(
     instance: AI
-  ): StateHookTuple<AtomInstanceStateType<AI>, AtomExportsType<AI>>
+  ): StateHookTuple<AtomStateType<AI>, AtomExportsType<AI>>
 } = <A extends AnyAtom>(
   atom: A,
   params?: AtomParamsType<A>
