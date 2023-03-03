@@ -39,7 +39,7 @@ The AtomGetters are **not** injectors. This means they can be called in loops or
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>\n
-  get<I extends AtomInstance>(instance: I): AtomInstanceStateType<I>\n
+  get<I extends AtomInstance>(instance: I): AtomStateType<I>\n
   getInstance<A extends Atom<any, []>>(atom: A): AtomInstanceType<A>\n
   getInstance<A extends Atom<any, any, any>>(
     atom: A,

@@ -6,7 +6,6 @@ import {
   AnyAtomInstance,
   AnyAtomInstanceBase,
   AtomGettersBase,
-  AtomInstanceStateType,
   AtomInstanceType,
   AtomParamsType,
   AtomSelectorOrConfig,
@@ -278,7 +277,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   public get<AI extends AtomInstanceBase<any, [...any], any>>(
     instance: AI
-  ): AtomInstanceStateType<AI>
+  ): AtomStateType<AI>
 
   /**
    * Returns an atom instance's value. Creates the atom instance if it doesn't

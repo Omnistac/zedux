@@ -9,7 +9,6 @@ import {
   AtomParamsType,
   AtomStateType,
 } from './atom-template-utils'
-import { AtomInstanceStateType } from './atom-utils'
 import { AnyAtom, AnyAtomInstance } from './utils'
 
 export * from './atom-template-utils'
@@ -49,7 +48,7 @@ export interface AtomGettersBase {
 
   get<AI extends AtomInstanceBase<any, [...any], any>>(
     instance: AI
-  ): AtomInstanceStateType<AI>
+  ): AtomStateType<AI>
 
   /**
    * Registers a static graph edge on the resolved atom instance when called
