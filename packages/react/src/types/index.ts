@@ -4,15 +4,10 @@ import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
 import { SelectorCacheItem } from '../classes/SelectorCache'
-import {
-  AtomInstanceType,
-  AtomParamsType,
-  AtomStateType,
-} from './atom-template-utils'
+import { AtomInstanceType, AtomParamsType, AtomStateType } from './atoms'
 import { AnyAtom, AnyAtomInstance } from './utils'
 
-export * from './atom-template-utils'
-export * from './atom-utils'
+export * from './atoms'
 export * from './utils'
 
 export type ActiveState = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
