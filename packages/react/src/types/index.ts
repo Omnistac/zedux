@@ -1,24 +1,22 @@
 import { ActionChain, Observable, Settable, Store } from '@zedux/core'
-import { AtomBase, AtomInstance, AtomInstanceBase, Ecosystem } from './classes'
-import { AtomApi } from './classes/AtomApi'
-import { SelectorCacheItem } from './classes/SelectorCache'
+import { AtomBase } from '../classes/atoms/AtomBase'
+import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
+import { AtomApi } from '../classes/AtomApi'
+import { Ecosystem } from '../classes/Ecosystem'
+import { SelectorCacheItem } from '../classes/SelectorCache'
+import {
+  AtomInstanceType,
+  AtomParamsType,
+  AtomStateType,
+} from './atom-template-utils'
+import { AtomInstanceStateType } from './atom-utils'
+import { AnyAtom, AnyAtomInstance } from './utils'
+
+export * from './atom-template-utils'
+export * from './atom-utils'
+export * from './utils'
 
 export type ActiveState = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
-
-export type AnyAtom = AtomBase<
-  any,
-  any,
-  any,
-  any,
-  any,
-  AtomInstance<any, any, any, any, any>
->
-export type AnyAtomInstance = AtomInstance<any, any, any, any, any>
-export type AnyAtomInstanceBase = AtomInstanceBase<
-  any,
-  any,
-  AtomBase<any, any, any, any, any, AtomInstance<any, any, any, any, any>>
->
 
 export type AtomApiPromise = Promise<any> | undefined
 
@@ -29,10 +27,6 @@ export interface AtomConfig<State = any> {
   manualHydration?: boolean
   ttl?: number
 }
-
-export type AtomExportsType<
-  AtomType extends AnyAtom
-> = AtomType extends AtomBase<any, any, infer T, any, any, any> ? T : never
 
 /**
  * The AtomGettersBase interface. You probably won't want to use this directly.
@@ -139,58 +133,7 @@ export interface AtomGetters extends AtomGettersBase {
   ecosystem: Ecosystem
 }
 
-export type AtomInstanceAtomType<
-  AtomInstanceType extends AtomInstanceBase<any, any, any>
-> = AtomInstanceType extends AtomInstanceBase<any, any, infer T> ? T : never
-
-export type AtomInstanceExportsType<
-  AtomInstanceType extends AtomInstance<any, any, any, any, any>
-> = AtomInstanceType extends AtomInstance<any, any, infer T, any, any>
-  ? T
-  : never
-
-export type AtomInstanceParamsType<
-  AtomInstanceType extends AtomInstanceBase<any, any, any>
-> = AtomInstanceType extends AtomInstanceBase<any, infer T, any> ? T : never
-
-export type AtomInstancePromiseType<
-  AtomInstanceType extends AtomInstance<any, any, any, any, any>
-> = AtomInstanceType extends AtomInstance<any, any, any, any, infer T>
-  ? T
-  : never
-
-export type AtomInstanceStateType<
-  AtomInstanceType extends AtomInstanceBase<any, any, any>
-> = AtomInstanceType extends AtomInstanceBase<infer T, any, any> ? T : never
-
-export type AtomInstanceStoreType<
-  AtomInstanceType extends AtomInstance<any, any, any, any, any>
-> = AtomInstanceType extends AtomInstance<any, any, any, infer T, any>
-  ? T
-  : never
-
-export type AtomInstanceType<
-  AtomType extends AnyAtom
-> = AtomType extends AtomBase<any, any, any, any, any, infer T> ? T : never
-
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
-
-export type AtomParamsType<
-  AtomType extends AnyAtom
-> = AtomType extends AtomBase<any, infer T, any, any, any, any> ? T : never
-
-export type AtomPromiseType<
-  AtomType extends AnyAtom
-> = AtomType extends AtomBase<
-  any,
-  any,
-  any,
-  any,
-  infer T,
-  AtomInstance<any, any, any, any, infer T>
->
-  ? T
-  : never
 
 export type AtomSelector<T = any, Args extends any[] = []> = (
   getters: AtomGetters,
@@ -220,28 +163,6 @@ export type AtomStateFactory<
   | AtomApi<State, Exports, StoreType | undefined, PromiseType>
   | StoreType
   | State
-
-export type AtomStateType<AtomType extends AnyAtom> = AtomType extends AtomBase<
-  infer T,
-  any,
-  any,
-  any,
-  any,
-  AtomInstance<infer T, any, any, any, any>
->
-  ? T
-  : never
-
-export type AtomStoreType<AtomType extends AnyAtom> = AtomType extends AtomBase<
-  any,
-  any,
-  any,
-  infer T,
-  any,
-  AtomInstance<infer T, any, any, infer T, any>
->
-  ? T
-  : never
 
 export type AtomTuple<A extends AnyAtom> = [A, AtomParamsType<A>]
 
