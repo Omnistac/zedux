@@ -24,7 +24,7 @@ const Group = styled.g<{ speed: number; size: number }>`
 
 const Rect = styled.rect<{ rotate?: boolean }>`
   fill: var(--color-primary);
-  transform: ${({ rotate }) => (rotate ? 'rotate(45deg)' : '')};
+  transform: ${({ rotate }) => (rotate ? 'rotate(45deg)' : 'none')};
   transform-box: fill-box;
   transform-origin: center;
 `
