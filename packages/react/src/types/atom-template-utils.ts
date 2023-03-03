@@ -64,7 +64,9 @@ export type AtomStateType<
   ? T
   : never
 
-export type AtomStoreType<AtomType extends AnyAtom> = AtomType extends AtomBase<
+export type AtomStoreType<
+  A extends AnyAtom | AnyAtomInstance
+> = A extends AtomBase<
   any,
   any,
   any,
@@ -72,5 +74,7 @@ export type AtomStoreType<AtomType extends AnyAtom> = AtomType extends AtomBase<
   any,
   AtomInstance<any, any, any, infer T, any>
 >
+  ? T
+  : A extends AtomInstance<any, any, any, infer T, any>
   ? T
   : never
