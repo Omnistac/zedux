@@ -1,4 +1,5 @@
 import {
+  api,
   atom,
   AtomInstanceProvider,
   AtomInstanceType,
@@ -31,16 +32,15 @@ const paramAtom = atom('param', (param: string) => {
 
 const testAtom = ion(
   'test',
-  ({ ecosystem, get }) => {
+  ({ ecosystem, get, getInstance }) => {
     const val = injectAtomSelector(({ get }) => get(paramAtom, ['param']).param)
 
     console.log('rendering stable atom:', { ecosystem, val })
     const other = get(otherAtom)
 
-    return other + ' world!' + ' ' + val
-  },
-  ({ set }, newVal) => {
-    set(otherAtom, newVal)
+    return api(other + ' world!' + ' ' + val).setExports({
+      update: (newVal: string) => getInstance(otherAtom).setState(newVal),
+    })
   },
   { ttl: 0 }
 )
@@ -63,6 +63,7 @@ function UnstableChild() {
 
 function Child() {
   const testInstance = useAtomConsumer(testAtom, [])
+  const { update } = testInstance.exports
   const upperCase = useAtomValue(upperCaseAtom, [testInstance])
 
   return (
@@ -70,7 +71,7 @@ function Child() {
       <div>test: {upperCase}</div>
       <button
         onClick={() => {
-          testInstance.setState('yooooo')
+          update('yooooo')
         }}
       >
         click me!

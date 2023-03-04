@@ -22,13 +22,13 @@ export const ion: {
       ...params: Params
     ) => AtomApi<Promise<State>, Exports, undefined, any>,
     config?: AtomConfig<State>
-  ): Ion<
-    PromiseState<State>,
-    Params,
-    Exports,
-    Store<PromiseState<State>>,
-    Promise<State>
-  >
+  ): Ion<{
+    State: PromiseState<State>
+    Params: Params
+    Exports: Exports
+    Store: Store<PromiseState<State>>
+    Promise: Promise<State>
+  }>
 
   // Custom Stores
   <
@@ -45,7 +45,13 @@ export const ion: {
       | StoreType
       | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): Ion<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>
+  ): Ion<{
+    State: StoreStateType<StoreType>
+    Params: Params
+    Exports: Exports
+    Store: StoreType
+    Promise: PromiseType
+  }>
 
   // No Store
   <
@@ -60,7 +66,13 @@ export const ion: {
       ...params: Params
     ) => AtomApi<State, Exports, undefined, PromiseType> | State,
     config?: AtomConfig<State>
-  ): Ion<State, Params, Exports, Store<State>, PromiseType>
+  ): Ion<{
+    State: State
+    Params: Params
+    Exports: Exports
+    Store: Store<State>
+    Promise: PromiseType
+  }>
 
   // Catch-all
   <
@@ -71,9 +83,21 @@ export const ion: {
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    get: IonStateFactory<State, Params, Exports, StoreType, PromiseType>,
+    get: IonStateFactory<{
+      State: State
+      Params: Params
+      Exports: Exports
+      Store: StoreType
+      Promise: PromiseType
+    }>,
     config?: AtomConfig<State>
-  ): Ion<State, Params, Exports, StoreType, PromiseType>
+  ): Ion<{
+    State: State
+    Params: Params
+    Exports: Exports
+    Store: StoreType
+    Promise: PromiseType
+  }>
 } = <
   State = any,
   Params extends any[] = [],
@@ -82,6 +106,12 @@ export const ion: {
   PromiseType extends AtomApiPromise = undefined
 >(
   key: string,
-  get: IonStateFactory<State, Params, Exports, StoreType, PromiseType>,
+  get: IonStateFactory<{
+    State: State
+    Params: Params
+    Exports: Exports
+    Store: StoreType
+    Promise: PromiseType
+  }>,
   config?: AtomConfig<State>
 ) => new Ion(key, get, config)

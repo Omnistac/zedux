@@ -66,9 +66,9 @@ const passingAnInstance = injectAtomValue(instance)
 <Tabs>
   {tab1(`injectAtomValue = (atomOrInstance, params?) => state`)}
   {tab2(`{
-  <A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>;
-  <A extends AtomBase<any, [...any], any>>(atom: A, params: AtomParamsType<A>): AtomStateType<A>;
-  <AI extends AtomInstanceBase<any, [...any], any>>(instance: AI): AtomStateType<AI>;
+  <A extends ParamlessAtom>(atom: A): AtomStateType<A>;
+  <A extends AnyAtom>(atom: A, params: AtomParamsType<A>): AtomStateType<A>;
+  <AI extends AnyAtomInstance>(instance: AI): AtomStateType<AI>;
 }`)}
 </Tabs>
 

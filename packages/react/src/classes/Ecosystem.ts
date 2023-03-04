@@ -16,12 +16,12 @@ import {
   GraphEdgeInfo,
   GraphViewRecursive,
   MaybeCleanup,
+  ParamlessAtom,
   PartialAtomInstance,
   Selectable,
 } from '../types'
 import { External, InstanceStackItem, SelectorStackItem } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
-import { AtomBase } from './atoms/AtomBase'
 import { EvaluationStack } from './EvaluationStack'
 import { Graph } from './Graph'
 import { IdGenerator } from './IdGenerator'
@@ -266,25 +266,21 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     })
   }
 
-  public get<A extends AtomBase<any, [], any, any, any, any>>(
-    atom: A
-  ): AtomStateType<A>
+  public get<A extends ParamlessAtom>(atom: A): AtomStateType<A>
 
-  public get<A extends AtomBase<any, [...any], any, any, any, any>>(
+  public get<A extends AnyAtom>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  public get<AI extends AtomInstanceBase<any, [...any], any>>(
-    instance: AI
-  ): AtomStateType<AI>
+  public get<AI extends AnyAtomInstance>(instance: AI): AtomStateType<AI>
 
   /**
    * Returns an atom instance's value. Creates the atom instance if it doesn't
    * exist yet. Doesn't register any graph dependencies.
    */
-  public get<A extends AtomBase<any, [...any], any, any, any, any>>(
-    atom: A | AtomInstanceBase<any, [...any], any>,
+  public get<A extends AnyAtom>(
+    atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>
   ) {
     if (is(atom, AtomInstanceBase)) {
@@ -294,22 +290,20 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const instance = this.getInstance(
       atom as A,
       params as AtomParamsType<A>
-    ) as AtomInstanceBase<any, any, any>
+    ) as AnyAtomInstance
 
     return instance.store.getState()
   }
 
-  public getInstance<A extends AtomBase<any, [], any, any, any, any>>(
-    atom: A
-  ): AtomInstanceType<A>
+  public getInstance<A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
 
-  public getInstance<A extends AtomBase<any, [...any], any, any, any, any>>(
+  public getInstance<A extends AnyAtom>(
     atom: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A>
 
-  public getInstance<AI extends AtomInstanceBase<any, any, any>>(
+  public getInstance<AI extends AnyAtomInstance>(
     instance: AI,
     params?: [],
     edgeInfo?: GraphEdgeInfo
@@ -319,8 +313,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Returns an atom instance. Creates the atom instance if it doesn't exist
    * yet. Doesn't register any graph dependencies.
    */
-  public getInstance<A extends AtomBase<any, [...any], any, any, any, any>>(
-    atom: A | AtomInstanceBase<any, [...any], any>,
+  public getInstance<A extends AnyAtom>(
+    atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>
   ) {
     if (is(atom, AtomInstanceBase)) return atom
@@ -395,7 +389,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public inspectInstances(atom?: AnyAtom | string) {
     const isAtom = (atom as AnyAtom)?.key
     const filterKey = isAtom ? (atom as AnyAtom)?.key : (atom as string)
-    const hash: Record<string, AtomInstanceBase<any, any, any>> = {}
+    const hash: Record<string, AnyAtomInstance> = {}
 
     Object.values(this._instances)
       .sort((a, b) => a.keyHash.localeCompare(b.keyHash))
@@ -670,23 +664,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Get an atom instance value. Don't create the atom instance if it doesn't
    * exist. Don't register any graph dependencies.
    */
-  public weakGet<A extends AtomBase<any, [], any, any, any, any>>(
-    atom: A
-  ): AtomStateType<A> | undefined
+  public weakGet<A extends ParamlessAtom>(atom: A): AtomStateType<A> | undefined
 
-  public weakGet<A extends AtomBase<any, [...any], any, any, any, any>>(
+  public weakGet<A extends AnyAtom>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A> | undefined
 
-  public weakGet<A extends AtomBase<any, [...any], any, any, any, any>>(
-    atom: A,
-    params?: AtomParamsType<A>
-  ) {
+  public weakGet<A extends AnyAtom>(atom: A, params?: AtomParamsType<A>) {
     const instance = this.weakGetInstance(
       atom as A,
       params as AtomParamsType<A>
-    ) as AtomInstanceBase<any, any, any>
+    ) as AnyAtomInstance
 
     return instance?.store.getState()
   }
@@ -695,11 +684,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Get an atom instance. Don't create the atom instance if it doesn't exist.
    * Don't register any graph dependencies.
    */
-  public weakGetInstance<A extends AtomBase<any, [], any, any, any, any>>(
+  public weakGetInstance<A extends ParamlessAtom>(
     atom: A
   ): AtomInstanceType<A> | undefined
 
-  public weakGetInstance<A extends AtomBase<any, [...any], any, any, any, any>>(
+  public weakGetInstance<A extends AnyAtom>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A> | undefined
@@ -708,7 +697,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     key: string
   ): AtomInstanceType<A> | undefined
 
-  public weakGetInstance<A extends AtomBase<any, [...any], any, any, any, any>>(
+  public weakGetInstance<A extends AnyAtom>(
     atom: A | string,
     params?: AtomParamsType<A>
   ) {

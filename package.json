@@ -5,7 +5,7 @@
   "scripts": {
     "docs:dev": "cd docs && yarn start",
     "examples": "cd examples && yarn start",
-    "lint": "eslint 'packages/*/src/**/*.ts'",
+    "lint": "eslint 'packages/*/src/**/*.ts' && tsc --noEmit",
     "pretest": "yarn lint",
     "test": "jest"
   },

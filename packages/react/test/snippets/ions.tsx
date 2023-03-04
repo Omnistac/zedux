@@ -1,4 +1,5 @@
 import {
+  api,
   atom,
   AtomInstanceProvider,
   AtomInstanceType,
@@ -13,14 +14,13 @@ const otherAtom = atom('other', () => 'hello')
 
 const testAtom = ion(
   'test',
-  ({ ecosystem, get }) => {
+  ({ ecosystem, get, getInstance }) => {
     console.log('the ecosystem:', ecosystem)
     const other = get(otherAtom)
 
-    return other + ' world!'
-  },
-  ({ set }, newVal) => {
-    set(otherAtom, newVal)
+    return api(other + ' world!').setExports({
+      update: (newVal: string) => getInstance(otherAtom).setState(newVal),
+    })
   },
   { ttl: 0 }
 )
@@ -33,6 +33,7 @@ const upperCaseAtom = ion(
 
 function Child() {
   const testInstance = useAtomConsumer(testAtom, [])
+  const { update } = testInstance.exports
   const upperCase = useAtomValue(upperCaseAtom, [testInstance])
 
   return (
@@ -40,7 +41,7 @@ function Child() {
       <div>test: {upperCase}</div>
       <button
         onClick={() => {
-          testInstance.setState('yooooo')
+          update('yooooo')
         }}
       >
         click me!

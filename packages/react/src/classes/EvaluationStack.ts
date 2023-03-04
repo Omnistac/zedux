@@ -1,5 +1,6 @@
 import { ActionFactoryPayloadType, Store } from '@zedux/core'
 import {
+  AnyAtom,
   AnyAtomInstance,
   AtomGetters,
   AtomParamsType,
@@ -13,7 +14,6 @@ import {
   Static,
 } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
-import { AtomBase } from './atoms/AtomBase'
 import { Ecosystem } from './Ecosystem'
 import { SelectorCacheItem } from './SelectorCache'
 
@@ -63,9 +63,7 @@ export class EvaluationStack {
       return instance.store.getState()
     }) as AtomGetters['get']
 
-    const getInstance: AtomGetters['getInstance'] = <
-      A extends AtomBase<any, [...any], any, any, any, any>
-    >(
+    const getInstance: AtomGetters['getInstance'] = <A extends AnyAtom>(
       atomOrInstance: A,
       params?: AtomParamsType<A>,
       edgeInfo?: GraphEdgeInfo

@@ -51,9 +51,9 @@ const fromInstance = useAtomValue(instance)
 <Tabs>
   {tab1(`useAtomValue = (atomOrInstance, params?) => state`)}
   {tab2(`declare const useAtomValue: {
-  <A extends AtomBase<any, [], any>>(atom: A): AtomStateType<A>;
-  <A extends AtomBase<any, [...any], any>>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): AtomStateType<A>;
-  <AI extends AtomInstanceBase<any, [...any], any>>(instance: AI, params?: [], config?: ZeduxHookConfig): AtomStateType<AI>;
+  <A extends ParamlessAtom>(atom: A): AtomStateType<A>;
+  <A extends AnyAtom>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): AtomStateType<A>;
+  <AI extends AnyAtomInstance>(instance: AI, params?: [], config?: ZeduxHookConfig): AtomStateType<AI>;
 }`)}
 </Tabs>
 

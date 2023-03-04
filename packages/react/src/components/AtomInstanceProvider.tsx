@@ -1,18 +1,17 @@
 import React, { FC, ReactNode } from 'react'
-import { AnyAtom } from '../types'
-import { AtomInstanceBase } from '../classes'
+import { AnyAtomInstance } from '../types'
 import { useEcosystem } from '../hooks'
 
 export const AtomInstanceProvider: FC<
   | {
       children?: ReactNode
-      instance: AtomInstanceBase<any, any, AnyAtom>
+      instance: AnyAtomInstance
       instances?: undefined
     }
   | {
       children?: ReactNode
       instance?: undefined
-      instances: AtomInstanceBase<any, any, AnyAtom>[]
+      instances: AnyAtomInstance[]
     }
 > = ({ children, instance, instances }) => {
   const ecosystem = useEcosystem()
@@ -23,8 +22,7 @@ export const AtomInstanceProvider: FC<
     )
   }
 
-  const allInstances =
-    instances || ([instance] as AtomInstanceBase<any, any, AnyAtom>[])
+  const allInstances = instances || ([instance] as AnyAtomInstance[])
 
   if (allInstances.length === 1) {
     const context = ecosystem._getReactContext(allInstances[0].atom)

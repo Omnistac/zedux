@@ -13,7 +13,7 @@ const localStorageAtom = atom('localStorage', (key: string) => {
   const val = localStorage.getItem(key)
 
   // using the function overload of `injectStore` to prevent JSON.parse from running unnecesarily on reevaluations:
-  const store = injectStore(() =>
+  const store = injectStore<any>(() =>
     createStore(null, val ? JSON.parse(val) : undefined)
   )
 
@@ -29,8 +29,12 @@ const usernameAtom = atom('username', () => {
   const storageInstance = injectAtomInstance(localStorageAtom, ['username'])
   const { update } = storageInstance.exports
   const storedName = injectAtomValue(storageInstance)
+  const val = (storedName as any) || ''
 
-  return api(storedName || '').setExports({ call: (a: string) => 2, update })
+  return api(val as string).setExports({
+    call: (a: string) => 2,
+    update,
+  })
 })
 
 function Username() {

@@ -63,25 +63,36 @@ const packages: Record<
           const relativeDistPath = Array(numRelativeNodes).fill('..').join('/')
 
           return {
-            content: content.replace(
-              /(^|\n)(im|ex)port ((.|\n)*?) from '(.*)?'/gm,
-              (match, capture1, capture2, capture3, capture4, capture5) => {
-                const base = `${capture1}${capture2}port ${capture3} from `
+            content: content
+              .replace(
+                /(^|\n)(im|ex)port ((.|\n)*?) from '(.*)?'/gm,
+                (match, capture1, capture2, capture3, capture4, capture5) => {
+                  const base = `${capture1}${capture2}port ${capture3} from `
 
-                if (!capture5.startsWith('@zedux')) {
-                  return `${base}'${capture5}'`
+                  if (!capture5.startsWith('@zedux')) {
+                    return `${base}'${capture5}'`
+                  }
+
+                  const importNodes = capture5.split('/')
+
+                  return `${base}'${join(
+                    relativeDistPath,
+                    importNodes[1],
+                    'src',
+                    ...importNodes.slice(2)
+                  )}'`
                 }
+              )
+              .replace(/import\("@zedux\/(.*?)"\)/g, (match, capture) => {
+                const importNodes = capture.split('/')
 
-                const importNodes = capture5.split('/')
-
-                return `${base}'${join(
+                return `import("${join(
                   relativeDistPath,
-                  importNodes[1],
+                  importNodes[0],
                   'src',
-                  ...importNodes.slice(2)
-                )}'`
-              }
-            ),
+                  ...importNodes.slice(1)
+                )}")`
+              }),
           }
         },
         include: isDev ? [resolve('./src'), resolve('../core/src')] : [],

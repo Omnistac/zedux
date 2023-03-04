@@ -11,7 +11,7 @@ import {
 } from '@zedux/core'
 import {
   ActiveState,
-  AtomApiPromise,
+  AtomGenerics,
   Cleanup,
   EvaluationReason,
   EvaluationSourceType,
@@ -68,29 +68,15 @@ const getStateStore = <
   return [stateType, stateStore] as const
 }
 
-export class AtomInstance<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>,
-  StoreType extends Store<State>,
-  PromiseType extends AtomApiPromise
-> extends AtomInstanceBase<
-  State,
-  Params,
-  AtomBase<
-    State,
-    Params,
-    Exports,
-    StoreType,
-    PromiseType,
-    AtomInstance<State, Params, Exports, StoreType, PromiseType>
-  >
+export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
+  G['State'],
+  AtomBase<G, AtomInstance<G>>
 > {
   public activeState: ActiveState = 'Initializing'
-  public api?: AtomApi<State, Exports, StoreType, PromiseType>
-  public exports: Exports
-  public promise: PromiseType
-  public store: StoreType
+  public api?: AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>
+  public exports: G['Exports']
+  public promise: G['Promise']
+  public store: G['Store']
 
   public _cancelDestruction?: Cleanup
   public _createdAt = Date.now()
@@ -103,24 +89,17 @@ export class AtomInstance<
   public _stateType?: StateType
 
   private _bufferedUpdate?: {
-    newState: State
-    oldState?: State
+    newState: G['State']
+    oldState?: G['State']
     action: ActionChain
   }
   private _subscription?: Subscription
 
   constructor(
     public readonly ecosystem: Ecosystem,
-    public readonly atom: AtomBase<
-      State,
-      Params,
-      Exports,
-      StoreType,
-      PromiseType,
-      AtomInstance<State, Params, Exports, StoreType, PromiseType>
-    >,
+    public readonly atom: AtomBase<G, AtomInstance<G>>,
     public readonly keyHash: string,
-    public readonly params: Params
+    public readonly params: G['Params']
   ) {
     super()
 
@@ -197,18 +176,18 @@ export class AtomInstance<
   /**
    * An alias for `.store.setState()`
    */
-  public setState = (settable: Settable<State>, meta?: any) =>
+  public setState = (settable: Settable<G['State']>, meta?: any) =>
     this.store.setState(settable, meta)
 
   /**
    * An alias for `.store.setStateDeep()`
    */
   public setStateDeep = (
-    settable: Settable<RecursivePartial<State>, State>,
+    settable: Settable<RecursivePartial<G['State']>, G['State']>,
     meta?: any
   ) => this.store.setStateDeep(settable, meta)
 
-  public _set?: ExportsInfusedSetter<State, Exports>
+  public _set?: ExportsInfusedSetter<G['State'], G['Exports']>
   public get _infusedSetter() {
     if (this._set) return this._set
     const setState: any = (settable: any, meta?: any) =>
@@ -328,9 +307,9 @@ export class AtomInstance<
 
   private evaluationTask = () => this._evaluationTask()
 
-  private _doEvaluate(): StoreType | State {
+  private _doEvaluate(): G['Store'] | G['State'] {
     this._nextInjectors = []
-    let newFactoryResult: StoreType | State
+    let newFactoryResult: G['Store'] | G['State']
     this.ecosystem._evaluationStack.start(this)
     this.ecosystem._graph.bufferUpdates(this.keyHash)
 
@@ -388,18 +367,26 @@ export class AtomInstance<
 
     try {
       const val = (_value as (
-        ...params: Params
-      ) => StoreType | State | AtomApi<State, Exports, StoreType, PromiseType>)(
+        ...params: G['Params']
+      ) =>
+        | G['Store']
+        | G['State']
+        | AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>)(
         ...this.params
       )
 
-      if (!is(val, AtomApi)) return val as StoreType | State
+      if (!is(val, AtomApi)) return val as G['Store'] | G['State']
 
-      this.api = val as AtomApi<State, Exports, StoreType, PromiseType>
+      this.api = val as AtomApi<
+        G['State'],
+        G['Exports'],
+        G['Store'],
+        G['Promise']
+      >
 
       // Exports can only be set on initial evaluation
       if (this.activeState === 'Initializing') {
-        this.exports = this.api.exports as Exports
+        this.exports = this.api.exports as G['Exports']
       }
 
       // if api.value is a promise, we ignore api.promise
@@ -415,7 +402,7 @@ export class AtomInstance<
         this._setPromise(this.api.promise)
       }
 
-      return this.api.value as StoreType | State
+      return this.api.value as G['Store'] | G['State']
     } catch (err) {
       console.error(
         `Zedux: Error while evaluating atom "${this.atom.key}" with params:`,
@@ -452,8 +439,8 @@ export class AtomInstance<
     if (newStateType === StateType.Value) {
       this.store.setState(
         typeof newFactoryResult === 'function'
-          ? () => newFactoryResult as State
-          : (newFactoryResult as State)
+          ? () => newFactoryResult as G['State']
+          : (newFactoryResult as G['State'])
       )
     }
   }
@@ -470,8 +457,8 @@ export class AtomInstance<
   }
 
   private _handleStateChange(
-    newState: State,
-    oldState: State | undefined,
+    newState: G['State'],
+    oldState: G['State'] | undefined,
     action: ActionChain
   ) {
     this.ecosystem._graph.scheduleDependents(
@@ -533,7 +520,7 @@ export class AtomInstance<
   private _setPromise(promise: Promise<any>, isStateUpdater?: boolean) {
     if (promise === this.promise) return this.store.getState()
 
-    this.promise = promise as PromiseType
+    this.promise = promise as G['Promise']
 
     // since we're the first to chain off the returned promise, we don't need to
     // track the chained promise - it will run first, before React suspense's
@@ -545,7 +532,9 @@ export class AtomInstance<
         this._promiseStatus = 'success'
         if (!isStateUpdater) return
 
-        this.store.setState((getSuccessPromiseState(data) as unknown) as State)
+        this.store.setState(
+          (getSuccessPromiseState(data) as unknown) as G['State']
+        )
       })
       .catch(error => {
         if (this.promise !== promise) return
@@ -554,7 +543,9 @@ export class AtomInstance<
         this._promiseError = error
         if (!isStateUpdater) return
 
-        this.store.setState((getErrorPromiseState(error) as unknown) as State)
+        this.store.setState(
+          (getErrorPromiseState(error) as unknown) as G['State']
+        )
       })
 
     const state: PromiseState<any> = getInitialPromiseState()
@@ -571,6 +562,6 @@ export class AtomInstance<
       true
     )
 
-    return (state as unknown) as State
+    return (state as unknown) as G['State']
   }
 }
