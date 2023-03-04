@@ -1,41 +1,21 @@
-import { Store } from '@zedux/core'
 import { ion } from '@zedux/react/factories/ion'
 import { injectAtomGetters } from '@zedux/react/injectors'
-import { AtomConfig, IonStateFactory, AtomApiPromise } from '@zedux/react/types'
+import { AtomConfig, IonStateFactory, AtomGenerics } from '@zedux/react/types'
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { AtomBase } from './AtomBase'
 
-export class Ion<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>,
-  StoreType extends Store<State>,
-  PromiseType extends AtomApiPromise
-> extends AtomBase<
-  State,
-  Params,
-  Exports,
-  StoreType,
-  PromiseType,
-  AtomInstance<State, Params, Exports, StoreType, PromiseType>
-> {
-  private _get: IonStateFactory<State, Params, Exports, StoreType, PromiseType>
+export class Ion<G extends AtomGenerics> extends AtomBase<G, AtomInstance<G>> {
+  private _get: IonStateFactory<G>
 
   constructor(
     key: string,
-    stateFactory: IonStateFactory<
-      State,
-      Params,
-      Exports,
-      StoreType,
-      PromiseType
-    >,
-    _config?: AtomConfig<State>
+    stateFactory: IonStateFactory<G>,
+    _config?: AtomConfig<G['State']>
   ) {
     super(
       key,
-      (...params: Params) => stateFactory(injectAtomGetters(), ...params),
+      (...params: G['Params']) => stateFactory(injectAtomGetters(), ...params),
       _config
     )
 
@@ -45,17 +25,12 @@ export class Ion<
   public _createInstance(
     ecosystem: Ecosystem,
     keyHash: string,
-    params: Params
-  ): AtomInstance<State, Params, Exports, StoreType, PromiseType> {
-    return new AtomInstance<State, Params, Exports, StoreType, PromiseType>(
-      ecosystem,
-      this,
-      keyHash,
-      params
-    )
+    params: G['Params']
+  ): AtomInstance<G> {
+    return new AtomInstance<G>(ecosystem, this, keyHash, params)
   }
 
-  public getKeyHash(ecosystem: Ecosystem, params?: Params) {
+  public getKeyHash(ecosystem: Ecosystem, params?: G['Params']) {
     const base = this.key
 
     if (!params?.length) return base
@@ -66,9 +41,7 @@ export class Ion<
     )}`
   }
 
-  public override(
-    newGet?: IonStateFactory<State, Params, Exports, StoreType, PromiseType>
-  ) {
+  public override(newGet?: IonStateFactory<G>) {
     return ion(this.key, newGet || this._get, this._config)
   }
 }

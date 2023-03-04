@@ -17,8 +17,7 @@ import { Store } from '@zedux/core'
 
 export abstract class AtomInstanceBase<
   State,
-  Params extends any[],
-  AtomType extends AtomBase<State, Params, any, any, any, any>
+  AtomType extends AtomBase<any, any>
 > {
   public static $$typeof = Symbol.for(`${prefix}/AtomInstanceBase`)
   public abstract activeState: ActiveState

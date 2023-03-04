@@ -1,6 +1,12 @@
 import { useMemo, useSyncExternalStore } from 'react'
-import { AtomBase, AtomInstance, AtomInstanceBase } from '../classes'
-import { AtomInstanceType, AtomParamsType, ZeduxHookConfig } from '../types'
+import {
+  AnyAtom,
+  AnyAtomInstance,
+  AtomInstanceType,
+  AtomParamsType,
+  ParamlessAtom,
+  ZeduxHookConfig,
+} from '../types'
 import { destroyed, External, Static } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
@@ -25,23 +31,21 @@ const OPERATION = 'useAtomInstance'
  * @param params The params for generating the instance's key.
  */
 export const useAtomInstance: {
-  <A extends AtomBase<any, [], any, any, any, any>>(
-    atom: A
-  ): AtomInstanceType<A>
+  <A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
 
-  <A extends AtomBase<any, [...any], any, any, any, any>>(
+  <A extends AnyAtom>(
     atom: A,
     params: AtomParamsType<A>,
     config?: ZeduxHookConfig
   ): AtomInstanceType<A>
 
-  <AI extends AtomInstance<any, [...any], any, any, any>>(
+  <AI extends AnyAtomInstance>(
     instance: AI,
     params?: [],
     config?: ZeduxHookConfig
   ): AI
-} = <A extends AtomBase<any, [...any], any, any, any, any>>(
-  atom: A | AtomInstanceBase<any, [...any], any>,
+} = <A extends AnyAtom>(
+  atom: A | AnyAtomInstance,
   params?: AtomParamsType<A>,
   { operation = OPERATION, subscribe, suspend }: ZeduxHookConfig = {
     operation: OPERATION,

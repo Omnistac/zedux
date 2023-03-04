@@ -20,13 +20,13 @@ export const atom: {
       ...params: Params
     ) => AtomApi<Promise<State>, Exports, undefined, any>,
     config?: AtomConfig<State>
-  ): Atom<
-    PromiseState<State>,
-    Params,
-    Exports,
-    Store<PromiseState<State>>,
-    Promise<State>
-  >
+  ): Atom<{
+    State: PromiseState<State>
+    Params: Params
+    Exports: Exports
+    Store: Store<PromiseState<State>>
+    Promise: Promise<State>
+  }>
 
   // Custom Stores
   <
@@ -42,7 +42,13 @@ export const atom: {
       | StoreType
       | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): Atom<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>
+  ): Atom<{
+    State: StoreStateType<StoreType>
+    Params: Params
+    Exports: Exports
+    Store: StoreType
+    Promise: PromiseType
+  }>
 
   // Catch-all
   <
@@ -53,9 +59,21 @@ export const atom: {
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    value: AtomValueOrFactory<State, Params, Exports, StoreType, PromiseType>,
+    value: AtomValueOrFactory<{
+      Exports: Exports
+      Params: Params
+      Promise: PromiseType
+      State: State
+      Store: StoreType
+    }>,
     config?: AtomConfig<State>
-  ): Atom<State, Params, Exports, StoreType, PromiseType>
+  ): Atom<{
+    Exports: Exports
+    Params: Params
+    Promise: PromiseType
+    State: State
+    Store: StoreType
+  }>
 } = <
   State = any,
   Params extends any[] = [],
@@ -64,16 +82,24 @@ export const atom: {
   PromiseType extends AtomApiPromise = undefined
 >(
   key: string,
-  value: AtomValueOrFactory<State, Params, Exports, StoreType, PromiseType>,
+  value: AtomValueOrFactory<{
+    Exports: Exports
+    Params: Params
+    Promise: PromiseType
+    State: State
+    Store: StoreType
+  }>,
   config?: AtomConfig<State>
 ) => {
   if (DEV && !key) {
     throw new TypeError('Zedux: All atoms must have a key')
   }
 
-  return new Atom<State, Params, Exports, StoreType, PromiseType>(
-    key,
-    value,
-    config
-  )
+  return new Atom<{
+    State: State
+    Params: Params
+    Exports: Exports
+    Store: StoreType
+    Promise: PromiseType
+  }>(key, value, config)
 }

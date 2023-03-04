@@ -1,22 +1,28 @@
-import { AtomBase, AtomInstanceBase } from '../classes'
-import { AtomParamsType, AtomStateType, ZeduxHookConfig } from '../types'
+import {
+  AnyAtom,
+  AnyAtomInstance,
+  AtomParamsType,
+  AtomStateType,
+  ParamlessAtom,
+  ZeduxHookConfig,
+} from '../types'
 import { useAtomInstance } from './useAtomInstance'
 
 export const useAtomValue: {
-  <A extends AtomBase<any, [], any, any, any, any>>(atom: A): AtomStateType<A>
+  <A extends ParamlessAtom>(atom: A): AtomStateType<A>
 
-  <A extends AtomBase<any, [...any], any, any, any, any>>(
+  <A extends AnyAtom>(
     atom: A,
     params: AtomParamsType<A>,
     config?: Omit<ZeduxHookConfig, 'subscribe'>
   ): AtomStateType<A>
 
-  <AI extends AtomInstanceBase<any, [...any], any>>(
+  <AI extends AnyAtomInstance>(
     instance: AI,
     params?: [],
     config?: Omit<ZeduxHookConfig, 'subscribe'>
   ): AtomStateType<AI>
-} = <A extends AtomBase<any, [...any], any, any, any, any>>(
+} = <A extends AnyAtom>(
   atom: A,
   params?: AtomParamsType<A>,
   config: Omit<ZeduxHookConfig, 'subscribe'> = { operation: 'useAtomValue' }

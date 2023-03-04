@@ -98,9 +98,9 @@ const [, { exports, only }] = injectAtomState(myAtom)
 <Tabs>
   {tab1(`injectAtomState = (atomOrInstance, params?) => [state, setState]`)}
   {tab2(`declare const injectAtomState: {
-  <A extends AtomBase<any, [], any, any, any, any>>(atom: A): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
-  <A extends AtomBase<any, [...any], any, any, any, any>>(atom: A, params: AtomParamsType<A>): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
-  <AI extends AtomInstance<any, [...any], any, any, any>>(instance: AI): StateHookTuple<AtomStateType<AI>, AtomExportsType<AI>>;
+  <A extends ParamlessAtom>(atom: A): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
+  <A extends AnyAtom>(atom: A, params: AtomParamsType<A>): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
+  <AI extends AnyAtomInstance>(instance: AI): StateHookTuple<AtomStateType<AI>, AtomExportsType<AI>>;
 }`)}
 </Tabs>
 

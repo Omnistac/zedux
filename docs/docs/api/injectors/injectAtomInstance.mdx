@@ -72,9 +72,9 @@ const injectCustomStuff = () => {
     `injectAtomInstance = (atomOrInstance, params?, operation?) => instance`
   )}
   {tab2(`declare const injectAtomInstance: {
-  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>;
-  <A extends AtomBase<any, [...any], any>>(atom: A, params: AtomParamsType<A>, operation?: string): AtomInstanceType<A>;
-  <AI extends AtomInstanceBase<any, [...any], any>>(instance: AI, params?: [], operation?: string): AI;
+  <A extends ParamlessAtom>(atom: A): AtomInstanceType<A>;
+  <A extends AnyAtom>(atom: A, params: AtomParamsType<A>, operation?: string): AtomInstanceType<A>;
+  <AI extends AnyAtomInstance>(instance: AI, params?: [], operation?: string): AI;
 }`)}
 </Tabs>
 

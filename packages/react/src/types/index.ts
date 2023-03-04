@@ -1,6 +1,5 @@
 import { ActionChain, Observable, Settable, Store } from '@zedux/core'
 import { AtomBase } from '../classes/atoms/AtomBase'
-import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
 import { SelectorCacheItem } from '../classes/SelectorCache'
@@ -11,6 +10,20 @@ export * from './atoms'
 export * from './utils'
 
 export type ActiveState = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
+
+export interface AtomGenerics {
+  Exports: Record<string, any>
+  Params: any[]
+  Promise: AtomApiPromise
+  State: any
+  Store: Store<any>
+}
+
+export type AtomGenericsPartial<G extends Partial<AtomGenerics>> = Omit<
+  AtomGenerics,
+  keyof G
+> &
+  G
 
 export type AtomApiPromise = Promise<any> | undefined
 
@@ -32,35 +45,26 @@ export interface AtomGettersBase {
    * synchronously during atom or AtomSelector evaluation. When called
    * asynchronously, is just an alias for `ecosystem.get`
    */
-  get<A extends AtomBase<any, [], any, any, any, any>>(
-    atom: A
-  ): AtomStateType<A>
+  get<A extends ParamlessAtom>(atom: A): AtomStateType<A>
 
-  get<A extends AtomBase<any, [...any], any, any, any, any>>(
-    atom: A,
-    params: AtomParamsType<A>
-  ): AtomStateType<A>
+  get<A extends AnyAtom>(atom: A, params: AtomParamsType<A>): AtomStateType<A>
 
-  get<AI extends AtomInstanceBase<any, [...any], any>>(
-    instance: AI
-  ): AtomStateType<AI>
+  get<AI extends AnyAtomInstance>(instance: AI): AtomStateType<AI>
 
   /**
    * Registers a static graph edge on the resolved atom instance when called
    * synchronously during atom or AtomSelector evaluation. When called
    * asynchronously, is just an alias for `ecosystem.getInstance`
    */
-  getInstance<A extends AtomBase<any, [], any, any, any, any>>(
-    atom: A
-  ): AtomInstanceType<A>
+  getInstance<A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
 
-  getInstance<A extends AtomBase<any, [...any], any, any, any, any>>(
+  getInstance<A extends AnyAtom>(
     atom: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A>
 
-  getInstance<AI extends AtomInstanceBase<any, any, any>>(
+  getInstance<AI extends AnyAtomInstance>(
     instance: AI,
     params?: [],
     edgeInfo?: GraphEdgeInfo
@@ -145,31 +149,19 @@ export type AtomSelectorOrConfig<T = any, Args extends any[] = []> =
   | AtomSelector<T, Args>
   | AtomSelectorConfig<T, Args>
 
-export type AtomStateFactory<
-  State = any,
-  Params extends any[] = [],
-  Exports extends Record<string, any> = Record<string, any>,
-  StoreType extends Store<State> = Store<State>,
-  PromiseType extends AtomApiPromise = undefined
-> = (
-  ...params: Params
+export type AtomStateFactory<G extends AtomGenerics> = (
+  ...params: G['Params']
 ) =>
-  | AtomApi<State, Exports, StoreType | undefined, PromiseType>
-  | StoreType
-  | State
+  | AtomApi<G['State'], G['Exports'], G['Store'] | undefined, G['Promise']>
+  | G['Store']
+  | G['State']
 
 export type AtomTuple<A extends AnyAtom> = [A, AtomParamsType<A>]
 
-export type AtomValueOrFactory<
-  State = any,
-  Params extends any[] = [],
-  Exports extends Record<string, any> = Record<string, any>,
-  StoreType extends Store<State> = Store<State>,
-  PromiseType extends AtomApiPromise = undefined
-> =
-  | AtomStateFactory<State, Params, Exports, StoreType, PromiseType>
-  | StoreType
-  | State
+export type AtomValueOrFactory<G extends AtomGenerics> =
+  | AtomStateFactory<G>
+  | G['Store']
+  | G['State']
 
 export type Cleanup = () => void
 
@@ -275,22 +267,21 @@ export interface InjectStoreConfig {
   subscribe?: boolean
 }
 
-export type IonStateFactory<
-  State,
-  Params extends any[],
-  Exports extends Record<string, any>,
-  StoreType extends Store<State>,
-  PromiseType extends AtomApiPromise
-> = (
+export type IonStateFactory<G extends AtomGenerics> = (
   getters: AtomGetters,
-  ...params: Params
-) => AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
+  ...params: G['Params']
+) =>
+  | AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>
+  | G['Store']
+  | G['State']
 
 export type MaybeCleanup = Cleanup | void
 
 export interface MutableRefObject<T = any> {
   current: T
 }
+
+export type ParamlessAtom = AtomBase<AtomGenericsPartial<{ Params: [] }>, any>
 
 /**
  * Part of the atom instance can be accessed during initial evaluation. The only

@@ -1,12 +1,13 @@
 import { InjectorDescriptor, prefix, Static } from '../utils'
 import {
-  AnyAtomInstanceBase,
+  AnyAtom,
+  AnyAtomInstance,
   AtomInstanceType,
   AtomParamsType,
   InjectAtomInstanceConfig,
+  ParamlessAtom,
   PartialAtomInstance,
 } from '../types'
-import { AtomBase, AtomInstanceBase } from '../classes'
 import { createInjector } from '../factories'
 
 const defaultOperation = 'injectAtomInstance'
@@ -34,26 +35,24 @@ const defaultOperation = 'injectAtomInstance'
  * @returns An atom instance, keyed based on the passed params.
  */
 export const injectAtomInstance: {
-  <A extends AtomBase<any, [], any, any, any, any>>(
-    atom: A
-  ): AtomInstanceType<A>
+  <A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
 
-  <A extends AtomBase<any, [...any], any, any, any, any>>(
+  <A extends AnyAtom>(
     atom: A,
     params: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig
   ): AtomInstanceType<A>
 
-  <AI extends AtomInstanceBase<any, [...any], any>>(
+  <AI extends AnyAtomInstance>(
     instance: AI,
     params?: [],
     config?: InjectAtomInstanceConfig
   ): AI
 } = createInjector(
   defaultOperation,
-  <A extends AtomBase<any, [...any], any, any, any, any>>(
+  <A extends AnyAtom>(
     instance: PartialAtomInstance,
-    atom: A | AnyAtomInstanceBase,
+    atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig
   ) => {
@@ -68,10 +67,10 @@ export const injectAtomInstance: {
       type: `${prefix}/atom`,
     } as InjectorDescriptor<AtomInstanceType<A>>
   },
-  <A extends AtomBase<any, [...any], any, any, any, any>>(
+  <A extends AnyAtom>(
     prevDescriptor: InjectorDescriptor<AtomInstanceType<A>>,
     instance: PartialAtomInstance,
-    atom: A | AnyAtomInstanceBase,
+    atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig
   ) => {
