@@ -335,16 +335,16 @@ const cache = ecosystem.selectorCache.getCache(getUserById, [userId])
 The 2nd argument to most Selector Cache methods is an array of the selector's params.
 :::
 
-### `weakGetCache`
+### `find`
 
-Just like [the Weak Getters](atom-getters#weak-getters) for atom instances, the Selector Cache has a Weak Getter for selector caches. Returns the cache object **only if it exists**. Otherwise returns undefined.
+Just like [the Weak Getters](atom-getters#weak-getters) for atom instances, the Selector Cache has Weak Getters for selector caches. `find` returns the cache object **only if it exists**. Otherwise returns undefined.
 
 ```ts
-const maybeCache = ecosystem.selectorCache.weakGetCache(getUserById, [userId])
+const maybeCache = ecosystem.selectorCache.find(getUserById, [userId])
 ```
 
 :::note
-This is different from `ecosystem.select()`. `weakGetCache` never runs the selector - it just returns the cache object if it exists. `ecosystem.select()` returns the cached _result_ if a cache exists. Otherwise it runs the selector statically (without registering graph dependencies) and returns that result.
+This is different from `ecosystem.select()`. `selectorCache.find()` never runs the selector - it just returns the cache object if it exists. `ecosystem.select()` returns the cached _result_ if a cache exists. Otherwise it runs the selector statically (without registering graph dependencies) and returns that result.
 :::
 
 ### `destroyCache`

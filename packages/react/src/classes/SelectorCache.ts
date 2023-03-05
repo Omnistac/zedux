@@ -114,6 +114,45 @@ export class SelectorCache {
     this._destroySelector(cacheKey)
   }
 
+  /**
+   * Get the cache for the given selector. Return undefined if it doesn't exist
+   * yet - don't create it.
+   */
+  public find<T = any, Args extends [] = []>(
+    selectable: Selectable<T, Args>
+  ): SelectorCacheItem<T, Args> | undefined
+
+  public find<T = any, Args extends any[] = []>(
+    selectable: Selectable<T, Args>,
+    args: Args
+  ): SelectorCacheItem<T, Args> | undefined
+
+  public find<T = any, Args extends any[] = any[]>(
+    selectable: string
+  ): SelectorCacheItem<T, Args> | undefined
+
+  public find<T = any, Args extends any[] = []>(
+    selectable: Selectable<T, Args> | string,
+    args?: Args
+  ) {
+    if (is(selectable, SelectorCacheItem)) {
+      return selectable as SelectorCacheItem
+    }
+
+    if (typeof selectable === 'string') {
+      return Object.values(this.inspectItems(selectable))[0]
+    }
+
+    const cacheKey = this.getCacheKey(
+      selectable as AtomSelectorOrConfig<T, Args>,
+      args as Args,
+      true
+    )
+    if (!cacheKey) return
+
+    return this._items[cacheKey]
+  }
+
   public getCache<T = any, Args extends [] = []>(
     selectable: Selectable<T, Args>
   ): SelectorCacheItem<T, Args>
@@ -235,37 +274,6 @@ export class SelectorCache {
   }
 
   /**
-   * Get the cache for the given selector. Don't create it if it doesn't exist,
-   * just return undefined.
-   */
-  public weakGetCache<T = any, Args extends [] = []>(
-    selectable: Selectable<T, Args>
-  ): SelectorCacheItem<T, Args> | undefined
-
-  public weakGetCache<T = any, Args extends any[] = []>(
-    selectable: Selectable<T, Args>,
-    args: Args
-  ): SelectorCacheItem<T, Args> | undefined
-
-  public weakGetCache<T = any, Args extends any[] = []>(
-    selectable: Selectable<T, Args>,
-    args?: Args
-  ) {
-    if (is(selectable, SelectorCacheItem)) {
-      return selectable as SelectorCacheItem
-    }
-
-    const cacheKey = this.getCacheKey(
-      selectable as AtomSelectorOrConfig<T, Args>,
-      args as Args,
-      true
-    )
-    if (!cacheKey) return
-
-    return this._items[cacheKey]
-  }
-
-  /**
    * Should only be used internally. Removes the selector from the cache and
    * the graph
    */
@@ -343,7 +351,7 @@ export class SelectorCache {
     newRef: AtomSelectorOrConfig<any, any[]>,
     args: any[]
   ) {
-    const existingCache = this.weakGetCache(oldRef, args)
+    const existingCache = this.find(oldRef, args)
     const baseKey = this._refBaseKeys.get(oldRef)
 
     if (!existingCache || !baseKey) return

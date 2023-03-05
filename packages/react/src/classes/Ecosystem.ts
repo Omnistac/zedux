@@ -521,7 +521,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
 
     const atomSelector = selectable as AtomSelectorOrConfig<T, Args>
-    const cache = this.selectorCache.weakGetCache(atomSelector, args)
+    const cache = this.selectorCache.find(atomSelector, args)
     if (cache) return cache.result as T
 
     const resolvedSelector =
