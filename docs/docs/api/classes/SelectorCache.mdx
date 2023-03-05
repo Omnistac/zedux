@@ -85,12 +85,34 @@ Every ecosystem creates a single SelectorCache instance - [`ecosystem.selectorCa
       </Item>
     </Legend>
   </Item>
+  <Item name="find">
+    <p>
+      Similar to{' '}
+      <Link to="#getcache">
+        <code>selectorCache.getCache()</code>
+      </Link>
+      , returns a <Link to="SelectorCacheItem">SelectorCacheItem</Link> instance
+      for the given selector + args combo. However, unlike <code>
+        .getCache()
+      </code>, <code>.find()</code> does not run the selector or cache the result
+      if it hasn't been cached already - it simply returns undefined.
+    </p>
+    <p>
+      Signature is almost the same as{' '}
+      <Link to="#getcache">
+        <code>.getCache()</code>
+      </Link>
+      , except that <code>.find()</code> also accepts a fuzzy search string which,
+      when passed, returns the first found SelectorCacheItem whose cacheKey includes
+      the passed string (case-insensitive).
+    </p>
+  </Item>
   <Item name="getCache">
     <p>
       Returns a <Link to="SelectorCacheItem">SelectorCacheItem</Link> instance
       for the given selector + args combo. If the selector + args combo has
-      never been cached before, runs the selector and caches the result before
-      returning the cache item.
+      never been cached before, <code>.getCache()</code> runs the selector and
+      caches the result before returning the cache item.
     </p>
     <p>
       Contrast this to{' '}
@@ -241,25 +263,6 @@ Every ecosystem creates a single SelectorCache instance - [`ecosystem.selectorCa
         their cached results.
       </Item>
     </Legend>
-  </Item>
-  <Item name="weakGetCache">
-    <p>
-      Similar to{' '}
-      <Link to="#getcache">
-        <code>selectorCache.getCache()</code>
-      </Link>
-      , returns a <Link to="SelectorCacheItem">SelectorCacheItem</Link> instance
-      for the given selector + args combo. However, unlike <code>
-        .getCache()
-      </code>, <code>.weakGetCache()</code> does not run the selector or cache the
-      result if it hasn't been cached already - it simply returns undefined.
-    </p>
-    <p>
-      Signature is exactly the same as{' '}
-      <Link to="#getcache">
-        <code>.getCache()</code>
-      </Link>
-    </p>
   </Item>
 </Legend>
 

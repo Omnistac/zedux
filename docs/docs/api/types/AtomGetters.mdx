@@ -192,7 +192,7 @@ value = select(atomSelectorCache)`}</Ts>
       exists).
     </p>
     <p>
-      If an SelectorCacheItem is passed, <code>select()</code> registers a
+      If a SelectorCacheItem is passed, <code>select()</code> registers a
       dynamic dependency on the cache and returns the cache's current result.
     </p>
     <p>
@@ -202,14 +202,14 @@ value = select(atomSelectorCache)`}</Ts>
     </p>
     <p>
       Use{' '}
-      <Link to="../classes/SelectorCache#weakgetcache">
-        ecosystem.selectorCache.weakGetCache()?.result
+      <Link to="../classes/SelectorCache#find">
+        ecosystem.selectorCache.find(mySelector)?.result
       </Link>{' '}
       to get the selector's cached value only if it has been cached already.
       Note however that this doesn't register any graph dependencies. To weakly
       register a dynamic dependency on a selector, use the following pattern:
     </p>
-    <Ts>{`const cache = ecosystem.selectorCache.weakGetCache(mySelector)
+    <Ts>{`const cache = ecosystem.selectorCache.find(mySelector)
 const val = cache ? select(cache) : defaultVal`}</Ts>
     <p>
       For best cache performance, pass a stable atom selector function (or
