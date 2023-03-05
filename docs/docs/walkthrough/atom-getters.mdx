@@ -321,27 +321,29 @@ Just like hooks and injectors, the `get` and `getInstance` Atom Getters create t
 
 For these use cases, ecosystems (and only ecosystems) have 2 "Weak Getters":
 
-### `weakGet`
+### `find`
 
-Returns an atom instance's value **if the atom instance exists**. Otherwise returns undefined.
-
-```ts
-const val = ecosystem.weakGet(myAtom)
-const paramsExample = ecosystem.weakGet(myAtom, ['param 1', 'param 2'])
-```
-
-### `weakGetInstance`
-
-Returns an atom instance **if the atom instance already exists**. Otherwise returns undefined.
+Returns an atom instance **if the atom instance exists**. Otherwise returns undefined.
 
 ```ts
-const instance = ecosystem.weakGetInstance(myAtom)
-const paramsExample = ecosystem.weakGetInstance(myAtom, ['param 1', 'param 2'])
+const val = ecosystem.find(myAtom)
+const paramsExample = ecosystem.find(myAtom, ['param 1', 'param 2'])
+const fuzzySearchString = ecosystem.find('myAtomKey')
 ```
 
-:::note
-There is no `weakSelect` - `ecosystem.select` never caches anything, but it will return the cached selector result if the passed Atom Selector has been cached before.
-:::
+When a string is passed, `ecosystem.find()` returns the first atom instance it finds whose keyHash contains the passed string (case-insensitive).
+
+### `findAll`
+
+Returns an object containing all instances of the passed atom **if any atom instances exist**, keyed by each instance's keyHash. Otherwise returns an empty object.
+
+```ts
+const instances = ecosystem.findAll(myAtom)
+const paramsExample = ecosystem.findAll(myAtom)
+const fuzzySearchString = ecosystem.findAll('myAtomKey')
+```
+
+When a string is passed, `ecosystem.findAll()` returns all atom instance whose keyHash contains the passed string (case-insensitive).
 
 ## Recap
 
@@ -352,7 +354,7 @@ There is no `weakSelect` - `ecosystem.select` never caches anything, but it will
 - The ecosystem's Atom Getters never register graph dependencies - and thus are your static analysis and testing friends.
 - When called after evaluation, Atom Getters do not register graph dependencies.
 - Atom Getters can be safely used in loops and conditional statements.
-- The Weak Getters (`weakGet` and `weakGetInstance`) return undefined if no atom instance exists yet rather than automatically creating it.
+- The Weak Getters (`find` and `findAll`) never create atom instances.
 
 ## Next Steps
 

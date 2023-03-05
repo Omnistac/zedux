@@ -37,9 +37,7 @@ const TodoResetButton = () => {
   const ecosystem = useEcosystem()
 
   return (
-    <button
-      onClick={() => ecosystem.weakGetInstance(todoListAtom)?.invalidate()}
-    >
+    <button onClick={() => ecosystem.find(todoListAtom)?.invalidate()}>
       Reset
     </button>
   )
