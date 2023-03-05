@@ -121,7 +121,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
 
     overrides.forEach(override => {
-      const instances = this.inspectInstances(override)
+      const instances = this.findAll(override)
 
       Object.values(instances).forEach(instance => instance.destroy(true))
     })
@@ -266,6 +266,63 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     })
   }
 
+  /**
+   * Get an atom instance. Don't create the atom instance if it doesn't exist.
+   * Don't register any graph dependencies.
+   */
+  public find<A extends ParamlessAtom>(atom: A): AtomInstanceType<A> | undefined
+
+  public find<A extends AnyAtom>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomInstanceType<A> | undefined
+
+  public find<A extends AnyAtom = any>(
+    key: string
+  ): AtomInstanceType<A> | undefined
+
+  public find<A extends AnyAtom>(atom: A | string, params?: AtomParamsType<A>) {
+    if (typeof atom !== 'string') {
+      const keyHash = (atom as A).getKeyHash(this, params)
+
+      // try to find an existing instance
+      return this._instances[keyHash]
+    }
+
+    return Object.values(this.findAll(atom))[0] as
+      | AtomInstanceType<A>
+      | undefined
+  }
+
+  /**
+   * Get an object of all atom instances in this ecosystem.
+   *
+   * Pass an atom or atom key string to only return instances whose keyHash
+   * weakly matches the passed key.
+   */
+  public findAll(atom?: AnyAtom | string) {
+    const isAtom = (atom as AnyAtom)?.key
+    const filterKey = isAtom ? (atom as AnyAtom)?.key : (atom as string)
+    const hash: Record<string, AnyAtomInstance> = {}
+
+    Object.values(this._instances)
+      .sort((a, b) => a.keyHash.localeCompare(b.keyHash))
+      .forEach(instance => {
+        if (
+          filterKey &&
+          (isAtom
+            ? instance.atom.key !== filterKey
+            : !instance.keyHash.toLowerCase().includes(filterKey))
+        ) {
+          return
+        }
+
+        hash[instance.keyHash] = instance
+      })
+
+    return hash
+  }
+
   public get<A extends ParamlessAtom>(atom: A): AtomStateType<A>
 
   public get<A extends AnyAtom>(
@@ -381,35 +438,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   /**
-   * Get an object of all atom instances in this ecosystem.
-   *
-   * Pass an atom or atom key string to only return instances whose keyHash
-   * weakly matches the passed key.
-   */
-  public inspectInstances(atom?: AnyAtom | string) {
-    const isAtom = (atom as AnyAtom)?.key
-    const filterKey = isAtom ? (atom as AnyAtom)?.key : (atom as string)
-    const hash: Record<string, AnyAtomInstance> = {}
-
-    Object.values(this._instances)
-      .sort((a, b) => a.keyHash.localeCompare(b.keyHash))
-      .forEach(instance => {
-        if (
-          filterKey &&
-          (isAtom
-            ? instance.atom.key !== filterKey
-            : !instance.keyHash.toLowerCase().includes(filterKey))
-        ) {
-          return
-        }
-
-        hash[instance.keyHash] = instance
-      })
-
-    return hash
-  }
-
-  /**
    * Add a ZeduxPlugin to this ecosystem. This ecosystem will subscribe to the
    * plugin's modStore, whose state can be changed to reactively update the mods
    * of this ecosystem.
@@ -459,7 +487,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     )
 
     overrides.forEach(override => {
-      const instances = this.inspectInstances(override)
+      const instances = this.findAll(override)
 
       Object.values(instances).forEach(instance => instance.destroy(true))
     })
@@ -526,7 +554,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     if (!this.isInitialized) return
 
     newOverrides.forEach(atom => {
-      const instances = this.inspectInstances(atom)
+      const instances = this.findAll(atom)
 
       Object.values(instances).forEach(instance => {
         instance.destroy(true)
@@ -536,7 +564,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     if (!oldOverrides) return
 
     Object.values(oldOverrides).forEach(atom => {
-      const instances = this.inspectInstances(atom)
+      const instances = this.findAll(atom)
 
       Object.values(instances).forEach(instance => {
         instance.destroy(true)
@@ -658,59 +686,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     })
 
     return hash
-  }
-
-  /**
-   * Get an atom instance value. Don't create the atom instance if it doesn't
-   * exist. Don't register any graph dependencies.
-   */
-  public weakGet<A extends ParamlessAtom>(atom: A): AtomStateType<A> | undefined
-
-  public weakGet<A extends AnyAtom>(
-    atom: A,
-    params: AtomParamsType<A>
-  ): AtomStateType<A> | undefined
-
-  public weakGet<A extends AnyAtom>(atom: A, params?: AtomParamsType<A>) {
-    const instance = this.weakGetInstance(
-      atom as A,
-      params as AtomParamsType<A>
-    ) as AnyAtomInstance
-
-    return instance?.store.getState()
-  }
-
-  /**
-   * Get an atom instance. Don't create the atom instance if it doesn't exist.
-   * Don't register any graph dependencies.
-   */
-  public weakGetInstance<A extends ParamlessAtom>(
-    atom: A
-  ): AtomInstanceType<A> | undefined
-
-  public weakGetInstance<A extends AnyAtom>(
-    atom: A,
-    params: AtomParamsType<A>
-  ): AtomInstanceType<A> | undefined
-
-  public weakGetInstance<A extends AnyAtom = any>(
-    key: string
-  ): AtomInstanceType<A> | undefined
-
-  public weakGetInstance<A extends AnyAtom>(
-    atom: A | string,
-    params?: AtomParamsType<A>
-  ) {
-    if (typeof atom !== 'string') {
-      const keyHash = (atom as A).getKeyHash(this, params)
-
-      // try to find an existing instance
-      return this._instances[keyHash]
-    }
-
-    return Object.values(this.inspectInstances(atom))[0] as
-      | AtomInstanceType<A>
-      | undefined
   }
 
   /**

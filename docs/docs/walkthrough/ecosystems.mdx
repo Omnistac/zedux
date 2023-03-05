@@ -194,19 +194,19 @@ const rootEcosystem = createEcosystem({
 })
 ```
 
-### `inspectInstances`
+### `findAll`
 
 Returns an object of all atom instances in the ecosystem, each instance keyed by a string that consists of its atom key + its serialized parameters.
 
-```tsx live ecosystemId=ecosystems/inspectInstances resultVar=Inspect
-const ecosystem = createEcosystem({ id: 'inspectInstances-test' })
+```tsx live ecosystemId=ecosystems/findAll resultVar=Inspect
+const ecosystem = createEcosystem({ id: 'findAll-test' })
 const testAtom = atom('test', (key?: number) => null)
 
 ecosystem.getInstance(testAtom)
 ecosystem.getInstance(testAtom, [1])
 
 function Inspect() {
-  const instances = ecosystem.inspectInstances()
+  const instances = ecosystem.findAll()
 
   return (
     <button onClick={() => console.log('Instances:', instances)}>

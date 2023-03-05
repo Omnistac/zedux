@@ -64,7 +64,7 @@ describe('selection', () => {
     expect(selector2).toHaveBeenCalledTimes(1)
 
     act(() => {
-      testEcosystem.weakGetInstance(testAtom, ['a'])?.setState('b')
+      testEcosystem.find(testAtom, ['a'])?.setState('b')
       jest.runAllTimers()
     })
 

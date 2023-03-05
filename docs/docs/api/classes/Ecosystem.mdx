@@ -336,6 +336,38 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
       </Item>
     </Legend>
   </Item>
+  <Item name="find">
+    <p>
+      Works similar to{' '}
+      <Link to="#getinstance">
+        <code>ecosystem.getInstance()</code>
+      </Link>{' '}
+      except it does NOT create the atom if it doesn't exist. In that case,{' '}
+      <code>.find()</code> returns undefined
+    </p>
+    <Ts>{`val = ecosystem.getInstance(myAtom, [...params]) // creates the atom instance if needed
+val = ecosystem.find(myAtom, [...params]) // never creates an atom instance`}</Ts>
+    <p>
+      <code>.find()</code> can also take a fuzzy search string
+    </p>
+  </Item>
+  <Item name="findAll">
+    <p>Get all atom instances in the ecosystem.</p>
+    <p>Signature:</p>
+    <Ts>{`findAll = (atom?) => instances`}</Ts>
+    <Legend>
+      <Item name="atom">
+        An atom or fuzzy search string. If an atom is passed,{' '}
+        <code>.findAll()</code> returns only instances of the passed atom. If a
+        string is passed, <code>.findAll()</code> returns only instances whose
+        keyHash includes the passed string (case-insensitive).
+      </Item>
+      <Item name="Returns">
+        An object of all Active and Stale atom instances in the ecosystem, keyed
+        by the instance's keyHash.
+      </Item>
+    </Legend>
+  </Item>
   <Item name="get">
     <p>
       Gets the current value of an atom instance's store. Creates the atom
@@ -400,24 +432,6 @@ instance.setState('new state')`}</Ts>
           that have an entry in the passed snapshot. To disable this, pass{' '}
           <code>{`{ retroactive: false }`}</code>.
         </p>
-      </Item>
-    </Legend>
-  </Item>
-  <Item name="inspectInstances">
-    <p>Get all atom instances in the ecosystem.</p>
-    <p>Signature:</p>
-    <Ts>{`inspectInstances = (atom?) => instances`}</Ts>
-    <Legend>
-      <Item name="atom">
-        An atom or fuzzy search string. If an atom is passed,{' '}
-        <code>.inspectInstances()</code> returns only instances of the passed
-        atom. If a string is passed, <code>.inspectInstances()</code> returns
-        only instances whose keyHash includes the passed string
-        (case-insensitive).
-      </Item>
-      <Item name="Returns">
-        An object of all Active and Stale atom instances in the ecosystem, keyed
-        by the instance's keyHash.
       </Item>
     </Legend>
   </Item>
@@ -583,30 +597,6 @@ const withArgs = myEcosystem.select(myAtomSelector, 'param 1', 'param 2')`}</Ts>
         .
       </Item>
     </Legend>
-  </Item>
-  <Item name="weakGet">
-    <p>
-      Works exactly like{' '}
-      <Link to="#get">
-        <code>ecosystem.get()</code>
-      </Link>{' '}
-      except it does NOT create the atom if it doesn't exist. In that case,{' '}
-      <code>.weakGet()</code> returns undefined
-    </p>
-    <Ts>{`val = ecosystem.get(myAtom, [...params]) // creates the atom instance if needed
-val = ecosystem.weakGet(myAtom, [...params]) // never creates an atom instance`}</Ts>
-  </Item>
-  <Item name="weakGetInstance">
-    <p>
-      Works exactly like{' '}
-      <Link to="#getinstance">
-        <code>ecosystem.getInstance()</code>
-      </Link>{' '}
-      except it does NOT create the atom if it doesn't exist. In that case,{' '}
-      <code>.weakGetInstance()</code> returns undefined
-    </p>
-    <Ts>{`val = ecosystem.getInstance(myAtom, [...params]) // creates the atom instance if needed
-val = ecosystem.weakGetInstance(myAtom, [...params]) // never creates an atom instance`}</Ts>
   </Item>
   <Item name="why">
     <p>

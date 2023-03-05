@@ -70,13 +70,24 @@ The AtomGetters are **not** injectors. This means they can be called in loops or
     </p>
     <Ts>{`const dynamicVal = get(val) // registers a dependency
 const staticVal = ecosystem.get(val) // doesn't register anything`}</Ts>
-    <p>The ecosystem also has additional getters:</p>
-    <Ts>{`// returns an atom instance only if one exists already
+    <p>The ecosystem also has additional methods for getting atom instances:</p>
+    <Ts>{`// returns the first matching atom instance only if one exists already
 // (unlike ecosystem.getInstance() which creates the instance if it doesn't exist):
-ecosystem.weakGetInstance(myAtom, [param1, param2])
-// returns an atom instance's value only if the atom instance exists already
-// (unlike ecosystem.get() which creates the instance if it doesn't exist):
-ecosystem.weakGet(myAtom, [param1, param2])`}</Ts>
+ecosystem.find(myAtom, [param1, param2])
+// returns all matching atom instances. Also doesn't create any instances:
+ecosystem.findAll(myAtom, [param1, param2])`}</Ts>
+    <p>
+      Both{' '}
+      <Link to="../classes/Ecosystem#find">
+        <code>ecosystem.find()</code>
+      </Link>{' '}
+      and{' '}
+      <Link to="../classes/Ecosystem#findall">
+        <code>ecosystem.findAll()</code>
+      </Link>{' '}
+      can take a fuzzy search string to find instances whose keyHashes contain
+      the passed string (case-insensitive).
+    </p>
     <p>
       On the ecosystem, you also have access to the{' '}
       <Link to="../classes/Ecosystem#selectorcache">
@@ -110,14 +121,14 @@ value = get(myAtomInstance)`}</Ts>
     </p>
     <p>
       Use{' '}
-      <Link to="../classes/Ecosystem#weakget">
-        <code>ecosystem.weakGet()</code>
+      <Link to="../classes/Ecosystem#find">
+        <code>ecosystem.find().getState()</code>
       </Link>{' '}
       to get a value only if the instance already exists. Note however that the
       ecosystem's getter functions don't register graph dependencies. To weakly
       register a dependency, use the following pattern:
     </p>
-    <Ts>{`const instance = ecosystem.weakGetInstance(myAtom, [param1, param2])
+    <Ts>{`const instance = ecosystem.find(myAtom, [param1, param2])
 const val = instance ? get(instance) : defaultVal`}</Ts>
   </Item>
   <Item name="getInstance">
@@ -145,14 +156,14 @@ instance = getInstance(myAtomInstance)`}</Ts>
     </p>
     <p>
       Use{' '}
-      <Link to="../classes/Ecosystem#weakgetinstance">
-        <code>ecosystem.weakGetInstance()</code>
+      <Link to="../classes/Ecosystem#find">
+        <code>ecosystem.find()</code>
       </Link>{' '}
       to get an instance only if it already exists. Note however that the
       ecosystem's getter functions don't register graph dependencies. To weakly
       register a static dependency, use the following pattern:
     </p>
-    <Ts>{`const maybeInstance = ecosystem.weakGetInstance(myAtom, [param1, param2])
+    <Ts>{`const maybeInstance = ecosystem.find(myAtom, [param1, param2])
 const instance = maybeInstance ? getInstance(maybeInstance) : undefined`}</Ts>
   </Item>
   <Item name="select">

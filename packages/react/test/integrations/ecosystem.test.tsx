@@ -263,22 +263,22 @@ describe('ecosystem', () => {
     ecosystem.destroy(true)
   })
 
-  test('.inspectInstances()', () => {
+  test('.findAll()', () => {
     const atomA = atom('a', (param: string) => param)
     const atomB = atom('b', () => 'b')
 
-    const ecosystem = createEcosystem({ id: 'inspectInstances' })
+    const ecosystem = createEcosystem({ id: 'findAll' })
 
     ecosystem.getInstance(atomA, ['a'])
     ecosystem.getInstance(atomA, ['aa'])
     ecosystem.getInstance(atomB)
 
-    expect(ecosystem.inspectInstances(atomA)).toEqual({
+    expect(ecosystem.findAll(atomA)).toEqual({
       'a-["a"]': expect.objectContaining({ params: ['a'] }),
       'a-["aa"]': expect.objectContaining({ params: ['aa'] }),
     })
 
-    expect(ecosystem.inspectInstances('a')).toEqual({
+    expect(ecosystem.findAll('a')).toEqual({
       'a-["a"]': expect.objectContaining({ params: ['a'] }),
       'a-["aa"]': expect.objectContaining({ params: ['aa'] }),
     })
@@ -321,18 +321,18 @@ describe('ecosystem', () => {
     ecosystem.destroy(true)
   })
 
-  test('weakGetInstance', () => {
+  test('find', () => {
     const atomA = atom('a', (param: string) => param)
 
     const ecosystem = createEcosystem({
-      id: 'weakGetInstance',
+      id: 'find',
     })
 
     const instance1 = ecosystem.getInstance(atomA, ['a'])
-    const instance2 = ecosystem.weakGetInstance(atomA, ['a'])
-    const instance3 = ecosystem.weakGetInstance('a')
-    const instance4 = ecosystem.weakGetInstance('a-["a"]')
-    const instance5 = ecosystem.weakGetInstance('a-["b"]')
+    const instance2 = ecosystem.find(atomA, ['a'])
+    const instance3 = ecosystem.find('a')
+    const instance4 = ecosystem.find('a-["a"]')
+    const instance5 = ecosystem.find('a-["b"]')
 
     expect(instance2).toBe(instance1)
     expect(instance3).toBe(instance1)

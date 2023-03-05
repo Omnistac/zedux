@@ -76,7 +76,7 @@ async function renderRoute(req, res) {
 
   // grab the promise from every atom instance that has one:
   // highlight-start
-  const promises = Object.values(ecosystem.inspectInstances())
+  const promises = Object.values(ecosystem.findAll())
     .map(instance => instance.promise)
     .filter(Boolean)
   // highlight-end
