@@ -37,15 +37,14 @@ export class SelectorCache<T = any, Args extends any[] = any[]> {
  */
 export class Selectors {
   /**
-   * Map selectorKey+params keyHash strings to the cached params and result for
-   * the selector
+   * Map selectorKey + params id strings to the SelectorCache for the selector
    */
   public _items: Record<string, SelectorCache<any, any>> = {}
 
   /**
    * Map selectors (or selector config objects) to a base selectorKey that can
-   * be used to predictably create selectorKey+params keyHashes to look up the
-   * cache in `this._items`
+   * be used to predictably create selectorKey+params ids to look up the cache
+   * in `this._items`
    */
   public _refBaseKeys = new WeakMap<AtomSelectorOrConfig<any, any>, string>()
 
@@ -259,8 +258,8 @@ export class Selectors {
    * Get an object mapping all cacheKeys in this selectorCache to their current
    * values.
    *
-   * Pass an atom or atom key string to only return instances whose keyHash
-   * weakly matches the passed key.
+   * Pass a selector or partial SelectorCache id string to only return caches
+   * whose id weakly matches the passed key.
    */
   public inspectItemValues(selectableOrName?: Selectable<any, any> | string) {
     const hash = this.findAll(selectableOrName)
@@ -335,7 +334,7 @@ export class Selectors {
 
     this.ecosystem._scheduler.schedule(
       {
-        keyHash: cacheKey,
+        id: cacheKey,
         task,
         type: 2, // EvaluateGraphNode (2)
       },

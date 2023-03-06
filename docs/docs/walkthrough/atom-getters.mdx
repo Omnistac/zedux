@@ -331,11 +331,11 @@ const paramsExample = ecosystem.find(myAtom, ['param 1', 'param 2'])
 const fuzzySearchString = ecosystem.find('myAtomKey')
 ```
 
-When a string is passed, `ecosystem.find()` returns the first atom instance it finds whose keyHash contains the passed string (case-insensitive).
+When a string is passed, `ecosystem.find()` returns the first atom instance it finds whose id contains the passed string (case-insensitive).
 
 ### `findAll`
 
-Returns an object containing all instances of the passed atom **if any atom instances exist**, keyed by each instance's keyHash. Otherwise returns an empty object.
+Returns an object containing all instances of the passed atom **if any atom instances exist**, keyed by each instance's id. Otherwise returns an empty object.
 
 ```ts
 const instances = ecosystem.findAll(myAtom)
@@ -343,7 +343,7 @@ const paramsExample = ecosystem.findAll(myAtom)
 const fuzzySearchString = ecosystem.findAll('myAtomKey')
 ```
 
-When a string is passed, `ecosystem.findAll()` returns all atom instance whose keyHash contains the passed string (case-insensitive).
+When a string is passed, `ecosystem.findAll()` returns all atom instance whose id contains the passed string (case-insensitive).
 
 ## Recap
 

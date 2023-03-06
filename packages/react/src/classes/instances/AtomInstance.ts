@@ -98,7 +98,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   constructor(
     public readonly ecosystem: Ecosystem,
     public readonly atom: AtomBase<G, AtomInstance<G>>,
-    public readonly keyHash: string,
+    public readonly id: string,
     public readonly params: G['Params']
   ) {
     super()
@@ -123,8 +123,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     // If we're not force-destroying, don't destroy if there are dependents
     if (
       !force &&
-      Object.keys(this.ecosystem._graph.nodes[this.keyHash]?.dependents || {})
-        .length
+      Object.keys(this.ecosystem._graph.nodes[this.id]?.dependents || {}).length
     ) {
       return
     }
@@ -151,9 +150,9 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       injector.cleanup?.()
     })
 
-    this.ecosystem._graph.removeDependencies(this.keyHash)
+    this.ecosystem._graph.removeDependencies(this.id)
     this._subscription?.unsubscribe()
-    this.ecosystem._destroyAtomInstance(this.keyHash)
+    this.ecosystem._destroyAtomInstance(this.id)
   }
 
   /**
@@ -204,7 +203,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     this._subscription = this.store.subscribe((newState, oldState, action) => {
       // buffer updates (with cache size of 1) if this instance is currently
       // evaluating
-      if (this.ecosystem._evaluationStack.isEvaluating(this.keyHash)) {
+      if (this.ecosystem._evaluationStack.isEvaluating(this.id)) {
         this._bufferedUpdate = { newState, oldState, action }
         return
       }
@@ -297,7 +296,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
     this.ecosystem._scheduler.schedule(
       {
-        keyHash: this.keyHash,
+        id: this.id,
         task: this.evaluationTask,
         type: 2, // EvaluateGraphNode (2)
       },
@@ -311,7 +310,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     this._nextInjectors = []
     let newFactoryResult: G['Store'] | G['State']
     this.ecosystem._evaluationStack.start(this)
-    this.ecosystem._graph.bufferUpdates(this.keyHash)
+    this.ecosystem._graph.bufferUpdates(this.id)
 
     try {
       newFactoryResult = this._evaluate()
@@ -462,7 +461,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     action: ActionChain
   ) {
     this.ecosystem._graph.scheduleDependents(
-      this.keyHash,
+      this.id,
       this._nextEvaluationReasons,
       newState,
       oldState,
@@ -552,7 +551,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     this._promiseStatus = state.status
 
     this.ecosystem._graph.scheduleDependents(
-      this.keyHash,
+      this.id,
       this._nextEvaluationReasons,
       undefined,
       undefined,

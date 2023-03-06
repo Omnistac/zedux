@@ -128,7 +128,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   /**
-   * Retrieve an object mapping atom instance keyHashes to their current values.
+   * Retrieve an object mapping atom instance ids to their current values.
    *
    * Calls the `dehydrate` atom config option (on atoms that have one) to
    * transform state to a serializable form. Pass `transform: false` to prevent
@@ -145,8 +145,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * ```
    *
    * An atom passed to `exclude` will exclude all instances of that atom. A
-   * string passed to `exclude` will exclude all instances whose keyHash
-   * contains the string (case-insensitive)
+   * string passed to `exclude` will exclude all instances whose id contains the
+   * string (case-insensitive)
    *
    * You can dehydrate only a subset of all atoms by passing `include` and/or
    * `includeFlags` options:
@@ -159,8 +159,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * ```
    *
    * An atom passed to `include` will include all instances of that atom. A
-   * string passed to `include` will include all instances whose keyHash
-   * contains the string (case-insensitive)
+   * string passed to `include` will include all instances whose id contains the
+   * string (case-insensitive)
    *
    * Excludes takes precedence over includes.
    *
@@ -186,7 +186,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         exclude &&
         exclude.some(atomOrKey =>
           typeof atomOrKey === 'string'
-            ? instance.keyHash.toLowerCase().includes(atomOrKey.toLowerCase())
+            ? instance.id.toLowerCase().includes(atomOrKey.toLowerCase())
             : instance.atom.key === atomOrKey.key
         )
       ) {
@@ -206,7 +206,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         include &&
         include.some(atomOrKey =>
           typeof atomOrKey === 'string'
-            ? instance.keyHash.toLowerCase().includes(atomOrKey.toLowerCase())
+            ? instance.id.toLowerCase().includes(atomOrKey.toLowerCase())
             : instance.atom.key === atomOrKey.key
         )
       ) {
@@ -228,7 +228,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         const state = instance.store.getState()
 
         return [
-          instance.keyHash,
+          instance.id,
           transform && instance.atom.dehydrate
             ? instance.atom.dehydrate(state)
             : state,
@@ -283,10 +283,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   public find<A extends AnyAtom>(atom: A | string, params?: AtomParamsType<A>) {
     if (typeof atom !== 'string') {
-      const keyHash = (atom as A).getKeyHash(this, params)
+      const id = (atom as A).getInstanceId(this, params)
 
       // try to find an existing instance
-      return this._instances[keyHash]
+      return this._instances[id]
     }
 
     return Object.values(this.findAll(atom))[0] as
@@ -297,8 +297,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   /**
    * Get an object of all atom instances in this ecosystem.
    *
-   * Pass an atom or atom key string to only return instances whose keyHash
-   * weakly matches the passed key.
+   * Pass an atom or atom key string to only return instances whose id weakly
+   * matches the passed key.
    */
   public findAll(atom?: AnyAtom | string) {
     const isAtom = (atom as AnyAtom)?.key
@@ -306,18 +306,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const hash: Record<string, AnyAtomInstance> = {}
 
     Object.values(this._instances)
-      .sort((a, b) => a.keyHash.localeCompare(b.keyHash))
+      .sort((a, b) => a.id.localeCompare(b.id))
       .forEach(instance => {
         if (
           filterKey &&
           (isAtom
             ? instance.atom.key !== filterKey
-            : !instance.keyHash.toLowerCase().includes(filterKey))
+            : !instance.id.toLowerCase().includes(filterKey))
         ) {
           return
         }
 
-        hash[instance.keyHash] = instance
+        hash[instance.id] = instance
       })
 
     return hash
@@ -376,22 +376,22 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   ) {
     if (is(atom, AtomInstanceBase)) return atom
 
-    const keyHash = (atom as A).getKeyHash(this, params)
+    const id = (atom as A).getInstanceId(this, params)
 
     // try to find an existing instance
-    const existingInstance = this._instances[keyHash]
+    const existingInstance = this._instances[id]
     if (existingInstance) return existingInstance
 
     // create a new instance
     const resolvedAtom = this.resolveAtom(atom as A)
-    this._graph.addNode(keyHash)
+    this._graph.addNode(id)
 
     const newInstance = resolvedAtom._createInstance(
       this,
-      keyHash,
+      id,
       (params || []) as AtomParamsType<A>
     )
-    this._instances[keyHash] = newInstance
+    this._instances[id] = newInstance
     newInstance._init()
 
     return newInstance
@@ -399,7 +399,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   /**
    * Hydrate the state of atoms in this ecosystem with an object mapping atom
-   * instance keyHashes to their hydrated state. This object will usually be the
+   * instance ids to their hydrated state. This object will usually be the
    * result of a call to `ecosystem.dehydrate()`.
    *
    * This is the key to SSR. The ecosystem's initial state can be dehydrated on
@@ -745,11 +745,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Should only be used internally
    */
   public _consumeHydration(instance: PartialAtomInstance) {
-    const hydratedValue = this.hydration?.[instance.keyHash]
+    const hydratedValue = this.hydration?.[instance.id]
 
     if (typeof hydratedValue === 'undefined') return
 
-    delete this.hydration?.[instance.keyHash]
+    delete this.hydration?.[instance.id]
 
     return instance.atom.hydrate
       ? instance.atom.hydrate(hydratedValue)
@@ -769,12 +769,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   /**
    * Should only be used internally
    */
-  public _destroyAtomInstance(keyHash: string) {
+  public _destroyAtomInstance(id: string) {
     // try to destroy instance (if not destroyed - this fn is called as part of
     // that destruction process too)
-    this._graph.removeNode(keyHash)
+    this._graph.removeNode(id)
 
-    delete this._instances[keyHash] // TODO: dispatch an action over internalStore for this mutation
+    delete this._instances[id] // TODO: dispatch an action over internalStore for this mutation
   }
 
   /**

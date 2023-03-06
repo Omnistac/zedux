@@ -97,7 +97,7 @@ export class IdGenerator {
 
   /**
    * Turn an array of anything into a predictable string. If any item is an atom
-   * instance, it will be serialized as the instance's keyHash. If
+   * instance, it will be serialized as the instance's id. If
    * acceptComplexParams is true, map class instances and functions to a
    * consistent id for the reference.
    *
@@ -106,7 +106,7 @@ export class IdGenerator {
    */
   public hashParams(params: any[], acceptComplexParams?: boolean): string {
     return JSON.stringify(params, (_, param) => {
-      if (is(param, AtomInstanceBase)) return param.keyHash
+      if (is(param, AtomInstanceBase)) return param.id
       if (!param) return param
       if (!isPlainObject(param)) {
         if (!acceptComplexParams || Array.isArray(param)) return param

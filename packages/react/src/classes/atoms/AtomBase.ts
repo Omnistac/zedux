@@ -34,9 +34,12 @@ export abstract class AtomBase<
 
   public abstract _createInstance(
     ecosystem: Ecosystem,
-    keyHash: string,
+    id: string,
     params: G['Params']
   ): InstanceType
 
-  public abstract getKeyHash(ecosystem: Ecosystem, params?: G['Params']): string
+  public abstract getInstanceId(
+    ecosystem: Ecosystem,
+    params?: G['Params']
+  ): string
 }

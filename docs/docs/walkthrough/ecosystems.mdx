@@ -178,7 +178,7 @@ const ecosystem = createEcosystem({ onReady })
 
 ## Methods & Properties
 
-The ecosystem object itself has many useful methods. You can use these to inspect the dependency graph, get the current state of all atoms, set atom overrides, and a lot more. We'll get to most of these throughout the walkthrough. See the [`Ecosystem` API](../api/classes/Ecosystem) for all the goodness.
+The ecosystem object itself has many useful methods. You can use these to inspect the dependency graph, get the current state of all atoms, set atom overrides, and a lot more. We'll get to most of these throughout the walkthrough. See the [`Ecosystem` API doc](../api/classes/Ecosystem) for all the goodness.
 
 ### `getInstance`
 
@@ -198,14 +198,14 @@ const rootEcosystem = createEcosystem({
 
 Returns an object of all atom instances in the ecosystem, each instance keyed by a string that consists of its atom key + its serialized parameters.
 
-```tsx live ecosystemId=ecosystems/findAll resultVar=Inspect
+```tsx live ecosystemId=ecosystems/findAll resultVar=Logger
 const ecosystem = createEcosystem({ id: 'findAll-test' })
 const testAtom = atom('test', (key?: number) => null)
 
 ecosystem.getInstance(testAtom)
 ecosystem.getInstance(testAtom, [1])
 
-function Inspect() {
+function Logger() {
   const instances = ecosystem.findAll()
 
   return (
@@ -222,14 +222,14 @@ Returns an object of the current state of all atom instances in the ecosystem, e
 
 Pass `transform: false` to prevent any [`dehydrate` atom config options](../api/types/AtomConfig#dehydrate) from transforming atom instance values.
 
-```tsx live ecosystemId=ecosystems/dehydrate resultVar=Inspect
+```tsx live ecosystemId=ecosystems/dehydrate resultVar=Logger
 const ecosystem = createEcosystem({ id: 'dehydrate-test' })
 const testAtom = atom('test', (key?: number) => 'testing!!')
 
 ecosystem.getInstance(testAtom)
 ecosystem.getInstance(testAtom, [1])
 
-function Inspect() {
+function Logger() {
   const instances = ecosystem.dehydrate({ transform: false })
 
   return (

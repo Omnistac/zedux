@@ -149,8 +149,8 @@ const instancesByWeight = Object.values(ecosystem._instances)
   .filter(instance => instance.promise) // only compare instances with promises
   .sort(
     (instanceA, instanceB) =>
-      ecosystem._graph.nodes[instanceA.keyHash].weight -
-      ecosystem._graph.nodes[instanceB.keyHash].weight
+      ecosystem._graph.nodes[instanceA.id].weight -
+      ecosystem._graph.nodes[instanceB.id].weight
   )
 
 // instances with lower weight are typically used more:

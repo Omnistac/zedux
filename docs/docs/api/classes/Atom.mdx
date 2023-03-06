@@ -156,17 +156,17 @@ When creating your own, custom atom types, you'll usually want to extend this cl
 ## Methods
 
 <Legend>
-  <Item name="getKeyHash">
-    <p>Gets a string keyHash for a specific instance of this atom.</p>
+  <Item name="getInstanceId">
+    <p>Gets a string id for a specific instance of this atom.</p>
     <p>Signature:</p>
-    <Ts>{`getKeyHash = (ecosystem, params?) => keyhash`}</Ts>
+    <Ts>{`getInstanceId = (ecosystem, params?) => id`}</Ts>
     <p>
       Accepts an ecosystem and an array of atom params (required if the atom
       takes params, <code>undefined</code> if not). Uses the ecosystem's id
       generator to generate a predictable hash of the atom's key + params combo.
     </p>
     <p>
-      Zedux uses this internally to generate atom instance keyHashes. You won't
+      Zedux uses this internally to generate atom instance ids. You won't
       typically call this.
     </p>
   </Item>

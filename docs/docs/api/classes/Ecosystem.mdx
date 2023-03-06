@@ -249,8 +249,8 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
           strings.
         </p>
         <p>
-          Any atom instances of the passed atoms or whose keyHash matches any of
-          the passed strings will be excluded from the snapshot.
+          Any atom instances of the passed atoms or whose id matches any of the
+          passed strings will be excluded from the snapshot.
         </p>
       </Item>
       <Item name="excludeFlags">
@@ -266,8 +266,8 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
           strings.
         </p>
         <p>
-          Only atom instances of the passed atoms or whose keyHashes match any
-          of the passed strings will be included in the snapshot.
+          Only atom instances of the passed atoms or whose ids match any of the
+          passed strings will be included in the snapshot.
         </p>
         <p>
           Excludes take priority over includes - if an atom instance is excluded
@@ -301,8 +301,8 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
       </Item>
       <Item name="Returns">
         <p>
-          An object mapping atom instance keyHashes to the transformed form
-          (unless <code>transform: false</code>) of their current state.
+          An object mapping atom instance ids to the transformed form (unless{' '}
+          <code>transform: false</code>) of their current state.
         </p>
       </Item>
     </Legend>
@@ -360,11 +360,11 @@ val = ecosystem.find(myAtom, [...params]) // never creates an atom instance`}</T
         An atom or fuzzy search string. If an atom is passed,{' '}
         <code>.findAll()</code> returns only instances of the passed atom. If a
         string is passed, <code>.findAll()</code> returns only instances whose
-        keyHash includes the passed string (case-insensitive).
+        id includes the passed string (case-insensitive).
       </Item>
       <Item name="Returns">
         An object of all Active and Stale atom instances in the ecosystem, keyed
-        by the instance's keyHash.
+        by the instance's id.
       </Item>
     </Legend>
   </Item>
@@ -419,9 +419,8 @@ instance.setState('new state')`}</Ts>
     <Legend>
       <Item name="snapshot">
         <p>
-          Required. An object. The keys of this object are keyHashes
-          corresponding to atom instance that may or may not exist in the
-          ecosystem yet.
+          Required. An object. The keys of this object are ids corresponding to
+          atom instances that may or may not exist in the ecosystem yet.
         </p>
       </Item>
       <Item name="config">

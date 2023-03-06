@@ -183,7 +183,7 @@ const exampleAtom = atom('example', () => initialState, {
 
 To enable value transforming, simply omit `{ transform: false }` in the `ecosystem.dehydrate()` call. Transforms are enabled by default.
 
-`ecosystem.dehydrate()` returns an object mapping atom instance keyHashes to their current value. But with transforms enabled, `.dehydrate()` does a little more magic.
+`ecosystem.dehydrate()` returns an object mapping atom instance ids to their current value. But with transforms enabled, `.dehydrate()` does a little more magic.
 
 `ecosystem.dehydrate()` calls the `dehydrate` atom config option (when specified) to transform the state of individual atom instances.
 
@@ -273,7 +273,7 @@ ecosystem.getInstance(hydrateMe, [1])
 const snapshot = ecosystem.dehydrate()
 ```
 
-Hydration will also immediately update any existing atom instances with keyHashes in the snapshot. Pass `{ retroactive: false }` as the second parameter to `ecosystem.hydrate()` to disable this. With this option, only instances that are created after hydration will have their state hydrated.
+Hydration will also immediately update any existing atom instances with ids in the snapshot. Pass `{ retroactive: false }` as the second parameter to `ecosystem.hydrate()` to disable this. With this option, only instances that are created after hydration will have their state hydrated.
 
 ```ts live ecosystemId=no-retroactive-example resultVar=snapshot
 const hydrateMe = atom('hydrateMe', (id: number) => {
@@ -461,10 +461,10 @@ const rehydratingAtom = atom(
     injectEffect(() => {
       // this effect does nothing but setup cleanup
       return () => {
-        // one way to get the current atom instance's keyHash:
+        // one way to get the current atom instance's id:
         const instance = ecosystem.getInstance(rehydratingAtom, [...params])
         // rehydrate!
-        ecosystem.hydrate({ [instance.keyHash]: hydrationRef.current })
+        ecosystem.hydrate({ [instance.id]: hydrationRef.current })
       }
     }, []) // [] - cleanup will only run on instance destruction
 

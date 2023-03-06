@@ -24,7 +24,7 @@ export const useAtomConsumer: {
     if (DEV && (instance as AtomInstanceType<A>).activeState === 'Destroyed') {
       throw new Error(
         `Zedux: useAtomConsumer - A destroyed atom instance was provided with key "${
-          (instance as AtomInstanceType<A>).keyHash
+          (instance as AtomInstanceType<A>).id
         }". This is not supported. Provide an active atom instance instead.`
       )
     }

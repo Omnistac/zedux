@@ -306,7 +306,7 @@ function TodoList() {
       {!isEditing && <button onClick={() => setIsEditing(true)}>Edit</button>}
       {instances.map(instance => (
         // vvv  Provide a different instance for each item  vvv
-        <AtomInstanceProvider key={instance.keyHash} instance={instance}>
+        <AtomInstanceProvider key={instance.id} instance={instance}>
           <Todo />
         </AtomInstanceProvider>
       ))}

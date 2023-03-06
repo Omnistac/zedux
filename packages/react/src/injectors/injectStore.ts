@@ -15,7 +15,7 @@ export const doSubscribe = <State>(
       // considered an anti-pattern.
       if (
         newState === oldState ||
-        instance.ecosystem._evaluationStack.isEvaluating(instance.keyHash) ||
+        instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
         action?.meta === internalTypes.ignore
       ) {
         return
