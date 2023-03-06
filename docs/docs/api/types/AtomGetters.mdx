@@ -91,7 +91,7 @@ ecosystem.findAll(myAtom, [param1, param2])`}</Ts>
     <p>
       On the ecosystem, you also have access to the{' '}
       <Link to="../classes/Ecosystem#selectorcache">
-        <code>.selectorCache</code>
+        <code>.selectors</code>
       </Link>{' '}
       property for full control over manually controlling cached selectors.
     </p>
@@ -170,12 +170,12 @@ const instance = maybeInstance ? getInstance(maybeInstance) : undefined`}</Ts>
     <p>
       A function that returns an <Link to="AtomSelector">atom selector's</Link>{' '}
       value. Pass an atom selector, an{' '}
-      <Link to="AtomSelectorConfig">AtomSelectorConfig</Link> object, or an{' '}
-      <Link to="../classes/SelectorCacheItem">SelectorCacheItem</Link> instance.
+      <Link to="AtomSelectorConfig">AtomSelectorConfig</Link> object, or a{' '}
+      <Link to="../classes/SelectorCache">SelectorCache</Link> instance.
     </p>
     <Ts>{`value = select(atomSelector, arg1, arg2)
 value = select(atomSelectorConfig, arg1, arg2)
-value = select(atomSelectorCache)`}</Ts>
+value = select(aSelectorCache)`}</Ts>
     <p>
       If an atom selector or AtomSelectorConfig object is passed and the
       selector takes arguments, those are required. Note that unlike{' '}
@@ -192,24 +192,25 @@ value = select(atomSelectorCache)`}</Ts>
       exists).
     </p>
     <p>
-      If a SelectorCacheItem is passed, <code>select()</code> registers a
-      dynamic dependency on the cache and returns the cache's current result.
+      If a SelectorCache is passed, <code>select()</code> registers a dynamic
+      dependency on the cache and returns the cache's current result.
     </p>
     <p>
       When called asynchronously (after the current atom instance or selector
       finishes evaluating), <code>select()</code> doesn't register any graph
-      dependencies. Other than that, it behaves the same.
+      dependencies. Other than that, it behaves the same as when called
+      synchronously during evaluation.
     </p>
     <p>
       Use{' '}
-      <Link to="../classes/SelectorCache#find">
-        ecosystem.selectorCache.find(mySelector)?.result
+      <Link to="../classes/Selectors#find">
+        ecosystem.selectors.find(mySelector)?.result
       </Link>{' '}
       to get the selector's cached value only if it has been cached already.
       Note however that this doesn't register any graph dependencies. To weakly
       register a dynamic dependency on a selector, use the following pattern:
     </p>
-    <Ts>{`const cache = ecosystem.selectorCache.find(mySelector)
+    <Ts>{`const cache = ecosystem.selectors.find(mySelector)
 const val = cache ? select(cache) : defaultVal`}</Ts>
     <p>
       For best cache performance, pass a stable atom selector function (or
@@ -220,7 +221,7 @@ const val = cache ? select(cache) : defaultVal`}</Ts>
     <p>
       Stable references can also make your graph look better, since Zedux
       defaults to using the selector function's name as part of its{' '}
-      <Link to="../classes/SelectorCacheItem#cachekey">
+      <Link to="../classes/SelectorCache#cachekey">
         <code>cacheKey</code>
       </Link>
       .

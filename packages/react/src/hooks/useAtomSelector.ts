@@ -4,7 +4,7 @@ import { destroyed, External, haveDepsChanged } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
 import { Ecosystem } from '../classes/Ecosystem'
-import { SelectorCacheItem } from '../classes/SelectorCache'
+import { SelectorCache } from '../classes/Selectors'
 
 const glob = ((typeof globalThis !== 'undefined' && globalThis) || {}) as any
 const INVALIDATE_REACT = `INVALIDATE_REACT_${Math.random()}`
@@ -35,7 +35,7 @@ const OPERATION = 'useAtomSelector'
 const isRefDifferent = (
   ecosystem: Ecosystem,
   newSelector: AtomSelectorOrConfig<any, any>,
-  cacheRef: MutableRefObject<SelectorCacheItem<any, any> | undefined>
+  cacheRef: MutableRefObject<SelectorCache<any, any> | undefined>
 ) => {
   if (!cacheRef.current) return true
 
@@ -53,8 +53,8 @@ const isRefDifferent = (
 
   if (newIsFunction !== oldIsFunction) return true
 
-  const newKey = ecosystem.selectorCache._getIdealCacheKey(newSelector)
-  const oldKey = ecosystem.selectorCache._getIdealCacheKey(oldSelector)
+  const newKey = ecosystem.selectors._getIdealCacheKey(newSelector)
+  const oldKey = ecosystem.selectors._getIdealCacheKey(oldSelector)
 
   if (newKey !== oldKey) return true
 
@@ -107,7 +107,7 @@ export const useAtomSelector = <T, Args extends any[]>(
 ): T => {
   const ecosystem = useEcosystem()
   const dependentKey = useReactComponentId()
-  const cacheRef = useRef<SelectorCacheItem<T, Args>>()
+  const cacheRef = useRef<SelectorCache<T, Args>>()
   const skipState = useRef<T>()
   const isConfig = typeof selectorOrConfig !== 'function'
 
@@ -126,13 +126,13 @@ export const useAtomSelector = <T, Args extends any[]>(
 
   if (isDifferent || !cacheRef.current) {
     // yes, this mutation is fine
-    cacheRef.current = ecosystem.selectorCache.getCache(
+    cacheRef.current = ecosystem.selectors.getCache(
       selectorOrConfig,
       resolvedArgs
     )
   }
 
-  const cache = cacheRef.current as SelectorCacheItem<T, Args>
+  const cache = cacheRef.current as SelectorCache<T, Args>
 
   const [subscribe, getSnapshot] = useMemo(() => {
     let isInvalidated = false
@@ -190,7 +190,7 @@ export const useAtomSelector = <T, Args extends any[]>(
   // if ref changed but is clearly the "same" selector, swap out the ref and
   // invalidate the cache
   if (hasRefChanged && !isDifferent) {
-    ecosystem.selectorCache._swapRefs(
+    ecosystem.selectors._swapRefs(
       cache.selectorRef as AtomSelectorOrConfig<any, any[]>,
       selectorOrConfig as AtomSelectorOrConfig<any, any[]>,
       resolvedArgs

@@ -1,0 +1,274 @@
+---
+id: Selectors
+title: Selectors
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+The Selectors class manages all selector-related tasks for the ecosystem.
+
+Since [atom selectors](../types/AtomSelector) are meant to feel lightweight, they don't have to be instances of a class - they'll often be standalone or even inline functions. This class handles all the logic that atom selectors would handle themselves if they were classes - instantiation, cache management, and destruction.
+
+Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ecosystem#selectors).
+
+## Methods
+
+<Legend>
+  <Item name="addDependent">
+    <p>
+      Manually adds a graph edge between an atom selector and a new external
+      "pseudo" graph node.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`addDependent = (cacheItem, config?) => cleanup`}</Ts>
+    <Legend>
+      <Item name="cacheItem">
+        <p>
+          Required. A <Link to="SelectorCache">SelectorCache</Link> instance.
+        </p>
+        <p>This is the dependency you're adding a dependent to.</p>
+      </Item>
+      <Item name="config">
+        <p>Optional. An object containing the following optional properties:</p>
+        <Ts>{`{ callback, operation }`}</Ts>
+        <Legend>
+          <Item name="callback">
+            <p>
+              A <Link to="../types/DependentCallback">DependentCallback</Link>{' '}
+              function.
+            </p>
+          </Item>
+          <Item name="operation">
+            <p>
+              A string. Can be anything. This can be useful when debugging your
+              selector graph. It essentially labels the edge, showing what
+              operation caused the graph edge to be added.
+            </p>
+          </Item>
+        </Legend>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="destroyCache">
+    <p>
+      Destroys a cached atom selector. Similar to{' '}
+      <Link to="AtomInstance#destroy">
+        <code>instance.destroy()</code>
+      </Link>
+      .
+    </p>
+    <p>
+      Like <code>instance.destroy()</code>, destruction bails out by default if
+      the selector node has dependents. Pass <code>true</code> as the 3rd
+      parameter to force destruction anyway, triggering dependents to recreate
+      the cache.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`destroyCache = (selectable, args?, force?) => void`}</Ts>
+    <Legend>
+      <Item name="selectable">
+        <p>
+          Required. An <Link to="../types/AtomSelector">atom selector</Link>,{' '}
+          <Link to="../types/AtomSelectorConfig">
+            AtomSelectorConfig object
+          </Link>
+          , or <Link to="SelectorCache">SelectorCache instance</Link>.
+        </p>
+      </Item>
+      <Item name="args">
+        An array. Required if the passed atom selector or AtomSelectorConfig
+        object takes args. Otherwise (or when passing a SelectorCache instance),
+        don't pass this or pass an empty array.
+      </Item>
+      <Item name="force">
+        Optional. A boolean. Whether to force destruction regardless of whether
+        the cached selector still has dependents.
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="find">
+    <p>
+      Similar to{' '}
+      <Link to="#getcache">
+        <code>selectors.getCache()</code>
+      </Link>
+      , returns a <Link to="SelectorCache">SelectorCache</Link> instance for the
+      given selector + args combo. However, unlike <code>.getCache()</code>, <code>
+        .find()
+      </code> does not run the selector or cache the result if it hasn't been cached
+      already - it simply returns undefined.
+    </p>
+    <p>
+      Signature is almost the same as{' '}
+      <Link to="#getcache">
+        <code>.getCache()</code>
+      </Link>
+      , except that <code>.find()</code> also accepts a fuzzy search string which,
+      when passed, returns the first found SelectorCache whose cacheKey includes
+      the passed string (case-insensitive).
+    </p>
+  </Item>
+  <Item name="findAll">
+    <p>
+      Gets a snapshot of current cache items. The selector equivalent of{' '}
+      <Link to="Ecosystem#findall">ecosystem.findAll()</Link>.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`findAll = (selectableOrName?) => cacheItems`}</Ts>
+    <Legend>
+      <Item name="selectableOrName">
+        <p>Optional. One of:</p>
+        <ul>
+          <li>A string</li>
+          <li>
+            An <Link to="../types/AtomSelector">atom selector</Link>
+          </li>
+          <li>
+            An{' '}
+            <Link to="../types/AtomSelectorConfig">
+              AtomSelectorConfig object
+            </Link>
+          </li>
+          <li>
+            A <Link to="SelectorCache">SelectorCache instance</Link> (accepted
+            for consistency with similar methods, but really you'd never pass
+            this)
+          </li>
+        </ul>
+        <p>
+          If passed, filters the returned object to only contain caches of the
+          passed selector or caches whose key includes the passed string
+          (case-insensitive).
+        </p>
+      </Item>
+      <Item name="Returns">
+        Returns an object mapping currently cached atom selector cache keys to
+        their <Link to="SelectorCache">SelectorCache</Link> instances.
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="getCache">
+    <p>
+      Returns a <Link to="SelectorCache">SelectorCache</Link> instance for the
+      given selector + args combo. If the selector + args combo has never been
+      cached before, <code>.getCache()</code> runs the selector and caches the
+      result before returning the cache item.
+    </p>
+    <p>
+      Contrast this to{' '}
+      <Link to="Ecosystem#select">
+        <code>ecosystem.select()</code>
+      </Link>{' '}
+      which does not cache the result. That means{' '}
+      <code>selectors.getCache()</code> is the selector equivalent of{' '}
+      <Link to="Ecosystem#getinstance">
+        <code>ecosystem.getInstance()</code>
+      </Link>
+      .
+    </p>
+    <p>Signature:</p>
+    <Ts>{`getCache = (selectable, args?) => cacheItem`}</Ts>
+    <Legend>
+      <Item name="selectable">
+        <p>
+          Required. An <Link to="../types/AtomSelector">atom selector</Link>,{' '}
+          <Link to="../types/AtomSelectorConfig">
+            AtomSelectorConfig object
+          </Link>
+          , or <Link to="SelectorCache">SelectorCache instance</Link>.
+        </p>
+        <p>
+          <code>.getCache()</code> has no special functionality if a
+          SelectorCache instance is passed - it simply returns the passed cache
+          item.
+        </p>
+      </Item>
+      <Item name="args">
+        An array. Required if the passed atom selector or AtomSelectorConfig
+        object takes args. Otherwise (or when passing a SelectorCache instance),
+        don't pass this or pass an empty array.
+      </Item>
+      <Item name="Returns">
+        A <Link to="SelectorCache">SelectorCache</Link> instance.
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="getCacheKey">
+    <p>
+      Returns the fully qualified cache key string that this Selectors class
+      will use for the given selector + args combo.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`getCacheKey = (selectable, args?, weak?) => cacheKey`}</Ts>
+    <Legend>
+      <Item name="selectable">
+        <p>
+          Required. An <Link to="../types/AtomSelector">atom selector</Link>,{' '}
+          <Link to="../types/AtomSelectorConfig">
+            AtomSelectorConfig object
+          </Link>
+          , or <Link to="SelectorCache">SelectorCache instance</Link>.
+        </p>
+      </Item>
+      <Item name="args">
+        An array. Required if the passed atom selector or AtomSelectorConfig
+        object takes args. Otherwise (or when passing a SelectorCache instance),
+        don't pass this or pass an empty array.
+      </Item>
+      <Item name="weak">
+        Optional. A boolean. By default, <code>.getCacheKey()</code> creates and
+        stores a cache key for the given selector + args combo if none exists
+        yet. Pass <code>true</code> to disable this.
+      </Item>
+      <Item name="Returns">
+        <p>
+          A string prefixed with <code>@@selector-</code> containing a set,
+          derived, or generated name for the passed selector and a deterministic
+          hash of all the passed args. If <code>true</code> was passed for the
+          3rd "weak" arg, returns undefined if no cache key has been stored for
+          given selector + args combo yet.
+        </p>
+      </Item>
+    </Legend>
+  </Item>
+  <Item name="inspectItemValues">
+    <p>Gets a snapshot of current cache item values.</p>
+    <p>Signature:</p>
+    <Ts>{`inspectItemValues = (selectableOrName?) => cacheItems`}</Ts>
+    <Legend>
+      <Item name="selectableOrName">
+        <p>Optional. One of:</p>
+        <ul>
+          <li>A string</li>
+          <li>
+            An <Link to="../types/AtomSelector">atom selector</Link>
+          </li>
+          <li>
+            An{' '}
+            <Link to="../types/AtomSelectorConfig">
+              AtomSelectorConfig object
+            </Link>
+          </li>
+          <li>
+            A <Link to="SelectorCache">SelectorCache instance</Link> (accepted
+            for consistency, but really you'd never pass this)
+          </li>
+        </ul>
+        <p>
+          If passed, filters the returned object to only contain cache values of
+          the passed selector or caches whose key includes the passed string
+          (case-insensitive).
+        </p>
+      </Item>
+      <Item name="Returns">
+        Returns an object mapping currently cached atom selector cache keys to
+        their cached results.
+      </Item>
+    </Legend>
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Selectors walkthrough](../../walkthrough/selectors)
+- [The `SelectorCache` class](SelectorCache)

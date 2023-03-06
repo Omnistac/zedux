@@ -313,46 +313,46 @@ Zedux tries to use the function name to key the selector. It handles name clashe
 
 ## The Cache
 
-Every Atom Selector + params combo that creates a graph node also creates a "selector cache instance" that stores the last result of the selector. Every ecosystem has a `.selectorCache` that keeps track of these cache instances. Every cache instance includes these fields:
+Every Atom Selector + params combo that creates a graph node also creates a "selector cache" that stores the last result of the selector. Every ecosystem has a `.selectors` property that references a class that keeps track of these caches. Every cache includes these fields:
 
 ```ts
 const { cacheKey, result } = cache
 ```
 
-Where `cacheKey` is the string the cache is keyed by internally and `result` is the cached result. See [the SelectorCacheItem class](../api/classes/SelectorCacheItem) for more info.
+Where `cacheKey` is the string the cache is keyed by internally and `result` is the cached result. See [the SelectorCache class](../api/classes/SelectorCache) for more info.
 
-The overarching Selector Cache has several methods that allow you to cache new selectors and find, invalidate, and destroy selector cache instances.
+The overarching Selectors class has several methods that allow you to cache new selectors and find, invalidate, and destroy selector caches.
 
 ### `getCache`
 
-Gets an Atom Selector cache. If the passed selector + params combo hasn't been cached before, `getCache` runs the selector, caches the result, and returns the new cache.
+Gets a SelectorCache. If the passed selector + params combo hasn't been cached before, `getCache` runs the selector, caches the result, and returns the new cache object.
 
 ```ts
-const cache = ecosystem.selectorCache.getCache(getUserById, [userId])
+const cache = ecosystem.selectors.getCache(getUserById, [userId])
 ```
 
 :::note
-The 2nd argument to most Selector Cache methods is an array of the selector's params.
+The 2nd argument to most Selectors methods is an array of the selector's params.
 :::
 
 ### `find`
 
-Just like [the Weak Getters](atom-getters#weak-getters) for atom instances, the Selector Cache has Weak Getters for selector caches. `find` returns the cache object **only if it exists**. Otherwise returns undefined.
+Just like [the Weak Getters](atom-getters#weak-getters) for atom instances, the Selectors class has Weak Getters for SelectorCaches. `find` returns the cache object **only if it exists**. Otherwise returns undefined.
 
 ```ts
-const maybeCache = ecosystem.selectorCache.find(getUserById, [userId])
+const maybeCache = ecosystem.selectors.find(getUserById, [userId])
 ```
 
 :::note
-This is different from `ecosystem.select()`. `selectorCache.find()` never runs the selector - it just returns the cache object if it exists. `ecosystem.select()` returns the cached _result_ if a cache exists. Otherwise it runs the selector statically (without registering graph dependencies) and returns that result.
+This is different from `ecosystem.select()`. `selectors.find()` never runs the selector - it just returns the cache object if it exists. `ecosystem.select()` returns the cached _result_ if a cache exists. Otherwise it runs the selector statically (without registering graph dependencies) and returns that result.
 :::
 
 ### `destroyCache`
 
-Destroys an Atom Selector cache (if it exists).
+Destroys a SelectorCache (if it exists).
 
 ```ts
-ecosystem.selectorCache.destroyCache(getUserById, [userId])
+ecosystem.selectors.destroyCache(getUserById, [userId])
 ```
 
 ## Memoization
@@ -380,7 +380,7 @@ Atom Selectors are a decent choice - they are "globally" cached in the ecosystem
 const rootEcosystem = createEcosystem({
   id: 'root',
   onReady: ecosystem => {
-    ecosystem.selectorCache.getCache(threadHogger)
+    ecosystem.selectors.getCache(threadHogger)
   },
 })
 ```
@@ -598,9 +598,9 @@ Notice we defined the config object outside the component for easy reuse and ref
 
 - Use Atom Selectors to share and compose basic selection logic.
 - Compose AtomSelectors together using `select`.
+- [`ecosystem.selectors`](../api/classes/Ecosystem#selectors) manages all the ecosystem's selector caches.
 - Use ions when you need more control over selection details (like memoization or side effects like buffering or throttling updates).
 - Use `useAtomSelector` with an Atom Selector to dynamically register atom subscriptions in React.
-- `ecosystem.selectorCache` holds
 - Use stable references and config objects to limit how often Atom Selectors run.
 
 ## Next Steps

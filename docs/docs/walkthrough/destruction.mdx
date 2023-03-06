@@ -101,12 +101,12 @@ Unlike atom instances, selector caches can never be stale - they're always destr
 
 Just like with atom instances, you should usually let the graph do its thing. But there is a method for destroying selector caches:
 
-### `selectorCache.destroyCache()`
+### `selectors.destroyCache()`
 
 We saw this briefly in [the selectors walkthrough](selectors).
 
 ```ts
-ecosystem.selectorCache.destroyCache(myAtomSelector)
+ecosystem.selectors.destroyCache(myAtomSelector)
 ```
 
 Just like `instance.destroy()`, this method does nothing by default if the selector cache's ref count is `> 0`.
@@ -121,17 +121,13 @@ We just saw that by default Zedux always tries to bail out of destruction if a n
 instance.destroy(true)
 ```
 
-We can do the same thing with selector caches. `selectorCache.destroyCache` also has an optional `force` parameter as its 3rd param:
+We can do the same thing with selector caches. `selectors.destroyCache` also has an optional `force` parameter as its 3rd param:
 
 ```ts
-ecosystem.selectorCache.destroyCache(
-  myAtomSelector,
-  ['param 1', 'param 2'],
-  true
-)
+ecosystem.selectors.destroyCache(myAtomSelector, ['param 1', 'param 2'], true)
 
 // if the selector doesn't take params, pass an empty array:
-ecosystem.selectorCache.destroyCache(myAtomSelector, [], true)
+ecosystem.selectors.destroyCache(myAtomSelector, [], true)
 ```
 
 When a node is force-destroyed, TTL is disregarded. Zedux immediately destroys the node and notifies all current dependents that their dependency was destroyed. But those dependents **need** this node! That's what a _dependency_ is, after all.
@@ -228,18 +224,18 @@ const cleanup = instance.addDependent({
 
 See [`instance.addDependent()`](../api/classes/AtomInstance#adddependent) for the low-level details.
 
-### `selectorCache.addDependent()`
+### `selectors.addDependent()`
 
 Atom Selectors have the same capability.
 
 ```ts
-const cleanup = ecosystem.selectorCache.addDependent(myAtomSelector)
+const cleanup = ecosystem.selectors.addDependent(myAtomSelector)
 
 // with params:
-ecosystem.selectorCache.addDependent(myAtomSelector, ['param 1', 'param 2'])
+ecosystem.selectors.addDependent(myAtomSelector, ['param 1', 'param 2'])
 
 // the config object is the optional 3rd param:
-ecosystem.selectorCache.addDependent(myAtomSelector, ['param 1', 'param 2'], {
+ecosystem.selectors.addDependent(myAtomSelector, ['param 1', 'param 2'], {
   callback: (signal, currentState, reason) => {
     ...
   },
@@ -247,7 +243,7 @@ ecosystem.selectorCache.addDependent(myAtomSelector, ['param 1', 'param 2'], {
 })
 
 // if the selector doesn't take params, pass an empty array:
-ecosystem.selectorCache.addDependent(myAtomSelector, [], {
+ecosystem.selectors.addDependent(myAtomSelector, [], {
   operation: 'mySpecificReasonForUsingTheSelectorHere'
 })
 ```
@@ -305,8 +301,8 @@ Again, this is mostly for testing convenience. You probably won't find yourself 
 ## Recap
 
 - Atom instances go stale when their ref count goes from 1 to 0.
-- Use `instance.destroy()` and `ecosystem.selectorCache.destroyCache()` to manually destroy and force-destroy atom instances and selector caches.
-- Use `instance.addDependent()` and `ecosystem.selectorCache.addDependent()` to manually add graph edges.
+- Use `instance.destroy()` and `ecosystem.selectors.destroyCache()` to manually destroy and force-destroy atom instances and selector caches.
+- Use `instance.addDependent()` and `ecosystem.selectors.addDependent()` to manually add graph edges.
 - Manual graphing with TTL is the recommended way to trigger destruction of atom instances when working with atoms outside React.
 - Use `ecosystem.destroy()` or `destroyOnUnmount` to destroy ecosystems.
 

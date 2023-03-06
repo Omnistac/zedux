@@ -132,7 +132,7 @@ export const LogActions = ({
         console.log(
           Zedux.getEcosystem(
             ecosystemIdRef.current
-          ).selectorCache.inspectItemValues()
+          ).selectors.inspectItemValues()
         )
         console.groupEnd()
       },

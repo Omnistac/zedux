@@ -1,5 +1,5 @@
 import { AnyAtomInstance } from '@zedux/react/types'
-import { SelectorCacheItem } from '../classes/SelectorCache'
+import { SelectorCache } from '../classes/Selectors'
 
 export type InjectorDescriptor<T = any> = T extends undefined
   ? {
@@ -15,7 +15,7 @@ export type InjectorDescriptor<T = any> = T extends undefined
 
 export interface StackItemBase {
   /**
-   * The cacheKey of the instance or selectorCache
+   * The cacheKey of the instance or SelectorCache
    */
   key: string
 
@@ -30,7 +30,7 @@ export interface InstanceStackItem extends StackItemBase {
 }
 
 export interface SelectorStackItem extends StackItemBase {
-  cache: SelectorCacheItem
+  cache: SelectorCache
 }
 
 export type StackItem = InstanceStackItem | SelectorStackItem
