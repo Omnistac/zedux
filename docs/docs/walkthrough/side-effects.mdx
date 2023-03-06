@@ -110,7 +110,7 @@ But now. We did introduce a new potential problem: What if we had other dependen
 
 This little beast returns an array of [reasons](../api/types/EvaluationReason) that tell you why the current atom is evaluating 🤯. Yes. 🤯.
 
-The list is empty on initial evaluation. After that, every reason in the list has a `sourceKey` field that gives the unique key, if any, of the dependency that caused the update. We can use this to determine if the current evaluation is the initial evaluation or was caused by a specific dependency updating:
+The list is empty on initial evaluation. After that, every reason in the list has a `sourceId` field that gives the unique id, if any, of the dependency that caused the update. We can use this to determine if the current evaluation is the initial evaluation or was caused by a specific dependency updating:
 
 ```ts
 const sortedUsersAtom = ion('sortedUsers', () => {
@@ -121,11 +121,11 @@ const sortedUsersAtom = ion('sortedUsers', () => {
   const reasons = injectWhy()
 
   // only set state if this is the initial evaluation or this evaluation was at
-  // least partially caused by usersInstance:
+  // least partially caused by usersInstance updating:
   // highlight-next-line
   if (
     !reasons.length ||
-    reasons.some(reason => reason.sourceKey === usersInstance.id)
+    reasons.some(reason => reason.sourceId === usersInstance.id)
   ) {
     store.setState([...usersList].sort((a, b) => a.name.localeCompare(b.name)))
   }

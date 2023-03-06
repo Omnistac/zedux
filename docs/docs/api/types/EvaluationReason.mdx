@@ -16,7 +16,7 @@ interface EvaluationReason<State = any> {
   oldState?: State
   operation: string // e.g. a function like "injectAtomValue"
   sourceType: EvaluationSourceType
-  sourceKey?: string // e.g. an atom key like "todos" or "userList"
+  sourceId?: string // e.g. an atom key like "todos" or "userList"
   reasons?: EvaluationReason[]
   type: EvaluationType
 }
@@ -71,7 +71,7 @@ type EvaluationType =
       source is external, the operation name will be "invalidate".
     </p>
   </Item>
-  <Item name="sourceKey">
+  <Item name="sourceId">
     <p>
       If the source dependency was another atom instance, this will be the key
       of that atom instance's atom. Otherwise, this will be undefined.
@@ -79,15 +79,13 @@ type EvaluationType =
   </Item>
   <Item name="sourceType">
     <p>
-      What changed. Could be a store we're subscribed to via{' '}
+      What changed. Could be a store subscribed to via{' '}
       <Link to="../injectors/injectStore">
         <code>injectStore()</code>
       </Link>
-      , or an atom instance that we injected, or an{' '}
-      <Link to="../classes/AtomInstance#invalidate">
+      , an injected atom instance, or an <Link to="../classes/AtomInstance#invalidate">
         <code>.invalidate()</code>
-      </Link>{' '}
-      call from a dependent.
+      </Link> call from a dependent.
     </p>
   </Item>
   <Item name="reasons">
