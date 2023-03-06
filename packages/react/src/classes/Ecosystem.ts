@@ -624,13 +624,13 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         }
       > = {}
 
-      Object.keys(this._graph.nodes).forEach(cacheKey => {
-        const node = this._graph.nodes[cacheKey]
+      Object.keys(this._graph.nodes).forEach(id => {
+        const node = this._graph.nodes[id]
 
-        hash[cacheKey] = {
+        hash[id] = {
           dependencies: Object.keys(node.dependencies).map(key => ({
             key,
-            operation: this._graph.nodes[key].dependents[cacheKey].operation,
+            operation: this._graph.nodes[key].dependents[id].operation,
           })),
           dependents: Object.keys(node.dependents).map(key => ({
             key,

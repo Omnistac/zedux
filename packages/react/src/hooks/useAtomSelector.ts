@@ -43,8 +43,7 @@ const isRefDifferent = (
 
   if (newSelector === oldSelector) return false
 
-  const dependents =
-    ecosystem._graph.nodes[cacheRef.current.cacheKey]?.dependents
+  const dependents = ecosystem._graph.nodes[cacheRef.current.id]?.dependents
 
   if (dependents && Object.keys(dependents).length !== 1) return true
 
@@ -53,8 +52,8 @@ const isRefDifferent = (
 
   if (newIsFunction !== oldIsFunction) return true
 
-  const newKey = ecosystem.selectors._getIdealCacheKey(newSelector)
-  const oldKey = ecosystem.selectors._getIdealCacheKey(oldSelector)
+  const newKey = ecosystem.selectors._getIdealCacheId(newSelector)
+  const oldKey = ecosystem.selectors._getIdealCacheId(oldSelector)
 
   if (newKey !== oldKey) return true
 
@@ -146,7 +145,7 @@ export const useAtomSelector = <T, Args extends any[]>(
         if (glob.IS_REACT_ACT_ENVIRONMENT) onStoreChange()
 
         // this function must be idempotent
-        if (!ecosystem._graph.nodes[cache.cacheKey]?.dependents[dependentKey]) {
+        if (!ecosystem._graph.nodes[cache.id]?.dependents[dependentKey]) {
           // React can unmount other components before calling this subscribe
           // function but after we got the cache above. Re-get the cache
           // if such unmountings destroyed it in the meantime:
@@ -161,7 +160,7 @@ export const useAtomSelector = <T, Args extends any[]>(
 
           ecosystem._graph.addEdge(
             dependentKey,
-            cache.cacheKey,
+            cache.id,
             OPERATION,
             External,
             (signal, newState) => {
@@ -180,7 +179,7 @@ export const useAtomSelector = <T, Args extends any[]>(
 
         return () => {
           // I don't think we need to unset any of the cache refs here
-          ecosystem._graph.removeEdge(dependentKey, cache.cacheKey)
+          ecosystem._graph.removeEdge(dependentKey, cache.id)
         }
       },
       () => (isInvalidated ? INVALIDATE_REACT : cache.result),

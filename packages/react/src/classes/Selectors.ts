@@ -22,7 +22,7 @@ export class SelectorCache<T = any, Args extends any[] = any[]> {
   public task?: () => void
 
   constructor(
-    public cacheKey: string,
+    public id: string,
     public selectorRef: AtomSelectorOrConfig<T, Args>,
     public args?: Args
   ) {}
@@ -63,13 +63,13 @@ export class Selectors {
     const id = this.ecosystem._idGenerator.generateNodeId()
     this.ecosystem._graph.addEdge(
       id,
-      cacheItem.cacheKey,
+      cacheItem.id,
       operation,
       Explicit | External,
       callback
     )
 
-    return () => this.ecosystem._graph.removeEdge(id, cacheItem.cacheKey)
+    return () => this.ecosystem._graph.removeEdge(id, cacheItem.id)
   }
 
   public destroyCache<T = any, Args extends [] = []>(
@@ -93,24 +93,24 @@ export class Selectors {
     args?: Args,
     force?: boolean
   ) {
-    const cacheKey = is(selectable, SelectorCache)
-      ? (selectable as SelectorCache).cacheKey
-      : this.getCacheKey(
+    const id = is(selectable, SelectorCache)
+      ? (selectable as SelectorCache).id
+      : this.getCacheId(
           selectable as AtomSelectorOrConfig<T, Args>,
           args as Args
         )
 
     const cache = is(selectable, SelectorCache)
       ? (selectable as SelectorCache<T, Args>)
-      : this._items[cacheKey]
+      : this._items[id]
 
     if (!cache) return
 
-    const node = this.ecosystem._graph.nodes[cacheKey]
+    const node = this.ecosystem._graph.nodes[id]
 
     if (!force && Object.keys(node?.dependents || {}).length) return
 
-    this._destroySelector(cacheKey)
+    this._destroySelector(id)
   }
 
   /**
@@ -142,20 +142,20 @@ export class Selectors {
       return Object.values(this.findAll(selectable))[0]
     }
 
-    const cacheKey = this.getCacheKey(
+    const id = this.getCacheId(
       selectable as AtomSelectorOrConfig<T, Args>,
       args as Args,
       true
     )
-    if (!cacheKey) return
+    if (!id) return
 
-    return this._items[cacheKey]
+    return this._items[id]
   }
 
   /**
    * Get an object of all currently-cached AtomSelectors.
    *
-   * Pass a selector reference or string to filter by caches whose cacheKey
+   * Pass a selector reference or string to filter by caches whose id
    * weakly matches the passed selector name.
    */
   public findAll(selectableOrName?: Selectable<any, any> | string) {
@@ -164,20 +164,20 @@ export class Selectors {
       !selectableOrName || typeof selectableOrName === 'string'
         ? selectableOrName
         : is(selectableOrName, SelectorCache)
-        ? (selectableOrName as SelectorCache).cacheKey
+        ? (selectableOrName as SelectorCache).id
         : this.getBaseKey(
             selectableOrName as AtomSelectorOrConfig<any, any>,
             true
-          ) || this._getIdealCacheKey(selectableOrName as AtomSelectorOrConfig)
+          ) || this._getIdealCacheId(selectableOrName as AtomSelectorOrConfig)
 
     Object.values(this._items)
-      .sort((a, b) => a.cacheKey.localeCompare(b.cacheKey))
+      .sort((a, b) => a.id.localeCompare(b.id))
       .forEach(instance => {
-        if (filterKey && !instance.cacheKey.includes(filterKey)) {
+        if (filterKey && !instance.id.includes(filterKey)) {
           return
         }
 
-        hash[instance.cacheKey] = instance
+        hash[instance.id] = instance
       })
 
     return hash
@@ -206,40 +206,40 @@ export class Selectors {
     }
 
     const selectorOrConfig = selectable as AtomSelectorOrConfig<T, Args>
-    const cacheKey = this.getCacheKey(selectorOrConfig, args as Args)
-    let cache = this._items[cacheKey] as SelectorCache<T, Args>
+    const id = this.getCacheId(selectorOrConfig, args as Args)
+    let cache = this._items[id] as SelectorCache<T, Args>
 
     if (cache) return cache
 
     // create the cache; it doesn't exist yet
-    cache = new SelectorCache(cacheKey, selectorOrConfig, args)
-    this._items[cacheKey] = cache as SelectorCache<any, any[]>
-    this.ecosystem._graph.addNode(cacheKey, true)
+    cache = new SelectorCache(id, selectorOrConfig, args)
+    this._items[id] = cache as SelectorCache<any, any[]>
+    this.ecosystem._graph.addNode(id, true)
 
-    this.runSelector(cacheKey, args as Args, true)
+    this.runSelector(id, args as Args, true)
 
     return cache
   }
 
-  public getCacheKey<T = any, Args extends [] = []>(
+  public getCacheId<T = any, Args extends [] = []>(
     selectorOrConfig: AtomSelectorOrConfig<T, Args>
   ): string
 
-  public getCacheKey<T = any, Args extends any[] = []>(
+  public getCacheId<T = any, Args extends any[] = []>(
     selectorOrConfig: AtomSelectorOrConfig<T, Args>,
     args: Args
   ): string
 
-  public getCacheKey<T = any, Args extends any[] = []>(
+  public getCacheId<T = any, Args extends any[] = []>(
     selectorOrConfig: AtomSelectorOrConfig<T, Args>,
     args: Args,
     weak: true
   ): string | undefined
 
   /**
-   * Get the fully qualified key hash for the given selector+params combo
+   * Get the fully qualified id for the given selector+params combo
    */
-  public getCacheKey(
+  public getCacheId(
     selectorOrConfig: AtomSelectorOrConfig<any, any[]>,
     args?: any[],
     weak?: boolean
@@ -255,7 +255,7 @@ export class Selectors {
   }
 
   /**
-   * Get an object mapping all cacheKeys in this selectorCache to their current
+   * Get an object mapping all ids in this selectorCache to their current
    * values.
    *
    * Pass a selector or partial SelectorCache id string to only return caches
@@ -265,8 +265,8 @@ export class Selectors {
     const hash = this.findAll(selectableOrName)
 
     // We just created the object. Just mutate it.
-    Object.keys(hash).forEach(cacheKey => {
-      hash[cacheKey] = hash[cacheKey].result
+    Object.keys(hash).forEach(id => {
+      hash[id] = hash[id].result
     })
 
     return hash
@@ -276,8 +276,8 @@ export class Selectors {
    * Should only be used internally. Removes the selector from the cache and
    * the graph
    */
-  public _destroySelector(cacheKey: string) {
-    const cache = this._items[cacheKey]
+  public _destroySelector(id: string) {
+    const cache = this._items[id]
 
     if (!cache) return // shouldn't happen
 
@@ -285,19 +285,19 @@ export class Selectors {
       this.ecosystem._scheduler.unschedule(cache.task)
     }
 
-    this.ecosystem._graph.removeDependencies(cacheKey)
-    this.ecosystem._graph.removeNode(cacheKey)
-    delete this._items[cacheKey]
+    this.ecosystem._graph.removeDependencies(id)
+    this.ecosystem._graph.removeNode(id)
+    delete this._items[id]
     cache.isDestroyed = true
     this._refBaseKeys.delete(cache.selectorRef)
   }
 
   /**
-   * Get the string key we would ideally use as the cacheKey of the given
+   * Get the string key we would ideally use as the id of the given
    * AtomSelector function or AtomSelectorConfig object - doesn't necessarily
    * mean we end up caching using this key.
    */
-  public _getIdealCacheKey(
+  public _getIdealCacheId(
     selectorOrConfig: AtomSelectorOrConfig<any, any>
   ): string | undefined {
     const idealKey =
@@ -312,11 +312,11 @@ export class Selectors {
    * Should only be used internally
    */
   public _scheduleEvaluation(
-    cacheKey: string,
+    id: string,
     reason: EvaluationReason,
     shouldSetTimeout?: boolean
   ) {
-    const cache = this._items[cacheKey]
+    const cache = this._items[id]
 
     // TODO: Any calls in this case probably indicate a memory leak on the
     // user's part. Notify them.
@@ -328,13 +328,13 @@ export class Selectors {
 
     const task = () => {
       cache.task = undefined
-      this.runSelector(cacheKey, cache.args as any[])
+      this.runSelector(id, cache.args as any[])
     }
     cache.task = task
 
     this.ecosystem._scheduler.schedule(
       {
-        id: cacheKey,
+        id: id,
         task,
         type: 2, // EvaluateGraphNode (2)
       },
@@ -357,7 +357,7 @@ export class Selectors {
 
     this._refBaseKeys.set(newRef, baseKey)
     existingCache.selectorRef = newRef
-    this.runSelector(existingCache.cacheKey, args)
+    this.runSelector(existingCache.id, args)
   }
 
   /**
@@ -365,16 +365,16 @@ export class Selectors {
    * Prefer `ecosystem.reset()`.
    */
   public _wipe() {
-    Object.keys(this._items).forEach(cacheKey => {
-      this._destroySelector(cacheKey)
+    Object.keys(this._items).forEach(id => {
+      this._destroySelector(id)
     })
 
     this._refBaseKeys = new WeakMap()
   }
 
   /**
-   * Get a base key that can be used to generate consistent cacheKeys for the
-   * given selector
+   * Get a base key that can be used to generate consistent ids for the given
+   * selector
    */
   private getBaseKey(
     selectorOrConfig: AtomSelectorOrConfig<any, any[]>,
@@ -384,7 +384,7 @@ export class Selectors {
 
     if (existingId || weak) return existingId
 
-    const idealKey = this._getIdealCacheKey(selectorOrConfig)
+    const idealKey = this._getIdealCacheId(selectorOrConfig)
     const prefixedKey = `@@selector-${idealKey}`
     const keyExists = this._items[prefixedKey]
 
@@ -405,12 +405,12 @@ export class Selectors {
    * `.bufferUpdates()`)
    */
   private runSelector<T = any, Args extends any[] = []>(
-    cacheKey: string,
+    id: string,
     args: Args,
     isInitializing?: boolean
   ) {
-    this.ecosystem._graph.bufferUpdates(cacheKey)
-    const cache = this._items[cacheKey] as SelectorCache<T, Args>
+    this.ecosystem._graph.bufferUpdates(id)
+    const cache = this._items[id] as SelectorCache<T, Args>
     this.ecosystem._evaluationStack.start(cache)
     const selector =
       typeof cache.selectorRef === 'function'
@@ -430,7 +430,7 @@ export class Selectors {
 
       if (!isInitializing && !resultsComparator(result, cache.result as T)) {
         this.ecosystem._graph.scheduleDependents(
-          cacheKey,
+          id,
           cache.nextEvaluationReasons,
           result,
           cache.result
@@ -454,7 +454,7 @@ export class Selectors {
     } catch (err) {
       this.ecosystem._graph.destroyBuffer()
       console.error(
-        `Zedux encountered an error while running AtomSelector with key "${cacheKey}":`,
+        `Zedux encountered an error while running AtomSelector with id "${id}":`,
         err
       )
 
