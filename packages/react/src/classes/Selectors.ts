@@ -72,6 +72,33 @@ export class Selectors {
     return () => this.ecosystem._graph.removeEdge(id, cacheItem.id)
   }
 
+  /**
+   * Get an object mapping all ids in this selectorCache to their current
+   * values.
+   *
+   * Pass a selector to only return caches of that selector.
+   *
+   * Pass a partial SelectorCache id string to only return caches whose id
+   * contains the passed key (case-insensitive).
+   *
+   * IMPORTANT: Don't use this for SSR. SelectorCaches are not designed to be
+   * shared across environments. Selectors should be simple derivations that
+   * will be predictably recreated from rehydrated atom instances.
+   *
+   * In other words, `ecosystem.dehydrate()` is all you need for SSR. Don't
+   * worry about selectors. This method is solely an inspection/debugging util.
+   */
+  public dehydrate(selectableOrName?: Selectable<any, any> | string) {
+    const hash = this.findAll(selectableOrName)
+
+    // We just created the object. Just mutate it.
+    Object.keys(hash).forEach(id => {
+      hash[id] = hash[id].result
+    })
+
+    return hash
+  }
+
   public destroyCache<T = any, Args extends [] = []>(
     selectable: Selectable<T, Args>
   ): void
@@ -162,7 +189,7 @@ export class Selectors {
     const hash: Record<string, SelectorCache> = {}
     const filterKey =
       !selectableOrName || typeof selectableOrName === 'string'
-        ? selectableOrName
+        ? selectableOrName?.toLowerCase()
         : is(selectableOrName, SelectorCache)
         ? (selectableOrName as SelectorCache).id
         : this.getBaseKey(
@@ -173,7 +200,7 @@ export class Selectors {
     Object.values(this._items)
       .sort((a, b) => a.id.localeCompare(b.id))
       .forEach(instance => {
-        if (filterKey && !instance.id.includes(filterKey)) {
+        if (filterKey && !instance.id.toLowerCase().includes(filterKey)) {
           return
         }
 
@@ -252,24 +279,6 @@ export class Selectors {
           this.ecosystem.complexParams
         )}`
       : baseKey
-  }
-
-  /**
-   * Get an object mapping all ids in this selectorCache to their current
-   * values.
-   *
-   * Pass a selector or partial SelectorCache id string to only return caches
-   * whose id weakly matches the passed key.
-   */
-  public inspectItemValues(selectableOrName?: Selectable<any, any> | string) {
-    const hash = this.findAll(selectableOrName)
-
-    // We just created the object. Just mutate it.
-    Object.keys(hash).forEach(id => {
-      hash[id] = hash[id].result
-    })
-
-    return hash
   }
 
   /**

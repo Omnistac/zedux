@@ -130,9 +130,7 @@ export const LogActions = ({
       SelectorCache: () => {
         console.group('Cached selectors:')
         console.log(
-          Zedux.getEcosystem(
-            ecosystemIdRef.current
-          ).selectors.inspectItemValues()
+          Zedux.getEcosystem(ecosystemIdRef.current).selectors.dehydrate()
         )
         console.groupEnd()
       },

@@ -49,6 +49,41 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
       </Item>
     </Legend>
   </Item>
+  <Item name="dehydrate">
+    <p>Gets a snapshot of current cache item values.</p>
+    <p>Signature:</p>
+    <Ts>{`dehydrate = (selectableOrName?) => cacheItems`}</Ts>
+    <Legend>
+      <Item name="selectableOrName">
+        <p>Optional. One of:</p>
+        <ul>
+          <li>A string</li>
+          <li>
+            An <Link to="../types/AtomSelector">atom selector</Link>
+          </li>
+          <li>
+            An{' '}
+            <Link to="../types/AtomSelectorConfig">
+              AtomSelectorConfig object
+            </Link>
+          </li>
+          <li>
+            A <Link to="SelectorCache">SelectorCache instance</Link> (accepted
+            for consistency, but really you'd never pass this)
+          </li>
+        </ul>
+        <p>
+          If passed, filters the returned object to only contain cache values of
+          the passed selector or caches whose key includes the passed string
+          (case-insensitive).
+        </p>
+      </Item>
+      <Item name="Returns">
+        Returns an object mapping fully qualified SelectorCache ids to the
+        cached result for that selector + params combo.
+      </Item>
+    </Legend>
+  </Item>
   <Item name="destroyCache">
     <p>
       Destroys a cached atom selector. Similar to{' '}
@@ -228,41 +263,6 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
           3rd "weak" arg, returns undefined if no id has been stored for given
           selector + args combo yet.
         </p>
-      </Item>
-    </Legend>
-  </Item>
-  <Item name="inspectItemValues">
-    <p>Gets a snapshot of current cache item values.</p>
-    <p>Signature:</p>
-    <Ts>{`inspectItemValues = (selectableOrName?) => cacheItems`}</Ts>
-    <Legend>
-      <Item name="selectableOrName">
-        <p>Optional. One of:</p>
-        <ul>
-          <li>A string</li>
-          <li>
-            An <Link to="../types/AtomSelector">atom selector</Link>
-          </li>
-          <li>
-            An{' '}
-            <Link to="../types/AtomSelectorConfig">
-              AtomSelectorConfig object
-            </Link>
-          </li>
-          <li>
-            A <Link to="SelectorCache">SelectorCache instance</Link> (accepted
-            for consistency, but really you'd never pass this)
-          </li>
-        </ul>
-        <p>
-          If passed, filters the returned object to only contain cache values of
-          the passed selector or caches whose key includes the passed string
-          (case-insensitive).
-        </p>
-      </Item>
-      <Item name="Returns">
-        Returns an object mapping fully qualified SelectorCache ids to the
-        cached result for that selector + params combo.
       </Item>
     </Legend>
   </Item>
