@@ -2,7 +2,7 @@ import { ActionChain, Observable, Settable, Store } from '@zedux/core'
 import { AtomBase } from '../classes/atoms/AtomBase'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
-import { SelectorCacheItem } from '../classes/SelectorCache'
+import { SelectorCache } from '../classes/Selectors'
 import { AtomInstanceType, AtomParamsType, AtomStateType } from './atoms'
 import { AnyAtom, AnyAtomInstance } from './utils'
 
@@ -313,7 +313,7 @@ export interface RefObject<T = any> {
 export type Selectable<T = any, Args extends any[] = []> =
   | AtomSelector<T, Args>
   | AtomSelectorConfig<T, Args>
-  | SelectorCacheItem<T, Args>
+  | SelectorCache<T, Args>
 
 export type StateHookTuple<State, Exports> = [
   State,

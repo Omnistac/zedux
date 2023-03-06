@@ -49,7 +49,7 @@ module.exports = {
           'api/classes/Ion',
           'api/classes/MachineStore',
           'api/classes/SelectorCache',
-          'api/classes/SelectorCacheItem',
+          'api/classes/Selectors',
           'api/classes/Store',
           'api/classes/ZeduxPlugin',
         ],

@@ -15,7 +15,7 @@ import {
 } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
-import { SelectorCacheItem } from './SelectorCache'
+import { SelectorCache } from './Selectors'
 
 const perf =
   typeof performance !== 'undefined' ? performance : { now: () => Date.now() }
@@ -98,7 +98,7 @@ export class EvaluationStack {
         return ecosystem.select(selectable, ...args)
       }
 
-      const cache = this.ecosystem.selectorCache.getCache(selectable, args)
+      const cache = this.ecosystem.selectors.getCache(selectable, args)
 
       ecosystem._graph.addEdge(
         stack[stack.length - 1].key,
@@ -137,7 +137,7 @@ export class EvaluationStack {
       }).instance = (item as InstanceStackItem).instance
     } else if ((item as SelectorStackItem).cache) {
       ;(action as {
-        cache: SelectorCacheItem
+        cache: SelectorCache
       }).cache = (item as SelectorStackItem).cache
     }
 
@@ -152,15 +152,15 @@ export class EvaluationStack {
     return stack[stack.length - 1]
   }
 
-  public start(item: AnyAtomInstance | SelectorCacheItem<any, any>) {
+  public start(item: AnyAtomInstance | SelectorCache<any, any>) {
     const newItem = {} as StackItem
 
     if ((item as AnyAtomInstance).keyHash) {
       newItem.key = (item as AnyAtomInstance).keyHash
       ;(newItem as InstanceStackItem).instance = item as AnyAtomInstance
     } else {
-      newItem.key = (item as SelectorCacheItem).cacheKey
-      ;(newItem as SelectorStackItem).cache = item as SelectorCacheItem
+      newItem.key = (item as SelectorCache).cacheKey
+      ;(newItem as SelectorStackItem).cache = item as SelectorCache
     }
 
     if (this.ecosystem._mods.evaluationFinished) {

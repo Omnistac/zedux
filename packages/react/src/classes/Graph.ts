@@ -209,10 +209,10 @@ export class Graph {
         pluginActions.edgeRemoved({
           dependency:
             this.ecosystem._instances[dependencyKey] ||
-            this.ecosystem.selectorCache._items[dependencyKey],
+            this.ecosystem.selectors._items[dependencyKey],
           dependent:
             this.ecosystem._instances[dependentKey] ||
-            this.ecosystem.selectorCache._items[dependentKey] ||
+            this.ecosystem.selectors._items[dependentKey] ||
             dependentKey,
           edge: dependentEdge,
         })
@@ -278,7 +278,7 @@ export class Graph {
     scheduleStaticDeps = false
   ) {
     const instance = this.ecosystem._instances[nodeKey]
-    const cache = this.ecosystem.selectorCache._items[nodeKey]
+    const cache = this.ecosystem.selectors._items[nodeKey]
     const node = this.nodes[nodeKey]
 
     Object.keys(node.dependents).forEach(dependentKey => {
@@ -312,7 +312,7 @@ export class Graph {
       // own jobs
       if (!(dependentEdge.flags & External)) {
         if (this.nodes[dependentKey].isAtomSelector) {
-          return this.ecosystem.selectorCache._scheduleEvaluation(
+          return this.ecosystem.selectors._scheduleEvaluation(
             dependentKey,
             reason,
             shouldSetTimeout
@@ -380,10 +380,10 @@ export class Graph {
         pluginActions.edgeCreated({
           dependency:
             this.ecosystem._instances[dependencyKey] ||
-            this.ecosystem.selectorCache._items[dependencyKey],
+            this.ecosystem.selectors._items[dependencyKey],
           dependent:
             this.ecosystem._instances[dependentKey] ||
-            this.ecosystem.selectorCache._items[dependentKey] ||
+            this.ecosystem.selectors._items[dependentKey] ||
             dependentKey, // unfortunate but not changing for now UPDATE: shouldn't be needed anymore. Double check
           edge: newEdge,
         })
@@ -418,7 +418,7 @@ export class Graph {
 
     if (node && !Object.keys(node.dependents).length) {
       if (node.isAtomSelector) {
-        this.ecosystem.selectorCache._destroySelector(nodeKey)
+        this.ecosystem.selectors._destroySelector(nodeKey)
       } else {
         this.ecosystem._instances[nodeKey]._scheduleDestruction()
       }

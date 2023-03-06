@@ -9,7 +9,7 @@ The ecosystem is an isolated atom environment. Every ecosystem creates:
 
 - A scheduler for intelligently running atom-related tasks.
 - A graph that manages atom dependencies.
-- A [SelectorCache](SelectorCache) for managing cached [Atom Selectors](../types/AtomSelector).
+- A [Selectors](Selectors) class instance for managing cached [Atom Selectors](../types/AtomSelector).
 - An id generator that generates unique ids for unnamed Atom Selectors and external graph nodes.
 
 The Ecosystem class itself defines many methods for creating, destroying, and inspecting atom instances and the graph they form.
@@ -189,10 +189,10 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
       <code>ecosystem.removeOverrides()</code>.
     </p>
   </Item>
-  <Item name="selectorCache">
+  <Item name="selectors">
     <p>
-      The <Link to="SelectorCache">SelectorCache</Link> class instance that
-      tracks all cached atom selectors in this ecosystem.
+      The <Link to="Selectors">Selectors</Link> class instance that tracks all
+      cached atom selectors in this ecosystem.
     </p>
   </Item>
   <Item name="ssr">
@@ -498,8 +498,8 @@ myEcosystem.reset({ someField: 'new val' })
       Gets the current value of a cached atom selector. If the atom selector
       hasn't been cached yet, runs the selector but does _not_ cache the result.
       Use{' '}
-      <Link to="SelectorCache">
-        <code>ecosystem.selectorCache.getCache()</code>
+      <Link to="Selectors#getcache">
+        <code>ecosystem.selectors.getCache()</code>
       </Link>{' '}
       to create and cache a selector. See{' '}
       <Link to="../types/AtomGetters#select">

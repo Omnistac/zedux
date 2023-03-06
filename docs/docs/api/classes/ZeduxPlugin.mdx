@@ -162,8 +162,8 @@ Every ZeduxPlugin has just two properties:
     </p>
     <p>Payload shape:</p>
     <Ts>{`{
-  dependency: AnyAtomInstance | SelectorCacheItem
-  dependent: AnyAtomInstance | SelectorCacheItem | string
+  dependency: AnyAtomInstance | SelectorCache
+  dependent: AnyAtomInstance | SelectorCache | string
   edge: DependentEdge
 }`}</Ts>
     <p>
@@ -182,8 +182,8 @@ Every ZeduxPlugin has just two properties:
     </p>
     <p>Payload shape:</p>
     <Ts>{`{
-  dependency: AnyAtomInstance | SelectorCacheItem
-  dependent: AnyAtomInstance | SelectorCacheItem | string
+  dependency: AnyAtomInstance | SelectorCache
+  dependent: AnyAtomInstance | SelectorCache | string
   edge: DependentEdge
 }`}</Ts>
     <p>
@@ -202,7 +202,7 @@ Every ZeduxPlugin has just two properties:
     </p>
     <p>Payload shape:</p>
     <Ts>{`{
-  cache?: SelectorCacheItem
+  cache?: SelectorCache
   instance?: AnyAtomInstance
   time: number
 }`}</Ts>
@@ -231,7 +231,7 @@ Every ZeduxPlugin has just two properties:
     <p>Payload shape:</p>
     <Ts>{`{
   action?: ActionChain
-  cache?: SelectorCacheItem
+  cache?: SelectorCache
   instance?: AnyAtomInstance
   newState: any
   oldState: any

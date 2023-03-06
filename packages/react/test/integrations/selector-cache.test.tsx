@@ -15,7 +15,7 @@ describe('selector cache', () => {
     const selector2 = ({ select }: AtomGetters) => select(selector1) + 'c'
     const selector3 = ({ select }: AtomGetters) => select(selector2) + 'd'
 
-    const cache = ecosystem.selectorCache.getCache(selector3)
+    const cache = ecosystem.selectors.getCache(selector3)
     const cache3 = {
       args: [],
       cacheKey: '@@selector-selector3',
@@ -27,7 +27,7 @@ describe('selector cache', () => {
 
     expect(cache).toEqual(cache3)
 
-    expect(ecosystem.selectorCache._items).toEqual({
+    expect(ecosystem.selectors._items).toEqual({
       '@@selector-selector1': {
         args: [],
         cacheKey: '@@selector-selector1',

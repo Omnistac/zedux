@@ -27,7 +27,7 @@ import { Graph } from './Graph'
 import { IdGenerator } from './IdGenerator'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
-import { SelectorCacheItem, SelectorCache } from './SelectorCache'
+import { SelectorCache, Selectors } from './Selectors'
 import { Mod, ZeduxPlugin } from './ZeduxPlugin'
 
 const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
@@ -53,7 +53,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public _reactContexts: Record<string, React.Context<any>> = {}
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
-  public selectorCache: SelectorCache = new SelectorCache(this)
+  public selectors: Selectors = new Selectors(this)
   public complexParams: boolean
   public context: Context
   public defaultTtl?: number
@@ -516,12 +516,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     selectable: Selectable<T, Args>,
     ...args: Args
   ): T {
-    if (is(selectable, SelectorCacheItem)) {
-      return (selectable as SelectorCacheItem<T, Args>).result as T
+    if (is(selectable, SelectorCache)) {
+      return (selectable as SelectorCache<T, Args>).result as T
     }
 
     const atomSelector = selectable as AtomSelectorOrConfig<T, Args>
-    const cache = this.selectorCache.find(atomSelector, args)
+    const cache = this.selectors.find(atomSelector, args)
     if (cache) return cache.result as T
 
     const resolvedSelector =
@@ -731,7 +731,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     })
 
     this.hydration = undefined
-    this.selectorCache._wipe()
+    this.selectors._wipe()
 
     this._scheduler.wipe()
     this._scheduler.flush()
