@@ -24,13 +24,13 @@ export class Ion<G extends AtomGenerics> extends AtomBase<G, AtomInstance<G>> {
 
   public _createInstance(
     ecosystem: Ecosystem,
-    keyHash: string,
+    id: string,
     params: G['Params']
   ): AtomInstance<G> {
-    return new AtomInstance<G>(ecosystem, this, keyHash, params)
+    return new AtomInstance<G>(ecosystem, this, id, params)
   }
 
-  public getKeyHash(ecosystem: Ecosystem, params?: G['Params']) {
+  public getInstanceId(ecosystem: Ecosystem, params?: G['Params']) {
     const base = this.key
 
     if (!params?.length) return base

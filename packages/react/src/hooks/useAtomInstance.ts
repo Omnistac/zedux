@@ -64,9 +64,7 @@ export const useAtomInstance: {
     return [
       (onStoreChange: () => void) => {
         // this function must be idempotent
-        if (
-          !ecosystem._graph.nodes[instance.keyHash]?.dependents[dependentKey]
-        ) {
+        if (!ecosystem._graph.nodes[instance.id]?.dependents[dependentKey]) {
           // React can unmount other components before calling this subscribe
           // function but after we got the instance above. Re-get the instance
           // if such unmountings destroyed it in the meantime:
@@ -79,7 +77,7 @@ export const useAtomInstance: {
 
           ecosystem._graph.addEdge(
             dependentKey,
-            instance.keyHash,
+            instance.id,
             operation,
             External | (subscribe ? 0 : Static),
             signal => {
@@ -95,7 +93,7 @@ export const useAtomInstance: {
         }
 
         return () => {
-          ecosystem._graph.removeEdge(dependentKey, instance.keyHash)
+          ecosystem._graph.removeEdge(dependentKey, instance.id)
         }
       },
       // this getSnapshot has to return a different val if either the instance

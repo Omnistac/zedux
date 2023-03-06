@@ -117,22 +117,23 @@ const importAtom = atom('import', () => {
   const { hello } = injectAtomInstance(exportsAtom).exports
 })`}</Ts>
   </Item>
-  <Item name="keyHash">
+  <Item name="id">
     <p>
-      A string representing the stable, unique key of this atom instance in the
-      ecosystem. This keyHash is the combination of the{' '}
-      <Link to="Atom#key">atom's key</Link> and a stable stringification of the{' '}
+      A string. This is the stable, unique id of this atom instance in the
+      ecosystem. This id is the combination of the{' '}
+      <Link to="Atom#key">atom's key</Link> and a deterministic stringification
+      of the{' '}
       <Link to="#params">
         <code>params</code>
       </Link>{' '}
       of this atom instance. Zedux uses this internally to identify this atom
       instance in the graph and atom instances cache.
     </p>
-    <Ts>{`ecosystem.getInstance(atom('a', null)).keyHash // 'a'
+    <Ts>{`ecosystem.getInstance(atom('a', null)).id // 'a'
 ecosystem.getInstance(
   atom('b', (param: string) => param),
   ['c']
-).keyHash // 'b-["c"]'`}</Ts>
+).id // 'b-["c"]'`}</Ts>
   </Item>
   <Item name="params">
     <p>

@@ -37,14 +37,14 @@ export class Scheduler implements SchedulerInterface {
     } else {
       const { nodes } = this.ecosystem._graph
       const flags = newJob.flags ?? 0
-      const weight = newJob.keyHash ? nodes[newJob.keyHash].weight : 0
+      const weight = newJob.id ? nodes[newJob.id].weight : 0
 
       const index = this.findIndex(job => {
         if (job.type !== newJob.type) return +(newJob.type - job.type > 0) || -1 // 1 or -1
 
         // a job type can use either weight or flags comparison or neither
-        if (job.keyHash) {
-          const jobWeight = nodes[job.keyHash].weight
+        if (job.id) {
+          const jobWeight = nodes[job.id].weight
 
           return weight < jobWeight ? -1 : +(weight > jobWeight) // + = 0 or 1
         } else if (job.flags != null) {

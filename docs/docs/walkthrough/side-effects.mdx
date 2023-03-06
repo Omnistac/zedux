@@ -125,7 +125,7 @@ const sortedUsersAtom = ion('sortedUsers', () => {
   // highlight-next-line
   if (
     !reasons.length ||
-    reasons.some(reason => reason.sourceKey === usersInstance.keyHash)
+    reasons.some(reason => reason.sourceKey === usersInstance.id)
   ) {
     store.setState([...usersList].sort((a, b) => a.name.localeCompare(b.name)))
   }

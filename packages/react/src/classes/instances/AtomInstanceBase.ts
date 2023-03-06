@@ -23,7 +23,7 @@ export abstract class AtomInstanceBase<
   public abstract activeState: ActiveState
   public abstract atom: AtomType
   public abstract ecosystem: Ecosystem
-  public abstract keyHash: string
+  public abstract id: string
   public abstract promise?: Promise<any>
   public abstract store: Store<State>
 
@@ -50,12 +50,12 @@ export abstract class AtomInstanceBase<
     const id = this.ecosystem._idGenerator.generateNodeId()
     this.ecosystem._graph.addEdge(
       id,
-      this.keyHash,
+      this.id,
       operation,
       Explicit | External,
       callback
     )
 
-    return () => this.ecosystem._graph.removeEdge(id, this.keyHash)
+    return () => this.ecosystem._graph.removeEdge(id, this.id)
   }
 }

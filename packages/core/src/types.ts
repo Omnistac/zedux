@@ -128,7 +128,7 @@ export type HierarchyDescriptor<State = any> =
 
 export interface Job {
   flags?: number
-  keyHash?: string
+  id?: string
   task: () => void
   /**
    * 0 - UpdateStore

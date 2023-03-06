@@ -55,7 +55,7 @@ export class EvaluationStack {
       // we can add graph edges for them
       ecosystem._graph.addEdge(
         stack[stack.length - 1].key,
-        instance.keyHash,
+        instance.id,
         'get',
         0
       )
@@ -81,7 +81,7 @@ export class EvaluationStack {
       // instances so we can add graph edges for them
       ecosystem._graph.addEdge(
         stack[stack.length - 1].key,
-        instance.keyHash,
+        instance.id,
         edgeInfo?.[1] || 'getInstance',
         edgeInfo?.[0] ?? Static
       )
@@ -155,8 +155,8 @@ export class EvaluationStack {
   public start(item: AnyAtomInstance | SelectorCache<any, any>) {
     const newItem = {} as StackItem
 
-    if ((item as AnyAtomInstance).keyHash) {
-      newItem.key = (item as AnyAtomInstance).keyHash
+    if ((item as AnyAtomInstance).id) {
+      newItem.key = (item as AnyAtomInstance).id
       ;(newItem as InstanceStackItem).instance = item as AnyAtomInstance
     } else {
       newItem.key = (item as SelectorCache).cacheKey
