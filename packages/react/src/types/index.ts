@@ -211,7 +211,7 @@ export interface EvaluationReason<State = any> {
   oldState?: State
   operation: string // e.g. a method like "injectValue"
   sourceType: EvaluationSourceType
-  sourceKey?: string // e.g. an atom like "myAtom"
+  sourceId?: string // e.g. a fully-qualified atom instance id like "myAtom-[0]"
   reasons?: EvaluationReason[]
   type: EvaluationType
 }

@@ -65,10 +65,10 @@ export class Graph {
   }
 
   // Should only be used internally
-  public addNode(nodeKey: string, isAtomSelector?: boolean) {
-    if (this.nodes[nodeKey]) return // already added
+  public addNode(nodeId: string, isAtomSelector?: boolean) {
+    if (this.nodes[nodeId]) return // already added
 
-    this.nodes[nodeKey] = {
+    this.nodes[nodeId] = {
       dependencies: {},
       dependents: {},
       isAtomSelector,
@@ -223,8 +223,8 @@ export class Graph {
   }
 
   // Should only be used internally
-  public removeNode(nodeKey: string) {
-    const node = this.nodes[nodeKey]
+  public removeNode(nodeId: string) {
+    const node = this.nodes[nodeId]
 
     if (!node) return // already removed
 
@@ -235,7 +235,7 @@ export class Graph {
     // if an atom instance is force-destroyed, it could still have dependents.
     // Inform them of the destruction
     this.scheduleDependents(
-      nodeKey,
+      nodeId,
       [],
       undefined,
       undefined,
@@ -256,10 +256,10 @@ export class Graph {
 
       const dependentNode = this.nodes[dependentKey]
 
-      if (dependentNode) delete dependentNode.dependencies[nodeKey]
+      if (dependentNode) delete dependentNode.dependencies[nodeId]
     })
 
-    delete this.nodes[nodeKey]
+    delete this.nodes[nodeId]
   }
 
   /**
@@ -268,7 +268,7 @@ export class Graph {
    * force-destroyed, or when an atom instance's promise changes.
    */
   public scheduleDependents(
-    nodeKey: string,
+    nodeId: string,
     reasons: EvaluationReason[],
     newState: any,
     oldState: any,
@@ -277,9 +277,9 @@ export class Graph {
     signal: GraphEdgeSignal = 'Updated',
     scheduleStaticDeps = false
   ) {
-    const instance = this.ecosystem._instances[nodeKey]
-    const cache = this.ecosystem.selectors._items[nodeKey]
-    const node = this.nodes[nodeKey]
+    const instance = this.ecosystem._instances[nodeId]
+    const cache = this.ecosystem.selectors._items[nodeId]
+    const node = this.nodes[nodeId]
 
     Object.keys(node.dependents).forEach(dependentKey => {
       const dependentEdge = node.dependents[dependentKey]
@@ -303,7 +303,7 @@ export class Graph {
         oldState,
         operation: dependentEdge.operation,
         reasons,
-        sourceKey: nodeKey,
+        sourceId: nodeId,
         sourceType: node.isAtomSelector ? 'AtomSelector' : 'Atom',
         type,
       }
@@ -398,8 +398,8 @@ export class Graph {
    * dependent, its dependents, etc) in the graph needs to have its weight
    * recalculated.
    */
-  private recalculateNodeWeight(nodeKey: string, weightDiff: number) {
-    const node = this.nodes[nodeKey]
+  private recalculateNodeWeight(nodeId: string, weightDiff: number) {
+    const node = this.nodes[nodeId]
 
     if (!node) return // happens when node is external
 
@@ -413,14 +413,14 @@ export class Graph {
   /**
    * When a node's refCount hits 0, schedule destruction of that node.
    */
-  private scheduleNodeDestruction(nodeKey: string) {
-    const node = this.nodes[nodeKey]
+  private scheduleNodeDestruction(nodeId: string) {
+    const node = this.nodes[nodeId]
 
     if (node && !Object.keys(node.dependents).length) {
       if (node.isAtomSelector) {
-        this.ecosystem.selectors._destroySelector(nodeKey)
+        this.ecosystem.selectors._destroySelector(nodeId)
       } else {
-        this.ecosystem._instances[nodeKey]._scheduleDestruction()
+        this.ecosystem._instances[nodeId]._scheduleDestruction()
       }
     }
   }
@@ -430,14 +430,14 @@ export class Graph {
    * that destruction is still pending and the refCount goes back up to 1,
    * cancel the scheduled destruction.
    */
-  private unscheduleNodeDestruction(nodeKey: string) {
-    const dependency = this.nodes[nodeKey]
+  private unscheduleNodeDestruction(nodeId: string) {
+    const dependency = this.nodes[nodeId]
 
     if (
       !dependency.isAtomSelector &&
       Object.keys(dependency.dependents).length === 1
     ) {
-      const instance = this.ecosystem._instances[nodeKey] as AnyAtomInstance
+      const instance = this.ecosystem._instances[nodeId] as AnyAtomInstance
 
       instance._cancelDestruction?.()
     }
