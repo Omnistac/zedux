@@ -316,10 +316,10 @@ Zedux tries to use the function name to key the selector. It handles name clashe
 Every Atom Selector + params combo that creates a graph node also creates a "selector cache" that stores the last result of the selector. Every ecosystem has a `.selectors` property that references a class that keeps track of these caches. Every cache includes these fields:
 
 ```ts
-const { cacheKey, result } = cache
+const { id, result } = cache
 ```
 
-Where `cacheKey` is the string the cache is keyed by internally and `result` is the cached result. See [the SelectorCache class](../api/classes/SelectorCache) for more info.
+Where `id` is the string the cache is keyed by internally and `result` is the cached result. See [the SelectorCache class](../api/classes/SelectorCache) for more info.
 
 The overarching Selectors class has several methods that allow you to cache new selectors and find, invalidate, and destroy selector caches.
 

@@ -104,8 +104,8 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
         <code>.getCache()</code>
       </Link>
       , except that <code>.find()</code> also accepts a fuzzy search string which,
-      when passed, returns the first found SelectorCache whose cacheKey includes
-      the passed string (case-insensitive).
+      when passed, returns the first found SelectorCache whose id includes the passed
+      string (case-insensitive).
     </p>
   </Item>
   <Item name="findAll">
@@ -142,8 +142,8 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
         </p>
       </Item>
       <Item name="Returns">
-        Returns an object mapping currently cached atom selector cache keys to
-        their <Link to="SelectorCache">SelectorCache</Link> instances.
+        Returns an object mapping fully qualified SelectorCache ids to their{' '}
+        <Link to="SelectorCache">SelectorCache</Link> instances.
       </Item>
     </Legend>
   </Item>
@@ -193,13 +193,13 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
       </Item>
     </Legend>
   </Item>
-  <Item name="getCacheKey">
+  <Item name="getCacheId">
     <p>
-      Returns the fully qualified cache key string that this Selectors class
+      Returns the fully qualified id string that this Selectors class instance
       will use for the given selector + args combo.
     </p>
     <p>Signature:</p>
-    <Ts>{`getCacheKey = (selectable, args?, weak?) => cacheKey`}</Ts>
+    <Ts>{`getCacheId = (selectable, args?, weak?) => id`}</Ts>
     <Legend>
       <Item name="selectable">
         <p>
@@ -216,17 +216,17 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
         don't pass this or pass an empty array.
       </Item>
       <Item name="weak">
-        Optional. A boolean. By default, <code>.getCacheKey()</code> creates and
-        stores a cache key for the given selector + args combo if none exists
-        yet. Pass <code>true</code> to disable this.
+        Optional. A boolean. By default, <code>.getCacheId()</code> creates and
+        stores an id for the given selector + args combo if none exists yet.
+        Pass <code>true</code> to disable this.
       </Item>
       <Item name="Returns">
         <p>
           A string prefixed with <code>@@selector-</code> containing a set,
           derived, or generated name for the passed selector and a deterministic
           hash of all the passed args. If <code>true</code> was passed for the
-          3rd "weak" arg, returns undefined if no cache key has been stored for
-          given selector + args combo yet.
+          3rd "weak" arg, returns undefined if no id has been stored for given
+          selector + args combo yet.
         </p>
       </Item>
     </Legend>
@@ -261,8 +261,8 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
         </p>
       </Item>
       <Item name="Returns">
-        Returns an object mapping currently cached atom selector cache keys to
-        their cached results.
+        Returns an object mapping fully qualified SelectorCache ids to the
+        cached result for that selector + params combo.
       </Item>
     </Legend>
   </Item>

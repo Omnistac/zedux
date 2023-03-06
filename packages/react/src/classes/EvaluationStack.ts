@@ -54,7 +54,7 @@ export class EvaluationStack {
       // if get is called during evaluation, track the required atom instances so
       // we can add graph edges for them
       ecosystem._graph.addEdge(
-        stack[stack.length - 1].key,
+        stack[stack.length - 1].id,
         instance.id,
         'get',
         0
@@ -80,7 +80,7 @@ export class EvaluationStack {
       // if getInstance is called during evaluation, track the required atom
       // instances so we can add graph edges for them
       ecosystem._graph.addEdge(
-        stack[stack.length - 1].key,
+        stack[stack.length - 1].id,
         instance.id,
         edgeInfo?.[1] || 'getInstance',
         edgeInfo?.[0] ?? Static
@@ -101,8 +101,8 @@ export class EvaluationStack {
       const cache = this.ecosystem.selectors.getCache(selectable, args)
 
       ecosystem._graph.addEdge(
-        stack[stack.length - 1].key,
-        cache.cacheKey,
+        stack[stack.length - 1].id,
+        cache.id,
         'select',
         0
       )
@@ -118,8 +118,8 @@ export class EvaluationStack {
     }
   }
 
-  public isEvaluating(key: string) {
-    return stack.some(item => item.key === key)
+  public isEvaluating(id: string) {
+    return stack.some(item => item.id === id)
   }
 
   public finish() {
@@ -156,10 +156,10 @@ export class EvaluationStack {
     const newItem = {} as StackItem
 
     if ((item as AnyAtomInstance).id) {
-      newItem.key = (item as AnyAtomInstance).id
+      newItem.id = (item as AnyAtomInstance).id
       ;(newItem as InstanceStackItem).instance = item as AnyAtomInstance
     } else {
-      newItem.key = (item as SelectorCache).cacheKey
+      newItem.id = (item as SelectorCache).id
       ;(newItem as SelectorStackItem).cache = item as SelectorCache
     }
 

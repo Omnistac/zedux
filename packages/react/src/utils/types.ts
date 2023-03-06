@@ -15,9 +15,9 @@ export type InjectorDescriptor<T = any> = T extends undefined
 
 export interface StackItemBase {
   /**
-   * The cacheKey of the instance or SelectorCache
+   * The id of the instance or SelectorCache
    */
-  key: string
+  id: string
 
   /**
    * the high-def timestamp of when the item was pushed onto the stack

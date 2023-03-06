@@ -18,7 +18,7 @@ describe('selector cache', () => {
     const cache = ecosystem.selectors.getCache(selector3)
     const cache3 = {
       args: [],
-      cacheKey: '@@selector-selector3',
+      id: '@@selector-selector3',
       nextEvaluationReasons: [],
       prevEvaluationReasons: [],
       result: 'abcd',
@@ -30,7 +30,7 @@ describe('selector cache', () => {
     expect(ecosystem.selectors._items).toEqual({
       '@@selector-selector1': {
         args: [],
-        cacheKey: '@@selector-selector1',
+        id: '@@selector-selector1',
         nextEvaluationReasons: [],
         prevEvaluationReasons: [],
         result: 'ab',
@@ -38,13 +38,13 @@ describe('selector cache', () => {
       },
       '@@selector-selector2': {
         args: [],
-        cacheKey: '@@selector-selector2',
+        id: '@@selector-selector2',
         nextEvaluationReasons: [],
         prevEvaluationReasons: [],
         result: 'abc',
         selectorRef: selector2,
       },
-      [cache3.cacheKey]: cache3,
+      [cache3.id]: cache3,
     })
   })
 })
