@@ -140,7 +140,7 @@ export class SelectorCache {
     }
 
     if (typeof selectable === 'string') {
-      return Object.values(this.inspectItems(selectable))[0]
+      return Object.values(this.findAll(selectable))[0]
     }
 
     const cacheKey = this.getCacheKey(
@@ -151,6 +151,37 @@ export class SelectorCache {
     if (!cacheKey) return
 
     return this._items[cacheKey]
+  }
+
+  /**
+   * Get an object of all currently-cached AtomSelectors.
+   *
+   * Pass a selector reference or string to filter by caches whose cacheKey
+   * weakly matches the passed selector name.
+   */
+  public findAll(selectableOrName?: Selectable<any, any> | string) {
+    const hash: Record<string, SelectorCacheItem> = {}
+    const filterKey =
+      !selectableOrName || typeof selectableOrName === 'string'
+        ? selectableOrName
+        : is(selectableOrName, SelectorCacheItem)
+        ? (selectableOrName as SelectorCacheItem).cacheKey
+        : this.getBaseKey(
+            selectableOrName as AtomSelectorOrConfig<any, any>,
+            true
+          ) || this._getIdealCacheKey(selectableOrName as AtomSelectorOrConfig)
+
+    Object.values(this._items)
+      .sort((a, b) => a.cacheKey.localeCompare(b.cacheKey))
+      .forEach(instance => {
+        if (filterKey && !instance.cacheKey.includes(filterKey)) {
+          return
+        }
+
+        hash[instance.cacheKey] = instance
+      })
+
+    return hash
   }
 
   public getCache<T = any, Args extends [] = []>(
@@ -225,37 +256,6 @@ export class SelectorCache {
   }
 
   /**
-   * Get an object of all currently-cached AtomSelectors.
-   *
-   * Pass a selector reference or string to filter by caches whose cacheKey
-   * weakly matches the passed selector name.
-   */
-  public inspectItems(selectableOrName?: Selectable<any, any> | string) {
-    const hash: Record<string, SelectorCacheItem> = {}
-    const filterKey =
-      !selectableOrName || typeof selectableOrName === 'string'
-        ? selectableOrName
-        : is(selectableOrName, SelectorCacheItem)
-        ? (selectableOrName as SelectorCacheItem).cacheKey
-        : this.getBaseKey(
-            selectableOrName as AtomSelectorOrConfig<any, any>,
-            true
-          ) || this._getIdealCacheKey(selectableOrName as AtomSelectorOrConfig)
-
-    Object.values(this._items)
-      .sort((a, b) => a.cacheKey.localeCompare(b.cacheKey))
-      .forEach(instance => {
-        if (filterKey && !instance.cacheKey.includes(filterKey)) {
-          return
-        }
-
-        hash[instance.cacheKey] = instance
-      })
-
-    return hash
-  }
-
-  /**
    * Get an object mapping all cacheKeys in this selectorCache to their current
    * values.
    *
@@ -263,7 +263,7 @@ export class SelectorCache {
    * weakly matches the passed key.
    */
   public inspectItemValues(selectableOrName?: Selectable<any, any> | string) {
-    const hash = this.inspectItems(selectableOrName)
+    const hash = this.findAll(selectableOrName)
 
     // We just created the object. Just mutate it.
     Object.keys(hash).forEach(cacheKey => {

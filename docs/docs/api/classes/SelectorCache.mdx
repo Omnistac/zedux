@@ -107,6 +107,45 @@ Every ecosystem creates a single SelectorCache instance - [`ecosystem.selectorCa
       the passed string (case-insensitive).
     </p>
   </Item>
+  <Item name="findAll">
+    <p>
+      Gets a snapshot of current cache items. The selector equivalent of{' '}
+      <Link to="Ecosystem#findall">ecosystem.findAll()</Link>.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`findAll = (selectableOrName?) => cacheItems`}</Ts>
+    <Legend>
+      <Item name="selectableOrName">
+        <p>Optional. One of:</p>
+        <ul>
+          <li>A string</li>
+          <li>
+            An <Link to="../types/AtomSelector">atom selector</Link>
+          </li>
+          <li>
+            An{' '}
+            <Link to="../types/AtomSelectorConfig">
+              AtomSelectorConfig object
+            </Link>
+          </li>
+          <li>
+            A <Link to="SelectorCacheItem">SelectorCacheItem instance</Link>{' '}
+            (accepted for consistency with similar methods, but really you'd
+            never pass this)
+          </li>
+        </ul>
+        <p>
+          If passed, filters the returned object to only contain caches of the
+          passed selector or caches whose key includes the passed string
+          (case-insensitive).
+        </p>
+      </Item>
+      <Item name="Returns">
+        Returns an object mapping currently cached atom selector cache keys to
+        their <Link to="SelectorCacheItem">SelectorCacheItem</Link> instances.
+      </Item>
+    </Legend>
+  </Item>
   <Item name="getCache">
     <p>
       Returns a <Link to="SelectorCacheItem">SelectorCacheItem</Link> instance
@@ -188,44 +227,6 @@ Every ecosystem creates a single SelectorCache instance - [`ecosystem.selectorCa
           3rd "weak" arg, returns undefined if no cache key has been stored for
           given selector + args combo yet.
         </p>
-      </Item>
-    </Legend>
-  </Item>
-  <Item name="inspectItems">
-    <p>
-      Gets a snapshot of current cache items. The selector equivalent of{' '}
-      <Link to="Ecosystem#findall">ecosystem.findAll()</Link>.
-    </p>
-    <p>Signature:</p>
-    <Ts>{`inspectItems = (selectableOrName?) => cacheItems`}</Ts>
-    <Legend>
-      <Item name="selectableOrName">
-        <p>Optional. One of:</p>
-        <ul>
-          <li>A string</li>
-          <li>
-            An <Link to="../types/AtomSelector">atom selector</Link>
-          </li>
-          <li>
-            An{' '}
-            <Link to="../types/AtomSelectorConfig">
-              AtomSelectorConfig object
-            </Link>
-          </li>
-          <li>
-            A <Link to="SelectorCacheItem">SelectorCacheItem instance</Link>{' '}
-            (accepted for consistency, but really you'd never pass this)
-          </li>
-        </ul>
-        <p>
-          If passed, filters the returned object to only contain caches of the
-          passed selector or caches whose key includes the passed string
-          (case-insensitive).
-        </p>
-      </Item>
-      <Item name="Returns">
-        Returns an object mapping currently cached atom selector cache keys to
-        their <Link to="SelectorCacheItem">SelectorCacheItem</Link> instances.
       </Item>
     </Legend>
   </Item>
