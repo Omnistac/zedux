@@ -17,7 +17,7 @@ yarn add @zedux/react
 
 ## Meet the Atoms
 
-Atoms are your building blocks. Create them with the `atom()` factory:
+Atoms are building blocks of state. To create an atom, you need to first create an "atom template". Create these with the `atom()` factory:
 
 ```ts
 import { atom } from '@zedux/react'
@@ -25,12 +25,13 @@ import { atom } from '@zedux/react'
 const greetingAtom = atom('greeting', 'Hello, world!')
 ```
 
-Here we created an atom with the key `greeting` and initial value `'Hello, world!'`.
+This creates an atom template with the key `greeting`. Zedux uses this template to automatically create atoms for you. Atoms created from this template will have the string `'Hello, world!'` as their initial value.
 
-Atoms themselves don't hold any state. Atoms are state templates. To make the magic happen, we need to actually use the atom. We can do this with hooks:
+Templates don't hold any state. To make the magic happen, you need to make Zedux create an atom from the template. You can do this with hooks:
 
 ```tsx
 import { useAtomState } from '@zedux/react'
+import { greetingAtom } from './atoms'
 
 function Greet() {
   const [greeting, setGreeting] = useAtomState(greetingAtom)
@@ -38,9 +39,13 @@ function Greet() {
 }
 ```
 
-The first time we use the atom, Zedux creates a new "atom instance" (similar to a class instance). Every atom instance has a store that holds its state.
+The first time you use the template, Zedux creates a new "instantiated atom" or simply "atom". This is conceptually similar to a class instance, except you never create them yourself - Zedux instantiates atoms for you.
 
-Our `greetingAtom` instance contains a single store whose state is the string `'Hello, world!'`. Zedux created this store automatically. We'll learn how to manually create stores later.
+:::tip
+Due to this similarity, and to avoid confusion between atom templates and atoms, we often refer to atoms as "atom instances".
+:::
+
+Every atom instance creates a store that holds its state. This `greetingAtom` instance contains a single store whose state is the string `'Hello, world!'`. In this case, Zedux created the store automatically.
 
 ### Setting State
 

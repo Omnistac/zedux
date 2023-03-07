@@ -184,6 +184,7 @@ export interface EcosystemConfig<
 > {
   complexParams?: boolean
   context?: Context
+  dedupe?: boolean
   defaultTtl?: number
   destroyOnUnmount?: boolean
   flags?: string[]

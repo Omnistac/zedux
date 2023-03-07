@@ -14,6 +14,7 @@ export abstract class AtomBase<
   public readonly hydrate?: AtomConfig<G['State']>['hydrate']
   public readonly manualHydration?: boolean
   public readonly ttl?: number
+  public _isOverride?: boolean
 
   constructor(
     public readonly key: string,

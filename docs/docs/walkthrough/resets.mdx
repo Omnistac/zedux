@@ -44,6 +44,17 @@ const TodoResetButton = () => {
 }
 ```
 
+This approach falls short when the atom does inject a store, since the store persists state across evaluations.
+
+```ts
+const todoListAtom = atom('todoList', () => {
+  // invalidating this atom does nothing 'cause the store's state is unchanged:
+  const store = injectStore([])
+
+  return store
+})
+```
+
 ## Exports
 
 Atoms can export anything. This means they can export a function that selectively "resets" whatever you want:

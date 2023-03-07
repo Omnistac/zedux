@@ -46,6 +46,15 @@ All fields are optional. It is recommended to at least pass an id.
       <Link to="../classes/Ecosystem#context">context</Link> for the ecosystem.
     </p>
   </Item>
+  <Item name="dedupe">
+    <p>
+      A boolean. Default <code>true</code>. Will be set as the{' '}
+      <Link to="../classes/Ecosystem#dedupe">
+        ecosystem's <code>dedupe</code> property
+      </Link>
+      .
+    </p>
+  </Item>
   <Item name="defaultTtl">
     <p>
       A number. Default <code>-1</code> (meaning infinite). Will be set as the{' '}
@@ -90,60 +99,9 @@ All fields are optional. It is recommended to at least pass an id.
   </Item>
   <Item name="onReady">
     <p>
-      A function. Will be called as soon as the ecosystem has initialized. Is
-      also called every time the ecosystem is{' '}
-      <Link to="../classes/Ecosystem#reset">reset</Link>.
+      A function. Will be set as the ecosystem's{' '}
+      <Link to="../classes/Ecosystem#onready">onReady</Link> function.
     </p>
-    <p>
-      This is the ideal place to bootstrap data and preload atoms. Since this
-      function is called on reset, it can be used to ensure the ecosystem's
-      "necessary data" is always loaded.
-    </p>
-    <p>Signature:</p>
-    <Ts>{`(ecosystem, prevContext?) => maybeCleanup`}</Ts>
-    <Legend>
-      <Item name="ecosystem">A reference to this ecosystem</Item>
-      <Item name="prevContext">
-        <p>
-          A reference to the previous context value of the ecosystem.{' '}
-          <code>ecosystem.reset()</code> can be optionally given a new context
-          object. If that happens, the ecosystem's context will be updated
-          before this function is called. So a reference to the old context is
-          passed here.
-        </p>
-        <p>
-          This parameter will be undefined the first time <code>onReady</code>{' '}
-          runs. Thus you can use this to check if this is the initial run.
-        </p>
-        <Ts>{`const ecosystem = createEcosystem({
-  context: { redux: reduxStore },
-  onReady: (ecosystem, prevContext) => {
-    if (!prevContext) {
-      // this is the initial run
-    } else {
-      // onReady is running after an ecosystem reset
-      const nextContext = ecosystem.context
-      
-      if (prevContext.redux !== nextContext.redux) {
-        // ecosystem.reset() changed the redux store reference
-      }
-    }
-  }
-})\n
-ecosystem.reset() // doesn't change context (prevContext === ecosystem.context)
-ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
-        <p>
-          Note that replacing context is an all-or-nothing deal. Spread{' '}
-          <code>ecosystem.context</code> into a new object to update only part
-          of the context:
-        </p>{' '}
-        <Ts>{`ecosystem.reset({ ...ecosystem.context, specialField: 'new val' })`}</Ts>
-      </Item>
-      <Item name="Returns">
-        Either <code>undefined</code> or a cleanup function that will be called
-        when the ecosystem is reset or destroyed.
-      </Item>
-    </Legend>
   </Item>
   <Item name="overrides">
     <p>

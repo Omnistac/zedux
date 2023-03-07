@@ -43,67 +43,59 @@ const mapOverrides = (overrides: AnyAtom[]) =>
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements AtomGettersBase {
-  public _destroyOnUnmount = false
-  public _graph: Graph = new Graph(this)
+  public complexParams?: boolean
+  public context: Context
+  public dedupe = true
+  public defaultTtl = -1
+  public destroyOnUnmount?: boolean
+  public flags?: string[]
+  public hydration?: Record<string, any>
+  public id: string
+  public modBus = createStore() // use an empty store as a message bus
+  public onReady: EcosystemConfig<Context>['onReady']
+  public overrides: Record<string, AnyAtom> = {}
+  public selectors: Selectors = new Selectors(this)
+  public ssr?: boolean
+
   public _evaluationStack: EvaluationStack = new EvaluationStack(this)
+  public _graph: Graph = new Graph(this)
   public _idGenerator = new IdGenerator()
   public _instances: Record<string, AnyAtomInstance> = {}
-  public _onReady: EcosystemConfig<Context>['onReady']
   public _mods: Record<Mod, number> = { ...defaultMods }
   public _reactContexts: Record<string, React.Context<any>> = {}
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
-  public selectors: Selectors = new Selectors(this)
-  public complexParams: boolean
-  public context: Context
-  public defaultTtl?: number
-  public id: string
-  public flags?: string[]
-  public hydration?: Record<string, any>
-  public modBus = createStore() // use an empty store as a message bus
-  public overrides: Record<string, AnyAtom> = {}
-  public ssr?: boolean
+
   private cleanup?: MaybeCleanup
   private isInitialized = false
   private plugins: { plugin: ZeduxPlugin; cleanup: Cleanup }[] = []
 
-  constructor({
-    complexParams,
-    context,
-    defaultTtl,
-    destroyOnUnmount,
-    flags,
-    id,
-    onReady,
-    overrides,
-    ssr,
-  }: EcosystemConfig<Context>) {
-    if (DEV && flags && !Array.isArray(flags)) {
-      throw new TypeError(
-        "Zedux: The Ecosystem's `flags` property must be an array of strings"
-      )
-    }
-    if (DEV && overrides && !Array.isArray(overrides)) {
-      throw new TypeError(
-        "Zedux: The Ecosystem's `overrides` property must be an array of Atom objects"
-      )
+  constructor(config: EcosystemConfig<Context>) {
+    if (DEV) {
+      if (config.flags && !Array.isArray(config.flags)) {
+        throw new TypeError(
+          "Zedux: The Ecosystem's `flags` property must be an array of strings"
+        )
+      }
+
+      if (config.overrides && !Array.isArray(config.overrides)) {
+        throw new TypeError(
+          "Zedux: The Ecosystem's `overrides` property must be an array of Atom objects"
+        )
+      }
     }
 
-    this.id = id || this._idGenerator.generateEcosystemId()
+    Object.assign(this, config)
 
-    if (overrides) {
-      this.setOverrides(overrides)
+    this.id ||= this._idGenerator.generateEcosystemId()
+
+    if (config.overrides) {
+      this.setOverrides(config.overrides)
     }
 
-    this.flags = flags
-    this.complexParams = !!complexParams
-    this.context = context as Context
-    this.defaultTtl = defaultTtl ?? -1
-    this.ssr = ssr
-    this._destroyOnUnmount = !!destroyOnUnmount
-    this._onReady = onReady
+    this.context = (this as any).context
     this.isInitialized = true
-    this.cleanup = onReady?.(this)
+    this.cleanup = config.onReady?.(this)
   }
 
   /**
@@ -380,7 +372,22 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     // try to find an existing instance
     const existingInstance = this._instances[id]
-    if (existingInstance) return existingInstance
+    if (existingInstance) {
+      if (
+        DEV &&
+        this.dedupe &&
+        existingInstance.atom !== atom &&
+        !existingInstance.atom._isOverride
+      ) {
+        console.error(
+          `Zedux: Encountered multiple atom templates with the same key "${
+            (atom as A).key
+          }"`
+        )
+      }
+
+      return existingInstance
+    }
 
     // create a new instance
     const resolvedAtom = this.resolveAtom(atom as A)
@@ -504,7 +511,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const prevContext = this.context
     if (typeof newContext !== 'undefined') this.context = newContext
 
-    this.cleanup = this._onReady?.(this, prevContext)
+    this.cleanup = this.onReady?.(this, prevContext)
   }
 
   /**
@@ -761,7 +768,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    */
   public _decrementRefCount() {
     this._refCount--
-    if (!this._destroyOnUnmount) return
+    if (!this.destroyOnUnmount) return
 
     this.destroy() // only destroys if _refCount === 0
   }

@@ -25,6 +25,10 @@ const testAtom = atom('test', 'some state')
 const testAtomOverride = atom('test', 'overridden state!', { ttl: 0 })
 ```
 
+:::note
+Atom overrides created manually like this will log errors unless you turn off deduping by passing [`dedupe: false`](../api/classes/Ecosystem#dedupe) when creating the ecosystem.
+:::
+
 The nice thing about `.override()` for TS users is that it will tell you if the override doesn't match the overridden atom's state, params, exports, or promise type.
 
 ## Using
