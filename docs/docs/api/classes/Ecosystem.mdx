@@ -87,9 +87,10 @@ All properties are readonly!
 <Legend>
   <Item name="complexParams">
     <p>
-      A boolean. This is set to the <code>complexParams</code> value you passed
-      via <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when
-      creating this ecosystem. If not specified, defaults to false.
+      A boolean. May be undefined. This is set to the <code>complexParams</code>{' '}
+      value you passed via{' '}
+      <Link to="../types/EcosystemConfig#complexparams">EcosystemConfig</Link>{' '}
+      when creating this ecosystem.
     </p>
     <p>
       Whether to allow non-serializable values as atom and selector params. See{' '}
@@ -115,22 +116,73 @@ All properties are readonly!
       as part of the reset.
     </p>
   </Item>
-  <Item name="defaultTtl">
+  <Item name="dedupe">
     <p>
-      A number. May be undefined. The default ttl to use for all atom instances
-      in the ecosystem.
+      A boolean. This is set to the <code>dedupe</code> value you passed via{' '}
+      <Link to="../types/EcosystemConfig#dedupe">EcosystemConfig</Link> when
+      creating this ecosystem. If not set, defaults to <code>true</code>.
     </p>
     <p>
-      The default is <code>undefined</code>, which means all atom instances will
-      live forever.
+      Whether to log an error if the ecosystem encounters multiple atom
+      templates with the same key.
+    </p>
+    <p>
+      This can be useful to ensure atom keys are unique. Only atom templates
+      created via{' '}
+      <Link to="Atom#override">
+        <code>atom.override()</code>
+      </Link>{' '}
+      will be ignored. Any other duplicates will log an error.
+    </p>
+    <p>
+      Turn this off if you need to support multiple windows, since each window
+      creates its own atom template references.
+    </p>
+  </Item>
+  <Item name="defaultTtl">
+    <p>
+      A number. This is set to the <code>defaultTtl</code> value you passed via{' '}
+      <Link to="../types/EcosystemConfig#defaultttl">EcosystemConfig</Link> when
+      creating this ecosystem.
+    </p>
+    <p>The default ttl to use for all atom instances in the ecosystem.</p>
+    <p>
+      If not set, defaults to <code>-1</code>, which means all atom instances
+      will live forever by default.
+    </p>
+  </Item>
+  <Item name="destroyOnUnmount">
+    <p>
+      A boolean. May be undefined. This is set to the{' '}
+      <code>destroyOnUnmount</code> value you passed via{' '}
+      <Link to="../types/EcosystemConfig#destroyonunmount">
+        EcosystemConfig
+      </Link>{' '}
+      when creating this ecosystem.
+    </p>
+    <p>
+      This defaults to <code>false</code> for ecosystems created via{' '}
+      <Link to="../factories/createEcosystem">
+        <code>createEcosystem()</code>
+      </Link>{' '}
+      and to <code>true</code> for ecosystems automatically created when
+      rendering an <code>&lt;EcosystemProvider&gt;</code> without passing an{' '}
+      <code>ecosystem</code> prop.
+    </p>
+    <p>
+      Whether to destroy this ecosystem when the last{' '}
+      <Link to="../components/EcosystemProvider">
+        <code>&lt;EcosystemProvider&gt;</code>
+      </Link>{' '}
+      providing it unmounts.
     </p>
   </Item>
   <Item name="id">
     <p>
       A string. The id of this ecosystem as set via{' '}
-      <Link to="../types/EcosystemConfig">EcosystemConfig</Link> when creating
-      this ecosystem. The string <code>'@@global'</code> is reserved for the
-      global ecosystem.
+      <Link to="../types/EcosystemConfig#id">EcosystemConfig</Link> when
+      creating this ecosystem. The string <code>'@@global'</code> is reserved
+      for the global ecosystem.
     </p>
     <p>
       If you didn't specify an id when creating this ecosystem, this will be a
@@ -139,9 +191,15 @@ All properties are readonly!
   </Item>
   <Item name="flags">
     <p>
-      An array of strings. These work in conjunction with{' '}
-      <Link to="Atom#flags">atom flags</Link> to raise warnings when unsafe
-      atoms are not overridden in certain environments.
+      An array of strings. This is set to the <code>flags</code> value you
+      passed via{' '}
+      <Link to="../types/EcosystemConfig#flags">EcosystemConfig</Link> when
+      creating this ecosystem.
+    </p>
+    <p>
+      These work in conjunction with <Link to="Atom#flags">atom flags</Link> to
+      raise warnings when unsafe atoms are not overridden in certain
+      environments.
     </p>
     <p>
       If an atom has a flag that is not present in this array, Zedux will log a
@@ -180,6 +238,69 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
       See <Link to="../../advanced/plugins">the plugins guide</Link>.
     </p>
   </Item>
+  <Item name="onReady">
+    <p>
+      A function. May be undefined. This is set to the <code>onReady</code>{' '}
+      value you passed via{' '}
+      <Link to="../types/EcosystemConfig#onready">EcosystemConfig</Link> when
+      creating this ecosystem.
+    </p>
+    <p>
+      Will be called as soon as the ecosystem has initialized. Is also called
+      every time the ecosystem is{' '}
+      <Link to="../classes/Ecosystem#reset">reset</Link>.
+    </p>
+    <p>
+      This is the ideal place to bootstrap data and preload atoms. Since this
+      function is called on reset, it can be used to ensure the ecosystem's
+      "necessary data" is always loaded.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`(ecosystem, prevContext?) => maybeCleanup`}</Ts>
+    <Legend>
+      <Item name="ecosystem">A reference to this ecosystem</Item>
+      <Item name="prevContext">
+        <p>
+          A reference to the previous context value of the ecosystem.{' '}
+          <code>ecosystem.reset()</code> can be optionally given a new context
+          object. If that happens, the ecosystem's context will be updated
+          before this function is called. So a reference to the old context is
+          passed here.
+        </p>
+        <p>
+          This parameter will be undefined the first time <code>onReady</code>{' '}
+          runs. Thus you can use this to check if this is the initial run.
+        </p>
+        <Ts>{`const ecosystem = createEcosystem({
+  context: { redux: reduxStore },
+  onReady: (ecosystem, prevContext) => {
+    if (!prevContext) {
+      // this is the initial run
+    } else {
+      // onReady is running after an ecosystem reset
+      const nextContext = ecosystem.context
+      
+      if (prevContext.redux !== nextContext.redux) {
+        // ecosystem.reset() changed the redux store reference
+      }
+    }
+  }
+})\n
+ecosystem.reset() // doesn't change context (prevContext === ecosystem.context)
+ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
+        <p>
+          Note that replacing context is an all-or-nothing deal. Spread{' '}
+          <code>ecosystem.context</code> into a new object to update only part
+          of the context:
+        </p>{' '}
+        <Ts>{`ecosystem.reset({ ...ecosystem.context, specialField: 'new val' })`}</Ts>
+      </Item>
+      <Item name="Returns">
+        Either <code>undefined</code> or a cleanup function that will be called
+        when the ecosystem is reset or destroyed.
+      </Item>
+    </Legend>
+  </Item>
   <Item name="overrides">
     <p>
       An object mapping atom keys to atoms. These are the currently-overridden
@@ -187,6 +308,10 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
       <code>ecosystem.setOverrides()</code>,{' '}
       <code>ecosystem.addOverrides()</code>, and{' '}
       <code>ecosystem.removeOverrides()</code>.
+    </p>
+    <p>
+      If an initial <code>overrides</code> array is passed, they will be
+      immediately mapped into this object.
     </p>
   </Item>
   <Item name="selectors">

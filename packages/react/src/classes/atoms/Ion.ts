@@ -42,6 +42,8 @@ export class Ion<G extends AtomGenerics> extends AtomBase<G, AtomInstance<G>> {
   }
 
   public override(newGet?: IonStateFactory<G>) {
-    return ion(this.key, newGet || this._get, this._config)
+    const newIon = ion(this.key, newGet || this._get, this._config)
+    newIon._isOverride = true
+    return newIon
   }
 }

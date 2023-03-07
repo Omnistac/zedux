@@ -30,6 +30,8 @@ export class Atom<G extends AtomGenerics> extends AtomBase<G, AtomInstance<G>> {
   }
 
   public override(newValue: AtomValueOrFactory<G>) {
-    return atom(this.key, newValue, this._config)
+    const newAtom = atom(this.key, newValue, this._config)
+    newAtom._isOverride = true
+    return newAtom
   }
 }

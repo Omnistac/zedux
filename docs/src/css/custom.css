@@ -18,6 +18,8 @@
   --ifm-color-primary-lighter: #fed0aa;
   --ifm-color-primary-lightest: #fff5df; /* #ffe6d3; */
   --ifm-code-font-size: 80%;
+  --ifm-container-width: 1100px;
+  --ifm-container-width-xl: 1100px;
   --ifm-font-family-base: 'Quicksand', sans-serif;
   --ifm-font-size-base: 16px;
   --ifm-link-color: var(--ifm-color-primary-dark);

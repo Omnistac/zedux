@@ -22,16 +22,16 @@ const PathTitle = styled.div`
 const PathWrapper = styled(Link)`
   background: linear-gradient(
     135deg,
-    #fff 1rem,
+    var(--ifm-background-surface-color) 1rem,
     #0004 1rem,
     var(--color-primary) calc(1rem + 3px),
     var(--color-primary) 1.5rem,
-    #fff 1.5rem,
-    #fff 2.5rem,
+    var(--ifm-background-surface-color) 1.5rem,
+    var(--ifm-background-surface-color) 2.5rem,
     #0004 2.5rem,
     var(--color-primary) calc(2.5rem + 3px),
     var(--color-primary) 3rem,
-    #fff 3rem
+    var(--ifm-background-surface-color) 3rem
   );
   border-radius: var(--ifm-global-radius);
   box-shadow: 5px 5px 3px 1px #0004;
