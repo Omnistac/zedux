@@ -7,7 +7,6 @@ import { Ecosystem } from '../classes/Ecosystem'
 import { SelectorCache } from '../classes/Selectors'
 
 const glob = ((typeof globalThis !== 'undefined' && globalThis) || {}) as any
-const INVALIDATE_REACT = `INVALIDATE_REACT_${Math.random()}`
 const OPERATION = 'useAtomSelector'
 
 /**
@@ -182,7 +181,7 @@ export const useAtomSelector = <T, Args extends any[]>(
           ecosystem._graph.removeEdge(dependentKey, cache.id)
         }
       },
-      () => (isInvalidated ? INVALIDATE_REACT : cache.result),
+      () => (isInvalidated ? destroyed : cache.result),
     ]
   }, [ecosystem, cache])
 
