@@ -3,9 +3,12 @@ import { injectAtomGetters } from '@zedux/react/injectors'
 import { AtomConfig, IonStateFactory, AtomGenerics } from '@zedux/react/types'
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
-import { AtomBase } from './AtomBase'
+import { AtomTemplateBase } from './AtomTemplateBase'
 
-export class Ion<G extends AtomGenerics> extends AtomBase<G, AtomInstance<G>> {
+export class IonTemplate<G extends AtomGenerics> extends AtomTemplateBase<
+  G,
+  AtomInstance<G>
+> {
   private _get: IonStateFactory<G>
 
   constructor(

@@ -9,10 +9,10 @@ However, the purpose of Zedux is very different from React Query. React Query is
 
 ## Queries
 
-Structurally, Zedux [atoms](../api/classes/Atom) are very similar to React Query [queries](https://react-query.tanstack.com/guides/queries).
+Structurally, Zedux [atoms](../api/classes/AtomInstance) are very similar to React Query [queries](https://react-query.tanstack.com/guides/queries).
 
 - Query keys and atom keys are constructed from a "deterministic" hash of their parameters.
-- For destroying stale instances: Atoms have [`ttl`](../api/classes/Atom#ttl). Queries have `cacheTime`.
+- For destroying stale instances: Atoms have [`ttl`](../api/classes/AtomTemplate#ttl). Queries have `cacheTime`.
 - For suspense: Atoms have [`.setPromise()`](../api/classes/AtomApi#setpromise). Queries have `suspense`.
 - For tracking promise state: Zedux has query atoms and [`injectPromise()`](../api/injectors/injectPromise). Queries track promise state by default.
 
@@ -77,7 +77,7 @@ const userProjectsAtom = atom('userProjects', (email: string) => {
 })
 ```
 
-Zedux doesn't have an `idle` state (currently). The above example would be `success` until `userIdAtom` updates with a value. If you need an `idle` state, open an issue and let's discuss!
+Zedux doesn't have an `idle` state (currently). The above example would be `success` until `userByEmail` updates with a value. If you need an `idle` state, open an issue and let's discuss!
 
 ## Mutations
 

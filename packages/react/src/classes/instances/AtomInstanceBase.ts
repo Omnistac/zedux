@@ -4,6 +4,7 @@ import {
   Cleanup,
   PromiseStatus,
   DependentCallback,
+  AnyAtomTemplate,
 } from '@zedux/react/types'
 import {
   Explicit,
@@ -11,21 +12,20 @@ import {
   InjectorDescriptor,
   prefix,
 } from '@zedux/react/utils'
-import { AtomBase } from '../atoms/AtomBase'
 import { Ecosystem } from '../Ecosystem'
 import { Store } from '@zedux/core'
 
 export abstract class AtomInstanceBase<
   State,
-  AtomType extends AtomBase<any, any>
+  TemplateType extends AnyAtomTemplate
 > {
   public static $$typeof = Symbol.for(`${prefix}/AtomInstanceBase`)
   public abstract activeState: ActiveState
-  public abstract atom: AtomType
   public abstract ecosystem: Ecosystem
   public abstract id: string
   public abstract promise?: Promise<any>
   public abstract store: Store<State>
+  public abstract template: TemplateType
 
   public abstract _createdAt: number
   public abstract _injectors?: InjectorDescriptor[]

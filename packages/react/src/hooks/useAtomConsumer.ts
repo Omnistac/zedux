@@ -1,19 +1,22 @@
 import { is } from '@zedux/core'
 import { useContext } from 'react'
 import { AtomInstanceBase } from '../classes'
-import { AnyAtom, AtomInstanceType, AtomParamsType } from '../types'
+import { AnyAtomTemplate, AtomInstanceType, AtomParamsType } from '../types'
 import { useEcosystem } from './useEcosystem'
 
 export const useAtomConsumer: {
-  <A extends AnyAtom>(atom: A): AtomInstanceType<A> | undefined
+  <A extends AnyAtomTemplate>(atom: A): AtomInstanceType<A> | undefined
 
-  <A extends AnyAtom>(
+  <A extends AnyAtomTemplate>(
     atom: A,
     defaultParams: AtomParamsType<A>
   ): AtomInstanceType<A>
 
-  <A extends AnyAtom>(atom: A, throwIfNotProvided: boolean): AtomInstanceType<A>
-} = <A extends AnyAtom>(
+  <A extends AnyAtomTemplate>(
+    atom: A,
+    throwIfNotProvided: boolean
+  ): AtomInstanceType<A>
+} = <A extends AnyAtomTemplate>(
   atom: A,
   defaultParams?: AtomParamsType<A> | boolean
 ) => {

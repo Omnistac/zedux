@@ -202,7 +202,7 @@ export const LearningPaths = () => {
           depth={10}
           ease={2}
           fun={1}
-          href={useBaseUrl('docs/api/classes/Atom')}
+          href={useBaseUrl('docs/api/classes/AtomTemplate')}
           title="API"
         >
           Dive into the comprehensive API docs

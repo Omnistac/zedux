@@ -4,13 +4,13 @@ title: ion
 ---
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
-import { AtomKeyDesc } from '../classes/Atom.mdx'
+import { AtomKeyDesc } from '../classes/AtomTemplate.mdx'
 
 ```ts
 import { ion } from '@zedux/react'
 ```
 
-A factory for creating [Ions](../classes/Ion). Ions are a type of atom that specialize in selection and derivation operations.
+A factory for creating [ion templates](../classes/IonTemplate). Ions are a type of atom that specialize in selection and derivation operations.
 
 Ions are loosely based off of Recoil's [selectors](https://recoiljs.org/docs/api-reference/core/selector).
 
@@ -68,7 +68,7 @@ function TempCelsius() {
       ...params: Params
     ) => AtomApi<Promise<State>, Exports, undefined, PromiseType>,
     config?: AtomConfig<State>
-  ): Ion<
+  ): IonTemplate<
     PromiseState<State>,
     Params,
     Exports,
@@ -90,7 +90,7 @@ function TempCelsius() {
       | StoreType
       | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): Ion<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>\n
+  ): IonTemplate<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>\n
   // No Store
   <
     State = any,
@@ -104,7 +104,7 @@ function TempCelsius() {
       ...params: Params
     ) => AtomApi<State, Exports, undefined, PromiseType> | State,
     config?: AtomConfig<State>
-  ): Ion<State, Params, Exports, Store<State>, PromiseType>
+  ): IonTemplate<State, Params, Exports, Store<State>, PromiseType>
   // Catch-all
   <
     State = any,
@@ -116,7 +116,7 @@ function TempCelsius() {
     key: string,
     get: IonStateFactory<State, Params, Exports, StoreType, PromiseType>,
     config?: AtomConfig<State>
-  ): Ion<State, Params, Exports, StoreType, PromiseType>
+  ): IonTemplate<State, Params, Exports, StoreType, PromiseType>
 }`)}
 </Tabs>
 
@@ -185,7 +185,7 @@ function TempCelsius() {
   </Item>
   <Item name="Returns">
     <p>
-      An <Link to="../classes/Ion">Ion instance</Link>.
+      An <Link to="../classes/IonTemplate">IonTemplate instance</Link>.
     </p>
   </Item>
 </Legend>
@@ -194,4 +194,4 @@ function TempCelsius() {
 
 - [The `atom()` factory](atom)
 - [The Selectors walkthrough](../../walkthrough/selectors)
-- [The `Ion` class](../classes/Ion)
+- [The `IonTemplate` class](../classes/IonTemplate)

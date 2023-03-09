@@ -23,7 +23,7 @@ interface EcosystemConfig<
     ecosystem: Ecosystem<Context>,
     prevContext?: Context
   ) => MaybeCleanup
-  overrides?: AtomBase<any, any[], any>[]
+  overrides?: AnyAtomTemplate[]
   ssr?: boolean
 }
 ```
@@ -58,7 +58,7 @@ All fields are optional. It is recommended to at least pass an id.
   <Item name="defaultTtl">
     <p>
       A number. Default <code>-1</code> (meaning infinite). Will be set as the{' '}
-      <Link to="../classes/Atom#ttl">
+      <Link to="../classes/AtomTemplate#ttl">
         <code>ttl</code>
       </Link>{' '}
       or all atoms that don't specify one.
@@ -105,7 +105,8 @@ All fields are optional. It is recommended to at least pass an id.
   </Item>
   <Item name="overrides">
     <p>
-      An array of <Link to="../classes/Atom">atoms</Link>. Will be set as the{' '}
+      An array of <Link to="../classes/AtomTemplate">atom templates</Link>. Will
+      be set as the{' '}
       <Link to="../classes/Ecosystem#overrides">ecosystem's overrides</Link>.
     </p>
     <p>

@@ -122,7 +122,7 @@ Zedux caches selectors by reference. If the selector function or AtomSelectorCon
 
 ## When Not to Use
 
-AtomSelectors aren't atoms. As such, you can't use [injectors](../glossary#injector) in them. [Ions](../classes/Ion) (or other atoms) should be preferred when you need:
+AtomSelectors aren't atoms. As such, you can't use [injectors](../glossary#injector) in them. [Ions](../classes/IonTemplate) (or other atoms) should be preferred when you need:
 
 - To memoize anything - use an atom with [`injectMemo()`](../injectors/injectMemo)
 - To create and update a new store - use an atom with [`injectStore()`](../injectors/injectStore)

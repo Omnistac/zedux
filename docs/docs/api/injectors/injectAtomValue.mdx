@@ -67,8 +67,8 @@ const passingAnInstance = injectAtomValue(instance)
   {tab1(`injectAtomValue = (atomOrInstance, params?) => state`)}
   {tab2(`{
   <A extends ParamlessAtom>(atom: A): AtomStateType<A>;
-  <A extends AnyAtom>(atom: A, params: AtomParamsType<A>): AtomStateType<A>;
-  <AI extends AnyAtomInstance>(instance: AI): AtomStateType<AI>;
+  <A extends AnyAtomTemplate>(atom: A, params: AtomParamsType<A>): AtomStateType<A>;
+  <I extends AnyAtomInstance>(instance: I): AtomStateType<I>;
 }`)}
 </Tabs>
 
@@ -76,7 +76,7 @@ export const InjectAtomValueLegend = ({ name = 'injectAtomValue' }) => (
   <Legend>
     <Item name="atomOrInstance">
       <p>
-        Required. An <Link to="../classes/Atom">Atom</Link> or{' '}
+        Required. An <Link to="../classes/AtomTemplate">atom template</Link> or{' '}
         <Link to="../classes/AtomInstance">atom instance</Link>.
       </p>
       <p>

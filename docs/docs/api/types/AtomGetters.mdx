@@ -35,13 +35,13 @@ The AtomGetters are **not** injectors. This means they can be called in loops or
   {tab2(`interface AtomGetters {
   ecosystem: Ecosystem\n
   get<A extends ParamlessAtom>(atom: A): AtomStateType<A>\n
-  get<A extends AnyAtom>(
+  get<A extends AnyAtomTemplate>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>\n
   get<I extends AtomInstance>(instance: I): AtomStateType<I>\n
   getInstance<A extends ParamlessAtom>(atom: A): AtomInstanceType<A>\n
-  getInstance<A extends AnyAtom>(
+  getInstance<A extends AnyAtomTemplate>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A>\n

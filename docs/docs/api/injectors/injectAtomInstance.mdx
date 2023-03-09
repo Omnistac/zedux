@@ -73,8 +73,8 @@ const injectCustomStuff = () => {
   )}
   {tab2(`declare const injectAtomInstance: {
   <A extends ParamlessAtom>(atom: A): AtomInstanceType<A>;
-  <A extends AnyAtom>(atom: A, params: AtomParamsType<A>, operation?: string): AtomInstanceType<A>;
-  <AI extends AnyAtomInstance>(instance: AI, params?: [], operation?: string): AI;
+  <A extends AnyAtomTemplate>(atom: A, params: AtomParamsType<A>, operation?: string): AtomInstanceType<A>;
+  <I extends AnyAtomInstance>(instance: I, params?: [], operation?: string): I;
 }`)}
 </Tabs>
 
@@ -86,7 +86,7 @@ export const InjectAtomInstanceLegend = ({
   <Legend>
     <Item name="atomOrInstance">
       <p>
-        Required. An <Link to="../classes/Atom">Atom</Link> or{' '}
+        Required. An <Link to="../classes/AtomTemplate">atom template</Link> or{' '}
         <Link to="../classes/AtomInstance">atom instance</Link>.
       </p>
       <p>

@@ -4,13 +4,13 @@ title: atom
 ---
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
-import { AtomKeyDesc } from '../classes/Atom.mdx'
+import { AtomKeyDesc } from '../classes/AtomTemplate.mdx'
 
 ```ts
 import { atom } from '@zedux/react'
 ```
 
-Where it all starts. `atom()` is a factory for creating normal, everyday atoms. These atoms are actually instances of [the Atom class](../classes/Atom).
+Where it all starts. `atom()` is a factory for creating atom templates. These templates are actually instances of [the AtomTemplate class](../classes/AtomTemplate). Atom templates are passed to many of Zedux's hooks and injectors. They tell Zedux how to create their atoms.
 
 ## Example
 
@@ -66,7 +66,7 @@ function App() {
       ...params: Params
     ) => AtomApi<Promise<State>, Exports, undefined, PromiseType>,
     config?: AtomConfig<State>
-  ): Atom<
+  ): AtomTemplate<
     PromiseState<State>,
     Params,
     Exports,
@@ -87,7 +87,7 @@ function App() {
       | StoreType
       | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): Atom<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>\n
+  ): AtomTemplate<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>\n
   // Catch-all
   <
     State = any,
@@ -99,7 +99,7 @@ function App() {
     key: string,
     value: AtomValueOrFactory<State, Params, Exports, StoreType, PromiseType>,
     config?: AtomConfig<State>
-  ): Atom<State, Params, Exports, StoreType, PromiseType>
+  ): AtomTemplate<State, Params, Exports, StoreType, PromiseType>
 } = <
   State = any,
   Params extends any[] = [],
@@ -184,8 +184,8 @@ function App() {
   </Item>
   <Item name="Returns">
     <p>
-      An atom. This atom is actually an instance of the{' '}
-      <Link to="../classes/Atom">Atom</Link> class.
+      An atom template. This template is actually an instance of the{' '}
+      <Link to="../classes/AtomTemplate">AtomTemplate</Link> class.
     </p>
     <p>
       Zedux will manage creating and maintaining instances of the atom as you

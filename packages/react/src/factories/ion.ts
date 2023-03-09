@@ -1,6 +1,6 @@
 import { Store, StoreStateType } from '@zedux/core'
 import { AtomApi } from '../classes'
-import { Ion } from '../classes/atoms/Ion'
+import { IonTemplate } from '../classes/templates/IonTemplate'
 import {
   AtomConfig,
   AtomGetters,
@@ -22,7 +22,7 @@ export const ion: {
       ...params: Params
     ) => AtomApi<Promise<State>, Exports, undefined, any>,
     config?: AtomConfig<State>
-  ): Ion<{
+  ): IonTemplate<{
     State: PromiseState<State>
     Params: Params
     Exports: Exports
@@ -45,7 +45,7 @@ export const ion: {
       | StoreType
       | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): Ion<{
+  ): IonTemplate<{
     State: StoreStateType<StoreType>
     Params: Params
     Exports: Exports
@@ -66,7 +66,7 @@ export const ion: {
       ...params: Params
     ) => AtomApi<State, Exports, undefined, PromiseType> | State,
     config?: AtomConfig<State>
-  ): Ion<{
+  ): IonTemplate<{
     State: State
     Params: Params
     Exports: Exports
@@ -91,7 +91,7 @@ export const ion: {
       Promise: PromiseType
     }>,
     config?: AtomConfig<State>
-  ): Ion<{
+  ): IonTemplate<{
     State: State
     Params: Params
     Exports: Exports
@@ -114,4 +114,4 @@ export const ion: {
     Promise: PromiseType
   }>,
   config?: AtomConfig<State>
-) => new Ion(key, get, config)
+) => new IonTemplate(key, get, config)

@@ -174,7 +174,7 @@ export const Hero = () => {
         </TaglineLight>
         <ApiDocs
           {...getAnimation(6)}
-          href={useBaseUrl('docs/api/classes/Atom')}
+          href={useBaseUrl('docs/api/api-overview')}
         >
           API Docs
         </ApiDocs>

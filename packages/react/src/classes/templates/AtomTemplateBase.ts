@@ -5,7 +5,8 @@ import {
 } from '@zedux/react/types'
 import { Ecosystem } from '../Ecosystem'
 import { AtomInstance } from '../instances/AtomInstance'
-export abstract class AtomBase<
+
+export abstract class AtomTemplateBase<
   G extends AtomGenerics,
   InstanceType extends AtomInstance<G>
 > {
@@ -14,6 +15,14 @@ export abstract class AtomBase<
   public readonly hydrate?: AtomConfig<G['State']>['hydrate']
   public readonly manualHydration?: boolean
   public readonly ttl?: number
+
+  /**
+   * Set this to true when this atom template is a known override of another
+   * atom template with the same key.
+   *
+   * This prevents Zedux from logging an error when encountering this atom
+   * override and the ecosystem's `dedupe` option is true.
+   */
   public _isOverride?: boolean
 
   constructor(
@@ -21,11 +30,7 @@ export abstract class AtomBase<
     public readonly _value: AtomValueOrFactory<G>,
     protected readonly _config?: AtomConfig<G['State']>
   ) {
-    this.dehydrate = _config?.dehydrate
-    this.flags = _config?.flags
-    this.hydrate = _config?.hydrate
-    this.manualHydration = _config?.manualHydration
-    this.ttl = _config?.ttl
+    Object.assign(this, _config)
 
     // const map = new WeakMap();
     // map.set(newAtomInstance, true);

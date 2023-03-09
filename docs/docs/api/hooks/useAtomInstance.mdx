@@ -58,9 +58,9 @@ const withParams = useAtomInstance(myAtom, ['param 1', 'param 2'])
 <Tabs>
   {tab1(`useAtomInstance = (atomOrInstance, params?, config?) => atomInstance`)}
   {tab2(`declare const useAtomInstance: {
-  <A extends AtomBase<any, [], any>>(atom: A): AtomInstanceType<A>;
-  <A extends AtomBase<any, [...any], any>>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): AtomInstanceType<A>;
-  <AI extends AtomInstance<any, [...any], any, any>>(instance: AI, params?: [], config?: ZeduxHookConfig): AI;
+  <A extends AtomTemplateBase<any, [], any>>(atom: A): AtomInstanceType<A>;
+  <A extends AtomTemplateBase<any, [...any], any>>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): AtomInstanceType<A>;
+  <I extends AnyAtomInstance>(instance: I, params?: [], config?: ZeduxHookConfig): I;
 }`)}
 </Tabs>
 

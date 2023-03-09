@@ -1,17 +1,17 @@
 ---
-id: Ion
-title: Ion
+id: IonTemplate
+title: IonTemplate
 ---
 
-Extends [Atom](Atom).
+Extends [AtomTemplate](AtomTemplate).
 
-Ions are a specialized atom type. They excel at selector-type operations. The only difference is that an ion's [state factory](../glossary#state-factory) receives an [AtomGetters object](../types/AtomGetters) as its first parameter. All other params work exactly the same as normal atom params.
+Ions are a specialized atom type. They excel at selector-type operations. The only difference from normal atoms is that an ion's [state factory](../glossary#state-factory) receives an [AtomGetters object](../types/AtomGetters) as its first parameter. All other params work exactly the same as normal atom params.
 
 Unlike atoms, ions _must_ be given a state factory function. That's the whole point!
 
 ## Creation
 
-Create ions using [the `ion()` factory](../factories/ion).
+Create ion templates using [the `ion()` factory](../factories/ion).
 
 ```ts
 import { ion } from '@zedux/react'
@@ -36,9 +36,9 @@ const withConfig = ion('withConfig', stateFactory, {
 })
 ```
 
-Ions expose no unique properties or methods besides those exposed by [Atom](Atom).
+Ions expose no unique properties or methods besides those exposed by [AtomTemplate](AtomTemplate).
 
 ## See Also
 
-- [the `Atom` class](Atom)
+- [the `AtomTemplate` class](AtomTemplate)
 - [the Selectors walkthrough](../../walkthrough/selectors)

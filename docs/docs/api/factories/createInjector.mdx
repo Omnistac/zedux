@@ -20,13 +20,16 @@ Creates a "native" [injector](../glossary#injector). Native meaning it has all t
 ## Example
 
 ```ts
-const injectAtomKey = createInjector('injectAtomKey', partialInstance => ({
-  result: partialInstance.atom.key,
-  type: 'injectAtomKey',
-}))
+const injectTemplateKey = createInjector(
+  'injectTemplateKey',
+  partialInstance => ({
+    result: partialInstance.template.key,
+    type: 'injectTemplateKey',
+  })
+)
 
 const atomWithCoolKey = atom('my-very-cool-key', () => {
-  const key = injectAtomKey()
+  const key = injectTemplateKey()
   key === 'my-very-cool-key' // true
 })
 ```

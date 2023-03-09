@@ -1,47 +1,47 @@
-import { AtomBase } from '../classes/atoms/AtomBase'
+import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomInstance } from '../classes/instances/AtomInstance'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
-import { AnyAtom, AnyAtomInstance, AnyAtomInstanceBase } from './utils'
+import { AnyAtomInstance, AnyAtomInstanceBase, AnyAtomTemplate } from './utils'
 
 export type AtomExportsType<
-  A extends AnyAtom | AnyAtomInstance
-> = A extends AtomBase<infer G, any>
+  A extends AnyAtomTemplate | AnyAtomInstance
+> = A extends AtomTemplateBase<infer G, any>
   ? G['Exports']
   : A extends AtomInstance<infer G>
   ? G['Exports']
   : never
 
 export type AtomInstanceType<
-  AtomType extends AnyAtom
-> = AtomType extends AtomBase<any, infer T> ? T : never
+  A extends AnyAtomTemplate
+> = A extends AtomTemplateBase<any, infer T> ? T : never
 
 export type AtomParamsType<
-  A extends AnyAtom | AnyAtomInstanceBase
-> = A extends AtomBase<infer G, AtomInstance<infer G>>
+  A extends AnyAtomTemplate | AnyAtomInstanceBase
+> = A extends AtomTemplateBase<infer G, AtomInstance<infer G>>
   ? G['Params']
-  : A extends AtomInstanceBase<any, infer At>
-  ? AtomParamsType<At>
+  : A extends AtomInstanceBase<any, infer AtomTemplateType>
+  ? AtomParamsType<AtomTemplateType>
   : never
 
 export type AtomPromiseType<
-  A extends AnyAtom | AnyAtomInstance
-> = A extends AtomBase<infer G, AtomInstance<infer G>>
+  A extends AnyAtomTemplate | AnyAtomInstance
+> = A extends AtomTemplateBase<infer G, AtomInstance<infer G>>
   ? G['Promise']
   : A extends AtomInstance<infer G>
   ? G['Promise']
   : never
 
 export type AtomStateType<
-  A extends AnyAtom | AnyAtomInstanceBase
-> = A extends AtomBase<infer G, AtomInstance<infer G>>
+  A extends AnyAtomTemplate | AnyAtomInstanceBase
+> = A extends AtomTemplateBase<infer G, AtomInstance<infer G>>
   ? G['State']
   : A extends AtomInstanceBase<infer T, any>
   ? T
   : never
 
 export type AtomStoreType<
-  A extends AnyAtom | AnyAtomInstance
-> = A extends AtomBase<infer G, AtomInstance<infer G>>
+  A extends AnyAtomTemplate | AnyAtomInstance
+> = A extends AtomTemplateBase<infer G, AtomInstance<infer G>>
   ? G['Store']
   : A extends AtomInstance<infer G>
   ? G['Store']

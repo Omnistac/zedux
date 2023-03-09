@@ -29,7 +29,7 @@ export const createInjector = <
 
     if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
       throw new Error(
-        `Zedux: ${operation} in atom "${instance.atom.key}" - injectors cannot be added, removed, or reordered`
+        `Zedux: ${operation} in atom "${instance.template.key}" - injectors cannot be added, removed, or reordered`
       )
     }
 

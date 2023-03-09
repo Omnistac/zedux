@@ -2,9 +2,12 @@ import { atom } from '@zedux/react/factories/atom'
 import { AtomGenerics, AtomValueOrFactory } from '@zedux/react/types'
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
-import { AtomBase } from './AtomBase'
+import { AtomTemplateBase } from './AtomTemplateBase'
 
-export class Atom<G extends AtomGenerics> extends AtomBase<G, AtomInstance<G>> {
+export class AtomTemplate<G extends AtomGenerics> extends AtomTemplateBase<
+  G,
+  AtomInstance<G>
+> {
   /**
    * This method should be overridden when creating custom atom classes that
    * create a custom atom instance class. Return a new instance of your atom
