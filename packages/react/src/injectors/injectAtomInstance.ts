@@ -1,7 +1,7 @@
 import { InjectorDescriptor, prefix, Static } from '../utils'
 import {
-  AnyAtom,
   AnyAtomInstance,
+  AnyAtomTemplate,
   AtomInstanceType,
   AtomParamsType,
   InjectAtomInstanceConfig,
@@ -37,20 +37,20 @@ const defaultOperation = 'injectAtomInstance'
 export const injectAtomInstance: {
   <A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
 
-  <A extends AnyAtom>(
+  <A extends AnyAtomTemplate>(
     atom: A,
     params: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig
   ): AtomInstanceType<A>
 
-  <AI extends AnyAtomInstance>(
-    instance: AI,
+  <I extends AnyAtomInstance>(
+    instance: I,
     params?: [],
     config?: InjectAtomInstanceConfig
-  ): AI
+  ): I
 } = createInjector(
   defaultOperation,
-  <A extends AnyAtom>(
+  <A extends AnyAtomTemplate>(
     instance: PartialAtomInstance,
     atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>,
@@ -67,7 +67,7 @@ export const injectAtomInstance: {
       type: `${prefix}/atom`,
     } as InjectorDescriptor<AtomInstanceType<A>>
   },
-  <A extends AnyAtom>(
+  <A extends AnyAtomTemplate>(
     prevDescriptor: InjectorDescriptor<AtomInstanceType<A>>,
     instance: PartialAtomInstance,
     atom: A | AnyAtomInstance,

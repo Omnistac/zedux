@@ -129,7 +129,7 @@ All properties are readonly!
     <p>
       This can be useful to ensure atom keys are unique. Only atom templates
       created via{' '}
-      <Link to="Atom#override">
+      <Link to="AtomTemplate#override">
         <code>atom.override()</code>
       </Link>{' '}
       will be ignored. Any other duplicates will log an error.
@@ -197,13 +197,13 @@ All properties are readonly!
       creating this ecosystem.
     </p>
     <p>
-      These work in conjunction with <Link to="Atom#flags">atom flags</Link> to
-      raise warnings when unsafe atoms are not overridden in certain
-      environments.
+      These work in conjunction with{' '}
+      <Link to="AtomTemplate#flags">atom flags</Link> to raise warnings when
+      unsafe atom templates are not overridden in certain environments.
     </p>
     <p>
-      If an atom has a flag that is not present in this array, Zedux will log a
-      warning.
+      If an atom template is used that has a flag that is not present in this
+      array, Zedux will log a warning.
     </p>
     <p>
       Flag checking is off by default - simply don't pass a flags array to{' '}
@@ -344,14 +344,15 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
     <p>
       Adds new overrides to the ecosystem's current list of overrides and/or
       updates existing overrides - swapping them out with different
-      implementations. All existing instances of atoms in the passed list will
-      be force-destroyed, allowing their dependents to recreate them.
+      implementations. All existing instances that match atom templates in the
+      passed list will be force-destroyed, allowing their dependents to recreate
+      them.
     </p>
     <p>Signature:</p>
     <Ts>{`addOverrides = (overrides) => void`}</Ts>
     <Legend>
       <Item name="overrides">
-        Required. An array of <Link to="Atom">atoms</Link>.
+        Required. An array of <Link to="AtomTemplate">atom templates</Link>.
       </Item>
     </Legend>
   </Item>
@@ -370,29 +371,30 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
     <Legend>
       <Item name="exclude">
         <p>
-          Optional. An array of atoms and/or case-insensitive fuzzy-search
-          strings.
+          Optional. An array of atom templates and/or case-insensitive
+          fuzzy-search strings.
         </p>
         <p>
-          Any atom instances of the passed atoms or whose id matches any of the
-          passed strings will be excluded from the snapshot.
+          Any atom instances of the passed atom templates or whose id matches
+          any of the passed strings will be excluded from the snapshot.
         </p>
       </Item>
       <Item name="excludeFlags">
         <p>Optional. An array of strings.</p>
         <p>
-          Any atom instance whose atom's <Link to="Atom#flags">flags</Link>{' '}
-          contain any of the passed strings will be excluded from the snapshot.
+          Any atom instance whose template's{' '}
+          <Link to="AtomTemplate#flags">flags</Link> contain any of the passed
+          strings will be excluded from the snapshot.
         </p>
       </Item>
       <Item name="include">
         <p>
-          Optional. An array of atoms and/or case-insensitive fuzzy-search
-          strings.
+          Optional. An array of atom templates and/or case-insensitive
+          fuzzy-search strings.
         </p>
         <p>
-          Only atom instances of the passed atoms or whose ids match any of the
-          passed strings will be included in the snapshot.
+          Only atom instances of the passed atom templates or whose ids match
+          any of the passed strings will be included in the snapshot.
         </p>
         <p>
           Excludes take priority over includes - if an atom instance is excluded
@@ -403,8 +405,9 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
       <Item name="includeFlags">
         <p>Optional. An array of strings.</p>
         <p>
-          Only atom instance whose atom's <Link to="Atom#flags">flags</Link>{' '}
-          contain any of the passed strings will be included in the snapshot.
+          Only atom instance whose template's{' '}
+          <Link to="AtomTemplate#flags">flags</Link> contain any of the passed
+          strings will be included in the snapshot.
         </p>
         <p>
           Excludes take priority over includes - if an atom instance is excluded
@@ -582,8 +585,8 @@ instance.setState('new state')`}</Ts>
     <Ts>{`removeOverrides = (overrides) => void`}</Ts>
     <Legend>
       <Item name="overrides">
-        Required. An array of <Link to="Atom">atoms</Link>. If any haven't been
-        set as overrides previously, they'll be ignored.
+        Required. An array of <Link to="AtomTemplate">atom templates</Link>. If
+        any haven't been set as overrides previously, they'll be ignored.
       </Item>
     </Legend>
   </Item>

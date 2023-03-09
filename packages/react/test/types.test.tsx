@@ -1,5 +1,5 @@
 import { Store } from '@zedux/core'
-import { AtomBase } from '@zedux/react'
+import { AtomTemplateBase } from '@zedux/react'
 import { api, atom, createEcosystem, ion } from '@zedux/react/factories'
 import { injectStore } from '@zedux/react/injectors'
 import {
@@ -70,7 +70,7 @@ describe('types', () => {
 
     expectTypeOf<TAtomInstance>().toEqualTypeOf<typeof instance>()
     expectTypeOf<TAtomTemplate>().toEqualTypeOf<
-      AtomBase<
+      AtomTemplateBase<
         {
           State: AtomState
           Params: AtomParams
@@ -146,7 +146,7 @@ describe('types', () => {
 
     expectTypeOf<TStoreAtomInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TStoreAtomTemplate>().toEqualTypeOf<
-      AtomBase<
+      AtomTemplateBase<
         {
           State: StoreAtomState
           Params: StoreAtomParams
@@ -159,7 +159,7 @@ describe('types', () => {
     >()
     expectTypeOf<TValueAtomInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TValueAtomTemplate>().toEqualTypeOf<
-      AtomBase<
+      AtomTemplateBase<
         {
           State: ValueAtomState
           Params: ValueAtomParams
@@ -328,7 +328,7 @@ describe('types', () => {
 
     expectTypeOf<TStoreIonInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TStoreIonTemplate>().toEqualTypeOf<
-      AtomBase<
+      AtomTemplateBase<
         {
           State: StoreIonState
           Params: StoreIonParams
@@ -341,7 +341,7 @@ describe('types', () => {
     >()
     expectTypeOf<TValueIonInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TValueIonTemplate>().toEqualTypeOf<
-      AtomBase<
+      AtomTemplateBase<
         {
           State: ValueIonState
           Params: ValueIonParams

@@ -38,15 +38,16 @@ module.exports = {
       'advanced/more-patterns',
     ],
     API: [
+      'api/api-overview',
       {
         type: 'category',
         label: 'Classes',
         items: [
-          'api/classes/Atom',
           'api/classes/AtomApi',
           'api/classes/AtomInstance',
+          'api/classes/AtomTemplate',
           'api/classes/Ecosystem',
-          'api/classes/Ion',
+          'api/classes/IonTemplate',
           'api/classes/MachineStore',
           'api/classes/SelectorCache',
           'api/classes/Selectors',

@@ -226,7 +226,7 @@ const loggingPlugin = new ZeduxPlugin({
           // only handle stateChanged mod events
           action.type !== ZeduxPlugin.actions.stateChanged.type ||
           // only log changes in atoms with logging enabled
-          !action.payload.instance?.atom?.flags?.includes('enable-logging')
+          !action.payload.instance?.template?.flags?.includes('enable-logging')
         ) {
           return
         }

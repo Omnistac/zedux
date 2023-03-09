@@ -1,10 +1,10 @@
 import { ActionChain, Observable, Settable, Store } from '@zedux/core'
-import { AtomBase } from '../classes/atoms/AtomBase'
+import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
 import { SelectorCache } from '../classes/Selectors'
 import { AtomInstanceType, AtomParamsType, AtomStateType } from './atoms'
-import { AnyAtom, AnyAtomInstance } from './utils'
+import { AnyAtomInstance, AnyAtomTemplate } from './utils'
 
 export * from './atoms'
 export * from './utils'
@@ -47,9 +47,12 @@ export interface AtomGettersBase {
    */
   get<A extends ParamlessAtom>(atom: A): AtomStateType<A>
 
-  get<A extends AnyAtom>(atom: A, params: AtomParamsType<A>): AtomStateType<A>
+  get<A extends AnyAtomTemplate>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): AtomStateType<A>
 
-  get<AI extends AnyAtomInstance>(instance: AI): AtomStateType<AI>
+  get<I extends AnyAtomInstance>(instance: I): AtomStateType<I>
 
   /**
    * Registers a static graph edge on the resolved atom instance when called
@@ -58,17 +61,17 @@ export interface AtomGettersBase {
    */
   getInstance<A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
 
-  getInstance<A extends AnyAtom>(
+  getInstance<A extends AnyAtomTemplate>(
     atom: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A>
 
-  getInstance<AI extends AnyAtomInstance>(
-    instance: AI,
+  getInstance<I extends AnyAtomInstance>(
+    instance: I,
     params?: [],
     edgeInfo?: GraphEdgeInfo
-  ): AI
+  ): I
 
   /**
    * Runs an AtomSelector which receives its own AtomGetters object and can use
@@ -156,7 +159,7 @@ export type AtomStateFactory<G extends AtomGenerics> = (
   | G['Store']
   | G['State']
 
-export type AtomTuple<A extends AnyAtom> = [A, AtomParamsType<A>]
+export type AtomTuple<A extends AnyAtomTemplate> = [A, AtomParamsType<A>]
 
 export type AtomValueOrFactory<G extends AtomGenerics> =
   | AtomStateFactory<G>
@@ -193,7 +196,7 @@ export interface EcosystemConfig<
     ecosystem: Ecosystem<Context>,
     prevContext?: Context
   ) => MaybeCleanup
-  overrides?: AnyAtom[]
+  overrides?: AnyAtomTemplate[]
   ssr?: boolean
 }
 
@@ -282,7 +285,10 @@ export interface MutableRefObject<T = any> {
   current: T
 }
 
-export type ParamlessAtom = AtomBase<AtomGenericsPartial<{ Params: [] }>, any>
+export type ParamlessAtom = AtomTemplateBase<
+  AtomGenericsPartial<{ Params: [] }>,
+  any
+>
 
 /**
  * Part of the atom instance can be accessed during initial evaluation. The only

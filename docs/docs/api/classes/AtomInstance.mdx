@@ -15,7 +15,7 @@ import {
   tab2,
 } from '@site/src/all'
 
-All standard "atom instances" are actually instances of this class. When Zedux instantiates [Ions](Ion) and [Standard Atoms](Atom), it's just creating instances of this class.
+All standard "atom instances" are actually instances of this class. When Zedux instantiates [atom templates](AtomTemplate) (and [ion templates](IonTemplate)), it's just creating instances of this class.
 
 ## Creation
 
@@ -89,12 +89,6 @@ Atom instances have the following **readonly** properties:
       <Link to="Ecosystem#getinstance">ecosystem.getInstance()</Link>).
     </p>
   </Item>
-  <Item name="atom">
-    <p>
-      A reference to the <Link to="Atom">atom</Link> that this atom instance was
-      created from.
-    </p>
-  </Item>
   <Item name="ecosystem">
     <p>
       A reference to the <Link to="Ecosystem">ecosystem</Link> that created and
@@ -121,8 +115,8 @@ const importAtom = atom('import', () => {
     <p>
       A string. This is the stable, unique id of this atom instance in the
       ecosystem. This id is the combination of the{' '}
-      <Link to="Atom#key">atom's key</Link> and a deterministic stringification
-      of the{' '}
+      <Link to="AtomTemplate#key">atom template's key</Link> and a deterministic
+      stringification of the{' '}
       <Link to="#params">
         <code>params</code>
       </Link>{' '}
@@ -176,7 +170,7 @@ useAtomInstance(myAtom, ['b', 'a'])`}</Ts>
     <Sandbox
       ecosystemId="AtomInstance/shout"
       resultVar="Shout"
-    >{`const normalAtom = atom('normal', "I'm just a little, black rain cloud")\n
+    >{`const normalAtom = atom('normal', "row, row, row your boat gently lest I scream")\n
 const shoutingAtom = atom('shouting', (instance: AtomInstance<string>) => {
   const val = injectAtomValue(instance) // subscribe to updates\n
   return val.toUpperCase()
@@ -203,6 +197,12 @@ function Shout() {
       A Zedux <Link to="Store">store</Link>. A reference to this atom instance's
       store. If the state factory returned a store, this is a reference to that
       store.
+    </p>
+  </Item>
+  <Item name="template">
+    <p>
+      A reference to the <Link to="AtomTemplate">atom template</Link> that this
+      atom instance was created from.
     </p>
   </Item>
 </Legend>

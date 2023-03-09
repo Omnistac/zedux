@@ -2,9 +2,9 @@ import { createStore, is } from '@zedux/core'
 import React, { createContext } from 'react'
 import { internalStore } from '../store'
 import {
-  AnyAtom,
   AnyAtomInstance,
   AnyAtomInstanceBase,
+  AnyAtomTemplate,
   AtomGettersBase,
   AtomInstanceType,
   AtomParamsType,
@@ -35,11 +35,11 @@ const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
   return map
 }, {} as Record<Mod, number>)
 
-const mapOverrides = (overrides: AnyAtom[]) =>
+const mapOverrides = (overrides: AnyAtomTemplate[]) =>
   overrides.reduce((map, atom) => {
     map[atom.key] = atom
     return map
-  }, {} as Record<string, AnyAtom>)
+  }, {} as Record<string, AnyAtomTemplate>)
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements AtomGettersBase {
@@ -53,7 +53,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public id: string
   public modBus = createStore() // use an empty store as a message bus
   public onReady: EcosystemConfig<Context>['onReady']
-  public overrides: Record<string, AnyAtom> = {}
+  public overrides: Record<string, AnyAtomTemplate> = {}
   public selectors: Selectors = new Selectors(this)
   public ssr?: boolean
 
@@ -80,7 +80,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
       if (config.overrides && !Array.isArray(config.overrides)) {
         throw new TypeError(
-          "Zedux: The Ecosystem's `overrides` property must be an array of Atom objects"
+          "Zedux: The Ecosystem's `overrides` property must be an array of atom template objects"
         )
       }
     }
@@ -106,7 +106,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * This can't be used to remove overrides. Use `.setOverrides()` or
    * `.removeOverrides()` for that.
    */
-  public addOverrides(overrides: AnyAtom[]) {
+  public addOverrides(overrides: AnyAtomTemplate[]) {
     this.overrides = {
       ...this.overrides,
       ...mapOverrides(overrides),
@@ -167,9 +167,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     includeFlags,
     transform = true,
   }: {
-    exclude?: (AnyAtom | string)[]
+    exclude?: (AnyAtomTemplate | string)[]
     excludeFlags?: string[]
-    include?: (AnyAtom | string)[]
+    include?: (AnyAtomTemplate | string)[]
     includeFlags?: string[]
     transform?: boolean
   } = {}) {
@@ -179,7 +179,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         exclude.some(atomOrKey =>
           typeof atomOrKey === 'string'
             ? instance.id.toLowerCase().includes(atomOrKey.toLowerCase())
-            : instance.atom.key === atomOrKey.key
+            : instance.template.key === atomOrKey.key
         )
       ) {
         return false
@@ -187,7 +187,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
       if (
         excludeFlags &&
-        excludeFlags.some(flag => instance.atom.flags?.includes(flag))
+        excludeFlags.some(flag => instance.template.flags?.includes(flag))
       ) {
         return false
       }
@@ -199,7 +199,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         include.some(atomOrKey =>
           typeof atomOrKey === 'string'
             ? instance.id.toLowerCase().includes(atomOrKey.toLowerCase())
-            : instance.atom.key === atomOrKey.key
+            : instance.template.key === atomOrKey.key
         )
       ) {
         return true
@@ -207,7 +207,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
       if (
         includeFlags &&
-        includeFlags.some(flag => instance.atom.flags?.includes(flag))
+        includeFlags.some(flag => instance.template.flags?.includes(flag))
       ) {
         return true
       }
@@ -221,8 +221,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
         return [
           instance.id,
-          transform && instance.atom.dehydrate
-            ? instance.atom.dehydrate(state)
+          transform && instance.template.dehydrate
+            ? instance.template.dehydrate(state)
             : state,
         ]
       })
@@ -264,16 +264,19 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    */
   public find<A extends ParamlessAtom>(atom: A): AtomInstanceType<A> | undefined
 
-  public find<A extends AnyAtom>(
+  public find<A extends AnyAtomTemplate>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A> | undefined
 
-  public find<A extends AnyAtom = any>(
+  public find<A extends AnyAtomTemplate = any>(
     key: string
   ): AtomInstanceType<A> | undefined
 
-  public find<A extends AnyAtom>(atom: A | string, params?: AtomParamsType<A>) {
+  public find<A extends AnyAtomTemplate>(
+    atom: A | string,
+    params?: AtomParamsType<A>
+  ) {
     if (typeof atom !== 'string') {
       const id = (atom as A).getInstanceId(this, params)
 
@@ -292,9 +295,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Pass an atom or atom key string to only return instances whose id weakly
    * matches the passed key.
    */
-  public findAll(atom?: AnyAtom | string) {
-    const isAtom = (atom as AnyAtom)?.key
-    const filterKey = isAtom ? (atom as AnyAtom)?.key : (atom as string)
+  public findAll(atom?: AnyAtomTemplate | string) {
+    const isAtom = (atom as AnyAtomTemplate)?.key
+    const filterKey = isAtom ? (atom as AnyAtomTemplate)?.key : (atom as string)
     const hash: Record<string, AnyAtomInstance> = {}
 
     Object.values(this._instances)
@@ -303,7 +306,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         if (
           filterKey &&
           (isAtom
-            ? instance.atom.key !== filterKey
+            ? instance.template.key !== filterKey
             : !instance.id.toLowerCase().includes(filterKey))
         ) {
           return
@@ -317,18 +320,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   public get<A extends ParamlessAtom>(atom: A): AtomStateType<A>
 
-  public get<A extends AnyAtom>(
+  public get<A extends AnyAtomTemplate>(
     atom: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
-  public get<AI extends AnyAtomInstance>(instance: AI): AtomStateType<AI>
+  public get<I extends AnyAtomInstance>(instance: I): AtomStateType<I>
 
   /**
    * Returns an atom instance's value. Creates the atom instance if it doesn't
    * exist yet. Doesn't register any graph dependencies.
    */
-  public get<A extends AnyAtom>(
+  public get<A extends AnyAtomTemplate>(
     atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>
   ) {
@@ -346,23 +349,23 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   public getInstance<A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
 
-  public getInstance<A extends AnyAtom>(
+  public getInstance<A extends AnyAtomTemplate>(
     atom: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A>
 
-  public getInstance<AI extends AnyAtomInstance>(
-    instance: AI,
+  public getInstance<I extends AnyAtomInstance>(
+    instance: I,
     params?: [],
     edgeInfo?: GraphEdgeInfo
-  ): AI
+  ): I
 
   /**
    * Returns an atom instance. Creates the atom instance if it doesn't exist
    * yet. Doesn't register any graph dependencies.
    */
-  public getInstance<A extends AnyAtom>(
+  public getInstance<A extends AnyAtomTemplate>(
     atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>
   ) {
@@ -376,8 +379,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (
         DEV &&
         this.dedupe &&
-        existingInstance.atom !== atom &&
-        !existingInstance.atom._isOverride
+        existingInstance.template !== atom &&
+        !existingInstance.template._isOverride
       ) {
         console.error(
           `Zedux: Encountered multiple atom templates with the same key "${
@@ -437,7 +440,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (!instance) return
 
       instance.setState(
-        instance.atom.hydrate ? instance.atom.hydrate(val) : val
+        instance.template.hydrate ? instance.template.hydrate(val) : val
       )
 
       delete this.hydration?.[key]
@@ -482,7 +485,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * will cause dependents of those instances to recreate their dependency atom
    * instance without using an override.
    */
-  public removeOverrides(overrides: (AnyAtom | string)[]) {
+  public removeOverrides(overrides: (AnyAtomTemplate | string)[]) {
     this.overrides = mapOverrides(
       Object.values(this.overrides).filter(atom =>
         overrides.every(override => {
@@ -553,7 +556,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * This forced destruction will cause dependents of those instances to
    * recreate their dependency atom instance.
    */
-  public setOverrides(newOverrides: AnyAtom[]) {
+  public setOverrides(newOverrides: AnyAtomTemplate[]) {
     const oldOverrides = this.overrides
 
     this.overrides = mapOverrides(newOverrides)
@@ -758,8 +761,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     delete this.hydration?.[instance.id]
 
-    return instance.atom.hydrate
-      ? instance.atom.hydrate(hydratedValue)
+    return instance.template.hydrate
+      ? instance.template.hydrate(hydratedValue)
       : hydratedValue
   }
 
@@ -787,7 +790,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   /**
    * Should only be used internally
    */
-  public _getReactContext(atom: AnyAtom) {
+  public _getReactContext(atom: AnyAtomTemplate) {
     const existingContext = this._reactContexts[atom.key]
 
     if (existingContext) return existingContext
@@ -819,9 +822,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
   }
 
-  private resolveAtom<AtomType extends AnyAtom>(atom: AtomType) {
+  private resolveAtom<A extends AnyAtomTemplate>(atom: A) {
     const override = this.overrides?.[atom.key]
-    const maybeOverriddenAtom = (override || atom) as AtomType
+    const maybeOverriddenAtom = (override || atom) as A
 
     // to turn off flag checking, just don't pass a `flags` prop
     if (this.flags) {

@@ -1,6 +1,6 @@
 ---
-id: Atom
-title: Atom
+id: AtomTemplate
+title: AtomTemplate
 ---
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
@@ -16,18 +16,18 @@ export const AtomKeyDesc = () => (
 
 The standard, default atom type. Instances of this class are passed to most of Zedux' hooks and injectors.
 
-An atom defines a template that Zedux will use to create atom instances. Do not confuse "atom instances" with instances of this Atom class! Atom instances are actually instances of [the AtomInstance class](AtomInstance) 🤕. We refer to instances of this Atom class as simply "atoms".
+An atom template defines a skeleton that Zedux will use to create [atom instances](AtomInstance) on demand.
 
 ## Creation
 
 Use [the `atom()` factory](../factories/atom) to create atoms:
 
 ```ts
-import { Atom, atom } from '@zedux/react'
+import { AtomTemplate, atom } from '@zedux/react'
 
 const exampleAtom = atom('example', 'initial state')
 
-exampleAtom instanceof Atom // true
+exampleAtom instanceof AtomTemplate // true
 ```
 
 ## Extending

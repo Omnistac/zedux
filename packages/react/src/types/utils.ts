@@ -1,10 +1,10 @@
-import { AtomBase } from '../classes/atoms/AtomBase'
+import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomInstance } from '../classes/instances/AtomInstance'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 
-export type AnyAtom = AtomBase<any, any>
 export type AnyAtomInstance = AtomInstance<any>
 export type AnyAtomInstanceBase = AtomInstanceBase<
   any,
-  AtomBase<any, AtomInstance<any>>
+  AtomTemplateBase<any, AtomInstance<any>>
 >
+export type AnyAtomTemplate = AtomTemplateBase<any, any>

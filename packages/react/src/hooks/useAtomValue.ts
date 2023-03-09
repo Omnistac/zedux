@@ -1,6 +1,6 @@
 import {
-  AnyAtom,
   AnyAtomInstance,
+  AnyAtomTemplate,
   AtomParamsType,
   AtomStateType,
   ParamlessAtom,
@@ -11,18 +11,18 @@ import { useAtomInstance } from './useAtomInstance'
 export const useAtomValue: {
   <A extends ParamlessAtom>(atom: A): AtomStateType<A>
 
-  <A extends AnyAtom>(
+  <A extends AnyAtomTemplate>(
     atom: A,
     params: AtomParamsType<A>,
     config?: Omit<ZeduxHookConfig, 'subscribe'>
   ): AtomStateType<A>
 
-  <AI extends AnyAtomInstance>(
-    instance: AI,
+  <I extends AnyAtomInstance>(
+    instance: I,
     params?: [],
     config?: Omit<ZeduxHookConfig, 'subscribe'>
-  ): AtomStateType<AI>
-} = <A extends AnyAtom>(
+  ): AtomStateType<I>
+} = <A extends AnyAtomTemplate>(
   atom: A,
   params?: AtomParamsType<A>,
   config: Omit<ZeduxHookConfig, 'subscribe'> = { operation: 'useAtomValue' }

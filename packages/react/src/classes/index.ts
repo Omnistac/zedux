@@ -1,6 +1,6 @@
-export * from './atoms/Ion' // this .. has to be imported before Atom or the build breaks :exploding_head:
-export * from './atoms/Atom'
-export * from './atoms/AtomBase'
+export * from './templates/IonTemplate' // this .. has to be imported before AtomTemplate or the build breaks :exploding_head:
+export * from './templates/AtomTemplate'
+export * from './templates/AtomTemplateBase'
 export * from './instances/AtomInstance'
 export * from './instances/AtomInstanceBase'
 export * from './AtomApi'

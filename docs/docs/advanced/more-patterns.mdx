@@ -122,7 +122,7 @@ const exampleMapAtom = mapAtom('example', () => new Map())
 
 Beyond simple config, this can be used to gain more control over types. For example, it isn't possible to change an atom instance's inferred state type based on params. Every instance of an atom is expected to have the same state type.
 
-While you can use a TypeScript union and that works well enough, you can also use an atom factory to create completely different atoms. Of course, this approach might require manual param serializing ([`atom.getInstanceId()`](../api/classes/Atom#getinstanceid) to the rescue!) and potentially lots of manual typing to create the properly-typed atoms. But it _could_ be worth it.
+While you can use a TypeScript union, and that works well enough, you can also use an atom factory to create completely different atom templates. Of course, this approach might require manual param serializing ([`atom.getInstanceId()`](../api/classes/AtomTemplate#getinstanceid) to the rescue!) and potentially lots of manual typing to create the properly-typed atoms. But it _could_ be worth it.
 
 ## Atom Instance Factories
 

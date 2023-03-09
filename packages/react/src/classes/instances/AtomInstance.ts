@@ -19,17 +19,17 @@ import {
   PromiseState,
   PromiseStatus,
 } from '@zedux/react/types'
-import { InjectorDescriptor } from '@zedux/react/utils'
+import { pluginActions } from '@zedux/react/utils/plugin-actions'
 import {
   getErrorPromiseState,
   getInitialPromiseState,
   getSuccessPromiseState,
 } from '@zedux/react/utils/promiseUtils'
+import { InjectorDescriptor } from '@zedux/react/utils/types'
 import { Ecosystem } from '../Ecosystem'
 import { AtomApi } from '../AtomApi'
 import { AtomInstanceBase } from './AtomInstanceBase'
-import { pluginActions } from '@zedux/react/utils/plugin-actions'
-import { AtomBase } from '../atoms/AtomBase'
+import { AtomTemplateBase } from '../templates/AtomTemplateBase'
 
 enum StateType {
   Store,
@@ -70,7 +70,7 @@ const getStateStore = <
 
 export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   G['State'],
-  AtomBase<G, AtomInstance<G>>
+  AtomTemplateBase<G, AtomInstance<G>>
 > {
   public activeState: ActiveState = 'Initializing'
   public api?: AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>
@@ -97,7 +97,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
   constructor(
     public readonly ecosystem: Ecosystem,
-    public readonly atom: AtomBase<G, AtomInstance<G>>,
+    public readonly template: AtomTemplateBase<G, AtomInstance<G>>,
     public readonly id: string,
     public readonly params: G['Params']
   ) {
@@ -214,7 +214,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     this._setActiveState('Active')
 
     // hydrate if possible
-    if (!this.ecosystem.hydration || this.atom.manualHydration) return
+    if (!this.ecosystem.hydration || this.template.manualHydration) return
 
     const hydration = this.ecosystem._consumeHydration(this)
 
@@ -358,7 +358,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
    * - A function that returns an AtomApi
    */
   private _evaluate() {
-    const { _value } = this.atom
+    const { _value } = this.template
 
     if (typeof _value !== 'function') {
       return _value
@@ -404,7 +404,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       return this.api.value as G['Store'] | G['State']
     } catch (err) {
       console.error(
-        `Zedux: Error while evaluating atom "${this.atom.key}" with params:`,
+        `Zedux: Error while evaluating atom "${this.template.key}" with params:`,
         this.params,
         err
       )
@@ -420,7 +420,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
     if (DEV && newStateType !== this._stateType) {
       throw new Error(
-        `Zedux: atom factory for atom "${this.atom.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
+        `Zedux: atom factory for atom "${this.template.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
       )
     }
 
@@ -430,7 +430,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       newFactoryResult !== this.store
     ) {
       throw new Error(
-        `Zedux: atom factory for atom "${this.atom.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
+        `Zedux: atom factory for atom "${this.template.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
       )
     }
 
@@ -446,7 +446,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
   private _getTtl() {
     if (this.api?.ttl == null) {
-      return this.atom.ttl ?? this.ecosystem.defaultTtl
+      return this.template.ttl ?? this.ecosystem.defaultTtl
     }
 
     // this atom instance set its own ttl

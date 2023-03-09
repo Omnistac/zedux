@@ -1,7 +1,7 @@
 import { ActionFactoryPayloadType, Store } from '@zedux/core'
 import {
-  AnyAtom,
   AnyAtomInstance,
+  AnyAtomTemplate,
   AtomGetters,
   AtomParamsType,
   GraphEdgeInfo,
@@ -63,7 +63,7 @@ export class EvaluationStack {
       return instance.store.getState()
     }) as AtomGetters['get']
 
-    const getInstance: AtomGetters['getInstance'] = <A extends AnyAtom>(
+    const getInstance: AtomGetters['getInstance'] = <A extends AnyAtomTemplate>(
       atomOrInstance: A,
       params?: AtomParamsType<A>,
       edgeInfo?: GraphEdgeInfo

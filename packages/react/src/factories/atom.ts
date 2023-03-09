@@ -5,8 +5,8 @@ import {
   AtomValueOrFactory,
   PromiseState,
 } from '../types'
-import { Atom } from '../classes/atoms/Atom'
-import { AtomApi } from '../classes'
+import { AtomTemplate } from '../classes/templates/AtomTemplate'
+import { AtomApi } from '../classes/AtomApi'
 
 export const atom: {
   // Query Atoms
@@ -20,7 +20,7 @@ export const atom: {
       ...params: Params
     ) => AtomApi<Promise<State>, Exports, undefined, any>,
     config?: AtomConfig<State>
-  ): Atom<{
+  ): AtomTemplate<{
     State: PromiseState<State>
     Params: Params
     Exports: Exports
@@ -42,7 +42,7 @@ export const atom: {
       | StoreType
       | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): Atom<{
+  ): AtomTemplate<{
     State: StoreStateType<StoreType>
     Params: Params
     Exports: Exports
@@ -67,7 +67,7 @@ export const atom: {
       Store: StoreType
     }>,
     config?: AtomConfig<State>
-  ): Atom<{
+  ): AtomTemplate<{
     Exports: Exports
     Params: Params
     Promise: PromiseType
@@ -95,7 +95,7 @@ export const atom: {
     throw new TypeError('Zedux: All atoms must have a key')
   }
 
-  return new Atom<{
+  return new AtomTemplate<{
     State: State
     Params: Params
     Exports: Exports

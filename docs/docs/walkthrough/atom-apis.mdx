@@ -3,7 +3,7 @@ id: atom-apis
 title: Atom APIs
 ---
 
-In the quick start, we learned that injectors are like hooks for atoms. But some operations don't fit well into the injector paradigm. Injectors, like hooks, should be composable and usable multiple times throughout an atom state factory and other injectors.
+The quick start showed that injectors are like hooks for atoms. But some operations don't fit well into the injector paradigm. Injectors, like hooks, should be composable and usable multiple times throughout an atom state factory and other injectors.
 
 But atoms have a few one-off operations (operations that should only be performed once). For these, we use an Atom API.
 
@@ -18,7 +18,7 @@ How to create an Atom API and use it to:
 
 ## `api()`
 
-To create an Atom API, we simply wrap state in a call to `api()` before we return it from a state factory:
+To create an Atom API, simply wrap state in a call to `api()` before returning it from a state factory:
 
 ```ts
 import { api, atom } from '@zedux/react'
@@ -38,11 +38,13 @@ const exampleAtom = atom('example', () => {
 })
 ```
 
+You can create an Atom API anywhere, but only the Atom API returned from the state factory will become _the_ atom instance's API.
+
 So now then ... what can an Atom API do?
 
 ## Exports
 
-Atoms can export anything via an Atom API:
+Atoms can export anything via a returned Atom API:
 
 ```tsx live ecosystemId=atom-apis/exports resultVar=App
 const counterAtom = atom('counter', () => {
@@ -69,12 +71,12 @@ function App() {
 }
 ```
 
-We learned in the [atom instances walkthrough](atom-instances) that atom instances have a `.exports` property. Here we're seeing it in action. Atom APIs have a `.setExports()` method that allows us to define an atom instance's exports the first time it evaluates.
+Atom instances have a `.exports` property. Atom APIs have a `.setExports()` method that defines an atom instance's exports (when the atom API is returned from the state factory). These exports are set on initial evaluation and ignored on evaluations after that.
 
-Exports must be an object and can contain anything. As you can imagine, exports are another big feature that sets Zedux apart from other atom libraries.
+Exports must be an object and can contain anything. As you can imagine, exports are another big feature that sets Zedux apart from other atomic libraries.
 
 :::info important
-Exports are constant! This means exported variables should be stable references. Zedux won't update them on subsequent evaluations. In this example, `increment` and `decrement` are not stable references, but they don't reference anything except the store, which is stable.
+Exports are constant! This means exported variables should be stable references. Zedux won't update them on subsequent evaluations. In this example, `increment` and `decrement` are not stable references, but they don't reference anything except the store, which is stable. You have to be conscious of this.
 :::
 
 :::tip
@@ -158,7 +160,7 @@ This is poor man's async handling. Let's upgrade to Suspense.
 
 ## Suspense
 
-Atoms can be used as suspending resources in React. To suspend, we simply pass a promise to a returned Atom API's `.setPromise()` method:
+Atoms can be used as suspending resources in React. To suspend, simply pass a promise to a returned Atom API's `.setPromise()` method:
 
 ```ts
 return api(val).setPromise(suspensePromise)

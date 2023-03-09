@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import {
-  AnyAtom,
   AnyAtomInstance,
+  AnyAtomTemplate,
   AtomInstanceType,
   AtomParamsType,
   ParamlessAtom,
@@ -33,18 +33,18 @@ const OPERATION = 'useAtomInstance'
 export const useAtomInstance: {
   <A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
 
-  <A extends AnyAtom>(
+  <A extends AnyAtomTemplate>(
     atom: A,
     params: AtomParamsType<A>,
     config?: ZeduxHookConfig
   ): AtomInstanceType<A>
 
-  <AI extends AnyAtomInstance>(
-    instance: AI,
+  <I extends AnyAtomInstance>(
+    instance: I,
     params?: [],
     config?: ZeduxHookConfig
-  ): AI
-} = <A extends AnyAtom>(
+  ): I
+} = <A extends AnyAtomTemplate>(
   atom: A | AnyAtomInstance,
   params?: AtomParamsType<A>,
   { operation = OPERATION, subscribe, suspend }: ZeduxHookConfig = {

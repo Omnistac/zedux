@@ -25,7 +25,7 @@ export const AtomInstanceProvider: FC<
   const allInstances = instances || ([instance] as AnyAtomInstance[])
 
   if (allInstances.length === 1) {
-    const context = ecosystem._getReactContext(allInstances[0].atom)
+    const context = ecosystem._getReactContext(allInstances[0].template)
 
     return (
       <context.Provider value={allInstances[0]}>{children}</context.Provider>
@@ -33,7 +33,7 @@ export const AtomInstanceProvider: FC<
   }
 
   const [parentInstance, ...childInstances] = allInstances
-  const context = ecosystem._getReactContext(parentInstance.atom)
+  const context = ecosystem._getReactContext(parentInstance.template)
 
   return (
     <context.Provider value={parentInstance}>

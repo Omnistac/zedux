@@ -1,6 +1,6 @@
 import {
-  AnyAtom,
   AnyAtomInstance,
+  AnyAtomTemplate,
   AtomExportsType,
   AtomParamsType,
   AtomStateType,
@@ -15,16 +15,16 @@ export const injectAtomState: {
     AtomExportsType<A>
   >
 
-  <A extends AnyAtom>(atom: A, params: AtomParamsType<A>): StateHookTuple<
-    AtomStateType<A>,
-    AtomExportsType<A>
-  >
+  <A extends AnyAtomTemplate>(
+    atom: A,
+    params: AtomParamsType<A>
+  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
 
-  <AI extends AnyAtomInstance>(instance: AI): StateHookTuple<
-    AtomStateType<AI>,
-    AtomExportsType<AI>
+  <I extends AnyAtomInstance>(instance: I): StateHookTuple<
+    AtomStateType<I>,
+    AtomExportsType<I>
   >
-} = <A extends AnyAtom>(
+} = <A extends AnyAtomTemplate>(
   atom: A,
   params?: AtomParamsType<A>
 ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>> => {

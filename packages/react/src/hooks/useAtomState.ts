@@ -1,6 +1,6 @@
 import {
-  AnyAtom,
   AnyAtomInstance,
+  AnyAtomTemplate,
   AtomExportsType,
   AtomParamsType,
   AtomStateType,
@@ -16,18 +16,18 @@ export const useAtomState: {
     AtomExportsType<A>
   >
 
-  <A extends AnyAtom>(
+  <A extends AnyAtomTemplate>(
     atom: A,
     params: AtomParamsType<A>,
     config?: Omit<ZeduxHookConfig, 'subscribe'>
   ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
 
-  <AI extends AnyAtomInstance>(
-    instance: AI,
+  <I extends AnyAtomInstance>(
+    instance: I,
     params?: [],
     config?: Omit<ZeduxHookConfig, 'subscribe'>
-  ): StateHookTuple<AtomStateType<AI>, AtomExportsType<AI>>
-} = <A extends AnyAtom>(
+  ): StateHookTuple<AtomStateType<I>, AtomExportsType<I>>
+} = <A extends AnyAtomTemplate>(
   atom: A,
   params?: AtomParamsType<A>,
   config: Omit<ZeduxHookConfig, 'subscribe'> = { operation: 'useAtomState' }

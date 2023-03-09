@@ -3,7 +3,7 @@ id: atom-state
 title: Atom State
 ---
 
-In the quick start we learned how to use the `useAtomState` hook to get and update an atom instance's state from a React component. Calling the `setState` function returned from `useAtomState` triggers an "external update". But atoms can also update themselves.
+The quick start showed how to use the `useAtomState` hook to get and update an atom instance's state from a React component. Calling the `setState` function returned from `useAtomState` triggers an "external update". But atoms can also update themselves.
 
 :::tip you will learn:
 
@@ -40,9 +40,9 @@ const exampleAtom = atom('example', () => {
 })
 ```
 
-This creates a "zero-config" store with `'initial state'` as its ... initial state. Whenever this store's state updates, Zedux will call this state factory again.
+This creates a "zero-config" store with `'initial state'` as its ... initial state. Whenever this store's state updates, Zedux will reevaluate this atom, calling this state factory again.
 
-We can use the current state of the store exactly like we'd use local state in React - to run side effects, change callbacks, and even change the state we return from this atom.
+You can use the current state of the store exactly like local state in React - to run side effects, change callbacks, and even change the atom's state.
 
 ```tsx live ecosystemId=atom-state/injectStore resultVar=Multiply
 const multiplyAtom = atom('multiply', (num: number) => {
@@ -77,7 +77,7 @@ function Multiply() {
 
 ## `createStore`
 
-We can create stores completely outside atoms using `createStore`:
+You can create stores completely outside atoms using [`createStore()`](../api/factories/createStore):
 
 ```ts
 import { createStore } from '@zedux/react'
@@ -87,7 +87,7 @@ const store = createStore(null, 'initial state')
 
 Notice that the initial state is the 2nd param of `createStore`. Don't worry about that first param yet; just pass `null` for zero-config stores.
 
-`injectStore` has a function overload that allows us to create the store ourselves:
+`injectStore` has a function overload that allows you to create the store manually:
 
 ```tsx
 import { atom, createStore, injectStore } from '@zedux/react'
@@ -163,9 +163,9 @@ What we really want is to:
 
 ## Expose the Store
 
-Remember that we said every atom instance has its own store? Zedux creates this store automatically by default. But now that we know how to create our own stores, we can tell Zedux that it doesn't need to create one for us.
+Remember that every atom instance has its own store? Zedux creates this store automatically by default. But now that you know how to create your own stores, you can tell Zedux that it doesn't need to create one for you.
 
-How do we do that?
+How do you do that?
 
 Return The Store!
 
@@ -173,7 +173,7 @@ Return The Store!
 const greetingAtom = atom('greeting', () => {
   const store = injectStore('Hello, World!')
 
-  return store // <- behold the magic!
+  return store // <- the magic!
 })
 
 function Greeting() {
@@ -183,7 +183,7 @@ function Greeting() {
 }
 ```
 
-By returning the store from the state factory, we essentially tell Zedux, "Don't create a store for me! I created my own. Use this one."
+By returning the store from the state factory, you essentially tell Zedux, "Don't create a store for me! I created my own. Use this one."
 
 :::info important
 When returning a store from a state factory, ensure that the exact same store reference is returned every time the atom evaluates - e.g. by using `injectStore` (recommended) or `injectMemo`.
@@ -191,7 +191,7 @@ When returning a store from a state factory, ensure that the exact same store re
 
 ## Joint Updates
 
-With our store exposed, we are now able to update it both internally and externally. Let's expose the store in our counter example from earlier to see this in action:
+With the store exposed, you can now update it both internally and externally. Let's expose the store in the counter example from earlier to see this in action:
 
 ```tsx live ecosystemId=atom-state/bidirectional-updates resultVar=Seconds
 const secondsAtom = atom('seconds', () => {
@@ -220,11 +220,11 @@ function Seconds() {
 }
 ```
 
-Try clicking the button to make the counter count faster. Our `secondsAtom` now controls its own state _and_ simultaneously allows dependents to update it.
+Try clicking the button to make the counter count faster. The `secondsAtom` now controls its own state _and_ simultaneously allows dependents to update it.
 
 ## Multiple Stores
 
-An atom state factory can inject any number of stores. But only one store can be returned. Having unexposed "internal" stores is completely fine. But what if we want to expose multiple stores?
+An atom state factory can inject any number of stores. But only one store can be returned. Having unexposed "internal" stores is completely fine. But what if you want to expose multiple stores?
 
 Zedux stores have an Ultra Mega Superpower: They are composable.
 
@@ -265,7 +265,7 @@ function MultipleStores() {
 }
 ```
 
-To return multiple stores, we create a single "parent" store composed of all the stores we want to expose.
+To return multiple stores, create a single "parent" store composed of all the stores you want to expose and return that.
 
 :::tip
 You've just seen your first configured (not zero-config) store! We'll learn a lot more about this in the [stores walkthrough](stores).
@@ -280,4 +280,4 @@ You've just seen your first configured (not zero-config) store! We'll learn a lo
 
 ## Next Steps
 
-Now that we know a bit more about creating atoms, it's time to learn [what atom instances look like](atom-instances).
+Now that you know a bit more about creating atoms, it's time to learn [what atom instances look like](atom-instances).

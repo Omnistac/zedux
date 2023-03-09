@@ -9,7 +9,7 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { useAtomConsumer } from '@zedux/react'
 ```
 
-A React hook that accepts an [atom](../classes/Atom) and returns an [instance](../classes/AtomInstance) of that atom that has been provided over React context via [`<AtomInstanceProvider>`](../components/AtomInstanceProvider).
+A React hook that accepts an [atom template](../classes/AtomTemplate) and returns an [instance](../classes/AtomInstance) of that atom that has been provided over React context via [`<AtomInstanceProvider>`](../components/AtomInstanceProvider).
 
 If no instance has been provided, this hook will return undefined. Pass default params as the second argument to tell Zedux to create an atom instance if one wasn't provided. Pass `true` as the second argument to tell Zedux to throw an error if you forgot to provide an instance.
 
@@ -73,18 +73,18 @@ const guaranteed = useAtomConsumer(myAtom, true)
 ## Signature
 
 <Tabs>
-  {tab1(`useAtomConsumer = (atom, defaultParamsOrThrow?) => atomInstance`)}
+  {tab1(`useAtomConsumer = (template, defaultParamsOrThrow?) => atomInstance`)}
   {tab2(`declare const useAtomConsumer: {
-  <A extends AnyAtom>(atom: A): AtomInstanceType<A> | Record<string, never>;
-  <A extends AnyAtom>(atom: A, defaultParams: AtomParamsType<A>): AtomInstanceType<A>;
-  <A extends AnyAtom>(atom: A, throwIfNotProvided: true): AtomInstanceType<A>;
+  <A extends AnyAtomTemplate>(template: A): AtomInstanceType<A> | Record<string, never>;
+  <A extends AnyAtomTemplate>(template: A, defaultParams: AtomParamsType<A>): AtomInstanceType<A>;
+  <A extends AnyAtomTemplate>(template: A, throwIfNotProvided: true): AtomInstanceType<A>;
 }`)}
 </Tabs>
 
 <Legend>
-  <Item name="atom">
+  <Item name="template">
     <p>
-      Required. An <Link to="../classes/Atom">atom</Link>.
+      Required. An <Link to="../classes/AtomTemplate">atom template</Link>.
     </p>
   </Item>
   <Item name="defaultParamsOrThrow">
