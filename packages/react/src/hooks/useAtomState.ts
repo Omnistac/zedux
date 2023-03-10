@@ -4,14 +4,14 @@ import {
   AtomExportsType,
   AtomParamsType,
   AtomStateType,
-  ParamlessAtom,
+  ParamlessTemplate,
   StateHookTuple,
   ZeduxHookConfig,
 } from '../types'
 import { useAtomInstance } from './useAtomInstance'
 
 export const useAtomState: {
-  <A extends ParamlessAtom>(atom: A): StateHookTuple<
+  <A extends ParamlessTemplate>(atom: A): StateHookTuple<
     AtomStateType<A>,
     AtomExportsType<A>
   >

@@ -3,12 +3,12 @@ import {
   AnyAtomTemplate,
   AtomParamsType,
   AtomStateType,
-  ParamlessAtom,
+  ParamlessTemplate,
 } from '../types'
 import { injectAtomInstance } from './injectAtomInstance'
 
 export const injectAtomValue: {
-  <A extends ParamlessAtom>(atom: A): AtomStateType<A>
+  <A extends ParamlessTemplate>(atom: A): AtomStateType<A>
 
   <A extends AnyAtomTemplate>(
     atom: A,

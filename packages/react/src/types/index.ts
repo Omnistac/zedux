@@ -9,8 +9,6 @@ import { AnyAtomInstance, AnyAtomTemplate } from './utils'
 export * from './atoms'
 export * from './utils'
 
-export type ActiveState = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
-
 export interface AtomGenerics {
   Exports: Record<string, any>
   Params: any[]
@@ -20,7 +18,7 @@ export interface AtomGenerics {
 }
 
 export type AtomGenericsPartial<G extends Partial<AtomGenerics>> = Omit<
-  AtomGenerics,
+  { Exports: any; Params: any; Promise: any; State: any; Store: any },
   keyof G
 > &
   G
@@ -45,7 +43,7 @@ export interface AtomGettersBase {
    * synchronously during atom or AtomSelector evaluation. When called
    * asynchronously, is just an alias for `ecosystem.get`
    */
-  get<A extends ParamlessAtom>(atom: A): AtomStateType<A>
+  get<A extends ParamlessTemplate>(atom: A): AtomStateType<A>
 
   get<A extends AnyAtomTemplate>(
     atom: A,
@@ -59,7 +57,7 @@ export interface AtomGettersBase {
    * synchronously during atom or AtomSelector evaluation. When called
    * asynchronously, is just an alias for `ecosystem.getInstance`
    */
-  getInstance<A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
+  getInstance<A extends ParamlessTemplate>(atom: A): AtomInstanceType<A>
 
   getInstance<A extends AnyAtomTemplate>(
     atom: A,
@@ -187,7 +185,6 @@ export interface EcosystemConfig<
 > {
   complexParams?: boolean
   context?: Context
-  dedupe?: boolean
   defaultTtl?: number
   destroyOnUnmount?: boolean
   flags?: string[]
@@ -279,13 +276,15 @@ export type IonStateFactory<G extends AtomGenerics> = (
   | G['Store']
   | G['State']
 
+export type LifecycleStatus = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
+
 export type MaybeCleanup = Cleanup | void
 
 export interface MutableRefObject<T = any> {
   current: T
 }
 
-export type ParamlessAtom = AtomTemplateBase<
+export type ParamlessTemplate = AtomTemplateBase<
   AtomGenericsPartial<{ Params: [] }>,
   any
 >

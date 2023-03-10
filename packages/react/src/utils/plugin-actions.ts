@@ -1,22 +1,15 @@
 import { ActionChain, actionFactory } from '@zedux/core'
 import { Ecosystem } from '../classes/Ecosystem'
 import {
-  ActiveState,
+  LifecycleStatus,
   AnyAtomInstance,
   DependentEdge,
   EvaluationReason,
+  AnyAtomTemplate,
 } from '../types'
 import { SelectorCache } from '../classes/Selectors'
 
 export const pluginActions = {
-  activeStateChanged: actionFactory<
-    {
-      instance: AnyAtomInstance
-      newActiveState: ActiveState
-      oldActiveState: ActiveState
-    },
-    'activeStateChanged'
-  >('activeStateChanged'),
   ecosystemWiped: actionFactory<{ ecosystem: Ecosystem }, 'ecosystemWiped'>(
     'ecosystemWiped'
   ),
@@ -48,6 +41,10 @@ export const pluginActions = {
       },
     'evaluationFinished'
   >('evaluationFinished'),
+  instanceReused: actionFactory<{
+    instance: AnyAtomInstance
+    template: AnyAtomTemplate
+  }>('instanceReused'),
   // either cache or instance will always be defined, depending on the node type
   stateChanged: actionFactory<
     {
@@ -60,4 +57,12 @@ export const pluginActions = {
     },
     'stateChanged'
   >('stateChanged'),
+  statusChanged: actionFactory<
+    {
+      instance: AnyAtomInstance
+      newStatus: LifecycleStatus
+      oldStatus: LifecycleStatus
+    },
+    'statusChanged'
+  >('statusChanged'),
 }

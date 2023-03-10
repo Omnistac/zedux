@@ -6,13 +6,13 @@ describe('plugins', () => {
     const actionList: [string | undefined, string][] = []
 
     const plugin = new ZeduxPlugin({
-      initialMods: ['activeStateChanged'],
+      initialMods: ['statusChanged'],
       registerEcosystem: ecosystem => {
         ecosystem.modBus.subscribe({
           effects: ({ action }) => {
             if (!action) return
 
-            actionList.push([action.type, action.payload?.newActiveState])
+            actionList.push([action.type, action.payload?.newStatus])
           },
         })
       },
@@ -27,8 +27,8 @@ describe('plugins', () => {
     ecosystem.destroy(true)
 
     expect(actionList).toEqual([
-      ['activeStateChanged', 'Active'],
-      ['activeStateChanged', 'Destroyed'],
+      ['statusChanged', 'Active'],
+      ['statusChanged', 'Destroyed'],
     ])
   })
 })

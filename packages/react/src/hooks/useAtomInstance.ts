@@ -4,7 +4,7 @@ import {
   AnyAtomTemplate,
   AtomInstanceType,
   AtomParamsType,
-  ParamlessAtom,
+  ParamlessTemplate,
   ZeduxHookConfig,
 } from '../types'
 import { destroyed, External, Static } from '../utils'
@@ -31,7 +31,7 @@ const OPERATION = 'useAtomInstance'
  * @param params The params for generating the instance's key.
  */
 export const useAtomInstance: {
-  <A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
+  <A extends ParamlessTemplate>(atom: A): AtomInstanceType<A>
 
   <A extends AnyAtomTemplate>(
     atom: A,
@@ -68,7 +68,7 @@ export const useAtomInstance: {
           // React can unmount other components before calling this subscribe
           // function but after we got the instance above. Re-get the instance
           // if such unmountings destroyed it in the meantime:
-          if (instance.activeState === 'Destroyed') {
+          if (instance.status === 'Destroyed') {
             tuple[1] = destroyed
             onStoreChange()
 
@@ -107,9 +107,11 @@ export const useAtomInstance: {
         if (tuple[1] === destroyed) return destroyed as any
 
         if (suspend !== false) {
-          if (tuple[0]._promiseStatus === 'loading') {
+          const status = tuple[0]._promiseStatus
+
+          if (status === 'loading') {
             throw tuple[0].promise
-          } else if (tuple[0]._promiseStatus === 'error') {
+          } else if (status === 'error') {
             throw tuple[0]._promiseError
           }
         }

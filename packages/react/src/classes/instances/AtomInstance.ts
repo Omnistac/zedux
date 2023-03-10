@@ -10,12 +10,12 @@ import {
   Subscription,
 } from '@zedux/core'
 import {
-  ActiveState,
   AtomGenerics,
   Cleanup,
   EvaluationReason,
   EvaluationSourceType,
   ExportsInfusedSetter,
+  LifecycleStatus,
   PromiseState,
   PromiseStatus,
 } from '@zedux/react/types'
@@ -72,7 +72,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   G['State'],
   AtomTemplateBase<G, AtomInstance<G>>
 > {
-  public activeState: ActiveState = 'Initializing'
+  public status: LifecycleStatus = 'Initializing'
   public api?: AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>
   public exports: G['Exports']
   public promise: G['Promise']
@@ -118,7 +118,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
    * `true` to force-destroy the atom instance anyway.
    */
   public destroy(force?: boolean) {
-    if (this.activeState === 'Destroyed') return
+    if (this.status === 'Destroyed') return
 
     // If we're not force-destroying, don't destroy if there are dependents
     if (
@@ -131,7 +131,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     this._cancelDestruction?.()
     this._cancelDestruction = undefined
 
-    this._setActiveState('Destroyed')
+    this._setStatus('Destroyed')
 
     if (this._nextEvaluationReasons.length) {
       this.ecosystem._scheduler.unschedule(this.evaluationTask)
@@ -211,7 +211,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       this._handleStateChange(newState, oldState, action)
     })
 
-    this._setActiveState('Active')
+    this._setStatus('Active')
 
     // hydrate if possible
     if (!this.ecosystem.hydration || this.template.manualHydration) return
@@ -229,9 +229,9 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
    */
   public _scheduleDestruction() {
     // the atom is already scheduled for destruction or destroyed
-    if (this.activeState !== 'Active') return
+    if (this.status !== 'Active') return
 
-    this._setActiveState('Stale')
+    this._setStatus('Stale')
 
     const ttl = this._getTtl()
     if (ttl == null || ttl === -1) return
@@ -286,9 +286,9 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   ) => {
     // TODO: Any calls in this case probably indicate a memory leak on the
     // user's part. Notify them. TODO: Can we pause evaluations while
-    // activeState is Stale (and should we just always evaluate once when
+    // status is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
-    if (this.activeState === 'Destroyed') return
+    if (this.status === 'Destroyed') return
 
     this._nextEvaluationReasons.push(reason)
 
@@ -384,7 +384,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       >
 
       // Exports can only be set on initial evaluation
-      if (this.activeState === 'Initializing') {
+      if (this.status === 'Initializing') {
         this.exports = this.api.exports as G['Exports']
       }
 
@@ -501,16 +501,16 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     this.ecosystem._scheduler.flush()
   }
 
-  private _setActiveState(newActiveState: ActiveState) {
-    const oldActiveState = this.activeState
-    this.activeState = newActiveState
+  private _setStatus(newStatus: LifecycleStatus) {
+    const oldStatus = this.status
+    this.status = newStatus
 
-    if (this.ecosystem._mods.activeStateChanged) {
+    if (this.ecosystem._mods.statusChanged) {
       this.ecosystem.modBus.dispatch(
-        pluginActions.activeStateChanged({
+        pluginActions.statusChanged({
           instance: this,
-          newActiveState,
-          oldActiveState,
+          newStatus,
+          oldStatus,
         })
       )
     }

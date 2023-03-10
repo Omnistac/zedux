@@ -15,7 +15,7 @@ export const createInjector = <
   const injector = (...args: A) => {
     const instance = readInstance()
 
-    if (instance.activeState === 'Initializing') {
+    if (instance.status === 'Initializing') {
       const descriptor = first(instance, ...args)
       type = descriptor.type
       instance._nextInjectors?.push(descriptor)
