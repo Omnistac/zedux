@@ -16,7 +16,7 @@ import {
   GraphEdgeInfo,
   GraphViewRecursive,
   MaybeCleanup,
-  ParamlessAtom,
+  ParamlessTemplate,
   PartialAtomInstance,
   Selectable,
 } from '../types'
@@ -45,7 +45,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements AtomGettersBase {
   public complexParams?: boolean
   public context: Context
-  public dedupe = true
   public defaultTtl = -1
   public destroyOnUnmount?: boolean
   public flags?: string[]
@@ -262,10 +261,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Get an atom instance. Don't create the atom instance if it doesn't exist.
    * Don't register any graph dependencies.
    */
-  public find<A extends ParamlessAtom>(atom: A): AtomInstanceType<A> | undefined
+  public find<A extends ParamlessTemplate>(
+    template: A
+  ): AtomInstanceType<A> | undefined
 
   public find<A extends AnyAtomTemplate>(
-    atom: A,
+    template: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A> | undefined
 
@@ -274,17 +275,17 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   ): AtomInstanceType<A> | undefined
 
   public find<A extends AnyAtomTemplate>(
-    atom: A | string,
+    template: A | string,
     params?: AtomParamsType<A>
   ) {
-    if (typeof atom !== 'string') {
-      const id = (atom as A).getInstanceId(this, params)
+    if (typeof template !== 'string') {
+      const id = (template as A).getInstanceId(this, params)
 
       // try to find an existing instance
       return this._instances[id]
     }
 
-    return Object.values(this.findAll(atom))[0] as
+    return Object.values(this.findAll(template))[0] as
       | AtomInstanceType<A>
       | undefined
   }
@@ -292,12 +293,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   /**
    * Get an object of all atom instances in this ecosystem.
    *
-   * Pass an atom or atom key string to only return instances whose id weakly
-   * matches the passed key.
+   * Pass an atom template or atom template key string to only return instances
+   * whose id weakly matches the passed key.
    */
-  public findAll(atom?: AnyAtomTemplate | string) {
-    const isAtom = (atom as AnyAtomTemplate)?.key
-    const filterKey = isAtom ? (atom as AnyAtomTemplate)?.key : (atom as string)
+  public findAll(template?: AnyAtomTemplate | string) {
+    const isAtom = (template as AnyAtomTemplate)?.key
+    const filterKey = isAtom
+      ? (template as AnyAtomTemplate)?.key
+      : (template as string)
     const hash: Record<string, AnyAtomInstance> = {}
 
     Object.values(this._instances)
@@ -318,12 +321,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     return hash
   }
 
-  public get<A extends ParamlessAtom>(atom: A): AtomStateType<A>
+  public get<T extends ParamlessTemplate>(template: T): AtomStateType<T>
 
-  public get<A extends AnyAtomTemplate>(
-    atom: A,
-    params: AtomParamsType<A>
-  ): AtomStateType<A>
+  public get<T extends AnyAtomTemplate>(
+    template: T,
+    params: AtomParamsType<T>
+  ): AtomStateType<T>
 
   public get<I extends AnyAtomInstance>(instance: I): AtomStateType<I>
 
@@ -347,10 +350,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     return instance.store.getState()
   }
 
-  public getInstance<A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
+  public getInstance<A extends ParamlessTemplate>(
+    template: A
+  ): AtomInstanceType<A>
 
   public getInstance<A extends AnyAtomTemplate>(
-    atom: A,
+    template: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
   ): AtomInstanceType<A>
@@ -374,22 +379,15 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const id = (atom as A).getInstanceId(this, params)
 
     // try to find an existing instance
-    const existingInstance = this._instances[id]
-    if (existingInstance) {
-      if (
-        DEV &&
-        this.dedupe &&
-        existingInstance.template !== atom &&
-        !existingInstance.template._isOverride
-      ) {
-        console.error(
-          `Zedux: Encountered multiple atom templates with the same key "${
-            (atom as A).key
-          }"`
+    const instance = this._instances[id]
+    if (instance) {
+      if (this._mods.instanceReused) {
+        this.modBus.dispatch(
+          pluginActions.instanceReused({ instance, template: atom as A })
         )
       }
 
-      return existingInstance
+      return instance
     }
 
     // create a new instance

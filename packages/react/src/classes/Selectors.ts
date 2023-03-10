@@ -418,9 +418,10 @@ export class Selectors {
     args: Args,
     isInitializing?: boolean
   ) {
-    this.ecosystem._graph.bufferUpdates(id)
+    const ecosystem = this.ecosystem
+    ecosystem._graph.bufferUpdates(id)
     const cache = this._items[id] as SelectorCache<T, Args>
-    this.ecosystem._evaluationStack.start(cache)
+    ecosystem._evaluationStack.start(cache)
     const selector =
       typeof cache.selectorRef === 'function'
         ? cache.selectorRef
@@ -432,21 +433,18 @@ export class Selectors {
       defaultResultsComparator
 
     try {
-      const result = selector(
-        this.ecosystem._evaluationStack.atomGetters,
-        ...args
-      )
+      const result = selector(ecosystem._evaluationStack.atomGetters, ...args)
 
       if (!isInitializing && !resultsComparator(result, cache.result as T)) {
-        this.ecosystem._graph.scheduleDependents(
+        ecosystem._graph.scheduleDependents(
           id,
           cache.nextEvaluationReasons,
           result,
           cache.result
         )
 
-        if (this.ecosystem._mods.stateChanged) {
-          this.ecosystem.modBus.dispatch(
+        if (ecosystem._mods.stateChanged) {
+          ecosystem.modBus.dispatch(
             pluginActions.stateChanged({
               cache: cache as SelectorCache<any, any[]>,
               newState: result,
@@ -461,7 +459,7 @@ export class Selectors {
         cache.result = result
       }
     } catch (err) {
-      this.ecosystem._graph.destroyBuffer()
+      ecosystem._graph.destroyBuffer()
       console.error(
         `Zedux encountered an error while running AtomSelector with id "${id}":`,
         err
@@ -469,11 +467,11 @@ export class Selectors {
 
       throw err
     } finally {
-      this.ecosystem._evaluationStack.finish()
+      ecosystem._evaluationStack.finish()
       cache.prevEvaluationReasons = cache.nextEvaluationReasons
       cache.nextEvaluationReasons = []
     }
 
-    this.ecosystem._graph.flushUpdates()
+    ecosystem._graph.flushUpdates()
   }
 }

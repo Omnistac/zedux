@@ -24,7 +24,7 @@ export const useAtomConsumer: {
   const instance = useContext(ecosystem._getReactContext(atom))
 
   if (!defaultParams || is(instance, AtomInstanceBase)) {
-    if (DEV && (instance as AtomInstanceType<A>).activeState === 'Destroyed') {
+    if (DEV && (instance as AtomInstanceType<A>).status === 'Destroyed') {
       throw new Error(
         `Zedux: useAtomConsumer - A destroyed atom instance was provided with key "${
           (instance as AtomInstanceType<A>).id

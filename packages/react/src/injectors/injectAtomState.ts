@@ -4,13 +4,13 @@ import {
   AtomExportsType,
   AtomParamsType,
   AtomStateType,
-  ParamlessAtom,
+  ParamlessTemplate,
   StateHookTuple,
 } from '../types'
 import { injectAtomInstance } from './injectAtomInstance'
 
 export const injectAtomState: {
-  <A extends ParamlessAtom>(atom: A): StateHookTuple<
+  <A extends ParamlessTemplate>(atom: A): StateHookTuple<
     AtomStateType<A>,
     AtomExportsType<A>
   >

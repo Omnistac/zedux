@@ -5,7 +5,7 @@ import {
   AtomInstanceType,
   AtomParamsType,
   InjectAtomInstanceConfig,
-  ParamlessAtom,
+  ParamlessTemplate,
   PartialAtomInstance,
 } from '../types'
 import { createInjector } from '../factories'
@@ -35,7 +35,7 @@ const defaultOperation = 'injectAtomInstance'
  * @returns An atom instance, keyed based on the passed params.
  */
 export const injectAtomInstance: {
-  <A extends ParamlessAtom>(atom: A): AtomInstanceType<A>
+  <A extends ParamlessTemplate>(atom: A): AtomInstanceType<A>
 
   <A extends AnyAtomTemplate>(
     atom: A,

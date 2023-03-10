@@ -16,11 +16,11 @@ export type AtomInstanceType<
 > = A extends AtomTemplateBase<any, infer T> ? T : never
 
 export type AtomParamsType<
-  A extends AnyAtomTemplate | AnyAtomInstanceBase
+  A extends AnyAtomTemplate | AnyAtomInstance
 > = A extends AtomTemplateBase<infer G, AtomInstance<infer G>>
   ? G['Params']
-  : A extends AtomInstanceBase<any, infer AtomTemplateType>
-  ? AtomParamsType<AtomTemplateType>
+  : A extends AtomInstance<infer G>
+  ? G['Params']
   : never
 
 export type AtomPromiseType<
@@ -32,11 +32,11 @@ export type AtomPromiseType<
   : never
 
 export type AtomStateType<
-  A extends AnyAtomTemplate | AnyAtomInstanceBase
+  A extends AnyAtomTemplate | AnyAtomInstance
 > = A extends AtomTemplateBase<infer G, AtomInstance<infer G>>
   ? G['State']
-  : A extends AtomInstanceBase<infer T, any>
-  ? T
+  : A extends AtomInstance<infer G>
+  ? G['State']
   : never
 
 export type AtomStoreType<

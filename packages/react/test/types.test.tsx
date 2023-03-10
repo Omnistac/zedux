@@ -1,9 +1,10 @@
 import { Store } from '@zedux/core'
-import { AtomTemplateBase } from '@zedux/react'
+import { AtomInstance, AtomTemplateBase } from '@zedux/react'
 import { api, atom, createEcosystem, ion } from '@zedux/react/factories'
-import { injectStore } from '@zedux/react/injectors'
+import { injectAtomValue, injectStore } from '@zedux/react/injectors'
 import {
   AtomExportsType,
+  AtomGenericsPartial,
   AtomInstanceType,
   AtomParamsType,
   AtomPromiseType,
@@ -438,6 +439,50 @@ describe('types', () => {
     >()
     expectTypeOf<AtomPromiseType<typeof queryWithPromiseIon>>().toEqualTypeOf<
       Promise<string>
+    >()
+  })
+
+  test('AtomGenericsPartial - instances as params', () => {
+    const innerAtom = atom('inner', 'a')
+
+    const outerAtom = atom(
+      'outer',
+      (instance: AtomInstance<AtomGenericsPartial<{ State: string }>>) => {
+        const val = injectAtomValue(instance) // subscribe to updates
+
+        return val.toUpperCase()
+      }
+    )
+
+    const innerInstance = ecosystem.getInstance(innerAtom)
+    const outerInstance = ecosystem.getInstance(outerAtom, [innerInstance])
+    const val = outerInstance.getState()
+
+    expect(val).toBe('A')
+    expectTypeOf<typeof innerInstance>().toMatchTypeOf<
+      AtomInstance<{
+        Exports: Record<string, never>
+        Params: []
+        State: string
+        Store: Store<string>
+        Promise: undefined
+      }>
+    >()
+
+    expectTypeOf<typeof outerInstance>().toMatchTypeOf<
+      AtomInstance<{
+        Exports: Record<string, never>
+        Params: [
+          instance: AtomInstance<
+            AtomGenericsPartial<{
+              State: string
+            }>
+          >
+        ]
+        State: string
+        Store: Store<string>
+        Promise: undefined
+      }>
     >()
   })
 })

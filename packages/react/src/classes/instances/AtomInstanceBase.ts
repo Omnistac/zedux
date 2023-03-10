@@ -1,10 +1,10 @@
 import {
-  ActiveState,
   EvaluationReason,
   Cleanup,
   PromiseStatus,
   DependentCallback,
   AnyAtomTemplate,
+  LifecycleStatus,
 } from '@zedux/react/types'
 import {
   Explicit,
@@ -20,9 +20,9 @@ export abstract class AtomInstanceBase<
   TemplateType extends AnyAtomTemplate
 > {
   public static $$typeof = Symbol.for(`${prefix}/AtomInstanceBase`)
-  public abstract activeState: ActiveState
   public abstract ecosystem: Ecosystem
   public abstract id: string
+  public abstract status: LifecycleStatus
   public abstract promise?: Promise<any>
   public abstract store: Store<State>
   public abstract template: TemplateType

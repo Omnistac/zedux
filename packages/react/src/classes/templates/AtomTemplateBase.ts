@@ -20,8 +20,10 @@ export abstract class AtomTemplateBase<
    * Set this to true when this atom template is a known override of another
    * atom template with the same key.
    *
-   * This prevents Zedux from logging an error when encountering this atom
-   * override and the ecosystem's `dedupe` option is true.
+   * This has no built-in functionality, but it allows plugins to identify
+   * potentially problematic duplicate atom keys e.g. by hooking into the
+   * `instanceReused` mod and logging a warning if the templates don't match and
+   * neither is an override.
    */
   public _isOverride?: boolean
 
