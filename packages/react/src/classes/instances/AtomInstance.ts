@@ -164,7 +164,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
    * An alias for `instance.store.getState()`. Returns the current state of this
    * atom instance's store.
    */
-  public getState() {
+  public getState(): G['State'] {
     return this.store.getState()
   }
 
