@@ -506,20 +506,10 @@ export class Store<State = any> {
     this._currentState = newState
 
     // defer informing if a parent store is currently dispatching
-    this._scheduler.scheduleNow(
-      {
-        task: () => {
-          // skip informing subscribers if the state has already been changed
-          // by a parent store's subscriber (which state change is already
-          // propagated to this store's subscribers by this point):
-          if (this._currentState !== newState) return
-
-          this._finishInforming(effect)
-        },
-        type: 1, // InformSubscribers (1)
-      },
-      false
-    )
+    this._scheduler.scheduleNow({
+      task: () => this._finishInforming(effect),
+      type: 1, // InformSubscribers (1)
+    })
 
     this._parents?.forEach(parent => parent(effect))
   }

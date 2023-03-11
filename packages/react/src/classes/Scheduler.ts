@@ -35,30 +35,7 @@ export class Scheduler implements SchedulerInterface {
       // RunEffect (4) jobs run in any order, after everything else
       this.jobs.push(newJob)
     } else {
-      const { nodes } = this.ecosystem._graph
-      const flags = newJob.flags ?? 0
-      const weight = newJob.id ? nodes[newJob.id].weight : 0
-
-      const index = this.findIndex(job => {
-        if (job.type !== newJob.type) return +(newJob.type - job.type > 0) || -1 // 1 or -1
-
-        // a job type can use either weight or flags comparison or neither
-        if (job.id) {
-          const jobWeight = nodes[job.id].weight
-
-          return weight < jobWeight ? -1 : +(weight > jobWeight) // + = 0 or 1
-        } else if (job.flags != null) {
-          return flags < job.flags ? -1 : +(flags > job.flags)
-        }
-
-        return 0
-      })
-
-      if (index === -1) {
-        this.jobs.push(newJob)
-      } else {
-        this.jobs.splice(index, 0, newJob)
-      }
+      this.insertJob(newJob)
     }
 
     // we just pushed the first job onto the queue
@@ -74,9 +51,15 @@ export class Scheduler implements SchedulerInterface {
    * Other jobs (inform subscriber jobs) must run immediately after the current
    * task. This is done by passing `false` for the 2nd param.
    */
-  public scheduleNow(newJob: Job, runIfRunning = true) {
-    if (this._isRunning === runIfRunning) return newJob.task()
-    this.jobs.unshift(newJob)
+  public scheduleNow(newJob: Job) {
+    if (this._isRunning && newJob.type === 0) return newJob.task()
+
+    if (newJob.type === 1) {
+      this.insertJob(newJob)
+    } else {
+      this.jobs.unshift(newJob)
+    }
+
     this.flush()
   }
 
@@ -119,6 +102,38 @@ export class Scheduler implements SchedulerInterface {
     )
 
     return this.findIndex(cb, newIndex, iteration + 1)
+  }
+
+  private insertJob(newJob: Job) {
+    const { nodes } = this.ecosystem._graph
+    const flags = newJob.flags ?? 0
+    const weight = newJob.id ? nodes[newJob.id].weight : 0
+
+    const index = this.findIndex(job => {
+      if (job.type !== newJob.type) return +(newJob.type - job.type > 0) || -1 // 1 or -1
+
+      // InformSubscribers (1) jobs go after all other InformSubscribers jobs
+      if (job.type === 1) {
+        return 1
+      }
+
+      // other jobs can use either weight or flags comparison or neither
+      if (job.id) {
+        const jobWeight = nodes[job.id].weight
+
+        return weight < jobWeight ? -1 : +(weight > jobWeight) // + = 0 or 1
+      } else if (job.flags != null) {
+        return flags < job.flags ? -1 : +(flags > job.flags)
+      }
+
+      return 0
+    })
+
+    if (index === -1) {
+      this.jobs.push(newJob)
+    } else {
+      this.jobs.splice(index, 0, newJob)
+    }
   }
 
   private runJobs() {

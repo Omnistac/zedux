@@ -1,8 +1,15 @@
 import { Store } from '@zedux/core'
 import { AtomInstance, AtomTemplateBase } from '@zedux/react'
 import { api, atom, createEcosystem, ion } from '@zedux/react/factories'
-import { injectAtomValue, injectStore } from '@zedux/react/injectors'
 import {
+  injectAtomInstance,
+  injectAtomState,
+  injectAtomValue,
+  injectStore,
+} from '@zedux/react/injectors'
+import {
+  AnyAtomInstance,
+  AnyAtomTemplate,
   AtomExportsType,
   AtomGenericsPartial,
   AtomInstanceType,
@@ -11,6 +18,8 @@ import {
   AtomStateType,
   AtomStoreType,
   AtomTemplateType,
+  AtomTuple,
+  ParamlessTemplate,
   PromiseState,
 } from '@zedux/react/types'
 import { expectTypeOf } from 'expect-type'
@@ -20,7 +29,8 @@ const exampleAtom = atom('example', (p: string) => {
 
   return api(store)
     .setExports({
-      getNum: () => 2,
+      getBool: () => Boolean(store.getState()),
+      getNum: () => Number(store.getState()),
     })
     .setPromise(Promise.resolve(2))
 })
@@ -484,5 +494,131 @@ describe('types', () => {
         Promise: undefined
       }>
     >()
+  })
+
+  test('accepting templates', () => {
+    const getKey = <A extends AnyAtomTemplate>(template: A) => template.key
+
+    let idCounter = 0
+    const instantiateWithId = <
+      A extends AnyAtomTemplate<{ Params: [id: string] }>
+    >(
+      template: A
+    ) =>
+      ecosystem.getInstance(template, [
+        (idCounter++).toString(),
+      ] as AtomParamsType<A>)
+
+    const key = getKey(exampleAtom)
+    const instance = instantiateWithId(exampleAtom)
+
+    expectTypeOf<typeof key>().toBeString()
+    expectTypeOf<typeof instance>().toMatchTypeOf<
+      AtomInstance<{
+        State: string
+        Params: [p: string]
+        Exports: {
+          getBool: () => boolean
+          getNum: () => number
+        }
+        Store: Store<string>
+        Promise: Promise<number>
+      }>
+    >()
+  })
+
+  test('accepting instances', () => {
+    const getExampleVal = <I extends AtomInstanceType<typeof exampleAtom>>(
+      i: I
+    ) => i.getState()
+
+    const getKey = <I extends AnyAtomInstance>(instance: I) =>
+      instance.template.key
+
+    const getUppercase = <I extends AnyAtomInstance<{ State: string }>>(
+      instance: I
+    ) => instance.getState().toUpperCase()
+
+    const getNum = <
+      I extends Omit<AnyAtomInstance<{ State: string }>, 'exports'> & {
+        exports: { getNum: () => number }
+      }
+    >(
+      i: I
+    ) => i.exports.getNum()
+
+    const getNum2 = <I extends { exports: { getNum: () => number } }>(i: I) =>
+      i.exports.getNum()
+
+    const getValue: {
+      // no params ("singleton"):
+      <A extends ParamlessTemplate>(template: A): AtomStateType<A>
+
+      // params ("family"):
+      <A extends AnyAtomTemplate>(
+        template: A,
+        params: AtomParamsType<A>
+      ): AtomStateType<A>
+
+      // also accept instances:
+      <I extends AnyAtomInstance>(instance: I): AtomStateType<I>
+    } = <A extends AnyAtomTemplate | AnyAtomInstance>(template: A) =>
+      ecosystem.get(template as AnyAtomTemplate)
+
+    const instance = ecosystem.getInstance(exampleAtom, ['a'])
+    const exampleVal = getExampleVal(instance)
+    const key = getKey(instance)
+    const uppercase = getUppercase(instance)
+    const num = getNum(instance)
+    const num2 = getNum2(instance)
+    const val = getValue(exampleAtom, ['a'])
+    const val2 = getValue(instance)
+
+    expectTypeOf<typeof exampleVal>().toBeString()
+    expectTypeOf<typeof key>().toBeString()
+    expectTypeOf<typeof uppercase>().toBeString()
+    expectTypeOf<typeof num>().toBeNumber()
+    expectTypeOf<typeof num2>().toBeNumber()
+    expectTypeOf<typeof val>().toBeString()
+    expectTypeOf<typeof val2>().toBeString()
+  })
+
+  test('injectors', () => {
+    const injectingAtom = atom('injecting', () => {
+      // @ts-expect-error missing param
+      injectAtomInstance(exampleAtom)
+      const instance = injectAtomInstance(exampleAtom, ['a'])
+      const val1 = injectAtomValue(exampleAtom, ['a'])
+      const val2 = injectAtomValue(instance)
+      const [val3] = injectAtomState(exampleAtom, ['a'])
+      const [val4] = injectAtomState(instance)
+
+      return api(injectStore(instance.getState())).setExports({
+        val1,
+        val2,
+        val3,
+        val4,
+      })
+    })
+
+    const instance = ecosystem.getInstance(injectingAtom)
+
+    expectTypeOf<AtomStateType<typeof instance>>().toBeString()
+    expectTypeOf<AtomExportsType<typeof instance>>().toMatchTypeOf<{
+      val1: string
+      val2: string
+      val3: string
+      val4: string
+    }>()
+  })
+
+  test('AtomTuple', () => {
+    const getPromise = <A extends AnyAtomTemplate<{ Promise: Promise<any> }>>(
+      ...[template, params]: AtomTuple<A>
+    ) => ecosystem.getInstance(template, params).promise as AtomPromiseType<A>
+
+    const promise = getPromise(exampleAtom, ['a'])
+
+    expectTypeOf<typeof promise>().resolves.toBeNumber()
   })
 })

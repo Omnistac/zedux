@@ -194,7 +194,7 @@ export type Reducer<State = any> = (
 ) => State
 
 export interface Scheduler {
-  scheduleNow(newJob: Job, runIfRunning?: boolean): void
+  scheduleNow(newJob: Job): void
 }
 
 export type Selector<State = any, Derivation = any> = (

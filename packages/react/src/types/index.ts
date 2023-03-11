@@ -1,29 +1,17 @@
-import { ActionChain, Observable, Settable, Store } from '@zedux/core'
-import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
+import { ActionChain, Observable, Settable } from '@zedux/core'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
 import { SelectorCache } from '../classes/Selectors'
-import { AtomInstanceType, AtomParamsType, AtomStateType } from './atoms'
-import { AnyAtomInstance, AnyAtomTemplate } from './utils'
+import {
+  AnyAtomInstance,
+  AnyAtomTemplate,
+  AtomGenerics,
+  AtomInstanceType,
+  AtomParamsType,
+  AtomStateType,
+} from './atoms'
 
 export * from './atoms'
-export * from './utils'
-
-export interface AtomGenerics {
-  Exports: Record<string, any>
-  Params: any[]
-  Promise: AtomApiPromise
-  State: any
-  Store: Store<any>
-}
-
-export type AtomGenericsPartial<G extends Partial<AtomGenerics>> = Omit<
-  { Exports: any; Params: any; Promise: any; State: any; Store: any },
-  keyof G
-> &
-  G
-
-export type AtomApiPromise = Promise<any> | undefined
 
 export interface AtomConfig<State = any> {
   dehydrate?: <D>(state: State) => D
@@ -284,10 +272,7 @@ export interface MutableRefObject<T = any> {
   current: T
 }
 
-export type ParamlessTemplate = AtomTemplateBase<
-  AtomGenericsPartial<{ Params: [] }>,
-  any
->
+export type ParamlessTemplate = AnyAtomTemplate<{ Params: [] }>
 
 /**
  * Part of the atom instance can be accessed during initial evaluation. The only
