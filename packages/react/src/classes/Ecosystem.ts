@@ -3,7 +3,6 @@ import React, { createContext } from 'react'
 import { internalStore } from '../store'
 import {
   AnyAtomInstance,
-  AnyAtomInstanceBase,
   AnyAtomTemplate,
   AtomGettersBase,
   AtomInstanceType,
@@ -339,7 +338,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     params?: AtomParamsType<A>
   ) {
     if (is(atom, AtomInstanceBase)) {
-      return (atom as AnyAtomInstanceBase).store.getState()
+      return (atom as AnyAtomInstance).store.getState()
     }
 
     const instance = this.getInstance(

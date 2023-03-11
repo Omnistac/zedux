@@ -4,12 +4,12 @@ import { HierarchyType } from '../utils/general'
 import { getMetaData, removeMeta } from '../api/meta'
 import { DiffNode, StoreNode } from '../utils/types'
 
-export const getErrorMessage = DEV
-  ? (subStorePath: string[]) =>
-      `Zedux: store.dispatch() - Invalid Delegation - Current store hierarchy does not contain a sub-store at path: ${subStorePath.join(
-        ' -> '
-      )}`
-  : () => ''
+const getErrorMessage = (subStorePath: string[]) =>
+  `Zedux: store.dispatch() - Invalid Delegation - Store does not contain a child store at path: ${subStorePath.join(
+    ' -> '
+  )}`
+
+const prodError = 'Minified Error'
 
 /**
   Finds a node in a diffTree given a node path (array of nodes).
@@ -17,13 +17,13 @@ export const getErrorMessage = DEV
 const findChild = (diffTree: DiffNode, nodePath: string[]) => {
   for (const node of nodePath) {
     if (diffTree.type !== HierarchyType.Branch) {
-      throw new ReferenceError(getErrorMessage(nodePath))
+      throw new ReferenceError(DEV ? getErrorMessage(nodePath) : prodError)
     }
 
     diffTree = diffTree.children[node]
 
     if (!diffTree) {
-      throw new ReferenceError(getErrorMessage(nodePath))
+      throw new ReferenceError(DEV ? getErrorMessage(nodePath) : prodError)
     }
   }
 
@@ -53,7 +53,7 @@ export const delegate = (
   const child = findChild(diffTree, subStorePath)
 
   if (child.type !== HierarchyType.Store) {
-    throw new TypeError(getErrorMessage(subStorePath))
+    throw new TypeError(DEV ? getErrorMessage(subStorePath) : prodError)
   }
 
   ;(child as StoreNode).store.dispatch(

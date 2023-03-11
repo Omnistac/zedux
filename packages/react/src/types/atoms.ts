@@ -1,7 +1,36 @@
+import { Store } from '@zedux/core'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomInstance } from '../classes/instances/AtomInstance'
 import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
-import { AnyAtomInstance, AnyAtomInstanceBase, AnyAtomTemplate } from './utils'
+
+type AnyAtomGenerics = { [K in keyof AtomGenerics]: any }
+
+export type AnyAtomInstance<
+  G extends Partial<AtomGenerics> | 'any' = 'any'
+> = AtomInstance<G extends Partial<AtomGenerics> ? AtomGenericsPartial<G> : any>
+
+export type AnyAtomTemplate<
+  G extends Partial<AtomGenerics> | 'any' = 'any'
+> = AtomTemplateBase<
+  G extends Partial<AtomGenerics> ? AtomGenericsPartial<G> : any,
+  AnyAtomInstance<G>
+>
+
+export interface AtomGenerics {
+  Exports: Record<string, any>
+  Params: any[]
+  Promise: AtomApiPromise
+  State: any
+  Store: Store<any>
+}
+
+export type AtomGenericsPartial<G extends Partial<AtomGenerics>> = Omit<
+  AnyAtomGenerics,
+  keyof G
+> &
+  G
+
+export type AtomApiPromise = Promise<any> | undefined
 
 export type AtomExportsType<
   A extends AnyAtomTemplate | AnyAtomInstance
@@ -48,5 +77,5 @@ export type AtomStoreType<
   : never
 
 export type AtomTemplateType<
-  A extends AnyAtomInstanceBase
+  A extends AtomInstanceBase<any, AtomTemplateBase<any, AtomInstance<any>>>
 > = A extends AtomInstanceBase<any, infer T> ? T : never
