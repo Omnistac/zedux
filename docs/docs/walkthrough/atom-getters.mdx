@@ -3,7 +3,7 @@ id: atom-getters
 title: Atom Getters
 ---
 
-We've learned several hooks and injectors that we can use to get atoms and their values while updating the dependency graph. These are easy enough. But it gets even easier.
+This walkthrough has introduced several hooks and injectors that let you manipulate the dependency graph. These are easy enough. But it gets even easier.
 
 :::tip you will learn:
 How to use Atom Getters to dynamically and efficiently update the graph.
@@ -27,7 +27,7 @@ Let's take a quick look at each Atom Getter.
 
 ### `get`
 
-Returns the current value of an atom instance.
+Returns the current value of an atom instance. Creates the instance using the passed template if it doesn't exist.
 
 ```ts
 const value = get(myAtom)
@@ -37,7 +37,7 @@ get(myAtom, ['param 1', 'param 2'])
 
 ### `getInstance`
 
-Returns an atom instance.
+Returns an atom instance. Creates the instance using the passed template if it doesn't exist.
 
 ```ts
 const instance = getInstance(myAtom)
@@ -66,16 +66,21 @@ That's right, every ecosystem _is_ an Atom Getters object.
 ```ts
 const ecosystem = useEcosystem()
 
+// get
 const instanceValue = ecosystem.get(myAtom, ['param 1', 'param 2'])
+
+// getInstance
 const instance = ecosystem.getInstance(myAtom, ['param 1', 'param 2'])
+
+// select
 const selectorResult = ecosystem.select(myAtomSelector)
 ```
 
-Ecosystems are the **only** Atom Getters objects that don't have an `ecosystem` field (how redundant would that be). The ecosystem's Atom Getters are also unique in that they never register graph dependencies. More on this [shortly](#registering-dependencies).
+Ecosystems are the **only** Atom Getters objects that don't have an `ecosystem` field (they don't need it of course!). The ecosystem's Atom Getters are also unique in that they never register graph dependencies. More on this [shortly](#registering-dependencies).
 
 ### `injectAtomGetters`
 
-You can inject an Atom Getters object in any atom using `injectAtomGetters`:
+You can inject an Atom Getters object in any atom using `injectAtomGetters()`:
 
 ```ts
 const exampleAtom = atom('example', () => {
@@ -111,15 +116,15 @@ const exampleIon = ion(
 
 ## Registering Dependencies
 
-When `get`, `getInstance`, and `select` are called **synchronously** during atom instance evaluation or Atom Selector evaluation, they register graph dependencies.
+When `get`, `getInstance`, and `select` are called **synchronously** during atom or selector evaluation, they register graph dependencies.
 
-- `get` registers dynamic dependencies
-- `getInstance` registers static dependencies
-- `select` registers dynamic and static dependencies depending on what the Atom Selector does. Dynamic dependencies created by the selector only cause an update if the selector result changes.
+- `get` registers dynamic dependencies.
+- `getInstance` registers static dependencies.
+- `select` registers a dynamic dependency on the selector itself, which in turn registers its own dynamic and static deps.
 
-Atom Getters **never** register graph dependencies when called after evaluation ends. Also, importantly, the Atom Getters on the ecosystem **never** register graph dependencies.
+This graph automation only happens during evaluation. When called after evaluation ends (e.g. in an effect or exported callback), Atom Getters **never** register graph dependencies.
 
-You can use this to purposefully prevent dependencies from being registered:
+The Atom Getters on the ecosystem also **never** register graph dependencies. You can use this to purposefully prevent dependencies from being registered:
 
 ```ts
 // toggling this atom's value changes maybeDynamicAtom's dynamicity!
@@ -142,7 +147,7 @@ Since the ecosystem's Atom Getters never register graph dependencies, they can b
 // create an atom instance outside React or atoms or anything:
 const instance = ecosystem.getInstance(myAtom)
 
-// run myAtomSelector anywhere
+// run a selector anywhere:
 const val = ecosystem.select(myAtomSelector)
 ```
 
@@ -219,7 +224,7 @@ While an atom instance or Atom Selector is evaluating, Zedux buffers graph updat
 const exampleAtom = atom('example', () => {
   const { ecosystem, get } = injectAtomGetters()
 
-  const otherVal = get(myOtherAtom)
+  const otherVal = get(myOtherAtom) // create a dep
 
   ecosystem.viewGraph() // the dep won't be there (it doesn't exist yet!)
 })
@@ -228,7 +233,7 @@ const exampleAtom = atom('example', () => {
 const exampleAtom = atom('example', () => {
   const { ecosystem, get } = injectAtomGetters()
 
-  const otherVal = get(myOtherAtom)
+  const otherVal = get(myOtherAtom) // create a dep
 
   injectEffect(() => {
     ecosystem.viewGraph() // effects are deferred; the dep exists now!
@@ -255,7 +260,7 @@ const exampleAtom = atom('example', () => {
 
 ## Conditional Injectors
 
-Remember how injectors are like hooks? As such, `injectAtomValue`, `injectAtomInstance`, etc. can't be used in `if` statements or loops. Atom Getters, however, **are not injectors**. This means they **can** be used conditionally!
+Remember how injectors are like hooks? As such, `injectAtomValue`, `injectAtomInstance`, etc. can't be used in `if` statements or loops. Atom Getters, however, are not injectors. This means they _can_ be used conditionally!
 
 ```tsx live ecosystemId=atom-getters/conditional-injectors resultVar=CounterList
 // Let's do a bigger example. This is a good opportunity to review what
@@ -350,7 +355,7 @@ When a string is passed, `ecosystem.findAll()` returns all atom instance whose i
 - `get` returns an atom instance's value. It registers dynamic graph dependencies when called synchronously during evaluation.
 - `getInstance` returns an atom instance. It registers static graph dependencies when called synchronously during evaluation.
 - `select` returns an Atom Selector's result. It registers dependencies dynamically depending on the Atom Selector.
-- Zedux passes an Atom Getters object to Atom Selectors and Ions. Get them manually with `injectAtomGetters`. Every ecosystem is also an Atom Getters object.
+- Zedux passes an Atom Getters object to Atom Selectors and Ions. Or get them manually with `injectAtomGetters()`. Every ecosystem is also an Atom Getters object.
 - The ecosystem's Atom Getters never register graph dependencies - and thus are your static analysis and testing friends.
 - When called after evaluation, Atom Getters do not register graph dependencies.
 - Atom Getters can be safely used in loops and conditional statements.

@@ -21,11 +21,7 @@ const atomB = atom('b', () => {
 })
 ```
 
-But there are a couple workarounds. The basic idea for all of them is: Create one of the dependencies asynchronously
-
-### Workaround 1
-
-Only make one dependency, e.g. `a -> b` (a depends on b). Load the other atom when needed, e.g. (in b) `get(atomA)`.
+But there are some workarounds. The basic idea for all of them is: Only make one dependency, e.g. `a -> b` (a depends on b). Load the other atom when needed, e.g. `get(atomA)` in a `b` callback or effect.
 
 ```ts
 import {
@@ -39,9 +35,9 @@ import {
 const connectionAtom = atom('connection', () => {
   const { getInstance } = injectAtomGetters()
 
-  // instead of calling getInstance during atom evaluation like this:
-  // const login = getInstance(loginAtom)
-  // we call it only when we need to (inside an exported callback):
+  // instead of registering a dependency on loginAtom like this:
+  // const { login } = getInstance(loginAtom).exports
+  // get the instance right when it's needed (inside an exported callback):
   // highlight-next-line
   const logout = () => getInstance(loginAtom).exports.reset()
 
@@ -69,35 +65,10 @@ const loginAtom = atom('login', () => {
 
 (Note that the better solution here is to move the `logout` function somewhere else - e.g. inside `loginAtom` - completely avoiding the circular dependency in the first place).
 
-### Workaround 2
+Another possible solution is to pass a [partial instance](../api/factories/createInjector#partial-instance) as a [param](../walkthrough/the-graph#instances-as-params) to the other atom (yes, a partial instance is supported just like a normal instance). This would work as long as the "child" atom doesn't register any kind of graph dependency on the received "parent" atom instance.
 
-Use [manual graphing](../walkthrough/destruction#manual-graphing) to add a dependency later.
-
-```ts
-const atomA = atom('a', () => {
-  const b = injectAtomValue(atomB)
-
-  return 'a' + b
-})
-
-const atomB = atom('b', () => {
-  const { getInstance } = injectAtomGetters
-  const store = injectStore('b')
-
-  injectEffect(() => {
-    const a = getInstance(atomA)
-    const cleanup = a.addDependent()
-    store.setState(a)
-
-    return cleanup // this is insufficient; see Important Note below
-  }, [])
-
-  return store
-})
-```
-
-:::note Important Note below
-In this case, these two atoms have real dependencies on each other. As such, they prevent each other from being cleaned up, so this `injectEffect` cleanup will never run. You'll need to account for that by destroying the manually created edge yourself or force destroying either instance if destruction is needed.
+:::info important
+You may be tempted to use manual graphing to create a real dependency asynchronously. This is not supported. Zedux's graph is acyclic, meaning circular dependencies break everything no matter how they're created. It is possible to change that, but we don't want to for performance reasons.
 :::
 
 ## Atom Factories

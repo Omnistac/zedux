@@ -3,9 +3,9 @@ id: destruction
 title: Destruction
 ---
 
-In [the atom instances walkthrough](atom-instances), we learned that every atom instance has an `activeState` "lifecycle":
+The [atom instances walkthrough](atom-instances) showed that every atom instance has a `status` "lifecycle":
 
-![Initializing -> Active <-> Stale -> Destroyed](/img/diagrams/active-state-machine.png)
+![Initializing -> Active <-> Stale -> Destroyed](/img/diagrams/status-machine.png)
 
 But when exactly does an atom instance transition between these states?
 
@@ -30,25 +30,25 @@ const lifecycleTestAtom = atom('lifecycleTest', null)
 function MyComponent() {
   // this call creates the atom instance and gives it its first dependent:
   const instance = useAtomInstance(lifecycleTestAtom)
-  instance.activeState // 'Active'
+  instance.status // 'Active'
 }
 ```
 
 We call "the number of dependents of an atom instance" the atom instance's "ref count". As long as the ref count is `> 0`, the atom instance is Active. When the ref count hits 0, the atom instance goes Stale.
 
-In the example above, if `MyComponent` is the only dependent on the `lifecycleTest` atom instance, its ref count will be 1. If `MyComponent` is unmounted, the ref count will go to 0 and Zedux will set the instance's `activeState` to `'Stale'`.
+In the example above, if `MyComponent` is the only dependent on the `lifecycleTest` atom instance, its ref count will be 1. If `MyComponent` is unmounted, the ref count will go to 0 and Zedux will set the instance's `status` to `'Stale'`.
 
-When a Stale atom instance's ref count goes back up to 1, its `activeState` transitions back to `'Active'`.
+When a Stale atom instance's ref count goes back up to 1, its `status` transitions back to `'Active'`.
 
 ## Instance Destruction
 
 When an atom instance is destroyed, Zedux removes all its dependency graph edges, cleans up its injectors (e.g. by calling `injectEffect` cleanup functions), and removes it from the ecosystem and the graph.
 
-But how do we destroy the instance?
+But how do you destroy an atom instance?
 
 ### TTL
 
-We learned about `ttl` in [the configuring atoms walkthrough](configuring-atoms). This is the simplest way to destroy atom instances.
+The [configuring atoms walkthrough](configuring-atoms) showed how to configure an atom's TTL. This is the simplest way to destroy atom instances.
 
 There are 4 possible TTL flows:
 
@@ -93,7 +93,7 @@ Using `instance.destroy()` like this is fine. It's good enough when you just nee
 
 ## Atom Selector Destruction
 
-Atom Selectors don't have the same `activeState` lifecycle status as atom instances. But Atom Selector caches do have a ref count and a lifecycle of sorts.
+Atom Selectors don't have the same `status` lifecycle as atom instances. But Atom Selector caches do have a ref count and a lifecycle of sorts.
 
 :::note
 Unlike atom instances, selector caches can never be stale - they're always destroyed automatically as soon as their ref count hits 0 (essentially they always have `ttl: 0`).
@@ -107,13 +107,14 @@ We saw this briefly in [the selectors walkthrough](selectors).
 
 ```ts
 ecosystem.selectors.destroyCache(myAtomSelector)
+ecosystem.selectors.destroyCache(myAtomSelector, ['with', 'params']))
 ```
 
 Just like `instance.destroy()`, this method does nothing by default if the selector cache's ref count is `> 0`.
 
 ## Force Destruction
 
-We just saw that by default Zedux always tries to bail out of destruction if a node's ref count is `> 0`. But you can change this behavior.
+_By default_ Zedux always tries to bail out of destruction if a node's ref count is `> 0`. But you can change this behavior.
 
 `instance.destroy()` takes a single optional parameter - `force`. Simply pass `true` to force destruction, ignoring ref count:
 
@@ -121,7 +122,7 @@ We just saw that by default Zedux always tries to bail out of destruction if a n
 instance.destroy(true)
 ```
 
-We can do the same thing with selector caches. `selectors.destroyCache` also has an optional `force` parameter as its 3rd param:
+You can do the same thing with selector caches. `selectors.destroyCache` also has an optional `force` parameter as its 3rd param:
 
 ```ts
 ecosystem.selectors.destroyCache(myAtomSelector, ['param 1', 'param 2'], true)
@@ -132,7 +133,9 @@ ecosystem.selectors.destroyCache(myAtomSelector, [], true)
 
 When a node is force-destroyed, TTL is disregarded. Zedux immediately destroys the node and notifies all current dependents that their dependency was destroyed. But those dependents **need** this node! That's what a _dependency_ is, after all.
 
-Dependents of a force-destroyed node automatically schedule a rerender (if the dependent is a React component) or reevaluation (if the dependent is an atom or Atom Selector) to recreate their dependency. That's right; force-destroyed nodes will be automatically recreated by their dependents. Because of this, force-destruction serves as a sort of "reset". More on this in [the resets walkthrough](resets).
+Dependents of a force-destroyed node automatically schedule a rerender (if the dependent is a React component) or reevaluation (if the dependent is an atom or Atom Selector) to recreate their dependency.
+
+That's right; force-destroyed nodes will be automatically recreated by their dependents. Because of this, force-destruction serves as a sort of "reset". More on this in [the resets walkthrough](resets).
 
 ```tsx live ecosystemId=destruction/force-destruction resultVar=Destroyer
 const destroyableAtom = atom('destroyable', () => Math.random().toFixed(4))
@@ -262,8 +265,8 @@ The manual way. You'll probably never need this in a normal app. It's mostly for
 
 Ecosystems also keep a "ref count" of sorts to track how often they're provided in [`<EcosystemProvider>`s](../api/components/EcosystemProvider). Destruction will bail out by default if the ref count is `> 0`. Pass `true` to force destruction anyway.
 
-:::info important
-Unlike force-destroying atom instances and selector caches, force-destroying ecosystems is not at all recommended (and not really tested). There shouldn't ever be a need to force-destroy an ecosystem. We may remove the ability.
+:::danger
+Unlike force-destroying atom instances and selector caches, force-destroying ecosystems is not at all recommended. There shouldn't ever be a need to force-destroy an ecosystem. We may remove the ability.
 :::
 
 ```ts
@@ -308,4 +311,4 @@ Again, this is mostly for testing convenience. You probably won't find yourself 
 
 ## Next Steps
 
-Now that you know how to control the lifecycle of atom instances, you're ready to learn the cool stuff. Let's start with learning how to [provide atom instances over React context](react-context).
+With full control over atom instance lifecycles, you're ready to learn the cool stuff. Let's start with providing atom instances [over React context](react-context).

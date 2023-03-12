@@ -2,7 +2,6 @@ module.exports = {
   react: {
     About: [
       'about/introduction',
-      'about/overview',
       'about/recoil-comparison',
       'about/redux-comparison',
       'about/react-query-comparison',
@@ -30,12 +29,13 @@ module.exports = {
     ],
     Advanced: [
       'advanced/complex-params',
-      'advanced/persistence',
-      'advanced/ssr',
-      'advanced/time-travel',
-      'advanced/plugins',
-      'advanced/store-composition',
       'advanced/more-patterns',
+      'advanced/persistence',
+      'advanced/plugins',
+      'advanced/ssr',
+      'advanced/store-composition',
+      'advanced/time-travel',
+      'advanced/typescript-tips',
     ],
     API: [
       'api/api-overview',

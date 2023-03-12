@@ -170,7 +170,7 @@ childStore.getState() // 'a new value'
 
 When we set the child store's state, that change propagated to the parent store.
 
-When we set the parent store's state, the parent store recognized that the relevant state was controlled by a child store and [delegated](/not-done) that action to the child store. The child store then updated its state and propagated that change back up to the parent store.
+When we set the parent store's state, the parent store recognized that the relevant state was controlled by a child store and [delegated](../advanced/store-composition#delegation) that action to the child store. The child store then updated its state and propagated that change back up to the parent store.
 
 Now what can you do with that?
 
@@ -213,7 +213,7 @@ Remember that you can only return a single store from a state factory. Compositi
 const combinedStore = injectStore(() => createStore({ a: storeA, b: storeB }))
 ```
 
-Composition is powerful. There's a lot of potential for many more advanced patterns with store composition. In general though, you shouldn't need much more than what we did in these examples. You can check out the [store composition guide](/not-done) to learn more.
+Composition is powerful. There's a lot of potential for many more advanced patterns with store composition. In general though, you shouldn't need much more than what we did in these examples. You can check out the [store composition guide](../advanced/store-composition) to learn more.
 
 ## Subscribing
 

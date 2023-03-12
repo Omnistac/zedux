@@ -176,13 +176,13 @@ Suspense is on by default in Zedux. But suspense is still technically experiment
 
 ```ts
 useAtomValue(myAtom, ['param-1', 'param-2'], { suspend: false })
-useAtomValue(paramlessAtom, [], { suspend: false })
+useAtomValue(ParamlessTemplate, [], { suspend: false })
 useAtomValue(anAtomInstance, [], { suspend: false })
 
 // the same applies for all hooks that take atoms, e.g.:
 useAtomState(myAtom, ['param-1', 'param-2'], { suspend: false })
 
-useAtomInstance(paramlessAtom, [], { suspend: false })
+useAtomInstance(ParamlessTemplate, [], { suspend: false })
 ```
 
 ### Traditional Flow

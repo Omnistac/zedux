@@ -123,6 +123,14 @@ function App() {
     <div>
       <AtomKeyDesc />
     </div>
+    <p>
+      It is possible for plugins to hook into the{' '}
+      <Link to="../ZeduxPlugin#instancereused">
+        <code>instanceReused</code> mod
+      </Link>{' '}
+      and check for potentially problematic duplicate keys. Though HMR makes
+      that difficult.
+    </p>
   </Item>
   <Item name="valueOrFactory">
     <p>Required. Can be any of the following:</p>

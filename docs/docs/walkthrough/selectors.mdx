@@ -13,7 +13,7 @@ A crucial tool in state management is the ability to "derive" or transform data.
 - How to use selectors to dynamically subscribe to atoms
 - How to configure and compose Atom Selectors
 - How to control the memoization details of selectors
-- How to manipulate the selector cache
+- How to manipulate cached selectors
 
 :::
 
@@ -108,7 +108,7 @@ const userSettingsAtom = atom('userSettings', (userId: string) => {
 
 ## `select`
 
-We just learned about this Atom Getter in the [Atom Getters walkthrough](atom-getters). Anywhere you have access to Atom Getters, you can use the `select` Atom Getter to run an Atom Selector:
+The [Atom Getters walkthrough](atom-getters) just introduced this Atom Getter. Anywhere you have access to Atom Getters, you can use the `select` Atom Getter to run an Atom Selector:
 
 ```ts
 import { atom, injectAtomGetters } from '@zedux/react'
@@ -121,7 +121,7 @@ const userSettingsAtom = atom('userSettings', (userId: string) => {
 ```
 
 :::tip
-Remember, when Atom Getters are called synchronously during Atom Selector or atom instance evaluation (like we did here), they register graph dependencies. This means our `userSettingsAtom` will reevaluate every time `getUserById`'s result changes!
+Remember, when Atom Getters are called synchronously during Atom Selector or atom instance evaluation (like we did here), they register graph dependencies. This means that `userSettings` atom instances will reevaluate every time their `getUserById` selector's result changes!
 :::
 
 ### Selector Composition
@@ -182,7 +182,7 @@ function Username() {
 
 Atom Selectors are great for **simple selection logic**. They're meant to be light, fast, and easy - they're just functions! By design, you have less control over when Atom Selectors reevaluate than you do over atom instances. This is mostly due to how React works.
 
-Sometimes you need a more complex, expensive selector that must not run unless it absolutely needs to - imagine sorting, filter, and mapping a big list that changes often. Atom Selectors _can_ be okay for complex selection logic sometimes. But usually you'll want more control.
+Sometimes you need a more complex, expensive selector that must not run unless it absolutely needs to - imagine sorting, filtering, and mapping a big list that changes often. Atom Selectors _can_ be okay for complex selection logic sometimes. But usually you'll want more control.
 
 In Zedux, the simplest tool for taming expensive operations and controlling memoization details is [`injectMemo`](../api/injectors/injectMemo). Since Atom Selectors are **not** atoms, you can't use injectors in them. You could put selection logic in any old atom. But Zedux provides a special tool just for this:
 
@@ -196,7 +196,9 @@ const sortedUsersAtom = ion('sortedUsers', ({ get }) =>
 )
 ```
 
-The state factory of an ion receives an [Atom Getters object](atom-getters) as its first parameter. Any parameters after that are the actual params of the ion:
+The state factory of an ion receives an [Atom Getters object](atom-getters) as its first parameter. This parameter is the entire difference between atoms and ions. Any parameters after that are the actual params of the ion.
+
+Since ions are just atoms, you access them just like you would any other atom! e.g. with hooks like `useAtomValue` or injectors like `injectAtomInstance`:
 
 ```ts
 const sortedUsersAtom = ion('sortedUsers', ({ get }, roleFilter: string) => {
@@ -213,12 +215,6 @@ function MyComponent() {
   ...
 }
 ```
-
-:::note
-Since ions are just atoms, you access them just like you would any other atom! e.g. with hooks like `useAtomValue` or injectors like `injectAtomInstance`.
-:::
-
-This Atom Getters parameter is basically the entire difference between atoms and ions.
 
 :::tip
 Use an Atom Selector instead of an ion:
@@ -240,7 +236,7 @@ Use an ion instead of an Atom Selector:
 
 :::
 
-Since you have full control over atom evaluations, prefer ions for the heavy lifting.
+Since you have full control over atom evaluations, prefer ions for the heavy lifting. The [AtomSelector API doc](../api/types/AtomSelector#converting-atomselectors) demonstrates how easy it is to upgrade selectors to ions when needed.
 
 ## Limiting Renders
 
@@ -303,7 +299,7 @@ function Graph() {
 }
 ```
 
-Click `Log > Graph` in the above sandbox, open your browser console, and expand the `Flat` graph view. You'll see that `getUserById` has 2 entries in the graph - one for each set of params we passed it.
+Click `Log > Graph` in the above sandbox, open your browser console, and expand the `Flat` graph view. You'll see that `getUserById` has 2 entries in the graph - one for each set of params.
 
 Notice also that the `Graph` component is a dependent of the Atom Selectors themselves, which in turn are dependents of the `users` atom. This means that the `Graph` component will only rerender when the user objects returned from these selectors change, not when anything else in the `users` atom changes.
 
@@ -332,7 +328,7 @@ const cache = ecosystem.selectors.getCache(getUserById, [userId])
 ```
 
 :::note
-The 2nd argument to most Selectors methods is an array of the selector's params.
+The 2nd argument to most Selectors class methods is an array of the selector's params.
 :::
 
 ### `find`
@@ -357,13 +353,13 @@ ecosystem.selectors.destroyCache(getUserById, [userId])
 
 ## Memoization
 
-Say we have a piece of data that is expensive to calculate
+Let's say this is an expensive calculation:
 
 ```ts
 const expensiveState = threadHogger(someState)
 ```
 
-We know that throwing this line in a React component would cause the expensive `threadHogger` function to run every time that component renders. `useMemo` only gets us so far:
+Throwing this line in a React component would cause the expensive `threadHogger` function to run every time that component renders. `useMemo` only gets us so far:
 
 ```ts
 function MyComponent() {
@@ -374,7 +370,7 @@ function MyComponent() {
 
 Now `threadHogger` could still run many times if we render several `MyComponent`s on the page. We need a way to globally memoize this value.
 
-Atom Selectors are a decent choice - they are "globally" cached in the ecosystem as long as the selector reference is stable. But they _can_ evaluate unnecessarily in React sometimes. In some cases, we can circumvent that by pre-caching the selector e.g. in the ecosystem's `onReady` function:
+Atom Selectors are a decent choice - they are "globally" cached in the ecosystem as long as the selector reference is stable. But they _can_ evaluate unnecessarily in React sometimes. In some cases, you can circumvent that by pre-caching the selector e.g. in the ecosystem's `onReady` function:
 
 ```ts
 const rootEcosystem = createEcosystem({
@@ -394,7 +390,7 @@ This is where atoms excel:
 - There are no edge cases where React could make atom instances evaluate unnecessarily.
 - They have access to injectors.
 
-Using [`injectMemo`](../api/injectors/injectMemo) in an ion gives us maximum selection and caching powers here:
+Using [`injectMemo`](../api/injectors/injectMemo) in an ion gives maximum selection and caching powers here:
 
 ```ts
 import { injectMemo, ion, useAtomValue } from '@zedux/react'
@@ -412,7 +408,7 @@ function MyComponent() {
 
 An `expensiveAtom` instance is created the first time it's used, then cached in the current ecosystem.
 
-You may have noticed in the above very specific example that the `injectMemo` is redundant. Since `expensiveAtom` has only one dependency, it will only reevaluate when `otherAtom`'s value changes. And since we pass that value straight to `injectMemo`'s deps array, we're effectively running `threadHogger` every single time this atom evaluates anyway. Let's do away with it:
+You may have noticed in the above very specific example that the `injectMemo` is redundant. Since `expensiveAtom` has only one dependency, it will only reevaluate when `otherAtom`'s value changes. And since we pass that value straight to `injectMemo`'s deps array, it runs `threadHogger` every single time this atom evaluates anyway. Let's do away with it:
 
 ```ts
 // highlight-next-line
@@ -434,7 +430,7 @@ You have much more control over Zedux atom reevaluations than you do over React 
 
 ## Dynamic Subscriptions
 
-The main reason AtomSelectors were added to Zedux is to provide an easy way to dynamically add and remove graph edges in React components. We already have this capability in atoms thanks to injectors and Atom Getters:
+The main reason AtomSelectors were added to Zedux is to provide an easy way to dynamically add and remove graph edges in React components. You already have this capability in atoms thanks to injectors and Atom Getters:
 
 ```ts
 const dynamicIon = ion('dynamic', ({ get }) => {
@@ -474,10 +470,11 @@ function MyComponent() {
   const val = useAtomSelector(({ get }) => {
     return shouldUse1 ? get(atom1) : get(atom2)
   })
+  ...
 }
 ```
 
-Here we declared an Atom Selector inline. The function gets recreated every time `MyComponent` renders. Since the reference changes, Zedux thinks the new Atom Selector is different. **Zedux will run this Atom Selector every time `MyComponent` renders.**
+Notice that the Atom Selector is created inline. This means it will be recreated every time `MyComponent` renders. Since the reference changes, Zedux thinks the new Atom Selector is different. **Zedux will run this Atom Selector every time `MyComponent` renders.**
 
 This is usually fine. But we can optimize this. To make Zedux only run the Atom Selector once, we could move it outside the component:
 
@@ -493,10 +490,11 @@ function MyComponent() {
 
   // highlight-next-line
   const val = useAtomSelector(getOneOrTwo)
+  ...
 }
 ```
 
-Sometimes this works beautifully, but in this case, our selector needs access to the `shouldUse1` state. We therefore _do_ want the Atom Selector to re-run sometimes, but only when `shouldUse1` changes.
+Sometimes this works beautifully, but in this case, the selector needs access to the `shouldUse1` state. We therefore _do_ want the Atom Selector to re-run sometimes, but only when `shouldUse1` changes.
 
 We can memoize the Atom Selector in this component with `useCallback`:
 
@@ -515,10 +513,11 @@ function MyComponent() {
 
   // highlight-next-line
   const val = useAtomSelector(getOneOrTwo)
+  ...
 }
 ```
 
-Now our Atom Selector will only run exactly as often as it needs to. But there is another way:
+Now the Atom Selector will only run exactly as often as it needs to. But there is another way:
 
 ### Passing Arguments
 
@@ -550,7 +549,7 @@ select(getOneOrTwo, shouldUse1) // in ions or other Atom Selectors
 
 ### Configuring
 
-We can also use special [AtomSelectorConfig](../api/types/AtomSelector#atomselectorconfig) objects to control when Zedux reruns an Atom Selector and whether the new result has "changed" and should cause a rerender.
+You can also use special [AtomSelectorConfig](../api/types/AtomSelector#atomselectorconfig) objects to control when Zedux reruns an Atom Selector and whether the new result has "changed" and should cause a rerender.
 
 Everywhere Zedux accepts an Atom Selector, it also accepts an AtomSelectorConfig object. This object has the following properties:
 
@@ -569,7 +568,7 @@ We could add support for `argsComparator` in `injectAtomSelector`. But as of now
 :::
 
 ```ts
-// this selector will only rerun when the `filters.name` we pass it changes.
+// this selector will only rerun when the passed `filters.name` changes.
 // And it will only cause a component to rerender when the returned user's
 // `name` is different.
 const getUserByFilters = {

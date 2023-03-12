@@ -7,7 +7,7 @@ export const EditorWrapper = styled.div`
   flex-flow: row nowrap;
   font-family: 'Source Code Pro', monospace;
   font-size: var(--ifm-code-font-size);
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
   max-height: 500px;
   overflow-y: auto;
 `
@@ -131,13 +131,23 @@ export const Wrapper = styled.section`
   border-radius: 12px;
   box-shadow: 10px 10px 7px rgba(0, 0, 0, 0.4);
   display: grid;
-  grid-template-columns: minmax(180px, 9fr) minmax(140px, 5fr);
+  grid-template-columns: minmax(180px, 13fr) minmax(140px, 6fr);
   grid-template-rows: auto auto;
   line-height: 1.45;
-  margin: 0 -0.6rem 2em;
+  margin: 0 0 2em;
 
-  @media (min-width: 1600px) {
-    margin-left: -1.8rem;
-    margin-right: -1.8rem;
+  @container (min-width: 400px) {
+    margin-left: -1rem;
+    margin-right: -1rem;
+  }
+
+  @container (min-width: 760px) {
+    margin-left: -3rem;
+    margin-right: -3rem;
+  }
+
+  @media (max-width: 996px) {
+    margin-left: 0;
+    margin-right: 0;
   }
 `

@@ -66,7 +66,7 @@ const passingAnInstance = injectAtomValue(instance)
 <Tabs>
   {tab1(`injectAtomValue = (atomOrInstance, params?) => state`)}
   {tab2(`{
-  <A extends ParamlessAtom>(atom: A): AtomStateType<A>;
+  <A extends ParamlessTemplate>(atom: A): AtomStateType<A>;
   <A extends AnyAtomTemplate>(atom: A, params: AtomParamsType<A>): AtomStateType<A>;
   <I extends AnyAtomInstance>(instance: I): AtomStateType<I>;
 }`)}
@@ -103,9 +103,9 @@ export const InjectAtomValueLegend = ({ name = 'injectAtomValue' }) => (
     <Item name="Returns">
       <p>The current value of the resolved atom instance's store.</p>
       <p>
-        Uses the passed atom + params combo to find an existing atom instance.
-        If no instance is found, <code>{name}()</code> creates one and returns
-        its initial value.
+        Uses the passed atom template + params combo to find an existing atom
+        instance. If no instance is found, <code>{name}()</code> creates one
+        using the template and returns its initial value.
       </p>
     </Item>
   </Legend>

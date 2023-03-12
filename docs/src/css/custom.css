@@ -18,8 +18,8 @@
   --ifm-color-primary-lighter: #fed0aa;
   --ifm-color-primary-lightest: #fff5df; /* #ffe6d3; */
   --ifm-code-font-size: 80%;
-  --ifm-container-width: 1100px;
-  --ifm-container-width-xl: 1100px;
+  --ifm-container-width: 1050px;
+  --ifm-container-width-xl: 1150px;
   --ifm-font-family-base: 'Quicksand', sans-serif;
   --ifm-font-size-base: 16px;
   --ifm-link-color: var(--ifm-color-primary-dark);
@@ -101,9 +101,20 @@ pre {
   stroke: var(--color-dark);
 }
 
+@media (min-width: 1440px) {
+  .container > .row {
+    gap: 2rem;
+  }
+}
+
 .main-wrapper {
   display: flex;
   flex-flow: column nowrap;
+}
+
+.markdown {
+  container-type: inline-size;
+  line-height: 1.8;
 }
 
 .menu > .menu__list {
@@ -124,10 +135,6 @@ pre {
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
   border-bottom: 1px solid #0001;
-}
-
-.markdown {
-  line-height: 1.8;
 }
 
 .navbar {

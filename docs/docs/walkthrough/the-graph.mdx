@@ -3,7 +3,7 @@ id: the-graph
 title: The Graph
 ---
 
-As you use atoms inside an ecosystem, Zedux tracks dependencies and forms a graph that it uses to efficiently propagate state updates.
+As you use atoms inside an ecosystem, Zedux tracks dependencies and forms a "Weighted Directed Acyclic Graph" (...we just call it a graph) that it uses to efficiently propagate state updates.
 
 :::tip you will learn:
 
@@ -33,13 +33,11 @@ Note that leaf nodes _can_ have external dependents (e.g. React components). We 
 
 ### Views
 
-When inspecting the graph, sometimes we want to traverse the graph starting from the root nodes, ending at the leaves. Other times we want to start at the leaf nodes and traverse up. And sometimes we want a more normalized structure for programmatically working with the graph.
-
 Zedux provides 3 simple graph "views" out of the box:
 
 - Top-Down - An object containing every root node in the graph. Each node's value is an object containing its dependents who, in turn, contain their dependents, and so on till the leaf nodes.
 - Bottom-Up - The inverse of Top-Down. An object containing every leaf node in the graph. Each node's value is an object containing its dependencies who, in turn, contain their dependencies, and so on till the root nodes.
-- Flat - An object containing every node in the graph in the top level (no nesting). Each node has a list of dependency strings and a list of dependent strings that point to other keys in the top-level object. This is the only view that shows pseudo-nodes.
+- Flat - An object containing every node in the graph in the top level (no nesting). Each node has a list of dependency strings and a list of dependent strings that point to other keys in the top-level object. This is the only view that shows pseudo-nodes and is the best view for programmatically working with the graph.
 
 ## Getting the Graph
 
@@ -92,7 +90,7 @@ Not all edges are created equal! Some dependencies behave differently depending 
 
 When an edge is dynamic, the dependent will update every time the dependency's state changes. This means that if the dependent is a React component, it will rerender every time the dependency's state changes. If the dependent is an atom instance or selector, it will reevaluate every time the dependency's state changes.
 
-We already know one hook that creates dynamic edges, `useAtomState`:
+We've seen one hook that creates dynamic edges, `useAtomState()`:
 
 ```ts
 const greetingAtom = atom('greeting', 'Hello, World!')
@@ -104,7 +102,7 @@ function Greeting() {
 }
 ```
 
-In the quick start, we also learned about `injectAtomState`. This injector creates a dynamic edge between two atom instances.
+The injector equivalent of `useAtomState()` - `injectAtomState()` - creates a dynamic edge between two atom instances.
 
 ```ts
 const parentAtom = atom('parent', 'foo')
@@ -126,7 +124,7 @@ Static dependents _are_ informed when their dependency is force-destroyed. In th
 
 Static dependents are also informed when their dependency's promise changes. More on promises in [the suspense walkthrough](suspense).
 
-We already know one hook that creates static edges, `useAtomInstance`:
+We've seen one hook that creates static edges - `useAtomInstance()`:
 
 ```ts
 const greetingAtom = atom('greeting', 'Hello, World!')
@@ -144,7 +142,7 @@ Zedux also tracks whether an edge was created implicitly or explicitly and wheth
 
 ## `useAtomValue`
 
-It's about time we learned about this hook. This is the simplest way to create a dynamic graph edge in a React component.
+A new hook! This is the simplest way to create a dynamic graph edge in a React component.
 
 ```ts
 import { useAtomValue } from '@zedux/react'
@@ -192,9 +190,7 @@ function Seconds() {
 
 ## `injectAtomInstance`
 
-We learned about `useAtomInstance` in [the atom instances walkthrough](atom-instances) and we just learned that it creates static graph edges. Well it's about time we saw this hook's injector equivalent.
-
-`injectAtomInstance` is the simplest way to create static graph edges in atoms.
+`useAtomInstance()` also has an injector equivalent. `injectAtomInstance()` is the simplest way to create static graph edges between atoms.
 
 ```tsx live ecosystemId=the-graph/injectAtomInstance resultVar=App
 // we'll use params to create multiple instances of this atom:
@@ -247,7 +243,7 @@ function App() {
 
 (Yes, it's a word). Here's a common situation: You need an atom instance (e.g. to access its exports or promise), but want the component to rerender every time the atom instance's state changes.
 
-Turns out, you can pass an atom instance directly to any hooks/injectors that expect atoms (`useAtomValue`, `useAtomState`, `injectAtomValue`, and `injectAtomState`). When you do this, Zedux upgrades the edge from static to dynamic.
+Turns out, you can pass an atom instance directly to any hooks/injectors that expect an atom template (`useAtomValue`, `useAtomState`, `injectAtomValue`, and `injectAtomState`). When you do this, Zedux upgrades the edge from static to dynamic.
 
 :::tip well...
 Inside atoms, the edge is upgraded. In React, Zedux adds another edge. This is because React doesn't currently provide a way to know that 2 hooks were used from the same component instance.
@@ -258,7 +254,7 @@ const todosAtom = atom('todos', () => {
   const store = injectStore<string[]>(['go', 'fight'])
 
   const addTodo = (text: string) =>
-    store.setState(state => (state.includes(text) ? state : [...state, text]))
+    store.setState(state => Array.from(new Set([...state, text])))
 
   const removeTodo = (text: string) =>
     store.setState(state => state.filter(todo => todo !== text))
@@ -307,7 +303,7 @@ function Todos() {
 
 ## Staticizing Edges
 
-(_Also_ a word). `useAtomInstance` and `injectAtomInstance` also have overloads for passing atom instances.
+(_Also_ a word). `useAtomInstance()` and `injectAtomInstance()` also have overloads for passing atom instances.
 
 You can't downgrade an edge from dynamic to static. But sometimes you'll receive atom instances from outside the current component or atom. In this case, `useAtomInstance`/`injectAtomInstance` can be used to register a static graph edge (which is an upgrade from nothing!).
 
@@ -351,11 +347,14 @@ const normalAtom = atom(
   'row, row, row your boat gently lest I scream'
 )
 
-const shoutingAtom = atom('shouting', (instance: AtomInstance<string>) => {
-  const val = injectAtomValue(instance) // subscribe to updates
+const shoutingAtom = atom(
+  'shouting',
+  (instance: AnyAtomInstance<{ State: string }>) => {
+    const val = injectAtomValue(instance) // subscribe to updates
 
-  return val.toUpperCase()
-})
+    return val.toUpperCase()
+  }
+)
 
 function Shout() {
   const instance = useAtomInstance(normalAtom)
@@ -365,9 +364,9 @@ function Shout() {
 }
 ```
 
-When an atom instance receives another atom instance via params, it doesn't create any kind of dependency on that instance. This is usually fine: Whoever passed the instance is probably already registering their own dependency on the instance they're passing.
+When an atom instance receives another atom instance via params, it doesn't create any kind of dependency on that instance. This is usually fine: Whatever passed the instance is probably already registering its own dependency on the instance.
 
-In this example, we passed the instance to `injectAtomValue` to create a dynamic dependency on the instance. We could have also used `injectAtomInstance` to create a static dependency.
+This example passes the instance to `injectAtomValue()` to create a dynamic dependency on the instance. To create a static dependency instead, use `injectAtomInstance()`.
 
 See [AtomInstance#params](../api/classes/AtomInstance#params) for more info.
 
@@ -377,8 +376,8 @@ See [AtomInstance#params](../api/classes/AtomInstance#params) for more info.
 - Create dynamic dependencies (or "edges") with `useAtomState` or `useAtomValue` and their injector equivalents.
 - Create static dependencies with `useAtomInstance`/`injectAtomInstance`.
 - Upgrade an edge from static to dynamic by passing the instance to a dynamic hook/injector.
-- Instances can be passed directly to other atom instances via params.
+- Atom instances can be passed directly to other atoms as params.
 
 ## Next Steps
 
-We know enough hooks and injectors to get a pretty beastly graph going. It's time to learn how to manipulate the graph by swapping out nodes with [ecosystem overrides](overrides).
+With this newfound graph-building knowledge, it's time to learn to learn to swap out atom instances with [atom overrides](overrides).
