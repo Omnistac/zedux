@@ -72,7 +72,7 @@ const injectCustomStuff = () => {
     `injectAtomInstance = (atomOrInstance, params?, operation?) => instance`
   )}
   {tab2(`declare const injectAtomInstance: {
-  <A extends ParamlessAtom>(atom: A): AtomInstanceType<A>;
+  <A extends ParamlessTemplate>(atom: A): AtomInstanceType<A>;
   <A extends AnyAtomTemplate>(atom: A, params: AtomParamsType<A>, operation?: string): AtomInstanceType<A>;
   <I extends AnyAtomInstance>(instance: I, params?: [], operation?: string): I;
 }`)}
@@ -154,8 +154,9 @@ const val = ${
     <Item name="Returns">
       <p>The resolved atom instance.</p>
       <p>
-        Uses the passed atom + params combo to find an existing atom instance.
-        If no instance is found, creates one and returns it.
+        Uses the passed atom template + params combo to find an existing atom
+        instance. If no instance is found, creates one using the template and
+        returns it.
       </p>
     </Item>
   </Legend>

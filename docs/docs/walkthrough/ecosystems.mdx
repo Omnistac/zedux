@@ -100,6 +100,8 @@ function App() {
 }
 ```
 
+If no ecosystem was provided above the current component, `useEcosystem()` returns the global ecosystem (creating it if it doesn't exist yet).
+
 ### `injectAtomGetters()`
 
 All atom instances created in an ecosystem can access the ecosystem via [`injectAtomGetters()`](../api/injectors/injectAtomGetters).
@@ -121,7 +123,7 @@ You can get an ecosystem completely outside React or atoms with the exported `ge
 ```ts
 import { getEcosystem } from '@zedux/react'
 
-// get the ecosystem we created via `createEcosystem({ id: 'root' })`
+// get the ecosystem created via `createEcosystem({ id: 'root' })`
 const ecosystem = getEcosystem('root')
 ```
 
@@ -155,6 +157,8 @@ This will be set as the `.context` property on the ecosystem. It's also passed a
 return <EcosystemProvider context={{ reduxStore }}>...</EcosystemProvider>
 // or
 const ecosystem = createEcosystem({ context: { reduxStore } })
+
+ecosystem.context // { reduxStore }
 ```
 
 Context is also useful when resetting the ecosystem. More on that in [the resets walkthrough](resets).
@@ -182,7 +186,7 @@ The ecosystem object itself has many useful methods. You can use these to inspec
 
 ### `getInstance`
 
-Returns the atom instance for the given atom + params combo. Creates the instance if it doesn't exist yet. This is the simplest way to preload atoms.
+Returns the atom instance for the given atom template + params combo. Creates the instance if it doesn't exist yet. This is the simplest way to preload atoms.
 
 ```ts
 const rootEcosystem = createEcosystem({
@@ -196,11 +200,11 @@ const rootEcosystem = createEcosystem({
 
 ### `findAll`
 
-Returns an object of all atom instances in the ecosystem, each instance keyed by a string that consists of its atom key + its serialized parameters.
+Returns an object of all atom instances in the ecosystem, each instance keyed by a string that consists of its atom template's key + its serialized parameters.
 
 ```tsx live ecosystemId=ecosystems/findAll resultVar=Logger
 const ecosystem = createEcosystem({ id: 'findAll-test' })
-const testAtom = atom('test', (key?: number) => null)
+const testAtom = atom('test', (key?: number) => key)
 
 ecosystem.getInstance(testAtom)
 ecosystem.getInstance(testAtom, [1])
@@ -218,13 +222,13 @@ function Logger() {
 
 ### `dehydrate`
 
-Returns an object of the current state of all atom instances in the ecosystem, each value keyed by a string that consists of the instance's atom key + its serialized parameters.
+Returns an object of the current state of all atom instances in the ecosystem, each value keyed by a string that consists of the instance's atom template's key + its serialized parameters.
 
 Pass `transform: false` to prevent any [`dehydrate` atom config options](../api/types/AtomConfig#dehydrate) from transforming atom instance values.
 
-```tsx live ecosystemId=ecosystems/dehydrate resultVar=Logger
+```tsx live resultVar=Logger
 const ecosystem = createEcosystem({ id: 'dehydrate-test' })
-const testAtom = atom('test', (key?: number) => 'testing!!')
+const testAtom = atom('test', (key?: number) => key)
 
 ecosystem.getInstance(testAtom)
 ecosystem.getInstance(testAtom, [1])
@@ -255,9 +259,9 @@ const reduxAtom = atom('redux', () => {
 ```
 
 :::note
-Sadly, when accessing ecosystem context like this, it can't be strongly typed for TS users :(. This is because atoms don't know what ecosystem they'll be used in.
+When accessing ecosystem context like this, it can't be strongly typed for TS users :(. This is because atoms don't know what ecosystem they'll be used in.
 
-You'll have to cast it (make sure to add type guards) or use a different approach like exporting a callback that you call in `ecosystem.onReady`:
+You'll have to cast it (make sure to add type guards) or use a different approach like exporting a callback that you call in [`ecosystem.onReady`](../api/classes/Ecosystem#onready):
 
 ```ts
 const onReady = (ecosystem, context) => {
@@ -275,7 +279,7 @@ The global ecosystem can be nice for simplicity. Some apps don't need any of the
 
 ## Isolation Example
 
-Ecosystems are completely isolated atom environments. In the quick start, we learned that atom instances can be reused by passing the same params to certain hooks/injectors. Since atom instances live in an ecosystem, reuse can only happen inside that ecosystem.
+Ecosystems are completely isolated atom environments. The [quick start](quick-start) showed that atom instances can be reused by passing the same params to certain hooks/injectors. Since atom instances live in an ecosystem, reuse can only happen inside that ecosystem.
 
 In the following example, the `counterAtom` doesn't take any params. But since it's used in two different ecosystems, two different instances are created.
 

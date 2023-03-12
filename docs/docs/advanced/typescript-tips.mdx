@@ -1,0 +1,236 @@
+---
+id: typescript-tips
+title: TypeScript Tips
+---
+
+Zedux was created in TypeScript from the ground up. Many Zedux APIs are designed specifically to work well with TypeScript. The [API Docs](../api/api-overview#types) document many of Zedux's more prominent types. But there are lots of TypeScript helpers and nuances not covered anywhere else in these docs.
+
+:::tip you will learn:
+
+- How to use Zedux's `AtomGenerics` "type map"
+- Some utility types that Zedux exports
+- How to pull generics off Zedux classes
+- How to maximize inference
+- Some shortcomings and workarounds
+
+:::
+
+## AtomGenerics
+
+When creating functions (injectors, hooks, utility functions, etc), you'll often want to accept atom templates or instances matching a certain type. The AtomTemplate and AtomInstance classes require a single `AtomGenerics` generic. This generic is actually an object type containing several other generics that are all required for every atom template and instance.
+
+This `AtomGenerics` object is called a "type map". It's kind of like passing an object to a function instead of a long list of params. The object lets you name the params and only pass the ones you want. But instead of passing params to a function, it's passing generics to a class.
+
+It looks like this:
+
+```ts
+interface AtomGenerics {
+  Exports: Record<string, any>
+  Params: any[]
+  Promise: Promise<any> | undefined
+  State: any
+  Store: Store<any>
+}
+```
+
+Several Zedux APIs accept an `AtomGenerics` type map. Atom templates and instances use it, so you'll probably see it a lot. Factories like `atom()` automatically infer these types and map them into this type map when you define atoms.
+
+## Utility Types
+
+All `AtomGenerics` are required. But sometimes it can be a real pain to pass all of them. Sometimes you only care that the state is a string. Sometimes you don't care about any of them. For these situations, Zedux exports two utility types:
+
+- `AnyAtomTemplate` - Configures all or part of the AtomTemplate class's generics.
+- `AnyAtomInstance` - Configures all or part of the AtomInstance class's generics.
+
+### `AnyAtomTemplate`
+
+Use this with no generics to accept absolutely any atom template:
+
+```ts
+const getKey = <A extends AnyAtomTemplate>(template: A) => template.key
+```
+
+Pass any number of the `AtomGenerics` to accept only atom templates that match those generics:
+
+```ts
+let idCounter = 0
+const instantiateWithId = <A extends AnyAtomTemplate<{ Params: [id: string] }>>(
+  template: A
+) =>
+  ecosystem.getInstance(template, [
+    (idCounter++).toString(),
+  ] as AtomParamsType<A>) // this cast is necessary. Current TS shortcoming.
+```
+
+:::note
+The `as AtomParamsType<A>` cast here is necessary. We'll look at that helper shortly. But know that with the cast in place, TS will still error if your type is wrong. The cast only prevents it from erroring when your type is right. Thus you're still getting full type safety, just with one extra step.
+:::
+
+### `AnyAtomInstance`
+
+Use this with no generics to accept absolutely any atom instance:
+
+```ts
+const getKey = <I extends AnyAtomInstance>(instance: I) => instance.template.key
+```
+
+Pass any number of the `AtomGenerics` to accept only atom instances that match those generics. For example, to accept any atom instance whose state type is a string, use the following:
+
+```ts
+const getUpperCase = <I extends AnyAtomInstance<{ State: string }>>(
+  instance: I
+) => {
+  // TS knows this `.getState()` returns a string:
+  return instance.getState().toUpperCase()
+}
+```
+
+## Generics Getters
+
+To pull `AtomGenerics` off of an atom template or atom instance, use one of these utils:
+
+- `AtomExportsType` - pull the `Exports` type off a template or instance.
+- `AtomParamsType` - pull the `Params` type off a template or instance.
+- `AtomPromiseType` - pull the `Promise` type off a template or instance.
+- `AtomStateType` - pull the `State` type off a template or instance.
+- `AtomStoreType` - pull the `Store` type off a template or instance.
+
+Example:
+
+```ts
+import {
+  AtomExportsType,
+  AtomParamsType,
+  AtomPromiseType,
+  AtomStateType,
+  AtomStoreType,
+  api,
+  atom,
+  injectStore,
+} from '@zedux/react'
+
+const exampleAtom = atom('example', (id: string) => {
+  const store = injectStore(0)
+
+  return api(store).setExports({ id }).setPromise(Promise.resolve(true))
+})
+
+type TExports = AtomExportsType<typeof exampleAtom> // { id: string }
+type TParams = AtomParamsType<typeof exampleAtom> // [id: string]
+type TPromise = AtomParamsType<typeof exampleAtom> // Promise<boolean>
+type TState = AtomStateType<typeof exampleAtom> // number
+type TStore = AtomStoreType<typeof exampleAtom> // Store<number>
+```
+
+Or using the instance:
+
+```ts
+const instance = myEcosystem.getInstance(exampleAtom, ['an-id'])
+
+type TExports = AtomExportsType<typeof instance> // { id: string }
+type TParams = AtomParamsType<typeof instance> // [id: string]
+type TPromise = AtomParamsType<typeof instance> // Promise<boolean>
+type TState = AtomStateType<typeof instance> // number
+type TStore = AtomStoreType<typeof instance> // Store<number>
+```
+
+Additionally, atom templates have a util to pull the instance type they create, and atom instances have a util to pull the template type they were created from:
+
+- `AtomInstanceType` - pull the AtomInstance type off an atom template
+- `AtomTemplateType` - pull the AtomTemplate type off an atom instance
+
+```ts
+import { AtomInstanceType, AtomTemplateType } from '@zedux/react'
+
+type TInstance = AtomInstanceType<typeof exampleAtom>
+type TTemplate = AtomTemplateType<typeof instance>
+```
+
+## Accepting Atoms
+
+When creating functions, you'll often want to accept a Zedux class that meets some criteria. Here are some examples of how to do this (note that there may be more ways to do these!).
+
+### Instance of Template
+
+To create a function that accepts any instance of a given template, use the following:
+
+```ts
+const getUpperCase = <I extends AtomInstanceType<typeof exampleAtom>>(
+  instance: I
+) => {
+  // given the exampleAtom above, TS knows this `.getState()` returns a string:
+  return instance.getState().toUpperCase()
+}
+```
+
+### Matching Exports
+
+The `AnyAtomInstance` type can be used to match an atom instance with an exact exports shape:
+
+```ts
+const validateInstance = <
+  I extends AnyAtomInstance<{ Exports: { validate: () => boolean } }>
+>(
+  instance: I
+) => instance.exports.validate()
+```
+
+However this will only accept atom instances with a `validate` function as their _only_ export. To accept any atom instance that contains _at least_ specific exports, use the following:
+
+```ts
+const validateInstance = <
+  I extends Omit<AnyAtomInstance, 'exports'> & {
+    exports: { validate: () => boolean }
+  }
+>(
+  instance: I
+) => instance.exports.validate()
+```
+
+Just a good old TS `Omit` and you're in business.
+
+## AtomTuple
+
+Most of Zedux's functions require params to be passed when the atom takes params. But if the atom doesn't take params, Zedux makes the params array optional.
+
+Zedux uses overloads to accomplish this. For full power, you may want to use overloads too:
+
+```ts
+const getValue: {
+  // no params ("singleton"):
+  <A extends ParamlessTemplate>(template: A): AtomStateType<A>
+
+  // params ("family"):
+  <A extends AnyAtomTemplate>(
+    template: A,
+    params: AtomParamsType<A>
+  ): AtomStateType<A>
+
+  // also accept instances 'cause we can 'cause overloads are powerful:
+  <I extends AnyAtomInstance>(instance: I): AtomStateType<I>
+} = <A extends AnyAtomTemplate | AnyAtomInstance>(template: A) => {
+  ecosystem.get(template as AnyAtomTemplate) // this cast is fine
+}
+```
+
+This gives the most control, but can obviously be tedious to create and maintain. TS is a little limited here, but Zedux does export one util that can help with this - `AtomTuple`.
+
+`AtomTuple` is a tuple type that contains an atom template and its params type. Use it like so:
+
+```ts
+const getPromise = <A extends AnyAtomTemplate<{ Promise: Promise<any> }>>(
+  ...[template, params]: AtomTuple<A>
+) => ecosystem.getInstance(template, params).promise as AtomPromiseType<A>
+
+getPromise(myParamlessAtom) // works
+getPromise(twoParamsAtom, ['param-1', 'param-2']) // works
+```
+
+Now no overloads are needed, at the cost of a little tuple ugliness. Of course this doesn't support passing an atom instance like the overloads example. But for functions that don't need that, this may be good enough.
+
+## Recap
+
+- `AnyAtomTemplate` helps selectively match atom templates.
+- `AnyAtomInstance` helps selectively match atom instances.
+- The `Atom_____Type` helpers pull generics off atom templates and instances.
+- The `AtomTuple` type can mitigate the need for function overloads.

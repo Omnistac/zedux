@@ -2,6 +2,7 @@ import React, { createContext, PropsWithChildren, useContext } from 'react'
 import styled from '@site/src/ssc'
 
 const ItemDesc = styled.div`
+  container-type: inline-size;
   padding: 1rem;
 `
 

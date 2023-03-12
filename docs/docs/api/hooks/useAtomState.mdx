@@ -69,7 +69,7 @@ const [, { exports, only }] = useAtomState(myAtom)
 <Tabs>
   {tab1(`useAtomState = (atomOrInstance, params?) => [state, setState]`)}
   {tab2(`declare const useAtomState: {
-  <A extends ParamlessAtom>(atom: A): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
+  <A extends ParamlessTemplate>(atom: A): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
   <A extends AnyAtomTemplate>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
   <I extends AnyAtomInstance>(instance: I, params?: [], config?: ZeduxHookConfig): StateHookTuple<AtomStateType<I>, AtomExportsType<I>>;
 }`)}

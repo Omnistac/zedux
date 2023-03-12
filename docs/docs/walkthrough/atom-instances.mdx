@@ -105,19 +105,15 @@ const instance = useAtomInstance(myAtom)
 instance.setState(newState)
 ```
 
+:::tip
+You'll find that Zedux gives you a _lot_ of control over React rerenders. This is one of the primary reasons we created it.
+:::
+
 Alright, we did a few things with the atom instance that we haven't seen before. Let's look at those now.
 
 ## Atom Instances
 
-Every [atom instance](../api/classes/AtomInstance) is just an object that contains the following methods/properties:
-
-### `activeState`
-
-A string. Every atom instance goes through a lifecycle:
-
-![Initializing -> Active <-> Stale -> Destroyed](/img/diagrams/active-state-machine.png)
-
-`instance.activeState` should typically be `'Active'` on instances you use. We'll talk more about these in [the destruction walkthrough](destruction).
+Every [atom instance](../api/classes/AtomInstance) is just an object with several useful properties and methods, including:
 
 ### `params`
 
@@ -130,10 +126,19 @@ const blogPostCommentAtom = atom(
     ...
   }
 )
-...
-const instance = useAtomInstance(myAtom)
-const [blogPostId, commentId] = instance.params
+
+// in a React component:
+const instance = useAtomInstance(blogPostCommentAtom, [1, 2])
+const [blogPostId, commentId] = instance.params // [1, 2]
 ```
+
+### `status`
+
+A string. Every atom instance goes through a lifecycle:
+
+![Initializing -> Active <-> Stale -> Destroyed](/img/diagrams/status-machine.png)
+
+`instance.status` should typically be `'Active'` on instances you use. We'll talk more about these in [the destruction walkthrough](destruction).
 
 ### `store`
 

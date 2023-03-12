@@ -4,10 +4,13 @@ title: Selectors
 ---
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+import { AddDependentConfigParam } from './AtomInstance.mdx'
 
 The Selectors class manages all selector-related tasks for the ecosystem.
 
 Since [atom selectors](../types/AtomSelector) are meant to feel lightweight, they don't have to be instances of a class - they'll often be standalone or even inline functions. This class handles all the logic that atom selectors would handle themselves if they were classes - instantiation, cache management, and destruction.
+
+On top of that, it provides methods for pre-caching selectors and finding selector caches.
 
 Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ecosystem#selectors).
 
@@ -28,25 +31,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
         </p>
         <p>This is the dependency you're adding a dependent to.</p>
       </Item>
-      <Item name="config">
-        <p>Optional. An object containing the following optional properties:</p>
-        <Ts>{`{ callback, operation }`}</Ts>
-        <Legend>
-          <Item name="callback">
-            <p>
-              A <Link to="../types/DependentCallback">DependentCallback</Link>{' '}
-              function.
-            </p>
-          </Item>
-          <Item name="operation">
-            <p>
-              A string. Can be anything. This can be useful when debugging your
-              selector graph. It essentially labels the edge, showing what
-              operation caused the graph edge to be added.
-            </p>
-          </Item>
-        </Legend>
-      </Item>
+      <AddDependentConfigParam />
     </Legend>
   </Item>
   <Item name="dehydrate">

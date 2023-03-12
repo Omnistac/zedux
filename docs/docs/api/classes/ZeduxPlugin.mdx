@@ -128,11 +128,11 @@ Every ZeduxPlugin has just two properties:
 ## Mod Details
 
 <Legend>
-  <Item name="activeStateChanged">
+  <Item name="statusChanged">
     <p>
       Turn this mod on to receive mod events every time an atom instance's{' '}
-      <Link to="AtomInstance#activestate">
-        <code>activeState</code>
+      <Link to="AtomInstance#status">
+        <code>status</code>
       </Link>{' '}
       property transitions to a new state (e.g. from Initializing to Active or
       from Active to Stale).
@@ -140,8 +140,8 @@ Every ZeduxPlugin has just two properties:
     <p>Payload shape:</p>
     <Ts>{`{
   instance: AnyAtomInstance
-  newActiveState: ActiveState
-  oldActiveState: ActiveState
+  newStatus: LifecycleStatus
+  oldStatus: LifecycleStatus
 }`}</Ts>
   </Item>
   <Item name="ecosystemWiped">
@@ -221,6 +221,31 @@ Every ZeduxPlugin has just two properties:
       </a>{' '}
       in the browser. In other envs, it will fall back to using a non-high-res
       timestamp via <code>Date.now()</code>.
+    </p>
+  </Item>
+  <Item name="instanceReused">
+    <p>
+      Turn this mod on to receive a mod event every time an existing atom
+      instance is reused anywhere.
+    </p>
+    <p>
+      This mod _might_ be useful to find problematic duplicate atom keys. Though
+      HMR/React Fast Refresh complicates this. Plugins can ignore overrides
+      created via{' '}
+      <Link to="AtomTemplate">
+        <code>template.override()</code>
+      </Link>{' '}
+      by checking <code>template._isOverride</code>.
+    </p>
+    <p>Payload shape:</p>
+    <Ts>{`{
+  instance: AnyAtomInstance
+  template: AnyAtomTemplate
+}`}</Ts>
+    <p>
+      <code>instance</code> references the existing atom instance being reused.{' '}
+      <code>template</code> is the atom template used to find the instance on
+      this particular call.
     </p>
   </Item>
   <Item name="stateChanged">

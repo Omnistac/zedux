@@ -21,19 +21,15 @@ const testAxiosAtom = axiosAtom.override({ post: jest.fn() })
 You don't have to use `.override()`. You can create a clone manually. The only requirement is that the override must have the same `key`:
 
 ```ts
-const testAtom = atom('test', 'some state')
-const testAtomOverride = atom('test', 'overridden state!', { ttl: 0 })
+const exampleAtom = atom('example', 'some state')
+const exampleAtomOverride = atom('example', 'overridden state!', { ttl: 0 })
 ```
 
-:::note
-Atom overrides created manually like this will log errors unless you turn off deduping by passing [`dedupe: false`](../api/classes/Ecosystem#dedupe) when creating the ecosystem.
-:::
-
-The nice thing about `.override()` for TS users is that it will tell you if the override doesn't match the overridden atom's state, params, exports, or promise type.
+The nice thing about `.override()` for TS users is that it will tell you if the override doesn't match the overridden atom template's state, params, exports, or promise type.
 
 ## Using
 
-These overridden atoms can then be supplied to an `ecosystem` via the `overrides` field:
+These overridden atoms can then be supplied to an `ecosystem` via the [`overrides`](../api/types/EcosystemConfig#overrides) ecosystem config option:
 
 ```tsx
 function TestApp() {
@@ -52,7 +48,7 @@ const ecosystem = createEcosystem({
 })
 ```
 
-Now this test ecosystem will use `testAxiosAtom` everywhere `axiosAtom` is used:
+Now this `test` ecosystem will use `testAxiosAtom` everywhere `axiosAtom` is used:
 
 ```tsx
 function Routes {
@@ -148,6 +144,7 @@ const myAtom = atom('theKey', () => 'the original')
 const myAtomOverride = myAtom.override(() => 'the override')
 
 const ecosystem = createEcosystem({ overrides: [myAtomOverride] })
+// highlight-next-line
 ecosystem.overrides // { theKey: myAtomOverride }
 ```
 

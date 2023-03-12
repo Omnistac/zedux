@@ -38,7 +38,7 @@ const exampleAtom = atom('example', () => {
 })
 ```
 
-You can create an Atom API anywhere, but only the Atom API returned from the state factory will become _the_ atom instance's API.
+You can create an Atom API anywhere, but only the Atom API returned from the state factory will become _the_ API of the atom.
 
 So now then ... what can an Atom API do?
 
@@ -71,7 +71,9 @@ function App() {
 }
 ```
 
-Atom instances have a `.exports` property. Atom APIs have a `.setExports()` method that defines an atom instance's exports (when the atom API is returned from the state factory). These exports are set on initial evaluation and ignored on evaluations after that.
+Atom APIs have a `.setExports()` method that defines an atom instance's exports (when the atom API is returned from the state factory). These exports are set on initial evaluation and ignored on evaluations after that.
+
+The exports are set on `instance.exports`. Wherever you have an atom instance, you have access to its exports.
 
 Exports must be an object and can contain anything. As you can imagine, exports are another big feature that sets Zedux apart from other atomic libraries.
 
@@ -114,11 +116,13 @@ function Grid() {
 Another use is to export callbacks for implementing render-as-you-fetch patterns:
 
 ```tsx live ecosystemId=atom-apis/export-callbacks resultVar=Age
+// some mocks for this example:
 const mockFetch = data =>
   new Promise(resolve => {
     setTimeout(() => resolve(data), 1000)
   })
 
+// start here:
 const userNameAtom = atom('userName', () => {
   const store = injectStore({
     isLoading: false,
@@ -177,7 +181,7 @@ const mockFetch = data =>
 const ageAtom = atom('age', () => {
   const store = injectStore(undefined, { subscribe: false })
 
-  // An inline side effect?? We'll cover this in the side effects walkthrough
+  // An inline side effect?? We'll cover this in the suspense walkthrough
   const promise = mockFetch(Math.floor(Math.random() * 100))
   promise.then(val => store.setState(val))
 
@@ -262,7 +266,7 @@ Query atoms get [their own walkthrough](query-atoms).
 
 ## Properties
 
-The object returned from `api()` is an instance of [the `AtomApi` class](../api/classes/AtomApi). It has a few **readonly** properties that reference the values we set on it:
+The object returned from `api()` is an instance of [the `AtomApi` class](../api/classes/AtomApi). It has a few **readonly** properties that reference the values you set on it:
 
 - `.value` - The value passed to `api()`.
 - `.exports` - The exports set via `api().setExports()` and `api().addExports()`.
@@ -272,10 +276,10 @@ The object returned from `api()` is an instance of [the `AtomApi` class](../api/
 ```ts
 const myApi = api(myStore).setExports(myExports).setPromise(myPromise)
 
-myApi.value // myStore
-myApi.exports // myExports
-myApi.promise // myPromise
-myApi.store // myStore
+myApi.value === myStore
+myApi.exports === myExports
+myApi.promise === myPromise
+myApi.store === myStore
 ```
 
 ## Atom API Composition
@@ -289,7 +293,9 @@ const myApi = api('some state').setExports({ something })
 const clonedApi = api(myApi) // has the same value and exports
 ```
 
-Atom APIs are a convenient way to pass stores, exports, and promises around. You may find yourself working with multiple Atom APIs when using custom injectors. Atom APIs have a `.addExports()` method specifically for merging exports together from multiple sources:
+Atom APIs are a convenient way to pass stores, exports, and promises around. You may find yourself working with multiple Atom APIs when using custom injectors.
+
+Atom APIs have a `.addExports()` method specifically for merging exports together from multiple sources:
 
 ```ts
 const complexAtom = atom('complex', () => {
@@ -303,7 +309,7 @@ const complexAtom = atom('complex', () => {
 })
 ```
 
-If these custom injectors return Atom APIs with stores, you can also use store composition to create a new Atom API from the injected APIs:
+If you have multiple Atom APIs with stores attached, you can also use store composition to create a new Atom API from the injected APIs:
 
 ```ts
 const apiA = injectA()
@@ -320,7 +326,7 @@ return api(composedStore).setExports({
 
 ### Promises
 
-Unlike Recoil, Zedux doesn't provide any promise utilities like `waitForAll`/`waitForNone`. This is because Zedux relinquishes all control over async flows to you, the programmer. This means you can use native Promise APIs or any other async management layer (yes, even RxJS) to control serialization and parallelization of async flows.
+Unlike Recoil, Zedux doesn't provide any promise utilities like `waitForAll`/`waitForNone`. This is because Zedux relinquishes all control over async flows to you, the programmer. This means you can use native Promise APIs or any other async tool (read RxJS) to control async flows.
 
 Let's look at an example using `Promise.all()` to "compose" promises together from multiple sources:
 
@@ -339,8 +345,7 @@ const bothAtom = atom('both', () => {
   const instance1 = injectAtomInstance(oneSecondAtom)
   const instance2 = injectAtomInstance(twoSecondsAtom)
 
-  // memoize the promise so we only create a new one when dependency promises
-  // change:
+  // memoize to only create a new promise when dependency promises change
   const promise = injectMemo(
     () => Promise.all([instance1.promise, instance2.promise]),
     [instance1.promise, instance2.promise]
@@ -369,17 +374,17 @@ const App = () => (
 ```
 
 :::tip
-Click "Reset" in the above sandbox.
+Click "Reset" in the above sandbox to see the promises cascade.
 :::
 
 ## Recap
 
-- Create an Atom API with `api(stateOrStore)`. Return an Atom API from a state factory to make it **the** API of an atom instance.
-- Use `.setExports()` to export an object containing anything and set that object as the instance's `.exports` property.
+- Create an Atom API with `api(stateOrStore)`. Return an Atom API from a state factory to make it **the** API of the atom.
+- Use `.setExports()` to "export" an object to the instance's `.exports` property.
 - Make atoms trigger React suspense with `.setPromise(myPromise)`.
 - Make Zedux control promise state by returning `api(myPromise)`.
 - Clone Atom APIs with `api(myApi)`.
 
 ## Next Steps
 
-We know a lot about atoms themselves at this point. It's time to zoom out and look at the [bigger picture](ecosystems).
+You've now unlocked some of the stronger powers of Zedux atoms. It's time to zoom out and look at the [bigger picture](ecosystems).

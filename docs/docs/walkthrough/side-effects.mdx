@@ -142,7 +142,7 @@ Zedux' store composition model works by making actions themselves composable obj
 
 We'll go over the specifics of Zedux' store composition model in [the store composition guide](../advanced/store-composition). For now you just need to know that, depending on your store setup, you may see these ActionChain objects as the `action` property in your effects handlers. Zedux doesn't unwrap the action because sometimes you will need to observe the metadata the action is wrapped in.
 
-If you don't care about the metadata, you can get the wrapped action with [`removeAllMeta`](/not-done)
+If you don't care about the metadata, you can get the wrapped action with [`removeAllMeta`](../api/utils/action-chain-utils#removeallmeta).
 
 ```ts
 import { removeAllMeta, when } from '@zedux/react'

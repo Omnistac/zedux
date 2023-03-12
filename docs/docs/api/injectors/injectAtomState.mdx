@@ -98,7 +98,7 @@ const [, { exports, only }] = injectAtomState(myAtom)
 <Tabs>
   {tab1(`injectAtomState = (atomOrInstance, params?) => [state, setState]`)}
   {tab2(`declare const injectAtomState: {
-  <A extends ParamlessAtom>(atom: A): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
+  <A extends ParamlessTemplate>(atom: A): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
   <A extends AnyAtomTemplate>(atom: A, params: AtomParamsType<A>): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
   <I extends AnyAtomInstance>(instance: I): StateHookTuple<AtomStateType<I>, AtomExportsType<I>>;
 }`)}
@@ -150,8 +150,8 @@ export const InjectAtomStateLegend = ({
         </li>
       </ul>
       <p>
-        Uses the passed atom + params combo to find an existing atom instance.
-        If no instance is found, creates one.
+        Uses the passed atom template + params combo to find an existing atom
+        instance. If no instance is found, creates one using the template.
       </p>
       <p>
         The returned state setter is a direct wrapper around{' '}

@@ -20,7 +20,7 @@ You'll find this object in the following places:
 - [`injectAtomGetters()`](../injectors/injectAtomGetters) returns one.
 - [Ecosystems](../classes/Ecosystem) themselves are AtomGetters objects, minus the `ecosystem` property.
 
-When called synchronously during atom instance or AtomSelector evaluation, `get`, `getInstance`, and `select` will register graph dependencies on resolved atom instances. In this way, `get` is like [`injectAtomValue`](../injectors/injectAtomValue), `getInstance` is like [`injectAtomInstance`](../injectors/injectAtomInstance), and `select` is like [`injectAtomSelector`](../injectors/injectAtomSelector).
+When called synchronously during atom or selector evaluation, `get`, `getInstance`, and `select` will register graph dependencies on resolved [atom instances](../classes/AtomInstance) and [SelectorCaches](../classes/SelectorCache). In this way, `get` is like [`injectAtomValue`](../injectors/injectAtomValue), `getInstance` is like [`injectAtomInstance`](../injectors/injectAtomInstance), and `select` is like [`injectAtomSelector`](../injectors/injectAtomSelector).
 
 The ecosystem's AtomGetters (`ecosystem.get()`, `ecosystem.getInstance()`, and `ecosystem.select()`) however **never** register graph dependencies.
 
@@ -34,15 +34,15 @@ The AtomGetters are **not** injectors. This means they can be called in loops or
   {tab1(`atomGetters = { ecosystem, get, getInstance, select }`)}
   {tab2(`interface AtomGetters {
   ecosystem: Ecosystem\n
-  get<A extends ParamlessAtom>(atom: A): AtomStateType<A>\n
+  get<A extends ParamlessTemplate>(template: A): AtomStateType<A>\n
   get<A extends AnyAtomTemplate>(
-    atom: A,
+    template: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>\n
   get<I extends AtomInstance>(instance: I): AtomStateType<I>\n
-  getInstance<A extends ParamlessAtom>(atom: A): AtomInstanceType<A>\n
+  getInstance<A extends ParamlessTemplate>(template: A): AtomInstanceType<A>\n
   getInstance<A extends AnyAtomTemplate>(
-    atom: A,
+    template: A,
     params: AtomParamsType<A>
   ): AtomInstanceType<A>\n
   getInstance<I extends AtomInstance>(instance: I): I\n
@@ -57,12 +57,12 @@ The AtomGetters are **not** injectors. This means they can be called in loops or
   <Item name="ecosystem">
     <p>
       A reference to the <Link to="../classes/Ecosystem">ecosystem</Link> this
-      atom/ion instance or AtomSelector was created in.
+      atom or selector was created in.
     </p>
     <p>
-      Note that while we call ecosystems AtomGetters, they are the only
-      AtomGetters that don't have an <code>ecosystem</code> property (they don't
-      need it obviously)
+      Note that while we call ecosystems themselves AtomGetters, they are the
+      only AtomGetters that don't have an <code>ecosystem</code> property (they
+      don't need it obviously).
     </p>
     <p>
       Use this AtomGetter when you want to specifically avoid registering graph
@@ -99,8 +99,8 @@ ecosystem.findAll(myAtom, [param1, param2])`}</Ts>
   <Item name="get">
     <p>
       A function that returns the current state of an atom instance's store.
-      Pass either an instance directly or an atom and its params (if the atom
-      takes params).
+      Pass either an instance directly or an atom template and its params (if
+      the atom takes params).
     </p>
     <Ts>{`value = get(myAtom)
 value = get(myAtom, [param1, param2])
@@ -110,14 +110,15 @@ value = get(myAtomInstance)`}</Ts>
       dependency on that instance and returns its current value.
     </p>
     <p>
-      When an atom is passed, <code>get()</code> creates the instance if it
-      doesn't exist yet, registers a dynamic graph dependency on the new
+      When an atom template is passed, <code>get()</code> creates the instance
+      if it doesn't exist yet, registers a dynamic graph dependency on the
       instance, and returns its initial value.
     </p>
     <p>
       When called asynchronously (after the current atom instance or selector
       finishes evaluating), <code>get()</code> doesn't register any graph
-      dependencies. Other than that, it behaves the same.
+      dependencies. Other than that, it behaves the same as when called
+      synchronously during evaluation.
     </p>
     <p>
       Use{' '}
@@ -133,9 +134,9 @@ const val = instance ? get(instance) : defaultVal`}</Ts>
   </Item>
   <Item name="getInstance">
     <p>
-      A function that returns the atom instance for the given atom + params
-      combo. Pass either an instance directly or an atom and its params (if the
-      atom takes params).
+      A function that returns the atom instance for the given atom template +
+      params combo. Pass either an instance directly or an atom template and its
+      params (if the atom takes params).
     </p>
     <Ts>{`instance = getInstance(myAtom)
 instance = getInstance(myAtom, ['param 1', 'param 2'])
@@ -145,9 +146,9 @@ instance = getInstance(myAtomInstance)`}</Ts>
       graph dependency on that instance and returns it as-is.
     </p>
     <p>
-      When an atom is passed, <code>get()</code> creates the instance if it
-      doesn't exist yet, registers a static graph dependency on the new
-      instance, and returns it.
+      When an atom template is passed, <code>getInstance()</code> creates the
+      instance if it doesn't exist yet, registers a static graph dependency on
+      the instance, and returns it.
     </p>
     <p>
       When called asynchronously (after the current atom instance or selector

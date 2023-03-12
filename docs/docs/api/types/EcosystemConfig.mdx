@@ -46,15 +46,6 @@ All fields are optional. It is recommended to at least pass an id.
       <Link to="../classes/Ecosystem#context">context</Link> for the ecosystem.
     </p>
   </Item>
-  <Item name="dedupe">
-    <p>
-      A boolean. Default <code>true</code>. Will be set as the{' '}
-      <Link to="../classes/Ecosystem#dedupe">
-        ecosystem's <code>dedupe</code> property
-      </Link>
-      .
-    </p>
-  </Item>
   <Item name="defaultTtl">
     <p>
       A number. Default <code>-1</code> (meaning infinite). Will be set as the{' '}
@@ -106,8 +97,9 @@ All fields are optional. It is recommended to at least pass an id.
   <Item name="overrides">
     <p>
       An array of <Link to="../classes/AtomTemplate">atom templates</Link>. Will
-      be set as the{' '}
-      <Link to="../classes/Ecosystem#overrides">ecosystem's overrides</Link>.
+      be mapped into the{' '}
+      <Link to="../classes/Ecosystem#overrides">ecosystem's overrides</Link>{' '}
+      object.
     </p>
     <p>
       Used for{' '}

@@ -194,11 +194,13 @@ export const Sandbox = ({
   children,
   ecosystemId,
   extraScope,
+  noProvide,
   resultVar = 'Result',
 }: {
   children: string
   ecosystemId?: string
   extraScope?: string | Record<string, any>
+  noProvide?: string
   resultVar?: string
 }) => {
   const { baseUrl } = useDocusaurusContext().siteConfig
@@ -314,7 +316,7 @@ export const Sandbox = ({
     </Slate>
   )
 
-  return ecosystemIdRef.current ? (
+  return ecosystemIdRef.current && !noProvide ? (
     <Zedux.EcosystemProvider id={ecosystemId}>{slate}</Zedux.EcosystemProvider>
   ) : (
     slate

@@ -116,29 +116,6 @@ All properties are readonly!
       as part of the reset.
     </p>
   </Item>
-  <Item name="dedupe">
-    <p>
-      A boolean. This is set to the <code>dedupe</code> value you passed via{' '}
-      <Link to="../types/EcosystemConfig#dedupe">EcosystemConfig</Link> when
-      creating this ecosystem. If not set, defaults to <code>true</code>.
-    </p>
-    <p>
-      Whether to log an error if the ecosystem encounters multiple atom
-      templates with the same key.
-    </p>
-    <p>
-      This can be useful to ensure atom keys are unique. Only atom templates
-      created via{' '}
-      <Link to="AtomTemplate#override">
-        <code>atom.override()</code>
-      </Link>{' '}
-      will be ignored. Any other duplicates will log an error.
-    </p>
-    <p>
-      Turn this off if you need to support multiple windows, since each window
-      creates its own atom template references.
-    </p>
-  </Item>
   <Item name="defaultTtl">
     <p>
       A number. This is set to the <code>defaultTtl</code> value you passed via{' '}
