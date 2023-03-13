@@ -8,7 +8,10 @@ type MemoInjectorDescriptor<T> = {
   type: string
 }
 
-export const injectMemo = createInjector(
+export const injectMemo: <Value = any>(
+  valueFactory: () => Value,
+  deps?: InjectorDeps
+) => Value = createInjector(
   'injectMemo',
   <Value = any>(
     instance: PartialAtomInstance,
