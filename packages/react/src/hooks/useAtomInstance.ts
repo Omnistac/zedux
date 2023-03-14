@@ -16,9 +16,9 @@ const OPERATION = 'useAtomInstance'
 /**
  * useAtomInstance
  *
- * Creates an atom instance for the passed atom based on the passed params. If
- * an instance has already been created for the passed params, reuses the
- * existing instance.
+ * Creates an atom instance for the passed atom template based on the passed
+ * params. If an instance has already been created for the passed params, reuses
+ * the existing instance.
  *
  * Registers a static graph dependency on the atom instance. This means
  * components that use this hook will not rerender when this atom instance's
@@ -27,14 +27,15 @@ const OPERATION = 'useAtomInstance'
  * If the params are large, serializing them every render can cause some
  * overhead.
  *
- * @param atom The atom to instantiate or reuse an instantiation of
+ * @param atom The atom template to instantiate or reuse an instantiation of OR
+ * an atom instance itself.
  * @param params The params for generating the instance's key.
  */
 export const useAtomInstance: {
-  <A extends ParamlessTemplate>(atom: A): AtomInstanceType<A>
+  <A extends ParamlessTemplate>(template: A): AtomInstanceType<A>
 
   <A extends AnyAtomTemplate>(
-    atom: A,
+    template: A,
     params: AtomParamsType<A>,
     config?: ZeduxHookConfig
   ): AtomInstanceType<A>

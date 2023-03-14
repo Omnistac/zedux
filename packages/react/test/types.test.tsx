@@ -1,10 +1,13 @@
-import { Store } from '@zedux/core'
-import { AtomInstance, AtomTemplateBase } from '@zedux/react'
+import { Store, StoreStateType } from '@zedux/core'
+import { AtomApi, AtomInstance, AtomTemplateBase } from '@zedux/react'
 import { api, atom, createEcosystem, ion } from '@zedux/react/factories'
 import {
   injectAtomInstance,
   injectAtomState,
   injectAtomValue,
+  injectCallback,
+  injectMemo,
+  injectPromise,
   injectStore,
 } from '@zedux/react/injectors'
 import {
@@ -92,6 +95,8 @@ describe('types', () => {
         TAtomInstance
       >
     >()
+
+    expectTypeOf<StoreStateType<AtomStore>>().toBeString()
   })
 
   test('non-atom-api inference in atoms', () => {
@@ -562,8 +567,10 @@ describe('types', () => {
 
       // also accept instances:
       <I extends AnyAtomInstance>(instance: I): AtomStateType<I>
-    } = <A extends AnyAtomTemplate | AnyAtomInstance>(template: A) =>
-      ecosystem.get(template as AnyAtomTemplate)
+    } = <A extends AnyAtomTemplate | AnyAtomInstance>(
+      template: A,
+      params?: AtomParamsType<A>
+    ) => ecosystem.get(template as AnyAtomTemplate, params)
 
     const instance = ecosystem.getInstance(exampleAtom, ['a'])
     const exampleVal = getExampleVal(instance)
@@ -592,12 +599,18 @@ describe('types', () => {
       const val2 = injectAtomValue(instance)
       const [val3] = injectAtomState(exampleAtom, ['a'])
       const [val4] = injectAtomState(instance)
+      const val5 = injectMemo(() => true, [])
+      const val6 = injectCallback(() => true, [])
+      const val7 = injectPromise(() => Promise.resolve(1), [])
 
       return api(injectStore(instance.getState())).setExports({
         val1,
         val2,
         val3,
         val4,
+        val5,
+        val6,
+        val7,
       })
     })
 
@@ -609,6 +622,14 @@ describe('types', () => {
       val2: string
       val3: string
       val4: string
+      val5: boolean
+      val6: () => boolean
+      val7: AtomApi<
+        PromiseState<number>,
+        Record<string, any>,
+        Store<PromiseState<number>>,
+        Promise<number>
+      >
     }>()
   })
 

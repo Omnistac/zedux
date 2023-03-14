@@ -44,8 +44,8 @@ export class EvaluationStack {
   public atomGetters: AtomGetters
 
   constructor(private readonly ecosystem: Ecosystem) {
-    const get: AtomGetters['get'] = ((atomOrInstance, params) => {
-      const instance = ecosystem.getInstance(atomOrInstance, params)
+    const get: AtomGetters['get'] = ((atom, params) => {
+      const instance = ecosystem.getInstance(atom, params)
 
       // when called outside AtomSelector evaluation, get() is just an alias for
       // ecosystem.get()
@@ -64,14 +64,11 @@ export class EvaluationStack {
     }) as AtomGetters['get']
 
     const getInstance: AtomGetters['getInstance'] = <A extends AnyAtomTemplate>(
-      atomOrInstance: A,
+      atom: A,
       params?: AtomParamsType<A>,
       edgeInfo?: GraphEdgeInfo
     ) => {
-      const instance = ecosystem.getInstance(
-        atomOrInstance,
-        params as AtomParamsType<A>
-      )
+      const instance = ecosystem.getInstance(atom, params as AtomParamsType<A>)
 
       // when called outside AtomSelector evaluation, getInstance() is just an alias
       // for ecosystem.getInstance()

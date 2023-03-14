@@ -300,7 +300,8 @@ export class Store<State = any> {
   public use(newHierarchy: HierarchyDescriptor<State>) {
     const newDiffTree = hierarchyDescriptorToDiffTree(
       newHierarchy,
-      this._registerChildStore.bind(this)
+      (childStorePath: string[], childStore: Store) =>
+        this._registerChildStore(childStorePath, childStore)
     )
 
     this._currentDiffTree = mergeDiffTrees(
