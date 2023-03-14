@@ -35,10 +35,10 @@ const defaultOperation = 'injectAtomInstance'
  * @returns An atom instance, keyed based on the passed params.
  */
 export const injectAtomInstance: {
-  <A extends ParamlessTemplate>(atom: A): AtomInstanceType<A>
+  <A extends ParamlessTemplate>(template: A): AtomInstanceType<A>
 
   <A extends AnyAtomTemplate>(
-    atom: A,
+    template: A,
     params: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig
   ): AtomInstanceType<A>

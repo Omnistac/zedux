@@ -8,10 +8,10 @@ import {
 import { injectAtomInstance } from './injectAtomInstance'
 
 export const injectAtomValue: {
-  <A extends ParamlessTemplate>(atom: A): AtomStateType<A>
+  <A extends ParamlessTemplate>(template: A): AtomStateType<A>
 
   <A extends AnyAtomTemplate>(
-    atom: A,
+    template: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
