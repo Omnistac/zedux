@@ -4,8 +4,7 @@ import styled from '@site/src/ssc'
 import * as ReactZedux from '../../../../packages/react/src'
 
 const options = {
-  AtomState: 'Atom State',
-  SelectorCache: 'Selector Cache',
+  State: 'State',
   Ecosystem: 'Ecosystem',
   Graph: 'Graph',
   Scope: 'Sandbox Scope',
@@ -105,33 +104,46 @@ export const LogActions = ({
 
   const actions = useMemo<Record<keyof typeof options, () => void>>(
     () => ({
-      AtomState: () => {
-        console.group('Current state of all atom instances:')
+      State: () => {
+        const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
+        if (!ecosystem) {
+          return console.log(
+            "Looks like this sandbox doesn't have an ecosystem"
+          )
+        }
+        console.group('Current state:')
+        console.log('Atom Instances:')
         console.log(
-          Zedux.getEcosystem(ecosystemIdRef.current).dehydrate({
+          ecosystem.dehydrate({
             transform: false,
           })
         )
+        console.log('Selector Caches:')
+        console.log(ecosystem.selectors.dehydrate())
         console.groupEnd()
       },
       Ecosystem: () => {
+        const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
+        if (!ecosystem) {
+          return console.log(
+            "Looks like this sandbox doesn't have an ecosystem"
+          )
+        }
         console.group('Ecosystem:')
-        console.log(Zedux.getEcosystem(ecosystemIdRef.current))
+        console.log(ecosystem)
         console.groupEnd()
       },
       Graph: () => {
         const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
+        if (!ecosystem) {
+          return console.log(
+            "Looks like this sandbox doesn't have an ecosystem"
+          )
+        }
         console.group('Current graph:')
         console.log('Flat:', ecosystem.viewGraph('flat'))
         console.log('Top-Down:', ecosystem.viewGraph('top-down'))
         console.log('Bottom-Up:', ecosystem.viewGraph('bottom-up'))
-        console.groupEnd()
-      },
-      SelectorCache: () => {
-        console.group('Cached selectors:')
-        console.log(
-          Zedux.getEcosystem(ecosystemIdRef.current).selectors.dehydrate()
-        )
         console.groupEnd()
       },
       Scope: () => {
