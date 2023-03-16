@@ -48,13 +48,13 @@ return api(myPromise)
     value:
       | StoreType
       | AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
-  ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>\n
+  ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
   // No Value
   <
     State = undefined,
     Exports extends Record<string, any> = Record<string, any>,
     PromiseType extends AtomApiPromise = undefined
-  >(): AtomApi<State, Exports, undefined, PromiseType>\n
+  >(): AtomApi<State, Exports, undefined, PromiseType>
   // No Store
   <
     State = undefined,
@@ -62,7 +62,7 @@ return api(myPromise)
     PromiseType extends AtomApiPromise = undefined
   >(
     value: State | AtomApi<State, Exports, undefined, PromiseType>
-  ): AtomApi<State, Exports, undefined, PromiseType>\n
+  ): AtomApi<State, Exports, undefined, PromiseType>
   // Catch-all
   <
     State = undefined,

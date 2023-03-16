@@ -18,7 +18,7 @@ There are many ways to persist and restore state "snapshots" in Zedux. It can be
 
 Let's start simple. We'll use `localStorage` for these examples, but you can use whatever means of storage you want.
 
-To persist the state of a single atom, we could use a separate atom to handle the persist/restore functionality.
+One way to persist the state of a single atom is to use a separate atom to handle the persist/restore functionality.
 
 Here's an example using a separate `localStorageAtom` that we give a `key` param, creating a different `localStorageAtom` instance for every localStorage key we want to persist data to/from:
 
@@ -61,7 +61,7 @@ function Username() {
 }
 ```
 
-We could also use an injector.
+Another way is to use an injector:
 
 ```tsx live ecosystemId=persistence/injector resultVar=Username
 const injectLocalStorage = (key: string, defaultVal: any) => {
@@ -122,7 +122,7 @@ const snapshot = ecosystem.dehydrate({ transform: false })
 
 This may be all you need. However, passing `{ transform: false }` makes `ecosystem.dehydrate()` very "dumb" - it doesn't do anything special to transform the state, it just returns it as-is. Since atoms can hold anything, you may have a situation where you're storing non-serializable values (namely functions) in atoms. Data types from Immutable.js, for example, require an extra step to serialize/deserialize values.
 
-For these atoms you have two options:
+For these atoms, you have two options:
 
 - Skip the non-serializable atom.
 - Transform the atom's value to something that can be serialized.
@@ -301,7 +301,7 @@ const exampleAtom = atom('example', initialState, {
 })
 ```
 
-This can be used to transform dehydrated values back to non-serializable form. Let's return to our JS Map example:
+This can be used to transform dehydrated values back to non-serializable form. Let's plug that into the JS Map example:
 
 ```tsx live ecosystemId=persistence/hydrate resultVar=Dehydrator
 const transformingAtom = atom(
@@ -476,9 +476,9 @@ const rehydratingAtom = atom(
 
 ## Reactivity Via Plugins
 
-The `localStorage` single atom examples we gave at the beginning of this page were beautifully reactive - they would persist the atom's state immediately on state change. None of our ecosystem examples do that. We have to manually call `ecosystem.dehydrate()` e.g. in response to a button press or on an interval.
+The `localStorage` single atom examples at the beginning of this page were beautifully reactive - they would persist the atom's state immediately on state change. None of the ecosystem examples so far do that. You have to manually call `ecosystem.dehydrate()` e.g. in response to a button press or on an interval.
 
-By default, ecosystems don't receive any kind of update when individual atom instances change state. This is by design, for performance reasons. However, it is possible to turn this behavior on with plugins.
+By default, ecosystems don't receive any kind of update when individual atom instances change state. This is by design, for performance reasons. However, it is possible to turn this behavior on with [plugins](plugins).
 
 Just turn on the `stateChanged` mod.
 
@@ -518,4 +518,4 @@ ecosystem.registerPlugin(plugin)
 
 ## Next Steps
 
-Now we know the basics of persistence. Let's use these tools to implement [SSR](ssr).
+With the persistence tools mastered, you can use these tools to implement [SSR](ssr).

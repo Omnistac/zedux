@@ -218,7 +218,7 @@ Since Zedux creates a different atom instance if it detects different atom param
 
 This means you _can_ conditionally add/remove injectors based on params. We definitely don't recommend doing this, especially if you're new to Zedux. But we have found some situations where it's convenient.
 
-It also means that you don't need to pass params as deps to `injectMemo`, `injectEffect`, `injectCallback`, `injectPromise`, and similar injectors.
+It also means that you don't need to pass params as deps to `injectMemo()`, `injectEffect()`, `injectCallback()`, `injectPromise()`, and similar injectors.
 
 ```ts
 const requestAtom = atom('request', (endpoint: string) => {

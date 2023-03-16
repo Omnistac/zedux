@@ -77,13 +77,11 @@ function Table() {
 
 <Tabs>
   {tab1(`injectRef = (initialValue?) => ref`)}
-  {tab2(
-    `declare const injectRef: {
-  <T>(initialVal: T): MutableRefObject<T>;
-  <T>(initialVal: T | null): RefObject<T>;
-  <T = undefined>(): MutableRefObject<T | undefined>;
-}`
-  )}
+  {tab2(`declare const injectRef: {
+  <T>(initialVal: T): MutableRefObject<T>
+  <T>(initialVal: T | null): RefObject<T>
+  <T = undefined>(): MutableRefObject<T | undefined>
+}`)}
 </Tabs>
 
 <Legend>

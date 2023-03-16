@@ -28,8 +28,10 @@ interface StoreEffect<State = any, S extends Store<State> = Store<State>> {
     </p>
     <p>
       Every state update in Zedux is triggered by an action. Even{' '}
-      <Link to="../classes/Store#setstate">store.setState()</Link> and similar
-      APIs always generate "psuedo actions" representing the change.
+      <Link to="../classes/Store#setstate">
+        <code>store.setState()</code>
+      </Link>{' '}
+      and similar APIs always generate "psuedo actions" representing the change.
     </p>
   </Item>
   <Item name="error">
@@ -44,9 +46,8 @@ interface StoreEffect<State = any, S extends Store<State> = Store<State>> {
       reducer layer and to all child stores.
     </p>
     <p>
-      Note that effects subscribers run after the state has been completely
-      updated, so this value will be exactly equal to{' '}
-      <code>store.getState()</code>.
+      Effects subscribers run after the state has been completely updated, so
+      this value will be exactly equal to <code>store.getState()</code>.
     </p>
   </Item>
   <Item name="oldState">

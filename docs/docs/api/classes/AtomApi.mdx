@@ -153,9 +153,9 @@ AtomApis expose the following **readonly** properties:
       change on subsequent evaluations.
     </p>
     <p>
-      Merges the passed object into any already-set [exports](#exports) on this
-      AtomApi. If no exports have been set yet on this AtomApi,{' '}
-      <code>.addExports()</code> sets the exports.
+      Merges the passed object into any already-set{' '}
+      <Link to="#exports">exports</Link> on this AtomApi. If no exports have
+      been set yet on this AtomApi, <code>.addExports()</code> sets the exports.
     </p>
     <p>Returns the AtomApi for chaining.</p>
     <Ts>{`api('val')
@@ -172,6 +172,14 @@ AtomApis expose the following **readonly** properties:
       evaluations.
     </p>
     <p>Overwrites any previously-set exports on this AtomApi.</p>
+    <p>
+      If this AtomApi is returned from a state factory, these exports will be
+      set as the atom instance's{' '}
+      <Link to="AtomInstance#exports">
+        <code>.exports</code>
+      </Link>
+      .
+    </p>
     <p>Returns the AtomApi for chaining.</p>
     <Ts>{`const initialExports = api(val).setExports({ ...myExports })
 const overwriteExports = api(initialExports).setExports({ ...newExports })`}</Ts>
@@ -182,9 +190,15 @@ const overwriteExports = api(initialExports).setExports({ ...newExports })`}</Ts
       <Link to="#promise">
         <code>.promise</code>
       </Link>{' '}
-      property of this AtomApi. If this AtomApi is returned from a state
-      factory, the promise will be set as the atom instance's promise and will
-      be used to cause React to suspend.
+      property of this AtomApi.
+    </p>
+    <p>
+      If this AtomApi is returned from a state factory, the promise will be set
+      as the atom instance's{' '}
+      <Link to="AtomInstance#promise">
+        <code>.promise</code>
+      </Link>{' '}
+      and will be used to cause React to suspend.
     </p>
     <p>
       This promise does not have to be a stable reference, though you should be
@@ -199,6 +213,11 @@ const overwriteExports = api(initialExports).setExports({ ...newExports })`}</Ts
       Accepts an <Link to="../types/AtomInstanceTtl">AtomInstanceTtl</Link> or a
       function that returns an AtomInstanceTtl. This will be set as the
       AtomApi's <code>.ttl</code> property.
+    </p>
+    <p>
+      If this AtomApi is returned from a state factory, this AtomInstanceTtl
+      will be set as the atom instance's TTL, overriding any atom config and
+      ecosystem-level TTL.
     </p>
     <p>Returns the AtomApi for chaining.</p>
   </Item>

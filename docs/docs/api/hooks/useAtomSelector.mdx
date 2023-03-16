@@ -89,11 +89,15 @@ const value = useAtomSelector(cache) // subscribes
 
 <Tabs>
   {tab1(`useAtomSelector = (selectable, ...args?) => result`)}
-  {tab2(
-    `declare const useAtomSelector: <T, Args extends any[]>(selectable: Selectable<T, Args>, ...args: Args) => T`
-  )}
+  {tab2(`declare const useAtomSelector: <T, Args extends any[]>(
+  selectorOrConfig: AtomSelectorOrConfig<T, Args>,
+  ...args: Args
+) => T`)}
 </Tabs>
 
 <InjectAtomSelectorLegend name="useAtomSelector" type="hook" />
 
 ## See Also
+
+- [The `select` Atom Getter](../types/AtomGetters#select)
+- [`injectAtomSelector()`](../injectors/injectAtomSelector)

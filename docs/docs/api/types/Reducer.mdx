@@ -64,8 +64,7 @@ type Reducer<State = any> = (state: State | undefined, action: Action) => State
     <p>
       The current state of this reducer or <code>undefined</code> if this is the
       first time the reducer is run. Note that reducers should never return
-      undefined. This ensures that the state is never undefined after the first
-      run.
+      undefined.
     </p>
     <p>Common practice is to assign this parameter to a default value.</p>
   </Item>

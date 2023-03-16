@@ -449,7 +449,7 @@ You need to be conscious of "dead stores" (frankenstores anyone?). Stores can't 
 
 Performance-wise, Zedux stores are plenty fast. Some metrics beat out most other tools handily - for example, zero-config store creation time. However, most dispatches and subscriber notifications are slower than other tools. This is because Zedux has to run a little logic to work its store composition magic.
 
-The trade-off is that Zedux stores are more modular. Especially when combined with the atomic model, your stores will be tiny compared to a Redux store for example. This scales extremely well. Indefinitely, in fact.
+The (huge) trade-off is that Zedux stores are more modular. Especially when combined with the atomic model, your stores will be tiny compared to a Redux store, for example. This scales extremely well. Indefinitely, in fact.
 
 The bottom line is that Zedux _should_ be more and more performant, relatively, the bigger your app gets. And it's only when your app gets bigger that you start to care about performance.
 

@@ -22,16 +22,23 @@ const output = test({ some: 'data' })
 
 <Tabs>
   {tab1(`actionFactory = (type) => factory`)}
-  {tab2(
-    `declare const actionFactory: <Payload = undefined, Type extends string = string>(actionType: Type) => Payload extends undefined ? ActionFactory<undefined, Type> : ActionFactory<Payload, Type>`
-  )}
+  {tab2(`declare const actionFactory: <
+  Payload = undefined,
+  Type extends string = string
+>(
+  actionType: Type
+) => Payload extends undefined
+  ? ActionFactory<undefined, Type>
+  : ActionFactory<Payload, Type>`)}
 </Tabs>
 
 <Legend>
   <Item name="type">
     <p>Required. A string.</p>
     <p>
-      Will be set as the ActionFactory's <code>.type</code> property.
+      Will be set as the ActionFactory's <code>.type</code> property. Will also
+      be the <code>type</code> property of all action objects created by the
+      returned factory.
     </p>
   </Item>
   <Item name="Returns">

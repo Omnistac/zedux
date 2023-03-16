@@ -16,7 +16,7 @@ Zedux stores don't take middleware. The [stores walkthrough](../walkthrough/stor
 Zedux doesn't offer a dedicated plugin system at the store level at all. In Zedux, plugins live on the ecosystem.
 
 :::tip you will learn:
-How to make a Zedux plugin and use it to implement global time travel
+How to make a Zedux plugin and use it to implement a simple logger.
 :::
 
 ## The Gist
@@ -81,7 +81,7 @@ ecosystem.registerPlugin(myFirstPlugin)
 
 This kicks off a sort of handshake between the ecosystem and the plugin. The ecosystem subscribes to changes in the plugin's requested "mods", and the plugin subscribes to mod events in the ecosystem. This is essentially a bidirectional (two-way) stream.
 
-Registering the plugin in the ecosystem only sets up half of the two-way stream. The other half is the plugin's responsibility. To do that, we need to register the ecosystem in the plugin.
+Registering the plugin in the ecosystem only sets up half of the two-way stream. The other half is the plugin's responsibility. To do that, you need to register the ecosystem in the plugin.
 
 ## Register the Ecosystem
 
@@ -97,7 +97,7 @@ const plugin = new ZeduxPlugin({
 
 The `registerEcosystem` function is called when the plugin is registered in an ecosystem. It receives a single parameter - a reference to that ecosystem.
 
-This is where we handle the other half of the "handshake". And the main thing we're shaking is called the mod bus.
+This is where you handle the other half of the "handshake". And the main thing you're shaking is called the mod bus.
 
 ### The `modBus`
 
@@ -122,7 +122,7 @@ const plugin = new ZeduxPlugin({
 
 Typically you'll want to register a single [effects subscriber](../api/types/Subscriber#effects) with the ecosystem's `modBus`.
 
-Now the plugin is ready to receive mod events. But it won't actually receive any yet because the ecosystem doesn't know what the plugin wants. To make the ecosystem push mod events to the plugin, we need to turn on mods.
+Now the plugin is ready to receive mod events. But it won't actually receive any yet because the ecosystem doesn't know what the plugin wants. To make the ecosystem push mod events to the plugin, you need to turn on mods.
 
 ## Mods
 
@@ -188,7 +188,7 @@ const plugin = new ZeduxPlugin({
 })
 ```
 
-For TS users, this is the recommended type safe way to check mod types.
+For TS users, this is the recommended type-safe way to check mod event types.
 
 For details about each mod type, see the [`ZeduxPlugin` API documentation](../api/classes/ZeduxPlugin#mod-details)
 
@@ -210,7 +210,7 @@ While we don't recommend implicitly changing state, you can really do whatever y
 
 ## Example
 
-Here's an example logging state updates based on flags.
+Time to put it all together. The following example creates and registers a `loggingPlugin` that tracks state changes only on atoms with logging enabled.
 
 ```tsx live resultVar=App
 const inputAtom = atom('input', '', { flags: ['enable-logging'] })
@@ -226,7 +226,7 @@ const loggingPlugin = new ZeduxPlugin({
           // only handle stateChanged mod events
           action.type !== ZeduxPlugin.actions.stateChanged.type ||
           // only log changes in atoms with logging enabled
-          !action.payload.instance?.template?.flags?.includes('enable-logging')
+          !action.payload.instance?.template.flags?.includes('enable-logging')
         ) {
           return
         }
@@ -272,7 +272,7 @@ function App() {
 
 ## Recap
 
-- Create a plugin with `new ZeduxPlugin()`
+- Create a plugin with `new ZeduxPlugin()`.
 - Turn mods on with `initialMods` and/or by setting the plugin's `modStore`'s state.
 - Subscribe to mod events by registering an effects subscriber with `ecosystem.modBus` in `registerEcosystem`.
-- Have fun
+- Have fun.

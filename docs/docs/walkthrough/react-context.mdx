@@ -48,7 +48,7 @@ return (
 
 ## Consuming
 
-Consume provided instances with [`useAtomConsumer`](../api/hooks/useAtomConsumer)
+Consume provided instances with [`useAtomConsumer()`](../api/hooks/useAtomConsumer)
 
 ```ts
 import { useAtomConsumer } from '@zedux/react'
@@ -61,20 +61,20 @@ function Child() {
 
 ### If an Instance Wasn't Provided
 
-If a component uses `useAtomConsumer` but no instance was provided by any parent, an empty object will be returned.
+If a component uses `useAtomConsumer()` but no instance was provided by any parent, `useAtomConsumer()` returns undefined.
 
 ```ts
 const instance = useAtomConsumer(myAtom)
-instance.invalidate() // error! instance.invalidate is not a function
+instance.invalidate() // error! Cannot read properties of undefined
 ```
 
-TypeScript users will be warned of this. But to get around it, you'd have to put checks before everything you try to do with that instance. This isn't very useful. In fact, it's downright annoying.
+TypeScript users will be warned of this. But to get around it, you'd have to put checks before everything you try to do with that instance. Sounds like a fast-track to annoyance.
 
-Fortunately (on purpose), `useAtomConsumer` has two overloads that help with this:
+Fortunately (on purpose), `useAtomConsumer()` has two overloads that help with this:
 
 #### Case #1: I want a default atom instance to be created, if none was provided.
 
-You can provide an array of params to `useAtomConsumer`. These params must match the params of the atom. If no atom instance was provided, Zedux will use the passed default params to locate an existing atom instance or create a new instance if it doesn't exist yet.
+You can provide an array of params to `useAtomConsumer()`. These params must match the params of the atom. If no atom instance was provided, Zedux will use the passed default params to locate an existing atom instance or create a new instance if it doesn't exist yet.
 
 ```ts
 const instance = useAtomConsumer(myAtom, ['default instance params'])
@@ -90,7 +90,7 @@ instance.invalidate() // 😊
 
 #### Case #2: I don't ever want an instance to not be provided. Throw an error if I forget!
 
-Instead of an array of default parameters, you can pass `true` as the second param to `useAtomConsumer`. This tells Zedux to throw an error if no atom instance was provided.
+Instead of an array of default parameters, you can pass `true` as the second param to `useAtomConsumer()`. This tells Zedux to throw an error if no atom instance was provided.
 
 ```ts
 const instance = useAtomConsumer(myAtom, true)
@@ -105,7 +105,7 @@ instance.invalidate() // all good again! TS smiles upon you
 
 The amazing thing about using atoms for React context is that neither the providing nor consuming component subscribes to the atom instance by default. This gives you full control over rerenders.
 
-Any component can set the state of the atom without subscribing to the state itself. And, of course, any component can subscribe itself to the atom instance using [`useAtomValue`](../api/hooks/useAtomValue) or similar.
+Any component can set the state of the atom without subscribing to the state itself. And, of course, any component can subscribe itself to the atom instance using [`useAtomValue()`](../api/hooks/useAtomValue) or similar.
 
 ```tsx
 function Parent() {
@@ -126,14 +126,14 @@ function Child() {
 }
 ```
 
-Let's see a live example of what we have so far.
+Full live example:
 
 ```tsx live ecosystemId=context/simple resultVar=Parent
 const providedAtom = atom('provided', 'the state!')
 
 function Child() {
   const instance = useAtomConsumer(providedAtom)
-  const [state, setState] = useAtomState(instance) // subscribe to state updates
+  const [state, setState] = useAtomState(instance) // subscribe to changes
 
   return (
     <>
@@ -161,20 +161,23 @@ Try changing the `Parent` component above to be dynamic with `useAtomValue(insta
 
 ## Using Selectors
 
-A common pattern is to pass the provided atom instance to an Atom Getter inside [`useAtomSelector`](../api/hooks/useAtomSelector) to limit component rerenders.
+A common pattern is to pass the provided atom instance to an Atom Getter inside [`useAtomSelector()`](../api/hooks/useAtomSelector) to limit component rerenders.
 
 ```tsx
 function Child() {
   const instance = useAtomConsumer(myAtom, true) // doesn't subscribe
 
   // subscribe, but only cause a rerender when `someField` changes:
+  // highlight-next-line
   const someField = useAtomSelector(({ get }) => get(instance).someField)
+  // or pass the instance as an argument:
+  useAtomSelector(mySelector, instance)
 }
 ```
 
 ## Cool But Why?
 
-Ecosystems essentially make all atom instances "global" to the whole component tree under an `<EcosystemProvider>`. So why would we need to provide certain instances to parts of the tree?
+Ecosystems essentially make all atom instances "global" to the whole component tree under an `<EcosystemProvider>`. So why would you need to provide an atom instance to a subtree?
 
 The primary purpose of providing atom instances over React context is to give a reusable subtree an atom instance with specific parameters. The children in the subtree don't need to know what params to pass to the atom.
 
@@ -241,6 +244,8 @@ function OnlineStatus() {
   return <div>{userData.isOnline ? <GreenDot /> : <RedDot />}</div>
 }
 ```
+
+This is a simple example and doesn't fully demonstrate how powerful this can be for a big component tree. Jotai has documented use cases for this pattern in their docs about [molecules](https://jotai.org/docs/integrations/molecules) and [atoms in atoms](https://jotai.org/docs/guides/atoms-in-atom) if you're curious.
 
 Here's a very contrived, in-depth, live example if you want to review a little of what we've learned so far. Otherwise, we're done here. Go next!
 
@@ -319,12 +324,12 @@ function TodoList() {
 ## Recap
 
 - Atom instances can be provided over React context via [`<AtomInstanceProvider>`](../api/components/AtomInstanceProvider).
-- Atom instances can be consumed from React context via [`useAtomConsumer`](../api/hooks/useAtomConsumer).
+- Atom instances can be consumed from React context via [`useAtomConsumer()`](../api/hooks/useAtomConsumer).
   - `useAtomConsumer(myAtom, [...defaultParams])` creates an atom instance with `defaultParams` if no instance was provided.
   - `useAtomConsumer(myAtom, true)` throws an error if no atom instance was provided.
-- You can subscribe any component to a consumed atom instance by using [`useAtomValue`](../api/hooks/useAtomValue) or any other hook that creates a [dynamic graph dependency](../api/glossary#dynamic-graph-dependency).
-- `useAtomSelector` will only rerender the component when the selector result changes.
+- You can subscribe any component to a consumed atom instance by using [`useAtomValue()`](../api/hooks/useAtomValue) or any other hook that creates a [dynamic graph dependency](../api/glossary#dynamic-graph-dependency).
+- Use `useAtomSelector()` with a provided instance to selectively subscribe to updates.
 
 ## Next Steps
 
-Let's continue learning how to integrate atoms with React. Next up: [React suspense](suspense).
+With React context mastered, there is only a little more about using atoms in React. Next up: [React suspense](suspense).

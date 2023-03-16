@@ -11,7 +11,7 @@ import { injectPromise } from '@zedux/react'
 
 An [injector](../glossary#injector) that creates a memoized promise reference. Returns an [AtomApi](../classes/AtomApi) with a promise and store attached. This AtomApi's store tracks the promise's state.
 
-Accepts a promise factory function, a list of dependencies (like `injectMemo` and `injectEffect`), and an optional config object.
+Accepts a promise factory function, a list of dependencies (similar to `injectMemo()` and `injectEffect()`), and an optional config object.
 
 ```ts
 const atomApi = injectPromise(createPromise, [dep1, dep2], {
@@ -26,8 +26,6 @@ const { promise, store } = atomApi
 :::
 
 The state of the store returned by this injector is patterned after [React Query's query state](https://tanstack.com/query/latest/docs/react/reference/useQuery).
-
-Use this injector to obtain a stable promise reference that can be passed to [`AtomApi#setPromise()`](../classes/AtomApi#setpromise) to trigger React suspense.
 
 ## Example
 
@@ -75,12 +73,18 @@ It also gives you access to the promise and store so you can compose them with o
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps: InjectorDeps,
-    config: { initialState?: T; dataOnly: true } & InjectStoreConfig
-  ): AtomApi<T, Record<string, any>, Store<T>, Promise<T>>\n
+    config: {
+      initialState?: T
+      dataOnly: true
+    } & InjectStoreConfig
+  ): AtomApi<T, Record<string, any>, Store<T>, Promise<T>>
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps?: InjectorDeps,
-    config?: { initialState?: T; dataOnly?: boolean } & InjectStoreConfig
+    config?: {
+      initialState?: T
+      dataOnly?: boolean
+    } & InjectStoreConfig
   ): AtomApi<
     PromiseState<T>,
     Record<string, any>,
@@ -129,7 +133,7 @@ store.getState() // <the data>
     <p>Optional. An array containing anything.</p>
     <p>
       When any items in the array change on a subsequent evaluation,{' '}
-      <code>injectPromise</code> will call the promise factory again and reset
+      <code>injectPromise()</code> will call the promise factory again and reset
       the state of the store for the new promise.
     </p>
     <p>

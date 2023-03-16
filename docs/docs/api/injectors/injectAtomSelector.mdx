@@ -78,6 +78,12 @@ const staticValUsingEcosystem = injectAtomSelector(
   ({ ecosystem }) => ecosystem.get(myAtom).someField
 )
 
+const withSelectorConfig = injectAtomSelector({
+  name: 'example',
+  resultsComparator: (newVal, oldVal) => _.isEqual(newVal, oldVal),
+  selector: ({ get }) => get(myAtom, ['a param']).someField,
+})
+
 // passing a selector cache directly:
 const cache = ecosystem.selectors.getCache(mySelector) // doesn't subscribe
 const value = injectAtomSelector(cache) // subscribes
@@ -87,9 +93,10 @@ const value = injectAtomSelector(cache) // subscribes
 
 <Tabs>
   {tab1(`injectAtomSelector = (selectable, ...args) => result`)}
-  {tab2(
-    `declare const injectAtomSelector: <T, Args extends any[]>(selectable: Selectable<T, Args>, ...args: Args) => T`
-  )}
+  {tab2(`declare const injectAtomSelector: <T, Args extends any[]>(
+  selectable: Selectable<T, Args>,
+  ...args: Args
+) => T`)}
 </Tabs>
 
 export const InjectAtomSelectorLegend = ({

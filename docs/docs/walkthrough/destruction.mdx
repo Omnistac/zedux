@@ -157,7 +157,7 @@ function Destroyer() {
 
 ## Manual Graphing
 
-We've learned how to use hooks, injectors, and Atom Getters to make Zedux update the dependency graph automatically. But thanks to ecosystems, you can work with atom instances completely outside of React or atoms themselves. Since Zedux can't automatically update the graph in this case, you might encounter a few unideal situations:
+Many hooks, injectors, and Atom Getters make Zedux update the dependency graph automatically. But thanks to ecosystems, you can work with atom instances completely outside of React or other atoms. Since Zedux can't automatically update the graph in this case, you might encounter a few unideal situations:
 
 - You create an atom instance with 0 dependents - Zedux can only automatically destroy atom instances when their ref count goes from 1 to 0. Instances that never get any dependents can never be automatically cleaned up!
 

@@ -3,14 +3,13 @@ id: typescript-tips
 title: TypeScript Tips
 ---
 
-Zedux was created in TypeScript from the ground up. Many Zedux APIs are designed specifically to work well with TypeScript. The [API Docs](../api/api-overview#types) document many of Zedux's more prominent types. But there are lots of TypeScript helpers and nuances not covered anywhere else in these docs.
+Zedux was created in TypeScript from the ground up. Many Zedux APIs are designed specifically to work well with TypeScript. The [API Docs](../api/api-overview#types) document many of Zedux's types, but there are several TypeScript helpers and nuances not covered anywhere else in these docs.
 
 :::tip you will learn:
 
 - How to use Zedux's `AtomGenerics` "type map"
 - Some utility types that Zedux exports
 - How to pull generics off Zedux classes
-- How to maximize inference
 - Some shortcomings and workarounds
 
 :::
@@ -33,7 +32,7 @@ interface AtomGenerics {
 }
 ```
 
-Several Zedux APIs accept an `AtomGenerics` type map. Atom templates and instances use it, so you'll probably see it a lot. Factories like `atom()` automatically infer these types and map them into this type map when you define atoms.
+Several Zedux APIs accept an `AtomGenerics` type map. Atom templates and instances use it, so you'll probably see it a lot. Factories like [`atom()`](../api/factories/atom) automatically infer these types and map them into this type map when you define atoms.
 
 ## Utility Types
 
@@ -155,11 +154,11 @@ When creating functions, you'll often want to accept a Zedux class that meets so
 To create a function that accepts any instance of a given template, use the following:
 
 ```ts
-const getUpperCase = <I extends AtomInstanceType<typeof exampleAtom>>(
+const getRounded = <I extends AtomInstanceType<typeof exampleAtom>>(
   instance: I
 ) => {
-  // given the exampleAtom above, TS knows this `.getState()` returns a string:
-  return instance.getState().toUpperCase()
+  // given the exampleAtom above, TS knows this `.getState()` returns a number:
+  return Math.round(instance.getState())
 }
 ```
 
@@ -208,8 +207,11 @@ const getValue: {
 
   // also accept instances 'cause we can 'cause overloads are powerful:
   <I extends AnyAtomInstance>(instance: I): AtomStateType<I>
-} = <A extends AnyAtomTemplate | AnyAtomInstance>(template: A) => {
-  ecosystem.get(template as AnyAtomTemplate) // this cast is fine
+} = <A extends AnyAtomTemplate | AnyAtomInstance>(
+  template: A,
+  params?: AtomParamsType<A>
+) => {
+  ecosystem.get(template as AnyAtomTemplate, params) // this cast is fine
 }
 ```
 
@@ -226,7 +228,18 @@ getPromise(myParamlessAtom) // works
 getPromise(twoParamsAtom, ['param-1', 'param-2']) // works
 ```
 
-Now no overloads are needed, at the cost of a little tuple ugliness. Of course this doesn't support passing an atom instance like the overloads example. But for functions that don't need that, this may be good enough.
+Now no overloads are needed, at the cost of a little tuple spread ugliness. Of course this doesn't support passing an atom instance like the overloads example. But for functions that don't need that, this may be good enough.
+
+## Stores
+
+Zedux also exports a `StoreStateType` util for pulling the state generic off a Zedux store
+
+```ts
+import { createStore, StoreStateType } from '@zedux/react'
+
+const store = createStore(null, 'Hello, world!')
+type State = StoreStateType<typeof store> // string
+```
 
 ## Recap
 

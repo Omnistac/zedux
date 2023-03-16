@@ -3,7 +3,11 @@ id: ssr
 title: SSR
 ---
 
-In [the persistence guide](persistence), we learned how to get an ecosystem's state snapshot and use it to rehydrate the entire ecosystem. There is only a little more to learn to get a full-fledged SSR setup going.
+:::tip
+It is recommended to read the [persistence guide](persistence) before this SSR guide.
+:::
+
+[The persistence guide](persistence) showed how to get an ecosystem's state snapshot and use it to rehydrate the entire ecosystem. There is only a little more to learn to get a full-fledged SSR setup going.
 
 :::tip you will learn:
 How to use Zedux in a server-rendered app
@@ -145,7 +149,7 @@ For example, it's possible to analyze your dependency graph and prefetch only hi
 ```ts
 renderApp(ecosystem)
 
-const instancesByWeight = Object.values(ecosystem._instances)
+const instancesByWeight = Object.values(ecosystem.findAll())
   .filter(instance => instance.promise) // only compare instances with promises
   .sort(
     (instanceA, instanceB) =>

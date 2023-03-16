@@ -7,21 +7,23 @@ Zedux doesn't place any restrictions on how you manage asynchronous code. You ca
 
 Zedux stores do not have middleware. Read more on that in the [Redux comparison](../about/redux-comparison). There are many other ways to manage side effects that avoid hijacking control from the store like middleware does.
 
-We've learned how to use `injectEffect` to run side effects on state changes that cause atom reevaluations. We also learned in [the stores walkthrough](stores) that stores can take effects subscribers. We'll learn all about those here.
+This walkthrough has covered many of these. There's only a little more to learn to master side effects in Zedux.
 
 :::tip you will learn
 
-- That you may not need `injectEffect`
-- How to use effects subscribers
-- Some utilities for conditionally running side effects
+- How to "render-as-you-fetch" with atoms
+- How to see what caused an atom or selector evaluation
+- Some effect subscriber nuances
 
 :::
 
 ## Render As You Fetch
 
-Many of the best practices for managing side effects in React still apply with Zedux. If you've been following the React community, you've probably heard that `useEffect` is not a great pattern for most side effects - it's prone to race conditions and some of its quirks are unintuitive. The same applies for `injectEffect`.
+Many of the best practices for managing side effects in React still apply with Zedux. If you've been following the React community, you've probably heard that `useEffect` is not a great pattern for most side effects - it's prone to race conditions and some of its quirks are unintuitive. The same applies for `injectEffect()` with one big difference:
 
-When React suspense came out, we learned about a new pattern called "render-as-you-fetch". This boils down to putting side effects in event handlers instead of `useEffect`. That is boiling it pretty heavily, but let's see an example:
+Since atoms aren't tightly-coupled to components, their side effects are also not tied to any single component. This makes atoms a _much_ better place to put your side effects. Despite having almost the exact same API, `injectEffect()` is a much more useful tool for managing side effects than `useEffect()`.
+
+When React suspense came out, the React team introduced us to a new pattern called "render-as-you-fetch". This boils down to putting side effects in event handlers instead of `useEffect`. That is boiling it pretty heavily, but here's an example:
 
 ```tsx
 const userAtom = atom('user', () => {
@@ -48,19 +50,19 @@ function User() {
 }
 ```
 
-Rather than using `injectEffect` to listen to a state update on `idStore`, we kick off the request immediately, in the `setId` callback. The state update will cause the `User` component to rerender, and when it does it will suspend again.
+Rather than using `injectEffect()` to listen to a state update on `idStore`, we kick off the request immediately in the `setId` callback. The state update will cause the `User` component to rerender, and when it does it will suspend again.
 
-We'll learn more about suspense in [the suspense walkthrough](suspense).
+But of course you know all about that since you didn't skip [the suspense walkthrough](suspense) 'cause who would do that.
 
 :::tip
-In general, side effects should be colocated with the state they manipulate. This is exactly what we do in React thanks to hooks and props. In Zedux, we can use injectors and exports.
+In general, side effects should be colocated with the state they manipulate. React's hooks and props facilitate this. In Zedux, you have injectors and exports.
 :::
 
 ## `Syncing State`
 
 A key piece of managing side effects well is having as few of them as possible. Here's a common situation you might find yourself in:
 
-Ions are often used as selectors with better memoization capabilities. As such, they often transform state from one shape to another. You might be tempted to use `injectEffect` for this:
+Ions are often used as selectors with better memoization capabilities. As such, they often transform state from one shape to another. You might be tempted to use `injectEffect()` for this:
 
 ```ts
 const sortUsers = list => [...list].sort((a, b) => a.name.localeCompare(b.name))
@@ -79,12 +81,12 @@ const sortedUsersAtom = ion('sortedUsers', () => {
 
 This works but has a few imperfections:
 
-- We set the initial state twice! Once on initial evaluation and once the first time the effect runs.
-- We had to define the `sort` logic outside the ion so we can reuse it when setting the initial state and inside the effect.
-- `injectEffect` runs the callback one tick later than the atom evaluation. This can be annoying to account for in tests.
-- We call `sortUsers` every time this ion evaluates and discard the result every time except on the first evaluation. This can be fixed by using the function overload of `injectStore`, but that's much more verbose since it requires creating the store manually.
+- It sets the initial state twice! Once on initial evaluation and once the first time the effect runs.
+- The sort logic is outside the ion so it can be reused.
+- `injectEffect()` runs the callback one tick later than the atom evaluation. This can be annoying to account for in tests.
+- `sortUsers` runs every time this ion evaluates and discards the result every time except on the first evaluation. This can be fixed by using the function overload of `injectStore()`, but that requires creating the store manually. Bleh.
 
-The fix is simple: Remove `injectEffect`! Remember that you can call `.setState()` on local stores during atom evaluation without triggering another evaluation. Let's refactor:
+The fix is simple: Remove `injectEffect()`! Remember that you can call `.setState()` on local stores during atom evaluation without triggering another evaluation. Let's refactor:
 
 ```ts
 const sortedUsersAtom = ion('sortedUsers', () => {
@@ -104,13 +106,13 @@ This fixes every single problem. Zedux is very specifically designed to work lik
 While updating a locally injected store during evaluation is good, updating stores in other atom instances during evaluation is not recommended. This is because atom instances can be created during render, and React doesn't like it when components update while another component is rendering.
 :::
 
-But now. We did introduce a new potential problem: What if we had other dependencies in this atom? We'd be spreading and sorting the users list every single time this atom reevaluates as a result of any of those dependencies changing. Well. You won't believe this ... but Zedux actually has yet another superpower:
+But now. This did introduce a new potential problem: What if this atom had other dependencies? This would spread and sort the users list every time this atom reevaluates due to any of those dependencies changing. Well. You won't believe this ... but Zedux actually has yet another superpower:
 
 ## `injectWhy()`
 
 This little beast returns an array of [reasons](../api/types/EvaluationReason) that tell you why the current atom is evaluating 🤯. Yes. 🤯.
 
-The list is empty on initial evaluation. After that, every reason in the list has a `sourceId` field that gives the unique id, if any, of the dependency that caused the update. We can use this to determine if the current evaluation is the initial evaluation or was caused by a specific dependency updating:
+The list is empty on initial evaluation. After that, every reason in the list has a `sourceId` field that gives the unique id, if any, of the dependency that caused the update. You can use this to determine if the current evaluation is the initial evaluation or was caused by a specific dependency updating:
 
 ```ts
 const sortedUsersAtom = ion('sortedUsers', () => {
@@ -122,9 +124,9 @@ const sortedUsersAtom = ion('sortedUsers', () => {
 
   // only set state if this is the initial evaluation or this evaluation was at
   // least partially caused by usersInstance updating:
-  // highlight-next-line
   if (
     !reasons.length ||
+    // highlight-next-line
     reasons.some(reason => reason.sourceId === usersInstance.id)
   ) {
     store.setState([...usersList].sort((a, b) => a.name.localeCompare(b.name)))
@@ -134,11 +136,11 @@ const sortedUsersAtom = ion('sortedUsers', () => {
 })
 ```
 
-We'll learn more about `injectWhy` in [the dev tools walkthrough](../advanced/dev-tools).
+See [`injectWhy()`](../api/injectors/injectWhy). Also see [`ecosystem.why()`](../api/classes/Ecosystem#why) which gives the same power to atom selectors.
 
 ## Odd-Looking Actions
 
-Zedux' store composition model works by making actions themselves composable objects called ActionChains. The ActionChain contains needed metadata for Zedux to perform its store composition magic. ActionChains consist of any number of "meta nodes" with the wrapped action being the last node in the chain.
+Zedux's store composition model works by making actions themselves composable objects called ActionChains. The ActionChain contains needed metadata for Zedux to perform its store composition magic. ActionChains consist of any number of "meta nodes" with the wrapped action being the last node in the chain.
 
 We'll go over the specifics of Zedux' store composition model in [the store composition guide](../advanced/store-composition). For now you just need to know that, depending on your store setup, you may see these ActionChain objects as the `action` property in your effects handlers. Zedux doesn't unwrap the action because sometimes you will need to observe the metadata the action is wrapped in.
 
@@ -157,16 +159,15 @@ store.subscribe((newState, oldState, actionChain) => {
 Zedux stores are a type of observable. They can be passed directly to [RxJS](https://github.com/ReactiveX/rxjs)'s `from()` to create full-fledged streams of state:
 
 ```ts
-const filterUsersAtom = atom('filterUsers', 'User Joe')
+const filterUsersAtom = atom('filterUsers', 'Joe')
 
 const instance = ecosystem.getInstance(filterUsersAtom)
 const state$ = from(instance.store)
 
-const subscription = state$
-  .pipe(filter(state => state.length >= 3))
-  .subscribe(currentState => {
-    fetchUsers({ filter: currentState })
-  })
+const users$ = state$.pipe(
+  filter(state => state.length >= 3),
+  switchMap(state => fetchUsers({ filter: state }))
+)
 ```
 
 You'll often want the first emission to be the current state. For that, the following pattern can be helpful:
@@ -227,7 +228,7 @@ const userAtom = atom('user', () => {
 
 One of the superpowers of Zedux stores is that they can be consumed as streams of actions. Call `store.actionStream()` to get an "observable"-like object that you can subscribe to to receive notifications for every action dispatched to the store.
 
-This observable-like object is compatible with RxJS' `from()`:
+This observable-like object is compatible with RxJS's `from()`:
 
 ```tsx
 import { from } from 'rxjs'
@@ -246,11 +247,11 @@ function BigGrid() {
     const subscription = from(busInstance.store.actionStream())
       .pipe(filter(action => action.type === updateRow.type))
       .subscribe(action =>
-        gridRef.current.updateRow(action.payload.rowId, action.payload)
+        gridRef.current?.updateRow(action.payload.rowId, action.payload)
       )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [busInstance]) // instances can be force-destroyed so pass them here
 
   return <ThirdPartyGridComponent ref={gridRef} />
 }
@@ -258,8 +259,7 @@ function BigGrid() {
 
 ## Recap
 
-- `injectEffect()` is a simple tool for running side effects on changes that trigger atom reevaluation. It's also good for managing cleanup.
-- BUT you may not need `injectEffect()`.
+- `injectEffect()` is a simple tool for running side effects on changes that trigger reevaluations. It's also good for managing cleanup. BUT you may not need it.
 - `injectWhy()` can help reduce side effects.
 - Stores can be consumed directly as streams of state or as streams of actions via `store.actionStream()`.
 - Zedux can handle every possible asynchronous flow, e.g. RxJS streams, generators, promises, sockets, etc.

@@ -79,7 +79,7 @@ function Theme() {
     MapStatesToEvents<States, Context>,
     Context
   >
-): MachineStore<
+) => MachineStore<
   MapStatesToStateNames<States, Context>,
   MapStatesToEvents<States, Context>,
   Context
@@ -139,14 +139,15 @@ store.getContext() // { foo: 'bar' }`}</Ts>
     <Legend>
       <Item name="guard">
         <p>
-          Optional. A function that receives the MachineStore's current{' '}
-          <code>.context</code> value and should return a boolean.
+          Optional. A function that receives the MachineStore's current state
+          and the <code>.value</code> string the machine is about to transition
+          to and should return a boolean.
         </p>
         <Tabs>
-          {tab1(`guard = (context) => boolean`)}
+          {tab1(`guard = (currentState, nextValue) => boolean`)}
           {tab2(`guard?: (
   currentState: MachineStateType<StateNames, Context>,
-  nextState: StateNames
+  nextValue: StateNames
 ) => boolean`)}
         </Tabs>
         <p>
@@ -195,11 +196,6 @@ store.getContext() // { foo: 'bar' }`}</Ts>
       <code>injectMachineStore()</code> will also register all guards and
       listeners on all individual states as well as the universal guard and{' '}
       <code>onTransition</code> listener.
-    </p>
-    <p>
-      If returning this store from a state factory, you may also want to export
-      some of the MachineStore's properties like <code>.send</code>,{' '}
-      <code>.is</code>, and <code>.setContext</code>
     </p>
   </Item>
 </Legend>

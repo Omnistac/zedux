@@ -112,7 +112,8 @@ store.actionStream().subscribe({
       After the reducer layer has been given an opportunity to produce a new
       value, all{' '}
       <Link to="../types/Subscriber#effects">effects subscribers</Link>{' '}
-      (including action streams) will be notified of the action.
+      (including action streams) will be notified of the action. If the dispatch
+      resulted in a state change, all normal subscribers will also be notified.
     </p>
     <p>
       Also accepts <Link to="../types/ActionChain">ActionChain objects</Link>.
@@ -190,9 +191,9 @@ store.dispatch({ type: internalTypes.hydrate, payload: 'myState' })`}</Ts>
       objects.
     </p>
     <p>
-      IMPORTANT! Cannot be used to delete keys. Use <code>.setState()</code> for
-      that. <code>.setStateDeep()</code> is only for recursively adding/updating
-      keys.
+      IMPORTANT! This cannot be used to delete keys. Use{' '}
+      <code>.setState()</code> for that. <code>.setStateDeep()</code> is only
+      for recursively adding/updating keys.
     </p>
     <p>
       Generates and effectively dispatches a special{' '}
@@ -244,7 +245,7 @@ store.dispatch({
   </Item>
   <Item name="use">
     <p>
-      The code-splitting wizard of the Zedux realm. <code>.use()</code> modifies
+      The composition wizard of the Zedux realm. <code>.use()</code> modifies
       the structure of the store on the fly. Use it to add or remove child
       stores and reducers.
     </p>

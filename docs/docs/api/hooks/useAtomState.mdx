@@ -10,7 +10,7 @@ import { InjectAtomStateLegend } from '../injectors/injectAtomState.mdx'
 import { useAtomState } from '@zedux/react'
 ```
 
-A React hook that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning a tuple of the current value and a state setter.
+A React hook that accepts an atom template and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning a tuple of the instance's current value and a state setter.
 
 This hook's return type is very similar to React's `useState()` hook.
 
@@ -69,9 +69,20 @@ const [, { exports, only }] = useAtomState(myAtom)
 <Tabs>
   {tab1(`useAtomState = (atomOrInstance, params?) => [state, setState]`)}
   {tab2(`declare const useAtomState: {
-  <A extends ParamlessTemplate>(atom: A): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
-  <A extends AnyAtomTemplate>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
-  <I extends AnyAtomInstance>(instance: I, params?: [], config?: ZeduxHookConfig): StateHookTuple<AtomStateType<I>, AtomExportsType<I>>;
+  <A extends ParamlessTemplate>(template: A): StateHookTuple<
+    AtomStateType<A>,
+    AtomExportsType<A>
+  >
+  <A extends AnyAtomTemplate>(
+    template: A,
+    params: AtomParamsType<A>,
+    config?: Omit<ZeduxHookConfig, 'subscribe'>
+  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
+  <I extends AnyAtomInstance>(
+    instance: I,
+    params?: [],
+    config?: Omit<ZeduxHookConfig, 'subscribe'>
+  ): StateHookTuple<AtomStateType<I>, AtomExportsType<I>>
 }`)}
 </Tabs>
 

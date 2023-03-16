@@ -3,7 +3,9 @@ id: HierarchyDescriptor
 title: HierarchyDescriptor
 ---
 
-The type passed to [`createStore()`](../factories/createStore) and to [`Store#use()`](../classes/Store#use).
+The type passed to [`createStore()`](../factories/createStore) and to [`Store#use()`](../classes/Store#use). The hierarchy descriptor describes the store's state tree. Zedux reads the hierarchy and converts it into a tree of reducers, one for each "branch" (nested object) in the tree.
+
+Zedux also finds all child stores and wraps them in special reducers that know how to keep the state in sync between the child store and the parent's state slice that the child controls.
 
 ## Definition
 
