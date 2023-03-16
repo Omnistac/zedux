@@ -86,9 +86,29 @@ On top of these, you can add any fields you want. For example, injectors that ta
 
 ## Definition
 
-```ts
-createInjector = (operation, first, next?) => injector
-```
+<Tabs>
+  {tab1(`createInjector = (operation, first, next?) => injector`)}
+  {tab2(`declare const createInjector: <
+  A extends any[],
+  T extends
+    | {
+        cleanup?: (() => void) | undefined
+        result?: any
+        type: string
+      }
+    | {
+        cleanup?: (() => void) | undefined
+        result: any
+        type: string
+      }
+>(
+  operation: string,
+  first: (instance: PartialAtomInstance, ...args: A) => T,
+  next?:
+    | ((prevDescriptor: T, instance: PartialAtomInstance, ...args: A) => T)
+    | undefined
+) => (...args: A) => any`)}
+</Tabs>
 
 <Legend>
   <Item name="operation">

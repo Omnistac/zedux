@@ -10,7 +10,7 @@ import { InjectAtomValueLegend } from '../injectors/injectAtomValue.mdx'
 import { useAtomValue } from '@zedux/react'
 ```
 
-A React hook that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning the value.
+A React hook that accepts an atom template and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance, returning the value.
 
 The component that uses this hook will rerender whenever the resolved atom instance's state changes.
 
@@ -51,9 +51,17 @@ const fromInstance = useAtomValue(instance)
 <Tabs>
   {tab1(`useAtomValue = (atomOrInstance, params?) => state`)}
   {tab2(`declare const useAtomValue: {
-  <A extends ParamlessTemplate>(atom: A): AtomStateType<A>;
-  <A extends AnyAtomTemplate>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): AtomStateType<A>;
-  <I extends AnyAtomInstance>(instance: I, params?: [], config?: ZeduxHookConfig): AtomStateType<I>;
+  <A extends ParamlessTemplate>(template: A): AtomStateType<A>
+  <A extends AnyAtomTemplate>(
+    template: A,
+    params: AtomParamsType<A>,
+    config?: Omit<ZeduxHookConfig, 'subscribe'>
+  ): AtomStateType<A>
+  <I extends AnyAtomInstance>(
+    instance: I,
+    params?: [],
+    config?: Omit<ZeduxHookConfig, 'subscribe'>
+  ): AtomStateType<I>
 }`)}
 </Tabs>
 

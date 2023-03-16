@@ -3,12 +3,11 @@ id: suspense
 title: Suspense
 ---
 
-Atoms are extremely flexible when working with React suspense. We've learned how to use [Atom APIs](atom-apis) to set an atom instance's promise. It's time we learned how this works with suspense.
+Atoms are extremely flexible when working with React suspense. The [Atom APIs](atom-apis) walkthrough showed how to set an atom instance's promise. It's time to learn how this works with suspense.
 
 :::tip you will learn
 
 - How to efficiently use atoms as suspending resources in React
-- How to "render-as-you-fetch" with atoms
 - Best practices for creating and updating promises
 
 :::
@@ -31,11 +30,13 @@ const fetcherAtom = atom('fetcher', (url: string) => {
 })
 ```
 
-When `fetcherAtom` is used in a component (e.g. with `useAtomValue` or `useAtomInstance`), Zedux will throw the promise, allowing React to suspend. When the promise completes, React will recreate the component and Zedux will no longer throw the now-resolved promise.
+When `fetcherAtom` is used in a component (e.g. via [`useAtomValue()`](../api/hooks/useAtomValue) or [`useAtomInstance()`](../api/hooks/useAtomInstance)), Zedux will throw the promise, allowing React to suspend. When the promise completes, React will recreate the component and Zedux will no longer throw the now-resolved promise.
 
 Using `subscribe: false` is essential to make this approach work. Without it the promise will make this atom reevaluate every time it completes, which would recreate the promise, making an infinite loop.
 
-You can access the promise directly on the atom instance via `instance.promise`. You can use this outside React to wait until an atom instance is "ready":
+We'll look at a better approach in the [query atoms walkthrough](query-atoms), but this'll do for now.
+
+You can access the promise directly on the atom instance via [`instance.promise`](../api/classes/AtomInstance#promise). You can use this outside React to wait until an atom instance is "ready":
 
 ```ts
 const fetchUsersInstance = myEcosystem.getInstance(fetcherAtom, ['/users'])
@@ -48,7 +49,9 @@ fetchUsersInstance.promise.then(() => {
 
 If the promise reference changes on a subsequent evaluation, Zedux will make all components using the atom instance suspend again.
 
-Our `fetcherAtom` above will create a new promise reference every time it evaluates. But with the current implementation, it has no dependencies that could cause it to reevaluate! As we learned in [the selectors walkthrough](selectors), Zedux gives you lots of control over when evaluations happen. In this case, we can use [`instance.invalidate()`](../api/classes/AtomInstance#invalidate) to force the atom to reevaluate:
+The `fetcherAtom` above will create a new promise reference every time it evaluates. But with the current implementation, it has no dependencies that could cause it to reevaluate!
+
+Well, as the [the selectors walkthrough](selectors) showed, Zedux gives you lots of control over when evaluations happen. In this case, you can use [`instance.invalidate()`](../api/classes/AtomInstance#invalidate) to force the atom to reevaluate:
 
 ```tsx
 function RefreshUsers() {
@@ -157,18 +160,26 @@ const rxAtom = atom('rx', () => {
     controller => {
       const subscription = from(asyncInstance.promise)
         .pipe(doCrazyRxStuff)
-        .subscribe(result => console.log('result:', result))
+        .subscribe(result => store.setState(result))
 
       controller.signal.addEventListener('abort', () => {
         subscription.unsubscribe()
       })
     },
-    [asyncInstance]
+    [asyncInstance.promise]
   )
 })
 ```
 
-While this async flexibility is intentional, it does seem boilerplate-heavy compared to Recoil's async-by-default approach. We may create an atom type someday that mimics Recoil. In fact, an early prototype of Zedux already did. We pivoted from that approach because we didn't need it at Omnistac. This may be a job we leave up to userspace.
+We'll see [`injectPromise()`](../api/injectors/injectPromise) at work in the [query atoms walkthrough](query-atoms).
+
+While this async flexibility is intentional, it is boilerplate-heavy compared to Recoil's async-by-default approach. Though of course, lots of this boilerplate can be abstracted away using custom injectors.
+
+We may create an atom type someday that mimics Recoil. In fact, an early prototype of Zedux already did. We pivoted from that approach because we needed full control over asynchrony. In fact, it's the main reason we decided against using Recoil at Omnistac.
+
+Zedux's async power and predictably synchronous graph updates are well worth the trade-off of async boilerplate, especially in more complex apps.
+
+We may also make it possible for [plugins](../advanced/plugins) to implement automatic promise forwarding. If that sounds useful to you, feel free to open an issue about it!
 
 ## No Thanks
 
@@ -257,7 +268,7 @@ function App() {
 
 ## Recap
 
-- Set an atom instance's promise by returning an AtomApi with a promise attached via `.setPromise()`.
+- Make an atom a suspending resource in React by setting its promise via `.setPromise()` on a returned Atom API.
 - Promises must be forwarded manually to trigger React suspense.
 - Turn suspense off with `{ suspend: false }` or just don't set a promise.
 

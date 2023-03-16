@@ -5,7 +5,7 @@ title: Custom Injectors
 
 If you use React, you've probably written custom hooks. These are functions whose names start with `use` and that compose other hooks.
 
-In Zedux, we have the same thing but for injectors. Custom injectors are just functions whose names start with `inject` and that compose other injectors.
+Zedux injectors have the same composability. Custom injectors are just functions whose names start with `inject` and that compose other injectors.
 
 :::tip you will learn
 How to create, compose, and use custom injectors
@@ -19,7 +19,7 @@ An injector will also always call other injectors - if it doesn't, it isn't an i
 
 ## An Example
 
-In the [quick start](quick-start), we referenced a theoretical custom `injectFetch` injector. Let's create it for real:
+The [quick start](quick-start) referenced a theoretical custom `injectFetch` injector. Let's create it for real:
 
 ```ts
 const injectFetch = (url: string) => {
@@ -54,7 +54,7 @@ const friendsAtom = atom('friends', () => {
 })
 ```
 
-Notice that in `usersAtom` we returned only the store, while in `friendsAtom` we returned the entire Atom API from `injectFetch`. Let's take a closer look at this flexibility afforded by Atom APIs:
+Notice that `usersAtom` returns only the store, while `friendsAtom` returns the entire Atom API. Let's take a closer look at this flexibility afforded by Atom APIs:
 
 ## Using Atom APIs
 
@@ -82,11 +82,11 @@ Atom APIs are designed to be passed around between injectors and ultimately comp
 
 ## Native Injectors
 
-Zedux actually exposes the [`createInjector`](../api/factories/createInjector) factory it uses to create the built-in injectors like `injectEffect` and `injectMemo`. With this factory, you can create custom injectors with every capability that Zedux's own injectors have.
+Zedux actually exposes the [`createInjector()`](../api/factories/createInjector) factory it uses to create the built-in injectors like `injectEffect()` and `injectMemo()`. With this factory, you can create custom injectors with every capability that Zedux's own injectors have.
 
-The one capability that `createInjector` gives you that nothing else does is access to the partially-created atom instance (along with its atom definition) currently being created.
+The one capability that `createInjector()` gives you that nothing else does is access to the partially-created atom instance currently being created. This can be useful for custom injectors since they otherwise don't know which atom they're being used in.
 
-This is hidden from everything else because on initial evaluation, the atom instance doesn't have many things you'd expect to exist on an instance - namely the 3 "meta data types" (store, exports, promise). These haven't been created yet. That's the purpose of the initial evaluation!
+This "partial instance" is hidden from everything else because on initial evaluation, the atom instance doesn't have many things you'd expect to exist on an instance - namely the 3 "meta data types" (store, exports, promise). These haven't been created yet. That's the purpose of the initial evaluation!
 
 This is a low-level feature. So low that it's out of the scope of this walkthrough. But if you're interested, check it out in [the API docs](../api/factories/createInjector).
 
@@ -94,7 +94,7 @@ This is a low-level feature. So low that it's out of the scope of this walkthrou
 
 - Custom injectors can encapsulate any logic you want
 - Atom APIs are a convenient standard for passing stores, exports, and promises around
-- Low-level native injectors can be created with `createInjector`.
+- Low-level native injectors can be created with `createInjector()`.
 
 ## Next Steps
 

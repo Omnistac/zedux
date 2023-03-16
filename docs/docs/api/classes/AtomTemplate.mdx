@@ -8,19 +8,19 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 export const AtomKeyDesc = () => (
   <div>
     The key is the key to Dependency Injection - it's how ecosystems know which
-    atoms to override. It also aids development - many errors will log the key
-    of the atom they originated in. Keys also help with a codebase's
+    atom templates to override. It also aids development - many errors will log
+    the key of the atom they originated in. Keys also help with a codebase's
     grepability.
   </div>
 )
 
-The standard, default atom type. Instances of this class are passed to most of Zedux' hooks and injectors.
+The object returned from [the `atom()` factory](../factories/atom). Instances of this class are passed to most of Zedux' hooks and injectors.
 
 An atom template defines a skeleton that Zedux will use to create [atom instances](AtomInstance) on demand.
 
 ## Creation
 
-Use [the `atom()` factory](../factories/atom) to create atoms:
+Use [the `atom()` factory](../factories/atom) to create atom templates:
 
 ```ts
 import { AtomTemplate, atom } from '@zedux/react'
@@ -29,6 +29,10 @@ const exampleAtom = atom('example', 'initial state')
 
 exampleAtom instanceof AtomTemplate // true
 ```
+
+:::note
+The `_____Atom` naming convention comes from Jotai. If it's confusing (templates aren't atoms after all...), you don't have to use it. Feel free to pick your own.
+:::
 
 ## Extending
 
@@ -67,7 +71,7 @@ When creating your own, custom atom types, you'll usually want to extend this cl
     <p>
       The flags that will be checked alongside an{' '}
       <Link to="Ecosystem#flags">ecosystem's flags</Link> to warn about unsafe
-      atoms being used in certain environments.
+      atom templates being used in certain environments.
     </p>
   </Item>
   <Item name="hydrate">
@@ -132,10 +136,12 @@ When creating your own, custom atom types, you'll usually want to extend this cl
       default.
     </p>
     <ul>
-      <li>Set to `-1` to make this atom's instances live forever.</li>
       <li>
-        Set to `0` to destroy all instances of this atom as soon as they go
-        stale.
+        Set to <code>-1</code> to make this atom's instances live forever.
+      </li>
+      <li>
+        Set to <code>0</code> to destroy all instances of this atom as soon as
+        they go stale.
       </li>
       <li>
         Set to any positive integer to make atoms live in a stale state for{' '}
@@ -157,13 +163,14 @@ When creating your own, custom atom types, you'll usually want to extend this cl
 
 <Legend>
   <Item name="getInstanceId">
-    <p>Gets a string id for a specific instance of this atom.</p>
+    <p>Gets a string id for a specific instance of this atom template.</p>
     <p>Signature:</p>
     <Ts>{`getInstanceId = (ecosystem, params?) => id`}</Ts>
     <p>
       Accepts an ecosystem and an array of atom params (required if the atom
       takes params, <code>undefined</code> if not). Uses the ecosystem's id
-      generator to generate a predictable hash of the atom's key + params combo.
+      generator to generate a predictable hash of the atom template's key +
+      params combo.
     </p>
     <p>
       Zedux uses this internally to generate atom instance ids. You won't
@@ -171,7 +178,7 @@ When creating your own, custom atom types, you'll usually want to extend this cl
     </p>
   </Item>
   <Item name="override">
-    <p>Creates a clone of this atom, but with a different value.</p>
+    <p>Creates a clone of this atom template, but with a different value.</p>
     <p>Signature:</p>
     <Ts>{`override = (newValue) => newAtom`}</Ts>
     <p>
@@ -181,7 +188,7 @@ When creating your own, custom atom types, you'll usually want to extend this cl
       new value should match the corresponding types in the overridden atom.
       TypeScript will enforce this.
     </p>
-    <p>Returns the new atom</p>
+    <p>Returns the new atom template.</p>
   </Item>
 </Legend>
 

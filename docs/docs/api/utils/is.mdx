@@ -29,10 +29,10 @@ is(customStore, Store) // true
 
 Here's the full list of Zedux classes that can be checked with `is()`:
 
-- [`Store`](../classes/Store)
 - [`AtomApi`](../classes/AtomApi)
-- [`SelectorCache`](../classes/SelectorCache)
 - [`AtomInstance`](../classes/AtomInstance)
+- [`SelectorCache`](../classes/SelectorCache)
+- [`Store`](../classes/Store)
 
 Any class that extends these classes works too.
 
@@ -51,7 +51,7 @@ is = (value, classToCheck) => boolean
   </Item>
   <Item name="classToCheck">
     <p>
-      A class that contains a public, static <code>$$typeof</code> symbol.
+      A class that contains a public static <code>$$typeof</code> symbol.
     </p>
   </Item>
   <Item name="Returns">

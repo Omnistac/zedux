@@ -139,7 +139,7 @@ function Todos() {
 
 As seen in the [destruction walkthrough](destruction), every atom instance can be force-destroyed. This destroys the atom instance regardless of whether it has dependents.
 
-If the atom instance does have dependents, those dependents will immediately recreate the instance. This resurrected instance is a completely new instance - fresh state, exports, promise, everything.
+If the atom instance does have dependents, those dependents will immediately recreate the instance. This resurrected instance is a completely new instance - fresh store, exports, promise, everything.
 
 Just pass `true` to [`instance.destroy()`](../api/classes/AtomInstance#destroy):
 

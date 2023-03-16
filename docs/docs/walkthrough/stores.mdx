@@ -57,7 +57,7 @@ nestedStore.getState() // { a: { b: 'cf', d: 'e' } }
 This is the number one cause of bugs in Zedux apps. Don't forget!
 :::
 
-It may seem that you lose out on unidirectional data flow and predictable, reproducible state updates with the zero config approach. You actually don't lose anything! We'll learn all about it in [the time travel walkthrough](../advanced/time-travel).
+It may seem that you lose out on unidirectional data flow and predictable, reproducible state updates with the zero config approach. You actually don't lose anything! We'll learn all about it in [the time travel guide](../advanced/time-travel).
 
 ## Hydration
 
@@ -181,8 +181,8 @@ const rootStore = createStore()
 const todosStore = createStore(null, [])
 const toNotDosStore = createStore(null, [])
 
-// The composition magic! Since we already created the store, we can use
-// `.use()` to update its hierarchy
+// The composition magic! Since the store is already created, use `.use()` to
+// update its hierarchy:
 rootStore.use({
   todos: todosStore,
   toNotDos: toNotDosStore,
@@ -209,8 +209,12 @@ const storeB = injectAnotherFancyStore()
 Remember that you can only return a single store from a state factory. Composition allows you to combine all the stores into a single "parent" store:
 
 ```ts
-// we use the function overload of injectStore to create our own store:
+// use the function overload of injectStore to create a composed store:
 const combinedStore = injectStore(() => createStore({ a: storeA, b: storeB }))
+
+// or, if any child store is an unstable reference, prefer `.use()`:
+const combinedStore = injectStore()
+combinedStore.use({ a: storeA, b: storeB })
 ```
 
 Composition is powerful. There's a lot of potential for many more advanced patterns with store composition. In general though, you shouldn't need much more than what we did in these examples. You can check out the [store composition guide](../advanced/store-composition) to learn more.
@@ -236,6 +240,8 @@ The returned subscription object has a single property - `unsubscribe()`. Be sur
 ```ts
 useEffect(() => {
   const subscription = myStore.subscribe(mySubscriber)
+
+  // highlight-next-line
   return () => subscription.unsubscribe()
 }, [myStore])
 ```
@@ -270,7 +276,7 @@ const subscription = myStore.subscribe({
 Effects subscribers receive all the info needed to implement time travel for the store. This includes all info needed to undo and replicate all state changes in all child stores 😮. More on this in [the time travel walkthrough](../advanced/time-travel).
 :::
 
-These subscribers receive a special "StoreEffect" object. See the full definition [here](../api/types/StoreEffect).
+These subscribers receive a special ["StoreEffect" object](../api/types/StoreEffect).
 
 There are 2 differences between effects subscribers and normal subscribers:
 
@@ -293,11 +299,11 @@ myStore.subscribe({
 
 ## Stores in Atoms
 
-We learned how to create stores to give atoms control over their own state in [the atom state walkthrough](atom-state). But now that we understand stores, we can look at some more advanced patterns.
+The [atom state walkthrough](atom-state) showed how to inject stores in atoms to give them control over their own state. Now with a better understanding of stores, let's look at some more advanced patterns.
 
 ### `injectStore`
 
-Let's combine our knowledge of this hook with what we just learned about reducers and store composition.
+Everything in this walkthrough can be applied to stores created via this injector:
 
 #### Creating a reducer-driven store
 
@@ -312,6 +318,10 @@ const storeA = injectStore('a')
 const storeB = injectStore('b')
 const store = injectStore(() => createStore({ a: storeA, b: storeB }))
 ```
+
+:::tip
+Remember that if any of these stores are unstable references (for example, stores from injected atom instances), call `store.use()` inline instead of passing a function to `injectStore()`.
+:::
 
 #### Mixing stores and reducers
 
@@ -341,7 +351,7 @@ const exampleAtom = atom('example', () => {
 
 But wouldn't this would cause a reevaluation loop??
 
-Turns out, this is fine! `injectStore` detects if the store's state is updated while its atom instance is being evaluated and doesn't trigger a new evaluation. This means, however, that you may need to be conscious of when you set state:
+Turns out, this is fine! `injectStore()` detects if the store's state is updated while its atom instance is being evaluated and doesn't trigger a new evaluation. This means, however, that you may need to be conscious of when you set state:
 
 ```ts
 const store = injectStore('initial state')
@@ -349,11 +359,11 @@ const store = injectStore('initial state')
 // store's state hasn't been updated yet!
 injectEffect(someSideEffect, [store.getState()])
 
-// won't trigger the above effect (which is fine if that's what we want)
+// won't trigger the above effect (which is fine if that's what you want)
 store.setState(injectSomeDerivation())
 ```
 
-Since `store.setState()` and `store.dispatch()` return the new state, we can pass that return value as a dep to `injectEffect` if needed:
+Since `store.setState()` and `store.dispatch()` return the new state, you can pass that return value as a dep to `injectEffect` if needed:
 
 ```ts
 const store = injectStore('initial state')
@@ -365,7 +375,7 @@ injectEffect(someSideEffect, [newState])
 
 Sometimes you will encounter an asynchronous evaluation loop, e.g. with `injectEffect`, where an effect needs to set the store's state but then the effect also reruns every time the state changes.
 
-Since the above only applies during synchronous evaluation, these situations require something extra. It may be possible in some cases to fix this by narrowing your effect's dependency so that only a piece of state causes the effect to rerun. Or you may be able to reorganize your state so that the effect updates a separate store than the one it depends on.
+Since Zedux can only skip updates that happen synchronously during evaluation, these situations require something extra. It may be possible in some cases to fix this by narrowing your effect's dependency so that only a piece of state causes the effect to rerun. Or you may be able to reorganize your state so that the effect updates a separate store than the one it depends on.
 
 If all else fails, you can pass [`internalTypes.ignore`](../api/utils/internalTypes#ignore) as an action's `meta` property to prevent Zedux from reevaluating this atom on this particular state change.
 
@@ -395,33 +405,47 @@ const store = injectStore(() =>
 )
 ```
 
-The store from `otherAtom` is technically an unstable reference because `otherAtom` could be force-destroyed, which would trigger recreation with a completely different store reference. If that happens, our composed store will hold onto the old reference forever!
+The store from `otherAtom` is technically an unstable reference because the `otherAtom` instance could be force-destroyed, which would trigger recreation with a completely different store reference. If that happens, the composed store will hold onto the old reference forever!
 
-The fix is very simple. Instead of using `createStore` inside `injectStore` for one-time configuration of the store, use `.use()` inline:
+The fix is very simple. Instead of using `createStore()` inside `injectStore()` for one-time configuration of the store, use `.use()` inline:
 
 ```ts
 const store = injectStore()
 store.use({ local: localStore, external: externalStore })
 ```
 
-`store.use()` triggers a state update in the store, but remember that state updates during evaluation don't trigger a reevaluation. Now if `externalStore`'s reference changes, we'll immediately update its reference in the composed store and trigger a state update. And if the new hierarchy exactly matches the old one, `store.use()` will do nothing.
+Now if `externalStore`'s reference changes, this immediately updates its reference in the composed store and triggers a state update. And remember that state updates during evaluation don't trigger a reevaluation.
+
+`store.use()` is a no-op when nothing's changed.
+
+Another way to accomplish this is to only wrap the unstable store(s):
+
+```ts
+const wrappedExternalStore = injectStore()
+// highlight-next-line
+wrappedExternalStore.use(externalStore)
+
+const store = injectStore(() =>
+  createStore({ local: localStore, external: wrappedExternalStore })
+)
+```
 
 ### Wrapper Atoms
 
-Sometimes we'll have an atom that doesn't hold any state itself, but may wrap some functionality around another atom. There is (currently) no rule that says an atom instance can't reuse another atom instance's store.
+Sometimes you'll have an atom that doesn't hold any state itself, but may wrap some functionality around another atom. There is (currently) no rule that says an atom instance can't reuse another atom instance's store.
 
-However, remember that such injected stores are technically unstable references. To make them stable, be sure to compose the store (essentially creating a local "copy" that Zedux keeps in sync with the original).
+However, as the above section just detailed, remember that such injected stores are technically unstable references. To make them stable, be sure to compose the store (essentially creating a local "copy" that Zedux keeps in sync with the original).
 
 ```ts
 const wrappedInstance = injectAtomInstance(wrappedAtom)
 const store = injectStore()
 store.use(wrappedInstance.store)
 
-return api(wrappedInstance.store).setExports({ ... })
+return api(store).setExports({ ... })
 ```
 
 :::caution
-Try to avoid this pattern, as this bypasses Zedux' internal graph algorithm. For simple use cases, this should be fine. We are exploring a few potential solutions to allow composed stores from different atom instances to respect the atom graph when propagating updates.
+Try to avoid this pattern, as this bypasses Zedux's internal graph algorithm. For simple use cases, this should be fine. We are exploring a few potential solutions to allow composed stores from different atom instances to respect the atom graph when propagating updates.
 :::
 
 ## Recap

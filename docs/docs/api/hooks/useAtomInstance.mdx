@@ -10,13 +10,13 @@ import { InjectAtomInstanceLegend } from '../injectors/injectAtomInstance.mdx'
 import { useAtomInstance } from '@zedux/react'
 ```
 
-A React hook that accepts an atom and its params and registers a [static graph dependency](../glossary#static-graph-dependency) on the resolved atom instance. Returns the resolved [atom instance object](../classes/AtomInstance).
+A React hook that accepts an atom template and its params and registers a [static graph dependency](../glossary#static-graph-dependency) on the resolved atom instance. Returns the resolved [atom instance object](../classes/AtomInstance).
 
 Since the dependency is static, the component that uses this hook will not rerender when the resolved atom instance's state changes.
 
 To make the dependency dynamic, pass the returned atom instance to a dynamic hook like [`useAtomValue()`](useAtomValue), [`useAtomState()`](useAtomState), or [`useAtomSelector()`](useAtomSelector).
 
-You can also pass an atom instance directly to register a static graph dependency on instances received from other sources, e.g. from [useAtomConsumer](useAtomConsumer). You typically won't need to do this.
+You can also pass an atom instance directly to register a static graph dependency on instances received from other sources, e.g. from [`useAtomConsumer()`](useAtomConsumer). You typically won't need to do this.
 
 ## Examples
 
@@ -58,9 +58,17 @@ const withParams = useAtomInstance(myAtom, ['param 1', 'param 2'])
 <Tabs>
   {tab1(`useAtomInstance = (atomOrInstance, params?, config?) => atomInstance`)}
   {tab2(`declare const useAtomInstance: {
-  <A extends AtomTemplateBase<any, [], any>>(atom: A): AtomInstanceType<A>;
-  <A extends AtomTemplateBase<any, [...any], any>>(atom: A, params: AtomParamsType<A>, config?: ZeduxHookConfig): AtomInstanceType<A>;
-  <I extends AnyAtomInstance>(instance: I, params?: [], config?: ZeduxHookConfig): I;
+  <A extends ParamlessTemplate>(template: A): AtomInstanceType<A>
+  <A extends AnyAtomTemplate>(
+    template: A,
+    params: AtomParamsType<A>,
+    config?: ZeduxHookConfig
+  ): AtomInstanceType<A>
+  <I extends AnyAtomInstance>(
+    instance: I,
+    params?: [],
+    config?: ZeduxHookConfig
+  ): I
 }`)}
 </Tabs>
 
@@ -69,7 +77,7 @@ const withParams = useAtomInstance(myAtom, ['param 1', 'param 2'])
   extraConfig={
     <Item name="suspend">
       <p>
-        A boolean. Default <code>true</code>
+        A boolean. Default <code>true</code>.
       </p>
       <p>
         Pass <code>false</code> to prevent React from throwing the resolved atom

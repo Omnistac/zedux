@@ -53,43 +53,7 @@ function Reasons() {
 }
 ```
 
-If an atom's state is set multiple times synchronously, Zedux will batch those updates. In this case, `injectWhy` can be used to get the list of intermediate state changes that ultimately resulted in this evaluation but that didn't individually cause separate evaluations.
-
-```tsx live ecosystemId=injectWhy/batch-observing resultVar=Reasons
-const reasonsAtom = atom('reasons', () => {
-  const store = injectStore(0)
-
-  const reasons = injectWhy()
-  const sawFive = reasons.some(reason => reason.newState === 5)
-
-  injectEffect(() => {
-    if (sawFive) alert('hah! I saw that 5 in there!')
-  }, [sawFive])
-
-  return store
-})
-
-function Reasons() {
-  const [state, setState] = useAtomState(reasonsAtom)
-
-  return (
-    <>
-      <div>State: {state}</div>
-      <button
-        onClick={() => {
-          setState(currentState => currentState + 1)
-          setState(currentState => currentState + 1)
-          setState(currentState => currentState + 1)
-        }}
-      >
-        Fire 3 Updates
-      </button>
-    </>
-  )
-}
-```
-
-`injectWhy` will return an empty array on the first evaluation. That's the only time. Thus `injectWhy` can be used to determine if this is the first evaluation.
+`injectWhy()` will return an empty array on the first evaluation. That's the only time. Thus `injectWhy` can be used to determine if this is the first evaluation.
 
 ```ts
 const reasons = injectWhy()

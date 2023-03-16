@@ -36,9 +36,11 @@ const withOnReadyFn = createEcosystem({
 
 <Tabs>
   {tab1(`createEcosystem = (config?) => Ecosystem`)}
-  {tab2(
-    `declare const createEcosystem: <Context extends Record<string, any> | undefined = any>(config?: EcosystemConfig<Context>) => Ecosystem<any> | Ecosystem<Context>`
-  )}
+  {tab2(`declare const createEcosystem: <
+  Context extends Record<string, any> | undefined = any
+>(
+  config?: EcosystemConfig<Context>
+) => Ecosystem<any> | Ecosystem<Context>`)}
 </Tabs>
 
 <Legend>

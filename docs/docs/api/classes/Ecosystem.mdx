@@ -187,8 +187,7 @@ All properties are readonly!
       <code>createEcosystem()</code> and Zedux will ignore all flags. To turn it
       on, but with no flags, pass an empty array.
     </p>
-    <Ts>{`
-createEcosystem() // flag checking disabled. Zedux will ignore all atom flags.
+    <Ts>{`createEcosystem() // flag checking disabled. Zedux will ignore all atom flags.
 createEcosystem({ flags: [] }) // flag checking enabled! All flags will log warnings
 createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
 `}</Ts>
@@ -280,8 +279,8 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
   </Item>
   <Item name="overrides">
     <p>
-      An object mapping atom keys to atoms. These are the currently-overridden
-      atoms in this ecosystem. Modify this list by calling{' '}
+      An object mapping atom keys to atom templates. These are the
+      currently-overridden atoms in this ecosystem. Modify this list by calling{' '}
       <code>ecosystem.setOverrides()</code>,{' '}
       <code>ecosystem.addOverrides()</code>, and{' '}
       <code>ecosystem.removeOverrides()</code>.
@@ -447,13 +446,20 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
       <Link to="#getinstance">
         <code>ecosystem.getInstance()</code>
       </Link>{' '}
-      except it does NOT create the atom if it doesn't exist. In that case,{' '}
-      <code>.find()</code> returns undefined
+      except it does NOT create the atom instance if it doesn't exist. In that
+      case, <code>.find()</code> returns undefined
     </p>
-    <Ts>{`val = ecosystem.getInstance(myAtom, [...params]) // creates the atom instance if needed
-val = ecosystem.find(myAtom, [...params]) // never creates an atom instance`}</Ts>
+    <Ts>{`// creates the atom instance if needed:
+instance = ecosystem.getInstance(myAtom, [...params])\n
+// never creates an atom instance:
+instance = ecosystem.find(myAtom, [...params])`}</Ts>
     <p>
-      <code>.find()</code> can also take a fuzzy search string
+      <code>.find()</code> can also take a fuzzy search string:
+    </p>
+    <Ts>{`instance = ecosystem.find('myAtomKey')`}</Ts>
+    <p>
+      In this case, <code>.find()</code> returns the first atom instance it
+      finds whose id contains the passed string (case-insensitive).
     </p>
   </Item>
   <Item name="findAll">
@@ -462,10 +468,10 @@ val = ecosystem.find(myAtom, [...params]) // never creates an atom instance`}</T
     <Ts>{`findAll = (atom?) => instances`}</Ts>
     <Legend>
       <Item name="atom">
-        An atom or fuzzy search string. If an atom is passed,{' '}
-        <code>.findAll()</code> returns only instances of the passed atom. If a
-        string is passed, <code>.findAll()</code> returns only instances whose
-        id includes the passed string (case-insensitive).
+        An atom template or fuzzy search string. If an atom template is passed,{' '}
+        <code>.findAll()</code> returns only instances of the passed template.
+        If a string is passed, <code>.findAll()</code> returns only instances
+        whose id includes the passed string (case-insensitive).
       </Item>
       <Item name="Returns">
         An object of all Active and Stale atom instances in the ecosystem, keyed
@@ -554,9 +560,9 @@ instance.setState('new state')`}</Ts>
   <Item name="removeOverrides">
     <p>
       Removes overrides previously set via <code>.addOverrides()</code> or{' '}
-      <code>.setOverrides()</code>. All existing instances of atoms in the
-      passed list will be force-destroyed, allowing their dependents to recreate
-      them using the original, non-overridden atom.
+      <code>.setOverrides()</code>. All existing instances of atom templates in
+      the passed list will be force-destroyed, allowing their dependents to
+      recreate them using the original, non-overridden atom template.
     </p>
     <p>Signature:</p>
     <Ts>{`removeOverrides = (overrides) => void`}</Ts>
@@ -600,8 +606,8 @@ myEcosystem.reset({ someField: 'new val' })
   <Item name="select">
     <p>
       Gets the current value of a cached atom selector. If the atom selector
-      hasn't been cached yet, runs the selector but does _not_ cache the result.
-      Use{' '}
+      hasn't been cached yet, runs the selector but does <i>not</i> cache the
+      result. Use{' '}
       <Link to="Selectors#getcache">
         <code>ecosystem.selectors.getCache()</code>
       </Link>{' '}
@@ -621,8 +627,8 @@ const withArgs = myEcosystem.select(myAtomSelector, 'param 1', 'param 2')`}</Ts>
   <Item name="setOverrides">
     <p>
       Replaces the ecosystem's list of overridden atoms with the passed
-      overrides. All instances of atoms in either the new or old lists will be
-      force-destroyed, allowing their dependencies to recreate them.
+      overrides. All instances of atom templates in either the new or old lists
+      will be force-destroyed, allowing their dependencies to recreate them.
     </p>
     <p>
       To selectively update only certain atoms, use{' '}
@@ -637,7 +643,7 @@ const withArgs = myEcosystem.select(myAtomSelector, 'param 1', 'param 2')`}</Ts>
     <p>Signature:</p>
     <Ts>{`setOverrides = (newOverrides) => void`}</Ts>
     <p>
-      Accepts an array of atoms. This will be set as the new{' '}
+      Accepts an array of atom templates. This will be set as the new{' '}
       <Link to="#overrides">
         <code>.overrides</code>
       </Link>{' '}

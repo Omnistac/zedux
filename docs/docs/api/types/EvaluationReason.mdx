@@ -5,7 +5,7 @@ title: EvaluationReason
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-Every update that causes an atom instance to reevaluate produces an EvaluationReason. You can get the list of reasons that caused an atom instance to reevaluate using [`injectWhy()`](../injectors/injectWhy).
+Every update that causes an atom instance to reevaluate produces an EvaluationReason. You can get the list of reasons that caused an atom instance to reevaluate using [`injectWhy()`](../injectors/injectWhy). To get the reason list for selectors, use [`ecosystem.why()`](../classes/Ecosystem#why).
 
 ## Definition
 
@@ -16,7 +16,7 @@ interface EvaluationReason<State = any> {
   oldState?: State
   operation: string // e.g. a function like "injectAtomValue"
   sourceType: EvaluationSourceType
-  sourceId?: string // e.g. an atom key like "todos" or "userList"
+  sourceId?: string // e.g. an instance id like "todos" or "userData-[1]"
   reasons?: EvaluationReason[]
   type: EvaluationType
 }
@@ -73,13 +73,13 @@ type EvaluationType =
   </Item>
   <Item name="sourceId">
     <p>
-      If the source dependency was another atom instance, this will be the key
-      of that atom instance's atom. Otherwise, this will be undefined.
+      If the source dependency was another atom instance or selector, this will
+      be that instance's or selector's id. Otherwise, this will be undefined.
     </p>
   </Item>
   <Item name="sourceType">
     <p>
-      What changed. Could be a store subscribed to via{' '}
+      What type of thing changed. Could be a store subscribed to via{' '}
       <Link to="../injectors/injectStore">
         <code>injectStore()</code>
       </Link>
@@ -87,6 +87,7 @@ type EvaluationType =
         <code>.invalidate()</code>
       </Link> call from a dependent.
     </p>
+    <p>See the "EvaluationSourceType" definition above.</p>
   </Item>
   <Item name="reasons">
     <p>
@@ -107,6 +108,7 @@ type EvaluationType =
       atom instance being destroyed, an atom instance's promise changing, or an
       invalidation triggered externally.
     </p>
+    <p>See the "EvaluationType" definition above.</p>
   </Item>
 </Legend>
 

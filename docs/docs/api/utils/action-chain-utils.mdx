@@ -109,6 +109,10 @@ Returns the action wrapped by the given ActionChain object.
 
 This is the one you might find useful. [Effects subscribers](../types/Subscriber#effects) of composed stores receive ActionChain objects that you won't usually care about, except when implementing time travel. Use this to remove the ActionMeta nodes and get the raw action.
 
+:::note
+Actions _are_ ActionChains. You can pass actions to this function, which will do nothing but return the passed action.
+:::
+
 Signature:
 
 ```ts
@@ -121,7 +125,8 @@ removeAllMeta = actionChain => action
   </Item>
   <Item name="Returns">
     <p>
-      The wrapped <Link to="../types/Action">action</Link> object.
+      The <Link to="../types/Action">action</Link> object that the passed chain
+      was wrapping. If the passed chain is an action, returns the action as-is.
     </p>
   </Item>
 </Legend>

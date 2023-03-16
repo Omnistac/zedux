@@ -15,12 +15,12 @@ If no instance has been provided, this hook will return undefined. Pass default 
 
 This hook will not register a graph dependency of any kind on the provided instance. You can create a graph dependency by passing the consumed atom instance to various hooks:
 
-- To register a [dynamic dependency](../glossary#dynamic-graph-dependency) (causing this component to rerender when the atom instance's state updates), pass the consumed atom instance to [`useAtomValue`](useAtomValue), [`useAtomState`](useAtomState), or [`useAtomSelector`](useAtomSelector).
+- To register a [dynamic dependency](../glossary#dynamic-graph-dependency) (causing this component to rerender when the atom instance's state updates), pass the consumed atom instance to [`useAtomValue()`](useAtomValue), [`useAtomState()`](useAtomState), or [`useAtomSelector()`](useAtomSelector).
 
-- To register a [static dependency](../glossary#static-graph-dependency), pass the consumed atom instance to [`useAtomInstance`](useAtomInstance). You typically won't need to do this as the providing component usually registers its own dependency on the provided instance.
+- To register a [static dependency](../glossary#static-graph-dependency), pass the consumed atom instance to [`useAtomInstance()`](useAtomInstance). You typically won't need to do this as the providing component usually registers its own dependency on the provided instance.
 
 :::note
-This is one of the few hooks that does not have an injector equivalent (there is no such thing as `injectAtomConsumer`). This is because this hook's functionality is very specific to React. There is no equivalent in the atoms universe.
+This is one of the few hooks that does not have an injector equivalent (there is no such thing as `injectAtomConsumer()`). This is because this hook's functionality is very specific to React. There is no equivalent in the atoms universe.
 :::
 
 ## Example
@@ -75,9 +75,15 @@ const guaranteed = useAtomConsumer(myAtom, true)
 <Tabs>
   {tab1(`useAtomConsumer = (template, defaultParamsOrThrow?) => atomInstance`)}
   {tab2(`declare const useAtomConsumer: {
-  <A extends AnyAtomTemplate>(template: A): AtomInstanceType<A> | Record<string, never>;
-  <A extends AnyAtomTemplate>(template: A, defaultParams: AtomParamsType<A>): AtomInstanceType<A>;
-  <A extends AnyAtomTemplate>(template: A, throwIfNotProvided: true): AtomInstanceType<A>;
+  <A extends AnyAtomTemplate>(template: A): AtomInstanceType<A> | undefined
+  <A extends AnyAtomTemplate>(
+    template: A,
+    defaultParams: AtomParamsType<A>
+  ): AtomInstanceType<A>
+  <A extends AnyAtomTemplate>(
+    template: A,
+    throwIfNotProvided: boolean
+  ): AtomInstanceType<A>
 }`)}
 </Tabs>
 
@@ -113,12 +119,13 @@ const guaranteed = useAtomConsumer(myAtom, true)
   <Item name="Returns">
     <p>
       An <Link to="../classes/AtomInstance">atom instance</Link> of the passed
-      atom.
+      atom template.
     </p>
     <p>
       If no instance was provided and default params were passed, returns the
       instance matching the given params. If the instance doesn't exist yet,{' '}
-      <code>useAtomConsumer()</code> uses the default params to create it.
+      <code>useAtomConsumer()</code> uses the passed template and default params
+      to create it.
     </p>
     <p>
       If no instance was provided and <code>true</code> is passed as the 2nd

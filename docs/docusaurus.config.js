@@ -38,7 +38,7 @@ module.exports = {
     'https://fonts.googleapis.com/css2?family=Quicksand&display=swap',
     'https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap',
   ],
-  scripts: ['https://unpkg.com/typescript@latest/lib/typescriptServices.js'],
+  scripts: ['https://unpkg.com/typescript@5.0.2/lib/typescript.js'],
   trailingSlash: false,
   /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
   themeConfig: {
@@ -69,8 +69,12 @@ module.exports = {
           title: 'Docs',
           items: [
             {
-              label: 'React',
+              label: 'Walkthrough',
               to: 'docs/walkthrough/quick-start',
+            },
+            {
+              label: 'API',
+              to: 'docs/api/api-overview',
             },
           ],
         },

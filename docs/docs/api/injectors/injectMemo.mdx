@@ -67,10 +67,10 @@ const changesEveryTimeButJustWhy = injectMemo(getExpensiveVal)
 
 <Legend>
   <Item name="valueFactory">
-    <p>Required. A function that should return the value to memoize.</p>
+    <p>Required. A function that returns the value to memoize.</p>
     <p>
       This function is called on initial evaluation and again every time any
-      dependencies change on subsequent evaluations
+      dependencies change on subsequent evaluations.
     </p>
   </Item>
   <Item name="deps">

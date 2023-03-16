@@ -58,21 +58,20 @@ function App() {
   <
     State = any,
     Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>,
-    PromiseType extends AtomApiPromise = undefined
+    Exports extends Record<string, any> = Record<string, never>
   >(
     key: string,
     value: (
       ...params: Params
-    ) => AtomApi<Promise<State>, Exports, undefined, PromiseType>,
+    ) => AtomApi<Promise<State>, Exports, undefined, any>,
     config?: AtomConfig<State>
-  ): AtomTemplate<
-    PromiseState<State>,
-    Params,
-    Exports,
-    Store<PromiseState<State>>,
-    PromiseType
-  >\n
+  ): AtomTemplate<{
+    State: PromiseState<State>
+    Params: Params
+    Exports: Exports
+    Store: Store<PromiseState<State>>
+    Promise: Promise<State>
+  }>\n
   // Custom Stores
   <
     StoreType extends Store<any> = Store<any>,
@@ -87,7 +86,13 @@ function App() {
       | StoreType
       | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): AtomTemplate<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>\n
+  ): AtomTemplate<{
+    State: StoreStateType<StoreType>
+    Params: Params
+    Exports: Exports
+    Store: StoreType
+    Promise: PromiseType
+  }>\n
   // Catch-all
   <
     State = any,
@@ -97,20 +102,22 @@ function App() {
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    value: AtomValueOrFactory<State, Params, Exports, StoreType, PromiseType>,
+    value: AtomValueOrFactory<{
+      Exports: Exports
+      Params: Params
+      Promise: PromiseType
+      State: State
+      Store: StoreType
+    }>,
     config?: AtomConfig<State>
-  ): AtomTemplate<State, Params, Exports, StoreType, PromiseType>
-} = <
-  State = any,
-  Params extends any[] = [],
-  Exports extends Record<string, any> = Record<string, never>,
-  StoreType extends Store<State> = Store<State>,
-  PromiseType extends AtomApiPromise = undefined
->(
-  key: string,
-  value: AtomValueOrFactory<State, Params, Exports, StoreType, PromiseType>,
-  config?: AtomConfig<State>
-)`)}
+  ): AtomTemplate<{
+    Exports: Exports
+    Params: Params
+    Promise: PromiseType
+    State: State
+    Store: StoreType
+  }>
+}`)}
 </Tabs>
 
 <Legend>
@@ -196,8 +203,8 @@ function App() {
       <Link to="../classes/AtomTemplate">AtomTemplate</Link> class.
     </p>
     <p>
-      Zedux will manage creating and maintaining instances of the atom as you
-      use it.
+      Zedux will manage creating and maintaining instances of the atom template
+      as you use it.
     </p>
   </Item>
 </Legend>

@@ -25,6 +25,10 @@ store.produce(state => state.b++)
 
 [Unlike Immer's `produce()`](https://immerjs.github.io/immer/return), it doesn't matter what the callback returns. Zedux will ignore the return value. Use `store.setState()` to overwrite the state of the store.
 
+:::note important
+The state of immer stores must be any of the data types that [Immer supports](https://immerjs.github.io/immer/complex-objects).
+:::
+
 ## `injectImmerStore()`
 
 The recommended way to create immer stores. This is a normal [injector](../api/glossary#injector) for use within atoms. Accepts two parameters:
@@ -96,7 +100,7 @@ const store = injectImmerStore({ key: 'val' })
 
 ## Reducers
 
-Immer stores are currently zero-config only. We can add helpers to make Immer reducers if there's a demand for it. Reducer-driven stores are rare enough in Zedux, we're hoping this won't be necessary. But feel free to open an issue if you need this functionality!
+Immer stores are currently zero-config only. We could add helpers to make Immer reducers if there's a demand for it. Reducer-driven stores are rare enough in Zedux, we're hoping this won't be necessary. But feel free to open an issue if you need this functionality!
 
 :::note
 Immer stores are still stores - they can be used anywhere a store can be used, including being composed inside a parent store. However, since they're zero-config only, they can't be given child stores.

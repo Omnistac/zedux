@@ -3,7 +3,7 @@ id: query-atoms
 title: Query Atoms
 ---
 
-The [Atom APIs](atom-apis) and [Suspense](suspense) walkthroughs taught how to set an atom instance's promise. But promises themselves innately carry state like:
+The [Atom APIs](atom-apis) and [Suspense](suspense) walkthroughs taught how to set an atom instance's promise. But promises themselves innately carry state. For example:
 
 - Is the promise resolved?
 - What's the resolved value?
@@ -20,7 +20,7 @@ Rather than translating this "promise state" into state yourself, you can make Z
 
 ## Query Atoms
 
-To recap [the Atom APIs walkthrough](atom-apis): A query atom is just an atom whose state factory returns `api(promise)`.
+To recap the [Atom APIs walkthrough](atom-apis): A query atom is just an atom whose state factory returns `api(promise)`.
 
 ```ts
 const fetcherAtom = atom('fetcher', (url: string) => {
@@ -32,8 +32,8 @@ const fetcherAtom = atom('fetcher', (url: string) => {
 
 Compared to the `fetcherAtom` in [the suspense walkthrough](suspense#quick-overview), this simplified a lot:
 
-- We no longer have to inject a store and track state manually.
-- We don't have to `.setPromise` anymore - the promise passed to `api()` serves as both the atom's state source and suspense promise.
+- You no longer have to inject a store and track state manually.
+- You don't have to `.setPromise()` anymore - the promise passed to `api()` serves as both the atom's state source and suspense promise.
 
 ### State Shape
 
@@ -126,19 +126,19 @@ function Users() {
 
 ## `injectPromise`
 
-So far we've been creating our promise inline in the state factory. While this is certainly a supported pattern, there are downsides:
+So far we've been creating the promise inline in the state factory. While this is certainly a supported pattern, there are downsides:
 
 - A side effect is running immediately when the atom instance is initialized. Since atoms are often initialized during a React render, this means we're kicking off side effects during render 😮. Especially when using SSR, this can be a problem.
 
-- The fetch will run every time this `fetcherAtom` instance is reevaluated. In Zedux, we typically do have more control over when evaluations happen than we do over rerenders in React components. But relying on this pattern still makes code more brittle. For example, it's easy for someone to add code later that causes this atom to reevaluate in new cases and voila we have a bug.
+- The fetch will run every time this `fetcherAtom` instance is reevaluated. In Zedux, you typically do have more control over when evaluations happen than you do over rerenders in React components. But relying on this pattern still makes code more brittle. For example, it's easy for someone to add code later that causes this atom to reevaluate in new cases and voila you have a bug.
 
-We could use `injectMemo` to at least prevent the fetch from running unnecessarily on reevaluations.
+We could use `injectMemo()` to at least prevent the fetch from running unnecessarily on reevaluations.
 
 ```ts
 const promise = injectMemo(() => fetch(url), [url])
 ```
 
-But we still have the first problem of the side effect running immediately. A separate injector to isolate these side effects during SSR would be nice. Fortunately there is an injector that solves all of the above: `injectPromise`.
+But we still have the first problem of the side effect running immediately. A separate injector to isolate these side effects during SSR would be nice. Fortunately there is an injector that solves all of the above: [`injectPromise()`](../api/injectors/injectPromise).
 
 ```ts
 const fetcherAtom = atom('fetcher', (url: string) => {
@@ -150,16 +150,16 @@ const fetcherAtom = atom('fetcher', (url: string) => {
 })
 ```
 
-`injectPromise` gives you the skeleton of a query atom. The first param is a promise factory function that returns your promise. The second param is a dependency array, just like other injectors like `injectEffect` and `injectMemo`. Zedux will only rerun the promise factory when deps change.
+`injectPromise()` gives you the skeleton of a query atom. The first param is a promise factory function that returns your promise. The second param is a dependency array, just like other injectors like `injectEffect()` and `injectMemo()`. Zedux will only rerun the promise factory when deps change.
 
-`injectPromise` returns an [AtomApi](../api/classes/AtomApi) with:
+`injectPromise()` returns an [Atom API](../api/classes/AtomApi) with:
 
 - A `.store` whose state looks like a query atom's state (see the above `PromiseState` interface).
 - An attached `.promise` set to the promise returned from your promise factory.
 
-### AtomApi Composition
+### Atom API Composition
 
-The AtomApi can then be returned directly from your state factory as your atom's api. Or you can use the returned store and promise however you want - e.g. to compose them together with other stores/promises:
+The Atom API can then be returned directly from your state factory as your atom's api. Or you can use the returned store and promise however you want - e.g. to compose them together with other stores/promises:
 
 ```ts
 import {
@@ -187,9 +187,11 @@ const blogPostAtom = atom('blogPost', (id: string) => {
 
   // compose both stores together:
   const store = injectStore()
+  // highlight-next-line
   store.use({ comments: commentsApi.store, post: postApi.store })
 
   const promise = injectMemo(
+    // highlight-next-line
     () => Promise.all([commentsApi.promise, postApi.promise]),
     [commentsApi.promise, postApi.promise]
   )
@@ -218,7 +220,7 @@ Just like `injectEffect`'s cleanup, Zedux will abort the signal whenever the pro
 
 ### Example
 
-Let's see `injectPromise` plugged into the `fetcherAtom` example:
+Here's `injectPromise()` plugged into the `fetcherAtom` example:
 
 ```tsx live ecosystemId=suspense/injectPromise resultVar=Users
 // mock stuff for example:
@@ -275,10 +277,10 @@ function Users() {
 }
 ```
 
-Clicking the button now does nothing because `injectPromise` prevents the promise from being recreated. The params we pass it (`[url]`) aren't changing, so Zedux doesn't rerun the promise factory.
+Clicking the button now does nothing because `injectPromise()` prevents the promise from being recreated. Its params (`[url]`) aren't changing, so Zedux doesn't rerun the promise factory.
 
 :::tip challenge!
-Try modifying the above sandbox to make the button work again while still using `injectPromise` (tip: As with most things in Zedux, there are several ways to go about it).
+Try modifying the above sandbox to make the button work again while still using `injectPromise()` (tip: As with most things in Zedux, there are several ways to go about it).
 :::
 
 ## Not React Query

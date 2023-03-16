@@ -75,7 +75,7 @@ function Parent() {
 }
 ```
 
-Consume provided instances with [`useAtomConsumer`](../hooks/useAtomConsumer)
+Consume provided instances with [`useAtomConsumer()`](../hooks/useAtomConsumer)
 
 ```ts
 import { useAtomConsumer } from '@zedux/react'
@@ -112,7 +112,7 @@ Atom instances have the following **readonly** properties:
       created and will not change on subsequent evaluations.
     </p>
     <Ts>{`import { api, atom } from '@zedux/react'\n
-const exportsAtom = atom('exports', api().setExports({ hello: 'world' }))\n
+const exportsAtom = atom('exports', () => api().setExports({ hello: 'world' }))\n
 const importAtom = atom('import', () => {
   const { hello } = injectAtomInstance(exportsAtom).exports
 })`}</Ts>
@@ -201,7 +201,7 @@ function Shout() {
     <p>
       This promise will be used to cause React to suspend whenever this atom
       instance is used in a component until the promise completes. This promise
-      reference will not change on subsequent evaluations.
+      reference will change if a subsequent evaluation returns a new promise.
     </p>
   </Item>
   <Item name="status">
@@ -305,7 +305,7 @@ function Coin() {
   return <button onClick={invalidate}>{isHeads ? 'Heads' : 'Tails'}</button>
 }`}</Sandbox>
     <p>
-      A reference to this functino is returned from{' '}
+      A reference to this function is returned from{' '}
       <Link to="../injectors/injectInvalidate">
         <code>injectInvalidate()</code>
       </Link>

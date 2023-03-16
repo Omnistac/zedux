@@ -182,10 +182,17 @@ const testAtom = atom('test', () => {
 
 ## Removing Meta Nodes
 
-Sometimes we don't care about this metadata. Zedux exports a `removeAllMeta` function that unwraps all meta nodes around an action object.
+Sometimes you don't care about this metadata. Use [`removeAllMeta()`](action-chain-utils#removeallmeta) to unwrap all meta nodes wrapping an action.
 
 ```ts
 import { removeAllMeta } from '@zedux/react'
+
+const inheritedAction = {
+  metaType: '@@zedux/inherit',
+  payload: {
+    type: 'test',
+  },
+}
 
 const unwrappedAction = removeAllMeta(inheritedAction) // { type: 'test' }
 ```

@@ -5,7 +5,7 @@ title: Glossary
 
 ### Dynamic Graph Dependency
 
-When one [graph node](#graph-node) depends on another, Zedux draws an edge between those two nodes in its internal graph algorithm.
+When one [graph node](#graph-node) depends on another, Zedux draws an edge between those two nodes in its internal graph.
 
 A "dynamic" dependency is a dependency that will trigger updates in the dependent node when the dependency node's state updates. Contrast this to [static dependencies](#static-graph-dependency), which do not trigger updates.
 
@@ -19,13 +19,16 @@ The edges between [graph nodes](#graph-node). These edges can have several prope
 
 Edges can be static or dynamic, internal or external, and async or synchronous. They can be identified by an "operation" string that helps when debugging.
 
+These can be created manually with [manual graphing](../walkthrough/destruction#manual-graphing).
+
 ### Graph Node
 
 Zedux builds an internal graph to manage atom dependencies and propagate updates in an optimal way. There are two types of nodes in this graph:
 
 - [Atom instances](classes/AtomInstance)
-- [AtomSelectors](types/AtomSelector)
-- External dependents (usually React components).
+- [Atom selectors](types/AtomSelector)
+
+The graph also contains "pseudo nodes" representing external dependents (usually React components).
 
 ### Injector
 
@@ -41,7 +44,7 @@ Injectors should only be used at the top level of [atom state factories](#state-
 
 Injectors can be used any number of times throughout an atom state factory. For certain one-off operations like setting an atom instance's exports or setting a suspense promise, use an [AtomApi](classes/AtomApi).
 
-Like hooks, you can create custom injectors that compose other injectors. The convention is to start all injectors with the word "inject", just like we use the word "use" with React hooks.
+Like hooks, you can create custom injectors that compose other injectors. The convention is to start all injectors with the word "inject", similar to the word "use" with React hooks.
 
 ### Pseudo Action
 

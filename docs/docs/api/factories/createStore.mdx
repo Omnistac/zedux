@@ -54,8 +54,14 @@ const bigComposedStore = createStore({
 <Tabs>
   {tab1(`createStore = (initialHierarchy?, initialState?) => store`)}
   {tab2(`declare const createStore: {
-  <State = any>(initialHierarchy?: HierarchyDescriptor<State>, initialState?: State): Store<State>;
-  <State = any>(initialHierarchy: null | undefined, initialState: State): Store<State>;
+  <State = any>(
+    initialHierarchy?: HierarchyDescriptor<State>,
+    initialState?: State
+  ): Store<State>
+  <State = any>(
+    initialHierarchy: null | undefined,
+    initialState: State
+  ): Store<State>
 }`)}
 </Tabs>
 

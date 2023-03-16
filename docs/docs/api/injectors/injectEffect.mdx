@@ -105,9 +105,15 @@ injectEffect(async () => {
 
 <Tabs>
   {tab1(`injectEffect = (effect, deps?, config?) => void`)}
-  {tab2(
-    `declare const injectEffect: (effect: EffectCallback, deps?: InjectorDeps) => void`
-  )}
+  {tab2(`declare const injectEffect: (
+  effect: EffectCallback,
+  deps?: InjectorDeps,
+  config?:
+    | {
+        synchronous?: boolean | undefined
+      }
+    | undefined
+) => any`)}
 </Tabs>
 
 <Legend>
@@ -121,7 +127,7 @@ injectEffect(async () => {
     <p>Signature:</p>
     <Tabs>
       {tab1(`effect = () => cleanup`)}
-      {tab2(`effect: () => (() => void) | void | Promise<any>`)}
+      {tab2(`effect: () => (() => void) | Promise<any> | void`)}
     </Tabs>
     <Legend>
       <Item name="Returns">
@@ -141,8 +147,8 @@ injectEffect(async () => {
   </Item>
   <Item name="deps">
     <p>
-      Optional (though you'll always want to pass it). An array containing
-      absolutely anything.
+      Optional (though you'll almost always want to pass it). An array
+      containing absolutely anything.
     </p>
     <p>
       If any items in this array change on a subsequent evaluation, the previous

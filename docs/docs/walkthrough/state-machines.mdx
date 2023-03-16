@@ -7,11 +7,15 @@ The state machine is one of the most important tools a statesmith can have in hi
 
 However, Zedux does provide a minimal state machine implementation out of the box. These state machines use a high-level, TypeScript-first design that's meant to handle simple cases extremely well. For more power, use XState.
 
+:::tip you will learn:
+How to create simple TS-first state machines and add transition guards and listeners.
+:::
+
 ## Creating a machine
 
-Zedux provides a single high-level injector for creating automatically-typed state machines: `injectMachineStore`.
+Zedux provides a single high-level injector for creating automatically-typed state machines: `injectMachineStore()`.
 
-Pass a function to `injectMachineStore` that accepts a single `state` factory function and returns an array of states. The first state in the array becomes the initial state.
+Pass a function to `injectMachineStore()` that accepts a single `state` factory function and returns an array of states. The first state in the array becomes the initial state.
 
 ```ts
 import { atom, injectMachineStore } from '@zedux/react'
@@ -27,7 +31,7 @@ const trafficLightAtom = atom('trafficLight', () => {
 })
 ```
 
-This creates a state machine with 3 states: `green`, `yellow`, and `red`. `green` is the initial state. But this machine is stuck in `green` forever! Let's give it transitions:
+This creates a state machine with 3 states: `green`, `yellow`, and `red`. `green` is the initial state. But this machine is stuck in `green` forever! To change that, you need to give it transitions:
 
 ```ts
 const store = injectMachineStore(state => [
@@ -37,9 +41,9 @@ const store = injectMachineStore(state => [
 ])
 ```
 
-We use `.on(event, nextState)` to add transitions to the machine's states. Now the machine can transition from `green` -> `yellow` -> `red` -> `green` -> etc. in a loop. The machine will transition when it receives the `timer` event.
+Use `.on(event, nextState)` to add transitions to the machine's states. Now the machine can transition from `green` -> `yellow` -> `red` -> `green` -> etc. in a loop. The machine will transition when it receives the `timer` event.
 
-Now ... how do we send that event to the machine?
+Now ... how do you send that event to the machine?
 
 ## MachineStore
 
@@ -196,7 +200,7 @@ machineStore.getContext()
 Sets the store's context value. Accepts function overloads.
 
 ```ts
-// These are equivalent:
+// These are all equivalent:
 machineStore.setState(state => ({ ...state, context: newContext }))
 machineStore.setContext(newContext)
 machineStore.setContext(context => newContext)
@@ -207,14 +211,14 @@ machineStore.setContext(context => newContext)
 Deeply merges the passed context value into the existing context. Accepts function overloads.
 
 ```ts
-// These are equivalent:
+// These are all equivalent:
 machineStore.setStateDeep({ context: newContext })
 machineStore.setContextDeep(newContext)
 machineStore.setContextDeep(context => newContext)
 ```
 
 :::warning
-Just like `.setStateDeep()`, `.setContextDeep()` is only for updating state - it cannot be used to delete keys. Use `.setContext` for that.
+Just like `.setStateDeep()`, `.setContextDeep()` is only for updating state - it cannot be used to delete keys. Use `.setContext()` for that.
 :::
 
 ### Example
@@ -534,11 +538,11 @@ function Cycler() {
   - `state.on()` adds transitions between states.
   - `state.onEnter()` and `state.onLeave()` add listeners to individual states.
 - Context is the MachineStore's "extra state". It must be an object (or `undefined`).
-  - Set initial context with the 2nd param to `injectMachineStore`.
+  - Set initial context with the 2nd param to `injectMachineStore()`.
   - Get context with `machineStore.getContext()`
   - Set context with `machineStore.setContext()` or `machineStore.setContextDeep()`
 - Use guards to prevent valid transitions.
-- Add a universal guard and `onTransition` listener via the 3rd param to `injectMachineStore`.
+- Add a universal guard and `onTransition` listener via the 3rd param to `injectMachineStore()`.
 
 ## Next Steps
 

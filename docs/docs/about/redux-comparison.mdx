@@ -254,9 +254,25 @@ store.subscribe({
 
 (This is a very Zedux-favored example. Not all side effects flows are simpler in Zedux).
 
+## Performance
+
+One of the primary reasons we created Zedux and switched to it from Redux at Omnistac is that Reselect selectors caused huge performance problems for highly volatile state. But as far as comparing Zedux to Redux itself:
+
+Redux stores actually beat Zedux stores in most straight-up performance comparisons. But there's a giant factor that makes measuring the difference impossible: Zedux's atomic and composable store models are designed to split your state out into many different stores. The performance savings of this approach adds up more and more the bigger your app gets.
+
+Bottom line: Zedux _should_ be more performant than Redux in complex apps where performance is actually a concern. But again, it's impossible to say for sure. Here's one comparison where Zedux does beat Redux outright:
+
+![simplest store creation - Zedux: 213 million/sec; Redux: 16 million/sec](/img/diagrams/simplest-possible-store.png)
+
+[Benchmark here](https://jsbench.me/c1lezp3jy6/1).
+
+Just remember that this is a highly Zedux-favored comparison (Zedux has zero-config stores, Redux doesn't). Objective comparison is impossible between these **different tools**, and Zedux doesn't always win.
+
+The [store composition guide](../advanced/store-composition#performance) gives a little more insight.
+
 ## No Middleware
 
-Yep. It isn't necessary. Side effects like logging or running sagas or observables can all be effectively handled by Zedux' effects subscribers. Batching and canceling actions may not be possible, but those never were necessary at the store level - they can be handled just fine outside the store. Batchine in particular is much less common in Zedux since the atomic model naturally makes all your state updates smaller and more granular.
+Yep. It isn't necessary. Side effects like logging or running sagas or observables can all be effectively handled by Zedux' effects subscribers. Batching and canceling actions may not be possible, but those never were necessary at the store level - they can be handled just fine outside the store. Batching in particular is much less common in Zedux since the atomic model naturally makes all your state updates smaller and more granular.
 
 In Redux, middleware can also be useful for adding plugins. Zedux has atoms, which can encapsulate the state, side effects, and exports of a "state slice". A plugin system at the store level isn't very necessary.
 

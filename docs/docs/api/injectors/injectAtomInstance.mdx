@@ -9,7 +9,7 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { injectAtomInstance } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that accepts an atom and its params and registers a [static graph dependency](../glossary#static-graph-dependency) on the resolved atom instance. Returns the resolved [atom instance object](../classes/AtomInstance).
+An [injector](../glossary#injector) that accepts an atom template and its params and registers a [static graph dependency](../glossary#static-graph-dependency) on the resolved atom instance. Returns the resolved [atom instance object](../classes/AtomInstance).
 
 Since the dependency is static, the atom instance that uses this injector will not reevaluate when the resolved atom instance's state changes. However, it will reevaluate when the atom instance's promise changes or when the atom instance is destroyed.
 
@@ -68,13 +68,19 @@ const injectCustomStuff = () => {
 ## Signature
 
 <Tabs>
-  {tab1(
-    `injectAtomInstance = (atomOrInstance, params?, operation?) => instance`
-  )}
+  {tab1(`injectAtomInstance = (atom, params?, operation?) => instance`)}
   {tab2(`declare const injectAtomInstance: {
-  <A extends ParamlessTemplate>(atom: A): AtomInstanceType<A>;
-  <A extends AnyAtomTemplate>(atom: A, params: AtomParamsType<A>, operation?: string): AtomInstanceType<A>;
-  <I extends AnyAtomInstance>(instance: I, params?: [], operation?: string): I;
+  <A extends ParamlessTemplate>(template: A): AtomInstanceType<A>
+  <A extends AnyAtomTemplate>(
+    template: A,
+    params: AtomParamsType<A>,
+    config?: InjectAtomInstanceConfig
+  ): AtomInstanceType<A>
+  <I extends AnyAtomInstance>(
+    instance: I,
+    params?: [],
+    config?: InjectAtomInstanceConfig
+  ): I
 }`)}
 </Tabs>
 
@@ -84,14 +90,14 @@ export const InjectAtomInstanceLegend = ({
   extraConfigDef = '',
 }) => (
   <Legend>
-    <Item name="atomOrInstance">
+    <Item name="atom">
       <p>
         Required. An <Link to="../classes/AtomTemplate">atom template</Link> or{' '}
         <Link to="../classes/AtomInstance">atom instance</Link>.
       </p>
       <p>
-        If an atom is passed, you must also pass any required params of the
-        atom.
+        If an atom template is passed, you must also pass any required params of
+        the atom.
       </p>
       <p>
         If an atom instance is passed, the params are ignored. In this case,{' '}
@@ -103,7 +109,10 @@ export const InjectAtomInstanceLegend = ({
       </p>
     </Item>
     <Item name="params">
-      <p>Required if the passed atom takes required params. Optional if not.</p>
+      <p>
+        Required if the passed atom template takes required params. Optional if
+        not.
+      </p>
       <p>
         Don't pass this or pass an empty array if the atom does not take params
         or if passing an atom instance.
@@ -156,7 +165,7 @@ const val = ${
       <p>
         Uses the passed atom template + params combo to find an existing atom
         instance. If no instance is found, creates one using the template and
-        returns it.
+        params and returns it.
       </p>
     </Item>
   </Legend>

@@ -20,13 +20,21 @@ You'll find this object in the following places:
 - [`injectAtomGetters()`](../injectors/injectAtomGetters) returns one.
 - [Ecosystems](../classes/Ecosystem) themselves are AtomGetters objects, minus the `ecosystem` property.
 
-When called synchronously during atom or selector evaluation, `get`, `getInstance`, and `select` will register graph dependencies on resolved [atom instances](../classes/AtomInstance) and [SelectorCaches](../classes/SelectorCache). In this way, `get` is like [`injectAtomValue`](../injectors/injectAtomValue), `getInstance` is like [`injectAtomInstance`](../injectors/injectAtomInstance), and `select` is like [`injectAtomSelector`](../injectors/injectAtomSelector).
+When called synchronously during atom or selector evaluation, `get`, `getInstance`, and `select` will register graph dependencies on resolved [atom instances](../classes/AtomInstance) and [SelectorCaches](../classes/SelectorCache). Thus:
+
+- `get()` is similar to [`injectAtomValue()`](../injectors/injectAtomValue).
+- `getInstance()` is similar to [`injectAtomInstance()`](../injectors/injectAtomInstance).
+- `select()` is similar to [`injectAtomSelector()`](../injectors/injectAtomSelector).
 
 The ecosystem's AtomGetters (`ecosystem.get()`, `ecosystem.getInstance()`, and `ecosystem.select()`) however **never** register graph dependencies.
 
-When called asynchronously, AtomGetters don't register graph dependencies. Thus `get` becomes an alias for `ecosystem.get()`, `getInstance` an alias for `ecosystem.getInstance()`, and `select` an alias for `ecosystem.select()`. They simply return the expected values.
-
 The AtomGetters are **not** injectors. This means they can be called in loops or if statements or even asynchronously.
+
+When called asynchronously, AtomGetters don't register graph dependencies; they simply return the expected values. Thus:
+
+- `get` becomes an alias for [`ecosystem.get()`](../classes/Ecosystem#get).
+- `getInstance` becomes an alias for [`ecosystem.getInstance()`](../classes/Ecosystem#getinstance).
+- `select` becomes an alias for [`ecosystem.select()`](../classes/Ecosystem#select).
 
 ## Definition
 
@@ -56,13 +64,14 @@ The AtomGetters are **not** injectors. This means they can be called in loops or
 <Legend>
   <Item name="ecosystem">
     <p>
-      A reference to the <Link to="../classes/Ecosystem">ecosystem</Link> this
-      atom or selector was created in.
+      A reference to the <Link to="../classes/Ecosystem">ecosystem</Link> the
+      current atom or selector was created in.
     </p>
     <p>
-      Note that while we call ecosystems themselves AtomGetters, they are the
-      only AtomGetters that don't have an <code>ecosystem</code> property (they
-      don't need it obviously).
+      The ecosystem is called an "AtomGetter", but it's really an AtomGetter
+      object containing its own AtomGetters. Ecosystems are the only AtomGetters
+      objects that don't have an <code>ecosystem</code> property (they don't
+      need it obviously).
     </p>
     <p>
       Use this AtomGetter when you want to specifically avoid registering graph
@@ -73,7 +82,7 @@ const staticVal = ecosystem.get(val) // doesn't register anything`}</Ts>
     <p>The ecosystem also has additional methods for getting atom instances:</p>
     <Ts>{`// returns the first matching atom instance only if one exists already
 // (unlike ecosystem.getInstance() which creates the instance if it doesn't exist):
-ecosystem.find(myAtom, [param1, param2])
+ecosystem.find(myAtom, [param1, param2])\n
 // returns all matching atom instances. Also doesn't create any instances:
 ecosystem.findAll(myAtom, [param1, param2])`}</Ts>
     <p>
@@ -93,26 +102,26 @@ ecosystem.findAll(myAtom, [param1, param2])`}</Ts>
       <Link to="../classes/Ecosystem#selectorcache">
         <code>.selectors</code>
       </Link>{' '}
-      property for full control over manually controlling cached selectors.
+      property for full manual control over cached selectors.
     </p>
   </Item>
   <Item name="get">
     <p>
       A function that returns the current state of an atom instance's store.
-      Pass either an instance directly or an atom template and its params (if
-      the atom takes params).
+      Pass either an atom template and its params (if the atom takes params) or
+      an atom instance directly.
     </p>
     <Ts>{`value = get(myAtom)
 value = get(myAtom, [param1, param2])
 value = get(myAtomInstance)`}</Ts>
     <p>
-      When an instance is passed, <code>get()</code> registers a dynamic graph
-      dependency on that instance and returns its current value.
-    </p>
-    <p>
       When an atom template is passed, <code>get()</code> creates the instance
       if it doesn't exist yet, registers a dynamic graph dependency on the
       instance, and returns its initial value.
+    </p>
+    <p>
+      When an instance is passed, <code>get()</code> registers a dynamic graph
+      dependency on that instance and returns its current value.
     </p>
     <p>
       When called asynchronously (after the current atom instance or selector
@@ -126,8 +135,8 @@ value = get(myAtomInstance)`}</Ts>
         <code>ecosystem.find().getState()</code>
       </Link>{' '}
       to get a value only if the instance already exists. Note however that the
-      ecosystem's getter functions don't register graph dependencies. To weakly
-      register a dependency, use the following pattern:
+      ecosystem's getters don't register graph dependencies. To weakly register
+      a dependency, use the following pattern:
     </p>
     <Ts>{`const instance = ecosystem.find(myAtom, [param1, param2])
 const val = instance ? get(instance) : defaultVal`}</Ts>
@@ -135,20 +144,20 @@ const val = instance ? get(instance) : defaultVal`}</Ts>
   <Item name="getInstance">
     <p>
       A function that returns the atom instance for the given atom template +
-      params combo. Pass either an instance directly or an atom template and its
-      params (if the atom takes params).
+      params combo. Pass either an atom template and its params (if the atom
+      takes params) or an atom instance directly.
     </p>
     <Ts>{`instance = getInstance(myAtom)
 instance = getInstance(myAtom, ['param 1', 'param 2'])
 instance = getInstance(myAtomInstance)`}</Ts>
     <p>
-      When an instance is passed, <code>getInstance()</code> registers a static
-      graph dependency on that instance and returns it as-is.
-    </p>
-    <p>
       When an atom template is passed, <code>getInstance()</code> creates the
       instance if it doesn't exist yet, registers a static graph dependency on
       the instance, and returns it.
+    </p>
+    <p>
+      When an instance is passed, <code>getInstance()</code> registers a static
+      graph dependency on that instance and returns it as-is.
     </p>
     <p>
       When called asynchronously (after the current atom instance or selector
@@ -161,8 +170,8 @@ instance = getInstance(myAtomInstance)`}</Ts>
         <code>ecosystem.find()</code>
       </Link>{' '}
       to get an instance only if it already exists. Note however that the
-      ecosystem's getter functions don't register graph dependencies. To weakly
-      register a static dependency, use the following pattern:
+      ecosystem's getters don't register graph dependencies. To weakly register
+      a static dependency, use the following pattern:
     </p>
     <Ts>{`const maybeInstance = ecosystem.find(myAtom, [param1, param2])
 const instance = maybeInstance ? getInstance(maybeInstance) : undefined`}</Ts>
@@ -205,7 +214,7 @@ value = select(aSelectorCache)`}</Ts>
     <p>
       Use{' '}
       <Link to="../classes/Selectors#find">
-        ecosystem.selectors.find(mySelector)?.result
+        <code>ecosystem.selectors.find(mySelector)?.result</code>
       </Link>{' '}
       to get the selector's cached value only if it has been cached already.
       Note however that this doesn't register any graph dependencies. To weakly
@@ -225,7 +234,8 @@ const val = cache ? select(cache) : defaultVal`}</Ts>
       <Link to="../classes/SelectorCache#id">
         <code>id</code>
       </Link>
-      .
+      . Unless you specifically make your inline selectors named functions (not common),
+      they won't have a name, causing Zedux to generate a random id.
     </p>
   </Item>
 </Legend>

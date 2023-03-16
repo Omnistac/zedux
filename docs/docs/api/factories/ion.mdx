@@ -16,25 +16,24 @@ Ions are loosely based off of Recoil's [selectors](https://recoiljs.org/docs/api
 
 ## Example
 
-```tsx live ecosystemId=ion/example resultVar=TempCelsius
-const tempFahrenheit = atom('tempFahrenheit', 32);
+Unlike Recoil selectors, ions don't implicitly hijack `setState` calls. Use exports to explicitly set state where needed.
 
-const tempCelsius = ion(
-  'tempCelsius',
-  ({ get }) => ((get(tempFahrenheit) - 32) * 5) / 9,
-  ({ set }, newValue) =>
-    set(
-      tempFahrenheit,
-      (newValue * 9) / 5 + 32
-    ),
-});
+```tsx live ecosystemId=ion/example resultVar=TempCelsius
+const tempFahrenheit = atom('tempFahrenheit', 32)
+
+const tempCelsius = ion('tempCelsius', ({ get, getInstance }) =>
+  api(((get(tempFahrenheit) - 32) * 5) / 9).setExports({
+    setTempC: newValue =>
+      getInstance(tempFahrenheit).setState((newValue * 9) / 5 + 32),
+  })
+)
 
 function TempCelsius() {
-  const [tempF, setTempF] = useAtomState(tempFahrenheit);
-  const [tempC, setTempC] = useAtomState(tempCelsius);
+  const [tempF, setTempF] = useAtomState(tempFahrenheit)
+  const [tempC, { setTempC }] = useAtomState(tempCelsius)
 
-  const addTenCelsius = () => setTempC(tempC + 10);
-  const addTenFahrenheit = () => setTempF(tempF + 10);
+  const addTenCelsius = () => setTempC(tempC + 10)
+  const addTenFahrenheit = () => setTempF(tempF + 10)
 
   return (
     <div>
@@ -46,9 +45,15 @@ function TempCelsius() {
       <br />
       <button onClick={addTenFahrenheit}>Add 10 Fahrenheit</button>
     </div>
-  );
+  )
 }
 ```
+
+This is better in pretty much every way imaginable. Exports "just work" with editor go-to definition. They give you more control and they're beautifully explicit which reduces cognitive load, bugs, surprises, all that stuff.
+
+:::tip Zedux history
+Ions used to have 4 parameters. Back then, the 4th param was the optional config object, and the 3rd was a Recoil-esque setter interceptor. We removed it because exports already handle this, and much more elegantly.
+:::
 
 ## Signature
 
@@ -59,22 +64,21 @@ function TempCelsius() {
   <
     State = any,
     Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>,
-    PromiseType extends AtomApiPromise = undefined
+    Exports extends Record<string, any> = Record<string, never>
   >(
     key: string,
     value: (
       getters: AtomGetters,
       ...params: Params
-    ) => AtomApi<Promise<State>, Exports, undefined, PromiseType>,
+    ) => AtomApi<Promise<State>, Exports, undefined, any>,
     config?: AtomConfig<State>
-  ): IonTemplate<
-    PromiseState<State>,
-    Params,
-    Exports,
-    Store<PromiseState<State>>,
-    PromiseType
-  >\n
+  ): IonTemplate<{
+    State: PromiseState<State>
+    Params: Params
+    Exports: Exports
+    Store: Store<PromiseState<State>>
+    Promise: Promise<State>
+  }>\n
   // Custom Stores
   <
     StoreType extends Store<any> = Store<any>,
@@ -90,7 +94,13 @@ function TempCelsius() {
       | StoreType
       | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): IonTemplate<StoreStateType<StoreType>, Params, Exports, StoreType, PromiseType>\n
+  ): IonTemplate<{
+    State: StoreStateType<StoreType>
+    Params: Params
+    Exports: Exports
+    Store: StoreType
+    Promise: PromiseType
+  }>\n
   // No Store
   <
     State = any,
@@ -104,7 +114,13 @@ function TempCelsius() {
       ...params: Params
     ) => AtomApi<State, Exports, undefined, PromiseType> | State,
     config?: AtomConfig<State>
-  ): IonTemplate<State, Params, Exports, Store<State>, PromiseType>
+  ): IonTemplate<{
+    State: State
+    Params: Params
+    Exports: Exports
+    Store: Store<State>
+    Promise: PromiseType
+  }>\n
   // Catch-all
   <
     State = any,
@@ -114,9 +130,21 @@ function TempCelsius() {
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    get: IonStateFactory<State, Params, Exports, StoreType, PromiseType>,
+    get: IonStateFactory<{
+      State: State
+      Params: Params
+      Exports: Exports
+      Store: StoreType
+      Promise: PromiseType
+    }>,
     config?: AtomConfig<State>
-  ): IonTemplate<State, Params, Exports, StoreType, PromiseType>
+  ): IonTemplate<{
+    State: State
+    Params: Params
+    Exports: Exports
+    Store: StoreType
+    Promise: PromiseType
+  }>
 }`)}
 </Tabs>
 
@@ -140,8 +168,8 @@ function TempCelsius() {
     </p>
     <ul className="spaced">
       <li>
-        A raw value. When the atom is instantiated, Zedux will create a new
-        store with this value as its initial state.
+        A raw value. When the ion template is instantiated, Zedux will create a
+        new store with this value as its initial state.
       </li>
       <li>
         A <Link to="../classes/Store">Zedux store</Link>. This will become the

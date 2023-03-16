@@ -9,7 +9,7 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { injectAtomState } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that accepts an atom and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance. Returns a tuple of the instance's store's current value and an export-infused state setter function.
+An [injector](../glossary#injector) that accepts an atom template and its params and registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the resolved atom instance. Returns a tuple of the instance's store's current value and an export-infused state setter function.
 
 This injector's return type is very similar to React's `useState()` hook.
 
@@ -21,7 +21,7 @@ const [state, setState] = injectAtomState(myAtom, [...params])
 
 The atom instance that uses this injector will reevaluate whenever the resolved atom instance's state changes.
 
-The returned state setter function has all the atom instance's exports attached to it. This facilitates using exports to update the atom's state, rather than updating the state directly.
+The returned state setter function is "export-infused", meaning it has all the atom instance's exports attached to it. This facilitates using exports to update the atom's state, rather than updating the state directly.
 
 ## Example
 
@@ -76,6 +76,7 @@ const passwordAtom = atom('password', () => {
 const formAtom = atom('form', () => {
   // destructure the exports directly off the state setter:
   const [password, { clear, setPassword }] = injectAtomState(passwordAtom)
+
   // this is a convenient alternative to the following:
   const passwordInstance = injectAtomInstance(passwordAtom)
   const password = injectAtomValue(passwordInstance)
@@ -96,11 +97,20 @@ const [, { exports, only }] = injectAtomState(myAtom)
 ## Signature
 
 <Tabs>
-  {tab1(`injectAtomState = (atomOrInstance, params?) => [state, setState]`)}
+  {tab1(`injectAtomState = (atom, params?) => [state, setState]`)}
   {tab2(`declare const injectAtomState: {
-  <A extends ParamlessTemplate>(atom: A): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
-  <A extends AnyAtomTemplate>(atom: A, params: AtomParamsType<A>): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>;
-  <I extends AnyAtomInstance>(instance: I): StateHookTuple<AtomStateType<I>, AtomExportsType<I>>;
+  <A extends ParamlessTemplate>(template: A): StateHookTuple<
+    AtomStateType<A>,
+    AtomExportsType<A>
+  >
+  <A extends AnyAtomTemplate>(
+    template: A,
+    params: AtomParamsType<A>
+  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
+  <I extends AnyAtomInstance>(instance: I): StateHookTuple<
+    AtomStateType<I>,
+    AtomExportsType<I>
+  >
 }`)}
 </Tabs>
 
@@ -109,14 +119,14 @@ export const InjectAtomStateLegend = ({
   type = 'injector',
 }) => (
   <Legend>
-    <Item name="atomOrInstance">
+    <Item name="atom">
       <p>
         Required. An <Link to="../classes/AtomTemplate">atom template</Link> or{' '}
         <Link to="../classes/AtomInstance">atom instance</Link>.
       </p>
       <p>
-        If an atom is passed, you must also pass any required params of the
-        atom.
+        If an atom template is passed, you must also pass any required params of
+        the atom.
       </p>
       <p>
         If an atom instance is passed, the params are ignored. In this case, the
@@ -130,7 +140,10 @@ export const InjectAtomStateLegend = ({
       </p>
     </Item>
     <Item name="params">
-      <p>Required if the passed atom takes required params. Optional if not.</p>
+      <p>
+        Required if the passed atom template takes required params. Optional if
+        not.
+      </p>
       <p>
         Don't pass this or pass an empty array if the atom does not take params
         or if passing an atom instance.
@@ -151,7 +164,8 @@ export const InjectAtomStateLegend = ({
       </ul>
       <p>
         Uses the passed atom template + params combo to find an existing atom
-        instance. If no instance is found, creates one using the template.
+        instance. If no instance is found, creates one using the template and
+        params.
       </p>
       <p>
         The returned state setter is a direct wrapper around{' '}
@@ -183,9 +197,9 @@ const [state, { export1, export2 }] = ${name}(myAtom)`}</Ts>
         function. TS users will see this, as the types correctly indicate this.
       </p>
       <p>
-        If this feels janky or hacky to you, just remember that this {type} is
-        provided for convenience. You don't have to use it if it inconveniences
-        you. There are other ways to accomplish everything this {type} does. For
+        If this feels hacky to you, just remember that this {type} is provided
+        for convenience. You don't have to use it if it inconveniences you.
+        There are other ways to accomplish everything this {type} does. For
         example:
       </p>
       <Ts>{`const instance = ${

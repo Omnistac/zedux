@@ -54,9 +54,8 @@ type NextSubscriber<State = any> = (
     <p>
       The action that triggered the state change. If the state change was due to
       a <code>.setState()</code> call or an action dispatched in a parent or
-      child store, this action will be an{' '}
-      <Link to="ActionChain">ActionChain</Link> containing metadata that can be
-      used to reproduce the state update from this store for time travel.
+      child store, this action will contain special metadata that can be used to
+      reproduce the state update from this store for time travel.
     </p>
   </Item>
 </Legend>
@@ -105,6 +104,10 @@ store.subscribe({
 Effects subscribers will be called every time an action is dispatched to the store - regardless of whether that action causes a state change, raises an error, or has no effect.
 
 They are also called for [pseudo-actions](../glossary#pseudo-action) (e.g. actions generated from `setState()` calls) that trigger state updates or raise errors.
+
+:::note
+The action could be an [ActionChain](ActionChain) containing [store composition](../../advanced/store-composition)-related meta nodes.
+:::
 
 Effects subscribers are not called when a `setState()` call doesn't change the state.
 

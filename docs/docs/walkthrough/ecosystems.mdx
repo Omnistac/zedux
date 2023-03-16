@@ -78,6 +78,20 @@ function App() {
 
 Ecosystems created this way can be controlled outside React. This means you can preload atoms, manipulate atoms, analyze the graph, and destroy the ecosystem without ever rendering a component. This is extremely useful for testing and for isomorphic codebases.
 
+If you don't need to access the ecosystem outside React, it's recommended to create the ecosystem inside `useMemo()` at top of your component tree:
+
+```tsx
+function App() {
+  const ecosystem = useMemo(() => createEcosystem({ id: 'root' }), [])
+
+  return (
+    <EcosystemProvider ecosystem={rootEcosystem}>
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
 ## Getting the Ecosystem
 
 ### `useEcosystem()`
