@@ -3,14 +3,463 @@ id: store-composition
 title: Store Composition
 ---
 
-## ActionChains
+:::caution low-level warning
+This guide is very low-level. Treat it as an FYI that you'll probably never need to fully understand.
 
-Zedux' store composition model works by making actions themselves composable objects called [ActionChains](../api/types/ActionChain). The ActionChain contains needed metadata for Zedux to perform its store composition magic. ActionChains consist of any number of "meta nodes" and the wrapped action. The action is always the last node in the chain.
+If you're new here, you probably don't want to read this doc yet.
+:::
 
-An action dispatched to a parent store will be wrapped in an [`inherit`](../api/utils/internalTypes#inherit) meta node before being passed to child stores. If the child has children, it will wrap the wrapped action again in another `inherit` meta node. This recurses indefinitely down through the store tree.
+Zedux's store composition model is unique, powerful, and, as you can probably guess, pretty complex. This guide will try to break down exactly how Zedux achieves the lofty goal of composable stores.
 
-Child stores don't dispatch actions to their parent. But they will inform their parent of state updates and the action that caused them. When this happens, the action will be wrapped in a [`delegate`](../api/utils/internalTypes#delegate) meta node before being passed to the parent's subscription. If that parent has parents, it will wrap the wrapped action again in another `delegate` meta node. This recurses indefinitely up through the store tree.
+:::tip you will learn:
+
+- How changes propagate up and down the store tree.
+- What ActionChains do.
+- How Zedux makes every state update reproducible.
+- Some quirks and how schedulers fix them.
+
+:::
+
+## From the Top
+
+Let's take a giant step back and look at a picture:
+
+![store composition setup A -> AA, A -> AB, AB -> ABA, AB -> ABB](/img/diagrams/sc-setup.png).
+
+This guide will break down the store setup in this image, so let's make sure it's clear:
+
+This is a tree of composed stores. Store A is the "root" or "parent" store. It has 2 child stores: AA and AB. Store AB has 2 children of its own: ABA and ABB.
+
+When we say a store is a "child" of another store, we mean that the child store appears _somewhere_ in the [hierarchy descriptor](../api/types/HierarchyDescriptor) of the parent store. For example:
+
+```ts
+const parent = createStore()
+const child = createStore()
+
+parent.use(child) // the child controls the parent's entire state
+
+parent.use({
+  child, // the child store controls only this state slice
+  otherSlice: anotherStoreOrReducer,
+})
+
+parent.use({
+  deeply: {
+    nested: {
+      child, // the child store can be anywhere in the hierarchy
+    },
+  },
+})
+```
+
+Thus the simplest way to create the above image's store setup would look like this:
+
+```ts live resultVar=output
+const a = createStore()
+const aa = createStore()
+const ab = createStore()
+const aba = createStore()
+const abb = createStore()
+
+a.use({
+  aa,
+  ab: ab.use({
+    aba,
+    abb,
+  }),
+})
+
+const output = a.getState()
+```
+
+This is the setup we'll assume in this guide, but the principles apply for all child stores no matter where they are in a hierarchy descriptor.
 
 :::note
-🚧 This page is under construction
+As you can see in the above sandbox's output, child stores with `undefined` state don't show up in the parent store. Try modifying the code to set the state of some of the child stores and you'll see them appear in the output.
 :::
+
+Alright! The first step to cracking this nut is to learn how stores communicate with each other.
+
+## ActionChains
+
+Zedux' store composition model works by making actions themselves composable objects called [ActionChains](../api/types/ActionChain). The ActionChain contains needed metadata for Zedux to perform its store composition magic.
+
+ActionChains consist of any number of "meta nodes" and the wrapped action. The action is always the last node in the chain.
+
+Meta nodes contain special instructions that Zedux understands. We'll look at some of these instructions now:
+
+## Inherit
+
+When a parent store receives a dispatched action, it handles it like any store would - passing it to its reducers. Child stores are wrapped in special reducers. These reducers pass the action along to all child stores. But before they do that, they wrap it in a meta node.
+
+:::tip
+A "dispatched action" could be a real action dispatched by calling `store.dispatch()` or a [pseudo action](../api/glossary#pseudo-action) "dispatched" by calling `store.setState()` or `store.setStateDeep()`.
+:::
+
+This particular meta node is called [`inherit`](../api/utils/internalTypes#inherit). It looks like this:
+
+```ts
+// given this action:
+{ type: 'addTodo' }
+// an `inherit` action chain would like:
+{
+  metaType: '@@zedux/inherit',
+  payload: { type: 'addTodo' }
+}
+```
+
+The child store receives this action chain, unwraps it, and dispatches the unwrapped action to its own reducers (if it has any).
+
+If the child has children, it will rewrap the unwrapped action in a new `inherit` meta node. This recurses down through the store tree.
+
+So back to the picture. That looks like this:
+
+![A wraps action and dispatches that to AA and AB; AB unwraps action, rewraps it, and dispatches that to ABA and ABB](/img/diagrams/sc-inherit.png).
+
+When an action is dispatched to the root store, it is also dispatched to every child store, grandchild store, and so on.
+
+These are full-on dispatches, as if you'd called `store.dispatch()` yourself with each child store. However, the `inherit` node tells Zedux it doesn't need to notify the parent of this action. We'll look at parent notification next.
+
+But first, inheritance in code form:
+
+```ts live resultVar=output
+const a = createStore()
+const aa = createStore()
+const ab = createStore()
+const aba = createStore()
+const abb = createStore()
+
+a.use({
+  aa,
+  ab: ab.use({
+    aba,
+    abb,
+  }),
+})
+
+let output
+
+aba.subscribe({
+  effects: ({ action }) => {
+    output = action
+  },
+})
+
+a.dispatch({ type: 'addTodo' })
+```
+
+`inherit` nodes are never nested more than once. Child stores don't care how many layers deep they are in a hierarchy - they only care whether the action is from _some_ parent.
+
+## Notify
+
+Child stores don't dispatch actions to their parent, but they will notify their parent of state updates and the action that caused them. Parent stores register special subscriptions with their child stores to receive these notifications.
+
+The child store wraps the action in a [`delegate`](../api/utils/internalTypes#delegate) meta node before passing that to its parent. If that parent has parents, it will wrap the wrapped action again in another `delegate` meta node before notifying them. This recurses up through the store tree.
+
+:::note
+Unlike `inherit` nodes, `delegate` nodes can be nested indefinitely.
+:::
+
+`delegate` nodes look like this:
+
+```ts
+// given this action:
+{ type: 'addTodo' }
+// a `delegate` action chain would like:
+{
+  metaType: '@@zedux/delegate',
+  metaData: ['aba'],
+  payload: { type: 'addTodo' },
+}
+```
+
+The `metaData` property records the key path where the child store is located in the parent store's hierarchy. For example, with this setup:
+
+```ts
+const parent = createStore()
+const child = createStore()
+
+parent.use({
+  deeply: {
+    nested: { child },
+  },
+})
+```
+
+An action dispatched to `child` would be wrapped in a `delegate` node like this:
+
+```ts
+{
+  metaType: '@@zedux/delegate',
+  metaData: ['deeply', 'nested', 'child'],
+  payload: { type: 'addTodo' }
+}
+```
+
+This action chain is the `action` object that the parent store's [effects subscribers](../api/types/Subscriber#effects) would receive.
+
+Back to the picture, here's what happens when dispatching an action to a grandchild store:
+
+![Action dispatched to ABA; ABA wraps it in a "delegate to ABA" node notifies AB; AB wraps it again in a "delegate to AB" node and notifies A](/img/diagrams/sc-notify.png).
+
+Breakdown:
+
+- ABA passes the action to its reducers (if any), allowing them to change state. Or, if this "dispatch" is from a `.setState()` or similar call, it handles the state change accordingly.
+
+- If this is a `.setState()` or `.setStateDeep()` call and no state was changed, nothing else happens. Otherwise:
+
+- ABA notifies its subscribers of the dispatch and state change (if it changed).
+
+- Before passing the action to AB, its parent, ABA wraps the action in a `delegate` node and passes that to AB.
+
+- AB **does not pass the action to its reducers**, it simply receives the `delegate`-wrapped action and relays it to its own subscribers.
+
+- Before passing the `delegate`-wrapped action to A, its parent, AB wraps the action _again_ in another `delegate` node.
+
+- A also **does not pass the action to its reducers**, it simply relays the received double-wrapped action to its own subscribers.
+
+You are perhaps starting to see why this guide is buried in the "Advanced" section 😅
+
+If you're still here, here's the code version:
+
+```ts live resultVar=output
+const a = createStore()
+const aa = createStore()
+const ab = createStore()
+const aba = createStore()
+const abb = createStore()
+
+a.use({
+  aa,
+  ab: ab.use({
+    aba,
+    abb,
+  }),
+})
+
+let output
+
+a.subscribe({
+  effects: ({ action }) => {
+    output = action
+  },
+})
+
+aba.dispatch({ type: 'addTodo' })
+```
+
+## Delegate
+
+Why is the node called `delegate` instead of `notify` or `propagate` or something bubbly? The purpose of `delegate` nodes is to tell parent stores _exactly_ how to reproduce this state change **from their perspective**.
+
+That's right, dispatching a `delegate` action chain to a parent store is _exactly_ the same as dispatching the unwrapped action to the child store. `delegate` action chains tell Zedux to reroute the action to a different store. The action skips the parent store entirely - it will not be dispatched to the parent store's reducers or any of its other children.
+
+Observe:
+
+!["delegate" node dispatched to A, unwrapped and delegated to AB, unwrapped again and delegated to ABA](/img/diagrams/sc-delegate.png).
+
+After reaching store ABA, the action is dispatched _exactly_ as if you'd dispatched it to ABA directly. It is not wrapped in an `inherit` meta node. This means that unlike `inherit`ed actions, the action will notify the delegating parent store of the dispatch.
+
+Yep, the `inherit` flow happens again:
+
+![Action dispatched to ABA; ABA wraps it in a "delegate to ABA" node notifies AB; AB wraps it again in a "delegate to AB" node and notifies A](/img/diagrams/sc-notify.png).
+
+Notice that Stores AA and ABB are _completely unaffected_ throughout the whole delegation process.
+
+This feature is used to implement undo/redo dev tool functionality. We'll look at using this power to implement time travel in the [time travel guide](time-travel).
+
+Now, in code form:
+
+```ts live resultVar=output
+const a = createStore()
+const aa = createStore()
+const ab = createStore()
+const aba = createStore()
+const abb = createStore()
+
+a.use({
+  aa,
+  ab: ab.use({
+    aba,
+    abb,
+  }),
+})
+
+const output = {}
+
+a.subscribe({
+  effects: ({ action }) => {
+    output.aReceived = action
+  },
+})
+
+aba.subscribe({
+  effects: ({ action }) => {
+    output.abaReceived = action
+  },
+})
+
+a.dispatch({
+  metaType: '@@zedux/delegate',
+  metaData: ['ab'],
+  payload: {
+    metaType: '@@zedux/delegate',
+    metaData: ['aba'],
+    payload: { type: 'addTodo' },
+  },
+})
+```
+
+Notice that the `aba` subscriber is called first.
+
+## Subscription Order
+
+The default subscriber notification order goes something like this:
+
+1. action dispatched to parent store
+2. action dispatched to first child store
+3. repeat step 2 until reaching a "leaf node" (a store with no own children)
+4. when the action reaches a leaf node, that store finishes its dispatch and immediately notifies its own subscribers.
+5. repeat steps 2-4 with all remaining child stores.
+6. when the parent has allowed all its children to dispatch and notify their own subscribers, it does the same
+7. repeat step 6 all the way back up the tree.
+
+In short, subscribers are notified starting at leaf nodes, coming all the way back up a branch before proceeding to the next branch.
+
+Example:
+
+```ts live resultVar=output
+// give leaf nodes a reducer now:
+const a = createStore()
+const aa = createStore((state = 0) => state + 1)
+const ab = createStore()
+const aba = createStore((state = 0) => state + 1)
+const abb = createStore((state = 0) => state + 1)
+
+a.use({
+  ab: ab.use({
+    aba,
+    abb,
+  }),
+  aa, // switch the order for this example
+})
+
+const output = {}
+
+a.subscribe({ effects: ({ action }) => (output.aReceived = action) })
+aa.subscribe({ effects: ({ action }) => (output.aaReceived = action) })
+ab.subscribe({
+  effects: ({ action }) => {
+    output.abReceived = action
+    try {
+      a.getState() // try to read parent state
+      output.tearingDetected = false
+    } catch (err) {
+      output.tearingDetected = true
+    }
+  },
+})
+aba.subscribe({ effects: ({ action }) => (output.abaReceived = action) })
+abb.subscribe({ effects: ({ action }) => (output.abbReceived = action) })
+
+a.dispatch({ type: 'addTodo' })
+```
+
+Notice we switched the order of `aa` and `ab` for this example, so you can see the full branch finishing before the next branch starts.
+
+Now, what's with that `try ... catch`?
+
+This default order is simple, but can be problematic. If a subscriber in the middle of the tree tries reading a parent store's state, it'll see that the state is temporarily out of sync between the stores. 😮 Big yikes!
+
+As shown in the above example, Zedux disallows the read and throws an error instead. So at least you'll know about it. But that's no solution.
+
+This is called "tearing". And fortunately, it isn't a problem you'll run into when using stores inside atoms. This is because all stores created in atoms use the ecosystem's scheduler to fix this. This includes stores created via [`injectStore()`](../api/injectors/injectStore) or manually created via [`createStore()`](../api/factories/createStore) _during atom evaluation_.
+
+### Schedulers
+
+The subscription order can be changed. Stores can be configured with a scheduler that can order the notifications however you want. This is so low-level and subject to change that we're not documenting that now. But:
+
+All stores created in atoms use the ecosystem's scheduler by default. This scheduler changes the subscription order. It ensures that no subscribers anywhere in the tree are notified until the entire composed store has been updated and is in-sync again.
+
+After the update has been fully propagated throughout the store tree, subscribers are notified starting from the leaves, proceeding up each branch to the root. Effectively, the order should appear the same as the default order.
+
+That looks like this:
+
+```ts live resultVar=output
+// this is the low-level stuff; don't worry about it:
+const ecosystem = createEcosystem({ id: 'change-subscription-order' })
+Store._scheduler = ecosystem._scheduler
+
+const a = createStore()
+const aa = createStore((state = 0) => state + 1)
+const ab = createStore()
+const aba = createStore((state = 0) => state + 1)
+const abb = createStore((state = 0) => state + 1)
+
+a.use({
+  ab: ab.use({
+    aba,
+    abb,
+  }),
+  aa, // switch the order for this example
+})
+
+const output = {}
+
+a.subscribe({ effects: ({ action }) => (output.aReceived = action) })
+aa.subscribe({ effects: ({ action }) => (output.aaReceived = action) })
+ab.subscribe({
+  effects: ({ action, newState }) => {
+    output.abReceived = action
+    output.noMoreTearing = a.getState() // all good now :)
+  },
+})
+aba.subscribe({ effects: ({ action }) => (output.abaReceived = action) })
+abb.subscribe({ effects: ({ action }) => (output.abbReceived = action) })
+
+a.dispatch({ type: 'addTodo' })
+
+// clean up our mess:
+Store._scheduler = undefined
+```
+
+Now all subscribers are completely safe from tearing. They're also safe from another edge case we haven't mentioned yet:
+
+If a subscriber in the middle of the tree dispatches another action to its store, the parent store's subscribers will be notified of events _out of order_. This can be handled and isn't a straight-up error, but can obviously be very problematic. Schedulers fix this too.
+
+In summary: Just use stores inside atoms and you'll be fine.
+
+## In The Middle
+
+This last example shows what happens when an action is dispatched in the middle of the tree. You should be able to use your newfound store composition expertise to figure this out yourself. But just in case you're dying to see it, here you go:
+
+![Action dispatched to ABA; ABA wraps it in a "delegate to ABA" node notifies AB; AB wraps it again in a "delegate to AB" node and notifies A](/img/diagrams/sc-notify-and-inherit.png).
+
+Notifications bubble up while inherited actions bubble down. A thing of beauty, really.
+
+## Caveats
+
+Surely with great power comes great shortcomings. Zedux stores have some imperfections, but overall they're exactly the powerhouse of a state management primitive that we needed at Omnistac. The downsides:
+
+### Dead Stores
+
+You need to be conscious of "dead stores" (frankenstores anyone?). Stores can't actually be dead, but atom instances can. When you compose stores together from multiple atom instances, you have to be wary of force-destruction ripping the atom instance and its store out from under you. A simple `store.use({ child: newChildStoreReference })` fixes that right up.
+
+### Performance
+
+Performance-wise, Zedux stores are plenty fast. Some metrics beat out most other tools handily - for example, zero-config store creation time. However, most dispatches and subscriber notifications are slower than other tools. This is because Zedux has to run a little logic to work its store composition magic.
+
+The trade-off is that Zedux stores are more modular. Especially when combined with the atomic model, your stores will be tiny compared to a Redux store for example. This scales extremely well. Indefinitely, in fact.
+
+The bottom line is that Zedux _should_ be more and more performant, relatively, the bigger your app gets. And it's only when your app gets bigger that you start to care about performance.
+
+In other words, Zedux should be a great fit performance-wise for every app. #ZeduxScales
+
+## Recap
+
+- `inherit` action chains bubble down through the store tree.
+- `delegate` action chains bubble up through the store tree.
+- Actions are only dispatched to reducers in the target store and its children, **not** its parents.
+- Dispatching a `delegate` action chain to a parent store is _exactly_ the same as dispatching the wrapped action to the child store.
+- Use stores inside atoms to prevent subscription order surprises.
+- Happy coding!
