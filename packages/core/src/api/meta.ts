@@ -36,16 +36,11 @@ export const addMeta = (
   action: ActionChain,
   metaType: string,
   metaData?: any
-) => {
-  const wrappedAction: ActionMeta = {
-    metaType,
-    payload: action,
-  }
-
-  if (metaData) wrappedAction.metaData = metaData
-
-  return wrappedAction
-}
+): ActionMeta => ({
+  metaType,
+  metaData,
+  payload: action,
+})
 
 /**
  * Returns the value of the metaData field of the first ActionMeta object in the
