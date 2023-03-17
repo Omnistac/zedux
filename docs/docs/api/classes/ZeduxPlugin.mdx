@@ -128,22 +128,6 @@ Every ZeduxPlugin has just two properties:
 ## Mod Details
 
 <Legend>
-  <Item name="statusChanged">
-    <p>
-      Turn this mod on to receive mod events every time an atom instance's{' '}
-      <Link to="AtomInstance#status">
-        <code>status</code>
-      </Link>{' '}
-      property transitions to a new state (e.g. from Initializing to Active or
-      from Active to Stale).
-    </p>
-    <p>Payload shape:</p>
-    <Ts>{`{
-  instance: AnyAtomInstance
-  newStatus: LifecycleStatus
-  oldStatus: LifecycleStatus
-}`}</Ts>
-  </Item>
   <Item name="ecosystemWiped">
     <p>
       Turn this mod on to receive a mod event when the ecosystem is wiped
@@ -271,6 +255,22 @@ Every ZeduxPlugin has just two properties:
       <Link to="../types/EvaluationReason">EvaluationReasons</Link> explaining
       the evaluation. Otherwise it will be empty.
     </p>
+  </Item>
+  <Item name="statusChanged">
+    <p>
+      Turn this mod on to receive mod events every time an atom instance's{' '}
+      <Link to="AtomInstance#status">
+        <code>status</code>
+      </Link>{' '}
+      property transitions to a new state (e.g. from Initializing to Active or
+      from Active to Stale).
+    </p>
+    <p>Payload shape:</p>
+    <Ts>{`{
+  instance: AnyAtomInstance
+  newStatus: LifecycleStatus
+  oldStatus: LifecycleStatus
+}`}</Ts>
   </Item>
 </Legend>
 
