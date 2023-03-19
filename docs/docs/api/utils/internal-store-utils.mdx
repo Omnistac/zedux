@@ -58,9 +58,9 @@ internalStore.getState()['my-ecosystem']
 
 ## `setInternalStore`
 
-Completely replaces Zedux' `internalStore` with the passed store. This is only for use in apps that need to support multiple realms (e.g. browser windows) where each realm loads its own instance of Zedux, React, etc.
+Completely replaces Zedux's `internalStore` with the passed store. This is only for use in apps that need to support multiple realms (e.g. browser windows) where each realm loads its own instance of Zedux, React, etc.
 
-To share your ecosystem setup across realms, you could share each ecosystem and manually set each Zedux instance's `internalStore`'s state yourself (not recommended obviously - we just said this is supposed to be readonly). But the more complete approach is to share Zedux' internalStore across the realms and use `setInternalStore` to make Zedux reuse the exact same `internalStore` in every realm.
+To share your ecosystem setup across realms, you could share each ecosystem and manually set each Zedux instance's `internalStore`'s state yourself (not recommended obviously - we just said this is supposed to be readonly). But the more complete approach is to share Zedux's internalStore across the realms and use `setInternalStore` to make Zedux reuse the exact same `internalStore` in every realm.
 
 ```ts
 // in main window:

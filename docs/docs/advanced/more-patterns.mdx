@@ -7,7 +7,7 @@ title: More Patterns
 
 It is always possible to design an atom graph without any circular dependencies. That said, sometimes it can be very hard to do so - requirements change, the new guy comes in, or sometimes the state is just very complex.
 
-Zedux' atomic model can't support circular dependencies ... or can it?
+Zedux's atomic model can't support circular dependencies ... or can it?
 
 Alright, strictly speaking, direct circular dependencies are not allowed:
 
@@ -146,7 +146,7 @@ function Form() {
 
 ## Recursive Atoms
 
-Zedux doesn't directly have a concept of "recursive atoms" or "atoms-in-atoms". However, Zedux' APIs are so powerful that setting up recursive atoms is easy. Here's just one of many ways to go about it:
+Zedux doesn't directly have a concept of "recursive atoms" or "atoms-in-atoms". However, Zedux's APIs are so powerful that setting up recursive atoms is easy. Here's just one of many ways to go about it:
 
 ```tsx live ecosystemId=more-patterns/recursive-atoms resultVar=App
 const idGeneratorAtom = atom('idGenerator', () =>

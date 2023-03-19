@@ -3,11 +3,11 @@ id: recoil-comparison
 title: Recoil Comparison
 ---
 
-Zedux' atomic model was born in 2020 shortly after Recoil started gaining traction. We liked Recoil, but were turned away mostly by its complexity and (then-)unstable effects model. By borrowing ideas from React Query and React itself and by using Zedux' existing composable store model, we were able to create an atomic model that we've found more beginner-friendly and powerful.
+Zedux's atomic model was born in 2020 shortly after Recoil started gaining traction. We liked Recoil, but were turned away mostly by its complexity and (then-)unstable effects model. By borrowing ideas from React Query and React itself and by using Zedux's existing composable store model, we were able to create an atomic model that we've found more beginner-friendly and powerful.
 
 ## Atom/Selector Families
 
-Recoil distinguishes between `atom`, `selector`, `atomFamily`, and `selectorFamily`. Zedux' [`atom`](../api/factories/atom) alone replaces all 4, though Zedux also provides [`ion`](../api/factories/ion) which is more commonly used to replace `selector`/`selectorFamily`.
+Recoil distinguishes between `atom`, `selector`, `atomFamily`, and `selectorFamily`. Zedux's [`atom`](../api/factories/atom) alone replaces all 4, though Zedux also provides [`ion`](../api/factories/ion) which is more commonly used to replace `selector`/`selectorFamily`.
 
 Recoil:
 
@@ -210,29 +210,31 @@ Zedux atoms always evaluate synchronously. While Zedux has several helpers for h
 - handle `null`/`undefined`/`isLoading` states until data comes in.
 - control asynchronous flows using `Promise.all`/`Promise.race` or any async helper library like RxJS.
 
-Zedux does have React suspense support. But as far as managing asynchronous state between atoms, Zedux suffers from all the age-old async difficulties - imperative state, race conditions, etc. But this was a conscious decision we made because it gives you full control. Modern tooling and some of Zedux' own helpers should make async state manageable.
+Zedux does have React suspense support, but does not make promises automatically cascade through the atom graph. You have to manually forward promises.
 
-While this seems like it would be undesirable, we've come to prefer it. Zedux' initial atom PoC used implicit suspense-like promise handling and we really didn't like it. Our key takeaways:
+This gives you full control at the cost of some boilerplate. You can "forward" promises however you want - you can even intercept them and use RxJS to control the async flow.
+
+No automatic promise cascading may seem like a step backward in the atomic paradigm. But this was a conscious decision we made after experimenting with Recoil's approach in our own state-intensive apps at Omnistac. Zedux's initial atom PoC used implicit suspense-like promise handling and we really didn't like it. Our key takeaways:
 
 - Explicit is good
 - Reinventing the async wheel is bad
 
-Specifically the ability to use observables inside atoms is a real game changer:
+We keep mentioning RxJS. Here's an example using `injectEffect()` to manage an observable subscription. At Omnistac, this ability has been a game changer.
 
 ```tsx
 const zeduxPlusRxEqualsLove = atom('❤️', () => {
-  // simple example accumulating all socket emissions into an array:
+  // simple example accumulating all observable emissions into an array:
   const store = injectStore([])
-  const mySocket$ = injectAtomValue(mySocketAtom)
+  const myObservable$ = injectAtomValue(myObservableAtom)
 
-  // yes, you can even abstract this out to a custom `injectSocket` injector!
+  // yes, you can even abstract this out to a custom `injectSocket` injector
   injectEffect(() => {
-    const subscription = mySocket$.subscribe(val =>
+    const subscription = myObservable$.subscribe(val =>
       store.setState(state => [...state, val])
     )
 
     return () => subscription.unsubscribe()
-  }, [mySocket$])
+  }, [myObservable$])
 
   return store
 })

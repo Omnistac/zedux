@@ -3,7 +3,7 @@ id: react-query-comparison
 title: React Query Comparison
 ---
 
-While Zedux doesn't (yet!) provide helpers for query operations (infinite scrolling, pagination, etc), Zedux is currently patterned after React Query more than any other library (yes, more than Redux or Recoil). React Query's cache management is unparalleled. So Zedux' atomic model borrows a lot of ideas from it.
+While Zedux doesn't (yet!) provide helpers for query operations (infinite scrolling, pagination, etc), Zedux is currently patterned after React Query more than any other library (yes, more than Redux or Recoil). React Query's cache management is unparalleled. So Zedux's atomic model borrows a lot of ideas from it.
 
 However, the purpose of Zedux is very different from React Query. React Query is designed around promises - managing their state, side effects, and result caches. Zedux is designed to manage both application state (a la Redux/Recoil) and cached server data. Zedux has _some_ special features for handling promises, but currently very little compared React Query.
 
@@ -47,7 +47,7 @@ const postsAtom = atom('posts', () => {
 const { data } = useAtomValue(postsAtom)
 ```
 
-Note that atom state factories can't be asynchronous functions. This is because the function body is used to dynamically inject dependencies, building Zedux' powerful DI graph.
+Note that atom state factories can't be asynchronous functions. This is because the function body is used to dynamically inject dependencies, building Zedux's DI graph.
 
 ## Dependent Queries
 

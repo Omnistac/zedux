@@ -21,7 +21,7 @@ As you can probably guess by the existence of this walkthrough page, the answer 
 
 :::tip you will learn:
 
-- How Zedux' powerful store composition model enables time travel.
+- How Zedux's powerful store composition model enables time travel.
 - How to implement undo/redo for individual stores, atoms, or an entire ecosystem.
 
 :::
@@ -202,6 +202,8 @@ formStore.subscribe((newState, oldState) => {
   }))
 })
 ```
+
+If the current state exactly matches the state the history is pointing at, we know the current state is a history state. We don't need to track it.
 
 Almost there! We just need to fix one little thing. If the user changes the form's state while we're showing a history state, we need to erase the history after the pointer and start tracking history anew starting from the pointer's location.
 
@@ -798,7 +800,7 @@ const timeTravelPlugin = new ZeduxPlugin({
 
 And finally, all together:
 
-```tsx live ecosystemId=ecosystem-time-travel resultVar=App
+```tsx live ecosystemId=ecosystem-time-travel noProvide resultVar=App
 const undo = actionFactory('@@timeTravel/undo')
 const redo = actionFactory('@@timeTravel/redo')
 

@@ -118,7 +118,7 @@ const childAtom = atom('child', () => {
 
 When an edge is static, the dependent will _not_ update when the dependency's state changes. So... what's the point of a static edge then?
 
-Static edges inform Zedux that someone depends on the injected atom instance. As long as an atom instance has any dependents, Zedux won't try to clean it up. We'll learn more about Zedux' automatable cleanup in [the destruction walkthrough](destruction).
+Static edges inform Zedux that someone depends on the injected atom instance. As long as an atom instance has any dependents, Zedux won't try to clean it up. We'll learn more about Zedux's automatable cleanup in [the destruction walkthrough](destruction).
 
 Static dependents _are_ informed when their dependency is force-destroyed. In this case, the static dependent actually will schedule a reevaluation or rerender to create a new instance. Again, we'll learn more in the destruction walkthrough.
 

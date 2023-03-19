@@ -310,7 +310,7 @@ Everything that hooks into the `modBus` should treat it as a global message bus 
 
 You can create a special atom that both your app and the plugin use to interact with each other.
 
-```tsx live ecosystemId=plugin-atom-example resultVar=App
+```tsx live ecosystemId=plugin-atom-example noProvide resultVar=App
 const changeCounterAtom = atom('changeCounter', 0)
 const usernameAtom = atom('username', '')
 
@@ -386,7 +386,7 @@ If the plugin creates its own ecosystem and you know the id, you can use [`getEc
 
 Or, a better solution with more boilerplate, create the plugin's ecosystem at the top of your app and simultaneously use it to create the plugin and provide it to the rest of the app.
 
-```tsx live resultVar=App
+```tsx live ecosystemId=plugin-ecosystem-example noProvide resultVar=App
 const changeCounterAtom = atom('changeCounter', 0)
 const usernameAtom = atom('username', '')
 
@@ -515,7 +515,7 @@ While we don't recommend implicitly changing state, you can really do whatever y
 
 Time to put it all together. The following example creates and registers a `loggingPlugin` that tracks state changes only on atoms with logging enabled.
 
-```tsx live resultVar=App
+```tsx live ecosystemId=plugin-example noProvide resultVar=App
 const inputAtom = atom('input', '', { flags: ['enable-logging'] })
 const logAtom = atom('log', [])
 

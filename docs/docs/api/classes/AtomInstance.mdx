@@ -154,7 +154,7 @@ instanceB.params // ['a', 'b']`}</Ts>
       Sameness is determined by deep value comparison, not reference equality.
       Order matters!
     </p>
-    <Ts>{`// These params are the "same" in Zedux' eyes:
+    <Ts>{`// These params are the "same" in Zedux's eyes:
 useAtomInstance(myAtom, ['a', { b: 'b', c: 'c' }])
 useAtomInstance(myAtom, ['a', { c: 'c', b: 'b' }])\n
 // But these are different:
