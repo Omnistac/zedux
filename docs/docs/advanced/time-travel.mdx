@@ -3,7 +3,17 @@ id: time-travel
 title: Time Travel
 ---
 
-One of the great patterns that Redux popularized is the ability to undo and redo state updates in your app. Earlier flux models didn't have this capability because they split state up across multiple stores. Well Zedux reintroduces the concept of multiple stores, so does that mean it loses out on time travel?
+:::caution low-level warning
+This guide is very low-level. Dev tools should implement this for you.
+
+If you're new here, you probably don't want to read this doc yet.
+:::
+
+:::tip
+This guide assumes knowledge of the [store composition guide](store-composition). It's recommended to read that first.
+:::
+
+Redux popularized the ability to undo and redo state updates in your app. Earlier flux models didn't have this capability because they split state up across multiple stores. Well Zedux reintroduces the concept of multiple stores, so does that mean it loses out on time travel?
 
 Zedux also introduces the concept of zero-config stores. In Redux, the boilerplate-heavy action-reducer model is central to its time traveling ability. Surely zero-config Zedux stores can't time travel... Can they?
 
@@ -16,6 +26,921 @@ As you can probably guess by the existence of this walkthrough page, the answer 
 
 :::
 
-:::note
-🚧 This page is under construction
+## Time Travel Basics
+
+First off, time travel has several overlapping concepts, with differing opinions about what they mean. This guide will assume these meanings:
+
+- Undo/Redo - Step backward and forward through a state history.
+- Replayable Actions - Given a list of actions and a starting state, dispatch those actions one-by-one to consistently arrive at a final state.
+- Time Travel - The overarching concept containing both undo/redo and replayable actions, adding the ability to jump backward several states at a time or forward several states or actions at a time.
+
+Undo/redo is cool, but more limited, since it doesn't dispatch actions exactly how they were originally dispatched. This means undo/redo can skip side effects or run them in an entirely different way than the real app. However, if you manage to design your side effects around this (nigh impossible), it can be very powerful.
+
+Replayable actions more faithfully replicate state changes. In Zedux, all state changes produce an action that can be used to fully reproduce the state change.
+
+Zedux has full support for both kinds of time travel at the store, atom instance, and ecosystem levels. This guide will demonstrate undo/redo since it's generally simpler, but the high-level concepts should also give enough insight into how to implement replayable actions.
+
+## In Zedux
+
+Every state update in Zedux is trackable and reproducible. When tracking changes in a composed store hierarchy, you only need one subscriber in the root store.
+
+Every parent store is able to track and reproduce every state change anywhere in its children, grandchildren, etc. That means a subscriber attached to the parent store receives actions that can be used to reproduce every state change (useful for replayable actions). Also, setting state on the parent store directly updates its children (useful for undo/redo).
+
+```ts live resultVar=output
+const parent = createStore()
+const child = createStore()
+
+parent.use({ child })
+
+child.setState('initial state')
+parent.setState({ child: 'better state' })
+
+const output = {
+  child: child.getState(),
+  parent: parent.getState(),
+}
+```
+
+To track and replay an action:
+
+```ts live resultVar=output
+const parent = createStore()
+const child = createStore()
+
+parent.use({ child })
+
+// for this example, we'll track one action and re-dispatch it:
+let trackedAction
+
+parent.subscribe({
+  effects: ({ action }) => {
+    if (!trackedAction) trackedAction = action
+  },
+})
+
+// creates a "pseudo-action"
+child.setState('initial state') // we'll track this state ...
+child.setState('better state') // ... and use it to override this state
+
+// dispatch the tracked action directly to the parent store:
+parent.dispatch(trackedAction)
+
+const output = {
+  child: child.getState(),
+  parent: parent.getState(),
+  trackedAction,
+}
+```
+
+Bottom line: In Zedux, you only need access to the parent store and you're golden. Atoms naturally expose exactly one parent store, so this works out beautifully.
+
+The rest of this guide will walk through specific possible implementations of undo/redo. You should probably not be implementing time travel yourself, but if you're curious, by all means continue.
+
+## Store Traveler
+
+To implement undo/redo for a store, first attach a subscriber to the parent store:
+
+```ts
+const formStore = createStore()
+const emailStore = createStore(null, '')
+const passwordStore = createStore(null, '')
+
+formStore.use({
+  email: emailStore,
+  password: passwordStore,
+})
+
+formStore.subscribe((newState, oldState) => {
+  if (newState === oldState) return
+
+  // we'll add this logic next
+})
+```
+
+:::tip
+To implement replayable actions, you'd need to attach an effects subscriber instead to receive a notification for every action.
 :::
+
+Now the parent needs to track state history somewhere. We'll use another store for this.
+
+```ts
+// highlight-start
+const historyStore = createStore(null, {
+  history: [formStore.getState()], // start with the current state
+})
+// highlight-end
+
+formStore.subscribe((newState, oldState) => {
+  if (newState === oldState) return
+
+  // highlight-start
+  historyStore.setState(({ history }) => ({
+    history: [...history, newState],
+  }))
+  // highlight-end
+})
+```
+
+With history tracked, we need the ability to "point" to a different state in the history. This lets us keep track of where we've time traveled to. Default this to pointing at the last history state.
+
+```ts
+const historyStore = createStore(null, {
+  history: [formStore.getState()],
+  // highlight-next-line
+  pointer: 0,
+})
+
+formStore.subscribe((newState, oldState) => {
+  if (newState === oldState) return
+
+  historyStore.setState(({ history, pointer }) => ({
+    history: [...history, newState],
+    // highlight-next-line
+    pointer: pointer + 1,
+  }))
+})
+```
+
+Now to implement undo/redo:
+
+```ts
+const undo = () => {
+  const newState = historyStore.setStateDeep(({ pointer }) => ({
+    pointer: Math.max(0, pointer - 1),
+  }))
+
+  formStore.setState(newState.history[newState.pointer])
+}
+
+const redo = () => {
+  const newState = historyStore.setStateDeep(({ history, pointer }) => ({
+    pointer: Math.min(history.length - 1, pointer + 1),
+  }))
+
+  formStore.setState(newState.history[newState.pointer])
+}
+```
+
+We use `Math.min` and `Math.max` to clamp the pointer to the history length.
+
+But now there's a problem. Setting the `formStore`s state like this will trigger the subscriber, pushing the state onto the history again! When we call `undo`/`redo`, we need to prevent the subscriber from running.
+
+There are several ways to accomplish that. We'll do this:
+
+```ts
+formStore.subscribe((newState, oldState) => {
+  if (newState === oldState) return
+
+  // highlight-start
+  const { history, pointer } = historyStore.getState()
+  if (newState === history[pointer]) return
+  // highlight-end
+
+  historyStore.setState(({ history, pointer }) => ({
+    history: [...history, newState],
+    pointer: pointer + 1,
+  }))
+})
+```
+
+Almost there! We just need to fix one little thing. If the user changes the form's state while we're showing a history state, we need to erase the history after the pointer and start tracking history anew starting from the pointer's location.
+
+```ts
+formStore.subscribe((newState, oldState) => {
+  if (newState === oldState) return
+
+  const { history, pointer } = historyStore.getState()
+  if (newState === history[pointer]) return
+
+  historyStore.setState(({ history, pointer }) => ({
+    // highlight-next-line
+    history: [...history.slice(0, pointer + 1), newState],
+    pointer: pointer + 1,
+  }))
+})
+```
+
+Alright! We're ready to put it all together. Here's the full example wrapped in a simple `form` atom:
+
+```tsx live ecosystemId=time-travel/store-traveler resultVar=App
+const formAtom = atom('form', () => {
+  const formStore = injectStore()
+  const emailStore = injectStore('', { subscribe: false }) // don't need to subscribe to child stores
+  const passwordStore = injectStore('', { subscribe: false }) // don't need to subscribe to child stores
+
+  formStore.use({
+    email: emailStore,
+    password: passwordStore,
+  })
+
+  const historyStore = injectStore({
+    history: [formStore.getState()],
+    pointer: 0,
+  })
+
+  injectEffect(() => {
+    const subscription = formStore.subscribe((newState, oldState) => {
+      if (newState === oldState) return
+
+      const { history, pointer } = historyStore.getState()
+      if (newState === history[pointer]) return
+
+      historyStore.setState(({ history, pointer }) => ({
+        history: [...history.slice(0, pointer + 1), newState],
+        pointer: pointer + 1,
+      }))
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const redo = () => {
+    const newState = historyStore.setStateDeep(({ history, pointer }) => ({
+      pointer: Math.min(history.length - 1, pointer + 1),
+    }))
+
+    formStore.setState(newState.history[newState.pointer])
+  }
+
+  const setEmail = email => emailStore.setState(email)
+  const setPassword = password => passwordStore.setState(password)
+
+  const undo = () => {
+    const newState = historyStore.setStateDeep(({ pointer }) => ({
+      pointer: Math.max(0, pointer - 1),
+    }))
+
+    formStore.setState(newState.history[newState.pointer])
+  }
+
+  return api(formStore).setExports({
+    redo,
+    setEmail,
+    setPassword,
+    undo,
+  })
+})
+
+function Devtools() {
+  const { redo, undo } = useAtomInstance(formAtom).exports
+
+  return (
+    <div>
+      <button onClick={undo}>Undo</button>
+      <button onClick={redo}>Redo</button>
+    </div>
+  )
+}
+
+function LoginForm() {
+  const [{ email, password }, { setEmail, setPassword }] = useAtomState(
+    formAtom
+  )
+
+  return (
+    <>
+      <div>
+        Email:{' '}
+        <input onChange={event => setEmail(event.target.value)} value={email} />
+      </div>
+      <div>
+        Password:{' '}
+        <input
+          onChange={event => setPassword(event.target.value)}
+          value={password}
+        />
+      </div>
+    </>
+  )
+}
+
+function App() {
+  return (
+    <>
+      <Devtools />
+      <LoginForm />
+    </>
+  )
+}
+```
+
+## Atom Traveler
+
+Since an atom has exactly one exposed store, undo/redo is very similar with atoms. In fact, you can simply extract the above time travel logic to a custom injector and reuse that in every atom where you want time travel. For example:
+
+```ts
+const injectTimeTravel = store => {
+  const historyStore = injectStore({
+    history: [formStore.getState()],
+    pointer: 0,
+  })
+
+  injectEffect(() => {
+    const subscription = formStore.subscribe((newState, oldState) => {
+      if (newState === oldState) return
+
+      const { history, pointer } = historyStore.getState()
+      if (newState === history[pointer]) return
+
+      historyStore.setState(({ history, pointer }) => ({
+        history: [...history.slice(0, pointer + 1), newState],
+        pointer: pointer + 1,
+      }))
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const redo = () => {
+    const newState = historyStore.setStateDeep(({ history, pointer }) => ({
+      pointer: Math.min(history.length - 1, pointer + 1),
+    }))
+
+    store.setState(newState.history[newState.pointer])
+  }
+
+  const undo = () => {
+    const newState = historyStore.setStateDeep(({ pointer }) => ({
+      pointer: Math.max(0, pointer - 1),
+    }))
+
+    store.setState(newState.history[newState.pointer])
+  }
+
+  return api(historyStore).setExports({ redo, undo })
+}
+```
+
+Example usage:
+
+```ts
+const formAtom = atom('form', () => {
+  const formStore = injectStore()
+  const emailStore = injectStore('', { subscribe: false })
+  const passwordStore = injectStore('', { subscribe: false })
+
+  formStore.use({
+    email: emailStore,
+    password: passwordStore,
+  })
+
+  // highlight-next-line
+  const historyApi = injectTimeTravel(formStore)
+
+  const setEmail = email => emailStore.setState(email)
+  const setPassword = password => passwordStore.setState(password)
+
+  return api(formStore).setExports({
+    // highlight-next-line
+    ...historyApi.exports,
+    setEmail,
+    setPassword,
+  })
+})
+```
+
+This approach is fine if it works for you, but a theoretical downside is that state management and time travel are orthogonal concerns. Tightly coupling an atom to its time travel implementation is ... weird. It should feel unnatural because it is.
+
+Since we know we're working with an atom, we can upgrade this setup a little.
+
+Remember that atoms can take other atom instances as params. We can use this power to create a `timeTravelAtom` that accepts any atom instance and tacks time travel onto it.
+
+```ts
+const timeTravelAtom = ion('timeTravel', ({ get }, instance) => {
+  const instanceState = get(instance)
+  const store = injectStore({
+    history: [instanceState],
+    pointer: 0,
+  })
+  const { history, pointer } = store.getState()
+
+  // if the state changed, add it to the history
+  if (instanceState !== history[pointer]) {
+    store.setStateDeep(({ history, pointer }) => ({
+      history: [...history.slice(0, pointer + 1), instanceState],
+      pointer: pointer + 1,
+    }))
+  }
+
+  const redo = () => {
+    const newState = store.setStateDeep(({ history, pointer }) => ({
+      pointer: Math.min(history.length - 1, pointer + 1),
+    }))
+
+    instance.setState(newState.history[newState.pointer])
+  }
+
+  const undo = () => {
+    const newState = store.setStateDeep(({ pointer }) => ({
+      pointer: Math.max(0, pointer - 1),
+    }))
+
+    instance.setState(newState.history[newState.pointer])
+  }
+
+  return api(store).setExports({ redo, undo })
+})
+```
+
+Example usage:
+
+```tsx
+function Devtools() {
+  const instance = useAtomInstance(formAtom)
+  const [stateHistory, { redo, undo }] = useAtomState(timeTravelAtom, [
+    instance,
+  ])
+
+  return (
+    <div>
+      <button onClick={undo}>Undo</button>
+      <button onClick={redo}>Redo</button>
+    </div>
+  )
+}
+```
+
+The primary advantage of this approach over the custom injector approach is that time travel is now a completely separate concern. Any atom can be made time-travelable, and no atom has to know whether it is.
+
+Full live example:
+
+```tsx live ecosystemId=time-travel/atom-traveler resultVar=App
+const textAtom = atom('text', (id: string) => '')
+
+const formAtom = atom('form', () => {
+  const store = injectStore()
+  const emailInstance = injectAtomInstance(textAtom, ['email'])
+  const passwordInstance = injectAtomInstance(textAtom, ['password'])
+
+  store.use({
+    email: emailInstance.store,
+    password: passwordInstance.store,
+  })
+
+  return api(store).setExports({
+    setEmail: email => store.setStateDeep({ email }),
+    setPassword: password => store.setStateDeep({ password }),
+  })
+})
+
+const timeTravelAtom = ion('timeTravel', ({ get }, instance) => {
+  const instanceState = get(instance)
+  const store = injectStore({
+    history: [instanceState],
+    pointer: 0,
+  })
+  const { history, pointer } = store.getState()
+
+  // if the state changed, add it to the history
+  if (instanceState !== history[pointer]) {
+    store.setStateDeep(({ history, pointer }) => ({
+      history: [...history.slice(0, pointer + 1), instanceState],
+      pointer: pointer + 1,
+    }))
+  }
+
+  const redo = () => {
+    const newState = store.setStateDeep(({ history, pointer }) => ({
+      pointer: Math.min(history.length - 1, pointer + 1),
+    }))
+
+    instance.setState(newState.history[newState.pointer])
+  }
+
+  const undo = () => {
+    const newState = store.setStateDeep(({ pointer }) => ({
+      pointer: Math.max(0, pointer - 1),
+    }))
+
+    instance.setState(newState.history[newState.pointer])
+  }
+
+  return api(store).setExports({ redo, undo })
+})
+
+function Devtools() {
+  const instance = useAtomInstance(formAtom)
+  const { redo, undo } = useAtomInstance(timeTravelAtom, [instance]).exports
+
+  return (
+    <div>
+      <button onClick={undo}>Undo</button>
+      <button onClick={redo}>Redo</button>
+    </div>
+  )
+}
+
+function LoginForm() {
+  const [{ email, password }, { setEmail, setPassword }] = useAtomState(
+    formAtom
+  )
+
+  return (
+    <>
+      <div>
+        Email:{' '}
+        <input onChange={event => setEmail(event.target.value)} value={email} />
+      </div>
+      <div>
+        Password:{' '}
+        <input
+          onChange={event => setPassword(event.target.value)}
+          value={password}
+        />
+      </div>
+    </>
+  )
+}
+
+function App() {
+  return (
+    <>
+      <Devtools />
+      <LoginForm />
+    </>
+  )
+}
+```
+
+## Ecosystem Traveler
+
+:::tip
+This section assumes basic knowledge of [plugins](plugins). It's recommended to read that guide first.
+:::
+
+Alright, we're in a completely different world now. Tracking and restoring every state change in the entire application is a big task and can only be accomplished with plugins.
+
+To track state changes, a plugin needs to turn on the [`stateChanged` mod](../api/classes/ZeduxPlugin#statechanged).
+
+```ts
+import { ZeduxPlugin } from '@zedux/react'
+
+const timeTravelPlugin = new ZeduxPlugin({
+  initialMods: ['stateChanged'],
+
+  registerEcosystem: ecosystem => {
+    // we'll add this logic next
+  },
+})
+```
+
+Now you need to track history state. This is almost the same as tracking history state for a single atom, but with a separate entry for every atom.
+
+A simple way to get an object mapping atom instance ids to their values is to use [`ecosystem.dehydrate()`](../api/classes/Ecosystem#dehydrate):
+
+```ts
+const timeTravelPlugin = new ZeduxPlugin({
+  initialMods: ['stateChanged'],
+
+  registerEcosystem: ecosystem => {
+    // highlight-start
+    const state = {
+      history: [ecosystem.dehydrate({ excludeFlags: ['no-time-travel'] })],
+      pointer: 0,
+    }
+    // highlight-end
+  },
+})
+```
+
+Now add a simple subscription on the ecosystem's [`modBus`](../api/classes/Ecosystem#modbus) that filters out everything but `stateChanged` mod events.
+
+Since atom selectors also trigger `stateChanged` mod events, filter out any events that don't have a `.instance` property too. Time travel only deals with top-level state. State derivations like selectors shouldn't be tracked.
+
+```ts
+const timeTravelPlugin = new ZeduxPlugin({
+  initialMods: ['stateChanged'],
+
+  registerEcosystem: ecosystem => {
+    const state = {
+      history: [ecosystem.dehydrate({ excludeFlags: ['no-time-travel'] })],
+      pointer: 0,
+    }
+
+    // highlight-start
+    const subscription = ecosystem.modBus.subscribe({
+      effects: ({ action }) => {
+        // only handle stateChanged mod events for atom instances
+        if (
+          action.type === ZeduxPlugin.actions.stateChanged.type &&
+          action.payload?.instance
+        ) {
+          state.history = [
+            ...state.history.slice(0, state.pointer + 1),
+            ecosystem.dehydrate({ excludeFlags: ['no-time-travel'] }),
+          ]
+          state.pointer += 1
+        }
+      },
+    })
+    // highlight-end
+
+    return () => subscription.unsubscribe()
+  },
+})
+```
+
+Now we need to actually handle undo/redo. We'll use the [`modBus` to send actions](plugins#via-modbus) to the plugin. The plugin can use its existing `modBus` subscription to listen for `undo` and `redo` events:
+
+```ts
+// highlight-start
+const undo = actionFactory('@@timeTravel/undo')
+const redo = actionFactory('@@timeTravel/redo')
+// highlight-end
+
+const timeTravelPlugin = new ZeduxPlugin({
+  initialMods: ['stateChanged'],
+
+  registerEcosystem: ecosystem => {
+    const state = {
+      history: [ecosystem.dehydrate({ excludeFlags: ['no-time-travel'] })],
+      // highlight-next-line
+      isHydrating: false,
+      pointer: 0,
+    }
+
+    const subscription = ecosystem.modBus.subscribe({
+      effects: ({ action }) => {
+        // only track history if we're not currently time traveling
+        // highlight-next-line
+        if (state.isHydrating) return
+
+        // only handle stateChanged mod events for atom instances
+        if (
+          action.type === ZeduxPlugin.actions.stateChanged.type &&
+          action.payload?.instance
+        ) {
+          state.history = [
+            ...state.history.slice(0, state.pointer + 1),
+            ecosystem.dehydrate({ excludeFlags: ['no-time-travel'] }),
+          ]
+          state.pointer += 1
+          return
+        }
+
+        // highlight-start
+        if (action.type === undo.type) {
+          const { pointer } = state
+          const newPointer = Math.max(0, pointer - 1)
+
+          if (newPointer === pointer) return
+
+          state.pointer = newPointer
+          state.isHydrating = true
+          ecosystem.hydrate(state.history[newPointer])
+          state.isHydrating = false
+          return
+        }
+
+        if (action.type === redo.type) {
+          const { history, pointer } = state
+          const newPointer = Math.min(history.length - 1, pointer + 1)
+
+          if (newPointer === pointer) return
+
+          state.pointer = newPointer
+          state.isHydrating = true
+          ecosystem.hydrate(state.history[newPointer])
+          state.isHydrating = false
+          return
+        }
+        // highlight-end
+      },
+    })
+
+    return () => subscription.unsubscribe()
+  },
+})
+```
+
+There's one last thing to fix. Since `registerEcosystem` is called as soon as the plugin is registered, our initial state snapshot will be empty. The ecosystem doesn't know what atoms are going to exist inside it, so the dehydration is a completely empty object.
+
+This means that the hydration won't affect any atoms. There are several ways to fix this.
+
+One approach is to make the plugin hook into `statusChanged` events and walk back through the state history, updating every snapshot to include the new atom's initial state when a new atom's `status` changes from Initializing to Active.
+
+But for simplicity in this example, we're just gonna set the initial history the first time we see any state change, instead of setting it as soon as the plugin is registered in the ecosystem.
+
+```ts
+const timeTravelPlugin = new ZeduxPlugin({
+  initialMods: ['stateChanged'],
+
+  registerEcosystem: ecosystem => {
+    const state = {
+      // highlight-next-line
+      history: [],
+      isHydrating: false,
+      pointer: 0,
+    }
+
+    const subscription = ecosystem.modBus.subscribe({
+      effects: ({ action }) => {
+        // only track history if we're not currently time traveling
+        if (state.isHydrating) return
+
+        // only handle stateChanged mod events for atom instances
+        if (
+          action.type === ZeduxPlugin.actions.stateChanged.type &&
+          action.payload?.instance
+        ) {
+          // get initial snapshot now
+          // highlight-start
+          if (!state.history.length) {
+            const snapshot = ecosystem.dehydrate({
+              excludeFlags: ['no-time-travel'],
+            })
+
+            snapshot[action.payload.instance.id] = action.payload.oldState
+            state.history.push(snapshot)
+          }
+          // highlight-end
+
+          state.history = [
+            ...state.history.slice(0, state.pointer + 1),
+            ecosystem.dehydrate({ excludeFlags: ['no-time-travel'] }),
+          ]
+          state.pointer += 1
+          return
+        }
+
+        if (action.type === undo.type) {
+          const { pointer } = state
+          const newPointer = Math.max(0, pointer - 1)
+
+          if (newPointer === pointer) return
+
+          state.pointer = newPointer
+          state.isHydrating = true
+          ecosystem.hydrate(state.history[newPointer])
+          state.isHydrating = false
+          return
+        }
+
+        if (action.type === redo.type) {
+          const { history, pointer } = state
+          const newPointer = Math.min(history.length - 1, pointer + 1)
+
+          if (newPointer === pointer) return
+
+          state.pointer = newPointer
+          state.isHydrating = true
+          ecosystem.hydrate(state.history[newPointer])
+          state.isHydrating = false
+          return
+        }
+      },
+    })
+
+    return () => subscription.unsubscribe()
+  },
+})
+```
+
+And finally, all together:
+
+```tsx live ecosystemId=ecosystem-time-travel resultVar=App
+const undo = actionFactory('@@timeTravel/undo')
+const redo = actionFactory('@@timeTravel/redo')
+
+const timeTravelPlugin = new ZeduxPlugin({
+  initialMods: ['stateChanged'],
+
+  registerEcosystem: ecosystem => {
+    const state = {
+      history: [],
+      isHydrating: false,
+      pointer: 0,
+    }
+
+    const subscription = ecosystem.modBus.subscribe({
+      effects: ({ action }) => {
+        // only track history if we're not currently time traveling
+        if (state.isHydrating) return
+
+        // only handle stateChanged mod events for atom instances
+        if (
+          action.type === ZeduxPlugin.actions.stateChanged.type &&
+          action.payload?.instance
+        ) {
+          // get initial snapshot now
+          if (!state.history.length) {
+            const snapshot = ecosystem.dehydrate({
+              excludeFlags: ['no-time-travel'],
+            })
+
+            snapshot[action.payload.instance.id] = action.payload.oldState
+            state.history.push(snapshot)
+          }
+
+          state.history = [
+            ...state.history.slice(0, state.pointer + 1),
+            ecosystem.dehydrate({ excludeFlags: ['no-time-travel'] }),
+          ]
+          state.pointer += 1
+          return
+        }
+
+        if (action.type === undo.type) {
+          const { pointer } = state
+          const newPointer = Math.max(0, pointer - 1)
+
+          if (newPointer === pointer) return
+
+          state.pointer = newPointer
+          state.isHydrating = true
+          ecosystem.hydrate(state.history[newPointer])
+          state.isHydrating = false
+          return
+        }
+
+        if (action.type === redo.type) {
+          const { history, pointer } = state
+          const newPointer = Math.min(history.length - 1, pointer + 1)
+
+          if (newPointer === pointer) return
+
+          state.pointer = newPointer
+          state.isHydrating = true
+          ecosystem.hydrate(state.history[newPointer])
+          state.isHydrating = false
+          return
+        }
+      },
+    })
+
+    return () => subscription.unsubscribe()
+  },
+})
+
+const formAtom = atom('form', () => {
+  const store = injectStore({
+    email: '',
+    password: '',
+  })
+
+  return api(store).setExports({
+    setEmail: email => store.setStateDeep({ email }),
+    setPassword: password => store.setStateDeep({ password }),
+  })
+})
+
+function Devtools() {
+  const ecosystem = useEcosystem()
+
+  return (
+    <div>
+      <button onClick={() => ecosystem.modBus.dispatch(undo())}>Undo</button>
+      <button onClick={() => ecosystem.modBus.dispatch(redo())}>Redo</button>
+    </div>
+  )
+}
+
+function LoginForm() {
+  const [{ email, password }, { setEmail, setPassword }] = useAtomState(
+    formAtom
+  )
+
+  return (
+    <>
+      <div>
+        Email:{' '}
+        <input onChange={event => setEmail(event.target.value)} value={email} />
+      </div>
+      <div>
+        Password:{' '}
+        <input
+          onChange={event => setPassword(event.target.value)}
+          value={password}
+        />
+      </div>
+    </>
+  )
+}
+
+function App() {
+  const ecosystem = useMemo(() => {
+    const ecosystem = createEcosystem({ id: 'ecosystem-time-travel' })
+
+    ecosystem.registerPlugin(timeTravelPlugin)
+
+    return ecosystem
+  }, [])
+
+  return (
+    <EcosystemProvider ecosystem={ecosystem}>
+      <Devtools />
+      <LoginForm />
+    </EcosystemProvider>
+  )
+}
+```
+
+## Recap
+
+- The parent store is a powerful single point of entry for working time travel magic.
+- Use a simple subscriber to track store state history (for undo/redo).
+- Use an effects subscriber or action stream to track all actions dispatched to a store (for replayable actions).
+- Dispatch tracked actions directly to the parent store to replay the action, no matter where in the hierarchy it originally happened.
+- Set state directly on the parent store to update the state of all or several child stores at once.
+- Passing atom instances as params is a powerful way to attach time travel to any atom instance while maintaining separation of concerns.
+- Use a plugin for maximum control.
