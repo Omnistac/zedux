@@ -38,7 +38,7 @@ module.exports = {
     'https://fonts.googleapis.com/css2?family=Quicksand&display=swap',
     'https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap',
   ],
-  scripts: ['https://unpkg.com/typescript@5.0.2/lib/typescript.js'],
+  scripts: [],
   trailingSlash: false,
   /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
   themeConfig: {
