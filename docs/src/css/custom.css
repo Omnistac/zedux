@@ -85,6 +85,10 @@ pre {
   box-shadow: 5px 5px rgba(255, 167, 0, 0.4);
 }
 
+.alert a {
+  text-decoration-color: currentColor;
+}
+
 .alert--info,
 .alert--secondary,
 .alert--success {

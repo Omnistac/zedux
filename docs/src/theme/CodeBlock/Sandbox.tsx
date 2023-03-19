@@ -25,6 +25,7 @@ import {
 } from 'slate'
 import { withHistory } from 'slate-history'
 import { Slate, withReact, ReactEditor, RenderLeafProps } from 'slate-react'
+import { JsxEmit, transpile } from 'typescript/lib/typescript'
 import * as ReactImmer from '../../../../packages/immer/src'
 import * as ReactZedux from '../../../../packages/react/src'
 import { LogActions } from './LogActions'
@@ -219,12 +220,9 @@ export const Sandbox = ({
 
       try {
         const extraScopeStr = typeof extraScope === 'string' ? extraScope : ''
-        const jsCode = (window as any)?.ts.transpile(
-          `${extraScopeStr}; ${val}`,
-          {
-            jsx: 'react',
-          }
-        )
+        const jsCode = transpile(`${extraScopeStr}; ${val}`, {
+          jsx: JsxEmit.React,
+        })
 
         if (!jsCode) return
 

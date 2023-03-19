@@ -23,7 +23,8 @@
     "slate": "^0.87.0",
     "slate-history": "^0.86.0",
     "slate-react": "^0.87.1",
-    "styled-components": "^5.3.6"
+    "styled-components": "^5.3.6",
+    "typescript": "^5.0.2"
   },
   "browserslist": {
     "production": [
