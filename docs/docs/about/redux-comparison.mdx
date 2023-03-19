@@ -14,7 +14,7 @@ const store = createStore() // no config required!
 store.setState('my state')
 ```
 
-In this comparison, we won't use Zedux' React or atomic APIs. Zedux' React usage is vastly different from Redux', using Recoil-esque atoms to structure and control stores.
+In this comparison, we won't use Zedux's React or atomic APIs. Zedux's React usage is vastly different from Redux', using Recoil-esque atoms to pass stores around.
 
 ## TL;DR
 
@@ -98,7 +98,7 @@ const store = createStore({
 })
 ```
 
-The concept is almost the same in both. Zedux' `createStore` is a bit more high-level, handling nested objects.
+The concept is almost the same in both. Zedux's `createStore` is a bit more high-level, handling nested objects.
 
 ### Actions and Reducers
 
@@ -272,7 +272,7 @@ The [store composition guide](../advanced/store-composition#performance) gives a
 
 ## No Middleware
 
-Yep. It isn't necessary. Side effects like logging or running sagas or observables can all be effectively handled by Zedux' effects subscribers. Batching and canceling actions may not be possible, but those never were necessary at the store level - they can be handled just fine outside the store. Batching in particular is much less common in Zedux since the atomic model naturally makes all your state updates smaller and more granular.
+Yep. It isn't necessary. Side effects like logging or running sagas or observables can all be effectively handled by Zedux's effects subscribers. Batching and canceling actions may not be possible, but those never were necessary at the store level - they can be handled just fine outside the store. Batching in particular is much less common in Zedux since the atomic model naturally makes all your state updates smaller and more granular.
 
 In Redux, middleware can also be useful for adding plugins. Zedux has atoms, which can encapsulate the state, side effects, and exports of a "state slice". A plugin system at the store level isn't very necessary.
 

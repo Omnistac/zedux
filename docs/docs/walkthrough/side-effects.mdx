@@ -142,7 +142,7 @@ See [`injectWhy()`](../api/injectors/injectWhy). Also see [`ecosystem.why()`](..
 
 Zedux's store composition model works by making actions themselves composable objects called ActionChains. The ActionChain contains needed metadata for Zedux to perform its store composition magic. ActionChains consist of any number of "meta nodes" with the wrapped action being the last node in the chain.
 
-We'll go over the specifics of Zedux' store composition model in [the store composition guide](../advanced/store-composition). For now you just need to know that, depending on your store setup, you may see these ActionChain objects as the `action` property in your effects handlers. Zedux doesn't unwrap the action because sometimes you will need to observe the metadata the action is wrapped in.
+We'll go over the specifics of Zedux's store composition model in [the store composition guide](../advanced/store-composition). For now you just need to know that, depending on your store setup, you may see these ActionChain objects as the `action` property in your effects handlers. Zedux doesn't unwrap the action because sometimes you will need to observe the metadata the action is wrapped in.
 
 If you don't care about the metadata, you can get the wrapped action with [`removeAllMeta`](../api/utils/action-chain-utils#removeallmeta).
 
@@ -188,7 +188,7 @@ import { of } from 'rxjs'
 const observableValue = atom('observableValue', of('hello, world'))
 ```
 
-This can be useful for taking advantage of Zedux' caching abilities to share observable references.
+This can be useful for taking advantage of Zedux's caching abilities to share observable references.
 
 You can also export an observable from any atom:
 

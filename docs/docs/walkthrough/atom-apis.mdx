@@ -257,7 +257,7 @@ function App() {
 ```
 
 :::note why can't I return a promise without using `api()`?
-In Zedux, atoms always evaluate synchronously. This allows Zedux' DI to be as dynamic as possible and simplifies a lot for you. It also means that state factories can't be asynchronous functions.
+In Zedux, atoms always evaluate synchronously. This allows Zedux's DI to be as dynamic as possible and simplifies a lot for you. It also means that state factories can't be asynchronous functions.
 
 Since returning a promise and declaring an async function are essentially the same thing (especially in Typescript's eyes), we found it better to disallow returning a promise directly. Just wrap your promise in `api(promise)`.
 :::

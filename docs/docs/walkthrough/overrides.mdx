@@ -3,7 +3,7 @@ id: overrides
 title: Overrides
 ---
 
-Zedux' Dependency Injection (DI) model is extremely dynamic. This walkthrough has taught several ways to inject atoms and create the DI graph so far. But Zedux has another DI superpower: Overrides.
+Zedux's Dependency Injection (DI) model is extremely dynamic. This walkthrough has taught several ways to inject atoms and create the DI graph so far. But Zedux has another DI superpower: Overrides.
 
 :::tip you will learn:
 How to create atom overrides and use them to dynamically swap out atom implementations.
@@ -89,7 +89,7 @@ function App() {
 
 ## Updating
 
-Atom implementations can be swapped out dynamically using [`ecosystem.setOverrides()`](../api/classes/Ecosystem#setoverrides). This is an extremely powerful feature of Zedux' DI model.
+Atom implementations can be swapped out dynamically using [`ecosystem.setOverrides()`](../api/classes/Ecosystem#setoverrides). This is an extremely powerful feature of Zedux's DI model.
 
 ```tsx live ecosystemId=overrides/setOverrides resultVar=Swapper
 const one = atom('common-key', () => 'Numero Uno')
