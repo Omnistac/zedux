@@ -136,7 +136,11 @@ export const injectPromise: {
   }, deps)
 
   injectEffect(
-    () => () => (refs.current.controller?.abort as any)?.('destroyed'),
+    () => () => {
+      const controller = refs.current.controller
+      if (!controller) return
+      ;(controller as any).abort('destroyed')
+    },
     []
   )
 
