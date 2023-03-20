@@ -11,7 +11,8 @@ export const api: {
   >(
     value:
       | StoreType
-      | AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
+      | AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>,
+    wrap?: boolean
   ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
 
   // No Value
@@ -27,7 +28,8 @@ export const api: {
     Exports extends Record<string, any> = Record<string, any>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: State | AtomApi<State, Exports, undefined, PromiseType>
+    value: State | AtomApi<State, Exports, undefined, PromiseType>,
+    wrap?: boolean
   ): AtomApi<State, Exports, undefined, PromiseType>
 
   // Catch-all
@@ -37,7 +39,8 @@ export const api: {
     StoreType extends Store<State> = Store<State>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: State | StoreType | AtomApi<State, Exports, StoreType, PromiseType>
+    value: State | StoreType | AtomApi<State, Exports, StoreType, PromiseType>,
+    wrap?: boolean
   ): AtomApi<State, Exports, StoreType, PromiseType>
 } = <
   State = undefined,
@@ -45,8 +48,13 @@ export const api: {
   StoreType extends Store<State> | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(
-  value?: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
+  value?: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State,
+  wrap?: boolean
 ) =>
   new AtomApi(
-    value as AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
+    value as
+      | AtomApi<State, Exports, StoreType, PromiseType>
+      | StoreType
+      | State,
+    wrap
   )

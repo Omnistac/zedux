@@ -2,6 +2,7 @@ import {
   ActionChain,
   createStore,
   Dispatchable,
+  internalTypes,
   is,
   Observable,
   RecursivePartial,
@@ -376,32 +377,43 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
       if (!is(val, AtomApi)) return val as G['Store'] | G['State']
 
-      this.api = val as AtomApi<
+      const api = (this.api = val as AtomApi<
         G['State'],
         G['Exports'],
         G['Store'],
         G['Promise']
-      >
+      >)
 
       // Exports can only be set on initial evaluation
-      if (this.status === 'Initializing') {
-        this.exports = this.api.exports as G['Exports']
+      if (this.status === 'Initializing' && api.exports) {
+        const exports = api.exports
+
+        // wrap exported functions in ecosystem.batch by default
+        this.exports = api.wrap
+          ? Object.keys(exports).reduce((obj, key: keyof G['Exports']) => {
+              const val = exports[key]
+              obj[key] =
+                typeof val === 'function'
+                  ? (((...args: any) =>
+                      this.ecosystem.batch(() =>
+                        val(...args)
+                      )) as G['Exports'][typeof key])
+                  : val
+              return obj
+            }, {} as G['Exports'])
+          : exports
       }
 
       // if api.value is a promise, we ignore api.promise
       if (
-        typeof ((this.api.value as unknown) as Promise<any>)?.then ===
-        'function'
+        typeof ((api.value as unknown) as Promise<any>)?.then === 'function'
       ) {
-        return this._setPromise(
-          (this.api.value as unknown) as Promise<any>,
-          true
-        )
-      } else if (this.api.promise) {
-        this._setPromise(this.api.promise)
+        return this._setPromise((api.value as unknown) as Promise<any>, true)
+      } else if (api.promise) {
+        this._setPromise(api.promise)
       }
 
-      return this.api.value as G['Store'] | G['State']
+      return api.value as G['Store'] | G['State']
     } catch (err) {
       console.error(
         `Zedux: Error while evaluating atom "${this.template.key}" with params:`,
@@ -481,7 +493,9 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     }
 
     // run the scheduler synchronously after any atom instance state update
-    this.ecosystem._scheduler.flush()
+    if (action.meta !== internalTypes.batch) {
+      this.ecosystem._scheduler.flush()
+    }
   }
 
   private _invalidate(

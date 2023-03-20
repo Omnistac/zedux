@@ -17,7 +17,8 @@ export class AtomApi<
   public value: State | StoreType
 
   constructor(
-    value: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
+    value: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State,
+    public readonly wrap = true
   ) {
     this.promise = undefined as PromiseType
     this.value = value as StoreType | State

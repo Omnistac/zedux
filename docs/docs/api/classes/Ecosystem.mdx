@@ -332,6 +332,18 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
       </Item>
     </Legend>
   </Item>
+  <Item name="batch">
+    <p>
+      Accepts a callback and batches all updates that happen synchronously while
+      the callback is running. Flushes all updates once the passed callback
+      completes.
+    </p>
+    <p>Signature:</p>
+    <Ts>{`batch = (callback) => void`}</Ts>
+    <p>
+      See <Link to="../../advanced/batching">the batching guide</Link>.
+    </p>
+  </Item>
   <Item name="dehydrate">
     <p>
       Returns a snapshot of the current state of instances in the ecosystem.

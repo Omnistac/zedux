@@ -7,44 +7,45 @@ export const doSubscribe = <State>(
   instance: PartialAtomInstance,
   store: Store<State>
 ) =>
-  store.subscribe({
-    effects: ({ action, newState, oldState }) => {
-      // Nothing to do if the state hasn't changed. Also, ignore state updates
-      // during evaluation. TODO: Create an ecosystem-level flag to turn on
-      // warning logging for state-updates-during-evaluation, since this may be
-      // considered an anti-pattern.
-      if (
-        newState === oldState ||
-        instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
-        action?.meta === internalTypes.ignore
-      ) {
-        return
-      }
+  store.subscribe((newState, oldState, action) => {
+    // Nothing to do if the state hasn't changed. Also, ignore state updates
+    // during evaluation. TODO: Create an ecosystem-level flag to turn on
+    // warning logging for state-updates-during-evaluation, since this may be
+    // considered an anti-pattern.
+    if (
+      instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
+      action.meta === internalTypes.ignore
+    ) {
+      return
+    }
 
-      instance._scheduleEvaluation(
-        {
-          newState,
-          oldState,
-          operation: 'injectStore',
-          reasons: [
-            {
-              action,
-              newState,
-              oldState,
-              operation: 'dispatch',
-              sourceType: 'Store',
-              type: 'state changed',
-            },
-          ],
-          sourceType: 'Injector',
-          type: 'state changed',
-        },
-        false
-      )
+    const isBatch = action?.meta === internalTypes.batch
 
-      // run the scheduler synchronously after any store update
+    instance._scheduleEvaluation(
+      {
+        newState,
+        oldState,
+        operation: 'injectStore',
+        reasons: [
+          {
+            action,
+            newState,
+            oldState,
+            operation: 'dispatch',
+            sourceType: 'Store',
+            type: 'state changed',
+          },
+        ],
+        sourceType: 'Injector',
+        type: 'state changed',
+      },
+      isBatch
+    )
+
+    // run the scheduler synchronously after every store update unless batching
+    if (!isBatch) {
       instance.ecosystem._scheduler.flush()
-    },
+    }
   })
 
 /**

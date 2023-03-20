@@ -263,6 +263,27 @@ describe('ecosystem', () => {
     ecosystem.destroy(true)
   })
 
+  test('find', () => {
+    const atomA = atom('a', (param: string) => param)
+
+    const ecosystem = createEcosystem({
+      id: 'find',
+    })
+
+    const instance1 = ecosystem.getInstance(atomA, ['a'])
+    const instance2 = ecosystem.find(atomA, ['a'])
+    const instance3 = ecosystem.find('a')
+    const instance4 = ecosystem.find('a-["a"]')
+    const instance5 = ecosystem.find('a-["b"]')
+
+    expect(instance2).toBe(instance1)
+    expect(instance3).toBe(instance1)
+    expect(instance4).toBe(instance1)
+    expect(instance5).toBeUndefined()
+
+    ecosystem.destroy()
+  })
+
   test('.findAll()', () => {
     const atomA = atom('a', (param: string) => param)
     const atomB = atom('b', () => 'b')
@@ -319,27 +340,6 @@ describe('ecosystem', () => {
     )
 
     ecosystem.destroy(true)
-  })
-
-  test('find', () => {
-    const atomA = atom('a', (param: string) => param)
-
-    const ecosystem = createEcosystem({
-      id: 'find',
-    })
-
-    const instance1 = ecosystem.getInstance(atomA, ['a'])
-    const instance2 = ecosystem.find(atomA, ['a'])
-    const instance3 = ecosystem.find('a')
-    const instance4 = ecosystem.find('a-["a"]')
-    const instance5 = ecosystem.find('a-["b"]')
-
-    expect(instance2).toBe(instance1)
-    expect(instance3).toBe(instance1)
-    expect(instance4).toBe(instance1)
-    expect(instance5).toBeUndefined()
-
-    ecosystem.destroy()
   })
 
   test('flags', () => {

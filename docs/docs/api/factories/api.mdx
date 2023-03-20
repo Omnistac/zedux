@@ -32,12 +32,15 @@ const ttlObservable = api().setTtl(my$)
 
 // query atoms:
 return api(myPromise)
+
+// prevent automatic batching:
+return api(val, false).setExports(myManuallyBatchedExports)
 ```
 
 ## Signature
 
 <Tabs>
-  {tab1(`api = (value?) => atomApi`)}
+  {tab1(`api = (value?, wrap?) => atomApi`)}
   {tab2(`declare const api: {
   // Custom Stores
   <
@@ -47,7 +50,8 @@ return api(myPromise)
   >(
     value:
       | StoreType
-      | AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
+      | AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>,
+    wrap?: boolean
   ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
   // No Value
   <
@@ -61,7 +65,8 @@ return api(myPromise)
     Exports extends Record<string, any> = Record<string, any>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: State | AtomApi<State, Exports, undefined, PromiseType>
+    value: State | AtomApi<State, Exports, undefined, PromiseType>,
+    wrap?: boolean
   ): AtomApi<State, Exports, undefined, PromiseType>
   // Catch-all
   <
@@ -70,7 +75,8 @@ return api(myPromise)
     StoreType extends Store<State> = Store<State>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: State | StoreType | AtomApi<State, Exports, StoreType, PromiseType>
+    value: State | StoreType | AtomApi<State, Exports, StoreType, PromiseType>,
+    wrap?: boolean
   ): AtomApi<State, Exports, StoreType, PromiseType>
 }`)}
 </Tabs>
@@ -92,6 +98,24 @@ return api(myPromise)
       If another Atom API is passed, <code>api()</code> clones it - returning a
       new AtomApi instance with all the properties of the passed api copied over
       (shallowly).
+    </p>
+  </Item>
+  <Item name="wrap">
+    <p>
+      Optional. A boolean. Default <code>true</code>.
+    </p>
+    <p>
+      Whether to automatically wrap all exported functions in{' '}
+      <Link to="../classes/Ecosystem#batch">
+        <code>ecosystem.batch()</code>
+      </Link>{' '}
+      calls.
+    </p>
+    <p>
+      Zedux wraps all exported functions by default. Pass <code>false</code> to
+      prevent this. This wrapping has some overhead, but is recommended to leave
+      enabled unless you know what you're doing. Forgetting to batch updates can
+      lead to state tearing in rare cases.
     </p>
   </Item>
   <Item name="Returns">
