@@ -502,6 +502,15 @@ describe('types', () => {
   })
 
   test('accepting templates', () => {
+    const optionalParamsAtom = atom(
+      'optionalParams',
+      (a?: boolean, b?: string[]) => {
+        const store = injectStore(a ? b : 2)
+
+        return store
+      }
+    )
+
     const getKey = <A extends AnyAtomTemplate>(template: A) => template.key
 
     let idCounter = 0
@@ -516,6 +525,18 @@ describe('types', () => {
 
     const key = getKey(exampleAtom)
     const instance = instantiateWithId(exampleAtom)
+    const instance2 = ecosystem.getInstance(optionalParamsAtom)
+
+    // @ts-expect-error exampleAtom has a required param
+    ecosystem.getInstance(exampleAtom)
+    // @ts-expect-error exampleAtom's param should be a string
+    ecosystem.getInstance(exampleAtom, [2])
+    // @ts-expect-error exampleAtom only needs 1 param
+    ecosystem.getInstance(exampleAtom, ['a', 2])
+    ecosystem.getInstance(optionalParamsAtom, [undefined, undefined])
+    ecosystem.getInstance(optionalParamsAtom, [undefined, ['1']])
+    // @ts-expect-error optionalParamsAtom's 2nd param is type `string[]`
+    ecosystem.getInstance(optionalParamsAtom, [undefined, [1]])
 
     expectTypeOf<typeof key>().toBeString()
     expectTypeOf<typeof instance>().toMatchTypeOf<
@@ -528,6 +549,15 @@ describe('types', () => {
         }
         Store: Store<string>
         Promise: Promise<number>
+      }>
+    >()
+    expectTypeOf<typeof instance2>().toMatchTypeOf<
+      AtomInstance<{
+        State: number | string[] | undefined
+        Params: [a?: boolean | undefined, b?: string[] | undefined]
+        Exports: Record<string, never>
+        Store: Store<number | string[] | undefined>
+        Promise: undefined
       }>
     >()
   })

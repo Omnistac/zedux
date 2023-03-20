@@ -37,6 +37,7 @@
     "machine",
     "management",
     "memoized",
+    "molecular",
     "performant",
     "react",
     "reducer",
@@ -44,7 +45,6 @@
     "simple",
     "state",
     "testable",
-    "testing",
     "zedux"
   ],
   "author": "Joshua Claunch",
