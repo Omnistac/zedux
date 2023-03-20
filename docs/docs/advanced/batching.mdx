@@ -33,7 +33,7 @@ ecosystem.batch(() => {
 })
 ```
 
-`ecosystem.batch()` prevents the scheduler from flushing until the callback completes.
+`ecosystem.batch()` prevents the scheduler from flushing until the callback completes. This is the simplest way to batch updates.
 
 ## Batching Unknown Updates
 
@@ -98,7 +98,7 @@ const manualBatchingAtom = atom('manualBatching', () => {
 })
 ```
 
-Both of these atoms behave exactly the same. However, `manualBatchingAtom` prevents Zedux from checking and wrapping the atom's exports, saving a _tiny bit_ of overhead.
+Both of these atoms behave exactly the same. However, `manualBatchingAtom` prevents Zedux from checking and wrapping the atom's exports, saving a _tiny bit_ of overhead at the cost of boilerplate.
 
 ## Why Batch?
 

@@ -176,7 +176,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   /**
    * An alias for `.store.setState()`
    */
-  public setState = (settable: Settable<G['State']>, meta?: any) =>
+  public setState = (settable: Settable<G['State']>, meta?: any): G['State'] =>
     this.store.setState(settable, meta)
 
   /**
@@ -185,7 +185,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   public setStateDeep = (
     settable: Settable<RecursivePartial<G['State']>, G['State']>,
     meta?: any
-  ) => this.store.setStateDeep(settable, meta)
+  ): G['State'] => this.store.setStateDeep(settable, meta)
 
   public _set?: ExportsInfusedSetter<G['State'], G['Exports']>
   public get _infusedSetter() {
