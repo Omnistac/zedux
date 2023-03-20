@@ -272,7 +272,23 @@ export interface MutableRefObject<T = any> {
   current: T
 }
 
-export type ParamlessTemplate = AnyAtomTemplate<{ Params: [] }>
+/**
+ * Many Zedux APIs make the `params` parameter optional if the atom doesn't take
+ * params or has up to 3 optional params.
+ */
+export type ParamlessTemplate =
+  | AnyAtomTemplate<{
+      Params: []
+    }>
+  | AnyAtomTemplate<{
+      Params: [any?]
+    }>
+  | AnyAtomTemplate<{
+      Params: [any?, any?]
+    }>
+  | AnyAtomTemplate<{
+      Params: [any?, any?, any?]
+    }>
 
 /**
  * Part of the atom instance can be accessed during initial evaluation. The only
