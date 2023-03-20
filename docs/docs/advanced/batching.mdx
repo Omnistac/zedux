@@ -65,7 +65,7 @@ There are a few situations where Zedux batches updates automatically. Some of th
 
 ### Atom Exports
 
-By default, Zedux wraps all of an [atom's exported functions](../api/classes/AtomInstance#exports) in [`ecosystem.batch()`](Ecosystem#batch) calls. This wrapping adds a little overhead, but prevents rare cases of state tearing as we'll soon see.
+By default, Zedux wraps all of an [atom's exported functions](../api/classes/AtomInstance#exports) in [`ecosystem.batch()`](../api/classes/Ecosystem#batch) calls. This wrapping adds a little overhead, but prevents rare cases of state tearing as we'll soon see.
 
 To prevent this overhead, batch state updates yourself and pass `false` as the 2nd param to `api()` to prevent Zedux from automatically wrapping your exported functions.
 
