@@ -2,10 +2,32 @@ import { Job, Scheduler as SchedulerInterface } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
 
 export class Scheduler implements SchedulerInterface {
+  /**
+   * We set this to true internally when the scheduler starts flushing. We also
+   * set it to true when batching updates, to prevent anything from flushing.
+   */
+  public _isRunning?: boolean
+  public _isRunningNows?: boolean
+
   // private _runStartTime?: number
+
+  /**
+   * The dynamic list of "full" jobs to run. Full jobs are:
+   *
+   * - EvaluateGraphNode (2)
+   * - UpdateExternalDependent (3)
+   * - RunEffect (4)
+   */
   private jobs: Job[] = []
-  private _jobTimeoutId?: ReturnType<typeof setTimeout>
-  private _isRunning?: boolean
+
+  /**
+   * The dynamic list of "now" jobs to run. Now jobs are:
+   *
+   * - UpdateStore (0)
+   * - InformSubscribers(1)
+   */
+  private nows: Job[] = []
+  private _handle?: ReturnType<typeof setTimeout>
 
   constructor(private readonly ecosystem: Ecosystem) {}
 
@@ -18,7 +40,10 @@ export class Scheduler implements SchedulerInterface {
    */
   public flush() {
     if (this._isRunning) return // already flushing
-    if (this._jobTimeoutId) clearTimeout(this._jobTimeoutId)
+    if (this._handle) {
+      clearTimeout(this._handle)
+      this._handle = undefined
+    }
 
     this.runJobs()
   }
@@ -45,22 +70,17 @@ export class Scheduler implements SchedulerInterface {
   }
 
   /**
-   * Some jobs (update store jobs) must run immediately but also need the
-   * scheduler to be running.
+   * UpdateStore (0) jobs must run immediately but also need the scheduler to be
+   * running all "now" jobs.
    *
-   * Other jobs (inform subscriber jobs) must run immediately after the current
-   * task. This is done by passing `false` for the 2nd param.
+   * InformSubscriber (1) jobs must run immediately after the current task.
    */
   public scheduleNow(newJob: Job) {
-    if (this._isRunning && newJob.type === 0) return newJob.task()
+    if (this._isRunningNows && newJob.type === 0) return newJob.task()
 
-    if (newJob.type === 1) {
-      this.insertJob(newJob)
-    } else {
-      this.jobs.unshift(newJob)
-    }
+    this.nows[newJob.type === 1 ? 'push' : 'unshift'](newJob)
 
-    this.flush()
+    if (!this._isRunningNows) this.runJobs(this.nows, '_isRunningNows')
   }
 
   public unschedule(task: () => void) {
@@ -104,6 +124,9 @@ export class Scheduler implements SchedulerInterface {
     return this.findIndex(cb, newIndex, iteration + 1)
   }
 
+  /**
+   * Schedule an EvaluateGraphNode (2) or UpdateExternalDependent (3) job
+   */
   private insertJob(newJob: Job) {
     const { nodes } = this.ecosystem._graph
     const flags = newJob.flags ?? 0
@@ -112,21 +135,17 @@ export class Scheduler implements SchedulerInterface {
     const index = this.findIndex(job => {
       if (job.type !== newJob.type) return +(newJob.type - job.type > 0) || -1 // 1 or -1
 
-      // InformSubscribers (1) jobs go after all other InformSubscribers jobs
-      if (job.type === 1) {
-        return 1
-      }
-
-      // other jobs can use either weight or flags comparison or neither
+      // EvaluateGraphNode (2) jobs use weight comparison
       if (job.id) {
         const jobWeight = nodes[job.id].weight
 
         return weight < jobWeight ? -1 : +(weight > jobWeight) // + = 0 or 1
-      } else if (job.flags != null) {
-        return flags < job.flags ? -1 : +(flags > job.flags)
       }
 
-      return 0
+      // UpdateExternalDependent (3) jobs use flags comparison
+      return flags < (job.flags as number)
+        ? -1
+        : +(flags > (job.flags as number))
     })
 
     if (index === -1) {
@@ -136,31 +155,36 @@ export class Scheduler implements SchedulerInterface {
     }
   }
 
-  private runJobs() {
-    this._jobTimeoutId = undefined
+  /**
+   * Run either all full jobs or all now jobs. Since the jobs are split, we can essentially have two schedulers running at once. Now jobs must always run before any full jobs, so the full jobs runner has to be aware of nows
+   */
+  private runJobs(
+    jobs = this.jobs,
+    runningKey: keyof Pick<this, '_isRunning' | '_isRunningNows'> = '_isRunning'
+  ) {
+    const nows = this.nows
     // this._runStartTime = performance.now()
     // let counter = 0
 
-    this._isRunning = true
-    while (this.jobs.length) {
-      const job = this.jobs.shift() as Job
+    this[runningKey] = true
+    while (jobs.length) {
+      const job = (nows.length ? nows : jobs).shift() as Job
       job.task()
 
-      // this "break" idea would need to only break if the next job is
-      // interruptible (store updates - the highest-prio tasks - are not
-      // interruptible)
+      // this "break" idea could only break for "full" jobs, not "now" jobs
       // if (!(++counter % 20) && performance.now() - this._runStartTime >= 100) {
       //   setTimeout(() => this.runJobs())
       //   break
       // }
     }
-    this._isRunning = false
+    this[runningKey] = false
   }
 
   private setTimeout() {
     if (this._isRunning) return
 
-    this._jobTimeoutId = setTimeout(() => {
+    this._handle = setTimeout(() => {
+      this._handle = undefined
       this.runJobs()
     })
   }

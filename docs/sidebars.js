@@ -28,6 +28,7 @@ module.exports = {
       'walkthrough/state-machines',
     ],
     Advanced: [
+      'advanced/batching',
       'advanced/complex-params',
       'advanced/more-patterns',
       'advanced/persistence',

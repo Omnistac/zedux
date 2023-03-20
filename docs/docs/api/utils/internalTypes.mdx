@@ -152,9 +152,33 @@ parentStore.dispatch({ type: 'test' })
 
 ## Meta Types
 
+You can use the following `internalTypes` as the `meta` property of dispatched actions to give Zedux instructions.
+
+These only have an effect in stores that belong to atom instances (i.e. stores that were injected via [`injectStore()`](../injectors/injectStore)).
+
+### `batch`
+
+Set this string to an action's `meta` property to tell Zedux to batch any atom reevaluations that will result from this state change with those from all subsequent dispatches that also use `internalTypes.batch`:
+
+```ts
+import { internalTypes } from '@zedux/react'
+
+const store = injectStore()
+store.dispatch({ type: 'my-action-type', meta: internalTypes.batch })
+```
+
+This meta property can also be set when calling [`instance.setState()`](../classes/AtomInstance#setstate)/[`store.setState()`](../classes/Store#setstate) or [`instance.setStateDeep()`](../classes/AtomInstance#setstatedeep)/[`store.setStateDeep()`](../classes/Store#setstatedeep) by passing it as the second parameter:
+
+```ts
+store.setState(newState, internalTypes.batch)
+store.setStateDeep(partialState, internalTypes.batch)
+```
+
+See [the batching guide](../../advanced/batching).
+
 ### `ignore`
 
-For use with stores that belong to atom instances. Set this string to an action's `meta` property to tell Zedux not to reevaluate the atom instance:
+Set this string to an action's `meta` property to tell Zedux not to reevaluate the atom instance:
 
 ```ts
 import { internalTypes } from '@zedux/react'

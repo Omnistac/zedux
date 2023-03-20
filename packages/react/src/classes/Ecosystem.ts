@@ -1,4 +1,5 @@
 import { createStore, is } from '@zedux/core'
+import { isPlainObject } from '@zedux/core/utils/general'
 import React, { createContext } from 'react'
 import { internalStore } from '../store'
 import {
@@ -115,6 +116,26 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
       Object.values(instances).forEach(instance => instance.destroy(true))
     })
+  }
+
+  /**
+   * Batch all state updates that happen synchronously during the passed
+   * callback's execution. Flush all updates when the passed callback completes.
+   *
+   * Has no effect if the scheduler is already running - updates are always
+   * batched when the scheduler is running.
+   */
+  public batch<T = any>(callback: () => T) {
+    const scheduler = this._scheduler
+
+    const prevIsRunning = scheduler._isRunning
+    scheduler._isRunning = true
+    const result = callback()
+    scheduler._isRunning = prevIsRunning
+
+    scheduler.flush()
+
+    return result
   }
 
   /**
@@ -427,6 +448,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     dehydratedState: Record<string, any>,
     config?: { retroactive?: boolean }
   ) {
+    if (DEV) {
+      if (!isPlainObject(dehydratedState)) {
+        throw new TypeError(
+          'Zedux: ecosystem.hydrate() - first parameter must be a plain object'
+        )
+      }
+    }
+
     this.hydration = { ...this.hydration, ...dehydratedState }
 
     if (config?.retroactive === false) return
