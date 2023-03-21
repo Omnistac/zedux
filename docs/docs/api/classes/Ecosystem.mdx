@@ -14,7 +14,7 @@ The ecosystem is an isolated atom environment. Every ecosystem creates:
 
 The Ecosystem class itself defines many methods for creating, destroying, and inspecting atom instances and the graph they form.
 
-Ecosystems can be used completely outside of React. This can be helpful for testing atoms.
+Ecosystems can be used completely outside of React. This can be helpful for testing atoms and selectors.
 
 ## Creation
 
@@ -427,11 +427,7 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
     <p>
       Destroys all atom instances in the ecosystem, cleans up the ecosystem
       itself (e.g. by removing all currently scheduled tasks), and removes it
-      from the{' '}
-      <Link to="../utils/internal-store-utils#internalstore">
-        internalStore
-      </Link>
-      .
+      from the <Link to="../utils/internal-utils#store">internal store</Link>.
     </p>
     <p>Signature:</p>
     <Ts>{`destroy = (force?) => void`}</Ts>

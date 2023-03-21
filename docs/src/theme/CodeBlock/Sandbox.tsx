@@ -130,9 +130,10 @@ const evalCode = (
   // eslint-disable-next-line no-new-func
   const fn = new Function('React', ...keys, wrapped)
 
-  const ecosystemsBefore = ReactZedux.internalStore.getState()
+  const { store } = ReactZedux.getInternals()
+  const ecosystemsBefore = store.getState()
   const result = fn.call(null, React, ...vals)
-  const ecosystemsAfter = ReactZedux.internalStore.getState()
+  const ecosystemsAfter = store.getState()
 
   if (!ecosystemIdRef.current) {
     Object.keys(ecosystemsAfter).forEach(key => {

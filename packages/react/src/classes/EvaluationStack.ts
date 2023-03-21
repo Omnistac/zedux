@@ -28,7 +28,7 @@ const perf =
  * This has to live in the module scope so `readInstance` can access it without
  * any ecosystem context. That's how injectors work.
  */
-const stack: StackItem[] = []
+export let stack: StackItem[] = []
 
 export const readInstance = () => {
   const item = stack[stack.length - 1]
@@ -39,6 +39,8 @@ export const readInstance = () => {
 
   return (item as InstanceStackItem).instance
 }
+
+export const setStack = (newStack: StackItem[]) => (stack = newStack)
 
 export class EvaluationStack {
   public atomGetters: AtomGetters
