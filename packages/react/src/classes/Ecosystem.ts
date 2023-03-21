@@ -251,7 +251,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   /**
    * Destroy this ecosystem - destroy all this ecosystem's atom instances,
    * remove and clean up all plugins, and remove this ecosystem from the
-   * internalStore.
+   * internal store.
    *
    * Destruction will bail out by default if this ecosystem is still being
    * provided via an <EcosystemProvider>. Pass `true` as the first parameter to

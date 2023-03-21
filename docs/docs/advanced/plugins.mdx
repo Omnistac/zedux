@@ -382,7 +382,7 @@ This approach affords lots of flexibility. For example, you could make the atom 
 
 ### Via Plugin Ecosystem
 
-If the plugin creates its own ecosystem and you know the id, you can use [`getEcosystem()`](../api/utils/internal-store-utils#getecosystem) to retrieve the plugin's ecosystem anywhere. Then use that ecosystem to interact with its atoms like you would with any ecosystem.
+If the plugin creates its own ecosystem and you know the id, you can use [`getEcosystem()`](../api/utils/internal-utils#getecosystem) to retrieve the plugin's ecosystem anywhere. Then use that ecosystem to interact with its atoms like you would with any ecosystem.
 
 Or, a better solution with more boilerplate, create the plugin's ecosystem at the top of your app and simultaneously use it to create the plugin and provide it to the rest of the app.
 

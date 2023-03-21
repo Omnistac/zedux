@@ -141,7 +141,7 @@ module.exports = {
         label: 'Utils',
         items: [
           'api/utils/action-chain-utils',
-          'api/utils/internal-store-utils',
+          'api/utils/internal-utils',
           'api/utils/internalTypes',
           'api/utils/is',
         ],

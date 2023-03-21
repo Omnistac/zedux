@@ -1,0 +1,104 @@
+---
+id: internal-utils
+title: Internal Utils
+---
+
+```ts
+import { getEcosystem, getInternals, setInternals, wipe } from '@zedux/react'
+```
+
+Zedux holds some internal (global, module-level) state. This state includes an internal store and an evaluation stack that needs to be global for injectors to work. Zedux exports a few utility functions for working with it. You should almost never use these in a real app. They're mostly for testing and odd situations like supporting multiple windows.
+
+## Store
+
+The internal store's state is an object mapping ecosystem ids to ecosystems. When an ecosystem is destroyed, it's removed from this store.
+
+Ecosystems are mutable objects with functions and circular references. This is by design - for performance and efficiency. But it means you can't use this global store to track state changes like in a normal, immutable flow.
+
+Plugins can subscribe to this store to see when ecosystems are created and destroyed. You can also use this to inspect the internal state of Zedux. Readonly!
+
+```ts
+import { createEcosystem, getInternals } from '@zedux/react'
+
+const rootEcosystem = createEcosystem({ id: 'root' })
+
+getInternals().store.getState()
+// {
+//   root: rootEcosystem
+// }
+
+const subscription = internalStore.subscribe((newState, oldState) => {
+  // some logic a plugin might use to detect new and destroyed ecosystems:
+  const newKeys = Object.keys(newState)
+  const oldKeys = oldState ? Object.keys(oldState) : []
+
+  const newEcosystems = newKeys.filter(key => !oldKeys.includes(key))
+  const destroyedEcosystems = oldKeys.filter(key => !newKeys.includes(key))
+})
+```
+
+## Stack
+
+The stack is just an array. It's mutated whenever an atom instance or selector is evaluating. Injectors use this to know which atom instance they're attached to.
+
+## Exposed Utils
+
+Zedux exposes the following functions for working with the internal store and stack. Remember you should almost never use these. They are primarily for supporting multiple windows (thus multiple loaded instances of Zedux) and allowing plugins to attach themselves to all ecosystems.
+
+### `getEcosystem`
+
+Retrieves an ecosystem given an id.
+
+```ts
+import { getEcosystem, getInternals } from '@zedux/react'
+
+const ecosystem = createEcosystem({ id: 'my-ecosystem' })
+
+getEcosystem('my-ecosystem') === ecosystem
+// this getEcosystem call is an alias for:
+getInternals().store.getState()['my-ecosystem']
+```
+
+### `getInternals`
+
+Returns an object containing both the internal store and the evaluation stack array reference.
+
+```ts
+import { getInternals } from '@zedux/react'
+
+const { stack, store } = getInternals()
+```
+
+### `setInternals`
+
+Completely replaces Zedux's internal store and stack with the passed store and stack array. This is only for use in apps that need to support multiple realms (e.g. browser windows) where each realm loads its own instance of Zedux, React, etc.
+
+To share your ecosystem setup across windows, simply sharing the ecosystem reference(s) is not enough. Those ecosystems still use the global stack that their methods have closed over. This means injectors from a different instance of Zedux (in atoms created in the child window) will throw an error - they're using a different stack.
+
+To share your setup across windows, expose the result of calling `getInternals()` on the parent window and use `setInternals` in the child window to make Zedux reuse the exact same internal store and stack in both.
+
+```ts
+// in main window:
+import { getInternals } from '@zedux/react'
+window.zeduxInternals = getInternals()
+
+// in child window:
+import { setInternals } from '@zedux/react'
+setInternals(window.opener.zeduxInternals)
+```
+
+This effectively "replaces" the child window's Zedux instance with the parent window's. Just be sure to do this before rendering the child window's React app or using any other Zedux APIs in the child window.
+
+Obviously don't use this unless you _need_ it. And be extremely careful with it - passing anything but the internals retrieved via `getInternals()` will break everything.
+
+### `wipe`
+
+Destroys every ecosystem and resets the internal store's state to an empty object. You shouldn't ever need this, but can use it as a safety net in tests, e.g.:
+
+```ts
+import { wipe } from '@zedux/react'
+
+afterAll(() => {
+  wipe() // unnecessary if you're destroying ecosystems properly
+})
+```
