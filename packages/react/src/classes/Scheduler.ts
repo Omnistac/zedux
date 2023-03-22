@@ -28,6 +28,7 @@ export class Scheduler implements SchedulerInterface {
    */
   private nows: Job[] = []
   private _handle?: ReturnType<typeof setTimeout>
+  private _runAfterNows?: boolean
 
   constructor(private readonly ecosystem: Ecosystem) {}
 
@@ -80,7 +81,7 @@ export class Scheduler implements SchedulerInterface {
 
     this.nows[newJob.type === 1 ? 'push' : 'unshift'](newJob)
 
-    if (!this._isRunningNows) this.runJobs(this.nows, '_isRunningNows')
+    this.runJobs(true)
   }
 
   public unschedule(task: () => void) {
@@ -156,12 +157,26 @@ export class Scheduler implements SchedulerInterface {
   }
 
   /**
-   * Run either all full jobs or all now jobs. Since the jobs are split, we can essentially have two schedulers running at once. Now jobs must always run before any full jobs, so the full jobs runner has to be aware of nows
+   * Run either all "full" jobs or all "now" jobs. Since the jobs are split, we
+   * can essentially have two schedulers running at once. "Now" jobs must always
+   * run before any "full" jobs, so the "full" jobs runner has to flush any "now"s that come up while it's flushing "full"s.
+   *
+   * Don't run "full" jobs while "now"s are running. It leads to "now"s being deferred until after "full"s finish. This is backwards and can lead to reevaluation loops.
    */
-  private runJobs(
-    jobs = this.jobs,
-    runningKey: keyof Pick<this, '_isRunning' | '_isRunningNows'> = '_isRunning'
-  ) {
+  private runJobs(isNows?: boolean) {
+    // we prevent this function from running at all if no "full" jobs are
+    // scheduled
+    if (this._isRunningNows) {
+      // schedule a "full" jobs run after "now"s finish
+      this._runAfterNows = !isNows
+      return
+    }
+
+    const jobs = isNows ? this.nows : this.jobs
+    const runningKey: keyof Pick<this, '_isRunning' | '_isRunningNows'> = isNows
+      ? '_isRunningNows'
+      : '_isRunning'
+
     const nows = this.nows
     // this._runStartTime = performance.now()
     // let counter = 0
@@ -178,6 +193,11 @@ export class Scheduler implements SchedulerInterface {
       // }
     }
     this[runningKey] = false
+
+    if (this._runAfterNows) {
+      this._runAfterNows = false
+      this.runJobs()
+    }
   }
 
   private setTimeout() {
