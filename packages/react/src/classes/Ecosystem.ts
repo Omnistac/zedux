@@ -810,7 +810,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     // that destruction process too)
     this._graph.removeNode(id)
 
-    delete this._instances[id] // TODO: dispatch an action over internalStore for this mutation
+    // mods have already been notified of the instance's status changing to
+    // Destroyed by this point. No need to notify anything of this mutation.
+    delete this._instances[id]
   }
 
   /**

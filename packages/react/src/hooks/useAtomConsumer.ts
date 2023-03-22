@@ -21,14 +21,14 @@ export const useAtomConsumer: {
   defaultParams?: AtomParamsType<A> | boolean
 ) => {
   const ecosystem = useEcosystem()
-  const instance = useContext(ecosystem._getReactContext(template))
+  const instance: AtomInstanceType<A> | undefined = useContext(
+    ecosystem._getReactContext(template)
+  )
 
   if (!defaultParams || is(instance, AtomInstanceBase)) {
-    if (DEV && (instance as AtomInstanceType<A>).status === 'Destroyed') {
+    if (DEV && instance?.status === 'Destroyed') {
       throw new Error(
-        `Zedux: useAtomConsumer - A destroyed atom instance was provided with key "${
-          (instance as AtomInstanceType<A>).id
-        }". This is not supported. Provide an active atom instance instead.`
+        `Zedux: useAtomConsumer - A destroyed atom instance was provided with key "${instance.id}". This is not supported. Provide an active atom instance instead.`
       )
     }
 
