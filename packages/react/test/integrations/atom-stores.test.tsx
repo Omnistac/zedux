@@ -1,5 +1,11 @@
 import { createStore } from '@zedux/core'
-import { atom, createEcosystem } from '@zedux/react'
+import {
+  atom,
+  createEcosystem,
+  injectAtomInstance,
+  injectEffect,
+  injectStore,
+} from '@zedux/react'
 
 const ecosystem = createEcosystem({ id: 'test' })
 
@@ -47,5 +53,46 @@ describe('stores in atoms', () => {
       { parent: { child: 'c' } },
       { grandparent: { parent: { child: 'c' } } },
     ])
+  })
+
+  test("state set on a `subscribed` store during atom evaluation doesn't trigger a reevaluation", () => {
+    // this exact atom1, atom2 setup is needed to prevent a scheduler loop regression
+    const atom1 = atom('1', () => {
+      const store = injectStore(0)
+
+      store.setState(state => state + 1)
+
+      return store
+    })
+
+    const atom2 = atom('2', () => {
+      const store = injectStore(0)
+      const instance1 = injectAtomInstance(atom1)
+
+      injectEffect(
+        () => {
+          const subscription = store.subscribe(() => {
+            instance1.setState(state => state + 1)
+          })
+
+          return () => subscription.unsubscribe()
+        },
+        [],
+        { synchronous: true }
+      )
+
+      return store
+    })
+
+    const instance2 = ecosystem.getInstance(atom2)
+    const instance1 = ecosystem.getInstance(atom1)
+
+    expect(instance1.getState()).toBe(1)
+    expect(instance2.getState()).toBe(0)
+
+    instance2.setState(1)
+
+    expect(instance1.getState()).toBe(3)
+    expect(instance2.getState()).toBe(1)
   })
 })
