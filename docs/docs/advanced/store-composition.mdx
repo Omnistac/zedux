@@ -266,7 +266,7 @@ Yep, the `inherit` flow happens again:
 
 Notice that Stores AA and ABB are _completely unaffected_ throughout the whole delegation process.
 
-This feature is used to implement undo/redo dev tool functionality. We'll look at using this power to implement time travel in the [time travel guide](time-travel).
+This feature is used to implement replayable actions in dev tools. We'll look at using this power to implement time travel in the [time travel guide](time-travel).
 
 Now, in code form:
 
@@ -310,18 +310,18 @@ a.dispatch({
 })
 ```
 
-Notice that the `aba` subscriber is called first.
+Notice that the `aba` subscriber is called first. Let's take a closer look at why.
 
 ## Subscription Order
 
 The default subscriber notification order goes something like this:
 
-1. action dispatched to parent store
-2. action dispatched to first child store
-3. repeat step 2 until reaching a "leaf node" (a store with no own children)
+1. action dispatched to parent store.
+2. action dispatched to first child store.
+3. repeat step 2 until reaching a "leaf node" (a store with no own children).
 4. when the action reaches a leaf node, that store finishes its dispatch and immediately notifies its own subscribers.
 5. repeat steps 2-4 with all remaining child stores.
-6. when the parent has allowed all its children to dispatch and notify their own subscribers, it does the same
+6. when the parent has allowed all its children to dispatch and notify their own subscribers, it does the same.
 7. repeat step 6 all the way back up the tree.
 
 In short, subscribers are notified starting at leaf nodes, coming all the way back up a branch before proceeding to the next branch.
