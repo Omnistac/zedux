@@ -4,7 +4,12 @@ import {
   wrapStoreInReducer,
 } from '@zedux/core/hierarchy/create'
 import { delegate, propagateChange } from '@zedux/core/hierarchy/traverse'
-import { HierarchyType } from '@zedux/core/utils/general'
+import {
+  BranchNodeType,
+  NullNodeType,
+  ReducerNodeType,
+  StoreNodeType,
+} from '@zedux/core/utils/general'
 import * as hierarchyConfig from '@zedux/core/utils/hierarchyConfig'
 import {
   createMockStore,
@@ -105,12 +110,12 @@ describe('delegate()', () => {
 
     delegate(
       {
-        type: HierarchyType.Branch,
+        type: BranchNodeType,
         children: {
           a: {
             reducer: () => 1,
             store: mockStore,
-            type: HierarchyType.Store,
+            type: StoreNodeType,
           },
         },
       },
@@ -121,18 +126,18 @@ describe('delegate()', () => {
 
     delegate(
       {
-        type: HierarchyType.Branch,
+        type: BranchNodeType,
         children: {
           a: {
-            type: HierarchyType.Branch,
+            type: BranchNodeType,
             children: {
               b: {
-                type: HierarchyType.Branch,
+                type: BranchNodeType,
                 children: {
                   c: {
                     reducer: () => 1,
                     store: mockStore,
-                    type: HierarchyType.Store,
+                    type: StoreNodeType,
                   },
                 },
               },
@@ -154,18 +159,18 @@ describe('delegate()', () => {
 
     delegate(
       {
-        type: HierarchyType.Branch,
+        type: BranchNodeType,
         children: {
           a: {
-            type: HierarchyType.Branch,
+            type: BranchNodeType,
             children: {
               b: {
-                type: HierarchyType.Branch,
+                type: BranchNodeType,
                 children: {
                   c: {
                     reducer: () => 1,
                     store: parentStore,
-                    type: HierarchyType.Store,
+                    type: StoreNodeType,
                   },
                 },
               },
@@ -199,24 +204,24 @@ describe('getHierarchyType()', () => {
 
   test('detects a Null node', () => {
     nullNodes.forEach(emptyNode => {
-      expect(getHierarchyType(emptyNode)).toBe(HierarchyType.Null)
+      expect(getHierarchyType(emptyNode)).toBe(NullNodeType)
     })
   })
 
   test('detects a Branch node', () => {
     plainObjects.forEach(plainObject =>
-      expect(getHierarchyType(plainObject)).toBe(HierarchyType.Branch)
+      expect(getHierarchyType(plainObject)).toBe(BranchNodeType)
     )
   })
 
   test('detects a Reducer node', () => {
-    expect(getHierarchyType(() => 1)).toBe(HierarchyType.Reducer)
+    expect(getHierarchyType(() => 1)).toBe(ReducerNodeType)
   })
 
   test('detects a Store node', () => {
     const mockStore = createStore()
 
-    expect(getHierarchyType(mockStore)).toBe(HierarchyType.Store)
+    expect(getHierarchyType(mockStore)).toBe(StoreNodeType)
   })
 })
 

@@ -1,8 +1,8 @@
 import { internalTypes } from '../api/constants'
 import { ActionChain, HierarchyConfig } from '../types'
-import { HierarchyType } from '../utils/general'
+import { BranchNodeType, StoreNodeType } from '../utils/general'
 import { getMetaData, removeMeta } from '../api/meta'
-import { DiffNode, StoreNode } from '../utils/types'
+import { HierarchyNode, StoreNode } from '../utils/types'
 
 const getErrorMessage = (subStorePath: string[]) =>
   `Zedux: store.dispatch() - Invalid Delegation - Store does not contain a child store at path: ${subStorePath.join(
@@ -12,47 +12,47 @@ const getErrorMessage = (subStorePath: string[]) =>
 const prodError = 'Minified Error'
 
 /**
-  Finds a node in a diffTree given a node path (array of nodes).
-*/
-const findChild = (diffTree: DiffNode, nodePath: string[]) => {
+ * Finds a node in a tree given a node path (array of nodes).
+ */
+const findChild = (tree: HierarchyNode, nodePath: string[]) => {
   for (const node of nodePath) {
-    if (diffTree.type !== HierarchyType.Branch) {
+    if (tree.type !== BranchNodeType) {
       throw new ReferenceError(DEV ? getErrorMessage(nodePath) : prodError)
     }
 
-    diffTree = diffTree.children[node]
+    tree = tree.children[node]
 
-    if (!diffTree) {
+    if (!tree) {
       throw new ReferenceError(DEV ? getErrorMessage(nodePath) : prodError)
     }
   }
 
-  return diffTree
+  return tree
 }
 
 /**
-  Delegates an action to a child store.
-
-  Does nothing if the special `delegate` meta node is not present in the action
-  action chain.
-
-  This expects the `metaData` of the `delegate` meta node to be an array
-  containing a path of nodes describing the child store's location in the parent
-  store's current hierarchy descriptor.
-
-  Delegated actions will not be handled by the parent store at all.
-*/
+ * Delegates an action to a child store.
+ *
+ * Does nothing if the special `delegate` meta node is not present in the action
+ * action chain.
+ *
+ * This expects the `metaData` of the `delegate` meta node to be an array
+ * containing a path of nodes describing the child store's location in the
+ * parent store's current hierarchy descriptor.
+ *
+ * Delegated actions will not be handled by the parent store at all.
+ */
 export const delegate = (
-  diffTree: DiffNode | undefined,
+  tree: HierarchyNode | undefined,
   action: ActionChain
 ) => {
   const subStorePath = getMetaData(action, internalTypes.delegate)
 
-  if (!subStorePath || !diffTree) return false
+  if (!subStorePath || !tree) return false
 
-  const child = findChild(diffTree, subStorePath)
+  const child = findChild(tree, subStorePath)
 
-  if (child.type !== HierarchyType.Store) {
+  if (child.type !== StoreNodeType) {
     throw new TypeError(DEV ? getErrorMessage(subStorePath) : prodError)
   }
 
@@ -62,13 +62,13 @@ export const delegate = (
 }
 
 /**
-  Propagates a state change from a child store to a parent.
-
-  Recursively finds the child store's node in the parent store's
-  state tree and re-creates all the nodes down that path.
-
-  #immutability
-*/
+ * Propagates a state change from a child store to a parent.
+ *
+ * Recursively finds the child store's node in the parent store's state tree and
+ * re-creates all the nodes down that path.
+ *
+ * #immutability
+ */
 export const propagateChange = <State = any>(
   currentState: State,
   subStorePath: string[],

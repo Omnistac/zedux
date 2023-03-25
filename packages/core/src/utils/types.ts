@@ -1,22 +1,33 @@
 import { Store } from '../api/createStore'
 import { Reducer } from '../types'
-import { HierarchyType } from './general'
+import {
+  BranchNodeType,
+  NullNodeType,
+  ReducerNodeType,
+  StoreNodeType,
+} from './general'
 
-export interface BranchNode extends DiffNodeBase {
-  children: DiffTree
+export type HierarchyNodeType =
+  | typeof BranchNodeType
+  | typeof NullNodeType
+  | typeof ReducerNodeType
+  | typeof StoreNodeType
+
+export interface BranchNode extends HierarchyNodeBase {
+  children: Hierarchy
   reducer?: Reducer
-  type: HierarchyType.Branch
+  type: BranchNodeType
 }
 
-export type DiffNode = BranchNode | NullNode | ReducerNode | StoreNode
+export type HierarchyNode = BranchNode | NullNode | ReducerNode | StoreNode
 
-export interface DiffNodeBase {
+export interface HierarchyNodeBase {
   destroy?: () => void
-  type: HierarchyType
+  type: HierarchyNodeType
 }
 
-export interface DiffTree {
-  [key: string]: DiffNode
+export interface Hierarchy {
+  [key: string]: HierarchyNode
 }
 
 export interface MachineStateType<
@@ -27,20 +38,20 @@ export interface MachineStateType<
   context: Context
 }
 
-export interface NullNode extends DiffNodeBase {
+export interface NullNode extends HierarchyNodeBase {
   reducer?: undefined
-  type: HierarchyType.Null
+  type: NullNodeType
 }
 
-export interface ReducerNode extends DiffNodeBase {
+export interface ReducerNode extends HierarchyNodeBase {
   reducer: Reducer
-  type: HierarchyType.Reducer
+  type: ReducerNodeType
 }
 
-export interface StoreNode extends DiffNodeBase {
+export interface StoreNode extends HierarchyNodeBase {
   reducer: Reducer
   store: Store
-  type: HierarchyType.Store
+  type: StoreNodeType
 }
 
 export type RegisterSubStore = (path: string[], store: Store) => () => void
