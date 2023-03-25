@@ -1,5 +1,5 @@
-import { hierarchyDescriptorToDiffTree } from '../hierarchy/create'
-import { mergeDiffTrees, mergeStateTrees } from '../hierarchy/merge'
+import { hierarchyDescriptorToHierarchy } from '../hierarchy/create'
+import { mergeHierarchies, mergeStateTrees } from '../hierarchy/merge'
 import { delegate, propagateChange } from '../hierarchy/traverse'
 import {
   Action,
@@ -24,7 +24,7 @@ import {
   STORE_IDENTIFIER,
 } from '../utils/general'
 import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
-import { DiffNode } from '../utils/types'
+import { HierarchyNode } from '../utils/types'
 import { internalTypes } from './constants'
 import { addMeta, removeAllMeta } from './meta'
 
@@ -77,13 +77,13 @@ export class Store<State = any> {
    * atom evaluation to the ecosystem.
    */
   static _scheduler?: Scheduler
-  private _currentDiffTree?: DiffNode
   private _currentState: State
   private _isDispatching?: boolean
   private _parents?: EffectsSubscriber[]
   private _rootReducer?: Reducer<State>
   private _scheduler: Scheduler
   private _subscribers: SubscriberObject[] = []
+  private _tree?: HierarchyNode
 
   constructor(
     initialHierarchy?: HierarchyDescriptor<State>,
@@ -298,18 +298,18 @@ export class Store<State = any> {
     Dispatches the special `prime` action to the store.
   */
   public use(newHierarchy: HierarchyDescriptor<State>) {
-    const newDiffTree = hierarchyDescriptorToDiffTree(
+    const newTree = hierarchyDescriptorToHierarchy(
       newHierarchy,
       (childStorePath: string[], childStore: Store) =>
         this._registerChildStore(childStorePath, childStore)
     )
 
-    this._currentDiffTree = mergeDiffTrees(
-      this._currentDiffTree,
-      newDiffTree,
+    this._tree = mergeHierarchies(
+      this._tree,
+      newTree,
       (this.constructor as typeof Store).hierarchyConfig
     )
-    this._rootReducer = this._currentDiffTree.reducer
+    this._rootReducer = this._tree.reducer
 
     if (this._rootReducer) {
       this._dispatchAction(primeAction, primeAction, this._currentState)
@@ -355,7 +355,7 @@ export class Store<State = any> {
       )
     }
 
-    const delegateResult = delegate(this._currentDiffTree, action)
+    const delegateResult = delegate(this._tree, action)
 
     if (delegateResult !== false) {
       // No need to inform subscribers - this store's effects subscriber

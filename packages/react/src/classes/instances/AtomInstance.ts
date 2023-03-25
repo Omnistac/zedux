@@ -32,15 +32,13 @@ import { AtomApi } from '../AtomApi'
 import { AtomInstanceBase } from './AtomInstanceBase'
 import { AtomTemplateBase } from '../templates/AtomTemplateBase'
 
-enum StateType {
-  Store,
-  Value,
-}
+const StoreState = 1
+const RawState = 2
 
 const getStateType = (val: any) => {
-  if (is(val, Store)) return StateType.Store
+  if (is(val, Store)) return StoreState
 
-  return StateType.Value
+  return RawState
 }
 
 const getStateStore = <
@@ -53,12 +51,12 @@ const getStateStore = <
   const stateType = getStateType(factoryResult)
 
   const stateStore =
-    stateType === StateType.Store
+    stateType === StoreState
       ? (factoryResult as StoreType)
       : (createStore<State>() as StoreType)
 
   // define how we populate our store (doesn't apply to user-supplied stores)
-  if (stateType === StateType.Value) {
+  if (stateType === RawState) {
     stateStore.setState(
       typeof factoryResult === 'function'
         ? () => factoryResult as State
@@ -87,7 +85,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   public _prevEvaluationReasons?: EvaluationReason[]
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
-  public _stateType?: StateType
+  public _stateType?: 1 | 2
 
   private _bufferedUpdate?: {
     newState: G['State']
@@ -436,18 +434,14 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       )
     }
 
-    if (
-      DEV &&
-      newStateType === StateType.Store &&
-      newFactoryResult !== this.store
-    ) {
+    if (DEV && newStateType === StoreState && newFactoryResult !== this.store) {
       throw new Error(
         `Zedux: atom factory for atom "${this.template.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
       )
     }
 
     // there is no way to cause an evaluation loop when the StateType is Value
-    if (newStateType === StateType.Value) {
+    if (newStateType === RawState) {
       this.store.setState(
         typeof newFactoryResult === 'function'
           ? () => newFactoryResult as G['State']

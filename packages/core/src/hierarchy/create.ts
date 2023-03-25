@@ -3,25 +3,37 @@ import { Store } from '../api/createStore'
 import { is } from '../api/is'
 import { addMeta } from '../api/meta'
 import { Action, Branch, HierarchyDescriptor, Reducer } from '../types'
-import { detailedTypeof, HierarchyType, isPlainObject } from '../utils/general'
-import { DiffNode, DiffTree, RegisterSubStore } from '../utils/types'
+import {
+  BranchNodeType,
+  detailedTypeof,
+  isPlainObject,
+  NullNodeType,
+  ReducerNodeType,
+  StoreNodeType,
+} from '../utils/general'
+import {
+  HierarchyNode,
+  Hierarchy,
+  HierarchyNodeType,
+  RegisterSubStore,
+} from '../utils/types'
 
 /**
-  Converts a Branch hierarchy descriptor to a diff node's children
-
-  Really should only be used from `hierarchyDescriptorToDiffTree()`
-*/
-function branchToDiffNodeChildren(
+ * Converts a Branch hierarchy descriptor to a HierarchyNode's children
+ *
+ * Really should only be used from `hierarchyDescriptorToHierarchy()`
+ */
+function branchToHierarchyChildren(
   branch: Branch,
   registerSubStore: RegisterSubStore,
   currentPath: string[]
 ) {
-  const children: DiffTree = {}
+  const children: Hierarchy = {}
 
   Object.entries(branch).forEach(([key, val]) => {
     const newPath = [...currentPath, key]
 
-    children[key] = hierarchyDescriptorToDiffTree(
+    children[key] = hierarchyDescriptorToHierarchy(
       val,
       registerSubStore,
       newPath
@@ -32,26 +44,26 @@ function branchToDiffNodeChildren(
 }
 
 /**
-  Turns a non-branch node from a user-supplied hierarchy descriptor into a
-  DiffNode object
-*/
-function nonBranchToDiffNode(
-  type: HierarchyType,
+ * Turns a non-branch node from a user-supplied hierarchy descriptor into a
+  HierarchyNode object
+ */
+function nonBranchToHierarchyNode(
+  type: HierarchyNodeType,
   hierarchy: Reducer | Store,
   registerSubStore: RegisterSubStore,
   currentPath: string[]
-): DiffNode {
-  if (type === HierarchyType.Null) {
+): HierarchyNode {
+  if (type === NullNodeType) {
     return { type }
   }
 
-  if (type === HierarchyType.Reducer) {
+  if (type === ReducerNodeType) {
     return { type, reducer: hierarchy as Reducer }
   }
 
   // It's a Store hierarchy descriptor
   return {
-    type: type as HierarchyType.Store,
+    type: type as StoreNodeType,
     destroy: registerSubStore(currentPath, hierarchy as Store),
     reducer: wrapStoreInReducer(hierarchy as Store),
     store: hierarchy as Store,
@@ -59,16 +71,16 @@ function nonBranchToDiffNode(
 }
 
 /**
-  Determines the type of the given hierarchy descriptor.
-
-  Throws a TypeError if the descriptor is invalid.
-*/
+ * Determines the HierarchyNodeType of the given hierarchy descriptor.
+ *
+ * Throws a TypeError if the descriptor is invalid.
+ */
 export function getHierarchyType(descriptor: HierarchyDescriptor) {
-  if (typeof descriptor === 'function') return HierarchyType.Reducer
+  if (typeof descriptor === 'function') return ReducerNodeType
 
-  if (descriptor && is(descriptor, Store)) return HierarchyType.Store
+  if (descriptor && is(descriptor, Store)) return StoreNodeType
 
-  if (isPlainObject(descriptor)) return HierarchyType.Branch
+  if (isPlainObject(descriptor)) return BranchNodeType
 
   if (DEV && descriptor != null) {
     throw new TypeError(
@@ -78,24 +90,24 @@ export function getHierarchyType(descriptor: HierarchyDescriptor) {
     )
   }
 
-  return HierarchyType.Null
+  return NullNodeType
 }
 
 /**
-  Turns a normal, user-supplied hierarchy descriptor into a diff tree for easy
-  reducer hierarchy creating, diffing, merging, and destroying.
-
-  Also figures out the reducer for non-branch nodes.
-*/
-export function hierarchyDescriptorToDiffTree(
+ * Turns a normal, user-supplied hierarchy descriptor into a Hierarchy for easy
+ * reducer hierarchy creating, diffing, merging, and destroying.
+ *
+ * Also figures out the reducer for non-branch nodes.
+ */
+export function hierarchyDescriptorToHierarchy(
   hierarchy: HierarchyDescriptor,
   registerSubStore: RegisterSubStore,
   currentPath: string[] = []
-): DiffNode {
+): HierarchyNode {
   const type = getHierarchyType(hierarchy)
 
-  if (type !== HierarchyType.Branch) {
-    return nonBranchToDiffNode(
+  if (type !== BranchNodeType) {
+    return nonBranchToHierarchyNode(
       type,
       hierarchy as Reducer | Store,
       registerSubStore,
@@ -107,7 +119,7 @@ export function hierarchyDescriptorToDiffTree(
   // a reducer for this branch 'cause the merge process does that for us
   return {
     type,
-    children: branchToDiffNodeChildren(
+    children: branchToHierarchyChildren(
       hierarchy as Branch,
       registerSubStore,
       currentPath
@@ -116,19 +128,19 @@ export function hierarchyDescriptorToDiffTree(
 }
 
 /**
-  Creates a reducer that wraps the entry points of the given store.
-
-  This reducer will propagate actions down the child store's reducers.
-
-  Wraps all actions in the special `inherit` meta node to inform the child
-  store's effects subscribers that this action was received from its parent
-  store.
-
-  Since the parent store also registers an effects subscriber on this child
-  store, it will know not to propagate the inherited action from the child
-  store. UPDATE: Actually, it doesn't even need to check - the parent store
-  knows that it _isDispatching and can ignore child store actions while it is.
-*/
+ * Creates a reducer that wraps the entry points of the given store.
+ *
+ * This reducer will propagate actions down the child store's reducers.
+ *
+ * Wraps all actions in the special `inherit` meta node to inform the child
+ * store's effects subscribers that this action was received from its parent
+ * store.
+ *
+ * Since the parent store also registers an effects subscriber on this child
+ * store, it will know not to propagate the inherited action from the child
+ * store. UPDATE: Actually, it doesn't even need to check - the parent store
+ * knows that it _isDispatching and can ignore child store actions while it is.
+ */
 export function wrapStoreInReducer<State>(store: Store<State>) {
   const reducer: Reducer = (state: State, action: Action) => {
     // If this is the special hydrate or partial hydrate action, re-create the

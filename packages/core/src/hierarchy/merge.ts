@@ -1,18 +1,18 @@
 import { Action, HierarchyConfig, Reducer } from '../types'
-import { HierarchyType } from '../utils/general'
-import { BranchNode, DiffNode, DiffTree } from '../utils/types'
+import { BranchNodeType, NullNodeType } from '../utils/general'
+import { BranchNode, Hierarchy, HierarchyNode } from '../utils/types'
 
 /**
-  Turns a diff tree into a single reducer.
-
-  All child diff nodes must have `reducer` props themselves.
-
-  Accepts configuration to create the state representation of this node,
-  to get and set properties on that data type, to determine if the old
-  state is a node, and to find the size of the node.
-*/
+ * Turns a Hierarchy into a single reducer.
+ *
+ * All child HierarchyNodes must have `reducer` props themselves.
+ *
+ * Accepts configuration to create the state representation of this node, to get
+ * and set properties on that data type, to determine if the old state is a
+ * node, and to find the size of the node.
+ */
 const createBranchReducer = (
-  children: DiffTree,
+  children: Hierarchy,
   { create, get, isNode, set, size }: HierarchyConfig
 ): Reducer => (oldState = create(), action: Action) => {
   // Make a new node to keep track of the values returned by
@@ -50,12 +50,12 @@ const createBranchReducer = (
 }
 
 /**
-  Recursively destroys a tree, preventing memory leaks.
-
-  Currently STORE is the only node type affected by this; stores need to
-  unsubscribe() from their child stores.
-*/
-export function destroyTree(tree?: DiffNode) {
+ * Recursively destroys a tree, preventing memory leaks.
+ *
+ * Currently STORE is the only node type affected by this; stores need to
+ * unsubscribe() from their child stores.
+ */
+export function destroyTree(tree?: HierarchyNode) {
   if (!tree) return
 
   const { children, destroy } = tree as BranchNode
@@ -68,12 +68,12 @@ export function destroyTree(tree?: DiffNode) {
 }
 
 /**
-  Merges two diff tree BRANCH nodes together.
-
-  Really should only be used from `mergeDiffTrees()`
-*/
+ * Merges two hierarchy BranchNodes together.
+ *
+ * Really should only be used from `mergeHierarchies()`
+ */
 export function mergeBranches(
-  oldTree: DiffNode,
+  oldTree: HierarchyNode,
   newTree: BranchNode,
   hierarchyConfig: HierarchyConfig
 ): BranchNode {
@@ -85,11 +85,11 @@ export function mergeBranches(
     const oldChild = (oldTree as BranchNode).children?.[key]
 
     // Attempt to recursively merge the two children
-    // Let `mergeDiffTrees()` handle any destroying
-    const mergedChild = mergeDiffTrees(oldChild, newChild, hierarchyConfig)
+    // Let `mergeHierarchies()` handle any destroying
+    const mergedChild = mergeHierarchies(oldChild, newChild, hierarchyConfig)
 
     // If the new node is NULL, kill it.
-    if (mergedChild.type === HierarchyType.Null) {
+    if (mergedChild.type === NullNodeType) {
       delete mergedChildren[key]
 
       return
@@ -101,49 +101,49 @@ export function mergeBranches(
   return {
     children: mergedChildren,
     reducer: createBranchReducer(mergedChildren, hierarchyConfig),
-    type: HierarchyType.Branch,
+    type: BranchNodeType,
   }
 }
 
 /**
-  Merges two diff trees together.
-
-  Uses head recursion to merge the leaf nodes first. This allows this step to
-  also find each node's reducer. (A node's children reducers need to exist
-  before its own reducer can)
-
-  Destroys any no-longer-used resources in the oldTree.
-
-  The resulting tree will always have the type of the newTree.
-
-  Dynamically injects reducers and stores into the hierarchy or replaces the
-  hierarchy altogether.
-
-  There are 4 types of nodes in this hierarchy:
-    - BRANCH - indicates a branch (non-leaf) node
-    - REDUCER - indicates a leaf node handled by this store
-    - STORE - indicates a leaf node handled by another store
-    - NULL - indicates a non-existent node, or node to be deleted
-
-  BRANCH nodes will be deeply merged (recursively).
-
-  All other nodes will be overwritten.
-*/
-export function mergeDiffTrees(
-  oldTree: DiffNode | undefined,
-  newTree: DiffNode,
+ * Merges two hierarchies together.
+ *
+ * Uses head recursion to merge the leaf nodes first. This allows this step to
+ * also find each node's reducer. (A node's children reducers need to exist
+ * before its own reducer can)
+ *
+ * Destroys any no-longer-used resources in the oldTree.
+ *
+ * The resulting tree will always have the type of the newTree.
+ *
+ * Dynamically injects reducers and stores into the hierarchy or replaces the
+ * hierarchy altogether.
+ *
+ * There are 4 types of nodes in this hierarchy:
+ *   - BRANCH - indicates a branch (non-leaf) node
+ *   - REDUCER - indicates a leaf node handled by this store
+ *   - STORE - indicates a leaf node handled by another store
+ *   - NULL - indicates a non-existent node, or node to be deleted
+ *
+ * BRANCH nodes will be deeply merged (recursively).
+ *
+ * All other nodes will be overwritten.
+ */
+export function mergeHierarchies(
+  oldTree: HierarchyNode | undefined,
+  newTree: HierarchyNode,
   hierarchyConfig: HierarchyConfig
-) {
-  if (newTree.type !== HierarchyType.Branch) {
+): HierarchyNode {
+  if (newTree.type !== BranchNodeType) {
     destroyTree(oldTree)
 
     return newTree
   }
 
-  if (!oldTree || oldTree.type !== HierarchyType.Branch) {
+  if (!oldTree || oldTree.type !== BranchNodeType) {
     destroyTree(oldTree)
 
-    return mergeBranches({ type: HierarchyType.Null }, newTree, hierarchyConfig)
+    return mergeBranches({ type: NullNodeType }, newTree, hierarchyConfig)
   }
 
   // They're both BRANCH nodes; recursively merge them
@@ -151,15 +151,15 @@ export function mergeDiffTrees(
 }
 
 /**
-  Deeply merges the new state tree into the old one.
-
-  If this hydration contains new state for a child store, this parent store will
-  create the child store's state for it :O
-
-  This means that mixing hierarchyConfigs is not supported, since only the
-  parent's hierarchyConfig will be respected during this merge. The child's
-  state will be full-hydrated with its new state after this merge.
-*/
+ * Deeply merges the new state tree into the old one.
+ *
+ * If this hydration contains new state for a child store, this parent store
+ * will create the child store's state for it :O
+ *
+ * This means that mixing hierarchyConfigs is not supported, since only the
+ * parent's hierarchyConfig will be respected during this merge. The child's
+ * state will be full-hydrated with its new state after this merge.
+ */
 export function mergeStateTrees(
   oldStateTree: any,
   newStateTree: any,
