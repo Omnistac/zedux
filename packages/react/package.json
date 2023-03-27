@@ -7,7 +7,6 @@
   "types": "./dist/react/src/index.d.ts",
   "sideEffects": false,
   "files": [
-    "devtools",
     "dist"
   ],
   "scripts": {
@@ -58,19 +57,14 @@
   },
   "exports": {
     ".": {
-      "development": {
-        "import": "./dist/react/zedux-react.es.js",
-        "require": "./dist/react/zedux-react.umd.js",
-        "default": "./dist/react/zedux-react.umd.js"
-      },
-      "import": "./dist/zedux-react.es.min.js",
-      "require": "./dist/zedux-react.umd.min.js",
-      "default": "./dist/zedux-react.umd.min.js"
-    },
-    "./devtools": {
-      "import": "./dist/react/devtools/zedux-react-devtools.es.js",
-      "require": "./dist/react/devtools/zedux-react-devtools.umd.js",
-      "default": "./dist/react/devtools/zedux-react-devtools.umd.js"
+      "import": "./dist/react/zedux-react.es.js",
+      "require": "./dist/react/zedux-react.umd.js",
+      "default": "./dist/react/zedux-react.umd.js",
+      "production": {
+        "import": "./dist/zedux-react.es.min.js",
+        "require": "./dist/zedux-react.umd.min.js",
+        "default": "./dist/zedux-react.umd.min.js"
+      }
     }
   },
   "homepage": "https://omnistac.github.io/zedux/",
