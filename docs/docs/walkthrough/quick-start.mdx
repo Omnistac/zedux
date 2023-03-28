@@ -89,7 +89,7 @@ These live playgrounds have every React and Zedux export in scope. Click `Log > 
 
 Super In-Depth Technical Breakdown Here:
 
-- We create an atom with the key `greeting`.
+- We create an atom template with the key `greeting`.
 - The `<Greeting>` component renders 2 children: `<GreetingPreview>` and `<EditGreeting>`.
 - `<GreetingPreview>` renders first and calls `useAtomState` to get the state of the `greeting` atom instance.
 - Zedux sees that the `greeting` atom template has never been used before, so it creates an atom instance with a store whose initial state is `'Hello, world!'`. `useAtomState` returns that state to `<GreetingPreview>`.
@@ -98,7 +98,7 @@ Super In-Depth Technical Breakdown Here:
 
 Notice that the atom instance's state is shared between both components. This state reuse is one of the main features of atoms.
 
-Try clicking `Log > Graph` in the Live Sandbox header above. Expand the logged object in your browser console and you'll see that Zedux has created a dependency graph. The `greeting` atom instance has two dependents, one for each React component that called `useAtomState`. Because of this, whenever the atom instance's state updates, both these React components will rerender. That's the magic of atoms!
+Try clicking `Log > Graph` in the Live Sandbox header above. Expand the logged object in your browser console and you'll see that Zedux has created a dependency graph. The `greeting` atom instance has two dependents, one for each React component that called `useAtomState`. Whenever the atom instance's state updates, both these React components will rerender. That's the magic of atoms!
 
 ### State Factories
 

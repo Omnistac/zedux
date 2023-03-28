@@ -1,15 +1,17 @@
 ---
 id: introduction
-title: Introducing Zedux
+title: Introduction
 ---
 
-Zedux is a flexible, multi-paradigm state management tool for React. It's packed with features covering all aspects of state management.
+A Molecular State Engine for React.
+
+Zedux is a multi-paradigm state management tool that features a powerful composable store model wrapped in a DI-driven atomic architecture.
 
 ## Features
 
 - Atomic architecture
 - Global state management
-- Local (component, "fractal") state management
+- Local (aka component aka fractal) state management
 - High-level abstractions for React context
 - Standardized Dependency Injection
 - Cache management
@@ -32,31 +34,35 @@ Apps of all sizes should be able to use Zedux comfortably. Zedux is designed to 
 
 ### Depth
 
-Zedux is not just another "80%" little state management library that fills some niche and gets people excited for a while. It's a mature tool that yields greater returns the more you use it and spend time learning its features.
+Zedux is not just another "80%" little state management library that fills some niche and gets people excited for a while. It's a mature tool that yields greater returns the more you use it and spend time learning its features. Its extreme flexibility should allow it to handle every possible use case.
 
-Zedux doesn't leave you reaching for other libraries to fill the holes in your state management needs. Rather, it tries to be as complete as possible while not rewriting everything. Zedux is not on a byte diet but is still pretty small.
+That doesn't mean you can't use other tools in combination with Zedux. For example, XState can be used for more powerful state machines.
 
 Knowledge gained from working with Zedux is transferrable. Zedux tries to stay close to other popular libraries in the space. The atomic APIs are similar to Recoil. The store APIs are similar to Redux. The cache management tools are similar to React Query. If one day you ditch Zedux forever, you should be able to easily jump into other libraries and feel familiar with the concepts.
 
 ### Simplicity
 
-Zero configuration and high-level APIs are standard across all features. A few simple lines of code is all you need to learn to start using Zedux. In fact, here they are:
+Zero configuration and high-level APIs are standard across all features. 2 simple functions is all you need to learn to start using Zedux (see the above example).
 
-```tsx
-import { atom, useAtomState } from '@zedux/react'
+## Standardized Primitives
 
-const myFirstAtom = atom('myFirst', 'Hello, world!')
+React has always lacked a standard API for interfacing with plugin state. You can get pretty far with props and hooks of course, but every 3rd-party library does it differently.
 
-function MyComponent() {
-  const [state] = useAtomState(myFirstAtom)
+The Redux community introduced the Ducks pattern as an attempt to standardize this. It worked, but Redux's infamous boilerplate meant attaching a plugin's reducers and middleware was a little cumbersome.
 
-  return <div>A message from the universe: {state}</div>
-}
-```
+Zedux introduces not 1 but 3 standard APIs for interfacing with 3rd-party state:
+
+- Composable stores. Zedux apps have many stores. Any module can simply expose one. The store can be composed together or simply subscribed to. Expose actions to dispatch to it and you're good to go.
+
+- Injectors. These work exactly like React hooks, but inside atoms. An injector can use Zedux's built-in injectors to create stores and manage their state, side effects, memoization details, and more.
+
+- Atom templates. Any module can expose an atom template that can be used to create fully configured atoms. Sky is the limit here.
+
+These are all perfectly modular, composable, and autonomous. They're immediately usable and boilerplate-free - if you know Zedux, you know how to use all of these with one line of code.
 
 ## I Have Bundlephobia
 
-The production build of Zedux currently weighs in at 48kb minified, 14kb minified + gzipped - very similar to other libraries in the space like Redux Toolkit and React Query.
+The production build of Zedux currently weighs in at 44kb minified, 14kb minified + gzipped - very similar to other libraries in the space like Redux Toolkit and React Query.
 
 ## Next Steps
 
