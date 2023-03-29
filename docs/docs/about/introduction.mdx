@@ -46,9 +46,9 @@ Zero configuration and high-level APIs are standard across all features. 2 simpl
 
 ## Standardized Primitives
 
-React has always lacked a standard API for interfacing with plugin state. You can get pretty far with props and hooks of course, but every 3rd-party library does it differently.
+React has always lacked a standard API for interfacing with plugin state. You can get pretty far with props and hooks of course, at the cost of tightly coupling business logic to React components.
 
-The Redux community introduced the Ducks pattern as an attempt to standardize this. It worked, but Redux's infamous boilerplate meant attaching a plugin's reducers and middleware was a little cumbersome.
+The Redux community introduced the Ducks pattern as an attempt to standardize global state sharing. It worked, but Redux's infamous boilerplate meant attaching a plugin's reducers and middleware was a little cumbersome, especially when code splitting is involved.
 
 Zedux introduces not 1 but 3 standard APIs for interfacing with 3rd-party state:
 
@@ -58,7 +58,47 @@ Zedux introduces not 1 but 3 standard APIs for interfacing with 3rd-party state:
 
 - Atom templates. Any module can expose an atom template that can be used to create fully configured atoms. Sky is the limit here.
 
-These are all perfectly modular, composable, and autonomous. They're immediately usable and boilerplate-free - if you know Zedux, you know how to use all of these with one line of code.
+These are all perfectly modular, composable, and autonomous. They're immediately usable and boilerplate-free - if you know Zedux, you know how to use all of these with one line of code. They also "just work" with code splitting.
+
+## Do I Need Zedux?
+
+An honest recommendation first: If you're using a combination of React Query, Zustand, Recoil, Jotai, and/or XState, and you haven't encountered any shortcomings with your setup, you probably don't need Zedux.
+
+In particular, Zedux doesn't fully replace React Query. It may someday, but for now it's possible to dual-wield Zedux + React Query just like many people do with Zustand + React Query.
+
+Now, even with these amazing tools, Zedux might be able to make your setup even better.
+
+Zedux was designed specifically to manage highly volatile state in Omnistac's bond trading platform. If your app has extreme state management demands, especially involving sockets/RxJS, Zedux might be exactly what you're looking for.
+
+We accounted for many things with Zedux from the very beginning:
+
+- Minimal boilerplate (yes, even less than Redux Toolkit). Zero config. Plug and play.
+
+- Scalable performance.
+
+- Granular control over selector evaluation, memoization details, and component rerenders.
+
+- Total control over state Time To Live and destruction.
+
+- Full, easy control over side effects - especially good RxJS support.
+
+- Incrementally adoptable - we needed to dual-wield Redux and Zedux for a while before we finished migrating to Zedux.
+
+- Lazy-loading support - especially the ability to stream and cache data on-demand.
+
+- Conducive to micro frontend architectures (really, if your app uses code splitting, you may find Zedux is a joy to work with).
+
+- Testable. You can use Zedux completely outside React.
+
+- SSR-compatible.
+
+- Time travel debugging, including replayable actions and undo/redo.
+
+- Plugin compatible - there are many, many ways to extend Zedux's functionality from extending its classes to creating custom injectors to creating a full-fledged ecosystem [plugin](../advanced/plugins).
+
+Zedux was designed to handle everything. There should be absolutely no app requirements that Zedux can't handle well. If smaller state management tools seem incomplete to you, Zedux may be a perfect fit for you.
+
+Zedux's community is obviously very young (brand new!). There are no community plugins for it yet, but Zedux's [standardized primitives](#standardized-primitives) and extreme extensibility leave that door wide open. If you want to help shape the community and tools of a powerful state management system, or you've been wanting to get involved in OSS, Zedux is a ripe opportunity.
 
 ## I Have Bundlephobia
 
