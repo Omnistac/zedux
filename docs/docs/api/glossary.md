@@ -48,9 +48,11 @@ Like hooks, you can create custom injectors that compose other injectors. The co
 
 ### Pseudo Action
 
-An action created by Zedux to represent a state change. The key to time travel debugging is tracking all actions that modify state. But zero config stores typically use [`.setState()`](classes/Store#setstate) to update their state. Parent and child stores can also cause the state of a store to change.
+An action created by Zedux to represent a state change. The key to time travel debugging is tracking all actions that modify state. But zero config stores typically use [`.setState()`](classes/Store#setstate) to update their state. Parent and child stores can also change the state of their children/parent stores.
 
 Zedux translates all of these state updating operations into "pseudo-actions" - action objects with metadata containing all the info needed to reproduce the state change.
+
+These actions can be dispatched to the store to exactly mimic the original `.setState()`, `.setStateDeep()`, or `.dispatch()` call from this store's perspective - wherever it happened in the store tree.
 
 ### State Factory
 
