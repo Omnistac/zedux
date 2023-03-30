@@ -66,9 +66,7 @@ An honest recommendation first: If you're using a combination of React Query, Zu
 
 In particular, Zedux doesn't fully replace React Query. It may someday, but for now it's possible to dual-wield Zedux + React Query just like many people do with Zustand + React Query.
 
-Now, even with these amazing tools, Zedux might be able to make your setup even better.
-
-Zedux was designed specifically to manage highly volatile state in Omnistac's bond trading platform. If your app has extreme state management demands, especially involving sockets/RxJS, Zedux might be exactly what you're looking for.
+Humility aside, even with these amazing tools, Zedux might be able to make your setup even better.
 
 We accounted for many things with Zedux from the very beginning:
 
@@ -98,7 +96,13 @@ We accounted for many things with Zedux from the very beginning:
 
 Zedux was designed to handle everything. There should be absolutely no app requirements that Zedux can't handle well. If smaller state management tools seem incomplete to you, Zedux may be a perfect fit for you.
 
-Zedux's community is obviously very young (brand new!). There are no community plugins for it yet, but Zedux's [standardized primitives](#standardized-primitives) and extreme extensibility leave that door wide open. If you want to help shape the community and tools of a powerful state management system, or you've been wanting to get involved in OSS, Zedux is a ripe opportunity.
+If your app is very small and simple, a smaller state management library like Jotai and Zustand might be good enough for you. Zedux is also a great choice for small apps with one big bonus: Zedux is designed to scale very well. If your app gets bigger and more complex over time, Zedux will be able to elegantly manage all of those complexities as they come up.
+
+If you're using Redux and your selectors are causing performance problems or your decoupled side effects are getting hard to manage and synchronize, Zedux was designed for you. That's what we encountered at Omnistac and is the primary reason Zedux exists.
+
+Zedux was designed specifically to manage highly volatile state in Omnistac's bond trading platform. If your app has extreme state management demands, especially involving web sockets and RxJS, Zedux might be exactly what you're looking for.
+
+Zedux's community is obviously very young (brand new!). There are no community plugins for it yet, but Zedux's [standardized primitives](#standardized-primitives) and extreme extensibility leave that door wide open. If you've been wanting to get involved in OSS and/or you want to help shape the community and tools of a powerful state management system, Zedux is a ripe opportunity.
 
 ## I Have Bundlephobia
 
