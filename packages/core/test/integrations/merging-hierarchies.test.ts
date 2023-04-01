@@ -1,5 +1,5 @@
 import { createStore } from '@zedux/core/index'
-import { createMockReducer } from '@zedux/core-test/utils'
+import { createMockReducer } from '../utils'
 
 describe('merging hierarchies', () => {
   test('branch -> branch', () => {

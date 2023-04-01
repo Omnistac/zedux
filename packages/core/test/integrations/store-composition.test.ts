@@ -1,6 +1,5 @@
 import { createStore, internalTypes } from '@zedux/core/index'
-
-import { createMockReducer } from '@zedux/core-test/utils'
+import { createMockReducer } from '../utils'
 
 describe('store composition', () => {
   test('parent store state reflects changes to the child store', () => {

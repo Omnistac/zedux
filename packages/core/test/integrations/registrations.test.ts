@@ -1,5 +1,5 @@
 import { Action, ActionChain, createStore, internalTypes } from '@zedux/core'
-import { createMockReducer } from '@zedux/core-test/utils'
+import { createMockReducer } from '../utils'
 
 describe('registrations', () => {
   describe('subscriptions', () => {
