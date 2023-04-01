@@ -4,7 +4,7 @@ import {
   nonDispatchables,
   nonFunctions,
   createMockReducer,
-} from '@zedux/core-test/utils'
+} from '../utils'
 
 describe('Store.dispatch()', () => {
   test('throws a TypeError if the thing dispatched is not a plain object', () => {
@@ -231,24 +231,17 @@ describe('Store.setState()', () => {
     const setState = (state: any) => ({ a: state.a })
 
     expect(() => store.setState(setState)).toThrowError(
-      /cannot read propert.*of undefined/i
+      /encountered an error while running a state setter passed to store\.setState/i
     )
-  })
 
-  test('notifies effects subscriber of an error thrown in a setState function', () => {
-    const store = createStore()
-    const subscriber = jest.fn()
-    store.subscribe({ effects: subscriber })
-    const setState = (state: any) => ({ a: state.a })
-
+    expect(() => store.setStateDeep(setState)).toThrowError(
+      /encountered an error while running a state setter passed to store\.setStateDeep/i
+    )
+    ;(globalThis as any).DEV = false
     expect(() => store.setState(setState)).toThrowError(
       /cannot read propert.*of undefined/i
     )
-    expect(subscriber).toHaveBeenCalledWith(
-      expect.objectContaining({
-        error: expect.any(Error),
-      })
-    )
+    ;(globalThis as any).DEV = true
   })
 
   test('accepts a non-modifying setState function', () => {

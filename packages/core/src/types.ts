@@ -38,17 +38,14 @@ export type ActionFactory<
   type: Type
 }
 
-export type ActionFactoryPayloadType<
-  A extends ActionFactory
-> = A extends ActionFactory<infer T> ? T : never
+export type ActionFactoryPayloadType<A extends ActionFactory> =
+  A extends ActionFactory<infer T> ? T : never
 
-export type ActionFactoryActionType<
-  A extends ActionFactory
-> = A extends ActionFactory<infer P, infer T> ? { payload: P; type: T } : never
+export type ActionFactoryActionType<A extends ActionFactory> =
+  A extends ActionFactory<infer P, infer T> ? { payload: P; type: T } : never
 
-export type ActionFactoryTypeType<
-  A extends ActionFactory
-> = A extends ActionFactory<any, infer T> ? T : never
+export type ActionFactoryTypeType<A extends ActionFactory> =
+  A extends ActionFactory<any, infer T> ? T : never
 
 export interface ActionMeta<
   Payload = any,
@@ -86,7 +83,7 @@ export type Branch<T = any> = {
 
 export type Composable<T = any> = (arg: T) => T
 
-export type Dispatchable = ActionChain // Just an ActionChain for now. Could include thunks but probably won't happen.
+export type Dispatchable = ActionChain
 
 export type Dispatcher<State = any> = (dispatchable: Dispatchable) => State
 
@@ -94,7 +91,7 @@ export interface StoreEffect<
   State = any,
   S extends Store<State> = Store<State>
 > {
-  action?: ActionChain
+  action: ActionChain
   error?: unknown
   newState: State
   oldState?: State
@@ -152,23 +149,17 @@ export type MachineHook<
   >
 ) => void
 
-export type MachineStoreContextType<
-  M extends MachineStore
-> = M extends MachineStore<any, any, infer C> ? C : never
+export type MachineStoreContextType<M extends MachineStore> =
+  M extends MachineStore<any, any, infer C> ? C : never
 
-export type MachineStoreEventNamesType<
-  M extends MachineStore
-> = M extends MachineStore<any, infer E, any> ? E : never
+export type MachineStoreEventNamesType<M extends MachineStore> =
+  M extends MachineStore<any, infer E, any> ? E : never
 
-export type MachineStoreStateType<
-  M extends MachineStore
-> = M extends MachineStore<infer S, any, infer C>
-  ? MachineStateType<S, C>
-  : never
+export type MachineStoreStateType<M extends MachineStore> =
+  M extends MachineStore<infer S, any, infer C> ? MachineStateType<S, C> : never
 
-export type MachineStoreStateNamesType<
-  M extends MachineStore
-> = M extends MachineStore<infer S, any, any> ? S : never
+export type MachineStoreStateNamesType<M extends MachineStore> =
+  M extends MachineStore<infer S, any, any> ? S : never
 
 export type NextSubscriber<State = any> = (
   newState: State,

@@ -1,8 +1,13 @@
 import { internalTypes } from '../api/constants'
 import { Store } from '../api/createStore'
 import { is } from '../api/is'
-import { addMeta } from '../api/meta'
-import { Action, Branch, HierarchyDescriptor, Reducer } from '../types'
+import {
+  Action,
+  ActionMeta,
+  Branch,
+  HierarchyDescriptor,
+  Reducer,
+} from '../types'
 import {
   BranchNodeType,
   detailedTypeof,
@@ -156,7 +161,10 @@ export function wrapStoreInReducer<State>(store: Store<State>) {
     }
 
     // Tell the child store's effect subscribers that this action is inherited
-    const inheritedAction = addMeta(action, internalTypes.inherit)
+    const inheritedAction: ActionMeta = {
+      metaType: internalTypes.inherit,
+      payload: action,
+    }
 
     return store.dispatch(inheritedAction)
   }

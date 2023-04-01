@@ -11,7 +11,7 @@ An object that describes a state change in a [store](../classes/Store). Zedux cr
 
 ```ts
 interface StoreEffect<State = any, S extends Store<State> = Store<State>> {
-  action?: ActionChain
+  action: ActionChain
   error?: unknown
   newState: State
   oldState?: State
@@ -24,7 +24,7 @@ interface StoreEffect<State = any, S extends Store<State> = Store<State>> {
     <p>
       A reference to the <Link to="Action">action</Link> (or{' '}
       <Link to="ActionChain">ActionChain</Link>) object that triggered the state
-      change.
+      change or that caused the error.
     </p>
     <p>
       Every state update in Zedux is triggered by an action. Even{' '}
@@ -36,8 +36,14 @@ interface StoreEffect<State = any, S extends Store<State> = Store<State>> {
   </Item>
   <Item name="error">
     <p>
-      If the dispatch or setState call errored, this will be a reference to the
-      error that was thrown.
+      If the dispatch call errored, this will be a reference to the error that
+      was thrown.
+    </p>
+    <p>
+      This only applies to errors thrown in reducers due to a call to{' '}
+      <code>store.dispatch()</code>. If a function passed to{' '}
+      <code>store.setState()</code> and similar methods throws an error, that
+      error will be thrown back to the caller and subscribers won't be notified.
     </p>
   </Item>
   <Item name="newState">

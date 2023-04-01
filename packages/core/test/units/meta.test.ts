@@ -1,11 +1,5 @@
 import { ActionMeta } from '@zedux/core/types'
-import {
-  addMeta,
-  getMetaData,
-  hasMeta,
-  removeAllMeta,
-  removeMeta,
-} from '@zedux/core/api/meta'
+import { getMetaData, removeAllMeta, removeMeta } from '@zedux/core/api/meta'
 
 const plainAction = {
   type: 'a',
@@ -56,33 +50,6 @@ const repeated = {
   },
 }
 
-describe('addMeta()', () => {
-  test('adds a meta node at the beginning of the action chain', () => {
-    const twoLayers = addMeta(oneLayer, 'c')
-
-    expect(oneLayer.metaType).toBe('a')
-    expect(twoLayers.metaType).toBe('c')
-    expect(twoLayers.payload).toBe(oneLayer)
-  })
-
-  test('creates the action chain on a plain action', () => {
-    const wrappedAction = addMeta(plainAction, 'a')
-
-    expect(wrappedAction.metaType).toBe('a')
-    expect(wrappedAction.payload).toBe(plainAction)
-  })
-
-  test('adds a metaData property to the new meta node if a payload is passed', () => {
-    const twoLayers = addMeta(oneLayer, 'c', 1)
-    const fourLayers = addMeta(threeLayers, 'e')
-
-    expect(twoLayers.metaType).toBe('c')
-    expect((twoLayers.payload as ActionMeta).metaType).toBe('a')
-    expect(twoLayers.metaData).toBe(1)
-    expect(fourLayers.metaType).toBe('e')
-  })
-})
-
 describe('getMetaData()', () => {
   test('throws an error if given an invalid ActionChain', () => {
     expect(() =>
@@ -101,27 +68,6 @@ describe('getMetaData()', () => {
     expect(getMetaData(plainAction, 'a')).not.toBeDefined()
     expect(getMetaData(oneLayer, 'b')).not.toBeDefined()
     expect(getMetaData(threeLayers, 'e')).not.toBeDefined()
-  })
-})
-
-describe('hasMeta()', () => {
-  test('does not find a non-existent action wrapper', () => {
-    expect(hasMeta(plainAction, 'a')).toBe(false)
-    expect(hasMeta(oneLayer, 'b')).toBe(false)
-    expect(hasMeta(threeLayers, 'e')).toBe(false)
-  })
-
-  test('finds a node at the top of the action chain', () => {
-    expect(hasMeta(oneLayer, 'a')).toBe(true)
-    expect(hasMeta(threeLayers, 'a')).toBe(true)
-  })
-
-  test('finds a node in the middle of the action chain', () => {
-    expect(hasMeta(threeLayers, 'b')).toBe(true)
-  })
-
-  test('finds a node at the end of the action chain', () => {
-    expect(hasMeta(threeLayers, 'c')).toBe(true)
   })
 })
 

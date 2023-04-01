@@ -1,17 +1,15 @@
-import { detailedTypeof, noop } from '../utils/general'
+import { detailedTypeof } from '../utils/general'
 import { Action, ActionChain, ActionMeta } from '../types'
 
-const assertActionExists = DEV
-  ? (action: ActionChain) => {
-      if (action) return
+const assertActionExists = (action: ActionChain) => {
+  if (action) return
 
-      throw new Error(
-        `Zedux: Invalid action chain. The last node in the chain must be either a valid action object with a non-empty "type" property or an effect with a non-empty "effectType" property. Received ${detailedTypeof(
-          action
-        )}`
-      )
-    }
-  : noop
+  throw new Error(
+    `Zedux: Invalid action chain. The last node in the chain must be either a valid action object with a non-empty "type" property or an effect with a non-empty "effectType" property. Received ${detailedTypeof(
+      action
+    )}`
+  )
+}
 
 const getNewRoot = <T extends ActionChain>(
   currentNode: T,
@@ -29,20 +27,6 @@ const getNewRoot = <T extends ActionChain>(
 }
 
 /**
- * Adds a meta node of the given metaType and with the given metaData at the
- * beginning of an ActionChain
- */
-export const addMeta = (
-  action: ActionChain,
-  metaType: string,
-  metaData?: any
-): ActionMeta => ({
-  metaType,
-  metaData,
-  payload: action,
-})
-
-/**
  * Returns the value of the metaData field of the first ActionMeta object in the
  * chain with the given metaType.
  */
@@ -58,24 +42,6 @@ export const getMetaData = (action: ActionChain, metaType: string) => {
       assertActionExists(action)
     }
   }
-}
-
-/**
- * Returns true if the given ActionChain contains an ActionMeta node with the
- * given metaType.
- */
-export const hasMeta = (action: ActionChain, metaType: string) => {
-  while ((action as ActionMeta).metaType) {
-    if ((action as ActionMeta).metaType === metaType) return true
-
-    action = action.payload
-
-    if (DEV) {
-      assertActionExists(action)
-    }
-  }
-
-  return false
 }
 
 /**
