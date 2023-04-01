@@ -1,4 +1,4 @@
-import { MachineHook, MachineStore } from '@zedux/core'
+import { internalTypes, MachineHook, MachineStore } from '@zedux/core'
 import { MachineStateType } from '@zedux/core/utils/types'
 import { createInjector } from '../factories'
 import { InjectStoreConfig, PartialAtomInstance } from '../types'
@@ -270,6 +270,7 @@ export const injectMachineStore: <
     if (enterHooks[currentState.value]) {
       enterHooks[currentState.value].forEach(callback =>
         callback(store, {
+          action: { type: internalTypes.prime },
           newState: currentState,
           store,
         })

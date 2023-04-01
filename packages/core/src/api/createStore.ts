@@ -26,7 +26,7 @@ import {
 import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
 import { HierarchyNode } from '../utils/types'
 import { internalTypes } from './constants'
-import { addMeta, removeAllMeta } from './meta'
+import { removeAllMeta } from './meta'
 
 // When an action is dispatched to a parent store and delegated to a child
 // store, the child store needs to wait until the update propagates everywhere
@@ -77,7 +77,7 @@ export class Store<State = any> {
    * atom evaluation to the ecosystem.
    */
   static _scheduler?: Scheduler
-  private _currentState: State
+  private _state: State
   private _isDispatching?: boolean
   private _parents?: EffectsSubscriber[]
   private _rootReducer?: Reducer<State>
@@ -89,7 +89,7 @@ export class Store<State = any> {
     initialHierarchy?: HierarchyDescriptor<State>,
     initialState?: State
   ) {
-    this._currentState = initialState as State
+    this._state = initialState as State
     this._scheduler = Store._scheduler || defaultScheduler
 
     if (initialHierarchy) this.use(initialHierarchy)
@@ -144,7 +144,7 @@ export class Store<State = any> {
       type: 0, // UpdateStore (0)
     })
 
-    return this._currentState
+    return this._state
   }
 
   /**
@@ -157,7 +157,7 @@ export class Store<State = any> {
       throw new Error('Zedux: store.getState() cannot be called in a reducer')
     }
 
-    return this._currentState
+    return this._state
   }
 
   /**
@@ -190,7 +190,7 @@ export class Store<State = any> {
       type: 0, // UpdateStore (0)
     })
 
-    return this._currentState
+    return this._state
   }
 
   /**
@@ -199,16 +199,16 @@ export class Store<State = any> {
     Accepts either a deep partial state object or a function that accepts the
     current state and returns a deep partial state object.
 
-    Dispatches the special `merge` action to the store's reducers.
-    Effects subscribers can inspect and record this action to implement time
-    travel.
+    This method only recursively traverses normal JS objects. If your store
+    deeply nests any other data structure, including arrays or maps, you'll have
+    to deeply merge them yourself using `store.setState()`.
 
-    The `merge` action's `payload` property will be set to the partial
-    state update.
+    Dispatches the special `merge` action to the store's reducers. This action's
+    `payload` property will be set to the resolved partial state update. Effects
+    subscribers can record this action to implement time travel.
 
-    Note that deep setting cannot remove properties from the state tree. If that
-    functionality is needed, use store.setState() or create a new reducer
-    hierarchy and pass it to store.use().
+    IMPORTANT: Deep setting cannot remove properties from the state tree. Use
+    `store.setState()` for that.
 
     Throws an error if called from the reducer layer.
 
@@ -231,7 +231,7 @@ export class Store<State = any> {
       type: 0, // UpdateStore (0)
     })
 
-    return this._currentState
+    return this._state
   }
 
   /**
@@ -312,7 +312,7 @@ export class Store<State = any> {
     this._rootReducer = this._tree.reducer
 
     if (this._rootReducer) {
-      this._dispatchAction(primeAction, primeAction, this._currentState)
+      this._dispatchAction(primeAction, primeAction, this._state)
     }
 
     return this // for chaining
@@ -360,7 +360,7 @@ export class Store<State = any> {
     if (delegateResult !== false) {
       // No need to inform subscribers - this store's effects subscriber
       // on the child store will have already done that by this point
-      return this._currentState
+      return this._state
     }
 
     return this._routeAction(action)
@@ -393,22 +393,12 @@ export class Store<State = any> {
     } finally {
       this._isDispatching = false
 
-      this._informSubscribers(newState, action, error)
+      this._notify(newState, action, error)
     }
 
     return newState
   }
 
-  /**
-    "Hydrates" the store with the given state.
-
-    Dispatches the special `hydrate` action to the store's inspectors
-    and reducers. The `hydrate` action's `payload` property will be
-    set to the new store state, allowing inspectors to pick up on
-    the changes and implement time travel and whatnot.
-
-    Throws an Error if called from the reducer layer.
-  */
   private _dispatchHydration<State = any>(
     state: RecursivePartial<State>,
     actionType: string,
@@ -418,14 +408,14 @@ export class Store<State = any> {
       actionType === internalTypes.hydrate
         ? state
         : mergeStateTrees(
-            this._currentState,
+            this._state,
             state,
             (this.constructor as typeof Store).hierarchyConfig
           )[0]
 
-    if (newState === this._currentState) {
+    if (newState === this._state) {
       // Nothing to do. TODO: Should this inform effects subscribers?
-      return this._currentState
+      return this._state
     }
 
     const action: Action = {
@@ -435,11 +425,7 @@ export class Store<State = any> {
 
     if (meta != null) action.meta = meta
 
-    // Maybe we can provide a utility for setting a description for the
-    // hydration. Then wrap the action in an ActionMeta with that description
-    // as the metaData.
-
-    // Propagate the change to child stores and allow for effects.
+    // Propagate the change to child stores
     return this._dispatchAction(action, action, newState)
   }
 
@@ -451,13 +437,16 @@ export class Store<State = any> {
     let newState
 
     try {
-      newState = getState(this._currentState)
+      newState = getState(this._state)
     } catch (error) {
-      this._informSubscribers(
-        this._currentState,
-        { type: internalTypes.merge },
-        error
-      )
+      if (DEV) {
+        throw new (Error as any)(
+          `Zedux: encountered an error while running a state setter passed to store.setState${
+            deep ? 'Deep' : ''
+          }()`,
+          { cause: error }
+        )
+      }
 
       throw error
     }
@@ -469,7 +458,7 @@ export class Store<State = any> {
     )
   }
 
-  private _finishInforming(effect: StoreEffect<State, this>) {
+  private _doNotify(effect: StoreEffect<State, this>) {
     // Clone the subscribers in case of mutation mid-iteration
     const subscribers = [...this._subscribers]
 
@@ -490,25 +479,21 @@ export class Store<State = any> {
     }
   }
 
-  private _informSubscribers(
-    newState: State,
-    action?: ActionChain,
-    error?: unknown
-  ) {
+  private _notify(newState: State, action: ActionChain, error?: unknown) {
     const effect: StoreEffect<State, this> = {
       action,
       error,
       newState,
-      oldState: this._currentState,
+      oldState: this._state,
       store: this,
     }
 
     // Update the stored state
-    this._currentState = newState
+    this._state = newState
 
     // defer informing if a parent store is currently dispatching
     this._scheduler.scheduleNow({
-      task: () => this._finishInforming(effect),
+      task: () => this._doNotify(effect),
       type: 1, // InformSubscribers (1)
     })
 
@@ -525,29 +510,31 @@ export class Store<State = any> {
       newState,
       oldState,
     }) => {
-      // If this store's reducer layer dispatched this action to this
-      // substore in the first place, ignore the propagation; this store
-      // will receive it anyway.
-      // const isInherited = hasMeta(action, internalTypes.inherit)
+      // If this store's reducer layer dispatched this action to this substore
+      // in the first place, ignore the propagation; this store is already going
+      // to notify its own subscribers of it.
       if (this._isDispatching) return
 
       const newOwnState =
         newState === oldState
-          ? this._currentState
+          ? this._state
           : propagateChange(
-              this._currentState,
+              this._state,
               childStorePath,
               newState,
               (this.constructor as typeof Store).hierarchyConfig
             )
 
-      // Tell the subscribers what child store this action came from.
-      // This store (the parent) can use this info to determine how to
-      // recreate this state update.
-      const wrappedAction =
-        action && addMeta(action, internalTypes.delegate, childStorePath)
+      // Tell the subscribers what child store this action came from. This store
+      // (the parent) can use this info to determine how to recreate this state
+      // update.
+      const wrappedAction = {
+        metaType: internalTypes.delegate,
+        metaData: childStorePath,
+        payload: action,
+      }
 
-      this._informSubscribers(newOwnState, wrappedAction, error)
+      this._notify(newOwnState, wrappedAction, error)
     }
 
     return childStore._register(effectsSubscriber)
@@ -575,7 +562,7 @@ export class Store<State = any> {
       )
     }
 
-    return this._dispatchAction(action, unwrappedAction, this._currentState)
+    return this._dispatchAction(action, unwrappedAction, this._state)
   }
 
   private _setState(

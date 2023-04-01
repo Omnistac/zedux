@@ -70,5 +70,3 @@ export function isPlainObject(value: any) {
   // If the prototype chain is exactly 1 layer deep, it's likely a normal object
   return Object.getPrototypeOf(prototype) === null
 }
-
-export const noop = () => {}
