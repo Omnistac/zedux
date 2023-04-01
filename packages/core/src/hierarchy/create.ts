@@ -50,7 +50,7 @@ function branchToHierarchyChildren(
 
 /**
  * Turns a non-branch node from a user-supplied hierarchy descriptor into a
-  HierarchyNode object
+ * HierarchyNode object
  */
 function nonBranchToHierarchyNode(
   type: HierarchyNodeType,
@@ -89,7 +89,7 @@ export function getHierarchyType(descriptor: HierarchyDescriptor) {
 
   if (DEV && descriptor != null) {
     throw new TypeError(
-      `Zedux: store.use() - Hierarchy descriptor nodes must be reducers, stores, or plain objects. Received ${detailedTypeof(
+      `Zedux: store.use() - Hierarchy descriptor nodes must be reducers, stores, plain objects, or null. Received ${detailedTypeof(
         descriptor
       )}`
     )

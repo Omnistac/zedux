@@ -6,7 +6,7 @@ export const api: {
   // Custom Stores
   <
     StoreType extends Store<any> = Store<any>,
-    Exports extends Record<string, any> = Record<string, any>,
+    Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
     value:
@@ -18,14 +18,14 @@ export const api: {
   // No Value
   <
     State = undefined,
-    Exports extends Record<string, any> = Record<string, any>,
+    Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(): AtomApi<State, Exports, undefined, PromiseType>
 
   // No Store
   <
     State = undefined,
-    Exports extends Record<string, any> = Record<string, any>,
+    Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
     value: State | AtomApi<State, Exports, undefined, PromiseType>,
@@ -35,7 +35,7 @@ export const api: {
   // Catch-all
   <
     State = undefined,
-    Exports extends Record<string, any> = Record<string, any>,
+    Exports extends Record<string, any> = Record<string, never>,
     StoreType extends Store<State> = Store<State>,
     PromiseType extends AtomApiPromise = undefined
   >(
@@ -44,7 +44,7 @@ export const api: {
   ): AtomApi<State, Exports, StoreType, PromiseType>
 } = <
   State = undefined,
-  Exports extends Record<string, any> = Record<string, any>,
+  Exports extends Record<string, any> = Record<string, never>,
   StoreType extends Store<State> | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(

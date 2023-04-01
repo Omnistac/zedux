@@ -11,43 +11,46 @@ import { BranchNode, Hierarchy, HierarchyNode } from '../utils/types'
  * and set properties on that data type, to determine if the old state is a
  * node, and to find the size of the node.
  */
-const createBranchReducer = (
-  children: Hierarchy,
-  { create, get, isNode, set, size }: HierarchyConfig
-): Reducer => (oldState = create(), action: Action) => {
-  // Make a new node to keep track of the values returned by
-  // the child reducers.
-  let newState = create()
-  let hasChanges = false
+const createBranchReducer =
+  (
+    children: Hierarchy,
+    { create, get, isNode, set, size }: HierarchyConfig
+  ): Reducer =>
+  (oldState = create(), action: Action) => {
+    // Make a new node to keep track of the values returned by
+    // the child reducers.
+    let newState = create()
+    let hasChanges = false
 
-  // Iterate over the child reducers, passing them their state slice
-  // and the action and recording their results.
-  Object.keys(children).forEach(key => {
-    const { reducer } = children[key] as { reducer: Reducer } // we've ensured reducer exists at this point
+    // Iterate over the child reducers, passing them their state slice
+    // and the action and recording their results.
+    Object.keys(children).forEach(key => {
+      const { reducer } = children[key] as { reducer: Reducer } // we've ensured reducer exists at this point
 
-    // Grab the old state slice
-    const oldStatePiece = isNode(oldState) ? get(oldState, key) : undefined // yes, explicitly set it to undefined
+      // Grab the old state slice
+      const oldStatePiece = isNode(oldState) ? get(oldState, key) : undefined // yes, explicitly set it to undefined
 
-    // Calculate the new value
-    const newStatePiece = reducer(oldStatePiece, action)
+      // Calculate the new value
+      const newStatePiece = reducer(oldStatePiece, action)
 
-    // Record the result
-    newState = set(newState, key, newStatePiece)
+      // Record the result
+      newState = set(newState, key, newStatePiece)
 
-    // Check for changes
-    hasChanges || (hasChanges = newStatePiece !== oldStatePiece)
-  })
+      // Check for changes
+      hasChanges || (hasChanges = newStatePiece !== oldStatePiece)
+    })
 
-  // Handle the case where `children` did not used to be an empty node. This
-  // means there were changes, but our change detection failed since we didn't
-  // actually iterate over anything.
-  hasChanges ||
-    (hasChanges =
-      !isNode(oldState) || (!Object.keys(children).length && !!size(oldState)))
+    // Handle the case where `children` did not used to be an empty node. This
+    // means there were changes, but our change detection failed since we didn't
+    // actually iterate over anything.
+    hasChanges ||
+      (hasChanges =
+        !isNode(oldState) ||
+        (!Object.keys(children).length && !!size(oldState)))
 
-  // If nothing changed, discard the accumulated newState
-  return hasChanges ? newState : oldState
-}
+    // If nothing changed, discard the accumulated newState
+    return hasChanges ? newState : oldState
+  }
 
 /**
  * Recursively destroys a tree, preventing memory leaks.
@@ -55,7 +58,7 @@ const createBranchReducer = (
  * Currently STORE is the only node type affected by this; stores need to
  * unsubscribe() from their child stores.
  */
-export function destroyTree(tree?: HierarchyNode) {
+function destroyTree(tree?: HierarchyNode) {
   if (!tree) return
 
   const { children, destroy } = tree as BranchNode
@@ -72,7 +75,7 @@ export function destroyTree(tree?: HierarchyNode) {
  *
  * Really should only be used from `mergeHierarchies()`
  */
-export function mergeBranches(
+function mergeBranches(
   oldTree: HierarchyNode,
   newTree: BranchNode,
   hierarchyConfig: HierarchyConfig

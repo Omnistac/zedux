@@ -4,10 +4,10 @@ import { runInNewContext } from 'vm'
 export const createMockReducer = (state: any) => jest.fn(() => state)
 
 export const createMockStore = () =>
-  (({
+  ({
     dispatch: jest.fn(),
     $$typeof: Symbol.for('zedux.store'),
-  } as unknown) as Store)
+  } as unknown as Store)
 
 export const dispatchables = [
   { type: 'a' },
@@ -79,3 +79,15 @@ export const plainObjects = [
   Object.create(Object.prototype),
   runInNewContext('placeholder = {}'),
 ]
+
+/**
+ * Runs the passed callback twice - with dev mode disabled and enabled. Pass
+ * `true` as the second param to only run the callback in prod mode.
+ */
+export const toggleDevMode = (callback: () => void, prodOnly?: boolean) => {
+  ;(globalThis as any).DEV = false
+  callback()
+  ;(globalThis as any).DEV = true
+
+  if (!prodOnly) callback()
+}
