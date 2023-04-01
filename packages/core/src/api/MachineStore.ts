@@ -1,5 +1,4 @@
-import { RecursivePartial, Settable } from '../types'
-import { MachineStateType } from '../utils/types'
+import { MachineStateShape, RecursivePartial, Settable } from '../types'
 import { Store } from './createStore'
 
 /**
@@ -11,7 +10,7 @@ export class MachineStore<
   StateNames extends string = string,
   EventNames extends string = string,
   Context extends Record<string, any> | undefined = undefined
-> extends Store<MachineStateType<StateNames, Context>> {
+> extends Store<MachineStateShape<StateNames, Context>> {
   constructor(
     initialState: StateNames,
     public readonly states: Record<
@@ -23,7 +22,7 @@ export class MachineStore<
     >,
     initialContext?: Context,
     private readonly guard?: (
-      currentState: MachineStateType<StateNames, Context>,
+      currentState: MachineStateShape<StateNames, Context>,
       nextValue: StateNames
     ) => boolean
   ) {

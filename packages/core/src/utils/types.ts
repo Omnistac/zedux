@@ -30,14 +30,6 @@ export interface Hierarchy {
   [key: string]: HierarchyNode
 }
 
-export interface MachineStateType<
-  StateNames extends string = string,
-  Context extends Record<string, any> | undefined = undefined
-> {
-  value: StateNames
-  context: Context
-}
-
 export interface NullNode extends HierarchyNodeBase {
   reducer?: undefined
   type: NullNodeType

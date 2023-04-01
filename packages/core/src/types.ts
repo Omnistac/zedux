@@ -1,6 +1,5 @@
 import { Store } from './api/createStore'
 import { MachineStore } from './api/MachineStore'
-import { MachineStateType } from './utils/types'
 
 // Same workaround rxjs uses for Symbol.observable:
 declare global {
@@ -144,10 +143,18 @@ export type MachineHook<
 > = (
   store: MachineStore<StateNames, EventNames, Context>,
   storeEffect: StoreEffect<
-    MachineStateType<StateNames, Context>,
+    MachineStateShape<StateNames, Context>,
     MachineStore<StateNames, EventNames, Context>
   >
 ) => void
+
+export interface MachineStateShape<
+  StateNames extends string = string,
+  Context extends Record<string, any> | undefined = undefined
+> {
+  value: StateNames
+  context: Context
+}
 
 export type MachineStoreContextType<M extends MachineStore> =
   M extends MachineStore<any, any, infer C> ? C : never
@@ -156,7 +163,9 @@ export type MachineStoreEventNamesType<M extends MachineStore> =
   M extends MachineStore<any, infer E, any> ? E : never
 
 export type MachineStoreStateType<M extends MachineStore> =
-  M extends MachineStore<infer S, any, infer C> ? MachineStateType<S, C> : never
+  M extends MachineStore<infer S, any, infer C>
+    ? MachineStateShape<S, C>
+    : never
 
 export type MachineStoreStateNamesType<M extends MachineStore> =
   M extends MachineStore<infer S, any, any> ? S : never

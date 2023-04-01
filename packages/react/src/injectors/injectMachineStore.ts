@@ -1,5 +1,9 @@
-import { internalTypes, MachineHook, MachineStore } from '@zedux/core'
-import { MachineStateType } from '@zedux/core/utils/types'
+import {
+  internalTypes,
+  MachineHook,
+  MachineStateShape,
+  MachineStore,
+} from '@zedux/core'
 import { createInjector } from '../factories'
 import { InjectStoreConfig, PartialAtomInstance } from '../types'
 import { InjectorDescriptor, prefix } from '../utils'
@@ -21,7 +25,7 @@ export type InjectMachineStoreParams<
   initialContext?: Context,
   config?: {
     guard?: (
-      currentState: MachineStateType<MapStatesToStateNames<States>, Context>,
+      currentState: MachineStateShape<MapStatesToStateNames<States>, Context>,
       nextValue: MapStatesToStateNames<States>
     ) => boolean
     onTransition?: MachineHook<
