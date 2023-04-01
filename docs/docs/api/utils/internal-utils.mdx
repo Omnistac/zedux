@@ -7,13 +7,13 @@ title: Internal Utils
 import { getEcosystem, getInternals, setInternals, wipe } from '@zedux/react'
 ```
 
-Zedux holds some internal (global, module-level) state. This state includes an internal store and an evaluation stack that needs to be global for injectors to work. Zedux exports a few utility functions for working with it. You should almost never use these in a real app. They're mostly for testing and odd situations like supporting multiple windows.
+Zedux holds some internal (global, module-level) state. This state includes an internal store and an evaluation stack that needs to be global for injectors to work. Zedux exports a few utility functions for working with it. You should almost never use these in a real app. They're mostly for testing, dev tooling, and odd situations like supporting multiple windows.
 
 ## Store
 
 The internal store's state is an object mapping ecosystem ids to ecosystems. When an ecosystem is destroyed, it's removed from this store.
 
-Ecosystems are mutable objects with functions and circular references. This is by design - for performance and efficiency. But it means you can't use this global store to track state changes like in a normal, immutable flow.
+Ecosystems are mutable objects with functions and circular references. This is by design - for performance and efficiency. But it means you can't use this global store to track ecosystem state changes like in a normal, immutable flow.
 
 Plugins can subscribe to this store to see when ecosystems are created and destroyed. You can also use this to inspect the internal state of Zedux. Readonly!
 

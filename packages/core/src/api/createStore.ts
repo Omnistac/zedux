@@ -419,11 +419,10 @@ export class Store<State = any> {
     }
 
     const action: Action = {
+      meta,
       payload: newState,
       type: actionType,
     }
-
-    if (meta != null) action.meta = meta
 
     // Propagate the change to child stores
     return this._dispatchAction(action, action, newState)

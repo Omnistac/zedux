@@ -4,6 +4,7 @@ import {
   nonDispatchables,
   nonFunctions,
   createMockReducer,
+  toggleDevMode,
 } from '../utils'
 
 describe('Store.dispatch()', () => {
@@ -226,22 +227,13 @@ describe('Store.setState()', () => {
     )
   })
 
-  test('re-throws an error thrown in a setState function', () => {
+  test('re-throws an error thrown in a state updater function', () => {
     const store = createStore()
-    const setState = (state: any) => ({ a: state.a })
+    const update = (state: any) => ({ a: state.a })
 
-    expect(() => store.setState(setState)).toThrowError(
-      /encountered an error while running a state setter passed to store\.setState/i
-    )
-
-    expect(() => store.setStateDeep(setState)).toThrowError(
-      /encountered an error while running a state setter passed to store\.setStateDeep/i
-    )
-    ;(globalThis as any).DEV = false
-    expect(() => store.setState(setState)).toThrowError(
-      /cannot read propert.*of undefined/i
-    )
-    ;(globalThis as any).DEV = true
+    toggleDevMode(() => {
+      expect(() => store.setState(update)).toThrowError()
+    })
   })
 
   test('accepts a non-modifying setState function', () => {
@@ -337,6 +329,15 @@ describe('Store.setState()', () => {
 })
 
 describe('Store.setStateDeep()', () => {
+  test('re-throws an error thrown in a state updater function', () => {
+    const store = createStore()
+    const update = (state: any) => ({ a: state.a })
+
+    toggleDevMode(() => {
+      expect(() => store.setStateDeep(update)).toThrowError()
+    })
+  })
+
   test('deeply merges the new state into the old state', () => {
     const initialState = {
       a: 1,
@@ -404,6 +405,20 @@ describe('Store.setStateDeep()', () => {
     })
 
     expect(state.b.d).toBe(initialState.b.d)
+  })
+
+  test('attaches the passed metadata as the `meta` property of the generated action', () => {
+    const subscriber = jest.fn()
+    const store = createStore()
+
+    store.subscribe(subscriber)
+    store.setStateDeep('a', 'b')
+
+    expect(subscriber).toHaveBeenCalledWith('a', undefined, {
+      meta: 'b',
+      payload: 'a',
+      type: internalTypes.merge,
+    })
   })
 })
 

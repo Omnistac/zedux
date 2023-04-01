@@ -45,7 +45,7 @@ export class MachineStore<
 
       if (
         !nextValue ||
-        (nextValue?.guard && !nextValue.guard(currentState.context)) ||
+        (nextValue.guard && !nextValue.guard(currentState.context)) ||
         (this.guard && !this.guard(currentState, nextValue.name))
       ) {
         return currentState

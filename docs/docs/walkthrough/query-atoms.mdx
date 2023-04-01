@@ -3,7 +3,7 @@ id: query-atoms
 title: Query Atoms
 ---
 
-The [Atom APIs](atom-apis) and [Suspense](suspense) walkthroughs taught how to set an atom instance's promise. But promises themselves innately carry state. For example:
+The [Atom APIs](atom-apis) and [Suspense](suspense) walkthroughs taught how to set an atom instance's promise. But promises themselves innately carry state like:
 
 - Is the promise resolved?
 - What's the resolved value?
@@ -142,9 +142,10 @@ But we still have the first problem of the side effect running immediately. A se
 
 ```ts
 const fetcherAtom = atom('fetcher', (url: string) => {
-  const queryApi = injectPromise(() => fetch(url).then(data => data.json()), [
-    url,
-  ])
+  const queryApi = injectPromise(
+    () => fetch(url).then(data => data.json()),
+    [url]
+  )
 
   return queryApi
 })

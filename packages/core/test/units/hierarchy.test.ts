@@ -17,6 +17,7 @@ import {
   nonPlainObjects,
   nullNodes,
   plainObjects,
+  toggleDevMode,
 } from '../utils'
 
 describe('delegate()', () => {
@@ -55,15 +56,29 @@ describe('delegate()', () => {
 
   test('throws an error if the node path does not exist in the hierarchy', () => {
     // @ts-expect-error {} isn't a valid node
-    expect(delegate.bind(null, {}, action1)).toThrowError()
+    expect(() => delegate({}, action1)).toThrowError()
 
-    expect(
-      // @ts-expect-error {} isn't a valid node
-      delegate.bind(
-        null,
+    expect(() =>
+      delegate(
         {
           children: {
+            // @ts-expect-error {} isn't a valid node
             a: {
+              children: {},
+            },
+          },
+        },
+        action3
+      )
+    ).toThrowError()
+
+    expect(() =>
+      delegate(
+        {
+          type: 1,
+          children: {
+            a: {
+              type: 1,
               children: {},
             },
           },
@@ -74,35 +89,38 @@ describe('delegate()', () => {
   })
 
   test('throws an error if the node at the given path is not a store node', () => {
-    expect(
-      // @ts-expect-error {} isn't a valid node
-      delegate.bind(
-        null,
-        {
-          children: {
-            a: {},
-          },
-        },
-        action1
-      )
-    ).toThrowError()
-
-    expect(
-      // @ts-expect-error {} isn't a valid node
-      delegate.bind(
-        null,
-        {
-          children: {
-            a: {
-              children: {
-                b: {},
+    toggleDevMode(() => {
+      expect(() =>
+        delegate(
+          {
+            type: 1,
+            children: {
+              a: {
+                reducer: () => {},
+                type: 3,
               },
             },
           },
-        },
-        action2
-      )
-    ).toThrowError()
+          action1
+        )
+      ).toThrowError()
+
+      expect(() =>
+        delegate(
+          {
+            children: {
+              a: {
+                children: {
+                  // @ts-expect-error {} isn't a valid node
+                  b: {},
+                },
+              },
+            },
+          },
+          action2
+        )
+      ).toThrowError()
+    })
   })
 
   test('delegates the one-delegate-layer-unwrapped action to the store at the given node', () => {

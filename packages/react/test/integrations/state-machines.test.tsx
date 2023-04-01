@@ -18,8 +18,6 @@ const injectMachine = <
 ) => {
   const store = injectMachineStore(...args)
   return api(store)
-    .setExports(store)
-    .addExports({ getState: () => store.getState() })
 }
 
 describe('state machines', () => {
@@ -32,7 +30,7 @@ describe('state machines', () => {
     )
 
     const instance = ecosystem.getInstance(toggleAtom)
-    const { getValue, is, send } = instance.exports
+    const { getValue, is, send } = instance.store
 
     expect(instance.getState()).toEqual({ context: undefined, value: 'a' })
     expect(getValue()).toBe('a')
@@ -66,7 +64,7 @@ describe('state machines', () => {
       ])
     )
 
-    const { is, send } = ecosystem.getInstance(machineAtom).exports
+    const { is, send } = ecosystem.getInstance(machineAtom).store
 
     expect(is('a')).toBe(true)
     send('down')
@@ -98,15 +96,11 @@ describe('state machines', () => {
       injectMachine(state => [state('a')], initialContext)
     )
 
-    const {
-      getContext,
-      getState,
-      setContext,
-      setContextDeep,
-    } = ecosystem.getInstance(machineAtom).exports
+    const instance = ecosystem.getInstance(machineAtom)
+    const { getContext, setContext, setContextDeep } = instance.store
 
     expect(getContext()).toBe(initialContext)
-    expect(getState()).toEqual({ context: initialContext, value: 'a' })
+    expect(instance.getState()).toEqual({ context: initialContext, value: 'a' })
     setContextDeep({ b: { d: 4 } })
     expect(getContext()).toEqual({ a: 1, b: { c: 2, d: 4 } })
     setContextDeep(state => ({ b: { c: state.b.c + 1 } }))
@@ -128,7 +122,7 @@ describe('state machines', () => {
       )
     )
 
-    const { is, send, setContext } = ecosystem.getInstance(toggleAtom).exports
+    const { is, send, setContext } = ecosystem.getInstance(toggleAtom).store
 
     send('toggle')
     expect(is('b')).toBe(true)
@@ -156,7 +150,7 @@ describe('state machines', () => {
       )
     )
 
-    const { is, send, setContext } = ecosystem.getInstance(toggleAtom).exports
+    const { is, send, setContext } = ecosystem.getInstance(toggleAtom).store
 
     send('toggle')
     expect(is('b')).toBe(true)
@@ -187,7 +181,7 @@ describe('state machines', () => {
       )
     )
 
-    const { is, send, setContext } = ecosystem.getInstance(toggleAtom).exports
+    const { is, send, setContext } = ecosystem.getInstance(toggleAtom).store
 
     send('toggle')
     expect(is('b')).toBe(true)
@@ -241,7 +235,7 @@ describe('state machines', () => {
       )
     )
 
-    const { getContext, is } = ecosystem.getInstance(trafficLightAtom).exports
+    const { getContext, is } = ecosystem.getInstance(trafficLightAtom).store
 
     expect(is('green')).toBe(true)
     expect(enter).not.toHaveBeenCalled()
@@ -271,7 +265,7 @@ describe('state machines', () => {
     )
 
     const instance = ecosystem.getInstance(toggleAtom)
-    const { send } = instance.exports
+    const { send } = instance.store
 
     send('toggle')
     send('toggle')
