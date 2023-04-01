@@ -146,7 +146,7 @@ store.getContext() // { foo: 'bar' }`}</Ts>
         <Tabs>
           {tab1(`guard = (currentState, nextValue) => boolean`)}
           {tab2(`guard?: (
-  currentState: MachineStateType<StateNames, Context>,
+  currentState: MachineStateShape<StateNames, Context>,
   nextValue: StateNames
 ) => boolean`)}
         </Tabs>
