@@ -1,3 +1,4 @@
+import { createStore } from '@zedux/core'
 import { internalTypes } from '@zedux/core/api/constants'
 import {
   getHierarchyType,
@@ -16,8 +17,7 @@ import {
   nonPlainObjects,
   nullNodes,
   plainObjects,
-} from '@zedux/core-test/utils'
-import { createStore } from '@zedux/core'
+} from '../utils'
 
 describe('delegate()', () => {
   const action1 = {

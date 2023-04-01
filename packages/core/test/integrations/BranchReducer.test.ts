@@ -1,5 +1,5 @@
 import { createStore } from '@zedux/core'
-import { createMockReducer } from '@zedux/core-test/utils'
+import { createMockReducer } from '../utils'
 
 describe('BranchReducer', () => {
   test('delegates the appropriate state slice to child reducers', () => {

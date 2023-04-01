@@ -104,8 +104,9 @@ describe('suspense', () => {
     expect(mock).toHaveBeenCalledTimes(3)
     expect(mock).toHaveBeenNthCalledWith(
       1,
-      expect.stringMatching(/uncaught 'b'/i),
-      'b'
+      expect.objectContaining({
+        message: expect.stringMatching(/uncaught 'b'/i),
+      })
     )
 
     console.error = originalConsoleError
@@ -145,8 +146,9 @@ describe('suspense', () => {
     expect(mock).toHaveBeenCalledTimes(3)
     expect(mock).toHaveBeenNthCalledWith(
       1,
-      expect.stringMatching(/uncaught 'b'/i),
-      'b'
+      expect.objectContaining({
+        message: expect.stringMatching(/uncaught 'b'/i),
+      })
     )
 
     console.error = originalConsoleError

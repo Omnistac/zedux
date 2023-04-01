@@ -8,8 +8,7 @@ import {
   NULL,
   PLAIN_OBJECT,
 } from '@zedux/core/utils/general'
-
-import { nonPlainObjects, plainObjects } from '@zedux/core-test/utils'
+import { nonPlainObjects, plainObjects } from '../utils'
 
 describe('detailedTypeof()', () => {
   test('returns the detailed type of the given variable', () => {

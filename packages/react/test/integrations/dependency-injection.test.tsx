@@ -1,4 +1,6 @@
+import { fireEvent } from '@testing-library/dom'
 import '@testing-library/jest-dom/extend-expect'
+import { act } from '@testing-library/react'
 import {
   api,
   atom,
@@ -9,9 +11,7 @@ import {
   useAtomValue,
 } from '@zedux/react'
 import React, { FC } from 'react'
-import { renderInEcosystem } from '@zedux/react-test/utils/renderInEcosystem'
-import { fireEvent } from '@testing-library/dom'
-import { act } from '@testing-library/react'
+import { renderInEcosystem } from '../utils/renderInEcosystem'
 
 const normalAtom = atom('normal', () => {
   const store = injectStore(0)
