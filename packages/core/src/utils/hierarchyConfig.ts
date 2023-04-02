@@ -1,4 +1,4 @@
-import { isPlainObject } from './general'
+import { isPlainObject } from '../api/isPlainObject'
 
 interface T {
   [key: string]: any

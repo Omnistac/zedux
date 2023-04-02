@@ -1,5 +1,4 @@
-import { createStore, is } from '@zedux/core'
-import { isPlainObject } from '@zedux/core/utils/general'
+import { createStore, is, isPlainObject } from '@zedux/core'
 import React, { createContext } from 'react'
 import { internalStore } from '../store'
 import {
@@ -42,7 +41,8 @@ const mapOverrides = (overrides: AnyAtomTemplate[]) =>
   }, {} as Record<string, AnyAtomTemplate>)
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
-  implements AtomGettersBase {
+  implements AtomGettersBase
+{
   public complexParams?: boolean
   public context: Context
   public defaultTtl = -1
@@ -623,9 +623,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   public viewGraph(view: 'bottom-up'): GraphViewRecursive
-  public viewGraph(
-    view?: 'flat'
-  ): Record<
+  public viewGraph(view?: 'flat'): Record<
     string,
     {
       dependencies: { key: string; operation: string }[]

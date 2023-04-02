@@ -1,4 +1,4 @@
-import { detailedTypeof } from '../utils/general'
+import { detailedTypeof } from './detailedTypeof'
 import { Action, ActionChain, ActionMeta } from '../types'
 
 const assertActionExists = (action: ActionChain) => {

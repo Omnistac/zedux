@@ -10,8 +10,6 @@ import {
 } from '../types'
 import {
   BranchNodeType,
-  detailedTypeof,
-  isPlainObject,
   NullNodeType,
   ReducerNodeType,
   StoreNodeType,
@@ -22,6 +20,8 @@ import {
   HierarchyNodeType,
   RegisterSubStore,
 } from '../utils/types'
+import { detailedTypeof } from '../api/detailedTypeof'
+import { isPlainObject } from '../api/isPlainObject'
 
 /**
  * Converts a Branch hierarchy descriptor to a HierarchyNode's children

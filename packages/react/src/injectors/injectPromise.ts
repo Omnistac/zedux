@@ -1,5 +1,4 @@
-import { Store } from '@zedux/core'
-import { detailedTypeof } from '@zedux/core/utils/general'
+import { detailedTypeof, Store } from '@zedux/core'
 import { api } from '../factories'
 import {
   getErrorPromiseState,

@@ -1,28 +1,25 @@
-import { createStore, is, Store } from '@zedux/core/index'
 import {
-  ARRAY,
-  COMPLEX_OBJECT,
+  createStore,
   detailedTypeof,
+  is,
   isPlainObject,
-  NO_PROTOTYPE,
-  NULL,
-  PLAIN_OBJECT,
-} from '@zedux/core/utils/general'
+  Store,
+} from '@zedux/core'
 import { nonPlainObjects, plainObjects } from '../utils'
 
 describe('detailedTypeof()', () => {
   test('returns the detailed type of the given variable', () => {
     expect(detailedTypeof(undefined)).toBe('undefined')
-    expect(detailedTypeof(null)).toBe(NULL)
+    expect(detailedTypeof(null)).toBe('null')
     expect(detailedTypeof('a')).toBe('string')
     expect(detailedTypeof(1)).toBe('number')
-    expect(detailedTypeof([])).toBe(ARRAY)
+    expect(detailedTypeof([])).toBe('array')
     expect(detailedTypeof(() => {})).toBe('function')
-    expect(detailedTypeof(new Map())).toBe(COMPLEX_OBJECT)
-    expect(detailedTypeof(Object.create(null))).toBe(NO_PROTOTYPE)
+    expect(detailedTypeof(new Map())).toBe('complex object')
+    expect(detailedTypeof(Object.create(null))).toBe('prototype-less object')
 
     plainObjects.forEach(plainObject =>
-      expect(detailedTypeof(plainObject)).toBe(PLAIN_OBJECT)
+      expect(detailedTypeof(plainObject)).toBe('object')
     )
   })
 })

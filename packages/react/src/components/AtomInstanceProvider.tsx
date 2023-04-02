@@ -2,6 +2,18 @@ import React, { FC, ReactNode } from 'react'
 import { AnyAtomInstance } from '../types'
 import { useEcosystem } from '../hooks'
 
+/**
+ * Provides an atom instance over React context.
+ *
+ * Provided atom instances can be consumed in child components via
+ * `useAtomConsumer()`. The atom instance can then be passed to other hooks like
+ * `useAtomValue()` or `useAtomState()` to create a dynamic dependency on the
+ * consumed instance.
+ *
+ * The providing component should typically register at least a static
+ * dependency on the provided instance via `useAtomInstance()` or manual
+ * graphing inside `useEffect()`.
+ */
 export const AtomInstanceProvider: FC<
   | {
       children?: ReactNode
