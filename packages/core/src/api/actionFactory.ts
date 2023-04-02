@@ -1,5 +1,5 @@
 import { Action, ActionFactory } from '../types'
-import { detailedTypeof } from '../utils/general'
+import { detailedTypeof } from './detailedTypeof'
 
 /**
   Factory for creating ActionFactory objects.

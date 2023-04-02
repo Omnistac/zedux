@@ -55,37 +55,39 @@ describe('delegate()', () => {
   })
 
   test('throws an error if the node path does not exist in the hierarchy', () => {
-    // @ts-expect-error {} isn't a valid node
-    expect(() => delegate({}, action1)).toThrowError()
+    toggleDevMode(() => {
+      // @ts-expect-error {} isn't a valid node
+      expect(() => delegate({}, action1)).toThrowError()
 
-    expect(() =>
-      delegate(
-        {
-          children: {
-            // @ts-expect-error {} isn't a valid node
-            a: {
-              children: {},
+      expect(() =>
+        delegate(
+          {
+            children: {
+              // @ts-expect-error {} isn't a valid node
+              a: {
+                children: {},
+              },
             },
           },
-        },
-        action3
-      )
-    ).toThrowError()
+          action3
+        )
+      ).toThrowError()
 
-    expect(() =>
-      delegate(
-        {
-          type: 1,
-          children: {
-            a: {
-              type: 1,
-              children: {},
+      expect(() =>
+        delegate(
+          {
+            type: 1,
+            children: {
+              a: {
+                type: 1,
+                children: {},
+              },
             },
           },
-        },
-        action3
-      )
-    ).toThrowError()
+          action3
+        )
+      ).toThrowError()
+    })
   })
 
   test('throws an error if the node at the given path is not a store node', () => {

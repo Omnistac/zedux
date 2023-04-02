@@ -18,14 +18,12 @@ import {
   Scheduler,
   Job,
 } from '../types'
-import {
-  detailedTypeof,
-  isPlainObject,
-  STORE_IDENTIFIER,
-} from '../utils/general'
+import { STORE_IDENTIFIER } from '../utils/general'
 import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
 import { HierarchyNode } from '../utils/types'
 import { internalTypes } from './constants'
+import { detailedTypeof } from './detailedTypeof'
+import { isPlainObject } from './isPlainObject'
 import { removeAllMeta } from './meta'
 
 // When an action is dispatched to a parent store and delegated to a child
