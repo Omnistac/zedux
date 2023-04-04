@@ -11,7 +11,7 @@ Zedux is a multi-paradigm state management tool that features a powerful composa
 
 ## Installation
 
-Install using npm or yarn. E.g.:
+Install using npm, yarn, etc. E.g.:
 
 ```bash
 yarn add @zedux/react
@@ -25,7 +25,7 @@ The React package (`@zedux/react`) contains everything you need - the core store
 
 We borrowed ideas from dozens of state management tools over the past 5 years, invented a few ourselves, and put it all together in one powerhouse of a state management library.
 
-Most notably, Zedux borrows ideas from Redux, Recoil, and React Query. Zedux takes the unique approach of separating the state layer (stores) from the architecture layer (atoms). This allows for a powerful DI model, conceptually similar to Angular's but simpler and more dynamic.
+Most notably, Zedux borrows ideas from Redux, Recoil, and React Query. Zedux takes the unique approach of separating the state layer (stores) from the architecture layer (atoms). This allows for a powerful Dependency Injection model, conceptually similar to Angular's but simpler and more dynamic.
 
 Sound complex? Zedux is actually very beginner-friendly. In fact, here's all you need to begin:
 
@@ -38,13 +38,10 @@ function Greeting() {
   const [greeting, setGreeting] = useAtomState(greetingAtom)
 
   return (
-    <div>
-      <div>{greeting}</div>
-      <input
-        onChange={event => setGreeting(event.target.value)}
-        value={greeting}
-      />
-    </div>
+    <input
+      onChange={event => setGreeting(event.target.value)}
+      value={greeting}
+    />
   )
 }
 ```
@@ -55,16 +52,16 @@ We'll break down this example and so much more in [the docs](https://omnistac.gi
 
 To embark on the journey of mastering Zedux, jump into [the quick start](https://Omnistac.github.io/zedux/docs/walkthrough/quick-start).
 
-If you prefer reading lots of words, [the introduction's](https://omnistac.github.io/zedux/docs/about/introduction) a decent place to start. Or if you want to learn Everything Everywhere All at once, the [API docs](https://omnistac.github.io/zedux/docs/api/api-overview) or [repo source code and tests](https://github.com/Omnistac/zedux/tree/master/packages).
+If you prefer something more high-level, [the introduction's](https://omnistac.github.io/zedux/docs/about/introduction) a decent place to start. Or if you want to learn Everything Everywhere All at Once, the [API docs](https://omnistac.github.io/zedux/docs/api/api-overview) or [repo source code and tests](https://github.com/Omnistac/zedux/tree/master/packages) are real page-turners.
 
 Happy coding!
 
 ## Contributing
 
-All contributions on any level are so overwhelmingly welcome. Just jump right in. Open an issue. For PRs, just use prettier like a human and keep tests at 100% (branches, functions, lines, everything 100%, plz). Let's make this awesome!
+Contributions an any level are absolutely welcome! Have a look at the [contribution guidelines](https://github.com/Omnistac/zedux/blob/master/CONTRIBUTING.md).
 
 Bugs can be submitted to https://github.com/Omnistac/zedux/issues
 
 ## License
 
-The MIT License.
+The [MIT License](https://github.com/Omnistac/zedux/blob/master/LICENSE.md).
