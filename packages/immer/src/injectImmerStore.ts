@@ -15,10 +15,8 @@ const doSubscribe = <State>(
   store: Store<State>
 ) =>
   store.subscribe((newState, oldState, action) => {
-    // Nothing to do if the state hasn't changed. Also, ignore state updates
-    // during evaluation. TODO: Create an ecosystem-level flag to turn on
-    // warning logging for state-updates-during-evaluation, since this may be
-    // considered an anti-pattern.
+    // Nothing to do if the state hasn't changed. Also ignore state updates
+    // during evaluation or that are caused by `internalTypes.ignore` actions
     if (
       newState === oldState ||
       instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
