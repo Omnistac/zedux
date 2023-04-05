@@ -1,0 +1,39 @@
+{
+  "defaultBase": "master",
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "@nrwl/nx-cloud",
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "lint",
+          "prepublishOnly",
+          "test"
+        ]
+      }
+    }
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ]
+    },
+    "prepublishOnly": {
+      "dependsOn": [
+        "^prepublishOnly"
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ]
+    },
+    "test": {
+      "outputs": [
+        "{projectRoot}/coverage"
+      ]
+    }
+  }
+}

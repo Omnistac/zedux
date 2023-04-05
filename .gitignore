@@ -1,5 +1,6 @@
 .cache
 .DS_Store
+.env
 .npmrc
 .rpt2_cache
 *.local

@@ -1,18 +1,32 @@
 {
   "name": "@zedux/core",
-  "version": "0.1.0",
+  "version": "0.5.6",
   "description": "A high-level, declarative, composable form of Redux",
-  "main": "./dist/es/index.js",
-  "module": "./dist/es/index.js",
-  "es2015": "./dist/es/index.js",
-  "typings": "./dist/es/index.d.ts",
-  "sideEffects": false,
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "test": "cd ../.. && yarn test packages/core --collectCoverageFrom=packages/core/src/**/*.ts"
+  "main": "./dist/zedux.umd.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "author": "Joshua Claunch",
+  "bugs": {
+    "url": "https://github.com/Omnistac/zedux/issues"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js",
+      "production": {
+        "import": "./dist/zedux.es.min.js",
+        "require": "./dist/zedux.umd.min.js",
+        "default": "./dist/zedux.umd.min.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "homepage": "https://omnistac.github.io/zedux/",
+  "license": "MIT",
   "keywords": [
     "abstraction",
     "beautiful",
@@ -31,16 +45,17 @@
     "state",
     "zedux"
   ],
-  "author": "Joshua Claunch",
-  "license": "MIT",
   "repository": {
+    "directory": "packages/core",
     "type": "git",
-    "url": "git+https://github.com/Omnistac/zedux.git"
+    "url": "https://github.com/Omnistac/zedux.git"
   },
-  "bugs": {
-    "url": "https://github.com/Omnistac/zedux/issues"
+  "scripts": {
+    "build": "../../scripts/build.js",
+    "lint": "eslint 'src/**/*.ts' && tsc --noEmit",
+    "prepublishOnly": "yarn build",
+    "test": "cd ../.. && yarn test packages/core --collectCoverageFrom=packages/core/src/**/*.ts"
   },
-  "homepage": "https://omnistac.github.io/zedux/",
-  "devDependencies": {},
-  "dependencies": {}
+  "sideEffects": false,
+  "type": "module"
 }

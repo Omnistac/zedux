@@ -2,64 +2,28 @@
   "name": "@zedux/react",
   "version": "0.5.6",
   "description": "A Molecular State Engine for React",
-  "main": "./dist/react/zedux-react.umd.js",
-  "module": "./dist/react/zedux-react.es.js",
-  "types": "./dist/react/src/index.d.ts",
-  "sideEffects": false,
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "rimraf dist && yarn build:prod && yarn build:dev",
-    "build:dev": "MODE=development vite build",
-    "build:prod": "vite build",
-    "dev": "vite",
-    "prepublishOnly": "yarn build",
-    "preview": "vite preview",
-    "test": "cd ../.. && yarn test packages/react --collectCoverageFrom=packages/react/src/**/*.ts"
-  },
-  "keywords": [
-    "atom",
-    "atoms",
-    "atomic",
-    "boilerplate",
-    "composable",
-    "composition",
-    "DI",
-    "dependency",
-    "easy",
-    "flexible",
-    "flux",
-    "functional",
-    "immutable",
-    "injection",
-    "machine",
-    "management",
-    "memoized",
-    "molecular",
-    "performant",
-    "react",
-    "reducer",
-    "redux",
-    "simple",
-    "state",
-    "testable",
-    "zedux"
-  ],
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "author": "Joshua Claunch",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Omnistac/zedux.git"
-  },
   "bugs": {
     "url": "https://github.com/Omnistac/zedux/issues"
   },
+  "dependencies": {
+    "@zedux/core": "*"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^14.0.0",
+    "@types/react-dom": "^18.0.11",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
   "exports": {
     ".": {
-      "import": "./dist/react/zedux-react.es.js",
-      "require": "./dist/react/zedux-react.umd.js",
-      "default": "./dist/react/zedux-react.umd.js",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js",
       "production": {
         "import": "./dist/zedux-react.es.min.js",
         "require": "./dist/zedux-react.umd.min.js",
@@ -67,16 +31,42 @@
       }
     }
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "homepage": "https://omnistac.github.io/zedux/",
-  "devDependencies": {
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.1.1",
-    "@types/react-dom": "^18.0.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "dependencies": {},
+  "keywords": [
+    "atom",
+    "atomic",
+    "composable",
+    "DI",
+    "easy",
+    "flexible",
+    "machine",
+    "molecular",
+    "react",
+    "redux",
+    "simple",
+    "state",
+    "testable",
+    "zedux"
+  ],
+  "license": "MIT",
   "peerDependencies": {
     "react": ">=18.0.0"
-  }
+  },
+  "repository": {
+    "directory": "packages/react",
+    "type": "git",
+    "url": "https://github.com/Omnistac/zedux.git"
+  },
+  "scripts": {
+    "build": "../../scripts/build.js",
+    "lint": "eslint 'src/**/*.@(tsx|ts)' && tsc --noEmit",
+    "prepublishOnly": "yarn build",
+    "test": "cd ../.. && yarn test packages/react --collectCoverageFrom=packages/react/src/**/*.ts"
+  },
+  "sideEffects": false,
+  "type": "module"
 }

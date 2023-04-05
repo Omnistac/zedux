@@ -1,8 +1,8 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "lib": ["ES2020"],
-    "outDir": "./dist"
+    "lib": ["DOM", "ESNext"],
+    "outDir": "./dist/esm"
   },
-  "include": ["./src", "./test", "../../global.d.ts"]
+  "include": ["./src", "../../global.d.ts"]
 }
