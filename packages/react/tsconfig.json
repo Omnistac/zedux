@@ -1,13 +1,12 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "lib": ["dom", "esnext"],
-    "noEmit": true,
-    "outDir": "./dist",
-    "skipLibCheck": false,
-    "useDefineForClassFields": true
+    "lib": ["DOM", "ESNext"],
+    "outDir": "./dist/esm",
+    "paths": {
+      "@zedux/react": ["./packages/react/src"],
+      "@zedux/react/*": ["./packages/react/src/*"]
+    }
   },
-  "include": ["./examples", "./src", "./test", "../core/src", "../../global.d.ts"]
+  "include": ["./src", "./test", "../../global.d.ts"]
 }

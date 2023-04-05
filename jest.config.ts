@@ -1,11 +1,16 @@
 import { Config } from '@jest/types'
-import { RawCompilerOptions } from 'ts-jest'
-import { pathsToModuleNameMapper } from 'ts-jest/utils'
+import { pathsToModuleNameMapper, RawCompilerOptions } from 'ts-jest'
 import { compilerOptions } from './tsconfig.json'
 
 const jestCompilerOptions: RawCompilerOptions = {
   ...(compilerOptions as any),
   lib: [...compilerOptions.lib, 'DOM'],
+  paths: {
+    '@zedux/core': ['./packages/core/src'],
+    '@zedux/core/*': ['./packages/core/src/*'],
+    '@zedux/react': ['./packages/react/src'],
+    '@zedux/react/*': ['./packages/react/src/*'],
+  },
 }
 
 const config: Config.InitialOptions = {
@@ -13,14 +18,12 @@ const config: Config.InitialOptions = {
   collectCoverageFrom: ['**/src/**'],
   globals: {
     DEV: true,
-    'ts-jest': {
-      tsconfig: jestCompilerOptions,
-    },
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
+  moduleNameMapper: pathsToModuleNameMapper(jestCompilerOptions.paths || {}, {
     prefix: '<rootDir>/',
   }),
+  modulePaths: [compilerOptions.baseUrl],
   preset: 'ts-jest',
   roots: [
     '<rootDir>/packages/core/src',
@@ -31,6 +34,14 @@ const config: Config.InitialOptions = {
   setupFilesAfterEnv: ['./jest.setup.ts'],
   testEnvironment: 'jsdom',
   testRegex: '/test/.*\\.test\\.tsx?$',
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: jestCompilerOptions,
+      },
+    ],
+  },
 }
 
 export default config

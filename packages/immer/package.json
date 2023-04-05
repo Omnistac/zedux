@@ -1,22 +1,35 @@
 {
   "name": "@zedux/immer",
-  "version": "0.1.0",
+  "version": "0.5.6",
   "description": "Official Immer integration for Zedux's store and atomic APIs",
-  "main": "./dist/es/index.js",
-  "module": "./dist/es/index.js",
-  "es2015": "./dist/es/index.js",
-  "typings": "./dist/es/index.d.ts",
-  "sideEffects": false,
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "rimraf dist && yarn build:prod && yarn build:dev",
-    "build:dev": "MODE=development vite build",
-    "build:prod": "vite build",
-    "prepublishOnly": "yarn build",
-    "test": "cd ../.. && yarn test packages/immer --collectCoverageFrom=packages/immer/src/**/*.ts"
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "author": "Joshua Claunch",
+  "bugs": {
+    "url": "https://github.com/Omnistac/zedux/issues"
   },
+  "devDependencies": {
+    "@zedux/react": "*",
+    "immer": "^9.0.21"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js",
+      "production": {
+        "import": "./dist/zedux-react.es.min.js",
+        "require": "./dist/zedux-react.umd.min.js",
+        "default": "./dist/zedux-react.umd.min.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "homepage": "https://omnistac.github.io/zedux/docs/packages/immer",
   "keywords": [
     "atom",
     "atomic",
@@ -25,23 +38,22 @@
     "store",
     "zedux"
   ],
-  "author": "Joshua Claunch",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Omnistac/zedux.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Omnistac/zedux/issues"
-  },
-  "homepage": "https://omnistac.github.io/zedux/",
-  "devDependencies": {
-    "@zedux/react": "^0.5.0",
-    "immer": "^9.0.19"
-  },
-  "dependencies": {},
   "peerDependencies": {
-    "@zedux/react": ">=0.5.0",
+    "@zedux/react": "*",
     "immer": ">=9.0.19"
-  }
+  },
+  "repository": {
+    "directory": "packages/immer",
+    "type": "git",
+    "url": "https://github.com/Omnistac/zedux.git"
+  },
+  "scripts": {
+    "build": "../../scripts/build.js",
+    "lint": "eslint 'src/**/*.ts' && tsc --noEmit",
+    "prepublishOnly": "yarn build",
+    "test": "cd ../.. && yarn test packages/immer --collectCoverageFrom=packages/immer/src/**/*.ts"
+  },
+  "sideEffects": false,
+  "type": "module"
 }

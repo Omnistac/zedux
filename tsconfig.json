@@ -1,34 +1,20 @@
 {
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "declaration": true,
-    "declarationMap": true,
-    "downlevelIteration": true,
-    "emitDecoratorMetadata": true,
     "esModuleInterop": true,
-    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
-    "lib": ["esnext"],
-    "module": "esnext",
+    "lib": ["ESNext"],
+    "module": "ESNext",
     "moduleResolution": "node",
     "noImplicitAny": true,
     "outDir": "./dist",
-    "paths": {
-      "@test/*": ["test/*"],
-      "@zedux/core": ["./packages/core/src"],
-      "@zedux/core/*": ["./packages/core/src/*"],
-      "@zedux/core-test": ["./packages/core/test"],
-      "@zedux/core-test/*": ["./packages/core/test/*"],
-      "@zedux/react": ["./packages/react/src"],
-      "@zedux/react/*": ["./packages/react/src/*"],
-      "@zedux/react-test": ["./packages/react/test"],
-      "@zedux/react-test/*": ["./packages/react/test/*"]
-    },
     "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,
-    "target": "es2015"
+    "target": "ES2015"
   },
+  "exclude": ["**/dist", "node_modules"],
   "include": ["./packages", "global.d.ts"]
 }

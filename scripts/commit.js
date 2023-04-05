@@ -109,9 +109,16 @@ const promptMessage = async () => {
   const { message } = await inquirer.prompt([
     {
       message:
-        'Enter a brief, imperative tense description of the change (no char limit):\n',
+        'Enter a brief, imperative mood description of the change (limit here--------------------👇):\n',
       name: 'message',
-      validate: input => !!input || 'You must enter a commit message',
+      validate: input => {
+        if (!input) return 'You must enter a commit message'
+
+        return (
+          input.length <= 90 ||
+          'Commit message cannot be longer than 80 characters'
+        )
+      },
     },
   ])
 
