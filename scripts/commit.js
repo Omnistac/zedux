@@ -18,21 +18,14 @@ const assertChangesStaged = async () => {
 const createCommit = async ({
   extraDetails,
   isBreaking,
-  issues,
   message,
   packages,
   type,
 }) => {
   const body = extraDetails ? `\n\n${extraDetails}` : ''
-  const issuesStr = issues.length ? `#resolves ${issues.join(', ')}` : ''
-
-  const packagesStr =
-    packages.length > 1 ? `#affects ${packages.join(', ')}` : ''
 
   const footer =
-    issuesStr || packagesStr
-      ? `\n\n${[packagesStr, issuesStr].filter(Boolean).join('; ')}`
-      : ''
+    packages.length > 1 ? `\n\n#affects ${packages.join(', ')}` : ''
 
   const commit = `${type}${packages.length === 1 ? `(${packages[0]})` : ''}${
     isBreaking ? '!' : ''
@@ -51,7 +44,10 @@ const getPackages = async () => {
     .map(dir => dir.name)
 }
 
-const promptBreaking = async () => {
+const promptBreaking = async type => {
+  // only chores, features, and fixes can have breaking changes
+  if (!['chore', 'feature', 'fix'].includes(type)) return false
+
   const { isBreaking } = await inquirer.prompt([
     {
       default: 'n',
@@ -75,34 +71,6 @@ const promptExtraDetails = async () => {
   ])
 
   return details
-}
-
-const promptIssues = async () => {
-  const issues = []
-
-  while (true) {
-    const { issue } = await inquirer.prompt([
-      {
-        message: `${
-          issues.length
-            ? 'Awesome! Are there any more?'
-            : 'Does this commit resolve or relate to a GitHub issue?'
-        } (Leave blank if not):\nIssue #`,
-        name: 'issue',
-        // TODO: check the GitHub API for an issue matching the given id
-        validate: input =>
-          !input ||
-          !!Number(input) || // issue can't be 0 so this is fine
-          'Input the issue number by itself. If there are multiple issues, enter them one-by-one',
-      },
-    ])
-
-    if (issue) {
-      issues.push(issue)
-    } else {
-      return issues
-    }
-  }
 }
 
 const promptMessage = async () => {
@@ -195,11 +163,10 @@ const run = async flag => {
   const message = await promptMessage()
   const type = await promptType()
   const packages = await promptPackages(type, packageList)
-  const issues = isShort ? '' : await promptIssues()
-  const isBreaking = isShort ? false : await promptBreaking()
+  const isBreaking = isShort ? false : await promptBreaking(type)
   const extraDetails = isShort ? '' : await promptExtraDetails()
 
-  createCommit({ extraDetails, isBreaking, issues, message, packages, type })
+  createCommit({ extraDetails, isBreaking, message, packages, type })
 }
 
 run(...process.argv.slice(2))
