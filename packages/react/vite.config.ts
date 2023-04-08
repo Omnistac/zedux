@@ -12,6 +12,6 @@ export default configureVite({
     },
   }),
   moduleName: 'ZeduxReact',
-  // don't add `@zedux/core` or `@zedux/core-atoms` to globals - @zedux/react
-  // bundles them
+  // don't add `@zedux/core` or `@zedux/atoms` to globals - @zedux/react prod
+  // builds bundle them
 })

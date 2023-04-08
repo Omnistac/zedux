@@ -60,7 +60,7 @@ This package exports the following APIs, along with many TypeScript types for wo
 
 ## For Authors
 
-If your package only depends on APIs in this package, it's recommended to only import this package, not `@zedux/core-atoms` or `@zedux/react`. This package is small enough that you _may_ consider bundling it in with your code, but that shouldn't be necessary.
+If your package only depends on APIs in this package, it's recommended to only import this package, not `@zedux/atoms` or `@zedux/react`. This package is small enough that you _may_ consider bundling it in with your code, but that shouldn't be necessary.
 
 ## Contributing, License, Etc
 

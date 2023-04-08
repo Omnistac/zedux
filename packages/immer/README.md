@@ -6,15 +6,15 @@ See [the documentation](https://omnistac.github.io/zedux/docs/packages/immer) fo
 
 ## Installation
 
-This package has a peer dependency on the [`@zedux/core-atoms`](https://www.npmjs.com/package/@zedux/core-atoms) package. Ensure that that's installed at the same version as this package:
+This package has a peer dependency on the [`@zedux/atoms`](https://www.npmjs.com/package/@zedux/atoms) package. Ensure that that's installed at the same version as this package:
 
 ```sh
-npm install @zedux/core-atoms @zedux/immer # npm
-yarn add @zedux/core-atoms @zedux/immer # yarn
-pnpm add @zedux/core-atoms @zedux/immer # pnpm
+npm install @zedux/atoms @zedux/immer # npm
+yarn add @zedux/atoms @zedux/immer # yarn
+pnpm add @zedux/atoms @zedux/immer # pnpm
 ```
 
-The `@zedux/react` package includes `@zedux/core-atoms` but does **not** include this package. So if you want Immer functionality, install this package alongside `@zedux/react`:
+The `@zedux/react` package already includes `@zedux/atoms`. To use Immer in React apps, install this package alongside `@zedux/react`:
 
 ```sh
 npm install @zedux/react @zedux/immer # npm
