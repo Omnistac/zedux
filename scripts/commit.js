@@ -31,7 +31,18 @@ const createCommit = async ({
     isBreaking ? '!' : ''
   }: ${message}${body}${footer}`
 
-  await cmd(`git commit -m "${commit.replace('"', '\\"')}"`)
+  const commitOutput = await cmd(
+    `git commit -m "${commit.replace(/"/g, '\\"')}"`
+  )
+
+  if (commitOutput.stderr) {
+    console.error(
+      'Failed to create commit. Output:',
+      commitOutput.stdout,
+      commitOutput.stderr
+    )
+    process.exit(1)
+  }
 
   console.info('Commit created!\n\n', commit, '\n')
 }
