@@ -12,7 +12,7 @@ yarn add @zedux/react # yarn
 pnpm add @zedux/react # pnpm
 ```
 
-This package has a direct dependency on the [`@zedux/core-atoms` package](https://www.npmjs.com/package/@zedux/core-atoms), which in turn has a direct dependency on the [`@zedux/core` package](https://www.npmjs.com/package/@zedux/core). If you install any of those directly, ensure their versions exactly match your `@zedux/react` version to prevent installing duplicate packages.
+This package has a direct dependency on the [`@zedux/atoms` package](https://www.npmjs.com/package/@zedux/atoms), which in turn has a direct dependency on the [`@zedux/core` package](https://www.npmjs.com/package/@zedux/core). If you install any of those directly, ensure their versions exactly match your `@zedux/react` version to prevent installing duplicate packages.
 
 ## Usage
 
@@ -47,7 +47,7 @@ function Greeting() {
 This package includes and re-exports everything from the following packages:
 
 - [`@zedux/core`](https://www.npmjs.com/package/@zedux/core)
-- [`@zedux/core-atoms`](https://www.npmjs.com/package/@zedux/core-atoms)
+- [`@zedux/atoms`](https://www.npmjs.com/package/@zedux/atoms)
 
 On top of these, `@zedux/react` exports the following APIs:
 
@@ -67,7 +67,7 @@ On top of these, `@zedux/react` exports the following APIs:
 
 ## For Authors
 
-The [Zedux documentation](https://omnistac.github.io/zedux) assumes you are using this package. Plugin and integration authors may want to depend directly on [`@zedux/core`](https://www.npmjs.com/package/@zedux/core) or [`@zedux/core-atoms`](https://www.npmjs.com/package/@zedux/core-atoms). However, if your package uses any of these React-specific APIs, it is recommended to only import this `@zedux/react` package.
+The [Zedux documentation](https://omnistac.github.io/zedux) assumes you are using this package. Plugin and integration authors may want to depend directly on [`@zedux/core`](https://www.npmjs.com/package/@zedux/core) or [`@zedux/atoms`](https://www.npmjs.com/package/@zedux/atoms). However, if your package uses any of these React-specific APIs, it is recommended to only import this `@zedux/react` package.
 
 ## Contributing, License, Etc
 

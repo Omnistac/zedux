@@ -63,13 +63,13 @@ It's recommended to always use `yarn commit`, but if you want to know the format
 - `refactor` - includes code style changes and moving code around without changing functionality
 - `test` - new or improved test cases
 
-`scope` is a package name (e.g. `core`, `core-atoms`) **if** the commit affects only one package. If the commit affects multiple packages or doesn't apply to packages, `scope` can be omitted in favor of the special footer.
+`scope` is a package name (e.g. `atoms`, `core`) **if** the commit affects only one package. If the commit affects multiple packages or doesn't apply to packages, `scope` can be omitted in favor of the special footer.
 
 `description` is the normal commit message (in imperative mood). There's no character limit, but keep it brief (preferably < 80 characters). Additional details can go in the `body`.
 
 `body` is completely optional and can contain anything. It's a single line. Use semicolons to break up ideas. Don't worry about documenting everything here. That's what PRs are for. We use squash and merge to link your commit to its PR so people can read the details in beautiful rendered markdown.
 
-`footer` contains special syntax for our custom script. The footer details what packages are affected and what GitHub issues the commit resolves.
+`footer` contains special syntax for our custom script. The footer details what packages are affected by the change.
 
 Examples:
 
@@ -84,7 +84,7 @@ fix(core): stop doing specific wrong thing
 ```
 feat: implement coolNewFeature
 
-#affects core, core-atoms, react; #resolves 1234, 4321
+#affects atoms, core, react
 ```
 
 If the commit includes a breaking change, simply add `!`. For example:
