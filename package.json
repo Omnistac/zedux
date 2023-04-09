@@ -59,10 +59,10 @@
     "url": "git+https://github.com/Omnistac/zedux.git"
   },
   "scripts": {
-    "build": "yarn nx run-many --target=build",
+    "build": "yarn nx run-many -t build",
     "changelog": "npx conventional-changelog-cli -p angular -i CHANGELOG.md -s",
     "commit": "./scripts/commit.js",
-    "lint": "yarn nx run-many --target=lint",
+    "lint": "yarn nx run-many -t lint",
     "pretest": "yarn lint",
     "release": "./scripts/release.js",
     "test": "jest"
