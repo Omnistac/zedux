@@ -101,7 +101,7 @@ module.exports = {
           ],
         },
       ],
-      copyright: `Copyright © 2017-${new Date().getFullYear()} Joshua Claunch. Built with Docusaurus.`,
+      copyright: `Copyright © 2017-${new Date().getFullYear()} Omnistac. Built with Docusaurus.`,
     },
   },
   plugins: [PathsPlugin],
