@@ -30,6 +30,8 @@ Add integration tests in the `test/integrations` folder of the appropriate packa
 
 Ensure that all tests pass by running `yarn test` in the repo root. That command will also output code coverage. Ensure that all changes have full Statement, Branch, Function, and Line coverage.
 
+The PR title should be in the same format as the main commit. E.g. `feat(react): implement cool new thing`
+
 If your PR resolves any issues, [link the PR to the issue(s)](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue) e.g. by putting the words `Resolves #<issue number>, resolves #<other issue number>` in the PR body.
 
 If your PR introduces any breaking changes, give as much information about it as possible. Your PR will be linked to in migration guides, so write it like documentation for people that are upgrading - give troubleshooting tips and link references/guides/etc.
@@ -37,6 +39,8 @@ If your PR introduces any breaking changes, give as much information about it as
 Make the PR directly against Zedux `master` branch unless it's a hotfix for a specific version, in which case make it against the desired `v_.x` branch.
 
 If your PR can't be merged due to conflicts, rebase against Zedux master, resolve conflicts locally, and force push the changes.
+
+If your PR requires changes, you can push those as separate commits (only the first commit has to follow the [commit message guidelines](#commit-messages) via `yarn commit`. All other commits can be free-form via `git commit`). Or you can `git commit --amend` a previous commit and force push.
 
 ## Commit Messages
 
