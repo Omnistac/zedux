@@ -52,8 +52,8 @@ const child = createStore()
 
 parent.use({ child })
 
-child.setState('initial state')
-parent.setState({ child: 'better state' })
+child.setState('initial state') // set child's state ...
+parent.setState({ child: 'better state' }) // ... and immediately change it
 
 const output = {
   child: child.getState(),
@@ -83,7 +83,7 @@ child.setState('initial state') // we'll track this state ...
 child.setState('better state') // ... and use it to override this state
 
 // dispatch the tracked action directly to the parent store:
-parent.dispatch(trackedAction)
+parent.dispatch(trackedAction) // state is now back to 'initial state'
 
 const output = {
   child: child.getState(),
@@ -295,9 +295,8 @@ function Devtools() {
 }
 
 function LoginForm() {
-  const [{ email, password }, { setEmail, setPassword }] = useAtomState(
-    formAtom
-  )
+  const [{ email, password }, { setEmail, setPassword }] =
+    useAtomState(formAtom)
 
   return (
     <>
@@ -533,9 +532,8 @@ function Devtools() {
 }
 
 function LoginForm() {
-  const [{ email, password }, { setEmail, setPassword }] = useAtomState(
-    formAtom
-  )
+  const [{ email, password }, { setEmail, setPassword }] =
+    useAtomState(formAtom)
 
   return (
     <>
@@ -898,9 +896,8 @@ function Devtools() {
 }
 
 function LoginForm() {
-  const [{ email, password }, { setEmail, setPassword }] = useAtomState(
-    formAtom
-  )
+  const [{ email, password }, { setEmail, setPassword }] =
+    useAtomState(formAtom)
 
   return (
     <>

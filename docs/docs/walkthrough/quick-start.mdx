@@ -27,7 +27,7 @@ const greetingAtom = atom('greeting', 'Hello, world!')
 
 This creates an atom template with the key `greeting`. Zedux uses this template to automatically create atoms for you. Atoms created from this template will have the string `'Hello, world!'` as their initial value.
 
-Templates don't hold any state. To make the magic happen, you need to make Zedux create an atom from the template. You can do this with hooks:
+Templates don't hold any state. To make the magic happen, you need to make Zedux create an atom from the template. You can do this in React with hooks:
 
 ```tsx
 import { useAtomState } from '@zedux/react'
@@ -42,7 +42,7 @@ function Greet() {
 The first time you use the template, Zedux creates a new "instantiated atom" or simply "atom". This is conceptually similar to a class instance, except you never create them yourself - Zedux instantiates atoms for you.
 
 :::tip
-Due to this similarity with classes, and to avoid confusion between atom templates and atoms, we often refer to atoms as "atom instances".
+To avoid confusion between atom templates and atoms, we often refer to atoms as "atom instances".
 :::
 
 `useAtomState()` subscribes to updates in the new `greetingAtom` instance. This means the `Greet` component will rerender every time the atom's state changes.
@@ -77,15 +77,15 @@ These live playgrounds have every React and Zedux export in scope. Click `Log > 
 Super In-Depth Technical Breakdown:
 
 - We created an atom template with the key `greeting`.
-- The `<Greeting>` component renders and calls `useAtomState()`.
+- The `Greeting` component renders and calls `useAtomState()`.
 - Zedux sees that the `greeting` atom template has never been used before, so it creates an atom instance with a store whose initial state is `'Hello, world!'`
 - `useAtomState()` subscribes to updates in the new `greeting` atom instance and returns the current state of the instance's store.
 
 Whenever the input's value changes, `setGreeting()` updates the state of the atom instance's store and causes the `<Greeting>` component to rerender.
 
-### Shared State
+### Caching
 
-One of the primary advantages of the atomic model is it prevents data and side effects from being tightly coupled to components. This gives you more control over when state is created and destroyed (we call this "cache management").
+One of the primary advantages of the atomic model is it decouples data and side effects from components. This gives you more control over when state is created and destroyed (we call this "cache management").
 
 In the following example, 2 components reuse the same atom template. When Zedux creates an atom instance, it caches it (globally for now. We'll learn how to control the cache in [the ecosystems walkthrough](ecosystems)). This means that both of these components reuse the same atom instance:
 
@@ -123,7 +123,7 @@ Another In-Depth Technical Breakdown:
 - `<GreetingPreview>` renders first and calls `useAtomState()` to get the state of the `greeting` atom instance.
 - Zedux sees that the `greeting` atom template has never been used before, so it creates an atom instance with a store whose initial state is `'Hello, world!'`. `useAtomState()` returns that state to `<GreetingPreview>`.
 - `<EditGreeting>` renders next and also calls `useAtomState()`.
-- Zedux sees that the `greeting` atom has a cached atom instance, so this time `useAtomState()` returns the current state of the cached atom instance's store.
+- Zedux sees that the `greeting` atom template has a cached atom instance, so this time `useAtomState()` returns the current state of the cached atom's store.
 
 The atom instance's state is shared between both components. This state reuse is one of the main features of atoms.
 
@@ -135,7 +135,7 @@ Whenever the atom instance's state updates, both these React components will rer
 
 ### State Factories
 
-The second parameter to `atom()` can be a factory function. This factory's job is to create and return the atom's state:
+The second parameter to `atom()` can be a factory function. This factory's job is to create and return the atom instance's state:
 
 ```ts
 const helloAtom = atom('hello', () => 'world')
@@ -181,19 +181,14 @@ import { atom, injectMemo } from '@zedux/react'
 const initialPriceAtom = atom('initialPrice', () => {
   // Let's say stockPriceAtom's state changes frequently:
   const [stockPrice] = injectAtomState(stockPriceAtom)
-  // `injectMemo()` with no deps memoizes the first value forever:
+  // memoize the value on initial evaluation and never update it:
   const initialPrice = injectMemo(() => stockPrice, [])
 
   return initialPrice
 })
 ```
 
-If you know React's `useMemo` hook, you should already be able to understand this example. But to break it down:
-
-- `initialPriceAtom` (or rather the "atom instance" Zedux creates) is reevaluated every time the injected `stockPriceAtom` instance's state changes.
-- Since `injectMemo()` doesn't have any dependencies, it never recalculates its value. So:
-- The returned `initialPrice` never changes, meaning the `initialPriceAtom` instance's state never changes. So:
-- Components that use `initialPriceAtom` won't rerender and other atoms that inject it won't reevaluate.
+If you know React's `useMemo` hook, you should already be able to understand this example. In short, any atoms or components that use `initialPriceAtom` instances won't reevaluate when the `stockPriceAtom` atom instance's state changes.
 
 :::info important
 Injectors have the same caveats as hooks too! E.g. don't put injectors in if statements or use them outside atom state factories.
@@ -203,33 +198,36 @@ Injectors have the same caveats as hooks too! E.g. don't put injectors in if sta
 In general, the simple rule is: Replace the word "use" with "inject" inside atoms. Custom injectors you make should also start with "inject".
 :::
 
-### Atom Instances
+### Atom instances
 
-Quick Recap:
+Atom instances are actual objects that you can use directly. They're instances of the [`AtomInstance` class](../api/classes/AtomInstance) and have many features that we'll cover throughout this walkthrough.
 
-When you create an atom template, Zedux waits until the template is used (e.g. by a component or another atom) to create an atom instance + store. When you pass a state factory to `atom()`, that function won't be called until Zedux instantiates an atom. When the atom template is used for the first time, Zedux creates an atom instance and calls the state factory to produce the initial value of the instance's store.
+Get one in React via `useAtomInstance()`:
 
-Atoms can inject other atoms. When injected dependencies update, Zedux calls the state factory again to produce a new value. This is similar to a rerender in React.
-
-If the state factory returns a different value, Zedux will update this atom instance's dependents, and so on down the graph tree.
-
-```tsx
-function Greeting() {
-  const [greeting] = useAtomState(greetingAtom)
+```ts
+function MyComponent() {
+  const instance = useAtomInstance(myAtomTemplate)
   ...
 }
-
-const SomeGreetings = () => (
-  <>
-    <Greeting />
-    <Greeting />
-  </>
-)
 ```
 
-Here, the first `<Greeting />` renders and Zedux creates an instance of `greetingAtom`. The next `<Greeting />` then renders and reuses that same atom instance.
+Unlike `useAtomState()`, `useAtomInstance()` does **not** subscribe to state updates in the instance. You can use this to prevent components from rendering unnecessarily:
 
-Usually this just works and you don't have to worry about it. But sometimes you'll need to create multiple instances of an atom. To make Zedux create more instances, pass params.
+```tsx
+function ToggleButton() {
+  // this component updates the togglerAtom instance's state, but doesn't need
+  // the value during render thanks to `.setState()`'s function overload
+  const instance = useAtomInstance(togglerAtom)
+
+  return (
+    <button onClick={() => instance.setState(state => !state)}>Toggle</button>
+  )
+}
+```
+
+The [atom instances walkthrough](atom-instances) will go into much more depth.
+
+So far, atom templates and instances have had a 1:1 ratio. But the relationship is actually one-to-many (templates-to-instances). That's right, a single atom template can be used to create multiple atom instances via params:
 
 ### Params
 
@@ -243,18 +241,18 @@ const userDataAtom = atom('userData', (id: string) => {
   return injectFetch(`/users/${id}`)
 })
 
-function MyProfile() {
-  const { data } = useAtomState(userDataAtom, ['joe'])
+function UserProfile() {
+  const [{ data }] = useAtomState(userDataAtom, ['joe'])
   ...
 }
 ```
 
-Here the `userData` atom template takes one parameter, `id`. When the `MyProfile` component uses the `userData` template, Zedux creates an instance of `userData` with `'joe'` as the id.
+Here the `userData` atom template takes one parameter, `id`. When the `UserProfile` component uses the `userData` template, Zedux creates an instance of `userData` with `'joe'` as the id.
 
 If you use `userDataAtom` multiple times with different `id`s, Zedux will create different atom instances:
 
 ```tsx
-function MyProfile() {
+function UserProfiles() {
   const [joeData] = useAtomState(userDataAtom, ['joe'])
   const [bobData] = useAtomState(userDataAtom, ['bob'])
   ...

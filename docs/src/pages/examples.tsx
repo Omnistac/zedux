@@ -6,7 +6,7 @@ import { BiRightArrow } from 'react-icons/bi'
 
 const Example = styled.a<{ isActive?: boolean }>`
   align-items: center;
-  border-top: 1px solid #e9e9e9;
+  border-bottom: 1px solid #e9e9e9;
   color: inherit;
   display: flex;
   gap: 0.5rem;
@@ -26,54 +26,63 @@ const Example = styled.a<{ isActive?: boolean }>`
       opacity: 1;
     }
   }
-
-  &:last-of-type {
-    border-bottom: 1px solid #e9e9e9;
-  }
 `
 
 const Heading = styled.h3`
   background: linear-gradient(
       135deg,
-      var(--color-primary),
       var(--color-primary) 25px,
       transparent 25px
     ),
-    linear-gradient(
-      -45deg,
-      var(--color-primary),
-      var(--color-primary) 25px,
-      transparent 25px
-    );
+    linear-gradient(-45deg, var(--color-primary) 25px, transparent 25px);
+  background-color: #fff;
+  border-bottom: 1px solid #e9e9e9;
   font-size: 2em;
   font-weight: normal;
   margin: 0;
   padding: 0.5rem 0;
+  position: sticky;
   text-align: center;
+  top: 0;
 `
 
 const Iframe = styled.iframe`
   border: 0;
-  height: 100%;
+  flex: 1;
   overflow: hidden;
-  width: 100%;
 `
 
 const Main = styled.main`
+  display: flex;
   flex: 1;
   font-size: 0;
+
+  @media (max-width: 600px) {
+    flex-flow: column;
+  }
 `
 
 const Sidebar = styled.aside`
   display: flex;
   flex-direction: column;
   width: 18rem;
+
+  @media (max-width: 600px) {
+    align-self: center;
+    max-height: 20vh;
+    overflow: auto;
+    width: 100%;
+  }
 `
 
 const Wrapper = styled.div`
   align-items: stretch;
   display: flex;
   flex: 1;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
 `
 
 const examples = {

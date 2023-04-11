@@ -44,11 +44,11 @@ useAtomState(myParamsAtom, [[one, two], three])
 useAtomState(myParamsAtom, [[two, one], three])
 ```
 
-## `useAtomInstance`
+## `useAtomInstance()`
 
-Up till now, `useAtomState` has been our only way to interact with atoms. It's time to learn a new hook.
+We saw this in the [quick start](quick-start), but quick recap:
 
-`useAtomInstance` is a lower-level hook than `useAtomState` that returns the entire atom instance. Importantly, unlike `useAtomState`, it doesn't cause a rerender when the atom instance's state changes.
+`useAtomInstance()` is a lower-level hook than `useAtomState()` that returns the entire atom instance. Importantly, unlike `useAtomState()`, it doesn't cause a rerender when the atom instance's state changes.
 
 ```tsx live ecosystemId=atom-instances/useAtomInstance resultVar=App
 const counterAtom = atom('counter', 0)
@@ -228,7 +228,7 @@ function RandomNum() {
 ## Recap
 
 - Atom params are hashed deterministically.
-- `useAtomInstance` returns an atom instance without subscribing to state updates.
+- `useAtomInstance()` returns an atom instance without subscribing to state updates.
 - Atom instances have a lot of features. We'll cover more in the rest of this walkthrough.
 
 ## Next Steps
