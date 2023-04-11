@@ -215,6 +215,8 @@ describe('types', () => {
         .setPromise(Promise.resolve(1))
     })
 
+    const noExportsAtom = atom('noExports', () => api('a'))
+
     type ExpectedExports = {
       toNum: (str: string) => number
     }
@@ -227,6 +229,7 @@ describe('types', () => {
     expectTypeOf<AtomStateType<typeof queryWithPromiseAtom>>().toEqualTypeOf<
       PromiseState<string>
     >()
+    expectTypeOf<AtomStateType<typeof noExportsAtom>>().toBeString()
 
     expectTypeOf<AtomParamsType<typeof storeAtom>>().toEqualTypeOf<
       [p: string]
@@ -240,6 +243,7 @@ describe('types', () => {
     expectTypeOf<AtomParamsType<typeof queryWithPromiseAtom>>().toEqualTypeOf<
       [p: string]
     >()
+    expectTypeOf<AtomParamsType<typeof noExportsAtom>>().toEqualTypeOf<[]>()
 
     expectTypeOf<
       AtomExportsType<typeof storeAtom>
@@ -253,6 +257,9 @@ describe('types', () => {
     expectTypeOf<
       AtomExportsType<typeof queryWithPromiseAtom>
     >().toEqualTypeOf<ExpectedExports>()
+    expectTypeOf<AtomExportsType<typeof noExportsAtom>>().toEqualTypeOf<
+      Record<string, never>
+    >()
 
     expectTypeOf<AtomStoreType<typeof storeAtom>>().toEqualTypeOf<
       Store<string>
@@ -265,6 +272,9 @@ describe('types', () => {
     >()
     expectTypeOf<AtomStoreType<typeof queryWithPromiseAtom>>().toEqualTypeOf<
       Store<PromiseState<string>>
+    >()
+    expectTypeOf<AtomStoreType<typeof noExportsAtom>>().toEqualTypeOf<
+      Store<string>
     >()
 
     expectTypeOf<AtomPromiseType<typeof storeAtom>>().toEqualTypeOf<
@@ -279,6 +289,9 @@ describe('types', () => {
     expectTypeOf<AtomPromiseType<typeof queryWithPromiseAtom>>().toEqualTypeOf<
       Promise<string>
     >()
+    expectTypeOf<
+      AtomPromiseType<typeof noExportsAtom>
+    >().toEqualTypeOf<undefined>()
   })
 
   test('non-atom-api inference in ions', () => {
