@@ -123,6 +123,8 @@ export class EvaluationStack {
 
   public finish() {
     const item = stack.pop()
+    Store._scheduler = undefined
+
     if (!item || !this.ecosystem._mods.evaluationFinished) return
 
     const time = item.start ? perf.now() - item.start : 0
@@ -131,20 +133,22 @@ export class EvaluationStack {
     >
 
     if ((item as InstanceStackItem).instance) {
-      ;(action as {
-        instance: AnyAtomInstance
-      }).instance = (item as InstanceStackItem).instance
+      ;(
+        action as {
+          instance: AnyAtomInstance
+        }
+      ).instance = (item as InstanceStackItem).instance
     } else if ((item as SelectorStackItem).cache) {
-      ;(action as {
-        cache: SelectorCache
-      }).cache = (item as SelectorStackItem).cache
+      ;(
+        action as {
+          cache: SelectorCache
+        }
+      ).cache = (item as SelectorStackItem).cache
     }
 
     this.ecosystem.modBus.dispatch(
       pluginActions.evaluationFinished(action as any)
     )
-
-    Store._scheduler = undefined
   }
 
   public read() {
