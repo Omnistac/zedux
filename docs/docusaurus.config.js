@@ -56,6 +56,12 @@ module.exports = {
           position: 'left',
         },
         {
+          to: 'examples',
+          activeBasePath: 'examples',
+          label: 'Examples',
+          position: 'left',
+        },
+        {
           href: 'https://github.com/Omnistac/zedux',
           label: 'GitHub',
           position: 'right',

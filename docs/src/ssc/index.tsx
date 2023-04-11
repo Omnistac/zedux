@@ -119,8 +119,8 @@ class Parser {
 
     this.groups.push({
       groupStack: [...this.groupStack],
-      mediaQuery: this.groups[this.groupStack[this.groupStack.length - 1]]
-        .mediaQuery,
+      mediaQuery:
+        this.groups[this.groupStack[this.groupStack.length - 1]].mediaQuery,
       selectors: this.currentGroupSelectors.map(selector => selector.trim()),
       props: [],
     })
@@ -394,6 +394,11 @@ const resolveTemplate = <Props extends Record<string, any>>(
       let arg = args[i - 1]
 
       while (typeof arg !== 'string') {
+        if (arg == null) {
+          arg = ''
+          break
+        }
+
         arg = (arg as any).componentClassName
           ? `.${(arg as any).componentClassName}`
           : typeof arg === 'function'
