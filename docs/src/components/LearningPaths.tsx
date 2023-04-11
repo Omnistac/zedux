@@ -177,7 +177,7 @@ export const LearningPaths = () => {
     <Wrapper>
       <Title>Learn Zedux</Title>
       <Paths>
-        <Path
+        {/* <Path
           applicable={9}
           depth={5}
           ease={7}
@@ -186,7 +186,7 @@ export const LearningPaths = () => {
           title="Tutorial"
         >
           Build a real app with Zedux
-        </Path>
+        </Path> */}
         <Path
           applicable={6}
           depth={8}
@@ -217,7 +217,7 @@ export const LearningPaths = () => {
         >
           Play with real Zedux code
         </Path>
-        <Path
+        {/* <Path
           applicable={5}
           depth={3}
           ease={10}
@@ -226,7 +226,7 @@ export const LearningPaths = () => {
           title="Videos"
         >
           Watch people talk about Zedux
-        </Path>
+        </Path> */}
         <Path
           applicable={1}
           depth={9}
