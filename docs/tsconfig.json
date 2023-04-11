@@ -6,6 +6,7 @@
   },
   "include": [
     "docs/",
-    "src/"
+    "src/",
+    "global.d.ts"
   ]
 }

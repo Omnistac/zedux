@@ -58,14 +58,14 @@ const LogoWrapper = styled.div<{ url: string }>`
   }
 `
 
-const Logo = motion(styled.div<{ url: string }>`
+const Logo = styled.div<{ url: string }>`
   background: url(${({ url }) => url}) no-repeat;
   background-size: cover;
   grid-row: 2;
   height: 9rem;
   width: 9rem;
   z-index: 1;
-`)
+`
 
 const TaglineDark = styled.div`
   color: var(--color-primary);
@@ -88,15 +88,11 @@ const NameWrapper = styled.div<{ url: string }>`
 `
 
 const Name = styled.div`
+  font-size: 5rem;
   grid-column: 1;
   grid-row: 2;
   z-index: 1;
 `
-
-const Letter = motion(styled.span`
-  display: inline-block;
-  font-size: 5rem;
-`)
 
 const TaglineLight = styled.div`
   color: #fff;
@@ -124,7 +120,7 @@ const getAnimation = (index: number) => ({
 const getTaglineAnimation = (index: number) => ({
   animate: { opacity: 1, y: 0 },
   initial: { opacity: 0, y: 50 },
-  transition: { delay: 0.03 * (index + 1), stiffness: 100, type: 'spring' },
+  transition: { delay: 0.03 * index, stiffness: 100, type: 'spring' },
 })
 
 export const Hero = () => {
@@ -134,7 +130,7 @@ export const Hero = () => {
   return (
     <Wrapper>
       <LogoWrapper url={textureUrl}>
-        <Logo {...getAnimation(0)} url={logoUrl} />
+        <Logo url={logoUrl} />
         <TaglineDark>
           {tagline
             .slice(0, middleChar)
@@ -146,19 +142,14 @@ export const Hero = () => {
             ))}
         </TaglineDark>
         <QuickStart
-          {...getAnimation(5)}
+          {...getAnimation(0)}
           href={useBaseUrl('docs/walkthrough/quick-start')}
         >
           Quick Start!
         </QuickStart>
       </LogoWrapper>
       <NameWrapper url={textureUrl}>
-        <Name>
-          <Letter {...getAnimation(1)}>e</Letter>
-          <Letter {...getAnimation(2)}>d</Letter>
-          <Letter {...getAnimation(3)}>u</Letter>
-          <Letter {...getAnimation(4)}>x</Letter>
-        </Name>
+        <Name>edux</Name>
         <TaglineLight>
           {tagline
             .slice(middleChar)
@@ -173,7 +164,7 @@ export const Hero = () => {
             ))}
         </TaglineLight>
         <ApiDocs
-          {...getAnimation(6)}
+          {...getAnimation(1)}
           href={useBaseUrl('docs/api/api-overview')}
         >
           API Docs

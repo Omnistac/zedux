@@ -8,7 +8,7 @@ export default function NavbarNavLinkWrapper(props) {
   if (props.label === 'GitHub') {
     return (
       <a
-        className={props.className}
+        className={`${props.className} navbar__item--highlighted`}
         href={props.href}
         rel="noreferrer"
         style={{
@@ -22,10 +22,15 @@ export default function NavbarNavLinkWrapper(props) {
     )
   }
 
+  if (props.label !== 'Docs') {
+    return <NavbarNavLink {...props} />
+  }
+
   return (
     <>
       <NavbarNavLink
         {...props}
+        className={`${props.className} navbar__item--highlighted`}
         label={
           <>
             <span>Docs</span>

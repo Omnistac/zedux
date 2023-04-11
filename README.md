@@ -11,13 +11,13 @@ Zedux is a multi-paradigm state management tool that features a powerful composa
 
 ## Installation
 
-Install using npm, yarn, etc. E.g.:
-
 ```bash
-yarn add @zedux/react
+npm install @zedux/react # npm
+yarn add @zedux/react # yarn
+pnpm add @zedux/react # pnpm
 ```
 
-The React package (`@zedux/react`) contains everything you need - the core store model, the core atomic model, and the React-specific APIs.
+The React package (`@zedux/react`) contains everything you need - the [core store model](npmjs.com/package/@zedux/core), the [core atomic model](npmjs.com/package/@zedux/atoms), and the React-specific APIs.
 
 `@zedux/react` has a peer dependency on React and is compatible with React 18+ only, as it uses the new `useSyncExternalStore` hook.
 
@@ -60,7 +60,9 @@ Happy coding!
 
 Contributions an any level are absolutely welcome! Have a look at the [contribution guidelines](https://github.com/Omnistac/zedux/blob/master/CONTRIBUTING.md).
 
-Bugs can be submitted to https://github.com/Omnistac/zedux/issues
+Bugs can be reported [here](https://github.com/Omnistac/zedux/issues).
+
+Questions, feature requests, ideas, and links to cool projects or examples are always welcome in the [discussions page](https://github.com/Omnistac/zedux/discussions).
 
 ## License
 
