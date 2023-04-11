@@ -1,9 +1,8 @@
 # Zedux
 
-[![Build Status](https://travis-ci.org/bowheart/zedux.svg?branch=master)](https://travis-ci.org/bowheart/zedux)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/0459ebf8444c36752eac/test_coverage)](https://codeclimate.com/github/bowheart/zedux/test_coverage)
-[![Maintainability](https://api.codeclimate.com/v1/badges/0459ebf8444c36752eac/maintainability)](https://codeclimate.com/github/bowheart/zedux/maintainability)
-[![npm](https://img.shields.io/npm/v/zedux.svg)](https://www.npmjs.com/package/zedux)
+[![Build Status](https://github.com/Omnistac/zedux/actions/workflows/coverage.yml/badge.svg)](https://github.com/Omnistac/zedux/actions/workflows/coverage.yml)
+[![codecov.io](https://codecov.io/github/Omnistac/zedux/coverage.svg)](https://codecov.io/github/Omnistac/zedux)
+[![npm](https://img.shields.io/npm/v/@zedux/react.svg)](https://www.npmjs.com/package/@zedux/react)
 
 A Molecular State Engine for React.
 
