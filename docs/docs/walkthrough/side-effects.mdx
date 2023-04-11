@@ -3,7 +3,9 @@ id: side-effects
 title: Side Effects
 ---
 
-Zedux doesn't place any restrictions on how you manage asynchronous code. You can use promises, observables, sockets, generators, or any third-party library.
+Thanks to `injectEffect()`, it's easy to colocate side effects with the state they interact with. Query atoms and `injectPromise()` give you even more tools for managing side effects. But importantly:
+
+Zedux doesn't place any restrictions on how you manage side effects - especially asynchronous flows. You can use promises, observables, sockets, generators, or any third-party library.
 
 Zedux stores do not have middleware. Read more on that in the [Redux comparison](../about/redux-comparison). There are many other ways to manage side effects that avoid hijacking control from the store like middleware does.
 
@@ -19,7 +21,7 @@ This walkthrough has covered many of these. There's only a little more to learn 
 
 ## Render As You Fetch
 
-Many of the best practices for managing side effects in React still apply with Zedux. If you've been following the React community, you've probably heard that `useEffect` is not a great pattern for most side effects - it's prone to race conditions and some of its quirks are unintuitive. The same applies for `injectEffect()` with one big difference:
+Many of the best practices for managing side effects in React still apply with Zedux. If you've been following the React community, you've probably heard that `useEffect` is not a great pattern for most side effects - it's prone to race conditions and some of its quirks are unintuitive. Much of this applies for `injectEffect()` with one big difference:
 
 Since atoms aren't tightly-coupled to components, their side effects are also not tied to any single component. This makes atoms a _much_ better place to put your side effects. Despite having almost the exact same API, `injectEffect()` is a much more useful tool for managing side effects than `useEffect()`.
 
@@ -156,7 +158,7 @@ store.subscribe((newState, oldState, actionChain) => {
 
 ## Observables
 
-Zedux stores are a type of observable. They can be passed directly to [RxJS](https://github.com/ReactiveX/rxjs)'s `from()` to create full-fledged streams of state:
+Zedux stores are a type of observable. They can be passed directly to [RxJS](https://github.com/ReactiveX/rxjs)'s `from()` to create full-fledged observables of state:
 
 ```ts
 const filterUsersAtom = atom('filterUsers', 'Joe')
