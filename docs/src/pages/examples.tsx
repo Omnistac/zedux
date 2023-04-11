@@ -37,7 +37,7 @@ const Heading = styled.h3`
     linear-gradient(-45deg, var(--color-primary) 25px, transparent 25px);
   background-color: #fff;
   border-bottom: 1px solid #e9e9e9;
-  font-size: 2em;
+  font-size: 1.6em;
   font-weight: normal;
   margin: 0;
   padding: 0.5rem 0;
