@@ -12,6 +12,9 @@ export default function SearchBarWrapper(props) {
           accessToken: 'pk_aef46253e9ecf7fe32442ff1e7c51cdb9bbd9663f5170931',
         },
       }}
+      theme={{
+        primaryColor: "#ffa359"
+      }}
       {...props}
     />
   )
