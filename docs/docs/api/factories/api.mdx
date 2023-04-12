@@ -42,36 +42,52 @@ return api(val, false).setExports(myManuallyBatchedExports)
 <Tabs>
   {tab1(`api = (value?, wrap?) => atomApi`)}
   {tab2(`declare const api: {
-  // Custom Stores
+  // Custom Stores (AtomApi cloning)
   <
     StoreType extends Store<any> = Store<any>,
-    Exports extends Record<string, any> = Record<string, any>,
+    Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value:
-      | StoreType
-      | AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>,
+    value: AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>,
     wrap?: boolean
-  ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
+  ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>\n
+  // Custom Stores (normal)
+  <StoreType extends Store<any> = Store<any>>(
+    value: StoreType,
+    wrap?: boolean
+  ): AtomApi<
+    StoreStateType<StoreType>,
+    Record<string, never>,
+    StoreType,
+    undefined
+  >\n
   // No Value
+  (): AtomApi<undefined, Record<string, never>, undefined, undefined>\n
   <
     State = undefined,
-    Exports extends Record<string, any> = Record<string, any>,
+    Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
-  >(): AtomApi<State, Exports, undefined, PromiseType>
-  // No Store
+  >(): AtomApi<State, Exports, undefined, PromiseType>\n
+  // No Store (AtomApi cloning)
   <
     State = undefined,
-    Exports extends Record<string, any> = Record<string, any>,
+    Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: State | AtomApi<State, Exports, undefined, PromiseType>,
+    value: AtomApi<State, Exports, undefined, PromiseType>,
     wrap?: boolean
-  ): AtomApi<State, Exports, undefined, PromiseType>
+  ): AtomApi<State, Exports, undefined, PromiseType>\n
+  // No Store (normal)
+  <State = undefined>(value: State, wrap?: boolean): AtomApi<
+    State,
+    Record<string, never>,
+    undefined,
+    undefined
+  >\n
   // Catch-all
   <
     State = undefined,
-    Exports extends Record<string, any> = Record<string, any>,
+    Exports extends Record<string, any> = Record<string, never>,
     StoreType extends Store<State> = Store<State>,
     PromiseType extends AtomApiPromise = undefined
   >(

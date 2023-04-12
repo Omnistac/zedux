@@ -29,6 +29,8 @@
   --ifm-menu-link-sublist-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><path stroke="rgba(0,0,0,0.3)" fill="none" d="M6 16l6-4l6 4"></path></svg>');
 
   --ifm-navbar-height: 3.15rem;
+
+  font-family: var(--ifm-font-family-base);
 }
 
 html[data-theme='dark'] {
@@ -111,6 +113,10 @@ pre {
   }
 }
 
+.EnhancedSearch__SearchModal__InnerBody pre code {
+  background: initial;
+}
+
 .main-wrapper {
   display: flex;
   flex-flow: column nowrap;
@@ -191,6 +197,10 @@ pre {
 
 .navbar__link--active .inactive {
   display: none;
+}
+
+.navbar__title {
+  font-weight: normal;
 }
 
 .prism-code
