@@ -191,11 +191,11 @@ pre {
   display: initial;
 }
 
-.navbar__link--active .active {
+.navbar__item--highlighted.navbar__link--active .active {
   display: initial;
 }
 
-.navbar__link--active .inactive {
+.navbar__item--highlighted.navbar__link--active .inactive {
   display: none;
 }
 
