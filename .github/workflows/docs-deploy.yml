@@ -23,6 +23,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -30,27 +33,21 @@ jobs:
         with:
           api-key: ${{ secrets.ENHANCEDOCS_API_KEY }}
       - name: Install dependencies
-        working-directory: docs
         run: yarn install
       - name: Build website
-        working-directory: docs
         run: yarn run build
       - name: Setup Pages
-        working-directory: docs
         uses: actions/configure-pages@v3
       - name: Upload artifact
-        working-directory: docs
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: "./build"
+          path: "./docs/build"
       - name: Deploy to GitHub Pages
-        working-directory: docs
         id: deployment
         uses: actions/deploy-pages@v1
       - name: Build EnhanceDocs
-        working-directory: docs
         run: enhancedocs build docs
       - name: Publish EnhanceDocs
-        working-directory: docs
         run: enhancedocs push 6435f1864f5eaca6c03bf1d4
+
