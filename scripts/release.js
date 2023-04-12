@@ -61,7 +61,9 @@ const assertNoChanges = async () => {
 const assertNpmIsAuthed = async () => {
   console.info("Making sure you're authed with npm")
 
-  const { stderr, stdout } = await cmd('npm whoami')
+  const { stderr, stdout } = await cmd(
+    'npm_config_registry=https://registry.npmjs.org/ npm whoami'
+  )
 
   if (stderr || !stdout.trim()) {
     console.error('Npm auth check failed. Output:', stderr || 'Nothing!')
@@ -92,7 +94,7 @@ const assertTestsPass = async () => {
   const { stderr } = await cmd('yarn test')
 
   if (/failed with exit code/.test(stderr)) {
-    console.error('Tests failed. Run `yarn test` to debug')
+    console.error('Tests failed. Run `yarn test` to debug', stderr)
     process.exit(1)
   }
 }
@@ -313,7 +315,8 @@ const generateChangelog = async (type, tagName) => {
         features.push(item)
       } else if (/^fix[(!:]/.test(message)) {
         fixes.push(item)
-      } else if (/^chore[(!:]/.test(message)) {
+      } else if (/^chore(\(.+?\))?!:/.test(message)) {
+        // only include breaking chores
         item.message = `Chore: ${shortMessage}`
         chores.push(item)
       }
@@ -378,7 +381,9 @@ const generateChangelog = async (type, tagName) => {
  * Return the branch name.
  */
 const getBranch = async type => {
-  console.info('Making sure the current branch is `master`')
+  console.info(
+    'Making sure the current branch is `master`, `v*.x`, or `next/v*.x`'
+  )
 
   const { stdout } = await cmd('git branch --show-current')
   const branch = stdout.trim()
@@ -589,7 +594,9 @@ const npmPublish = async packages => {
   let proceed = true
 
   const promises = packages.map(dir => {
-    const { stderr, stdout } = cmd(`cd packages/${dir} && npm publish`)
+    const { stderr, stdout } = cmd(
+      `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ npm publish`
+    )
 
     if (stderr) {
       proceed = false
