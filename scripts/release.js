@@ -29,12 +29,11 @@ const validPreIds = ['alpha', 'beta', 'rc']
 const assertDocsSiteBuilds = async () => {
   console.info('Making sure the docs site builds')
 
-  const { stderr, stdout } = await cmd('cd docs && yarn build')
+  const output = await cmd('cd docs && yarn build')
 
-  if (!stdout.includes('[SUCCESS]')) {
+  if (output.code) {
     console.error(
-      'Docs site failed to build. You may need to run `yarn` in the docs directory. Output:',
-      stderr
+      `Docs site failed to build. You may need to run \`yarn\` in the docs directory. Output: ${output}`
     )
     process.exit(1)
   }
@@ -61,12 +60,12 @@ const assertNoChanges = async () => {
 const assertNpmIsAuthed = async () => {
   console.info("Making sure you're authed with npm")
 
-  const { stderr, stdout } = await cmd(
+  const output = await cmd(
     'npm_config_registry=https://registry.npmjs.org/ npm whoami'
   )
 
-  if (stderr || !stdout.trim()) {
-    console.error('Npm auth check failed. Output:', stderr || 'Nothing!')
+  if (output.code) {
+    console.error(`Npm auth check failed. Output: ${output}`)
     process.exit(1)
   }
 }
@@ -77,10 +76,10 @@ const assertNpmIsAuthed = async () => {
 const assertPackagesBuild = async () => {
   console.info('Making sure all packages build successfully')
 
-  const { stdout, stderr } = await cmd('yarn nx run-many --target=build')
+  const output = await cmd('yarn nx run-many --target=build')
 
-  if (stderr) {
-    console.error('Packages failed building. Output:', stdout, stderr)
+  if (output.code) {
+    console.error(`Packages failed building. Output: ${output}`)
     process.exit(1)
   }
 }
@@ -91,10 +90,10 @@ const assertPackagesBuild = async () => {
 const assertTestsPass = async () => {
   console.info('Running tests')
 
-  const { stderr } = await cmd('yarn test')
+  const output = await cmd('yarn test')
 
-  if (/failed with exit code/.test(stderr)) {
-    console.error('Tests failed. Run `yarn test` to debug', stderr)
+  if (output.code) {
+    console.error(`Tests failed. Run \`yarn test\` to debug. Output: ${output}`)
     process.exit(1)
   }
 }
@@ -163,12 +162,8 @@ const commitChanges = async tagName => {
     `git checkout -b release/${tagName} && git add . && git commit -m "${tagName}" && git push -u origin release/${tagName}`
   )
 
-  if (commitOutput.stderr) {
-    console.error(
-      'Failed to commit and push changes. Output:',
-      commitOutput.stdout,
-      commitOutput.stderr
-    )
+  if (commitOutput.code) {
+    console.error(`Failed to commit and push changes. Output: ${commitOutput}`)
     process.exit(1)
   }
 }
@@ -226,10 +221,10 @@ const createRelease = async (
  * Make docusaurus deploy the docs site to GitHub pages.
  */
 const deployDocs = async () => {
-  const { stderr, stdout } = await cmd('cd docs && yarn deploy')
+  const output = await cmd('cd docs && yarn deploy')
 
-  if (!output.includes('[SUCCESS]')) {
-    console.error('Docs site failed to deploy. Output:', stdout, stderr)
+  if (output.code) {
+    console.error(`Docs site failed to deploy. Output: ${output}`)
     await confirm('\nDeploy it manually. Is it done?')
   }
 }
@@ -491,8 +486,10 @@ const incrementVersion = async (packages, type, preId) => {
     }`
   )
 
-  if (npmVersionOutput.stderr) {
-    console.error('Failed to increment npm version:', npmVersionOutput.stderr)
+  if (npmVersionOutput.code) {
+    console.error(
+      `Failed to increment npm version. Output: ${npmVersionOutput}`
+    )
     process.exit(1)
   }
 
@@ -594,17 +591,13 @@ const npmPublish = async packages => {
   let proceed = true
 
   const promises = packages.map(dir => {
-    const { stderr, stdout } = cmd(
+    const output = cmd(
       `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ npm publish`
     )
 
-    if (stderr) {
+    if (output.code) {
       proceed = false
-      console.error(
-        `Failed to publish package "${dir}". Output:`,
-        stdout,
-        stderr
-      )
+      console.error(`Failed to publish package "${dir}". Output: ${output}`)
     } else {
       console.info(`Published "${dir}" package successfully`)
     }
@@ -624,10 +617,10 @@ const npmPublish = async packages => {
  * Fetch git tags so we can determine changes since last release.
  */
 const pullTags = async () => {
-  const { stderr } = await cmd('git pull && git fetch --all --tags')
+  const output = await cmd('git pull && git fetch --all --tags')
 
-  if (stderr.length) {
-    console.error('Failed to fetch tags:', stderr)
+  if (output.code) {
+    console.error(`Failed to fetch tags: ${output}`)
     process.exit(1)
   }
 }
@@ -638,12 +631,8 @@ const pullTags = async () => {
 const pushToEnhanceDocs = async enhancedocsApiKey => {
   const buildOutput = await cmd('cd docs && yarn enhancedocs build docs')
 
-  if (buildOutput.stderr) {
-    console.error(
-      'enhancedocs build failed. Output:',
-      buildOutput.stdout,
-      buildOutput.stderr
-    )
+  if (buildOutput.code) {
+    console.error(`enhancedocs build failed. Output: ${buildOutput}`)
     return
   }
 
@@ -651,12 +640,8 @@ const pushToEnhanceDocs = async enhancedocsApiKey => {
     `cd docs && ENHANCEDOCS_API_KEY=${enhancedocsApiKey} yarn enhancedocs push 6435f1864f5eaca6c03bf1d4`
   )
 
-  if (pushOutput.stderr) {
-    console.error(
-      'enhancedocs push failed. Output:',
-      pushOutput.stdout,
-      pushOutput.stderr
-    )
+  if (pushOutput.code) {
+    console.error(`enhancedocs push failed. Output: ${pushOutput}`)
     return
   }
 }
@@ -667,10 +652,9 @@ const pushToEnhanceDocs = async enhancedocsApiKey => {
 const returnToBranch = async (branch, tagName) => {
   const checkoutOutput = await cmd(`git checkout ${branch} && git pull`)
 
-  if (checkoutOutput.stderr) {
+  if (checkoutOutput.code) {
     console.info(
-      'Failed to checkout original branch and/or pull changes. Output:',
-      checkoutOutput.stderr
+      `Failed to checkout original branch and/or pull changes. Output: ${checkoutOutput}`
     )
     await confirm(
       `\nInvestigate the problem. Ensure the current branch is "${branch}" and up-to-date. Is that done?`
@@ -692,8 +676,8 @@ const returnToBranch = async (branch, tagName) => {
     `git tag -a ${tagName} && git push origin ${tagName}`
   )
 
-  if (tagOutput.stderr) {
-    console.error('Failed to add and push git tag. Output:', tagOutput.stderr)
+  if (tagOutput.code) {
+    console.error(`Failed to add and push git tag. Output: ${tagOutput}`)
     await confirm('\nInvestigate the problem. Is it resolved?')
   }
 }

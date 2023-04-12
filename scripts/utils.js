@@ -3,7 +3,6 @@ import { promises } from 'fs'
 import { request } from 'https'
 import inquirer from 'inquirer'
 import path from 'path'
-import { promisify } from 'util'
 
 export const { readdir, readFile, writeFile } = promises
 
@@ -21,13 +20,25 @@ export const assertCwdIsRoot = async () => {
   }
 }
 
-const execAsync = promisify(exec)
-
 /**
  * Run any command in the CWD.
  */
 export const cmd = command =>
-  execAsync(command).catch(err => ({ stderr: err, stdout: '' }))
+  new Promise(resolve => {
+    let code
+
+    exec(command, (err, stdout, stderr) => {
+      resolve({
+        code,
+        stdout,
+        stderr,
+        toString: () =>
+          `\n\ncode: ${code}\n\nstdout:\n\n${
+            stdout || '<nothing>'
+          }\n\nstderr:\n\n${stderr || '<nothing>'}`,
+      })
+    }).on('exit', c => (code = c))
+  })
 
 /**
  * Ask the user a question and wait for a yes/no response. Pass the 2nd param to
