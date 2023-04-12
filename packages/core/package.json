@@ -1,6 +1,6 @@
 {
   "name": "@zedux/core",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "A high-level, declarative, composable form of Redux",
   "main": "./dist/zedux.umd.js",
   "module": "./dist/esm/index.js",
