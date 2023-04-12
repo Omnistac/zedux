@@ -1,6 +1,5 @@
 .cache
 .DS_Store
-.enhancedocs
 .env
 .npmrc
 .rpt2_cache
