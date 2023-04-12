@@ -71,34 +71,6 @@ const assertNpmIsAuthed = async () => {
 }
 
 /**
- * Make sure every package builds successfully
- */
-const assertPackagesBuild = async () => {
-  console.info('Making sure all packages build successfully')
-
-  const output = await cmd('yarn nx run-many --target=build')
-
-  if (output.code) {
-    console.error(`Packages failed building. Output: ${output}`)
-    process.exit(1)
-  }
-}
-
-/**
- * Make sure lint, tsc --noEmit, and tests pass for all packages
- */
-const assertTestsPass = async () => {
-  console.info('Running tests')
-
-  const output = await cmd('yarn test')
-
-  if (output.code) {
-    console.error(`Tests failed. Run \`yarn test\` to debug. Output: ${output}`)
-    process.exit(1)
-  }
-}
-
-/**
  * Make sure the GitHub token supplied via the GITHUB_TOKEN env variable is
  * valid and not expired.
  */
@@ -592,7 +564,7 @@ const npmPublish = async packages => {
 
   const promises = packages.map(dir => {
     const output = cmd(
-      `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ npm publish`
+      `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ npm publish --access=public`
     )
 
     if (output.code) {
@@ -650,6 +622,8 @@ const pushToEnhanceDocs = async enhancedocsApiKey => {
  * Now that the PR is merged, go back to the original branch and add the tag
  */
 const returnToBranch = async (branch, tagName) => {
+  console.info(`Returning to branch "${branch}" and pulling`)
+
   const checkoutOutput = await cmd(`git checkout ${branch} && git pull`)
 
   if (checkoutOutput.code) {
@@ -672,8 +646,10 @@ const returnToBranch = async (branch, tagName) => {
     )
   }
 
+  console.info('Tagging release commit')
+
   const tagOutput = await cmd(
-    `git tag -a ${tagName} && git push origin ${tagName}`
+    `git tag -a ${tagName} -m "${tagName}" && git push origin ${tagName}`
   )
 
   if (tagOutput.code) {
@@ -692,12 +668,13 @@ const returnToBranch = async (branch, tagName) => {
 const run = async (type, preId) => {
   assertValidArgs(type, preId)
 
+  // we don't need to assert that tests pass or that packages build - the
+  // release PR CI will do that. TODO: Move docs site build check to a CI job
+  // for `release/*` branch PRs
   await Promise.all([
     assertCwdIsRoot(),
     assertNoChanges(),
-    assertTestsPass(),
     assertDocsSiteBuilds(),
-    assertPackagesBuild(),
   ])
 
   await pullTags()
