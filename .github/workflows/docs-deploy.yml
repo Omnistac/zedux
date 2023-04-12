@@ -23,13 +23,14 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    working-directory: docs
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - uses: enhancedocs/enhancedocs-github-action@0.1.0
         with:
           api-key: ${{ secrets.ENHANCEDOCS_API_KEY }}
+      - name: Switch to Docs folder
+        run: cd docs
       - name: Build EnhanceDocs
         run: enhancedocs build docs
       - name: Publish EnhanceDocs
