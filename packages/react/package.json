@@ -1,6 +1,6 @@
 {
   "name": "@zedux/react",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "A Molecular State Engine for React",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -10,7 +10,7 @@
     "url": "https://github.com/Omnistac/zedux/issues"
   },
   "dependencies": {
-    "@zedux/core": "^0.5.8"
+    "@zedux/core": "^0.5.10"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
