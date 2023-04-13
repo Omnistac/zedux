@@ -106,7 +106,7 @@ export const useAtomSelector = <T, Args extends any[]>(
   const ecosystem = useEcosystem()
   const dependentKey = useReactComponentId()
   const cacheRef = useRef<SelectorCache<T, Args>>()
-  const skipState = useRef<T>()
+  const skipState = useRef<T>(destroyed as any)
   const isConfig = typeof selectorOrConfig !== 'function'
 
   const argsChanged =
@@ -116,7 +116,7 @@ export const useAtomSelector = <T, Args extends any[]>(
 
   const resolvedArgs = argsChanged
     ? args
-    : cacheRef.current?.args || (([] as unknown) as Args)
+    : cacheRef.current?.args || ([] as unknown as Args)
 
   const hasRefChanged = selectorOrConfig !== cacheRef.current?.selectorRef
   const isDifferent =
@@ -163,7 +163,11 @@ export const useAtomSelector = <T, Args extends any[]>(
             OPERATION,
             External,
             (signal, newState) => {
-              if (newState === skipState.current) return
+              if (newState === skipState.current) {
+                ;(skipState.current as any) = destroyed
+                return
+              }
+
               if (signal === 'Destroyed') {
                 // see comment in useAtomInstance about why returning
                 // a nonsense value from `getSnapshot` works
@@ -194,7 +198,7 @@ export const useAtomSelector = <T, Args extends any[]>(
       resolvedArgs
     )
     // prevent state update loop if new selector ref just returned a new result:
-    skipState.current = cache.result
+    skipState.current = cache.result as T
   }
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot) as T
