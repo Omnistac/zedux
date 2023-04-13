@@ -1,3 +1,9 @@
+## v0.5.8 (Apr 13, 2023)
+
+### Fixes:
+
+- `react`: make useAtomSelector rerender components when the selector value becomes undefined (#8)
+
 ## v0.5.7 (Apr 12, 2023)
 
 ### New Features:
