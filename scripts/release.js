@@ -190,18 +190,6 @@ const createRelease = async (
 }
 
 /**
- * Make docusaurus deploy the docs site to GitHub pages.
- */
-const deployDocs = async () => {
-  const output = await cmd('cd docs && yarn deploy')
-
-  if (output.code) {
-    console.error(`Docs site failed to deploy. Output: ${output}`)
-    await confirm('\nDeploy it manually. Is it done?')
-  }
-}
-
-/**
  * Receives a list of `{ affectedPackages: string[]; isBreaking: boolean;
  * message: string }` objects and turns it into a markdown unordered list.
  */
@@ -403,20 +391,17 @@ const getEmail = async () => {
 
 /**
  * Make sure there's a GITHUB_TOKEN env variable set for GitHub API requests and
- * a ENHANCEDOCS_API_KEY return them
+ * return it
  */
-const getEnv = async () => {
-  console.info(
-    'Reading configured GITHUB_TOKEN and ENHANCEDOCS_API_KEY env variables'
-  )
+const getToken = async () => {
+  console.info('Reading configured GITHUB_TOKEN env variable')
 
-  const githubToken = process.env.GITHUB_TOKEN
-  const enhancedocsApiKey = process.env.ENHANCEDOCS_API_KEY
+  const token = process.env.GITHUB_TOKEN
 
   try {
     const contents = (await readFile('.env')).toString()
 
-    const { ENHANCEDOCS_API_KEY, GITHUB_TOKEN } = contents
+    const { GITHUB_TOKEN } = contents
       .split('\n')
       .filter(Boolean)
       .reduce((obj, field) => {
@@ -425,20 +410,14 @@ const getEnv = async () => {
         return obj
       }, {})
 
-    if (
-      (!enhancedocsApiKey && !ENHANCEDOCS_API_KEY) ||
-      (!githubToken && !GITHUB_TOKEN)
-    ) {
+    if (!token && !GITHUB_TOKEN) {
       throw 'not set'
     }
 
-    return {
-      enhancedocsApiKey: enhancedocsApiKey || ENHANCEDOCS_API_KEY,
-      githubToken: githubToken || GITHUB_TOKEN,
-    }
+    return token || GITHUB_TOKEN
   } catch (err) {
     console.error(
-      "Couldn't find a GITHUB_TOKEN or an ENHANCEDOCS_API_KEY in the current environment. Either set the env variables before invoking this script or set it in a local (gitignored) .env file in the repo root"
+      "Couldn't find a GITHUB_TOKEN in the current environment. Either set the env variable before invoking this script or set it in a local (gitignored) .env file in the repo root"
     )
     process.exit(1)
   }
@@ -562,8 +541,9 @@ const npmPublish = async packages => {
 
   let proceed = true
 
-  const promises = packages.map(dir => {
-    const output = cmd(
+  // publish packages one-by-one (there seemed to be some Nx race condition)
+  for (const dir of packages) {
+    const output = await cmd(
       `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ npm publish --access=public`
     )
 
@@ -573,9 +553,7 @@ const npmPublish = async packages => {
     } else {
       console.info(`Published "${dir}" package successfully`)
     }
-  })
-
-  await Promise.all(promises)
+  }
 
   if (!proceed) {
     console.error('Some packages failed to publish')
@@ -594,27 +572,6 @@ const pullTags = async () => {
   if (output.code) {
     console.error(`Failed to fetch tags: ${output}`)
     process.exit(1)
-  }
-}
-
-/**
- * Push data to enhancedocs for any new documentation
- */
-const pushToEnhanceDocs = async enhancedocsApiKey => {
-  const buildOutput = await cmd('cd docs && yarn enhancedocs build docs')
-
-  if (buildOutput.code) {
-    console.error(`enhancedocs build failed. Output: ${buildOutput}`)
-    return
-  }
-
-  const pushOutput = await cmd(
-    `cd docs && ENHANCEDOCS_API_KEY=${enhancedocsApiKey} yarn enhancedocs push 6435f1864f5eaca6c03bf1d4`
-  )
-
-  if (pushOutput.code) {
-    console.error(`enhancedocs push failed. Output: ${pushOutput}`)
-    return
   }
 }
 
@@ -679,13 +636,14 @@ const run = async (type, preId) => {
 
   await pullTags()
 
-  const [branch, email, packages, { enhancedocsApiKey, githubToken }] =
-    await Promise.all([getBranch(type), getEmail(), getPackages(), getEnv()])
-
-  await Promise.all([
-    assertNpmIsAuthed(),
-    assertTokenIsValid(email, githubToken),
+  const [branch, email, packages, token] = await Promise.all([
+    getBranch(type),
+    getEmail(),
+    getPackages(),
+    getToken(),
   ])
+
+  await Promise.all([assertNpmIsAuthed(), assertTokenIsValid(email, token)])
 
   // start modifying things
   const tagName = await incrementVersion(packages, type, preId)
@@ -695,23 +653,17 @@ const run = async (type, preId) => {
 
   // Now we're at the point of no return. Stop exiting on errors and instead
   // prompt the user to manually fix any encountered problems.
-  await makePullRequest(email, githubToken, branch, tagName)
+  await makePullRequest(email, token, branch, tagName)
   await returnToBranch(branch, tagName)
 
   await npmPublish(packages)
   await createRelease(
     email,
-    githubToken,
+    token,
     tagName,
     changelogBody,
     type.startsWith('pre')
   )
-
-  // TODO: If it's a major version, cut, checkout, and push a maintenance branch
-  // TODO: If it's a major version, cut a docusaurus version (https://docusaurus.io/docs/versioning)
-
-  await deployDocs()
-  await pushToEnhanceDocs(enhancedocsApiKey)
 
   logPackageLinks(packages)
 }
