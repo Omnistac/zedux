@@ -123,7 +123,10 @@ export class EvaluationStack {
 
   public finish() {
     const item = stack.pop()
-    Store._scheduler = undefined
+
+    // if we just popped the last thing off the stack, restore the default
+    // scheduler
+    if (!stack.length) Store._scheduler = undefined
 
     if (!item || !this.ecosystem._mods.evaluationFinished) return
 
