@@ -5,7 +5,7 @@
  * set to Object.prototype, but it may not have a null prototype or prototype
  * chain more than 1 layer deep.
  */
-export function isPlainObject(value: any) {
+export const isPlainObject = (value: any) => {
   if (typeof value !== 'object' || !value) return false
 
   const prototype = Object.getPrototypeOf(value)

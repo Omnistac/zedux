@@ -37,11 +37,11 @@ export const createReducer = <State = any>(initialState?: State) => {
   return reducer
 }
 
-function mapActionTypesToReducer<State>(
+const mapActionTypesToReducer = <State>(
   map: ReducersMap<State>,
   actionTypes: string[],
   consumer: SubReducer
-) {
+) => {
   actionTypes.forEach(actionType => {
     if (!map[actionType]) {
       map[actionType] = []
@@ -51,11 +51,11 @@ function mapActionTypesToReducer<State>(
   })
 }
 
-function runReducers<State>(
+const runReducers = <State>(
   reducers: SubReducer[],
   state: State,
   action: Action
-) {
+) => {
   return reducers.reduce(
     (accumulatedState, reducer) =>
       reducer(accumulatedState, action.payload, action),

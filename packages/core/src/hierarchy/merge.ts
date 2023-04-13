@@ -58,7 +58,7 @@ const createBranchReducer =
  * Currently STORE is the only node type affected by this; stores need to
  * unsubscribe() from their child stores.
  */
-function destroyTree(tree?: HierarchyNode) {
+const destroyTree = (tree?: HierarchyNode) => {
   if (!tree) return
 
   const { children, destroy } = tree as BranchNode
@@ -75,11 +75,11 @@ function destroyTree(tree?: HierarchyNode) {
  *
  * Really should only be used from `mergeHierarchies()`
  */
-function mergeBranches(
+const mergeBranches = (
   oldTree: HierarchyNode,
   newTree: BranchNode,
   hierarchyConfig: HierarchyConfig
-): BranchNode {
+): BranchNode => {
   const mergedChildren = { ...(oldTree as BranchNode).children }
 
   // Iterate over the new tree's children
@@ -132,11 +132,11 @@ function mergeBranches(
  *
  * All other nodes will be overwritten.
  */
-export function mergeHierarchies(
+export const mergeHierarchies = (
   oldTree: HierarchyNode | undefined,
   newTree: HierarchyNode,
   hierarchyConfig: HierarchyConfig
-): HierarchyNode {
+): HierarchyNode => {
   if (newTree.type !== BranchNodeType) {
     destroyTree(oldTree)
 
@@ -163,11 +163,11 @@ export function mergeHierarchies(
  * parent's hierarchyConfig will be respected during this merge. The child's
  * state will be full-hydrated with its new state after this merge.
  */
-export function mergeStateTrees(
+export const mergeStateTrees = (
   oldStateTree: any,
   newStateTree: any,
   hierarchyConfig: HierarchyConfig
-) {
+) => {
   if (
     !hierarchyConfig.isNode(oldStateTree) ||
     !hierarchyConfig.isNode(newStateTree)

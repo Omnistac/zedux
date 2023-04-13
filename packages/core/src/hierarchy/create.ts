@@ -28,11 +28,11 @@ import { isPlainObject } from '../api/isPlainObject'
  *
  * Really should only be used from `hierarchyDescriptorToHierarchy()`
  */
-function branchToHierarchyChildren(
+const branchToHierarchyChildren = (
   branch: Branch,
   registerSubStore: RegisterSubStore,
   currentPath: string[]
-) {
+) => {
   const children: Hierarchy = {}
 
   Object.entries(branch).forEach(([key, val]) => {
@@ -52,12 +52,12 @@ function branchToHierarchyChildren(
  * Turns a non-branch node from a user-supplied hierarchy descriptor into a
  * HierarchyNode object
  */
-function nonBranchToHierarchyNode(
+const nonBranchToHierarchyNode = (
   type: HierarchyNodeType,
   hierarchy: Reducer | Store,
   registerSubStore: RegisterSubStore,
   currentPath: string[]
-): HierarchyNode {
+): HierarchyNode => {
   if (type === NullNodeType) {
     return { type }
   }
@@ -80,7 +80,7 @@ function nonBranchToHierarchyNode(
  *
  * Throws a TypeError if the descriptor is invalid.
  */
-export function getHierarchyType(descriptor: HierarchyDescriptor) {
+export const getHierarchyType = (descriptor: HierarchyDescriptor) => {
   if (typeof descriptor === 'function') return ReducerNodeType
 
   if (descriptor && is(descriptor, Store)) return StoreNodeType
@@ -104,11 +104,11 @@ export function getHierarchyType(descriptor: HierarchyDescriptor) {
  *
  * Also figures out the reducer for non-branch nodes.
  */
-export function hierarchyDescriptorToHierarchy(
+export const hierarchyDescriptorToHierarchy = (
   hierarchy: HierarchyDescriptor,
   registerSubStore: RegisterSubStore,
   currentPath: string[] = []
-): HierarchyNode {
+): HierarchyNode => {
   const type = getHierarchyType(hierarchy)
 
   if (type !== BranchNodeType) {
@@ -146,7 +146,7 @@ export function hierarchyDescriptorToHierarchy(
  * store. UPDATE: Actually, it doesn't even need to check - the parent store
  * knows that it _isDispatching and can ignore child store actions while it is.
  */
-export function wrapStoreInReducer<State>(store: Store<State>) {
+export const wrapStoreInReducer = <State>(store: Store<State>) => {
   const reducer: Reducer = (state: State, action: Action) => {
     // If this is the special hydrate or partial hydrate action, re-create the
     // action's payload using the current state slice

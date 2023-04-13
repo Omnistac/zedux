@@ -3,7 +3,7 @@
  *
  * Objects can be prototype-less, complex, or plain.
  */
-function getDetailedObjectType(value: object) {
+const getDetailedObjectType = (value: object) => {
   const prototype = Object.getPrototypeOf(value)
 
   if (!prototype) return 'prototype-less object'
@@ -19,7 +19,7 @@ function getDetailedObjectType(value: object) {
  *
  * "expected a plain object, received object"
  */
-export function detailedTypeof(value: any) {
+export const detailedTypeof = (value: any) => {
   const valueType = typeof value
 
   if (valueType !== 'object') return valueType
