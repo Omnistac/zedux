@@ -219,6 +219,57 @@ describe('selection', () => {
     expect((await findByTestId('text')).innerHTML).toBe('4')
   })
 
+  test("useAtomSelector triggers component rerenders when the selector's value becomes undefined", async () => {
+    jest.useFakeTimers()
+
+    const rootAtom = atom('root', { a: 1 } as
+      | { a: number }
+      | number
+      | undefined)
+    const selector = ({ get }: AtomGetters) => get(rootAtom)
+
+    function Test() {
+      const val = useAtomSelector(selector)
+
+      return <div data-testid="text">{typeof val}</div>
+    }
+
+    const { findByTestId } = render(
+      <EcosystemProvider ecosystem={testEcosystem}>
+        <Test />
+      </EcosystemProvider>
+    )
+
+    const div = await findByTestId('text')
+    const instance = testEcosystem.getInstance(rootAtom)
+
+    expect(div.innerHTML).toBe('object')
+
+    act(() => {
+      instance.setState(undefined)
+    })
+
+    jest.runAllTimers()
+
+    expect(div.innerHTML).toBe('undefined')
+
+    act(() => {
+      instance.setState(1)
+    })
+
+    jest.runAllTimers()
+
+    expect(div.innerHTML).toBe('number')
+
+    act(() => {
+      instance.setState(undefined)
+    })
+
+    jest.runAllTimers()
+
+    expect(div.innerHTML).toBe('undefined')
+  })
+
   test('same-name selectors share the namespace when destroyed and recreated at different times', () => {
     const rootAtom = atom('root', () => 1, { ttl: 0 })
     const selector1 = ({ get }: AtomGetters) => get(rootAtom) + 2
