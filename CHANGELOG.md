@@ -1,3 +1,9 @@
+## v0.5.10 (Apr 13, 2023)
+
+### Fixes:
+
+- `react`: make all stores of all atoms in the evaluation stack use the ecosystem's scheduler (#10)
+
 ## v0.5.9 (Apr 13, 2023)
 
 Republish v0.5.8 with build cache issue fixed

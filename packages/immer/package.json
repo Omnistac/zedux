@@ -1,6 +1,6 @@
 {
   "name": "@zedux/immer",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "Official Immer integration for Zedux's store and atomic APIs",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -10,7 +10,7 @@
     "url": "https://github.com/Omnistac/zedux/issues"
   },
   "devDependencies": {
-    "@zedux/react": "^0.5.8",
+    "@zedux/react": "^0.5.10",
     "immer": "^9.0.21"
   },
   "exports": {
@@ -41,7 +41,7 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@zedux/react": "^0.5.8",
+    "@zedux/react": "^0.5.10",
     "immer": ">=9.0.19"
   },
   "repository": {
