@@ -16,7 +16,7 @@ yarn add @zedux/react # yarn
 pnpm add @zedux/react # pnpm
 ```
 
-The React package (`@zedux/react`) contains everything you need - the [core store model](npmjs.com/package/@zedux/core), the [core atomic model](npmjs.com/package/@zedux/atoms), and the React-specific APIs.
+The React package (`@zedux/react`) contains everything you need - the [core store model](https://www.npmjs.com/package/@zedux/core), the [core atomic model](https://www.npmjs.com/package/@zedux/atoms), and the React-specific APIs.
 
 `@zedux/react` has a peer dependency on React and is compatible with React 18+ only, as it uses the new `useSyncExternalStore` hook.
 
