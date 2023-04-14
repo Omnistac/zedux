@@ -40,7 +40,7 @@ export interface MachineState<
   Context extends Record<string, any> | undefined = any,
   Name extends string = string,
   Events extends string[] = [],
-  ChildStates extends string[] = []
+  ChildStates extends string[] = [Name]
 > {
   on: <E extends string, S extends string>(
     eventName: E,
