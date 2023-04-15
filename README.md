@@ -3,6 +3,7 @@
 [![Build Status](https://github.com/Omnistac/zedux/actions/workflows/coverage.yml/badge.svg)](https://github.com/Omnistac/zedux/actions/workflows/coverage.yml)
 [![codecov.io](https://codecov.io/gh/Omnistac/zedux/coverage.svg)](https://app.codecov.io/gh/Omnistac/zedux)
 [![npm](https://img.shields.io/npm/v/@zedux/react.svg)](https://www.npmjs.com/package/@zedux/react)
+[![license](https://shields.io/badge/license-MIT-informational)](https://github.com/Omnistac/zedux/tree/master/LICENSE.md)
 
 A Molecular State Engine for React.
 
