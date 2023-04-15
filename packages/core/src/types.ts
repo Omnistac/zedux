@@ -176,8 +176,8 @@ export type NextSubscriber<State = any> = (
   action: ActionChain
 ) => any
 
-export interface Observable<State = any> {
-  subscribe(subscriber: Subscriber<Store<State>>): Subscription
+export interface Observable<T = any> {
+  subscribe(subscriber: (value: T) => any): Subscription
 }
 
 export type Reactable<Payload = any, Type extends string = any> =
