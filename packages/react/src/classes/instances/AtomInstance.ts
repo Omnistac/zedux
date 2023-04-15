@@ -245,6 +245,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
       // TODO: dispatch an action over stateStore for these mutations
       this._cancelDestruction = () => {
+        this._setStatus('Active')
         this._cancelDestruction = undefined
         clearTimeout(timeoutId)
       }
@@ -254,12 +255,13 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
     if (typeof (ttl as Promise<any>).then === 'function') {
       let isCanceled = false
-      ;(ttl as Promise<any>).then(() => {
+      Promise.allSettled([ttl as Promise<any>]).then(() => {
         this._cancelDestruction = undefined
         if (!isCanceled) this.destroy()
       })
 
       this._cancelDestruction = () => {
+        this._setStatus('Active')
         this._cancelDestruction = undefined
         isCanceled = true
       }
@@ -274,6 +276,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     })
 
     this._cancelDestruction = () => {
+      this._setStatus('Active')
       this._cancelDestruction = undefined
       subscription.unsubscribe()
     }
@@ -364,14 +367,14 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     }
 
     try {
-      const val = (_value as (
-        ...params: G['Params']
-      ) =>
-        | G['Store']
-        | G['State']
-        | AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>)(
-        ...this.params
-      )
+      const val = (
+        _value as (
+          ...params: G['Params']
+        ) =>
+          | G['Store']
+          | G['State']
+          | AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>
+      )(...this.params)
 
       if (!is(val, AtomApi)) return val as G['Store'] | G['State']
 
@@ -403,10 +406,8 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       }
 
       // if api.value is a promise, we ignore api.promise
-      if (
-        typeof ((api.value as unknown) as Promise<any>)?.then === 'function'
-      ) {
-        return this._setPromise((api.value as unknown) as Promise<any>, true)
+      if (typeof (api.value as unknown as Promise<any>)?.then === 'function') {
+        return this._setPromise(api.value as unknown as Promise<any>, true)
       } else if (api.promise) {
         this._setPromise(api.promise)
       }
@@ -540,7 +541,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
         if (!isStateUpdater) return
 
         this.store.setState(
-          (getSuccessPromiseState(data) as unknown) as G['State']
+          getSuccessPromiseState(data) as unknown as G['State']
         )
       })
       .catch(error => {
@@ -551,7 +552,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
         if (!isStateUpdater) return
 
         this.store.setState(
-          (getErrorPromiseState(error) as unknown) as G['State']
+          getErrorPromiseState(error) as unknown as G['State']
         )
       })
 
@@ -569,6 +570,6 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       true
     )
 
-    return (state as unknown) as G['State']
+    return state as unknown as G['State']
   }
 }
