@@ -1,22 +1,12 @@
 import {
   api,
   atom,
-  createEcosystem,
   injectAtomGetters,
   injectRef,
   injectStore,
   internalTypes,
 } from '@zedux/react'
-
-const ecosystem = createEcosystem({ id: 'test' })
-
-afterEach(() => {
-  ecosystem.reset()
-})
-
-afterAll(() => {
-  ecosystem.destroy()
-})
+import { ecosystem } from '../utils/ecosystem'
 
 describe('batching', () => {
   test('exports batch updates by default', () => {

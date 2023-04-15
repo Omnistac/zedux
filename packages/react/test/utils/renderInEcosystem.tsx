@@ -1,11 +1,12 @@
 import { render } from '@testing-library/react'
 import { Ecosystem, EcosystemProvider } from '@zedux/react'
 import React from 'react'
+import { ecosystem } from './ecosystem'
 
 export const renderInEcosystem = (
   children: JSX.Element,
-  ecosystem?: Ecosystem
+  theEcosystem: Ecosystem = ecosystem
 ) =>
   render(
-    <EcosystemProvider ecosystem={ecosystem}>{children}</EcosystemProvider>
+    <EcosystemProvider ecosystem={theEcosystem}>{children}</EcosystemProvider>
   )

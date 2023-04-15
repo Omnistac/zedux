@@ -1,11 +1,9 @@
 import { fireEvent } from '@testing-library/dom'
-import { act, render } from '@testing-library/react'
+import { act } from '@testing-library/react'
 import {
   api,
   atom,
   createStore,
-  createEcosystem,
-  EcosystemProvider,
   injectAtomGetters,
   injectAtomValue,
   injectStore,
@@ -18,6 +16,8 @@ import {
 } from '@zedux/react'
 import { Static } from '@zedux/react/utils'
 import React from 'react'
+import { ecosystem } from '../utils/ecosystem'
+import { renderInEcosystem } from '../utils/renderInEcosystem'
 
 const atom1 = atom('atom1', () => 1)
 const atom2 = atom('atom2', () => 2)
@@ -42,17 +42,9 @@ const atom4 = atom('atom4', () => {
   })
 })
 
-const ecosystem = createEcosystem({ id: 'test' })
-
-afterEach(() => {
-  ecosystem.reset()
-})
-
 describe('graph', () => {
   test('injectAtomGetters', async () => {
     jest.useFakeTimers()
-
-    const ecosystem = createEcosystem({ id: 'test1' })
 
     function Test() {
       const { sum } = useAtomValue(atom4)
@@ -66,11 +58,7 @@ describe('graph', () => {
       )
     }
 
-    const { findByTestId, findByText } = render(
-      <EcosystemProvider ecosystem={ecosystem}>
-        <Test />
-      </EcosystemProvider>
-    )
+    const { findByTestId, findByText } = renderInEcosystem(<Test />)
 
     const div = await findByTestId('sum')
     expect(div).toHaveTextContent('3')
@@ -120,6 +108,10 @@ describe('graph', () => {
       atom1: true,
       atom3: true,
     })
+
+    expect(ecosystem.viewGraph()).toMatchSnapshot()
+    expect(ecosystem.viewGraph('bottom-up')).toMatchSnapshot()
+    expect(ecosystem.viewGraph('top-down')).toMatchSnapshot()
   })
 
   test('getInstance(atom) returns the instance', () => {

@@ -1,12 +1,5 @@
-import { atom, AtomGetters, createEcosystem } from '@zedux/react'
-
-const ecosystem = createEcosystem({
-  id: 'selector-cache-test',
-})
-
-afterEach(() => {
-  ecosystem.reset()
-})
+import { atom, AtomGetters } from '@zedux/react'
+import { ecosystem } from '../utils/ecosystem'
 
 describe('selector cache', () => {
   test('deeply nested selectors get auto-created', () => {

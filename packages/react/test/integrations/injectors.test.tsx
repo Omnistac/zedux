@@ -1,7 +1,6 @@
 import {
   api,
   atom,
-  createEcosystem,
   injectAtomInstance,
   injectAtomState,
   injectAtomValue,
@@ -12,12 +11,7 @@ import {
   injectRef,
   injectStore,
 } from '@zedux/react'
-
-const ecosystem = createEcosystem({ id: 'test-injectors' })
-
-afterEach(() => {
-  ecosystem.reset()
-})
+import { ecosystem } from '../utils/ecosystem'
 
 describe('injectors', () => {
   test('React-esque injectors mimic React hook functionality', () => {
@@ -25,7 +19,7 @@ describe('injectors', () => {
     const cbs: (() => void)[] = []
     const cleanups: string[] = []
     const effects: string[] = []
-    const refs: typeof ref[] = []
+    const refs: (typeof ref)[] = []
     const vals: string[] = []
     const cbA = () => {}
     const cbB = () => {}

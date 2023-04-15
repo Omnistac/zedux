@@ -1,20 +1,12 @@
-import { render } from '@testing-library/react'
 import {
   atom,
   AtomInstanceProvider,
-  createEcosystem,
-  EcosystemProvider,
   useAtomConsumer,
   useAtomInstance,
   useAtomValue,
 } from '@zedux/react'
 import React, { Component } from 'react'
-
-const ecosystem = createEcosystem({ id: 'test-react-context' })
-
-afterEach(() => {
-  ecosystem.reset()
-})
+import { renderInEcosystem } from '../utils/renderInEcosystem'
 
 describe('React context', () => {
   test('a provided atom instance can be consumed dynamically anywhere', async () => {
@@ -47,11 +39,7 @@ describe('React context', () => {
       )
     }
 
-    const { findByTestId } = render(
-      <EcosystemProvider ecosystem={ecosystem}>
-        <Test />
-      </EcosystemProvider>
-    )
+    const { findByTestId } = renderInEcosystem(<Test />)
 
     const div1 = await findByTestId('0')
     const div2 = await findByTestId('1')
@@ -90,11 +78,7 @@ describe('React context', () => {
       )
     }
 
-    const { findByTestId } = render(
-      <EcosystemProvider ecosystem={ecosystem}>
-        <Test />
-      </EcosystemProvider>
-    )
+    const { findByTestId } = renderInEcosystem(<Test />)
 
     const div1 = await findByTestId('0')
 
@@ -142,11 +126,9 @@ describe('React context', () => {
       }
     }
 
-    const { findByTestId } = render(
+    const { findByTestId } = renderInEcosystem(
       <Boundary>
-        <EcosystemProvider ecosystem={ecosystem}>
-          <Test />
-        </EcosystemProvider>
+        <Test />
       </Boundary>
     )
 

@@ -1,22 +1,17 @@
-import { act, fireEvent, render } from '@testing-library/react'
+import { act, fireEvent } from '@testing-library/react'
 import {
   atom,
   AtomGetters,
-  createEcosystem,
-  EcosystemProvider,
   injectAtomSelector,
   ion,
   useAtomInstance,
   useAtomSelector,
 } from '@zedux/react'
 import React, { useEffect, useState } from 'react'
+import { ecosystem } from '../utils/ecosystem'
+import { renderInEcosystem } from '../utils/renderInEcosystem'
 
-const testEcosystem = createEcosystem({ id: 'test' })
 const testAtom = atom('testAtom', (key: string) => key)
-
-afterEach(() => {
-  testEcosystem.reset()
-})
 
 describe('selection', () => {
   test('default argsComparator prevents selector from running if selector reference and all args are the same', async () => {
@@ -43,11 +38,7 @@ describe('selection', () => {
       )
     }
 
-    const { findByTestId } = render(
-      <EcosystemProvider ecosystem={testEcosystem}>
-        <Test />
-      </EcosystemProvider>
-    )
+    const { findByTestId } = renderInEcosystem(<Test />)
 
     const button = await findByTestId('button')
 
@@ -64,7 +55,7 @@ describe('selection', () => {
     expect(selector2).toHaveBeenCalledTimes(1)
 
     act(() => {
-      testEcosystem.find(testAtom, ['a'])?.setState('b')
+      ecosystem.find(testAtom, ['a'])?.setState('b')
       jest.runAllTimers()
     })
 
@@ -107,11 +98,7 @@ describe('selection', () => {
       )
     }
 
-    const { findByTestId } = render(
-      <EcosystemProvider ecosystem={testEcosystem}>
-        <Test />
-      </EcosystemProvider>
-    )
+    const { findByTestId } = renderInEcosystem(<Test />)
 
     const button = await findByTestId('button')
 
@@ -154,11 +141,7 @@ describe('selection', () => {
       )
     }
 
-    const { findByTestId } = render(
-      <EcosystemProvider ecosystem={testEcosystem}>
-        <Test />
-      </EcosystemProvider>
-    )
+    const { findByTestId } = renderInEcosystem(<Test />)
 
     const button = await findByTestId('button')
 
@@ -197,11 +180,7 @@ describe('selection', () => {
       )
     }
 
-    const { findByTestId } = render(
-      <EcosystemProvider ecosystem={testEcosystem}>
-        <Test />
-      </EcosystemProvider>
-    )
+    const { findByTestId } = renderInEcosystem(<Test />)
 
     const button = await findByTestId('button')
 
@@ -234,14 +213,10 @@ describe('selection', () => {
       return <div data-testid="text">{typeof val}</div>
     }
 
-    const { findByTestId } = render(
-      <EcosystemProvider ecosystem={testEcosystem}>
-        <Test />
-      </EcosystemProvider>
-    )
+    const { findByTestId } = renderInEcosystem(<Test />)
 
     const div = await findByTestId('text')
-    const instance = testEcosystem.getInstance(rootAtom)
+    const instance = ecosystem.getInstance(rootAtom)
 
     expect(div.innerHTML).toBe('object')
 
@@ -278,18 +253,18 @@ describe('selection', () => {
     const atom2 = ion('2', ({ select }) => select(selector2), { ttl: 0 })
     const NAME = 'common-name'
     const FULL_NAME = `@@selector-${NAME}`
-    const originalGenerateId = testEcosystem._idGenerator.generateId
+    const originalGenerateId = ecosystem._idGenerator.generateId
 
     let idCounter = 0
-    testEcosystem._idGenerator.generateId = () => `testgen${idCounter++}`
+    ecosystem._idGenerator.generateId = () => `testgen${idCounter++}`
 
     Object.defineProperty(selector1, 'name', { value: NAME })
     Object.defineProperty(selector2, 'name', { value: NAME })
 
-    const instance1 = testEcosystem.getInstance(atom1)
+    const instance1 = ecosystem.getInstance(atom1)
     const cleanup1 = instance1.addDependent()
 
-    expect(testEcosystem._graph.nodes).toEqual({
+    expect(ecosystem._graph.nodes).toEqual({
       [FULL_NAME]: {
         dependencies: { root: true },
         dependents: {
@@ -334,12 +309,12 @@ describe('selection', () => {
 
     cleanup1()
 
-    expect(testEcosystem._graph.nodes).toEqual({})
+    expect(ecosystem._graph.nodes).toEqual({})
 
-    const instance2 = testEcosystem.getInstance(atom2)
+    const instance2 = ecosystem.getInstance(atom2)
     const cleanup2 = instance2.addDependent()
 
-    expect(testEcosystem._graph.nodes).toEqual({
+    expect(ecosystem._graph.nodes).toEqual({
       [FULL_NAME]: {
         dependencies: { root: true },
         dependents: {
@@ -382,10 +357,10 @@ describe('selection', () => {
     })
     expect(instance2.getState()).toBe(4)
 
-    const instance3 = testEcosystem.getInstance(atom1)
+    const instance3 = ecosystem.getInstance(atom1)
     const cleanup3 = instance3.addDependent()
 
-    expect(testEcosystem._graph.nodes).toEqual({
+    expect(ecosystem._graph.nodes).toEqual({
       [FULL_NAME]: {
         dependencies: { root: true },
         dependents: {
@@ -463,7 +438,7 @@ describe('selection', () => {
 
     cleanup2()
 
-    expect(testEcosystem._graph.nodes).toEqual({
+    expect(ecosystem._graph.nodes).toEqual({
       testgen2: {
         dependencies: { root: true },
         dependents: {
@@ -508,8 +483,8 @@ describe('selection', () => {
 
     cleanup3()
 
-    expect(testEcosystem._graph.nodes).toEqual({})
+    expect(ecosystem._graph.nodes).toEqual({})
 
-    testEcosystem._idGenerator.generateId = originalGenerateId
+    ecosystem._idGenerator.generateId = originalGenerateId
   })
 })

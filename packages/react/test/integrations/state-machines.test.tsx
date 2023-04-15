@@ -1,14 +1,11 @@
 import {
   api,
   atom,
-  createEcosystem,
   injectMachineStore,
   InjectMachineStoreParams,
   MachineState,
 } from '@zedux/react'
-
-const ecosystem = createEcosystem({ id: 'state-machines-test' })
-afterEach(() => ecosystem.reset())
+import { ecosystem } from '../utils/ecosystem'
 
 const injectMachine = <
   States extends MachineState[],

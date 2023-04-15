@@ -1,17 +1,8 @@
-import { api, atom, createEcosystem, useAtomValue } from '@zedux/react'
+import { api, atom, useAtomValue } from '@zedux/react'
 import React, { Suspense } from 'react'
 import { ErrorBoundary } from '../utils/ErrorBoundary'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
-
-const ecosystem = createEcosystem({ id: 'test' })
-
-afterAll(() => {
-  ecosystem.destroy()
-})
-
-afterEach(() => {
-  ecosystem.reset()
-})
+import { ecosystem } from '../utils/ecosystem'
 
 describe('suspense', () => {
   test('api().setPromise() makes a component suspend', async () => {

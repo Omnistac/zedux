@@ -1,17 +1,11 @@
 import { createStore } from '@zedux/core'
 import {
   atom,
-  createEcosystem,
   injectAtomInstance,
   injectEffect,
   injectStore,
 } from '@zedux/react'
-
-const ecosystem = createEcosystem({ id: 'test' })
-
-afterEach(() => {
-  ecosystem.reset()
-})
+import { ecosystem } from '../utils/ecosystem'
 
 describe('stores in atoms', () => {
   test('state set in a parent store subscriber lets previous dispatches inform subscribers in order', () => {

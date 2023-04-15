@@ -1,0 +1,76 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`graph injectAtomGetters 1`] = `
+{
+  "atom1": {
+    "dependencies": [],
+    "dependents": [
+      {
+        "key": "atom4",
+        "operation": "get",
+      },
+    ],
+    "weight": 1,
+  },
+  "atom2": {
+    "dependencies": [],
+    "dependents": [],
+    "weight": 1,
+  },
+  "atom3": {
+    "dependencies": [],
+    "dependents": [
+      {
+        "key": "atom4",
+        "operation": "get",
+      },
+    ],
+    "weight": 1,
+  },
+  "atom4": {
+    "dependencies": [
+      {
+        "key": "atom1",
+        "operation": "get",
+      },
+      {
+        "key": "atom3",
+        "operation": "get",
+      },
+    ],
+    "dependents": [
+      {
+        "key": "Test-0",
+        "operation": "useAtomValue",
+      },
+      {
+        "key": "Test-1",
+        "operation": "useAtomInstance",
+      },
+    ],
+    "weight": 3,
+  },
+}
+`;
+
+exports[`graph injectAtomGetters 2`] = `
+{
+  "atom2": {},
+  "atom4": {
+    "atom1": {},
+    "atom3": {},
+  },
+}
+`;
+
+exports[`graph injectAtomGetters 3`] = `
+{
+  "atom1": {
+    "atom4": {},
+  },
+  "atom2": {},
+  "atom3": {
+    "atom4": {},
+  },
+}
+`;

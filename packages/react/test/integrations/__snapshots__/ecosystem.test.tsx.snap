@@ -1,0 +1,168 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ecosystem big graph 1`] = `
+{
+  "atom1": {
+    "dependencies": [],
+    "dependents": [
+      {
+        "key": "atom2",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "atom3-["1"]",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "atom4",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "atom5",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "Child-4",
+        "operation": "useAtomValue",
+      },
+    ],
+    "weight": 1,
+  },
+  "atom2": {
+    "dependencies": [
+      {
+        "key": "atom1",
+        "operation": "injectAtomValue",
+      },
+    ],
+    "dependents": [
+      {
+        "key": "atom3-["1"]",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "atom5",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "Child-3",
+        "operation": "useAtomValue",
+      },
+    ],
+    "weight": 2,
+  },
+  "atom3-["1"]": {
+    "dependencies": [
+      {
+        "key": "atom1",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "atom2",
+        "operation": "injectAtomValue",
+      },
+    ],
+    "dependents": [
+      {
+        "key": "atom4",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "Child-2",
+        "operation": "useAtomValue",
+      },
+    ],
+    "weight": 4,
+  },
+  "atom4": {
+    "dependencies": [
+      {
+        "key": "atom3-["1"]",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "atom1",
+        "operation": "injectAtomValue",
+      },
+    ],
+    "dependents": [
+      {
+        "key": "atom5",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "Child-1",
+        "operation": "useAtomState",
+      },
+    ],
+    "weight": 6,
+  },
+  "atom5": {
+    "dependencies": [
+      {
+        "key": "atom2",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "atom4",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "atom1",
+        "operation": "injectAtomValue",
+      },
+    ],
+    "dependents": [
+      {
+        "key": "Child-0",
+        "operation": "useAtomValue",
+      },
+    ],
+    "weight": 10,
+  },
+}
+`;
+
+exports[`ecosystem big graph 2`] = `
+{
+  "atom5": {
+    "atom1": {},
+    "atom2": {
+      "atom1": {},
+    },
+    "atom4": {
+      "atom1": {},
+      "atom3-["1"]": {
+        "atom1": {},
+        "atom2": {
+          "atom1": {},
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`ecosystem big graph 3`] = `
+{
+  "atom1": {
+    "atom2": {
+      "atom3-["1"]": {
+        "atom4": {
+          "atom5": {},
+        },
+      },
+      "atom5": {},
+    },
+    "atom3-["1"]": {
+      "atom4": {
+        "atom5": {},
+      },
+    },
+    "atom4": {
+      "atom5": {},
+    },
+    "atom5": {},
+  },
+}
+`;

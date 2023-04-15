@@ -1,4 +1,5 @@
-import { atom, createEcosystem, ZeduxPlugin } from '@zedux/react'
+import { atom, ZeduxPlugin } from '@zedux/react'
+import { ecosystem } from '../utils/ecosystem'
 
 describe('plugins', () => {
   test('a plugin turns on mods dynamically', () => {
@@ -18,7 +19,6 @@ describe('plugins', () => {
       },
     })
 
-    const ecosystem = createEcosystem({ id: 'test' })
     ecosystem.registerPlugin(plugin)
 
     const instance = ecosystem.getInstance(atom1)

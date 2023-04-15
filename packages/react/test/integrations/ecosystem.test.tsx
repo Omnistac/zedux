@@ -1,9 +1,7 @@
-import { render } from '@testing-library/react'
 import {
   atom,
   Ecosystem,
   createEcosystem,
-  EcosystemProvider,
   injectAtomValue,
   injectStore,
   injectWhy,
@@ -12,12 +10,8 @@ import {
 } from '@zedux/react'
 import React from 'react'
 import { act } from 'react-dom/test-utils'
-
-const testEcosystem = createEcosystem({ id: 'test' })
-
-afterEach(() => {
-  testEcosystem.wipe()
-})
+import { ecosystem } from '../utils/ecosystem'
+import { renderInEcosystem } from '../utils/renderInEcosystem'
 
 describe('ecosystem', () => {
   test('big graph', async () => {
@@ -91,17 +85,9 @@ describe('ecosystem', () => {
       )
     }
 
-    function Test() {
-      return (
-        <EcosystemProvider ecosystem={testEcosystem}>
-          <Child />
-        </EcosystemProvider>
-      )
-    }
+    const { findByText } = renderInEcosystem(<Child />)
 
-    const { findByText } = render(<Test />)
-
-    expect(testEcosystem._instances).toEqual({
+    expect(ecosystem._instances).toEqual({
       atom1: expect.any(Object),
       atom2: expect.any(Object),
       'atom3-["1"]': expect.any(Object),
@@ -119,7 +105,7 @@ describe('ecosystem', () => {
     expect(evaluations).toEqual([5, 2, 1, 4, 3])
 
     act(() => {
-      testEcosystem.getInstance(atom1).setState('0')
+      ecosystem.getInstance(atom1).setState('0')
     })
 
     await findByText('1 0 0 2 0 0 2 0')
@@ -133,6 +119,10 @@ describe('ecosystem', () => {
       '0'
     )
     expect(evaluations).toEqual([5, 2, 1, 4, 3, 1, 2, 3, 4, 5])
+
+    expect(ecosystem.viewGraph('flat')).toMatchSnapshot()
+    expect(ecosystem.viewGraph('bottom-up')).toMatchSnapshot()
+    expect(ecosystem.viewGraph('top-down')).toMatchSnapshot()
   })
 
   test('ecosystem reset runs onReady function again', () => {
@@ -266,10 +256,6 @@ describe('ecosystem', () => {
   test('find', () => {
     const atomA = atom('a', (param: string) => param)
 
-    const ecosystem = createEcosystem({
-      id: 'find',
-    })
-
     const instance1 = ecosystem.getInstance(atomA, ['a'])
     const instance2 = ecosystem.find(atomA, ['a'])
     const instance3 = ecosystem.find('a')
@@ -287,8 +273,6 @@ describe('ecosystem', () => {
   test('.findAll()', () => {
     const atomA = atom('a', (param: string) => param)
     const atomB = atom('b', () => 'b')
-
-    const ecosystem = createEcosystem({ id: 'findAll' })
 
     ecosystem.getInstance(atomA, ['a'])
     ecosystem.getInstance(atomA, ['aa'])
