@@ -25,7 +25,7 @@ const createCommit = async ({
   const body = extraDetails ? `\n\n${extraDetails}` : ''
 
   const footer =
-    packages.length > 1 ? `\n\n#affects ${packages.join(', ')}` : ''
+    packages.length > 1 ? `\n\n@affects ${packages.join(', ')}` : ''
 
   const commit = `${type}${packages.length === 1 ? `(${packages[0]})` : ''}${
     isBreaking ? '!' : ''

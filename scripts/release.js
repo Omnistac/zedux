@@ -261,7 +261,7 @@ const generateChangelog = async (type, tagName) => {
 
       const affectedPackages =
         message.match(/^\w+\((.*?)\)!?:/)?.slice(1, 2) ||
-        message.match(/^#affects (.*)?/m)?.[1].split(', ') ||
+        message.match(/^@affects (.*)?/m)?.[1].split(', ') ||
         []
 
       const item = { affectedPackages, isBreaking, message: shortMessage }

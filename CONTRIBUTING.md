@@ -88,7 +88,7 @@ fix(core): stop doing specific wrong thing
 ```
 feat: implement coolNewFeature
 
-#affects atoms, core, react
+@affects atoms, core, react
 ```
 
 If the commit includes a breaking change, simply add `!`. For example:
