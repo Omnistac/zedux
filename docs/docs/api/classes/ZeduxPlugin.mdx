@@ -265,12 +265,38 @@ Every ZeduxPlugin has just two properties:
       property transitions to a new state (e.g. from Initializing to Active or
       from Active to Stale).
     </p>
+    <p>
+      This mod also triggers messages when selectors are finished initializing
+      and when selectors are destroyed. Selectors don't track their lifecycle
+      like atom instances do, but the <code>newStatus</code> and{' '}
+      <code>oldStatus</code> fields for these events will be LifeCycle strings
+      exactly like the strings used for atom instances.
+    </p>
     <p>Payload shape:</p>
     <Ts>{`{
-  instance: AnyAtomInstance
+  node: AnyAtomInstance | SelectorCache
   newStatus: LifecycleStatus
   oldStatus: LifecycleStatus
 }`}</Ts>
+    <p>
+      <code>node</code> will be either an atom instance or an atom selector. You
+      can use{' '}
+      <Link to="../utils/is">
+        <code>is()</code>
+      </Link>{' '}
+      to determine which.
+    </p>
+    <p>
+      <code>oldStatus</code> will be one of "Active", "Initializing", or "Stale"
+    </p>
+    <p>
+      <code>newStatus</code> will be one of "Initializing", "Stale", or
+      "Destroyed"
+    </p>
+    <p>
+      Note that atom selectors can never be "Stale". Their lifecycle essentially
+      goes <code>Initializing -> Active -> Destroyed</code>.
+    </p>
   </Item>
 </Legend>
 

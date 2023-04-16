@@ -517,8 +517,8 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     if (this.ecosystem._mods.statusChanged) {
       this.ecosystem.modBus.dispatch(
         pluginActions.statusChanged({
-          instance: this,
           newStatus,
+          node: this,
           oldStatus,
         })
       )
