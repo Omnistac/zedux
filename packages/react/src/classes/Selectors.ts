@@ -131,11 +131,11 @@ export class Selectors {
       ? (selectable as SelectorCache<T, Args>)
       : this._items[id]
 
-    if (!cache) return
+    if (!cache || cache.isDestroyed) return
 
     const node = this.ecosystem._graph.nodes[id]
 
-    if (!force && Object.keys(node?.dependents || {}).length) return
+    if (!force && Object.keys(node.dependents).length) return
 
     this._destroySelector(id)
   }
@@ -199,12 +199,12 @@ export class Selectors {
 
     Object.values(this._items)
       .sort((a, b) => a.id.localeCompare(b.id))
-      .forEach(instance => {
-        if (filterKey && !instance.id.toLowerCase().includes(filterKey)) {
+      .forEach(item => {
+        if (filterKey && !item.id.toLowerCase().includes(filterKey)) {
           return
         }
 
-        hash[instance.id] = instance
+        hash[item.id] = item
       })
 
     return hash
@@ -226,7 +226,7 @@ export class Selectors {
    */
   public getCache<T = any, Args extends any[] = []>(
     selectable: Selectable<T, Args> | SelectorCache<T, Args>,
-    args: Args = ([] as unknown) as Args
+    args: Args = [] as unknown as Args
   ) {
     if (is(selectable, SelectorCache)) {
       return selectable
@@ -290,15 +290,27 @@ export class Selectors {
 
     if (!cache) return // shouldn't happen
 
+    const { _graph, _scheduler, _mods, modBus } = this.ecosystem
+
     if (cache.nextEvaluationReasons.length && cache.task) {
-      this.ecosystem._scheduler.unschedule(cache.task)
+      _scheduler.unschedule(cache.task)
     }
 
-    this.ecosystem._graph.removeDependencies(id)
-    this.ecosystem._graph.removeNode(id)
+    _graph.removeDependencies(id)
+    _graph.removeNode(id)
     delete this._items[id]
     cache.isDestroyed = true
     this._refBaseKeys.delete(cache.selectorRef)
+
+    if (_mods.statusChanged) {
+      modBus.dispatch(
+        pluginActions.statusChanged({
+          newStatus: 'Destroyed',
+          node: cache,
+          oldStatus: 'Active',
+        })
+      )
+    }
   }
 
   /**
@@ -326,11 +338,6 @@ export class Selectors {
     shouldSetTimeout?: boolean
   ) {
     const cache = this._items[id]
-
-    // TODO: Any calls in this case probably indicate a memory leak on the
-    // user's part. Notify them.
-    if (!cache) return
-
     cache.nextEvaluationReasons.push(reason)
 
     if (cache.nextEvaluationReasons.length > 1) return // job already scheduled
@@ -418,10 +425,10 @@ export class Selectors {
     args: Args,
     isInitializing?: boolean
   ) {
-    const ecosystem = this.ecosystem
-    ecosystem._graph.bufferUpdates(id)
+    const { _evaluationStack, _graph, _mods, modBus } = this.ecosystem
+    _graph.bufferUpdates(id)
     const cache = this._items[id] as SelectorCache<T, Args>
-    ecosystem._evaluationStack.start(cache)
+
     const selector =
       typeof cache.selectorRef === 'function'
         ? cache.selectorRef
@@ -432,19 +439,21 @@ export class Selectors {
         cache.selectorRef.resultsComparator) ||
       defaultResultsComparator
 
+    _evaluationStack.start(cache)
+
     try {
-      const result = selector(ecosystem._evaluationStack.atomGetters, ...args)
+      const result = selector(_evaluationStack.atomGetters, ...args)
 
       if (!isInitializing && !resultsComparator(result, cache.result as T)) {
-        ecosystem._graph.scheduleDependents(
+        _graph.scheduleDependents(
           id,
           cache.nextEvaluationReasons,
           result,
           cache.result
         )
 
-        if (ecosystem._mods.stateChanged) {
-          ecosystem.modBus.dispatch(
+        if (_mods.stateChanged) {
+          modBus.dispatch(
             pluginActions.stateChanged({
               cache: cache as SelectorCache<any, any[]>,
               newState: result,
@@ -457,21 +466,31 @@ export class Selectors {
         cache.result = result
       } else if (isInitializing) {
         cache.result = result
+
+        if (_mods.statusChanged) {
+          modBus.dispatch(
+            pluginActions.statusChanged({
+              newStatus: 'Active',
+              node: cache as SelectorCache<any, any[]>,
+              oldStatus: 'Initializing',
+            })
+          )
+        }
       }
     } catch (err) {
-      ecosystem._graph.destroyBuffer()
+      _graph.destroyBuffer()
       console.error(
-        `Zedux encountered an error while running AtomSelector with id "${id}":`,
+        `Zedux encountered an error while running selector with id "${id}":`,
         err
       )
 
       throw err
     } finally {
-      ecosystem._evaluationStack.finish()
+      _evaluationStack.finish()
       cache.prevEvaluationReasons = cache.nextEvaluationReasons
       cache.nextEvaluationReasons = []
     }
 
-    ecosystem._graph.flushUpdates()
+    _graph.flushUpdates()
   }
 }
