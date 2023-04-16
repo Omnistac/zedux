@@ -277,8 +277,9 @@ export class Graph {
     signal: GraphEdgeSignal = 'Updated',
     scheduleStaticDeps = false
   ) {
-    const instance = this.ecosystem._instances[nodeId]
-    const cache = this.ecosystem.selectors._items[nodeId]
+    const { _instances, _scheduler, selectors } = this.ecosystem
+    const instance = _instances[nodeId]
+    const cache = selectors._items[nodeId]
     const node = this.nodes[nodeId]
 
     Object.keys(node.dependents).forEach(dependentKey => {
@@ -290,7 +291,7 @@ export class Graph {
 
         // destruction jobs supersede update jobs; cancel the existing job so we
         // can create a new one for the destruction
-        this.ecosystem._scheduler.unschedule(dependentEdge.task)
+        _scheduler.unschedule(dependentEdge.task)
       }
 
       // Static deps don't update on state change. Dynamic deps don't update on
@@ -312,14 +313,14 @@ export class Graph {
       // own jobs
       if (!(dependentEdge.flags & External)) {
         if (this.nodes[dependentKey].isAtomSelector) {
-          return this.ecosystem.selectors._scheduleEvaluation(
+          return selectors._scheduleEvaluation(
             dependentKey,
             reason,
             shouldSetTimeout
           )
         }
 
-        return this.ecosystem._instances[dependentKey]._scheduleEvaluation(
+        return _instances[dependentKey]._scheduleEvaluation(
           reason,
           shouldSetTimeout
         )
@@ -335,7 +336,7 @@ export class Graph {
         )
       }
 
-      this.ecosystem._scheduler.schedule(
+      _scheduler.schedule(
         {
           flags: dependentEdge.flags,
           task,

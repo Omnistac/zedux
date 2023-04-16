@@ -114,7 +114,7 @@ export class IdGenerator {
           return this.cacheClass(param)
         }
 
-        return param // let engine try resolve it or throw the error
+        return param // let engine try to resolve it or throw the error
       }
 
       return Object.keys(param)
