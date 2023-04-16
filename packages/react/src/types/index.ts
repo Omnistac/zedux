@@ -14,9 +14,9 @@ import {
 export * from './atoms'
 
 export interface AtomConfig<State = any> {
-  dehydrate?: <D>(state: State) => D
+  dehydrate?: (state: State) => any
   flags?: string[]
-  hydrate?: <D>(dehydratedState: D) => State
+  hydrate?: (dehydratedState: unknown) => State
   manualHydration?: boolean
   ttl?: number
 }
