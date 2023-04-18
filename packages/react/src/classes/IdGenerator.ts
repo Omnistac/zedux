@@ -54,6 +54,16 @@ export class IdGenerator {
     return this.generateId('es')
   }
 
+  /**
+   * Generate a pretty-much-guaranteed unique id using the passed prefix.
+   *
+   * This method and `IdGenerator#now()` are the only methods in Zedux that
+   * produce random values.
+   *
+   * Override these when testing to create reproducible graphs/dehydrations that
+   * can be used easily in snapshot testing. See our setup in the Zedux repo at
+   * `<repo root>/packages/react/test/utils/ecosystem.ts` for an example.
+   */
   public generateId = (prefix: string) =>
     `${prefix}-${++this.idCounter}${Math.random().toString(16).slice(2, 14)}`
 
@@ -124,6 +134,22 @@ export class IdGenerator {
           return result
         }, {} as Record<string, any>)
     })
+  }
+
+  /**
+   * Generate a timestamp. Pass true to make it a high res timestamp if possible
+   *
+   * This method and `IdGenerator#generateId()` are the only methods in Zedux
+   * that produce random values.
+   *
+   * Override these when testing to create reproducible graphs/dehydrations that
+   * can be used easily in snapshot testing. See our setup in the Zedux repo at
+   * `<repo root>/packages/react/test/utils/ecosystem.ts` for an example.
+   */
+  public now(highRes?: boolean) {
+    return highRes && typeof performance !== 'undefined'
+      ? performance.now()
+      : Date.now()
   }
 
   private cacheClass(instance: { new (): any }) {

@@ -78,7 +78,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   public store: G['Store']
 
   public _cancelDestruction?: Cleanup
-  public _createdAt = Date.now()
+  public _createdAt: number
   public _injectors?: InjectorDescriptor[]
   public _nextEvaluationReasons: EvaluationReason[] = []
   public _nextInjectors?: InjectorDescriptor[]
@@ -101,6 +101,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     public readonly params: G['Params']
   ) {
     super()
+    this._createdAt = ecosystem._idGenerator.now()
 
     // lol
     this.exports = (this as any).exports
@@ -211,9 +212,10 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     })
 
     this._setStatus('Active')
+    this.ecosystem._graph.flushUpdates()
 
     // hydrate if possible
-    if (!this.ecosystem.hydration || this.template.manualHydration) return
+    if (this.template.manualHydration) return
 
     const hydration = this.ecosystem._consumeHydration(this)
 
@@ -309,10 +311,12 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   private evaluationTask = () => this._evaluationTask()
 
   private _doEvaluate(): G['Store'] | G['State'] {
+    const { _evaluationStack, _graph } = this.ecosystem
+
     this._nextInjectors = []
     let newFactoryResult: G['Store'] | G['State']
-    this.ecosystem._evaluationStack.start(this)
-    this.ecosystem._graph.bufferUpdates(this.id)
+    _evaluationStack.start(this)
+    _graph.bufferUpdates(this.id)
 
     try {
       newFactoryResult = this._evaluate()
@@ -322,11 +326,11 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       })
 
       this._nextInjectors = undefined
-      this.ecosystem._graph.destroyBuffer()
+      _graph.destroyBuffer()
 
       throw err
     } finally {
-      this.ecosystem._evaluationStack.finish()
+      _evaluationStack.finish()
 
       // even if evaluation errored, we need to update dependents if the store's
       // state changed
@@ -345,7 +349,11 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
     this._injectors = this._nextInjectors
     this._nextInjectors = undefined
-    this.ecosystem._graph.flushUpdates()
+
+    if (this.status !== 'Initializing') {
+      // let this._init flush updates after status is set to Active
+      _graph.flushUpdates()
+    }
 
     return newFactoryResult
   }

@@ -591,6 +591,11 @@ instance.setState('new state')`}</Ts>
       (if any), and calls <code>onReady</code> again to reinitialize the
       ecosystem.
     </p>
+    <p>
+      Note that this doesn't remove overrides or plugins but <i>does</i> remove
+      hydrations. This is because you can remove overrides/plugins yourself if
+      needed, but there isn't currently a way to remove hydrations.
+    </p>
     <p>Signature:</p>
     <Ts>{`reset = (newContext?) => void`}</Ts>
     <p>

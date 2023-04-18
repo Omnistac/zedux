@@ -56,8 +56,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public selectors: Selectors = new Selectors(this)
   public ssr?: boolean
 
-  public _evaluationStack: EvaluationStack = new EvaluationStack(this)
   public _graph: Graph = new Graph(this)
+
+  // define this after _graph so it can access _graph immediately
+  public _evaluationStack: EvaluationStack = new EvaluationStack(this)
   public _idGenerator = new IdGenerator()
   public _instances: Record<string, AnyAtomInstance> = {}
   public _mods: Record<Mod, number> = { ...defaultMods }
@@ -192,60 +194,58 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     includeFlags?: string[]
     transform?: boolean
   } = {}) {
-    const instances = Object.values(this._instances).filter(instance => {
-      if (
-        exclude &&
-        exclude.some(atomOrKey =>
-          typeof atomOrKey === 'string'
-            ? instance.id.toLowerCase().includes(atomOrKey.toLowerCase())
-            : instance.template.key === atomOrKey.key
-        )
-      ) {
+    const instances = Object.values(this._instances).filter(
+      ({ id, template }) => {
+        if (
+          exclude &&
+          exclude.some(atomOrKey =>
+            typeof atomOrKey === 'string'
+              ? id.toLowerCase().includes(atomOrKey.toLowerCase())
+              : template.key === atomOrKey.key
+          )
+        ) {
+          return false
+        }
+
+        if (
+          excludeFlags &&
+          excludeFlags.some(flag => template.flags?.includes(flag))
+        ) {
+          return false
+        }
+
+        if (!include && !includeFlags) return true
+
+        if (
+          include &&
+          include.some(atomOrKey =>
+            typeof atomOrKey === 'string'
+              ? id.toLowerCase().includes(atomOrKey.toLowerCase())
+              : template.key === atomOrKey.key
+          )
+        ) {
+          return true
+        }
+
+        if (
+          includeFlags &&
+          includeFlags.some(flag => template.flags?.includes(flag))
+        ) {
+          return true
+        }
+
         return false
       }
-
-      if (
-        excludeFlags &&
-        excludeFlags.some(flag => instance.template.flags?.includes(flag))
-      ) {
-        return false
-      }
-
-      if (!include && !includeFlags) return true
-
-      if (
-        include &&
-        include.some(atomOrKey =>
-          typeof atomOrKey === 'string'
-            ? instance.id.toLowerCase().includes(atomOrKey.toLowerCase())
-            : instance.template.key === atomOrKey.key
-        )
-      ) {
-        return true
-      }
-
-      if (
-        includeFlags &&
-        includeFlags.some(flag => instance.template.flags?.includes(flag))
-      ) {
-        return true
-      }
-
-      return false
-    })
-
-    return Object.fromEntries(
-      instances.map(instance => {
-        const state = instance.store.getState()
-
-        return [
-          instance.id,
-          transform && instance.template.dehydrate
-            ? instance.template.dehydrate(state)
-            : state,
-        ]
-      })
     )
+
+    return instances.reduce((obj, { id, store, template }) => {
+      const state = store.getState()
+
+      obj[id] =
+        transform && template.dehydrate ? template.dehydrate(state) : state
+
+      return obj
+    }, {} as Record<string, any>)
   }
 
   /**
@@ -533,6 +533,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Destroys all atom instances in this ecosystem, runs the cleanup function
    * returned from `onReady` (if any), and calls `onReady` again to reinitialize
    * the ecosystem.
+   *
+   * Note that this doesn't remove overrides or plugins but _does_ remove
+   * hydrations. This is because you can remove overrides/plugins yourself if
+   * needed, but there isn't currently a way to remove hydrations.
    */
   public reset(newContext?: Context) {
     this.wipe()
@@ -746,32 +750,37 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * returned from the onReady callback (if any). Don't remove plugins or re-run
    * the onReady callback.
    *
+   * Also don't remove overrides. This may usually be wanted, but it's easy
+   * enough to add a `.setOverrides([])` call when you need it.
+   *
    * Important! This method is mostly for internal use. You won't typically want
    * to call this method. Prefer `.reset()` which re-runs the onReady callback
    * after wiping the ecosystem, allowing onReady to re-initialize the ecosystem
    * - preloading atoms, registering plugins, configuring context, etc
    */
   public wipe() {
+    const { _instances, _mods, _scheduler, modBus, selectors } = this
+
     // call cleanup function first so it can configure the ecosystem for cleanup
-    if (this.cleanup) this.cleanup()
+    this.cleanup?.()
 
     // TODO: Delete nodes in an optimal order, starting with nodes with no
     // internal dependents. This is different from highest-weighted nodes since
     // static dependents don't affect weight. This should make sure no internal
     // nodes schedule unnecessary reevaaluations to recreate force-destroyed
     // instances
-    Object.values(this._instances).forEach(instance => {
+    Object.values(_instances).forEach(instance => {
       instance.destroy(true)
     })
 
     this.hydration = undefined
-    this.selectors._wipe()
+    selectors._wipe()
 
-    this._scheduler.wipe()
-    this._scheduler.flush()
+    _scheduler.wipe()
+    _scheduler.flush()
 
-    if (this._mods.ecosystemWiped) {
-      this.modBus.dispatch(pluginActions.ecosystemWiped({ ecosystem: this }))
+    if (_mods.ecosystemWiped) {
+      modBus.dispatch(pluginActions.ecosystemWiped({ ecosystem: this }))
     }
   }
 
@@ -783,7 +792,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     if (typeof hydratedValue === 'undefined') return
 
-    delete this.hydration?.[instance.id]
+    // hydration must exist here. This cast is fine:
+    delete (this.hydration as Record<string, any>)[instance.id]
 
     return instance.template.hydrate
       ? instance.template.hydrate(hydratedValue)
@@ -848,19 +858,20 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
   }
 
-  private resolveAtom<A extends AnyAtomTemplate>(atom: A) {
-    const override = this.overrides?.[atom.key]
-    const maybeOverriddenAtom = (override || atom) as A
+  private resolveAtom<A extends AnyAtomTemplate>(template: A) {
+    const { flags, overrides } = this
+    const override = overrides[template.key]
+    const maybeOverriddenAtom = (override || template) as A
 
     // to turn off flag checking, just don't pass a `flags` prop
-    if (this.flags) {
+    if (flags) {
       const badFlag = maybeOverriddenAtom.flags?.find(
-        flag => !this.flags?.includes(flag)
+        flag => !flags.includes(flag)
       )
 
       if (DEV && badFlag) {
         console.error(
-          `Zedux: encountered unsafe atom "${atom.key}" with flag "${badFlag}". This atom should be overridden in the current environment.`
+          `Zedux: encountered unsafe atom template "${template.key}" with flag "${badFlag}". This atom template should be overridden in the current environment.`
         )
       }
     }
