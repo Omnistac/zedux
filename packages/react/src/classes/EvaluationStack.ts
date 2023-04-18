@@ -1,4 +1,4 @@
-import { ActionFactoryPayloadType, Store } from '@zedux/core'
+import { ActionFactoryPayloadType, Store, is } from '@zedux/core'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
@@ -16,9 +16,7 @@ import {
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 import { SelectorCache } from './Selectors'
-
-const perf =
-  typeof performance !== 'undefined' ? performance : { now: () => Date.now() }
+import { AtomInstanceBase } from './instances/AtomInstanceBase'
 
 /**
  * A stack of AtomInstances and AtomSelectors that are currently evaluating -
@@ -46,23 +44,20 @@ export class EvaluationStack {
   public atomGetters: AtomGetters
 
   constructor(private readonly ecosystem: Ecosystem) {
+    const { _graph, selectors } = ecosystem
+
     const get: AtomGetters['get'] = ((atom, params) => {
-      const instance = ecosystem.getInstance(atom, params)
+      const { id, store } = ecosystem.getInstance(atom, params)
 
       // when called outside AtomSelector evaluation, get() is just an alias for
       // ecosystem.get()
-      if (!stack.length) return instance.store.getState()
+      if (!stack.length) return store.getState()
 
       // if get is called during evaluation, track the required atom instances so
       // we can add graph edges for them
-      ecosystem._graph.addEdge(
-        stack[stack.length - 1].id,
-        instance.id,
-        'get',
-        0
-      )
+      _graph.addEdge(stack[stack.length - 1].id, id, 'get', 0)
 
-      return instance.store.getState()
+      return store.getState()
     }) as AtomGetters['get']
 
     const getInstance: AtomGetters['getInstance'] = <A extends AnyAtomTemplate>(
@@ -78,7 +73,7 @@ export class EvaluationStack {
 
       // if getInstance is called during evaluation, track the required atom
       // instances so we can add graph edges for them
-      ecosystem._graph.addEdge(
+      _graph.addEdge(
         stack[stack.length - 1].id,
         instance.id,
         edgeInfo?.[1] || 'getInstance',
@@ -97,14 +92,9 @@ export class EvaluationStack {
         return ecosystem.select(selectable, ...args)
       }
 
-      const cache = this.ecosystem.selectors.getCache(selectable, args)
+      const cache = selectors.getCache(selectable, args)
 
-      ecosystem._graph.addEdge(
-        stack[stack.length - 1].id,
-        cache.id,
-        'select',
-        0
-      )
+      _graph.addEdge(stack[stack.length - 1].id, cache.id, 'select', 0)
 
       return cache.result as T
     }
@@ -123,14 +113,15 @@ export class EvaluationStack {
 
   public finish() {
     const item = stack.pop()
+    const { _idGenerator, _mods, modBus } = this.ecosystem
 
     // if we just popped the last thing off the stack, restore the default
     // scheduler
     if (!stack.length) Store._scheduler = undefined
 
-    if (!item || !this.ecosystem._mods.evaluationFinished) return
+    if (!item || !_mods.evaluationFinished) return
 
-    const time = item.start ? perf.now() - item.start : 0
+    const time = item.start ? _idGenerator.now(true) - item.start : 0
     const action = { time } as ActionFactoryPayloadType<
       typeof pluginActions.evaluationFinished
     >
@@ -149,9 +140,7 @@ export class EvaluationStack {
       ).cache = (item as SelectorStackItem).cache
     }
 
-    this.ecosystem.modBus.dispatch(
-      pluginActions.evaluationFinished(action as any)
-    )
+    modBus.dispatch(pluginActions.evaluationFinished(action as any))
   }
 
   public read() {
@@ -159,9 +148,10 @@ export class EvaluationStack {
   }
 
   public start(item: AnyAtomInstance | SelectorCache<any, any>) {
+    const { _idGenerator, _mods, _scheduler } = this.ecosystem
     const newItem = {} as StackItem
 
-    if ((item as AnyAtomInstance).id) {
+    if (is(item, AtomInstanceBase)) {
       newItem.id = (item as AnyAtomInstance).id
       ;(newItem as InstanceStackItem).instance = item as AnyAtomInstance
     } else {
@@ -169,13 +159,13 @@ export class EvaluationStack {
       ;(newItem as SelectorStackItem).cache = item as SelectorCache
     }
 
-    if (this.ecosystem._mods.evaluationFinished) {
-      newItem.start = perf.now()
+    if (_mods.evaluationFinished) {
+      newItem.start = _idGenerator.now(true)
     }
 
     stack.push(newItem)
 
     // all stores created during evaluation automatically belong to the ecosystem
-    Store._scheduler = this.ecosystem._scheduler
+    Store._scheduler = _scheduler
   }
 }
