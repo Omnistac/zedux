@@ -63,8 +63,7 @@ export const doSubscribe = <State>(
  * Use the latter for maximum flexibility.
  *
  * Subscribes to the store by default, causing the atom to be reevaluated on
- * every state change. This can be changed by passing `false` as the
- * subscribe config option.
+ * every state change. This can be changed by passing `subscribe: false`.
  *
  * In most cases you won't need to prevent subscribing. But it can be a useful
  * performance optimization.
@@ -151,7 +150,8 @@ export const injectStore: {
 
     // we were subscribed, now we're not
     if (!subscribe) {
-      prevDescriptor.cleanup?.()
+      // cleanup must be defined here. This cast is fine:
+      ;(prevDescriptor.cleanup as () => void)()
       prevDescriptor.cleanup = undefined
       return prevDescriptor
     }

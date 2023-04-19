@@ -245,6 +245,18 @@ describe('selection', () => {
     expect(div.innerHTML).toBe('undefined')
   })
 
+  test("selector caches use the function name if `name` isn't given", () => {
+    const selector = {
+      selector: function testName() {
+        return 2
+      },
+    }
+
+    const cache = ecosystem.selectors.getCache(selector)
+
+    expect(cache.id).toBe('@@selector-testName')
+  })
+
   test('same-name selectors share the namespace when destroyed and recreated at different times', () => {
     const rootAtom = atom('root', () => 1, { ttl: 0 })
     const selector1 = ({ get }: AtomGetters) => get(rootAtom) + 2
@@ -252,11 +264,6 @@ describe('selection', () => {
     const atom1 = atom('1', () => injectAtomSelector(selector1), { ttl: 0 })
     const atom2 = ion('2', ({ select }) => select(selector2), { ttl: 0 })
     const NAME = 'common-name'
-    const FULL_NAME = `@@selector-${NAME}`
-    const originalGenerateId = ecosystem._idGenerator.generateId
-
-    let idCounter = 0
-    ecosystem._idGenerator.generateId = () => `testgen${idCounter++}`
 
     Object.defineProperty(selector1, 'name', { value: NAME })
     Object.defineProperty(selector2, 'name', { value: NAME })
@@ -264,47 +271,7 @@ describe('selection', () => {
     const instance1 = ecosystem.getInstance(atom1)
     const cleanup1 = instance1.addDependent()
 
-    expect(ecosystem._graph.nodes).toEqual({
-      [FULL_NAME]: {
-        dependencies: { root: true },
-        dependents: {
-          1: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'select',
-          },
-        },
-        isAtomSelector: true,
-        weight: 2,
-      },
-      1: {
-        dependencies: { [FULL_NAME]: true },
-        dependents: {
-          testgen0: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 3,
-            operation: 'addDependent',
-          },
-        },
-        isAtomSelector: undefined,
-        weight: 3,
-      },
-      root: {
-        dependencies: {},
-        dependents: {
-          [FULL_NAME]: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'get',
-          },
-        },
-        isAtomSelector: undefined,
-        weight: 1,
-      },
-    })
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
     expect(instance1.getState()).toBe(3)
 
     cleanup1()
@@ -314,177 +281,23 @@ describe('selection', () => {
     const instance2 = ecosystem.getInstance(atom2)
     const cleanup2 = instance2.addDependent()
 
-    expect(ecosystem._graph.nodes).toEqual({
-      [FULL_NAME]: {
-        dependencies: { root: true },
-        dependents: {
-          2: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'select',
-          },
-        },
-        isAtomSelector: true,
-        weight: 2,
-      },
-      2: {
-        dependencies: { [FULL_NAME]: true },
-        dependents: {
-          testgen1: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 3,
-            operation: 'addDependent',
-          },
-        },
-        isAtomSelector: undefined,
-        weight: 3,
-      },
-      root: {
-        dependencies: {},
-        dependents: {
-          [FULL_NAME]: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'get',
-          },
-        },
-        isAtomSelector: undefined,
-        weight: 1,
-      },
-    })
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
     expect(instance2.getState()).toBe(4)
 
     const instance3 = ecosystem.getInstance(atom1)
     const cleanup3 = instance3.addDependent()
 
-    expect(ecosystem._graph.nodes).toEqual({
-      [FULL_NAME]: {
-        dependencies: { root: true },
-        dependents: {
-          2: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'select',
-          },
-        },
-        isAtomSelector: true,
-        weight: 2,
-      },
-      testgen2: {
-        dependencies: { root: true },
-        dependents: {
-          1: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'select',
-          },
-        },
-        isAtomSelector: true,
-        weight: 2,
-      },
-      1: {
-        dependencies: { testgen2: true },
-        dependents: {
-          testgen3: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 3,
-            operation: 'addDependent',
-          },
-        },
-        isAtomSelector: undefined,
-        weight: 3,
-      },
-      2: {
-        dependencies: { [FULL_NAME]: true },
-        dependents: {
-          testgen1: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 3,
-            operation: 'addDependent',
-          },
-        },
-        isAtomSelector: undefined,
-        weight: 3,
-      },
-      root: {
-        dependencies: {},
-        dependents: {
-          [FULL_NAME]: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'get',
-          },
-          testgen2: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'get',
-          },
-        },
-        isAtomSelector: undefined,
-        weight: 1,
-      },
-    })
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
     expect(instance1.getState()).toBe(3)
     expect(instance2.getState()).toBe(4)
 
     cleanup2()
 
-    expect(ecosystem._graph.nodes).toEqual({
-      testgen2: {
-        dependencies: { root: true },
-        dependents: {
-          1: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'select',
-          },
-        },
-        isAtomSelector: true,
-        weight: 2,
-      },
-      1: {
-        dependencies: { testgen2: true },
-        dependents: {
-          testgen3: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 3,
-            operation: 'addDependent',
-          },
-        },
-        isAtomSelector: undefined,
-        weight: 3,
-      },
-      root: {
-        dependencies: {},
-        dependents: {
-          testgen2: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'get',
-          },
-        },
-        isAtomSelector: undefined,
-        weight: 1,
-      },
-    })
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
     expect(instance1.getState()).toBe(3)
 
     cleanup3()
 
     expect(ecosystem._graph.nodes).toEqual({})
-
-    ecosystem._idGenerator.generateId = originalGenerateId
   })
 })

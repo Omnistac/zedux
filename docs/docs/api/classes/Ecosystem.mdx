@@ -572,12 +572,18 @@ instance.setState('new state')`}</Ts>
       the passed list will be force-destroyed, allowing their dependents to
       recreate them using the original, non-overridden atom template.
     </p>
+    <p>
+      You can pass either the original template or the override. Zedux only
+      looks at their <code>key</code> properties. You can also pass strings
+      matching atom template keys.
+    </p>
     <p>Signature:</p>
     <Ts>{`removeOverrides = (overrides) => void`}</Ts>
     <Legend>
       <Item name="overrides">
-        Required. An array of <Link to="AtomTemplate">atom templates</Link>. If
-        any haven't been set as overrides previously, they'll be ignored.
+        Required. An array of <Link to="AtomTemplate">atom templates</Link>{' '}
+        and/or template key strings. If any haven't been set as overrides
+        previously, they'll be ignored.
       </Item>
     </Legend>
   </Item>

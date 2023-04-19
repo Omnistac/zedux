@@ -319,7 +319,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public findAll(template?: AnyAtomTemplate | string) {
     const isAtom = (template as AnyAtomTemplate)?.key
     const filterKey = isAtom
-      ? (template as AnyAtomTemplate)?.key
+      ? (template as AnyAtomTemplate).key
       : (template as string)
     const hash: Record<string, AnyAtomInstance> = {}
 
@@ -469,7 +469,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         instance.template.hydrate ? instance.template.hydrate(val) : val
       )
 
-      delete this.hydration?.[key]
+      // we know hydration is defined at this point
+      delete (this.hydration as Record<string, any>)[key]
     })
   }
 
@@ -513,11 +514,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    */
   public removeOverrides(overrides: (AnyAtomTemplate | string)[]) {
     this.overrides = mapOverrides(
-      Object.values(this.overrides).filter(atom =>
+      Object.values(this.overrides).filter(template =>
         overrides.every(override => {
           const key = typeof override === 'string' ? override : override.key
 
-          return key !== atom.key
+          return key !== template.key
         })
       )
     )
@@ -600,8 +601,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         instance.destroy(true)
       })
     })
-
-    if (!oldOverrides) return
 
     Object.values(oldOverrides).forEach(atom => {
       const instances = this.findAll(atom)

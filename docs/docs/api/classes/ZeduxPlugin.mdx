@@ -144,6 +144,15 @@ Every ZeduxPlugin has just two properties:
       the ecosystem's graph. This edge represents a dependency between two nodes
       in the graph.
     </p>
+    <p>
+      This mod can also be used to determine when an edge has "moved" after a
+      dependency was force-destroyed. Since no <code>edgeRemoved</code> events
+      are sent for edges between a force-destroyed node and its dependents, a
+      plugin's internal graph representation would still have those edges intact
+      when the new <code>edgeCreated</code> events come in after the dependency
+      is recreated. These <code>edgeCreated</code> events will thus appear to be
+      duplicates. When this happens, you can infer that the edge was "moved".
+    </p>
     <p>Payload shape:</p>
     <Ts>{`{
   dependency: AnyAtomInstance | SelectorCache
@@ -266,9 +275,9 @@ Every ZeduxPlugin has just two properties:
       from Active to Stale).
     </p>
     <p>
-      This mod also triggers messages when selectors are finished initializing
-      and when selectors are destroyed. Selectors don't track their lifecycle
-      like atom instances do, but the <code>newStatus</code> and{' '}
+      This mod also triggers messages when selector caches are finished
+      initializing and when selector caches are destroyed. Selectors don't track
+      their lifecycle like atom instances do, but the <code>newStatus</code> and{' '}
       <code>oldStatus</code> fields for these events will be LifeCycle strings
       exactly like the strings used for atom instances.
     </p>

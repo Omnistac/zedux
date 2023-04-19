@@ -32,19 +32,20 @@ export class Graph {
     flags: number,
     callback?: DependentCallback
   ) {
+    const { ecosystem, updateStack } = this
     const newEdge: DependentEdge = {
       callback,
-      createdAt: Date.now(),
+      createdAt: ecosystem._idGenerator.now(),
       flags,
       operation,
     }
 
-    if (!this.updateStack.length) {
+    if (!updateStack.length) {
       return this.finishAddingEdge(dependentKey, dependencyKey, newEdge)
     }
 
     // We're buffering updates! Buffer this one
-    const { dependencies, key } = this.updateStack[this.updateStack.length - 1]
+    const { dependencies, key } = updateStack[updateStack.length - 1]
 
     if (DEV && key !== dependentKey) {
       throw new Error(
@@ -65,14 +66,14 @@ export class Graph {
   }
 
   // Should only be used internally
-  public addNode(nodeId: string, isAtomSelector?: boolean) {
+  public addNode(nodeId: string, isSelector?: boolean) {
     if (this.nodes[nodeId]) return // already added
 
     this.nodes[nodeId] = {
       dependencies: {},
       dependents: {},
-      isAtomSelector,
-      weight: 1, // this node doesn't have dependencies yet; it's weight is 1
+      isSelector,
+      weight: 1, // this node doesn't have dependencies yet; its weight is 1
     }
   }
 
@@ -200,19 +201,20 @@ export class Graph {
       this.recalculateNodeWeight(dependentKey, -dependency.weight)
     }
 
+    const { _instances, _mods, _scheduler, modBus, selectors } = this.ecosystem
+
     if (dependentEdge.task) {
-      this.ecosystem._scheduler.unschedule(dependentEdge.task)
+      _scheduler.unschedule(dependentEdge.task)
     }
 
-    if (this.ecosystem._mods.edgeRemoved) {
-      this.ecosystem.modBus.dispatch(
+    if (_mods.edgeRemoved) {
+      modBus.dispatch(
         pluginActions.edgeRemoved({
           dependency:
-            this.ecosystem._instances[dependencyKey] ||
-            this.ecosystem.selectors._items[dependencyKey],
+            _instances[dependencyKey] || selectors._items[dependencyKey],
           dependent:
-            this.ecosystem._instances[dependentKey] ||
-            this.ecosystem.selectors._items[dependentKey] ||
+            _instances[dependentKey] ||
+            selectors._items[dependentKey] ||
             dependentKey,
           edge: dependentEdge,
         })
@@ -257,6 +259,11 @@ export class Graph {
       const dependentNode = this.nodes[dependentKey]
 
       if (dependentNode) delete dependentNode.dependencies[nodeId]
+
+      // we _probably_ don't need to send edgeRemoved mod events to plugins for
+      // these - it's better that they receive the duplicate edgeCreated event
+      // when the dependency is recreated by its dependent(s) so they can infer
+      // that the edge was "moved"
     })
 
     delete this.nodes[nodeId]
@@ -305,14 +312,14 @@ export class Graph {
         operation: dependentEdge.operation,
         reasons,
         sourceId: nodeId,
-        sourceType: node.isAtomSelector ? 'AtomSelector' : 'Atom',
+        sourceType: node.isSelector ? 'AtomSelector' : 'Atom',
         type,
       }
 
       // let internal dependents (other atoms and AtomSelectors) schedule their
       // own jobs
       if (!(dependentEdge.flags & External)) {
-        if (this.nodes[dependentKey].isAtomSelector) {
+        if (this.nodes[dependentKey].isSelector) {
           return selectors._scheduleEvaluation(
             dependentKey,
             reason,
@@ -376,15 +383,16 @@ export class Graph {
       this.recalculateNodeWeight(dependentKey, dependency.weight)
     }
 
-    if (this.ecosystem._mods.edgeCreated) {
-      this.ecosystem.modBus.dispatch(
+    const { _instances, _mods, modBus, selectors } = this.ecosystem
+
+    if (_mods.edgeCreated) {
+      modBus.dispatch(
         pluginActions.edgeCreated({
           dependency:
-            this.ecosystem._instances[dependencyKey] ||
-            this.ecosystem.selectors._items[dependencyKey],
+            _instances[dependencyKey] || selectors._items[dependencyKey],
           dependent:
-            this.ecosystem._instances[dependentKey] ||
-            this.ecosystem.selectors._items[dependentKey] ||
+            _instances[dependentKey] ||
+            selectors._items[dependentKey] ||
             dependentKey, // unfortunate but not changing for now UPDATE: shouldn't be needed anymore. Double check
           edge: newEdge,
         })
@@ -418,7 +426,7 @@ export class Graph {
     const node = this.nodes[nodeId]
 
     if (node && !Object.keys(node.dependents).length) {
-      if (node.isAtomSelector) {
+      if (node.isSelector) {
         this.ecosystem.selectors._destroySelector(nodeId)
       } else {
         this.ecosystem._instances[nodeId]._scheduleDestruction()
@@ -435,7 +443,7 @@ export class Graph {
     const dependency = this.nodes[nodeId]
 
     if (
-      !dependency.isAtomSelector &&
+      !dependency.isSelector &&
       Object.keys(dependency.dependents).length === 1
     ) {
       const instance = this.ecosystem._instances[nodeId] as AnyAtomInstance

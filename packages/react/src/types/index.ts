@@ -188,7 +188,7 @@ export interface EcosystemConfig<
 export interface EcosystemGraphNode {
   dependencies: Record<string, true>
   dependents: Record<string, DependentEdge>
-  isAtomSelector?: boolean
+  isSelector?: boolean
   weight: number
 }
 

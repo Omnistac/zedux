@@ -1,0 +1,229 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 1`] = `
+{
+  "1": {
+    "dependencies": {
+      "@@selector-common-name": true,
+    },
+    "dependents": {
+      "no-0": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "addDependent",
+      },
+    },
+    "isSelector": undefined,
+    "weight": 3,
+  },
+  "@@selector-common-name": {
+    "dependencies": {
+      "root": true,
+    },
+    "dependents": {
+      "1": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "select",
+      },
+    },
+    "isSelector": true,
+    "weight": 2,
+  },
+  "root": {
+    "dependencies": {},
+    "dependents": {
+      "@@selector-common-name": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+    },
+    "isSelector": undefined,
+    "weight": 1,
+  },
+}
+`;
+
+exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 2`] = `
+{
+  "2": {
+    "dependencies": {
+      "@@selector-common-name": true,
+    },
+    "dependents": {
+      "no-1": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "addDependent",
+      },
+    },
+    "isSelector": undefined,
+    "weight": 3,
+  },
+  "@@selector-common-name": {
+    "dependencies": {
+      "root": true,
+    },
+    "dependents": {
+      "2": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "select",
+      },
+    },
+    "isSelector": true,
+    "weight": 2,
+  },
+  "root": {
+    "dependencies": {},
+    "dependents": {
+      "@@selector-common-name": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+    },
+    "isSelector": undefined,
+    "weight": 1,
+  },
+}
+`;
+
+exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 3`] = `
+{
+  "1": {
+    "dependencies": {
+      "@@selector-common-name-2": true,
+    },
+    "dependents": {
+      "no-3": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "addDependent",
+      },
+    },
+    "isSelector": undefined,
+    "weight": 3,
+  },
+  "2": {
+    "dependencies": {
+      "@@selector-common-name": true,
+    },
+    "dependents": {
+      "no-1": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "addDependent",
+      },
+    },
+    "isSelector": undefined,
+    "weight": 3,
+  },
+  "@@selector-common-name": {
+    "dependencies": {
+      "root": true,
+    },
+    "dependents": {
+      "2": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "select",
+      },
+    },
+    "isSelector": true,
+    "weight": 2,
+  },
+  "@@selector-common-name-2": {
+    "dependencies": {
+      "root": true,
+    },
+    "dependents": {
+      "1": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "select",
+      },
+    },
+    "isSelector": true,
+    "weight": 2,
+  },
+  "root": {
+    "dependencies": {},
+    "dependents": {
+      "@@selector-common-name": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+      "@@selector-common-name-2": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+    },
+    "isSelector": undefined,
+    "weight": 1,
+  },
+}
+`;
+
+exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 4`] = `
+{
+  "1": {
+    "dependencies": {
+      "@@selector-common-name-2": true,
+    },
+    "dependents": {
+      "no-3": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "addDependent",
+      },
+    },
+    "isSelector": undefined,
+    "weight": 3,
+  },
+  "@@selector-common-name-2": {
+    "dependencies": {
+      "root": true,
+    },
+    "dependents": {
+      "1": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "select",
+      },
+    },
+    "isSelector": true,
+    "weight": 2,
+  },
+  "root": {
+    "dependencies": {},
+    "dependents": {
+      "@@selector-common-name-2": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+    },
+    "isSelector": undefined,
+    "weight": 1,
+  },
+}
+`;
