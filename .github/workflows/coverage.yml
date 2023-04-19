@@ -1,4 +1,4 @@
-name: Report Code Coverage
+name: Test Coverage
 
 on:
   push:
@@ -24,3 +24,4 @@ jobs:
           directory: ./coverage
           fail_ci_if_error: true
           name: zedux-master
+          token: ${{ secrets.CODECOV_TOKEN }}
