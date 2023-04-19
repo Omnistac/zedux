@@ -122,7 +122,7 @@ export const useAtomSelector = <T, Args extends any[]>(
   const isDifferent =
     argsChanged || isRefDifferent(ecosystem, selectorOrConfig, cacheRef)
 
-  if (isDifferent || !cacheRef.current) {
+  if (isDifferent) {
     // yes, this mutation is fine
     cacheRef.current = ecosystem.selectors.getCache(
       selectorOrConfig,
