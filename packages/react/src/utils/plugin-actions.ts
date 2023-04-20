@@ -59,8 +59,8 @@ export const pluginActions = {
   >('stateChanged'),
   statusChanged: actionFactory<
     {
-      node: AnyAtomInstance | SelectorCache
       newStatus: LifecycleStatus
+      node: AnyAtomInstance | SelectorCache
       oldStatus: LifecycleStatus
     },
     'statusChanged'
