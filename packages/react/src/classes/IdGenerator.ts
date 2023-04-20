@@ -87,8 +87,11 @@ export class IdGenerator {
       .map(line =>
         line
           .trim()
+          // V8/JavaScriptCore:
           .replace('at ', '')
           .replace(/ \(.*\)/, '')
+          // SpiderMonkey:
+          .replace(/@.*/, '')
       )
 
     const componentName = lines
@@ -97,7 +100,7 @@ export class IdGenerator {
 
         const identifiers = line.split('.')
         const fn = identifiers[identifiers.length - 1]
-        return fn[0].toUpperCase() === fn[0]
+        return fn[0]?.toUpperCase() === fn[0]
       })
       ?.split(' ')[0]
 
