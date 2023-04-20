@@ -715,7 +715,7 @@ const timeTravelPlugin = new ZeduxPlugin({
 
 There's one last thing to fix. Since `registerEcosystem` is called as soon as the plugin is registered, our initial state snapshot will be empty. The ecosystem doesn't know what atoms are going to exist inside it, so the dehydration is a completely empty object.
 
-This means that the hydration won't affect any atoms. There are several ways to fix this.
+A rehydration with this empty object won't affect any atoms. There are several ways to fix this.
 
 One approach is to make the plugin hook into `statusChanged` events and walk back through the state history, updating every snapshot to include the new atom's initial state when a new atom's `status` changes from Initializing to Active.
 
@@ -743,8 +743,8 @@ const timeTravelPlugin = new ZeduxPlugin({
           action.type === ZeduxPlugin.actions.stateChanged.type &&
           action.payload?.instance
         ) {
-          // get initial snapshot now
           // highlight-start
+          // get initial snapshot now
           if (!state.history.length) {
             const snapshot = ecosystem.dehydrate({
               excludeFlags: ['no-time-travel'],
