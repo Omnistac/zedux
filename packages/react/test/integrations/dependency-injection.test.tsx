@@ -7,11 +7,13 @@ import {
   createStore,
   injectEffect,
   injectStore,
+  ion,
   useAtomInstance,
   useAtomValue,
 } from '@zedux/react'
 import React, { FC } from 'react'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
+import { ecosystem } from '../utils/ecosystem'
 
 const normalAtom = atom('normal', () => {
   const store = injectStore(0)
@@ -117,5 +119,46 @@ describe('using atoms in components', () => {
       { a: 1, b: 2 },
       { a: 11, b: 22 },
     ])
+  })
+
+  test('overrides can be dynamically swapped in and out', async () => {
+    jest.useFakeTimers()
+    const atom1 = atom('1', 'a')
+    const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
+    const atom1Override = atom1.override('aa')
+    const atom2Override = atom2.override(({ get }) => get(atom1) + 'bb')
+
+    function Test() {
+      const two = useAtomValue(atom2)
+
+      return <div data-testid="text">{two}</div>
+    }
+
+    const { findByTestId } = renderInEcosystem(<Test />)
+
+    const div = await findByTestId('text')
+
+    expect(div.innerHTML).toBe('ab')
+
+    act(() => {
+      ecosystem.addOverrides([atom2Override])
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('abb')
+
+    act(() => {
+      ecosystem.addOverrides([atom1Override])
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('aabb')
+
+    act(() => {
+      ecosystem.removeOverrides([atom2Override])
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('aab')
   })
 })

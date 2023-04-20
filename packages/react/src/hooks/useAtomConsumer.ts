@@ -40,9 +40,11 @@ export const useAtomConsumer: {
       throw new ReferenceError(
         `Zedux: useAtomConsumer - No atom instance was provided for atom "${template.key}".`
       )
-    } else {
-      return instance as AtomInstanceType<A>
     }
+
+    // TODO: this should probably still throw an error. Change this when we have
+    // a decent system for minified prod errors
+    return instance as AtomInstanceType<A>
   }
 
   return ecosystem.getInstance(template, defaultParams)

@@ -13,6 +13,8 @@ import {
   AtomInstanceType,
   injectAtomInstance,
   injectRef,
+  AtomGetters,
+  EvaluationReason,
 } from '@zedux/react'
 import { Static } from '@zedux/react/utils'
 import React from 'react'
@@ -149,7 +151,7 @@ describe('graph', () => {
             operation: 'getInstance',
           },
         },
-        isAtomSelector: undefined,
+        isSelector: undefined,
         weight: 1,
       },
       atom2: {
@@ -162,13 +164,13 @@ describe('graph', () => {
             operation: 'getInstance',
           },
         },
-        isAtomSelector: undefined,
+        isSelector: undefined,
         weight: 1,
       },
       ion1: {
         dependencies: { atom1: true, atom2: true },
         dependents: {},
-        isAtomSelector: undefined,
+        isSelector: undefined,
         weight: 1, // static dependencies don't affect the weight
       },
     })
@@ -208,7 +210,7 @@ describe('graph', () => {
             operation: 'injectAtomValue',
           },
         },
-        isAtomSelector: undefined,
+        isSelector: undefined,
         weight: 1,
       },
       'b-["b"]': {
@@ -221,7 +223,7 @@ describe('graph', () => {
             operation: 'get',
           },
         },
-        isAtomSelector: undefined,
+        isSelector: undefined,
         weight: 1,
       },
       d: {
@@ -230,7 +232,7 @@ describe('graph', () => {
           'b-["b"]': true,
         },
         dependents: {},
-        isAtomSelector: undefined,
+        isSelector: undefined,
         weight: 3,
       },
     })
@@ -250,13 +252,13 @@ describe('graph', () => {
             operation: 'injectAtomValue',
           },
         },
-        isAtomSelector: undefined,
+        isSelector: undefined,
         weight: 1,
       },
       'b-["b"]': {
         dependencies: {},
         dependents: {},
-        isAtomSelector: undefined,
+        isSelector: undefined,
         weight: 1,
       },
       c: {
@@ -269,7 +271,7 @@ describe('graph', () => {
             operation: 'get',
           },
         },
-        isAtomSelector: undefined,
+        isSelector: undefined,
         weight: 1,
       },
       d: {
@@ -278,7 +280,7 @@ describe('graph', () => {
           c: true,
         },
         dependents: {},
-        isAtomSelector: undefined,
+        isSelector: undefined,
         weight: 3,
       },
     })
@@ -316,5 +318,50 @@ describe('graph', () => {
     instance1.setState(3)
 
     expect(instance.getState()).toBe(3)
+  })
+
+  test('simultaneously-scheduled selector evaluations cause one evaluation', () => {
+    const atom1 = atom('1', 'a')
+    const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
+
+    let why: EvaluationReason[] | undefined
+
+    const selector1 = ({ get }: AtomGetters) => {
+      why = ecosystem.why()
+      return get(atom1) + get(atom2)
+    }
+
+    const cache = ecosystem.selectors.getCache(selector1)
+    const instance = ecosystem.getInstance(atom1)
+
+    expect(cache.result).toBe('aab')
+    expect(why).toHaveLength(0)
+
+    instance.setState('aa')
+
+    expect(cache.result).toBe('aaaab')
+    expect(why).toHaveLength(2)
+    expect(why).toMatchInlineSnapshot(`
+      [
+        {
+          "newState": "aa",
+          "oldState": "a",
+          "operation": "get",
+          "reasons": [],
+          "sourceId": "1",
+          "sourceType": "Atom",
+          "type": "state changed",
+        },
+        {
+          "newState": "aab",
+          "oldState": "ab",
+          "operation": "get",
+          "reasons": [],
+          "sourceId": "2",
+          "sourceType": "Atom",
+          "type": "state changed",
+        },
+      ]
+    `)
   })
 })

@@ -3,6 +3,7 @@ import React, { Suspense } from 'react'
 import { ErrorBoundary } from '../utils/ErrorBoundary'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 import { ecosystem } from '../utils/ecosystem'
+import { mockConsole } from '../utils/console'
 
 describe('suspense', () => {
   test('api().setPromise() makes a component suspend', async () => {
@@ -62,8 +63,7 @@ describe('suspense', () => {
   })
 
   test('api().setPromise() rejected error hits ErrorBoundary', async () => {
-    const originalConsoleError = console.error
-    const mock = (console.error = jest.fn())
+    const mock = mockConsole('error')
 
     let reject: (val?: any) => void = () => {}
 
@@ -99,13 +99,10 @@ describe('suspense', () => {
         message: expect.stringMatching(/uncaught 'b'/i),
       })
     )
-
-    console.error = originalConsoleError
   })
 
   test('api(promise) rejected error hits ErrorBoundary', async () => {
-    const originalConsoleError = console.error
-    const mock = (console.error = jest.fn())
+    const mock = mockConsole('error')
 
     let reject: (val?: any) => void = () => {}
 
@@ -141,7 +138,5 @@ describe('suspense', () => {
         message: expect.stringMatching(/uncaught 'b'/i),
       })
     )
-
-    console.error = originalConsoleError
   })
 })
