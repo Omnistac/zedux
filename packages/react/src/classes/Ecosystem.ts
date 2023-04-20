@@ -394,7 +394,16 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>
   ) {
-    if (is(atom, AtomInstanceBase)) return atom
+    if (is(atom, AtomInstanceBase)) {
+      // if the passed atom instance is Destroyed, get(/create) the
+      // non-Destroyed instance
+      return (atom as AnyAtomInstance).status === 'Destroyed'
+        ? this.getInstance(
+            (atom as AnyAtomInstance).template,
+            (atom as AnyAtomInstance).params
+          )
+        : atom
+    }
 
     const id = (atom as A).getInstanceId(this, params)
 
