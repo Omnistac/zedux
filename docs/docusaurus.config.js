@@ -121,7 +121,7 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/Omnistac/zedux/tree/master/',
+          editUrl: 'https://github.com/Omnistac/zedux/edit/master/docs/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
