@@ -182,17 +182,20 @@ export class Scheduler implements SchedulerInterface {
     // let counter = 0
 
     this[runningKey] = true
-    while (jobs.length) {
-      const job = (nows.length ? nows : jobs).shift() as Job
-      job.task()
+    try {
+      while (jobs.length) {
+        const job = (nows.length ? nows : jobs).shift() as Job
+        job.task()
 
-      // this "break" idea could only break for "full" jobs, not "now" jobs
-      // if (!(++counter % 20) && performance.now() - this._runStartTime >= 100) {
-      //   setTimeout(() => this.runJobs())
-      //   break
-      // }
+        // this "break" idea could only break for "full" jobs, not "now" jobs
+        // if (!(++counter % 20) && performance.now() - this._runStartTime >= 100) {
+        //   setTimeout(() => this.runJobs())
+        //   break
+        // }
+      }
+    } finally {
+      this[runningKey] = false
     }
-    this[runningKey] = false
 
     if (this._runAfterNows) {
       this._runAfterNows = false
