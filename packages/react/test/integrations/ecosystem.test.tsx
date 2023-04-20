@@ -7,11 +7,15 @@ import {
   injectWhy,
   useAtomState,
   useAtomValue,
+  EcosystemProvider,
+  getEcosystem,
 } from '@zedux/react'
-import React from 'react'
+import React, { useState } from 'react'
 import { act } from 'react-dom/test-utils'
 import { ecosystem } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
+import { fireEvent, render } from '@testing-library/react'
+import { mockConsole } from '../utils/console'
 
 describe('ecosystem', () => {
   test('big graph', async () => {
@@ -164,7 +168,6 @@ describe('ecosystem', () => {
     const overrideC = atomC.override(() => 'cc')
 
     const ecosystem = createEcosystem({
-      id: 'overrides',
       overrides: [overrideA, overrideB],
     })
     ecosystem.getInstance(atomA)
@@ -327,18 +330,60 @@ describe('ecosystem', () => {
   })
 
   test('flags', () => {
-    const original = console.error
-    console.error = jest.fn()
+    const mock = mockConsole('error')
     const atomA = atom('a', () => 1, { flags: ['a'] })
+    const atomB = atom('b', () => 2)
 
     const ecosystem = createEcosystem({ flags: ['b'], id: 'flags' })
     ecosystem.getInstance(atomA)
 
-    ecosystem.destroy()
-    expect(console.error).toHaveBeenCalledTimes(1)
-    expect(console.error).toHaveBeenCalledWith(
+    expect(mock).toHaveBeenCalledTimes(1)
+    expect(mock).toHaveBeenCalledWith(
       expect.stringContaining('encountered unsafe atom')
     )
-    console.error = original
+
+    ecosystem.getInstance(atomB)
+
+    expect(mock).toHaveBeenCalledTimes(1)
+
+    ecosystem.destroy()
+  })
+
+  test('destroyOnUnmount destroys only when the last EcosystemProvider providing the ecosystem unmounts', async () => {
+    jest.useFakeTimers()
+    const testEcosystem = createEcosystem({ destroyOnUnmount: true })
+
+    function Test() {
+      const [count, setCount] = useState(0)
+
+      return (
+        <>
+          <button
+            data-testid="button"
+            onClick={() => setCount(state => state + 1)}
+          />
+          {count < 1 && <EcosystemProvider ecosystem={testEcosystem} />}
+          {count < 2 && <EcosystemProvider ecosystem={testEcosystem} />}
+        </>
+      )
+    }
+
+    const { findByTestId } = render(<Test />)
+
+    const button = await findByTestId('button')
+
+    act(() => {
+      fireEvent.click(button)
+      jest.runAllTimers()
+    })
+
+    expect(getEcosystem(testEcosystem.id)).toBe(testEcosystem)
+
+    act(() => {
+      fireEvent.click(button)
+      jest.runAllTimers()
+    })
+
+    expect(getEcosystem(testEcosystem.id)).toBeUndefined()
   })
 })

@@ -1,19 +1,48 @@
 import {
+  EvaluationReason,
   api,
   atom,
+  injectAtomGetters,
   injectAtomInstance,
+  injectAtomSelector,
   injectAtomState,
   injectAtomValue,
   injectCallback,
   injectEffect,
   injectInvalidate,
+  injectMachineStore,
   injectMemo,
+  injectPromise,
   injectRef,
   injectStore,
+  injectWhy,
 } from '@zedux/react'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('injectors', () => {
+  test('injectors can only be called during atom evaluation', () => {
+    ;[
+      injectAtomGetters,
+      injectAtomInstance,
+      injectAtomSelector,
+      injectAtomState,
+      injectAtomValue,
+      injectCallback,
+      injectEffect,
+      injectInvalidate,
+      injectMachineStore,
+      injectMemo,
+      injectPromise,
+      injectRef,
+      injectStore,
+      injectWhy,
+    ].forEach(injector => {
+      expect(injector).toThrowError(
+        /injectors can only be used in atom state factories/i
+      )
+    })
+  })
+
   test('React-esque injectors mimic React hook functionality', () => {
     const ref = {}
     const cbs: (() => void)[] = []
@@ -178,5 +207,54 @@ describe('injectors', () => {
       ['a', true, 22],
       ['a', true, 22],
     ])
+  })
+
+  test('injected AtomGetters do nothing after evaluation is over', () => {
+    const atom1 = atom('1', () => {
+      const { get, getInstance, select } = injectAtomGetters()
+
+      return api('a').setExports({ get, getInstance, select })
+    })
+
+    const selector1 = () => 1
+
+    const instance = ecosystem.getInstance(atom1)
+    const getValue = instance.exports.get(atom1)
+    const getInstanceValue = instance.exports.getInstance(atom1).getState()
+    const selectValue = instance.exports.select(selector1)
+
+    expect(getValue).toBe('a')
+    expect(getInstanceValue).toBe('a')
+    expect(selectValue).toBe(1)
+    expect(ecosystem.viewGraph()).toEqual({
+      1: {
+        dependencies: [],
+        dependents: [],
+        weight: 1,
+      },
+    })
+  })
+
+  test('injectWhy() is an alias of ecosystem.why() during atom evaluation', () => {
+    const whys: (EvaluationReason[] | undefined)[] = []
+
+    const atom1 = atom('1', () => {
+      const store = injectStore('a')
+      const { ecosystem } = injectAtomGetters()
+
+      whys.push(injectWhy())
+      whys.push(ecosystem.why())
+
+      return store
+    })
+
+    const instance1 = ecosystem.getInstance(atom1)
+
+    expect(whys).toEqual([[], []])
+
+    instance1.setState('b')
+
+    expect(whys).toMatchSnapshot()
+    expect(whys[2]).toEqual(whys[3])
   })
 })

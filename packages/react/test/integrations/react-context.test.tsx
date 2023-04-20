@@ -7,6 +7,9 @@ import {
 } from '@zedux/react'
 import React, { Component } from 'react'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
+import { ecosystem } from '../utils/ecosystem'
+import { act } from '@testing-library/react'
+import { mockConsole } from '../utils/console'
 
 describe('React context', () => {
   test('a provided atom instance can be consumed dynamically anywhere', async () => {
@@ -138,5 +141,94 @@ describe('React context', () => {
     expect(spy).toHaveBeenCalledTimes(3)
 
     spy.mockReset()
+  })
+
+  test('useAtomConsumer() can be given default params that are used if no instance was provided', async () => {
+    jest.useFakeTimers()
+    const atom1 = atom('1', (id: string) => id)
+
+    function Test() {
+      const instance = useAtomConsumer(atom1, ['a'])
+      const val = useAtomValue(instance)
+
+      return <div data-testid="text">{val}</div>
+    }
+
+    const { findByTestId } = renderInEcosystem(<Test />)
+
+    const div = await findByTestId('text')
+
+    expect(div.innerHTML).toBe('a')
+
+    act(() => {
+      ecosystem.getInstance(atom1, ['a']).setState('aa')
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('aa')
+  })
+
+  test('useAtomConsumer() logs an error if a Destroyed instance was provided', async () => {
+    jest.useFakeTimers()
+    const mock = mockConsole('error')
+    const atom1 = atom('1', (id: string) => id)
+
+    function Child() {
+      const instance = useAtomConsumer(atom1, true)
+      const val = useAtomValue(instance)
+
+      return <div data-testid="text">{val}</div>
+    }
+
+    function Parent() {
+      // useAtomInstance will naturally update the reference on force-destroy
+      const instance = ecosystem.getInstance(atom1, ['a'])
+
+      return (
+        <AtomInstanceProvider instance={instance}>
+          <Child />
+        </AtomInstanceProvider>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Parent />)
+
+    const div = await findByTestId('text')
+
+    expect(div.innerHTML).toBe('a')
+    expect(mock).not.toHaveBeenCalled()
+
+    act(() => {
+      ecosystem.getInstance(atom1, ['a']).destroy(true)
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('a')
+    expect(mock).toHaveBeenCalledWith(
+      expect.stringMatching(/a destroyed atom instance was provided/i)
+    )
+  })
+
+  test('useAtomConsumer() throws an error if 2nd param is true and no instance was provided', async () => {
+    jest.useFakeTimers()
+    const mock = mockConsole('error')
+    const atom1 = atom('1', (id: string) => id)
+
+    function Test() {
+      const instance = useAtomConsumer(atom1, true)
+      const val = useAtomValue(instance)
+
+      return <div data-testid="text">{val}</div>
+    }
+
+    const pattern = /no atom instance was provided/i
+
+    expect(() => renderInEcosystem(<Test />)).toThrowError(pattern)
+    expect(mock).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        message: expect.stringMatching(pattern),
+      })
+    )
   })
 })
