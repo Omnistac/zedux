@@ -1,3 +1,22 @@
+## v0.5.11 (Apr 20, 2023)
+
+### New Features:
+
+- `react`: export SelectorCache class (#14)
+- `react`: make selectors trigger statusChanged mod events on init and destroy (#15)
+- `react`: make timestamp generation easily overridable; fix statusChanged event order (#17)
+- `react`: make useAtomConsumer log instead of throw an error when instance is Destroyed
+- `react`: simplify inline selector detection (#22)
+- `react`: wrap scheduler run in try...finally; add handling for destroyed instances (#21)
+
+### Fixes:
+
+- `react`: make DEV mode React component id generation work in SpiderMonkey (#20)
+- `react`: prevent `controller.abort()` from isolating the `abort` fn (#27)
+- `react`: remove dehydrated state generic from ssr atom config options for now (#16)
+- `react`: restore Active status when an atom instance is revived (#13)
+- `core`, `react`: improve `state.on` and `Observable` types (#12)
+
 ## v0.5.10 (Apr 13, 2023)
 
 ### Fixes:
