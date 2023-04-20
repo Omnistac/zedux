@@ -233,7 +233,7 @@ export class Selectors {
     }
 
     const selectorOrConfig = selectable as AtomSelectorOrConfig<T, Args>
-    const id = this.getCacheId(selectorOrConfig, args as Args)
+    const id = this.getCacheId(selectorOrConfig, args)
     let cache = this._items[id] as SelectorCache<T, Args>
 
     if (cache) return cache
@@ -243,7 +243,7 @@ export class Selectors {
     this._items[id] = cache as SelectorCache<any, any[]>
     this.ecosystem._graph.addNode(id, true)
 
-    this.runSelector(id, args as Args, true)
+    this.runSelector(id, args, true)
 
     return cache
   }
@@ -364,7 +364,7 @@ export class Selectors {
   public _swapRefs(
     oldRef: AtomSelectorOrConfig<any, any[]>,
     newRef: AtomSelectorOrConfig<any, any[]>,
-    args: any[]
+    args: any[] = []
   ) {
     const existingCache = this.find(oldRef, args)
     const baseKey = this._refBaseKeys.get(oldRef)
@@ -372,6 +372,7 @@ export class Selectors {
     if (!existingCache || !baseKey) return
 
     this._refBaseKeys.set(newRef, baseKey)
+    this._refBaseKeys.delete(oldRef)
     existingCache.selectorRef = newRef
     this.runSelector(existingCache.id, args)
   }
