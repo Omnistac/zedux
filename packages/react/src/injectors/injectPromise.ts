@@ -109,9 +109,8 @@ export const injectPromise: {
     }
 
     if (promise === refs.current.promise) return refs.current.promise
-    ;(prevController?.abort as ((reason?: any) => void) | undefined)?.(
-      'updated'
-    )
+
+    if (prevController) (prevController as any).abort('updated')
 
     if (!dataOnly) {
       // preserve previous data and error using setStateDeep:
@@ -137,8 +136,7 @@ export const injectPromise: {
   injectEffect(
     () => () => {
       const controller = refs.current.controller
-      if (!controller) return
-      ;(controller as any).abort('destroyed')
+      if (controller) (controller as any).abort('destroyed')
     },
     []
   )
