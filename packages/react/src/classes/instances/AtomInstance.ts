@@ -168,9 +168,25 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     return this.store.getState()
   }
 
-  // a small, memory-efficient bound function property we can pass around
-  public invalidate = (operation?: string, sourceType?: EvaluationSourceType) =>
-    this._invalidate(operation, sourceType)
+  /**
+   * Force this atom instance to reevaluate.
+   */
+  public invalidate(
+    operation = 'invalidate',
+    sourceType: EvaluationSourceType = 'External'
+  ) {
+    this._scheduleEvaluation(
+      {
+        operation,
+        sourceType,
+        type: 'cache invalidated',
+      },
+      false
+    )
+
+    // run the scheduler synchronously after invalidation
+    this.ecosystem._scheduler.flush()
+  }
 
   /**
    * An alias for `.store.setState()`
@@ -499,23 +515,6 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     if (action.meta !== internalTypes.batch) {
       this.ecosystem._scheduler.flush()
     }
-  }
-
-  private _invalidate(
-    operation = 'invalidate',
-    sourceType: EvaluationSourceType = 'External'
-  ) {
-    this._scheduleEvaluation(
-      {
-        operation,
-        sourceType,
-        type: 'cache invalidated',
-      },
-      false
-    )
-
-    // run the scheduler synchronously after invalidation
-    this.ecosystem._scheduler.flush()
   }
 
   private _setStatus(newStatus: LifecycleStatus) {
