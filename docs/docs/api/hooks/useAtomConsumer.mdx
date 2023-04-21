@@ -9,7 +9,7 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { useAtomConsumer } from '@zedux/react'
 ```
 
-A React hook that accepts an [atom template](../classes/AtomTemplate) and returns an [instance](../classes/AtomInstance) of that atom that has been provided over React context via [`<AtomInstanceProvider>`](../components/AtomInstanceProvider).
+A React hook that accepts an [atom template](../classes/AtomTemplate) and returns an [instance](../classes/AtomInstance) of that atom template that has been provided over React context via [`<AtomProvider>`](../components/AtomProvider).
 
 If no instance has been provided, this hook will return undefined. Pass default params as the second argument to tell Zedux to create an atom instance if one wasn't provided. Pass `true` as the second argument to tell Zedux to throw an error if you forgot to provide an instance.
 
@@ -49,9 +49,9 @@ function Parent() {
   const instance = useAtomInstance(secondsAtom)
 
   return (
-    <AtomInstanceProvider instance={instance}>
+    <AtomProvider instance={instance}>
       <Child />
-    </AtomInstanceProvider>
+    </AtomProvider>
   )
 }
 ```
@@ -103,16 +103,16 @@ const guaranteed = useAtomConsumer(myAtom, true)
       If an array (<code>defaultParams</code>) is passed,{' '}
       <code>useAtomConsumer()</code> will use it to find or create an atom
       instance if none was provided above the current component via an{' '}
-      <Link to="../components/AtomInstanceProvider">
-        <code>&lt;AtomInstanceProvider&gt;</code>
+      <Link to="../components/AtomProvider">
+        <code>&lt;AtomProvider&gt;</code>
       </Link>
       . If the atom doesn't take params, pass an empty array.
     </p>
     <p>
       If <code>true</code> is passed, <code>useAtomConsumer()</code> will throw
       an error if the current component is rendered outside a matching{' '}
-      <code>&lt;AtomInstanceProvider&gt;</code>. This is the recommended
-      overload. Example:
+      <code>&lt;AtomProvider&gt;</code>. This is the recommended overload.
+      Example:
     </p>
     <Ts>{`const instance = useAtomConsumer(myAtom, true)`}</Ts>
   </Item>
@@ -137,4 +137,4 @@ const guaranteed = useAtomConsumer(myAtom, true)
 ## See Also
 
 - [The React Context walkthrough](../../walkthrough/react-context)
-- [`<AtomInstanceProvider>`](../components/AtomInstanceProvider)
+- [`<AtomProvider>`](../components/AtomProvider)

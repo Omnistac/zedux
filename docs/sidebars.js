@@ -60,7 +60,7 @@ module.exports = {
         type: 'category',
         label: 'Components',
         items: [
-          'api/components/AtomInstanceProvider',
+          'api/components/AtomProvider',
           'api/components/EcosystemProvider',
         ],
       },

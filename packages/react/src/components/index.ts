@@ -1,2 +1,2 @@
-export * from './AtomInstanceProvider'
+export * from './AtomProvider'
 export * from './EcosystemProvider'

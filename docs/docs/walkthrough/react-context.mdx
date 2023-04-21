@@ -16,33 +16,31 @@ The important philosophy here is that Zedux uses React context for Dependency In
 
 ## Providing
 
-An atom instance can be provided over React context via [`<AtomInstanceProvider>`](../api/components/AtomInstanceProvider).
+An atom instance can be provided over React context via [`<AtomProvider>`](../api/components/AtomProvider).
 
 ```tsx
-import { AtomInstanceProvider, useAtomInstance } from '@zedux/react'
+import { AtomProvider, useAtomInstance } from '@zedux/react'
 
 function Parent() {
   const instance = useAtomInstance(myAtom)
 
   return (
-    <AtomInstanceProvider instance={instance}>
+    <AtomProvider instance={instance}>
       <Child />
-    </AtomInstanceProvider>
+    </AtomProvider>
   )
 }
 ```
 
 ### Multiple Instances
 
-To provide instances of multiple atoms from the same component, you could nest a bunch of `<AtomInstanceProvider>`s. But that isn't very aesthetically pleasing now, is it.
+To provide instances of multiple atoms from the same component, you could nest a bunch of `<AtomProvider>`s. But that isn't very aesthetically pleasing now, is it.
 
-To this end, `AtomInstanceProvider` accepts an `instances` prop, whose value is an array of instances to provide. Only provide either an `instance` or an `instances` prop, not both.
+To this end, `AtomProvider` accepts an `instances` prop, whose value is an array of instances to provide. Only provide either an `instance` or an `instances` prop, not both.
 
 ```tsx
 return (
-  <AtomInstanceProvider instances={[instanceA, instanceB]}>
-    {children}
-  </AtomInstanceProvider>
+  <AtomProvider instances={[instanceA, instanceB]}>{children}</AtomProvider>
 )
 ```
 
@@ -113,9 +111,9 @@ function Parent() {
   const value = useAtomValue(instance) // subscribes
 
   return (
-    <AtomInstanceProvider instance={instance}>
+    <AtomProvider instance={instance}>
       <Child />
-    </AtomInstanceProvider>
+    </AtomProvider>
   )
 }
 
@@ -147,10 +145,10 @@ function Parent() {
   const instance = useAtomInstance(providedAtom)
 
   return (
-    <AtomInstanceProvider instance={instance}>
+    <AtomProvider instance={instance}>
       <div>Parent State (not subscribed): {instance.getState()}</div>
       <Child />
-    </AtomInstanceProvider>
+    </AtomProvider>
   )
 }
 ```
@@ -229,11 +227,11 @@ function UserThumbnail({ id }) {
   const instance = useAtomInstance(userData, [id])
 
   return (
-    <AtomInstanceProvider instance={userInstance}>
+    <AtomProvider instance={userInstance}>
       <Avatar />
       <Nickname />
       <OnlineStatus />
-    </AtomInstanceProvider>
+    </AtomProvider>
   )
 }
 
@@ -311,9 +309,9 @@ function TodoList() {
       {!isEditing && <button onClick={() => setIsEditing(true)}>Edit</button>}
       {instances.map(instance => (
         // vvv  Provide a different instance for each item  vvv
-        <AtomInstanceProvider key={instance.id} instance={instance}>
+        <AtomProvider key={instance.id} instance={instance}>
           <Todo />
-        </AtomInstanceProvider>
+        </AtomProvider>
       ))}
       {isEditing && <button onClick={saveAllChanges}>Save Changes</button>}
     </>
@@ -323,7 +321,7 @@ function TodoList() {
 
 ## Recap
 
-- Atom instances can be provided over React context via [`<AtomInstanceProvider>`](../api/components/AtomInstanceProvider).
+- Atom instances can be provided over React context via [`<AtomProvider>`](../api/components/AtomProvider).
 - Atom instances can be consumed from React context via [`useAtomConsumer()`](../api/hooks/useAtomConsumer).
   - `useAtomConsumer(myAtom, [...defaultParams])` creates an atom instance with `defaultParams` if no instance was provided.
   - `useAtomConsumer(myAtom, true)` throws an error if no atom instance was provided.
