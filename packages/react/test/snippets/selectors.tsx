@@ -6,7 +6,7 @@ import {
   injectAtomSelector,
   injectEffect,
   injectStore,
-  useAtomConsumer,
+  useAtomContext,
   useAtomInstance,
   useAtomSelector,
   useAtomValue,
@@ -62,7 +62,7 @@ function UnstableChild() {
 }
 
 function Child() {
-  const testInstance = useAtomConsumer(testAtom, [])
+  const testInstance = useAtomContext(testAtom, [])
   const { update } = testInstance.exports
   const upperCase = useAtomValue(upperCaseAtom, [testInstance])
 
