@@ -19,7 +19,7 @@ import {
   PartialAtomInstance,
   Selectable,
 } from '../types'
-import { External, InstanceStackItem, SelectorStackItem } from '../utils'
+import { External } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { EvaluationStack } from './EvaluationStack'
 import { Graph } from './Graph'
@@ -742,15 +742,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * array if this is the first evaluation of the instance or selector.
    */
   public why() {
-    const item = this._evaluationStack.read()
-
-    if (!item) return
-
-    if ((item as SelectorStackItem).cache) {
-      return (item as SelectorStackItem).cache.nextEvaluationReasons
-    }
-
-    return (item as InstanceStackItem).instance._nextEvaluationReasons
+    return this._evaluationStack.read()?.node.nextReasons
   }
 
   /**

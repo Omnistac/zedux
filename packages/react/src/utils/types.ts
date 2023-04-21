@@ -13,24 +13,14 @@ export type InjectorDescriptor<T = any> = T extends undefined
       type: string
     }
 
-export interface StackItemBase {
+export interface StackItem {
   /**
-   * The id of the instance or SelectorCache
+   * The atom instance or selector cache that's currently evaluating
    */
-  id: string
+  node: AnyAtomInstance | SelectorCache
 
   /**
-   * the high-def timestamp of when the item was pushed onto the stack
+   * The high-def timestamp of when the item was pushed onto the stack
    */
   start?: number
 }
-
-export interface InstanceStackItem extends StackItemBase {
-  instance: AnyAtomInstance
-}
-
-export interface SelectorStackItem extends StackItemBase {
-  cache: SelectorCache
-}
-
-export type StackItem = InstanceStackItem | SelectorStackItem

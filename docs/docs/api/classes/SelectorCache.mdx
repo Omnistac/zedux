@@ -4,6 +4,7 @@ title: SelectorCache
 ---
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+import { EvaluationReasonParams } from './AtomInstance.mdx'
 
 Every time an [ecosystem](Ecosystem)'s [`.selectors`](Selectors) manager caches an atom selector, the "cached selector" is really just an instance of this class. Thus, an instance of this class is what's returned from various Selectors class methods like [`.getCache()`](Selectors#getcache) and [`.findAll()`](Selectors#findall).
 
@@ -61,33 +62,7 @@ const cacheItem = ecosystem.selectors.getCache(getOddNumbers)
       SelectorCaches you're using outside React/atoms.
     </p>
   </Item>
-  <Item name="nextEvaluationReasons">
-    <p>
-      An array that tracks the batched{' '}
-      <Link to="../types/EvaluationReason">EvaluationReasons</Link> that will
-      lead to the selector reevaluating.
-    </p>
-    <p>
-      If the selector is currently evaluating, this is the list of reasons
-      explaining why and is what{' '}
-      <Link to="Ecosystem#why">
-        <code>ecosystem.why()</code>
-      </Link>{' '}
-      will return.
-    </p>
-    <p>
-      This will be empty if no reevaluation is currently scheduled or if this is
-      the first evaluation of the selector.
-    </p>
-  </Item>
-  <Item name="prevEvaluationReasons">
-    <p>
-      An array that tracks the batched{' '}
-      <Link to="../types/EvaluationReason">EvaluationReasons</Link> describing
-      why the selector last evaluated. This will be empty if the last evaluation
-      was the first.
-    </p>
-  </Item>
+  <EvaluationReasonParams type="selector" />
   <Item name="result">
     <p>
       The cached return value of the atom selector. Selectors don't use{' '}

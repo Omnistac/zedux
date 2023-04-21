@@ -74,15 +74,15 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   public status: LifecycleStatus = 'Initializing'
   public api?: AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>
   public exports: G['Exports']
+  public nextReasons: EvaluationReason[] = []
+  public prevReasons?: EvaluationReason[]
   public promise: G['Promise']
   public store: G['Store']
 
   public _cancelDestruction?: Cleanup
   public _createdAt: number
   public _injectors?: InjectorDescriptor[]
-  public _nextEvaluationReasons: EvaluationReason[] = []
   public _nextInjectors?: InjectorDescriptor[]
-  public _prevEvaluationReasons?: EvaluationReason[]
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
   public _stateType?: 1 | 2
@@ -133,7 +133,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
     this._setStatus('Destroyed')
 
-    if (this._nextEvaluationReasons.length) {
+    if (this.nextReasons.length) {
       this.ecosystem._scheduler.unschedule(this.evaluationTask)
     }
 
@@ -310,9 +310,9 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     // waking up a stale atom)?
     if (this.status === 'Destroyed') return
 
-    this._nextEvaluationReasons.push(reason)
+    this.nextReasons.push(reason)
 
-    if (this._nextEvaluationReasons.length > 1) return // job already scheduled
+    if (this.nextReasons.length > 1) return // job already scheduled
 
     this.ecosystem._scheduler.schedule(
       {
@@ -359,8 +359,8 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
         this._bufferedUpdate = undefined
       }
 
-      this._prevEvaluationReasons = this._nextEvaluationReasons
-      this._nextEvaluationReasons = []
+      this.prevReasons = this.nextReasons
+      this.nextReasons = []
     }
 
     this._injectors = this._nextInjectors
@@ -493,7 +493,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   ) {
     this.ecosystem._graph.scheduleDependents(
       this.id,
-      this._nextEvaluationReasons,
+      this.nextReasons,
       newState,
       oldState,
       false
@@ -506,7 +506,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
           instance: this,
           newState,
           oldState,
-          reasons: this._nextEvaluationReasons,
+          reasons: this.nextReasons,
         })
       )
     }
@@ -568,7 +568,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
     this.ecosystem._graph.scheduleDependents(
       this.id,
-      this._nextEvaluationReasons,
+      this.nextReasons,
       undefined,
       undefined,
       true,

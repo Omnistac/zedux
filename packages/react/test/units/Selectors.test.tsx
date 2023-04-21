@@ -13,8 +13,8 @@ describe('the Selectors class', () => {
     const cache3 = {
       args: [],
       id: '@@selector-selector3',
-      nextEvaluationReasons: [],
-      prevEvaluationReasons: [],
+      nextReasons: [],
+      prevReasons: [],
       result: 'abcd',
       selectorRef: selector3,
     }
@@ -25,16 +25,16 @@ describe('the Selectors class', () => {
       '@@selector-selector1': {
         args: [],
         id: '@@selector-selector1',
-        nextEvaluationReasons: [],
-        prevEvaluationReasons: [],
+        nextReasons: [],
+        prevReasons: [],
         result: 'ab',
         selectorRef: selector1,
       },
       '@@selector-selector2': {
         args: [],
         id: '@@selector-selector2',
-        nextEvaluationReasons: [],
-        prevEvaluationReasons: [],
+        nextReasons: [],
+        prevReasons: [],
         result: 'abc',
         selectorRef: selector2,
       },

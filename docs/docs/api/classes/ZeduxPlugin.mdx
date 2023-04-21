@@ -195,12 +195,21 @@ Every ZeduxPlugin has just two properties:
     </p>
     <p>Payload shape:</p>
     <Ts>{`{
-  cache?: SelectorCache
-  instance?: AnyAtomInstance
+  node: AnyAtomInstance | SelectorCache
   time: number
 }`}</Ts>
     <p>
-      Either <code>cache</code> or <code>instance</code> will always be set.{' '}
+      <code>node</code> is either an instance of{' '}
+      <Link to="AtomInstance">
+        <code>AtomInstance</code>
+      </Link>{' '}
+      or{' '}
+      <Link to="SelectorCache">
+        <code>SelectorCache</code>
+      </Link>
+      .
+    </p>
+    <p>
       <code>time</code> will be a DOMHighResTimestamp measured in milliseconds.
     </p>
     <p>
@@ -212,8 +221,8 @@ Every ZeduxPlugin has just two properties:
       >
         <code>performance.now()</code>
       </a>{' '}
-      in the browser. In other envs, it will fall back to using a non-high-res
-      timestamp via <code>Date.now()</code>.
+      when available in the global scope. In other envs, it will fall back to
+      using a non-high-res timestamp via <code>Date.now()</code>.
     </p>
   </Item>
   <Item name="instanceReused">

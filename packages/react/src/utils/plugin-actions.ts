@@ -31,14 +31,10 @@ export const pluginActions = {
     'edgeRemoved'
   >('edgeRemoved'),
   evaluationFinished: actionFactory<
-    | {
-        instance: AnyAtomInstance
-        time: number
-      }
-    | {
-        cache: SelectorCache
-        time: number
-      },
+    {
+      node: AnyAtomInstance | SelectorCache
+      time: number
+    },
     'evaluationFinished'
   >('evaluationFinished'),
   instanceReused: actionFactory<{

@@ -16,8 +16,8 @@ const defaultResultsComparator = (a: any, b: any) => a === b
 export class SelectorCache<T = any, Args extends any[] = any[]> {
   public static $$typeof = Symbol.for(`${prefix}/SelectorCache`)
   public isDestroyed?: boolean
-  public nextEvaluationReasons: EvaluationReason[] = []
-  public prevEvaluationReasons?: EvaluationReason[]
+  public nextReasons: EvaluationReason[] = []
+  public prevReasons?: EvaluationReason[]
   public result?: T
   public task?: () => void
 
@@ -292,7 +292,7 @@ export class Selectors {
 
     const { _graph, _scheduler, _mods, modBus } = this.ecosystem
 
-    if (cache.nextEvaluationReasons.length && cache.task) {
+    if (cache.nextReasons.length && cache.task) {
       _scheduler.unschedule(cache.task)
     }
 
@@ -338,9 +338,9 @@ export class Selectors {
     shouldSetTimeout?: boolean
   ) {
     const cache = this._items[id]
-    cache.nextEvaluationReasons.push(reason)
+    cache.nextReasons.push(reason)
 
-    if (cache.nextEvaluationReasons.length > 1) return // job already scheduled
+    if (cache.nextReasons.length > 1) return // job already scheduled
 
     const task = () => {
       cache.task = undefined
@@ -446,12 +446,7 @@ export class Selectors {
       const result = selector(_evaluationStack.atomGetters, ...args)
 
       if (!isInitializing && !resultsComparator(result, cache.result as T)) {
-        _graph.scheduleDependents(
-          id,
-          cache.nextEvaluationReasons,
-          result,
-          cache.result
-        )
+        _graph.scheduleDependents(id, cache.nextReasons, result, cache.result)
 
         if (_mods.stateChanged) {
           modBus.dispatch(
@@ -459,7 +454,7 @@ export class Selectors {
               cache: cache as SelectorCache<any, any[]>,
               newState: result,
               oldState: cache.result,
-              reasons: cache.nextEvaluationReasons,
+              reasons: cache.nextReasons,
             })
           )
         }
@@ -488,8 +483,8 @@ export class Selectors {
       throw err
     } finally {
       _evaluationStack.finish()
-      cache.prevEvaluationReasons = cache.nextEvaluationReasons
-      cache.nextEvaluationReasons = []
+      cache.prevReasons = cache.nextReasons
+      cache.nextReasons = []
     }
 
     _graph.flushUpdates()
