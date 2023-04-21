@@ -107,14 +107,14 @@ function Parent() {
 }
 ```
 
-Consume provided instances with [`useAtomConsumer()`](../hooks/useAtomConsumer)
+Consume provided instances with [`useAtomContext()`](../hooks/useAtomContext)
 
 ```ts
-import { useAtomConsumer } from '@zedux/react'
+import { useAtomContext } from '@zedux/react'
 import { myAtom } from './atoms'
 
 function Child() {
-  const instance = useAtomConsumer(myAtom)
+  const instance = useAtomContext(myAtom)
 }
 ```
 

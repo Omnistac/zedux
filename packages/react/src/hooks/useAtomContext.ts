@@ -4,7 +4,7 @@ import { AtomInstanceBase } from '../classes'
 import { AnyAtomTemplate, AtomInstanceType, AtomParamsType } from '../types'
 import { useEcosystem } from './useEcosystem'
 
-export const useAtomConsumer: {
+export const useAtomContext: {
   <A extends AnyAtomTemplate>(template: A): AtomInstanceType<A> | undefined
 
   <A extends AnyAtomTemplate>(
@@ -28,7 +28,7 @@ export const useAtomConsumer: {
   if (!defaultParams || is(instance, AtomInstanceBase)) {
     if (DEV && instance?.status === 'Destroyed') {
       console.error(
-        `Zedux: useAtomConsumer - A destroyed atom instance was provided with key "${instance.id}". This is not supported. Provide an active atom instance instead.`
+        `Zedux: useAtomContext - A destroyed atom instance was provided with key "${instance.id}". This is not recommended. Provide an active atom instance instead e.g. by calling \`useAtomInstance()\` in the providing component.`
       )
     }
 
@@ -38,7 +38,7 @@ export const useAtomConsumer: {
   if (typeof defaultParams === 'boolean') {
     if (DEV) {
       throw new ReferenceError(
-        `Zedux: useAtomConsumer - No atom instance was provided for atom "${template.key}".`
+        `Zedux: useAtomContext - No atom instance was provided for atom "${template.key}".`
       )
     }
 

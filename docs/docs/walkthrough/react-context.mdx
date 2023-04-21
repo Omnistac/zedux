@@ -46,52 +46,52 @@ return (
 
 ## Consuming
 
-Consume provided instances with [`useAtomConsumer()`](../api/hooks/useAtomConsumer)
+Consume provided instances with [`useAtomContext()`](../api/hooks/useAtomContext)
 
 ```ts
-import { useAtomConsumer } from '@zedux/react'
+import { useAtomContext } from '@zedux/react'
 
 function Child() {
-  const instance = useAtomConsumer(myAtom)
+  const instance = useAtomContext(myAtom)
   ...
 }
 ```
 
 ### If an Instance Wasn't Provided
 
-If a component uses `useAtomConsumer()` but no instance was provided by any parent, `useAtomConsumer()` returns undefined.
+If a component uses `useAtomContext()` but no instance was provided by any parent, `useAtomContext()` returns undefined.
 
 ```ts
-const instance = useAtomConsumer(myAtom)
+const instance = useAtomContext(myAtom)
 instance.invalidate() // error! Cannot read properties of undefined
 ```
 
 TypeScript users will be warned of this. But to get around it, you'd have to put checks before everything you try to do with that instance. Sounds like a fast-track to annoyance.
 
-Fortunately (on purpose), `useAtomConsumer()` has two overloads that help with this:
+Fortunately (on purpose), `useAtomContext()` has two overloads that help with this:
 
 #### Case #1: I want a default atom instance to be created, if none was provided.
 
-You can provide an array of params to `useAtomConsumer()`. These params must match the params of the atom. If no atom instance was provided, Zedux will use the passed default params to locate an existing atom instance or create a new instance if it doesn't exist yet.
+You can provide an array of params to `useAtomContext()`. These params must match the params of the atom. If no atom instance was provided, Zedux will use the passed default params to locate an existing atom instance or create a new instance if it doesn't exist yet.
 
 ```ts
-const instance = useAtomConsumer(myAtom, ['default instance params'])
+const instance = useAtomContext(myAtom, ['default instance params'])
 instance.invalidate() // all good! Even TS is happy
 ```
 
 If the atom doesn't take params, you must still pass an empty array for Zedux to find/create a default instance.
 
 ```ts
-const paramlessInstance = useAtomConsumer(myAtom, [])
+const paramlessInstance = useAtomContext(myAtom, [])
 instance.invalidate() // 😊
 ```
 
 #### Case #2: I don't ever want an instance to not be provided. Throw an error if I forget!
 
-Instead of an array of default parameters, you can pass `true` as the second param to `useAtomConsumer()`. This tells Zedux to throw an error if no atom instance was provided.
+Instead of an array of default parameters, you can pass `true` as the second param to `useAtomContext()`. This tells Zedux to throw an error if no atom instance was provided.
 
 ```ts
-const instance = useAtomConsumer(myAtom, true)
+const instance = useAtomContext(myAtom, true)
 instance.invalidate() // all good again! TS smiles upon you
 ```
 
@@ -118,7 +118,7 @@ function Parent() {
 }
 
 function Child() {
-  const instance = useAtomConsumer(myAtom, true) // doesn't subscribe
+  const instance = useAtomContext(myAtom, true) // doesn't subscribe
   const value = useAtomValue(instance) // subscribes
   ...
 }
@@ -130,7 +130,7 @@ Full live example:
 const providedAtom = atom('provided', 'the state!')
 
 function Child() {
-  const instance = useAtomConsumer(providedAtom)
+  const instance = useAtomContext(providedAtom)
   const [state, setState] = useAtomState(instance) // subscribe to changes
 
   return (
@@ -163,7 +163,7 @@ A common pattern is to pass the provided atom instance to an Atom Getter inside 
 
 ```tsx
 function Child() {
-  const instance = useAtomConsumer(myAtom, true) // doesn't subscribe
+  const instance = useAtomContext(myAtom, true) // doesn't subscribe
 
   // subscribe, but only cause a rerender when `someField` changes:
   // highlight-next-line
@@ -181,14 +181,14 @@ The primary purpose of providing atom instances over React context is to give a 
 
 ```ts
 function Child() {
-  // without useAtomConsumer, you need to pass the right params every time you use the atom:
+  // without useAtomContext, you need to pass the right params every time you use the atom:
   const instance = useAtomInstance(myAtom, [
     'my',
     { specific: { params: 'here' } },
   ])
 
   // compare:
-  const instance = useAtomConsumer(myAtom, true)
+  const instance = useAtomContext(myAtom, true)
 }
 ```
 
@@ -237,7 +237,7 @@ function UserThumbnail({ id }) {
 
 function OnlineStatus() {
   // no need to pass `id` prop!
-  const userData = useAtomConsumer(userData, true)
+  const userData = useAtomContext(userData, true)
 
   return <div>{userData.isOnline ? <GreenDot /> : <RedDot />}</div>
 }
@@ -274,7 +274,7 @@ const todoAtom = ion('todo', ({ get, getInstance }, id: number) => {
 })
 
 function Todo() {
-  const todoInstance = useAtomConsumer(todoAtom, true)
+  const todoInstance = useAtomContext(todoAtom, true)
   const [text, setText] = useAtomState(todoInstance)
   const isEditing = useAtomValue(isEditingTodosAtom)
 
@@ -322,9 +322,9 @@ function TodoList() {
 ## Recap
 
 - Atom instances can be provided over React context via [`<AtomProvider>`](../api/components/AtomProvider).
-- Atom instances can be consumed from React context via [`useAtomConsumer()`](../api/hooks/useAtomConsumer).
-  - `useAtomConsumer(myAtom, [...defaultParams])` creates an atom instance with `defaultParams` if no instance was provided.
-  - `useAtomConsumer(myAtom, true)` throws an error if no atom instance was provided.
+- Atom instances can be consumed from React context via [`useAtomContext()`](../api/hooks/useAtomContext).
+  - `useAtomContext(myAtom, [...defaultParams])` creates an atom instance with `defaultParams` if no instance was provided.
+  - `useAtomContext(myAtom, true)` throws an error if no atom instance was provided.
 - You can subscribe any component to a consumed atom instance by using [`useAtomValue()`](../api/hooks/useAtomValue) or any other hook that creates a [dynamic graph dependency](../api/glossary#dynamic-graph-dependency).
 - Use `useAtomSelector()` with a provided instance to selectively subscribe to updates.
 

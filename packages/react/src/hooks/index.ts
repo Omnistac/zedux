@@ -1,4 +1,4 @@
-export * from './useAtomConsumer'
+export * from './useAtomContext'
 export * from './useAtomInstance'
 export * from './useAtomSelector'
 export * from './useAtomState'

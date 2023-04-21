@@ -11,7 +11,7 @@ import { AtomProvider } from '@zedux/react'
 
 A component that provides one or more [atom instances](../classes/AtomInstance) over React context.
 
-To consume the provided instances, use [`useAtomConsumer()`](../hooks/useAtomConsumer).
+To consume the provided instances, use [`useAtomContext()`](../hooks/useAtomContext).
 
 ## Example
 
@@ -29,7 +29,7 @@ const secondsAtom = atom('seconds', (start: number) => {
 })
 
 function Child() {
-  const instance = useAtomConsumer(secondsAtom) // no need to pass params
+  const instance = useAtomContext(secondsAtom) // no need to pass params
   const state = useAtomValue(instance) // subscribe
 
   return <div>Child's Seconds: {state}</div>

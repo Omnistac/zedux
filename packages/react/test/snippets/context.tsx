@@ -6,7 +6,7 @@ import {
   injectAtomValue,
   injectEffect,
   injectStore,
-  useAtomConsumer,
+  useAtomContext,
   useAtomInstance,
   useAtomValue,
 } from '@zedux/react'
@@ -67,9 +67,9 @@ const atom4 = atom(
 )
 
 function One() {
-  const atom3val = useAtomValue(useAtomConsumer(atom3, ['1']))
+  const atom3val = useAtomValue(useAtomContext(atom3, ['1']))
   const atom2val = useAtomValue(atom2)
-  const atom1val = useAtomValue(useAtomConsumer(atom1, []))
+  const atom1val = useAtomValue(useAtomContext(atom1, []))
 
   return (
     <>
@@ -82,7 +82,7 @@ function One() {
 
 function Two() {
   const atom4val = useAtomValue(atom4)
-  const atom3val = useAtomValue(useAtomConsumer(atom3, ['1']))
+  const atom3val = useAtomValue(useAtomContext(atom3, ['1']))
 
   return (
     <>
