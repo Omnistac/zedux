@@ -29,7 +29,6 @@ export abstract class AtomInstanceBase<
 
   public abstract _createdAt: number
   public abstract _injectors?: InjectorDescriptor[]
-  public abstract _prevEvaluationReasons?: EvaluationReason[]
   public abstract _promiseError?: Error
   public abstract _promiseStatus?: PromiseStatus
 
