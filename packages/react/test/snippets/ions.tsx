@@ -3,7 +3,7 @@ import {
   atom,
   AtomProvider,
   AtomInstanceType,
-  useAtomConsumer,
+  useAtomContext,
   useAtomInstance,
   useAtomValue,
 } from '@zedux/react'
@@ -32,7 +32,7 @@ const upperCaseAtom = ion(
 )
 
 function Child() {
-  const testInstance = useAtomConsumer(testAtom, [])
+  const testInstance = useAtomContext(testAtom, [])
   const { update } = testInstance.exports
   const upperCase = useAtomValue(upperCaseAtom, [testInstance])
 

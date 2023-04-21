@@ -82,7 +82,7 @@ module.exports = {
         type: 'category',
         label: 'Hooks',
         items: [
-          'api/hooks/useAtomConsumer',
+          'api/hooks/useAtomContext',
           'api/hooks/useAtomInstance',
           'api/hooks/useAtomSelector',
           'api/hooks/useAtomState',

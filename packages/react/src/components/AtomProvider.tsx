@@ -6,7 +6,7 @@ import { useEcosystem } from '../hooks'
  * Provides an atom instance over React context.
  *
  * Provided atom instances can be consumed in child components via
- * `useAtomConsumer()`. The atom instance can then be passed to other hooks like
+ * `useAtomContext()`. The atom instance can then be passed to other hooks like
  * `useAtomValue()` or `useAtomState()` to create a dynamic dependency on the
  * consumed instance.
  *

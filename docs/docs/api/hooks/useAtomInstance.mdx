@@ -16,7 +16,7 @@ Since the dependency is static, the component that uses this hook will not reren
 
 To make the dependency dynamic, pass the returned atom instance to a dynamic hook like [`useAtomValue()`](useAtomValue), [`useAtomState()`](useAtomState), or [`useAtomSelector()`](useAtomSelector).
 
-You can also pass an atom instance directly to register a static graph dependency on instances received from other sources, e.g. from [`useAtomConsumer()`](useAtomConsumer). You typically won't need to do this.
+You can also pass an atom instance directly to register a static graph dependency on instances received from other sources, e.g. from [`useAtomContext()`](useAtomContext). You typically won't need to do this.
 
 ## Examples
 

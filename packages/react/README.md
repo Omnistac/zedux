@@ -58,7 +58,7 @@ On top of these, `@zedux/react` exports the following APIs:
 
 ### Hooks
 
-- [`useAtomConsumer()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomConsumer)
+- [`useAtomContext()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomContext)
 - [`useAtomInstance()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomInstance)
 - [`useAtomSelector()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomSelector)
 - [`useAtomState()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomState)

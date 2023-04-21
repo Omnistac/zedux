@@ -1,7 +1,7 @@
 import {
   atom,
   AtomProvider,
-  useAtomConsumer,
+  useAtomContext,
   useAtomInstance,
   useAtomValue,
 } from '@zedux/react'
@@ -17,7 +17,7 @@ describe('React context', () => {
     let counter = 0
 
     function Grandchild() {
-      const val = useAtomValue(useAtomConsumer(atom1, true))
+      const val = useAtomValue(useAtomContext(atom1, true))
 
       return <div data-testid={counter++}>{val}</div>
     }
@@ -57,8 +57,8 @@ describe('React context', () => {
     let counter = 0
 
     function Child() {
-      const val1 = useAtomValue(useAtomConsumer(atom1, true))
-      const val2 = useAtomValue(useAtomConsumer(atom2, ['c']))
+      const val1 = useAtomValue(useAtomContext(atom1, true))
+      const val2 = useAtomValue(useAtomContext(atom2, ['c']))
 
       return (
         <div data-testid={counter++}>
@@ -93,7 +93,7 @@ describe('React context', () => {
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
     function Child() {
-      const val = useAtomValue(useAtomConsumer(atom1, true))
+      const val = useAtomValue(useAtomContext(atom1, true))
 
       return <div data-testid="0">{val}</div>
     }
@@ -143,12 +143,12 @@ describe('React context', () => {
     spy.mockReset()
   })
 
-  test('useAtomConsumer() can be given default params that are used if no instance was provided', async () => {
+  test('useAtomContext() can be given default params that are used if no instance was provided', async () => {
     jest.useFakeTimers()
     const atom1 = atom('1', (id: string) => id)
 
     function Test() {
-      const instance = useAtomConsumer(atom1, ['a'])
+      const instance = useAtomContext(atom1, ['a'])
       const val = useAtomValue(instance)
 
       return <div data-testid="text">{val}</div>
@@ -168,13 +168,13 @@ describe('React context', () => {
     expect(div.innerHTML).toBe('aa')
   })
 
-  test('useAtomConsumer() logs an error if a Destroyed instance was provided', async () => {
+  test('useAtomContext() logs an error if a Destroyed instance was provided', async () => {
     jest.useFakeTimers()
     const mock = mockConsole('error')
     const atom1 = atom('1', (id: string) => id)
 
     function Child() {
-      const instance = useAtomConsumer(atom1, true)
+      const instance = useAtomContext(atom1, true)
       const val = useAtomValue(instance)
 
       return <div data-testid="text">{val}</div>
@@ -209,13 +209,13 @@ describe('React context', () => {
     )
   })
 
-  test('useAtomConsumer() throws an error if 2nd param is true and no instance was provided', async () => {
+  test('useAtomContext() throws an error if 2nd param is true and no instance was provided', async () => {
     jest.useFakeTimers()
     const mock = mockConsole('error')
     const atom1 = atom('1', (id: string) => id)
 
     function Test() {
-      const instance = useAtomConsumer(atom1, true)
+      const instance = useAtomContext(atom1, true)
       const val = useAtomValue(instance)
 
       return <div data-testid="text">{val}</div>
