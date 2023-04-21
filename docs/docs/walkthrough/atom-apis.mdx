@@ -157,7 +157,7 @@ function Age() {
 ```
 
 :::tip
-`injectCallback` is the injector equivalent of `useCallback`. We used it here with empty deps (`[]`) to remind us that this is an export and its reference can't change. This means we can't use any dynamic values inside the callback - notice that we call `store.getState()` inside the callback instead of setting it to a variable outside the callback and passing that as a dep.
+`injectCallback` is the injector equivalent of `useCallback`. We used it here with empty deps (`[]`) to remind us that this is an export and its reference can't change. This means we can't use any dynamic values inside the callback - only stable references. `injectCallback` also automatically [batches](../advanced/batching) all state updates in the callback.
 :::
 
 This is poor man's async handling. Let's upgrade to Suspense.

@@ -23,15 +23,11 @@ export const api: {
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>,
-    wrap?: boolean
+    value: AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
   ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
 
   // Custom Stores (normal)
-  <StoreType extends Store<any> = Store<any>>(
-    value: StoreType,
-    wrap?: boolean
-  ): AtomApi<
+  <StoreType extends Store<any> = Store<any>>(value: StoreType): AtomApi<
     StoreStateType<StoreType>,
     Record<string, never>,
     StoreType,
@@ -53,12 +49,11 @@ export const api: {
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: AtomApi<State, Exports, undefined, PromiseType>,
-    wrap?: boolean
+    value: AtomApi<State, Exports, undefined, PromiseType>
   ): AtomApi<State, Exports, undefined, PromiseType>
 
   // No Store (normal)
-  <State = undefined>(value: State, wrap?: boolean): AtomApi<
+  <State = undefined>(value: State): AtomApi<
     State,
     Record<string, never>,
     undefined,
@@ -72,8 +67,7 @@ export const api: {
     StoreType extends Store<State> = Store<State>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: State | StoreType | AtomApi<State, Exports, StoreType, PromiseType>,
-    wrap?: boolean
+    value: State | StoreType | AtomApi<State, Exports, StoreType, PromiseType>
   ): AtomApi<State, Exports, StoreType, PromiseType>
 } = <
   State = undefined,
@@ -81,13 +75,8 @@ export const api: {
   StoreType extends Store<State> | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(
-  value?: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State,
-  wrap?: boolean
+  value?: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
 ) =>
   new AtomApi(
-    value as
-      | AtomApi<State, Exports, StoreType, PromiseType>
-      | StoreType
-      | State,
-    wrap
+    value as AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
   )
