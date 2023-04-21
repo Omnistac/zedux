@@ -14,7 +14,7 @@ import { useEcosystem } from '../hooks'
  * dependency on the provided instance via `useAtomInstance()` or manual
  * graphing inside `useEffect()`.
  */
-export const AtomInstanceProvider: FC<
+export const AtomProvider: FC<
   | {
       children?: ReactNode
       instance: AnyAtomInstance
@@ -30,7 +30,7 @@ export const AtomInstanceProvider: FC<
 
   if (DEV && !instance && !instances) {
     throw new Error(
-      'Zedux: AtomInstanceProvider requires either an `instance` or `instances` prop'
+      'Zedux: AtomProvider requires either an `instance` or `instances` prop'
     )
   }
 
@@ -49,9 +49,7 @@ export const AtomInstanceProvider: FC<
 
   return (
     <context.Provider value={parentInstance}>
-      <AtomInstanceProvider instances={childInstances}>
-        {children}
-      </AtomInstanceProvider>
+      <AtomProvider instances={childInstances}>{children}</AtomProvider>
     </context.Provider>
   )
 }

@@ -1,6 +1,6 @@
 import {
   atom,
-  AtomInstanceProvider,
+  AtomProvider,
   useAtomConsumer,
   useAtomInstance,
   useAtomValue,
@@ -32,12 +32,12 @@ describe('React context', () => {
 
       return (
         <>
-          <AtomInstanceProvider instance={instance1}>
+          <AtomProvider instance={instance1}>
             <Child />
-          </AtomInstanceProvider>
-          <AtomInstanceProvider instance={instance2}>
+          </AtomProvider>
+          <AtomProvider instance={instance2}>
             <Child />
-          </AtomInstanceProvider>
+          </AtomProvider>
         </>
       )
     }
@@ -74,9 +74,9 @@ describe('React context', () => {
 
       return (
         <>
-          <AtomInstanceProvider instances={[instance1, instance2]}>
+          <AtomProvider instances={[instance1, instance2]}>
             <Child />
-          </AtomInstanceProvider>
+          </AtomProvider>
         </>
       )
     }
@@ -102,9 +102,9 @@ describe('React context', () => {
       return (
         <>
           {/** @ts-expect-error missing prop */}
-          <AtomInstanceProvider>
+          <AtomProvider>
             <Child />
-          </AtomInstanceProvider>
+          </AtomProvider>
         </>
       )
     }
@@ -137,7 +137,7 @@ describe('React context', () => {
 
     const div = await findByTestId('1')
 
-    expect(div.innerHTML).toMatch(/AtomInstanceProvider.*requires.*prop/i)
+    expect(div.innerHTML).toMatch(/AtomProvider.*requires.*prop/i)
     expect(spy).toHaveBeenCalledTimes(3)
 
     spy.mockReset()
@@ -185,9 +185,9 @@ describe('React context', () => {
       const instance = ecosystem.getInstance(atom1, ['a'])
 
       return (
-        <AtomInstanceProvider instance={instance}>
+        <AtomProvider instance={instance}>
           <Child />
-        </AtomInstanceProvider>
+        </AtomProvider>
       )
     }
 

@@ -53,7 +53,7 @@ On top of these, `@zedux/react` exports the following APIs:
 
 ### Components
 
-- [`<AtomInstanceProvider>`](https://omnistac.github.io/zedux/docs/api/components/AtomInstanceProvider)
+- [`<AtomProvider>`](https://omnistac.github.io/zedux/docs/api/components/AtomProvider)
 - [`<EcosystemProvider>`](https://omnistac.github.io/zedux/docs/api/components/EcosystemProvider)
 
 ### Hooks

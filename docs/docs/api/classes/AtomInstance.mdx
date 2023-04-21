@@ -90,19 +90,19 @@ function MyComponent() {
 
 ## Providing
 
-An atom instance can be provided over React context via [`<AtomInstanceProvider>`](../components/AtomInstanceProvider).
+An atom instance can be provided over React context via [`<AtomProvider>`](../components/AtomProvider).
 
 ```tsx
-import { AtomInstanceProvider, useAtomInstance } from '@zedux/react'
+import { AtomProvider, useAtomInstance } from '@zedux/react'
 import { myAtom } from './atoms'
 
 function Parent() {
   const instance = useAtomInstance(myAtom)
 
   return (
-    <AtomInstanceProvider instance={instance}>
+    <AtomProvider instance={instance}>
       <Child />
-    </AtomInstanceProvider>
+    </AtomProvider>
   )
 }
 ```

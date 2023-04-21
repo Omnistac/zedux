@@ -1,6 +1,6 @@
 import {
   atom,
-  AtomInstanceProvider,
+  AtomProvider,
   createEcosystem,
   EcosystemProvider,
   injectAtomValue,
@@ -110,9 +110,9 @@ function Parent() {
   const instance3 = useAtomInstance(atom3, ['1'])
 
   return (
-    <AtomInstanceProvider instances={[instance1, instance3]}>
+    <AtomProvider instances={[instance1, instance3]}>
       <Child />
-    </AtomInstanceProvider>
+    </AtomProvider>
   )
 }
 
