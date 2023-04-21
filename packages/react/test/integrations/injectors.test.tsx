@@ -45,13 +45,13 @@ describe('injectors', () => {
 
   test('React-esque injectors mimic React hook functionality', () => {
     const ref = {}
-    const cbs: (() => void)[] = []
+    const cbs: string[] = []
     const cleanups: string[] = []
     const effects: string[] = []
     const refs: (typeof ref)[] = []
     const vals: string[] = []
-    const cbA = () => {}
-    const cbB = () => {}
+    const cbA = () => 'aa'
+    const cbB = () => 'bb'
 
     const atom1 = atom('1', () => {
       const store = injectStore('a')
@@ -68,7 +68,7 @@ describe('injectors', () => {
       const cb3 = injectCallback(store.getState() === 'a' ? cbA : cbB, [
         store.getState(),
       ])
-      cbs.push(cb1, cb2, cb3)
+      cbs.push(cb1(), cb2(), cb3())
 
       injectEffect(() => {
         effects.push(store.getState())
@@ -84,7 +84,7 @@ describe('injectors', () => {
     instance.setState('b')
 
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b'])
-    expect(cbs).toEqual([cbA, cbA, cbA, cbB, cbA, cbB])
+    expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb'])
     expect(effects).toEqual(['b'])
     expect(cleanups).toEqual([])
     expect(refs).toEqual([ref, ref])
@@ -92,7 +92,7 @@ describe('injectors', () => {
     instance.setState('c')
 
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b', 'c', 'a', 'c'])
-    expect(cbs).toEqual([cbA, cbA, cbA, cbB, cbA, cbB, cbB, cbA, cbB])
+    expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb', 'bb', 'aa', 'bb'])
     expect(effects).toEqual(['b', 'c'])
     expect(cleanups).toEqual(['c'])
     expect(refs).toEqual([ref, ref, ref])

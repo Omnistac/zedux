@@ -2,6 +2,7 @@ import {
   api,
   atom,
   injectAtomGetters,
+  injectCallback,
   injectRef,
   injectStore,
   internalTypes,
@@ -9,7 +10,7 @@ import {
 import { ecosystem } from '../utils/ecosystem'
 
 describe('batching', () => {
-  test('exports batch updates by default', () => {
+  test('injectCallback() batches updates by default', () => {
     const evaluations: number[] = []
 
     const atom1 = atom('1', () => {
@@ -18,10 +19,10 @@ describe('batching', () => {
       evaluations.push(store.getState())
 
       return api(store).setExports({
-        update: () => {
+        update: injectCallback(() => {
           store.setState(1)
           store.setState(2)
-        },
+        }, []),
       })
     })
 
@@ -34,7 +35,7 @@ describe('batching', () => {
     expect(evaluations).toEqual([0, 2])
   })
 
-  test('api(..., wrap: false) prevents exports from batching updates', () => {
+  test("inline callbacks don't batch updates", () => {
     const evaluations: number[] = []
 
     const atom1 = atom('1', () => {
@@ -42,7 +43,7 @@ describe('batching', () => {
 
       evaluations.push(store.getState())
 
-      return api(store, false).setExports({
+      return api(store).setExports({
         update: () => {
           store.setState(1)
           store.setState(2)

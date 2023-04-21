@@ -411,22 +411,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
       // Exports can only be set on initial evaluation
       if (this.status === 'Initializing' && api.exports) {
-        const exports = api.exports
-
-        // wrap exported functions in ecosystem.batch by default
-        this.exports = api.wrap
-          ? Object.keys(exports).reduce((obj, key: keyof G['Exports']) => {
-              const val = exports[key]
-              obj[key] =
-                typeof val === 'function'
-                  ? (((...args: any) =>
-                      this.ecosystem.batch(() =>
-                        val(...args)
-                      )) as G['Exports'][typeof key])
-                  : val
-              return obj
-            }, {} as G['Exports'])
-          : exports
+        this.exports = api.exports
       }
 
       // if api.value is a promise, we ignore api.promise

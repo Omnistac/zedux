@@ -9,7 +9,28 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { injectCallback } from '@zedux/react'
 ```
 
-An [injector](../glossary#injector) that memoizes a function. Really just a shorthand for [`injectMemo()`](injectMemo) where the memoized value itself is a function. The returned function reference will only change when the passed dependencies change.
+An [injector](../glossary#injector) that memoizes a function and wraps it in an [`ecosystem.batch()`](../classes/Ecosystem#batch) call. This is essentially a shorthand for the following:
+
+```ts
+const { ecosystem } = injectAtomGetters()
+const setTwoStores = injectMemo(
+  () => (stateA, stateB) => {
+    ecosystem.batch(() => {
+      storeA.setState(stateA)
+      storeB.setState(stateB)
+    })
+  },
+  []
+)
+
+// equivalent using injectCallback:
+const setTwoStores = injectCallback((stateA, stateB) => {
+  storeA.setState(stateA)
+  storeB.setState(stateB)
+}, [])
+```
+
+The returned function reference will only change when the passed dependencies change on subsequent evaluations.
 
 Can be useful when exporting functions from an atom to ensure that you're only exporting stable references.
 
@@ -44,11 +65,14 @@ Miscellaneous:
 ```ts
 import { injectCallback, injectMemo } from '@zedux/react'
 
-// These are equivalent:
 const add = injectCallback((a: number, b: number) => a + b, [])
-const add = injectMemo(() => (a: number, b: number) => a + b, [])
+const withDeps = injectCallback(myFn, [depA, depB])
 
-const withDeps = injectCallback(fn, [depA, depB])
+// to prevent automatic batching, use `injectMemo` instead ...
+const withoutBatching = injectMemo(() => myFn, [depA, depB])
+
+// ... or use an inline function if memoization isn't needed:
+const inlineCallback = myFn
 ```
 
 ## Signature
@@ -63,8 +87,8 @@ const withDeps = injectCallback(fn, [depA, depB])
 
 <Legend>
   <Item name="callback">
-    Required. The function to memoize. This function reference will be discarded
-    when deps are the same.
+    Required. The function to memoize and auto-batch. This function reference
+    will be discarded when deps are the same.
   </Item>
   <Item name="deps">
     <p>
