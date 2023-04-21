@@ -423,21 +423,24 @@ const timeTravelAtom = ion('timeTravel', ({ get }, instance) => {
     }))
   }
 
-  const redo = () => {
+  // use `injectCallback()` to automatically batch these updates:
+  // highlight-next-line
+  const redo = injectCallback(() => {
     const newState = store.setStateDeep(({ history, pointer }) => ({
       pointer: Math.min(history.length - 1, pointer + 1),
     }))
 
     instance.setState(newState.history[newState.pointer])
-  }
+  }, [])
 
-  const undo = () => {
+  // highlight-next-line
+  const undo = injectCallback(() => {
     const newState = store.setStateDeep(({ pointer }) => ({
       pointer: Math.max(0, pointer - 1),
     }))
 
     instance.setState(newState.history[newState.pointer])
-  }
+  }, [])
 
   return api(store).setExports({ redo, undo })
 })
@@ -460,6 +463,10 @@ function Devtools() {
   )
 }
 ```
+
+:::note
+`injectCallback()` is necessary here for its automatic batching - without batching these updates, the `timeTravel` atom will reevaluate before the instance's state has been undone/redone.
+:::
 
 The primary advantage of this approach over the custom injector approach is that time travel is now a completely separate concern. Any atom can be made time-travelable, and no atom has to know whether it is.
 
@@ -500,21 +507,21 @@ const timeTravelAtom = ion('timeTravel', ({ get }, instance) => {
     }))
   }
 
-  const redo = () => {
+  const redo = injectCallback(() => {
     const newState = store.setStateDeep(({ history, pointer }) => ({
       pointer: Math.min(history.length - 1, pointer + 1),
     }))
 
     instance.setState(newState.history[newState.pointer])
-  }
+  }, [])
 
-  const undo = () => {
+  const undo = injectCallback(() => {
     const newState = store.setStateDeep(({ pointer }) => ({
       pointer: Math.max(0, pointer - 1),
     }))
 
     instance.setState(newState.history[newState.pointer])
-  }
+  }, [])
 
   return api(store).setExports({ redo, undo })
 })
