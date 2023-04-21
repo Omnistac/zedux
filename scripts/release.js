@@ -23,6 +23,9 @@ const validTypes = [
 ]
 const validPreIds = ['alpha', 'beta', 'rc']
 
+const isNextBranch = branch => /^next\/v\d+\.x$/.test(branch)
+const isSupportBranch = branch => /^v\d+\.x$/.test(branch)
+
 /**
  * Make sure the docs site builds - no missing links etc that'll stop the deploy
  */
@@ -342,9 +345,9 @@ const getBranch = async type => {
 
   const { stdout } = await cmd('git branch --show-current')
   const branch = stdout.trim()
-  const isSupportBranch = /^v\d+\.x$/.test(branch)
-  const isNextBranch = /^next\/v\d+\.x$/.test(branch)
-  const isValid = branch === 'master' || isSupportBranch || isNextBranch
+  const isNext = isNextBranch(branch)
+  const isSupport = isSupportBranch(branch)
+  const isValid = branch === 'master' || isSupport || isNext
 
   if (!isValid) {
     console.error(
@@ -353,17 +356,14 @@ const getBranch = async type => {
     process.exit(1)
   }
 
-  if (
-    isSupportBranch &&
-    !['minor', 'patch', 'preminor', 'prepatch'].includes(type)
-  ) {
+  if (isSupport && !['minor', 'patch', 'preminor', 'prepatch'].includes(type)) {
     console.error(
       'Support branches can only publish minor, patch, preminor, and prepatch versions.'
     )
     process.exit(1)
   }
 
-  if (isNextBranch && type !== 'premajor') {
+  if (isNext && type !== 'premajor') {
     console.error('Next branches can only publish premajor versions.')
     process.exit(1)
   }
@@ -533,18 +533,25 @@ const makePullRequest = async (email, token, branch, tagName) => {
 }
 
 /**
- * Publish each package to npm. If there are any successes, we proceed with the
- * release. User has to fix and publish failed packages manually
+ * Publish each package to npm. Report any failures and wait for them to be
+ * fixed manually before proceeding with the release.
  */
-const npmPublish = async packages => {
-  console.info('Publishing packages')
-
+const npmPublish = async (branch, packages, isPrerelease) => {
   let proceed = true
+  const tagStr = isNextBranch(branch)
+    ? ` --tag next-${branch.slice(5, -2)}`
+    : isSupportBranch(branch)
+    ? ` --tag lts-${isPrerelease ? 'next-' : ''}${branch.slice(0, -2)}`
+    : isPrerelease
+    ? ' --tag next'
+    : ''
+
+  console.info('Publishing packages with npm dist-tag:', tagStr.slice(7))
 
   // publish packages one-by-one (there seemed to be some Nx race condition)
   for (const dir of packages) {
     const output = await cmd(
-      `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ npm publish --access=public`
+      `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ npm publish --access=public${tagStr}`
     )
 
     if (output.code) {
@@ -625,6 +632,8 @@ const returnToBranch = async (branch, tagName) => {
 const run = async (type, preId) => {
   assertValidArgs(type, preId)
 
+  const isPrerelease = type.startsWith('pre')
+
   // we don't need to assert that tests pass or that packages build - the
   // release PR CI will do that. TODO: Move docs site build check to a CI job
   // for `release/*` branch PRs
@@ -656,14 +665,8 @@ const run = async (type, preId) => {
   await makePullRequest(email, token, branch, tagName)
   await returnToBranch(branch, tagName)
 
-  await npmPublish(packages)
-  await createRelease(
-    email,
-    token,
-    tagName,
-    changelogBody,
-    type.startsWith('pre')
-  )
+  await npmPublish(branch, packages, isPrerelease)
+  await createRelease(email, token, tagName, changelogBody, isPrerelease)
 
   logPackageLinks(packages)
 }
