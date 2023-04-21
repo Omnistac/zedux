@@ -9,4 +9,4 @@ import { readInstance } from '../classes/EvaluationStack'
  * const reasons = ecosystem.why()
  * ```
  */
-export const injectWhy = () => readInstance()._nextEvaluationReasons
+export const injectWhy = () => readInstance().nextReasons

@@ -37,6 +37,38 @@ export const AddDependentConfigParam = () => (
   </Item>
 )
 
+export const EvaluationReasonParams = ({ type = 'atom instance' }) => (
+  <>
+    <Item name="nextReasons">
+      <p>
+        An array that tracks the batched{' '}
+        <Link to="../types/EvaluationReason">EvaluationReasons</Link> that will
+        lead to the {type} reevaluating.
+      </p>
+      <p>
+        If the {type} is currently evaluating, this is the list of reasons
+        explaining why and is what{' '}
+        <Link to="Ecosystem#why">
+          <code>ecosystem.why()</code>
+        </Link>{' '}
+        will return.
+      </p>
+      <p>
+        This will be empty if no reevaluation is currently scheduled or if this
+        is the first evaluation of the {type}.
+      </p>
+    </Item>
+    <Item name="prevReasons">
+      <p>
+        An array that tracks the batched{' '}
+        <Link to="../types/EvaluationReason">EvaluationReasons</Link> describing
+        why the {type} last evaluated. This will be empty if the last evaluation
+        was the first.
+      </p>
+    </Item>
+  </>
+)
+
 All standard atoms (aka "atom instances") are actually instances of this class. When Zedux instantiates [atom templates](AtomTemplate) (and [ion templates](IonTemplate)), it's just creating instances of this class.
 
 ## Creation
@@ -135,6 +167,7 @@ ecosystem.getInstance(
   ['c']
 ).id // 'b-["c"]'`}</Ts>
   </Item>
+  <EvaluationReasonParams />
   <Item name="params">
     <p>
       A reference to the raw, unserialized params that were used to create this

@@ -7,12 +7,7 @@ import {
   GraphEdgeInfo,
   Selectable,
 } from '../types'
-import {
-  InstanceStackItem,
-  SelectorStackItem,
-  StackItem,
-  Static,
-} from '../utils'
+import { StackItem, Static } from '../utils'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 import { SelectorCache } from './Selectors'
@@ -31,11 +26,11 @@ export let stack: StackItem[] = []
 export const readInstance = () => {
   const item = stack[stack.length - 1]
 
-  if (DEV && !(item as InstanceStackItem | undefined)?.instance) {
+  if (DEV && !is(item?.node, AtomInstanceBase)) {
     throw new Error('Zedux: Injectors can only be used in atom state factories')
   }
 
-  return (item as InstanceStackItem).instance
+  return item.node as AnyAtomInstance
 }
 
 export const setStack = (newStack: StackItem[]) => (stack = newStack)
@@ -49,13 +44,13 @@ export class EvaluationStack {
     const get: AtomGetters['get'] = ((atom, params) => {
       const { id, store } = ecosystem.getInstance(atom, params)
 
-      // when called outside AtomSelector evaluation, get() is just an alias for
+      // when called outside evaluation, get() is just an alias for
       // ecosystem.get()
       if (!stack.length) return store.getState()
 
       // if get is called during evaluation, track the required atom instances so
       // we can add graph edges for them
-      _graph.addEdge(stack[stack.length - 1].id, id, 'get', 0)
+      _graph.addEdge(stack[stack.length - 1].node.id, id, 'get', 0)
 
       return store.getState()
     }) as AtomGetters['get']
@@ -67,14 +62,14 @@ export class EvaluationStack {
     ) => {
       const instance = ecosystem.getInstance(atom, params as AtomParamsType<A>)
 
-      // when called outside AtomSelector evaluation, getInstance() is just an alias
-      // for ecosystem.getInstance()
+      // when called outside evaluation, getInstance() is just an alias for
+      // ecosystem.getInstance()
       if (!stack.length) return instance
 
       // if getInstance is called during evaluation, track the required atom
       // instances so we can add graph edges for them
       _graph.addEdge(
-        stack[stack.length - 1].id,
+        stack[stack.length - 1].node.id,
         instance.id,
         edgeInfo?.[1] || 'getInstance',
         edgeInfo?.[0] ?? Static
@@ -87,14 +82,15 @@ export class EvaluationStack {
       selectable: Selectable<T, Args>,
       ...args: Args
     ) => {
-      // when called outside AtomSelector evaluation, select() is just an alias for ecosystem.select()
+      // when called outside evaluation, select() is just an alias for
+      // ecosystem.select()
       if (!stack.length) {
         return ecosystem.select(selectable, ...args)
       }
 
       const cache = selectors.getCache(selectable, args)
 
-      _graph.addEdge(stack[stack.length - 1].id, cache.id, 'select', 0)
+      _graph.addEdge(stack[stack.length - 1].node.id, cache.id, 'select', 0)
 
       return cache.result as T
     }
@@ -108,7 +104,7 @@ export class EvaluationStack {
   }
 
   public isEvaluating(id: string) {
-    return stack.some(item => item.id === id)
+    return stack.some(item => item.node.id === id)
   }
 
   public finish() {
@@ -122,45 +118,23 @@ export class EvaluationStack {
     if (!item || !_mods.evaluationFinished) return
 
     const time = item.start ? _idGenerator.now(true) - item.start : 0
-    const action = { time } as ActionFactoryPayloadType<
+    const action: ActionFactoryPayloadType<
       typeof pluginActions.evaluationFinished
-    >
+    > = { node: item.node, time }
 
-    if ((item as InstanceStackItem).instance) {
-      ;(
-        action as {
-          instance: AnyAtomInstance
-        }
-      ).instance = (item as InstanceStackItem).instance
-    } else if ((item as SelectorStackItem).cache) {
-      ;(
-        action as {
-          cache: SelectorCache
-        }
-      ).cache = (item as SelectorStackItem).cache
-    }
-
-    modBus.dispatch(pluginActions.evaluationFinished(action as any))
+    modBus.dispatch(pluginActions.evaluationFinished(action))
   }
 
-  public read() {
+  public read(): StackItem | undefined {
     return stack[stack.length - 1]
   }
 
   public start(item: AnyAtomInstance | SelectorCache<any, any>) {
     const { _idGenerator, _mods, _scheduler } = this.ecosystem
-    const newItem = {} as StackItem
 
-    if (is(item, AtomInstanceBase)) {
-      newItem.id = (item as AnyAtomInstance).id
-      ;(newItem as InstanceStackItem).instance = item as AnyAtomInstance
-    } else {
-      newItem.id = (item as SelectorCache).id
-      ;(newItem as SelectorStackItem).cache = item as SelectorCache
-    }
-
-    if (_mods.evaluationFinished) {
-      newItem.start = _idGenerator.now(true)
+    const newItem: StackItem = {
+      node: item,
+      start: _mods.evaluationFinished ? _idGenerator.now(true) : undefined,
     }
 
     stack.push(newItem)
