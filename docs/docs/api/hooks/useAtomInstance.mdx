@@ -48,9 +48,9 @@ const instance = useAtomInstance(myAtom)
 const withParams = useAtomInstance(myAtom, ['param 1', 'param 2'])
 
 // the instance can be provided over React context:
-<AtomInstanceProvider instance={instance}>
+<AtomProvider instance={instance}>
   {children}
-</AtomInstanceProvider>
+</AtomProvider>
 ```
 
 ## Signature

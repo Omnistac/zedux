@@ -1,12 +1,12 @@
 ---
-id: AtomInstanceProvider
-title: AtomInstanceProvider
+id: AtomProvider
+title: AtomProvider
 ---
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
 ```ts
-import { AtomInstanceProvider } from '@zedux/react'
+import { AtomProvider } from '@zedux/react'
 ```
 
 A component that provides one or more [atom instances](../classes/AtomInstance) over React context.
@@ -15,7 +15,7 @@ To consume the provided instances, use [`useAtomConsumer()`](../hooks/useAtomCon
 
 ## Example
 
-```tsx live ecosystemId=AtomInstanceProvider/example resultVar=Parent
+```tsx live ecosystemId=AtomProvider/example resultVar=Parent
 const secondsAtom = atom('seconds', (start: number) => {
   const store = injectStore(start)
 
@@ -39,9 +39,9 @@ function Parent() {
   const instance = useAtomInstance(secondsAtom, [100])
 
   return (
-    <AtomInstanceProvider instance={instance}>
+    <AtomProvider instance={instance}>
       <Child />
-    </AtomInstanceProvider>
+    </AtomProvider>
   )
 }
 ```
@@ -49,14 +49,12 @@ function Parent() {
 Providing multiple instances:
 
 ```tsx
-<AtomInstanceProvider instances={[instanceA, instanceB]}>
-  {children}
-</AtomInstanceProvider>
+<AtomProvider instances={[instanceA, instanceB]}>{children}</AtomProvider>
 ```
 
 ## Props
 
-AtomInstanceProvider accepts **either** an `instance` prop with a single atom instance OR an `instances` prop with an array of instances. You must pass one or the other but not both.
+AtomProvider accepts **either** an `instance` prop with a single atom instance OR an `instances` prop with an array of instances. You must pass one or the other but not both.
 
 <Legend>
   <Item name="instance">
@@ -72,7 +70,7 @@ AtomInstanceProvider accepts **either** an `instance` prop with a single atom in
     </p>
     <p>
       Be careful reordering this list and adding/removing items since this will
-      make React destroy/recreate the entire component subtree inside <code>{`<AtomInstanceProvider>`}</code>
+      make React destroy/recreate the entire component subtree inside <code>{`<AtomProvider>`}</code>
       .
     </p>
   </Item>

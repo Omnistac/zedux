@@ -1,7 +1,7 @@
 import {
   api,
   atom,
-  AtomInstanceProvider,
+  AtomProvider,
   AtomInstanceType,
   useAtomConsumer,
   useAtomInstance,
@@ -55,9 +55,9 @@ function Greeting() {
   const testInstance = useAtomInstance(testAtom)
 
   return (
-    <AtomInstanceProvider instance={testInstance}>
+    <AtomProvider instance={testInstance}>
       {view ? <div>the first view!</div> : <Child />}
       <button onClick={() => setView(curr => !curr)}>change view</button>
-    </AtomInstanceProvider>
+    </AtomProvider>
   )
 }
