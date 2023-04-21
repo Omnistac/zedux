@@ -5,15 +5,15 @@ title: Batching
 
 Zedux flushes updates synchronously. It needs to do this to keep user input in sync with state for optimal UX. But this can lead to unnecessary evaluations when setting the state of multiple stores at once.
 
-These extra evaluations are often an unnecessary performance loss. They can also be unexpected, leading to values seeming out of sync during the in-between evaluations. This is a form of "state tearing" and can even lead to bugs in rare cases.
+These extra evaluations are sometimes an unnecessary performance loss. They can also be unexpected, leading to values seeming out of sync during the in-between evaluations. This is a form of "state tearing" and can even lead to bugs in rare cases.
 
 To combat all this, Zedux offers batching APIs. It also batches some things by default.
 
 :::tip you will learn:
 
-- How to batch a known set of updates
-- How to batch an unknown number of updates
-- When Zedux automatically batches updates and how to disable it.
+- How to batch a known set of updates.
+- How to batch open-endedly.
+- When Zedux automatically batches updates.
 
 :::
 
@@ -35,9 +35,9 @@ ecosystem.batch(() => {
 
 `ecosystem.batch()` prevents the scheduler from flushing until the callback completes. This is the simplest way to batch updates.
 
-## Batching Unknown Updates
+## Open-Ended Batching
 
-Sometimes it isn't convenient to wrap a bunch of `.setState()` calls in a single `ecosystem.batch()` call. For these situations, you can set the `meta` property of the dispatched action to [`internalTypes.batch`](../api/utils/internalTypes#batch).
+Sometimes it isn't convenient to wrap synchronous dispatches in a single `ecosystem.batch()` call. For these situations, you can set the `meta` property of the dispatched action to [`internalTypes.batch`](../api/utils/internalTypes#batch).
 
 ```ts
 // before:
@@ -63,48 +63,64 @@ aStore.setStateDeep({ newValue })
 
 There are a few situations where Zedux batches updates automatically. Some of this batching you can't control - it's an integral part of Zedux's graph algorithm. But there is one place where you can control it:
 
-### Atom Exports
+### `injectCallback`
 
-By default, Zedux wraps all of an [atom's exported functions](../api/classes/AtomInstance#exports) in [`ecosystem.batch()`](../api/classes/Ecosystem#batch) calls. This wrapping adds a little overhead, but prevents rare cases of state tearing as we'll soon see.
-
-To prevent this overhead, batch state updates yourself and pass `false` as the 2nd param to `api()` to prevent Zedux from automatically wrapping your exported functions.
+Zedux wraps all calls to an injected callback in [`ecosystem.batch()`](../api/classes/Ecosystem#batch) calls.
 
 ```ts
 const automaticBatchingAtom = atom('automaticBatching', () => {
   const store = injectStore(0)
 
-  return api(store).setExports({
-    updateTwice: () => {
-      store.setState(state => state + 1)
-      store.setState(state => state + 1)
-    },
-  })
+  const updateTwice = injectCallback(() => {
+    store.setState(state => state + 1)
+    store.setState(state => state + 1)
+  }, [])
+
+  return api(store).setExports({ updateTwice })
 })
 
 const manualBatchingAtom = atom('manualBatching', () => {
   const { ecosystem } = injectAtomGetters()
   const store = injectStore(0)
 
-  // just pass false to turn off automatic batching
+  // use `injectMemo` to "turn off" automatic batching:
   // highlight-next-line
-  return api(store, false).setExports({
-    updateTwice: () => {
-      ecosystem.batch(() => {
-        store.setState(state => state + 1)
-        store.setState(state => state + 1)
-      })
-    },
-  })
+  const updateTwice = injectMemo(() => {
+    ecosystem.batch(() => {
+      store.setState(state => state + 1)
+      store.setState(state => state + 1)
+    })
+  }, [])
+
+  return api(store, false).setExports({ updateTwice })
 })
 ```
 
-Both of these atoms behave exactly the same. However, `manualBatchingAtom` prevents Zedux from checking and wrapping the atom's exports, saving a _tiny bit_ of overhead at the cost of boilerplate.
+Both of these atoms behave exactly the same. You typically shouldn't need to worry about this, but if you don't want to batch updates, you can usually ditch injectors altogether and use an inline function - no need for `injectMemo()`:
+
+```ts
+const noBatchingAtom = atom('noBatching', () => {
+  const { ecosystem } = injectAtomGetters()
+  const store = injectStore(0)
+
+  // create an inline function:
+  // highlight-next-line
+  const updateTwice = () => {
+    store.setState(state => state + 1)
+    store.setState(state => state + 1)
+  }
+
+  return api(store, false).setExports({ updateTwice })
+})
+```
+
+As long as the callback doesn't reference anything unstable (the `store` reference is stable in this example), inline callbacks are fine in Zedux.
 
 ## Why Batch?
 
-Since Zedux only deals with local state, batching updates in Zedux doesn't improve performance as much as you might think. Batching is much more important in UI or data fetching libraries where network speed and I/O are bottlenecks.
+Since Zedux only deals with local state, batching updates in Zedux doesn't improve performance as much as you might think. Batching is much more important in UI or fetching libraries where network speed and I/O are bottlenecks.
 
-Allowing an atom to reevaluate an extra time is usually not a big deal performance-wise. So why would Zedux wrap exported functions by default? Or why would you ever care to call `ecosystem.batch()` yourself?
+Allowing an atom to reevaluate an extra time is usually not a big deal performance-wise. So why would you ever care to use `injectCallback()` or call `ecosystem.batch()`?
 
 Turns out, there are rare situations where _not_ batching can lead to state "tearing" bugs. Since Zedux flushes all updates synchronously by default, you may encounter situations where setting state in one place leads to an atom reevaluating before you have a chance to update another piece of state that you're expecting to be in sync with the first piece.
 
@@ -120,8 +136,7 @@ const switcherAtom = ion('switcher', ({ get, getInstance }) => {
   const countersInstance = getInstance(countersAtom)
   const value = get(countersInstance)[key]
 
-  // pass `false` to `api()` to prevent automatic batching:
-  return api(value, false).setExports({
+  return api(value).setExports({
     switchAndIncrement: () => {
       const newKey = internalStore.getState() === 'even' ? 'odd' : 'even'
       internalStore.setState(newKey)
@@ -165,9 +180,9 @@ const switcherAtom = ion('switcher', ({ get, getInstance }) => {
     history.current.push({ key, value })
   }
 
-  // removing this `false` fixes everything:
-  return api(value, false).setExports({
+  return api(value).setExports({
     history,
+    // wrapping this function in `injectCallback()` fixes everything:
     switchAndIncrement: () => {
       const newKey = internalStore.getState() === 'even' ? 'odd' : 'even'
       internalStore.setState(newKey)
@@ -197,11 +212,11 @@ In this simple case, it's easy to update the logic to also check against `value`
 
 The better solution is to use batching to make sure the state you want to update is fully updated everywhere before any atoms evaluate.
 
-Since this example uses an export, simply removing the `false` passed to `api()` turns automatic batching back on, fixing everything (try it in the above sandbox!).
+Simply wrapping `switchAndIncrement` in `injectCallback()` "turns on" automatic batching, fixing everything (try it in the above sandbox!).
 
 ## Recap
 
 - Use `ecosystem.batch()` to batch a specific set of updates.
 - Set an action's `meta` property to `internalTypes.batch` to batch open-endedly.
-- Prevent Zedux from automatically batching an atom's exported functions by passing `false` as the 2nd param to `api()`.
+- Use `injectCallback()` to automatically batch updates.
 - Batching can prevent state tearing bugs. But you typically won't need to worry about it, especially if you structure side effects well.

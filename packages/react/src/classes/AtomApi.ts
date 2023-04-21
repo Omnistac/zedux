@@ -17,8 +17,7 @@ export class AtomApi<
   public value: State | StoreType
 
   constructor(
-    value: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State,
-    public readonly wrap = true
+    value: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
   ) {
     this.promise = undefined as PromiseType
     this.value = value as StoreType | State
@@ -44,25 +43,17 @@ export class AtomApi<
   public setExports<NewExports extends Record<string, any>>(
     exports: NewExports
   ): AtomApi<State, NewExports, StoreType, PromiseType> {
-    ;((this as unknown) as AtomApi<
-      State,
-      NewExports,
-      StoreType,
-      PromiseType
-    >).exports = exports
+    ;(
+      this as unknown as AtomApi<State, NewExports, StoreType, PromiseType>
+    ).exports = exports
 
-    return (this as unknown) as AtomApi<
-      State,
-      NewExports,
-      StoreType,
-      PromiseType
-    > // for chaining
+    return this as unknown as AtomApi<State, NewExports, StoreType, PromiseType> // for chaining
   }
 
   public setPromise<T>(
     promise: Promise<T>
   ): AtomApi<State, Exports, StoreType, Promise<T>> {
-    this.promise = (promise as unknown) as PromiseType
+    this.promise = promise as unknown as PromiseType
 
     return this as AtomApi<State, Exports, StoreType, Promise<T>> // for chaining
   }
