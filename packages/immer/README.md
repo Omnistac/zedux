@@ -1,25 +1,25 @@
 # `@zedux/immer`
 
-The official Immer integration for Zedux.
+The official [Immer](https://github.com/immerjs/immer) integration for Zedux. This is an addon package, meaning it doesn't have any own dependencies or re-export any APIs from other packages. It uses peer dependencies instead, expecting you to download the packages yourself.
 
 See [the documentation](https://omnistac.github.io/zedux/docs/packages/immer) for this package.
 
 ## Installation
 
-This package has a peer dependency on the [`@zedux/atoms`](https://www.npmjs.com/package/@zedux/atoms) package. Ensure that that's installed at the same version as this package:
+This package has a peer dependency on the [`@zedux/atoms`](https://www.npmjs.com/package/@zedux/atoms) package and on Immer itself. Ensure that `@zedux/atoms` is installed at the same version as this package:
 
 ```sh
-npm install @zedux/atoms @zedux/immer # npm
-yarn add @zedux/atoms @zedux/immer # yarn
-pnpm add @zedux/atoms @zedux/immer # pnpm
+npm install immer @zedux/atoms @zedux/immer # npm
+yarn add immer @zedux/atoms @zedux/immer # yarn
+pnpm add immer @zedux/atoms @zedux/immer # pnpm
 ```
 
-The `@zedux/react` package already includes `@zedux/atoms`. To use Immer in React apps, install this package alongside `@zedux/react`:
+The `@zedux/react` package already includes `@zedux/atoms`. To use Immer in React apps, install this package alongside `@zedux/react` instead:
 
 ```sh
-npm install @zedux/react @zedux/immer # npm
-yarn add @zedux/react @zedux/immer # yarn
-pnpm add @zedux/react @zedux/immer # pnpm
+npm install immer @zedux/react @zedux/immer # npm
+yarn add immer @zedux/react @zedux/immer # yarn
+pnpm add immer @zedux/react @zedux/immer # pnpm
 ```
 
 ## Usage

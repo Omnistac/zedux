@@ -10,7 +10,7 @@
     "url": "https://github.com/Omnistac/zedux/issues"
   },
   "devDependencies": {
-    "@zedux/react": "^0.5.11",
+    "@zedux/atoms": "^0.5.11",
     "immer": "^9.0.21"
   },
   "exports": {
@@ -19,9 +19,9 @@
       "require": "./dist/cjs/index.js",
       "default": "./dist/cjs/index.js",
       "production": {
-        "import": "./dist/zedux-react.es.min.js",
-        "require": "./dist/zedux-react.umd.min.js",
-        "default": "./dist/zedux-react.umd.min.js"
+        "import": "./dist/zedux-immer.es.min.js",
+        "require": "./dist/zedux-immer.umd.min.js",
+        "default": "./dist/zedux-immer.umd.min.js"
       }
     }
   },
@@ -41,7 +41,7 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@zedux/react": "^0.5.11",
+    "@zedux/atoms": "^0.5.11",
     "immer": ">=9.0.19"
   },
   "repository": {
