@@ -14,22 +14,21 @@ export const createInjector = <
 
   const injector = (...args: A) => {
     const instance = readInstance()
+    const { _injectors, _nextInjectors, status, template } = instance
 
-    if (instance.status === 'Initializing') {
+    if (status === 'Initializing') {
       const descriptor = first(instance, ...args)
       type = descriptor.type
-      instance._nextInjectors?.push(descriptor)
+      _nextInjectors?.push(descriptor)
 
       return descriptor.result
     }
 
-    const prevDescriptor = instance._injectors?.[
-      instance._nextInjectors?.length as number
-    ] as T
+    const prevDescriptor = _injectors?.[_nextInjectors?.length as number] as T
 
     if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
       throw new Error(
-        `Zedux: ${operation} in atom "${instance.template.key}" - injectors cannot be added, removed, or reordered`
+        `Zedux: ${operation} in atom "${template.key}" - injectors cannot be added, removed, or reordered`
       )
     }
 
@@ -37,7 +36,7 @@ export const createInjector = <
       ? next(prevDescriptor, instance, ...args)
       : prevDescriptor
 
-    instance._nextInjectors?.push(descriptor)
+    _nextInjectors?.push(descriptor)
 
     return descriptor.result
   }
