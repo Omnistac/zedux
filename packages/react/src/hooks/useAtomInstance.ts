@@ -32,12 +32,14 @@ const OPERATION = 'useAtomInstance'
  * @param params The params for generating the instance's key.
  */
 export const useAtomInstance: {
-  <A extends ParamlessTemplate>(template: A): AtomInstanceType<A>
-
   <A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>,
     config?: ZeduxHookConfig
+  ): AtomInstanceType<A>
+
+  <A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
   ): AtomInstanceType<A>
 
   <I extends AnyAtomInstance>(

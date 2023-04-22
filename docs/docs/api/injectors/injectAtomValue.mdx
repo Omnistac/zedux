@@ -66,11 +66,11 @@ const passingAnInstance = injectAtomValue(instance)
 <Tabs>
   {tab1(`injectAtomValue = (atom, params?) => state`)}
   {tab2(`declare const injectAtomValue: {
-  <A extends ParamlessTemplate>(template: A): AtomStateType<A>
   <A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>
-  ): AtomStateType<A>
+  ): AtomStateType<A>\n
+  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): AtomStateType<A>
   <I extends AnyAtomInstance>(instance: I): AtomStateType<I>
 }`)}
 </Tabs>

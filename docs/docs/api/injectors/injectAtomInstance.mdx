@@ -70,11 +70,13 @@ const injectCustomStuff = () => {
 <Tabs>
   {tab1(`injectAtomInstance = (atom, params?, operation?) => instance`)}
   {tab2(`declare const injectAtomInstance: {
-  <A extends ParamlessTemplate>(template: A): AtomInstanceType<A>
   <A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig
+  ): AtomInstanceType<A>\n
+  <A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
   ): AtomInstanceType<A>
   <I extends AnyAtomInstance>(
     instance: I,

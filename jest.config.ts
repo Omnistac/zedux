@@ -28,6 +28,8 @@ const config: Config.InitialOptions = {
   modulePaths: [compilerOptions.baseUrl],
   preset: 'ts-jest',
   roots: [
+    '<rootDir>/packages/atoms/src',
+    '<rootDir>/packages/atoms/test',
     '<rootDir>/packages/core/src',
     '<rootDir>/packages/core/test',
     '<rootDir>/packages/react/src',
