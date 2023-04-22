@@ -35,8 +35,8 @@ const ecosystem = createEcosystem({ id: 'root' })
 const instance = ecosystem.getInstance(greetingAtom)
 
 instance.store.subscribe(newState => console.log('state updated:', newState))
-
 instance.setState('Goodbye, World!')
+instance.destroy()
 ```
 
 ## Exports
@@ -45,21 +45,51 @@ This package includes and re-exports everything from the following package:
 
 - [`@zedux/core`](https://www.npmjs.com/package/@zedux/core)
 
-On top of these, `@zedux/atoms` exports the following APIs:
+On top of this, `@zedux/atoms` exports the following APIs and many helper types for working with them in TypeScript:
 
-### Components
+### Classes
 
-- [`<AtomProvider>`](https://omnistac.github.io/zedux/docs/api/components/AtomProvider)
-- [`<EcosystemProvider>`](https://omnistac.github.io/zedux/docs/api/components/EcosystemProvider)
+- [`AtomApi`](https://omnistac.github.io/zedux/docs/api/classes/AtomApi)
+- [`AtomInstance`](https://omnistac.github.io/zedux/docs/api/classes/AtomInstance)
+- [`AtomInstanceBase`](https://omnistac.github.io/zedux/docs/api/classes/AtomInstanceBase)
+- [`AtomTemplate`](https://omnistac.github.io/zedux/docs/api/classes/AtomTemplate)
+- [`AtomTemplateBase`](https://omnistac.github.io/zedux/docs/api/classes/AtomTemplateBase)
+- [`Ecosystem`](https://omnistac.github.io/zedux/docs/api/classes/Ecosystem)
+- [`IonTemplate`](https://omnistac.github.io/zedux/docs/api/classes/IonTemplate)
+- [`SelectorCache`](https://omnistac.github.io/zedux/docs/api/classes/SelectorCache)
+- [`ZeduxPlugin`](https://omnistac.github.io/zedux/docs/api/classes/ZeduxPlugin)
 
-### Hooks
+### Factories
 
-- [`useAtomContext()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomContext)
-- [`useAtomInstance()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomInstance)
-- [`useAtomSelector()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomSelector)
-- [`useAtomState()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomState)
-- [`useAtomValue()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomValue)
-- [`useEcosystem()`](https://omnistac.github.io/zedux/docs/api/hooks/useEcosystem)
+- [`api()`](https://omnistac.github.io/zedux/docs/api/factories/api)
+- [`atom()`](https://omnistac.github.io/zedux/docs/api/factories/atom)
+- [`createEcosystem()`](https://omnistac.github.io/zedux/docs/api/factories/createEcosystem)
+- [`createInjector()`](https://omnistac.github.io/zedux/docs/api/factories/createInjector)
+- [`ion()`](https://omnistac.github.io/zedux/docs/api/factories/ion)
+
+### Injectors
+
+- [`injectAtomGetters()`](https://omnistac.github.io/zedux/docs/api/injectors/injectAtomGetters)
+- [`injectAtomInstance()`](https://omnistac.github.io/zedux/docs/api/injectors/injectAtomInstance)
+- [`injectAtomSelector()`](https://omnistac.github.io/zedux/docs/api/injectors/injectAtomSelector)
+- [`injectAtomState()`](https://omnistac.github.io/zedux/docs/api/injectors/injectAtomState)
+- [`injectAtomValue()`](https://omnistac.github.io/zedux/docs/api/injectors/injectAtomValue)
+- [`injectCallback()`](https://omnistac.github.io/zedux/docs/api/injectors/injectCallback)
+- [`injectEffect()`](https://omnistac.github.io/zedux/docs/api/injectors/injectEffect)
+- [`injectInvalidate()`](https://omnistac.github.io/zedux/docs/api/injectors/injectInvalidate)
+- [`injectMachineStore()`](https://omnistac.github.io/zedux/docs/api/injectors/injectMachineStore)
+- [`injectMemo()`](https://omnistac.github.io/zedux/docs/api/injectors/injectMemo)
+- [`injectPromise()`](https://omnistac.github.io/zedux/docs/api/injectors/injectPromise)
+- [`injectRef()`](https://omnistac.github.io/zedux/docs/api/injectors/injectRef)
+- [`injectStore()`](https://omnistac.github.io/zedux/docs/api/injectors/injectStore)
+- [`injectWhy()`](https://omnistac.github.io/zedux/docs/api/injectors/injectWhy)
+
+### Utils
+
+- [`getEcosystem()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#getecosystem)
+- [`getInternals()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#getinternals)
+- [`setInternals()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#setinternals)
+- [`wipe()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#wipe)
 
 ## For Authors
 
