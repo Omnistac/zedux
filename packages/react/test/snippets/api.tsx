@@ -1,12 +1,12 @@
 import {
+  api,
   atom,
   injectMachineStore,
   injectStore,
+  ion,
   useAtomSelector,
   useAtomValue,
 } from '@zedux/react'
-import { api } from '@zedux/react/factories/api'
-import { ion } from '@zedux/react/factories/ion'
 import React, { Suspense, useState } from 'react'
 
 const a = atom('a', () => injectStore('a'))
@@ -17,11 +17,7 @@ const c = atom('c', () =>
 const d = atom('d', () =>
   api(injectMachineStore(state => [state('a').on('next', 'b')]))
 )
-const e = atom('e', () =>
-  api(
-    new Promise<string>(resolve => resolve('a'))
-  )
-)
+const e = atom('e', () => api(new Promise<string>(resolve => resolve('a'))))
 const f = ion('f', () => injectStore('a'))
 const g = ion('g', () => api(injectStore('a')))
 const h = ion('h', () =>

@@ -1,7 +1,6 @@
+import { createEcosystem, getEcosystem } from '@zedux/atoms'
 import { useContext } from 'react'
-import { createEcosystem } from '../factories/createEcosystem'
-import { getEcosystem } from '../store'
-import { ecosystemContext } from '../utils/general'
+import { ecosystemContext } from '../utils'
 
 export const useEcosystem = () => {
   const id = useContext(ecosystemContext)

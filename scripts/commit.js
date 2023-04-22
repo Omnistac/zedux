@@ -32,7 +32,7 @@ const createCommit = async ({
   }: ${message}${body}${footer}`
 
   const commitOutput = await cmd(
-    `git commit -m "${commit.replace(/"/g, '\\"')}"`
+    `git commit -m "${commit.replace(/"/g, '\\"').replace(/`/g, '\\`')}"`
   )
 
   if (commitOutput.stderr) {
