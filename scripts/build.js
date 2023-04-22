@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { platform } from 'os'
 import { cmd } from './utils.js'
 
 const tsconfig = 'tsconfig.build.json'
@@ -23,19 +24,19 @@ const tscBuild = async isCjs => {
   )
 
   if (tscAliasOutput.code) {
-    console.error(`tsc failed. Output: ${tscAliasOutput}`)
+    console.error(`tsc-alias failed. Output: ${tscAliasOutput}`)
     process.exit(1)
   }
 
   // replace usages of the DEV global with `true` in the built files
   const sedOutput = await cmd(
-    `find dist/${
-      isCjs ? 'cjs' : 'esm'
-    } -type f -exec sed -i '' 's/DEV/true \\/* DEV *\\//g' {} +`
+    `find dist/${isCjs ? 'cjs' : 'esm'} -type f -exec sed -i${
+      platform() === 'darwin' ? " ''" : ''
+    } 's/DEV/true \\/* DEV *\\//g' {} +`
   )
 
   if (sedOutput.code) {
-    console.error(`tsc failed. Output: ${sedOutput}`)
+    console.error(`sed failed. Output: ${sedOutput}`)
     process.exit(1)
   }
 }
@@ -47,7 +48,7 @@ const run = async () => {
   // prod builds (umd & es)
   cmd('yarn vite build').then(viteOutput => {
     if (viteOutput.code) {
-      console.error(`tsc failed. Output: ${viteOutput}`)
+      console.error(`vite failed. Output: ${viteOutput}`)
       process.exit(1)
     }
   })
