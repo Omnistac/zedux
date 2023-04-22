@@ -6,6 +6,8 @@ const jestCompilerOptions: RawCompilerOptions = {
   ...(compilerOptions as any),
   lib: [...compilerOptions.lib, 'DOM'],
   paths: {
+    '@zedux/atoms': ['./packages/atoms/src'],
+    '@zedux/atoms/*': ['./packages/atoms/src/*'],
     '@zedux/core': ['./packages/core/src'],
     '@zedux/core/*': ['./packages/core/src/*'],
     '@zedux/react': ['./packages/react/src'],

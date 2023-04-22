@@ -2,6 +2,8 @@
 
 This package includes the core composable store model of Zedux. It exports several utilities and TypeScript types for working with Zedux stores.
 
+This package is framework-independent.
+
 If you're new to Zedux, you're probably looking for [the quick start](https://omnistac.github.io/zedux/docs/walkthrough/quick-start).
 
 ## Installation
@@ -12,7 +14,7 @@ yarn add @zedux/core # yarn
 pnpm add @zedux/core # pnpm
 ```
 
-If you're using React, you probably want to install the [`@zedux/react` package](https://www.npmjs.com/package/@zedux/react) instead, which includes everything from this package and more.
+If you're using React, you probably want to install the [`@zedux/react` package](https://www.npmjs.com/package/@zedux/react) instead, which includes everything from this package, everything from the [`@zedux/atoms` package](https://www.npmjs.com/package/@zedux/atoms), and more.
 
 ## Usage
 
@@ -60,7 +62,7 @@ This package exports the following APIs, along with many TypeScript types for wo
 
 ## For Authors
 
-If your package only depends on APIs in this package, it's recommended to only import this package, not `@zedux/atoms` or `@zedux/react`. This package is small enough that you _may_ consider bundling it in with your code, but that shouldn't be necessary.
+If your lib only use APIs in this package, it's recommended to only import this package, not `@zedux/atoms` or `@zedux/react`. This package is small enough that you _may_ consider bundling it in with your code, but that shouldn't be necessary. It's usually recommended to use a peer dependency + dev dependency on this package.
 
 ## Contributing, License, Etc
 

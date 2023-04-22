@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react'
-import { AnyAtomInstance } from '../types'
+import { AnyAtomInstance } from '@zedux/atoms'
 import { useEcosystem } from '../hooks'
 
 /**

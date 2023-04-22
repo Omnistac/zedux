@@ -57,6 +57,8 @@ export const getViteBaseConfig = async (
     define: {
       DEV: JSON.stringify(false),
       'process.env.NODE_ENV': JSON.stringify(mode),
+      // use prod build across already-built Zedux packages in the monorepo:
+      'true /* DEV */': false,
     },
     server: {
       open: true,

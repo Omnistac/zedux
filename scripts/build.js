@@ -6,21 +6,38 @@ const tsconfig = 'tsconfig.build.json'
 
 const tscBuild = async isCjs => {
   // run tsc
-  await cmd(
+  const tscOutput = await cmd(
     `yarn tsc --project ${tsconfig}${
       isCjs ? ' --module commonjs --outDir dist/cjs' : ''
     }`
   )
 
+  if (tscOutput.code) {
+    console.error(`tsc failed. Output: ${tscOutput}`)
+    process.exit(1)
+  }
+
   // replace TS aliases in the built files with relative paths using tsc-alias
-  await cmd(`yarn tsc-alias -p ${tsconfig}${isCjs ? ' --outDir dist/cjs' : ''}`)
+  const tscAliasOutput = await cmd(
+    `yarn tsc-alias -p ${tsconfig}${isCjs ? ' --outDir dist/cjs' : ''}`
+  )
+
+  if (tscAliasOutput.code) {
+    console.error(`tsc failed. Output: ${tscAliasOutput}`)
+    process.exit(1)
+  }
 
   // replace usages of the DEV global with `true` in the built files
-  await cmd(
+  const sedOutput = await cmd(
     `find dist/${
       isCjs ? 'cjs' : 'esm'
     } -type f -exec sed -i '' 's/DEV/true \\/* DEV *\\//g' {} +`
   )
+
+  if (sedOutput.code) {
+    console.error(`tsc failed. Output: ${sedOutput}`)
+    process.exit(1)
+  }
 }
 
 const run = async () => {
@@ -28,7 +45,12 @@ const run = async () => {
   await cmd('yarn rimraf dist')
 
   // prod builds (umd & es)
-  cmd('yarn vite build')
+  cmd('yarn vite build').then(viteOutput => {
+    if (viteOutput.code) {
+      console.error(`tsc failed. Output: ${viteOutput}`)
+      process.exit(1)
+    }
+  })
 
   // esm dev build
   tscBuild()

@@ -1,7 +1,22 @@
 import { Store, StoreStateType } from '@zedux/core'
-import { AtomApi, AtomInstance, AtomTemplateBase } from '@zedux/react'
-import { api, atom, createEcosystem, ion } from '@zedux/react/factories'
 import {
+  AnyAtomInstance,
+  AnyAtomTemplate,
+  api,
+  atom,
+  AtomApi,
+  AtomExportsType,
+  AtomGenericsPartial,
+  AtomInstance,
+  AtomInstanceType,
+  AtomParamsType,
+  AtomPromiseType,
+  AtomStateType,
+  AtomStoreType,
+  AtomTemplateBase,
+  AtomTemplateType,
+  AtomTuple,
+  createEcosystem,
   injectAtomInstance,
   injectAtomState,
   injectAtomValue,
@@ -9,22 +24,10 @@ import {
   injectMemo,
   injectPromise,
   injectStore,
-} from '@zedux/react/injectors'
-import {
-  AnyAtomInstance,
-  AnyAtomTemplate,
-  AtomExportsType,
-  AtomGenericsPartial,
-  AtomInstanceType,
-  AtomParamsType,
-  AtomPromiseType,
-  AtomStateType,
-  AtomStoreType,
-  AtomTemplateType,
-  AtomTuple,
+  ion,
   ParamlessTemplate,
   PromiseState,
-} from '@zedux/react/types'
+} from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 
 const exampleAtom = atom('example', (p: string) => {

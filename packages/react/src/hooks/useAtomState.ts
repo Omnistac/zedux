@@ -6,8 +6,8 @@ import {
   AtomStateType,
   ParamlessTemplate,
   StateHookTuple,
-  ZeduxHookConfig,
-} from '../types'
+} from '@zedux/atoms'
+import { ZeduxHookConfig } from '../types'
 import { useAtomInstance } from './useAtomInstance'
 
 export const useAtomState: {

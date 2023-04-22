@@ -1,12 +1,12 @@
-import { useMemo, useSyncExternalStore } from 'react'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
   AtomInstanceType,
   AtomParamsType,
   ParamlessTemplate,
-  ZeduxHookConfig,
-} from '../types'
+} from '@zedux/atoms'
+import { useMemo, useSyncExternalStore } from 'react'
+import { ZeduxHookConfig } from '../types'
 import { destroyed, External, Static } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'

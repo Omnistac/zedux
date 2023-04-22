@@ -5,13 +5,13 @@ import {
   DependentCallback,
   AnyAtomTemplate,
   LifecycleStatus,
-} from '@zedux/react/types'
+} from '@zedux/atoms/types'
 import {
   Explicit,
   External,
   InjectorDescriptor,
   prefix,
-} from '@zedux/react/utils'
+} from '@zedux/atoms/utils'
 import { Ecosystem } from '../Ecosystem'
 import { Store } from '@zedux/core'
 

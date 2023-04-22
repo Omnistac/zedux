@@ -318,9 +318,3 @@ export type StateHookTuple<State, Exports> = [
   State,
   ExportsInfusedSetter<State, Exports>
 ]
-
-export interface ZeduxHookConfig {
-  operation?: string
-  subscribe?: boolean
-  suspend?: boolean
-}

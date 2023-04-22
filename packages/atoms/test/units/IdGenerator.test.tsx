@@ -1,4 +1,4 @@
-import { IdGenerator } from '@zedux/react/classes/IdGenerator'
+import { IdGenerator } from '@zedux/atoms/classes/IdGenerator'
 
 /**
  * unit test the IdGenerator's `generateId` method since we remove it for all

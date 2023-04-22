@@ -2,7 +2,7 @@ import {
   MutableRefObject,
   PartialAtomInstance,
   RefObject,
-} from '@zedux/react/types'
+} from '@zedux/atoms/types'
 import { createInjector } from '../factories'
 import { prefix } from '../utils'
 

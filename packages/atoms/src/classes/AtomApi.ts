@@ -1,6 +1,6 @@
 import { is, Store } from '@zedux/core'
-import { AtomInstanceTtl, AtomApiPromise } from '@zedux/react/types'
-import { prefix } from '@zedux/react/utils/general'
+import { AtomInstanceTtl, AtomApiPromise } from '@zedux/atoms/types'
+import { prefix } from '@zedux/atoms/utils/general'
 
 export class AtomApi<
   State,
