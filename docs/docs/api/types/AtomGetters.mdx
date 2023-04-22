@@ -42,16 +42,20 @@ When called asynchronously, AtomGetters don't register graph dependencies; they 
   {tab1(`atomGetters = { ecosystem, get, getInstance, select }`)}
   {tab2(`interface AtomGetters {
   ecosystem: Ecosystem\n
-  get<A extends ParamlessTemplate>(template: A): AtomStateType<A>\n
   get<A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>\n
+  get<A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
+  ): AtomStateType<A>\n
   get<I extends AtomInstance>(instance: I): AtomStateType<I>\n
-  getInstance<A extends ParamlessTemplate>(template: A): AtomInstanceType<A>\n
   getInstance<A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>
+  ): AtomInstanceType<A>\n
+  getInstance<A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
   ): AtomInstanceType<A>\n
   getInstance<I extends AtomInstance>(instance: I): I\n
   select<T, Args extends any[]>(

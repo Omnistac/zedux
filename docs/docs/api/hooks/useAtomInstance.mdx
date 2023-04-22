@@ -58,12 +58,14 @@ const withParams = useAtomInstance(myAtom, ['param 1', 'param 2'])
 <Tabs>
   {tab1(`useAtomInstance = (atomOrInstance, params?, config?) => atomInstance`)}
   {tab2(`declare const useAtomInstance: {
-  <A extends ParamlessTemplate>(template: A): AtomInstanceType<A>
   <A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>,
     config?: ZeduxHookConfig
-  ): AtomInstanceType<A>
+  ): AtomInstanceType<A>\n
+  <A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
+  ): AtomInstanceType<A>\n
   <I extends AnyAtomInstance>(
     instance: I,
     params?: [],

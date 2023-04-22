@@ -1,10 +1,13 @@
-import { AtomSelectorOrConfig } from '../types'
+import {
+  AtomSelectorOrConfig,
+  Ecosystem,
+  haveDepsChanged,
+  SelectorCache,
+} from '@zedux/atoms'
 import { MutableRefObject, useMemo, useRef, useSyncExternalStore } from 'react'
-import { destroyed, External, haveDepsChanged } from '../utils'
+import { destroyed, External } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
-import { Graph } from '../classes/Graph'
-import { SelectorCache, Selectors } from '../classes/Selectors'
 
 const glob = ((typeof globalThis !== 'undefined' && globalThis) || {}) as any
 const OPERATION = 'useAtomSelector'
@@ -30,8 +33,8 @@ const OPERATION = 'useAtomSelector'
  * function if possible.
  */
 const isRefDifferent = (
-  _graph: Graph,
-  selectors: Selectors,
+  _graph: Ecosystem['_graph'],
+  selectors: Ecosystem['selectors'],
   newSelector: AtomSelectorOrConfig<any, any>,
   cacheRef: MutableRefObject<SelectorCache<any, any>>
 ) => {

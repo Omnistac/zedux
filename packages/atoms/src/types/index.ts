@@ -13,6 +13,9 @@ import {
 
 export * from './atoms'
 
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type AnyNonNullishValue = {}
+
 export interface AtomConfig<State = any> {
   dehydrate?: (state: State) => any
   flags?: string[]
@@ -31,11 +34,13 @@ export interface AtomGettersBase {
    * synchronously during atom or AtomSelector evaluation. When called
    * asynchronously, is just an alias for `ecosystem.get`
    */
-  get<A extends ParamlessTemplate>(atom: A): AtomStateType<A>
+  get<A extends AnyAtomTemplate>(
+    template: A,
+    params: AtomParamsType<A>
+  ): AtomStateType<A>
 
   get<A extends AnyAtomTemplate>(
-    atom: A,
-    params: AtomParamsType<A>
+    template: ParamlessTemplate<A>
   ): AtomStateType<A>
 
   get<I extends AnyAtomInstance>(instance: I): AtomStateType<I>
@@ -45,12 +50,14 @@ export interface AtomGettersBase {
    * synchronously during atom or AtomSelector evaluation. When called
    * asynchronously, is just an alias for `ecosystem.getInstance`
    */
-  getInstance<A extends ParamlessTemplate>(atom: A): AtomInstanceType<A>
-
   getInstance<A extends AnyAtomTemplate>(
-    atom: A,
+    template: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
+  ): AtomInstanceType<A>
+
+  getInstance<A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
   ): AtomInstanceType<A>
 
   getInstance<I extends AnyAtomInstance>(
@@ -274,13 +281,12 @@ export interface MutableRefObject<T = any> {
 
 /**
  * Many Zedux APIs make the `params` parameter optional if the atom doesn't take
- * params or has up to 3 optional params.
+ * params or has only optional params.
  */
-export type ParamlessTemplate =
-  | AnyAtomTemplate<{ Params: [] }>
-  | AnyAtomTemplate<{ Params: [any?] }>
-  | AnyAtomTemplate<{ Params: [any?, any?] }>
-  | AnyAtomTemplate<{ Params: [any?, any?, any?] }>
+export type ParamlessTemplate<A extends AnyAtomTemplate> =
+  AtomParamsType<A> extends [AnyNonNullishValue | undefined | null, ...any[]]
+    ? never
+    : A
 
 /**
  * Part of the atom instance can be accessed during initial evaluation. The only
@@ -318,9 +324,3 @@ export type StateHookTuple<State, Exports> = [
   State,
   ExportsInfusedSetter<State, Exports>
 ]
-
-export interface ZeduxHookConfig {
-  operation?: string
-  subscribe?: boolean
-  suspend?: boolean
-}

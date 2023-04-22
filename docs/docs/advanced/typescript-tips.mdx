@@ -196,14 +196,14 @@ Zedux uses overloads to accomplish this. For full power, you may want to use ove
 
 ```ts
 const getValue: {
-  // no params ("singleton"):
-  <A extends ParamlessTemplate>(template: A): AtomStateType<A>
-
   // params ("family"):
   <A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>
   ): AtomStateType<A>
+
+  // no params ("singleton"):
+  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): AtomStateType<A>
 
   // also accept instances 'cause we can 'cause overloads are powerful:
   <I extends AnyAtomInstance>(instance: I): AtomStateType<I>

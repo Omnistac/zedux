@@ -51,12 +51,12 @@ const fromInstance = useAtomValue(instance)
 <Tabs>
   {tab1(`useAtomValue = (atomOrInstance, params?) => state`)}
   {tab2(`declare const useAtomValue: {
-  <A extends ParamlessTemplate>(template: A): AtomStateType<A>
   <A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>,
     config?: Omit<ZeduxHookConfig, 'subscribe'>
-  ): AtomStateType<A>
+  ): AtomStateType<A>\n
+  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): AtomStateType<A>
   <I extends AnyAtomInstance>(
     instance: I,
     params?: [],

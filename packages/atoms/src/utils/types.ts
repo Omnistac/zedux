@@ -1,4 +1,4 @@
-import { AnyAtomInstance } from '@zedux/react/types'
+import { AnyAtomInstance } from '@zedux/atoms/types'
 import { SelectorCache } from '../classes/Selectors'
 
 export type InjectorDescriptor<T = any> = T extends undefined

@@ -281,13 +281,13 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Get an atom instance. Don't create the atom instance if it doesn't exist.
    * Don't register any graph dependencies.
    */
-  public find<A extends ParamlessTemplate>(
-    template: A
-  ): AtomInstanceType<A> | undefined
-
   public find<A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>
+  ): AtomInstanceType<A> | undefined
+
+  public find<A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
   ): AtomInstanceType<A> | undefined
 
   public find<A extends AnyAtomTemplate = any>(
@@ -341,12 +341,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     return hash
   }
 
-  public get<T extends ParamlessTemplate>(template: T): AtomStateType<T>
+  public get<A extends AnyAtomTemplate>(
+    template: A,
+    params: AtomParamsType<A>
+  ): AtomStateType<A>
 
-  public get<T extends AnyAtomTemplate>(
-    template: T,
-    params: AtomParamsType<T>
-  ): AtomStateType<T>
+  public get<A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
+  ): AtomStateType<A>
 
   public get<I extends AnyAtomInstance>(instance: I): AtomStateType<I>
 
@@ -370,14 +372,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     return instance.store.getState()
   }
 
-  public getInstance<A extends ParamlessTemplate>(
-    template: A
-  ): AtomInstanceType<A>
-
   public getInstance<A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
+  ): AtomInstanceType<A>
+
+  public getInstance<A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
   ): AtomInstanceType<A>
 
   public getInstance<I extends AnyAtomInstance>(

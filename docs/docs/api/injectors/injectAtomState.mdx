@@ -99,14 +99,14 @@ const [, { exports, only }] = injectAtomState(myAtom)
 <Tabs>
   {tab1(`injectAtomState = (atom, params?) => [state, setState]`)}
   {tab2(`declare const injectAtomState: {
-  <A extends ParamlessTemplate>(template: A): StateHookTuple<
-    AtomStateType<A>,
-    AtomExportsType<A>
-  >
   <A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>
-  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
+  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>\n
+  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateHookTuple<
+    AtomStateType<A>,
+    AtomExportsType<A>
+  >
   <I extends AnyAtomInstance>(instance: I): StateHookTuple<
     AtomStateType<I>,
     AtomExportsType<I>

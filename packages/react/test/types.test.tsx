@@ -1,7 +1,22 @@
 import { Store, StoreStateType } from '@zedux/core'
-import { AtomApi, AtomInstance, AtomTemplateBase } from '@zedux/react'
-import { api, atom, createEcosystem, ion } from '@zedux/react/factories'
 import {
+  AnyAtomInstance,
+  AnyAtomTemplate,
+  api,
+  atom,
+  AtomApi,
+  AtomExportsType,
+  AtomGenericsPartial,
+  AtomInstance,
+  AtomInstanceType,
+  AtomParamsType,
+  AtomPromiseType,
+  AtomStateType,
+  AtomStoreType,
+  AtomTemplateBase,
+  AtomTemplateType,
+  AtomTuple,
+  createEcosystem,
   injectAtomInstance,
   injectAtomState,
   injectAtomValue,
@@ -9,22 +24,10 @@ import {
   injectMemo,
   injectPromise,
   injectStore,
-} from '@zedux/react/injectors'
-import {
-  AnyAtomInstance,
-  AnyAtomTemplate,
-  AtomExportsType,
-  AtomGenericsPartial,
-  AtomInstanceType,
-  AtomParamsType,
-  AtomPromiseType,
-  AtomStateType,
-  AtomStoreType,
-  AtomTemplateType,
-  AtomTuple,
+  ion,
   ParamlessTemplate,
   PromiseState,
-} from '@zedux/react/types'
+} from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 
 const exampleAtom = atom('example', (p: string) => {
@@ -515,13 +518,23 @@ describe('types', () => {
   })
 
   test('accepting templates', () => {
-    const optionalParamsAtom = atom(
-      'optionalParams',
+    const allOptionalParamsAtom = atom(
+      'allOptionalParams',
       (a?: boolean, b?: string[]) => {
         const store = injectStore(a ? b : 2)
 
         return store
       }
+    )
+
+    const allRequiredParamsAtom = atom(
+      'allRequiredParams',
+      (a: string, b: number, c: boolean) => (c ? a : b)
+    )
+
+    const someOptionalParamsAtom = atom(
+      'someOptionalParams',
+      (a: string, b?: number) => a + b
     )
 
     const getKey = <A extends AnyAtomTemplate>(template: A) => template.key
@@ -538,18 +551,18 @@ describe('types', () => {
 
     const key = getKey(exampleAtom)
     const instance = instantiateWithId(exampleAtom)
-    const instance2 = ecosystem.getInstance(optionalParamsAtom)
+    const instance2 = ecosystem.getInstance(allOptionalParamsAtom)
 
-    // @ts-expect-error exampleAtom has a required param
+    // @ts-expect-error exampleAtom's param is required
     ecosystem.getInstance(exampleAtom)
     // @ts-expect-error exampleAtom's param should be a string
     ecosystem.getInstance(exampleAtom, [2])
     // @ts-expect-error exampleAtom only needs 1 param
     ecosystem.getInstance(exampleAtom, ['a', 2])
-    ecosystem.getInstance(optionalParamsAtom, [undefined, undefined])
-    ecosystem.getInstance(optionalParamsAtom, [undefined, ['1']])
-    // @ts-expect-error optionalParamsAtom's 2nd param is type `string[]`
-    ecosystem.getInstance(optionalParamsAtom, [undefined, [1]])
+    ecosystem.getInstance(allOptionalParamsAtom, [undefined, undefined])
+    ecosystem.getInstance(allOptionalParamsAtom, [undefined, ['1']])
+    // @ts-expect-error allOptionalParamsAtom's 2nd param is type `string[]`
+    ecosystem.getInstance(allOptionalParamsAtom, [undefined, [1]])
 
     expectTypeOf<typeof key>().toBeString()
     expectTypeOf<typeof instance>().toMatchTypeOf<
@@ -573,6 +586,12 @@ describe('types', () => {
         Promise: undefined
       }>
     >()
+
+    // @ts-expect-error has a required param, so params must be passed
+    ecosystem.getInstance(someOptionalParamsAtom)
+
+    // @ts-expect-error all params required, so params must be passed
+    ecosystem.get(allRequiredParamsAtom)
   })
 
   test('accepting instances', () => {
@@ -599,13 +618,15 @@ describe('types', () => {
       i.exports.getNum()
 
     const getValue: {
-      // no params ("singleton"):
-      <A extends ParamlessTemplate>(template: A): AtomStateType<A>
-
       // params ("family"):
       <A extends AnyAtomTemplate>(
         template: A,
         params: AtomParamsType<A>
+      ): AtomStateType<A>
+
+      // no params ("singleton"):
+      <A extends AnyAtomTemplate>(
+        template: ParamlessTemplate<A>
       ): AtomStateType<A>
 
       // also accept instances:

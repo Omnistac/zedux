@@ -69,7 +69,7 @@ export const doSubscribe = <State>(
  * performance optimization.
  *
  * ```ts
- * import { atom, injectStore } from '@zedux/react'
+ * import { atom, injectStore } from '@zedux/atoms'
  *
  * const inputAtom = atom('input', () => {
  *   const store = injectStore('', { subscribe: false })

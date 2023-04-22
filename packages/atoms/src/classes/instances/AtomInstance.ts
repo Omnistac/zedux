@@ -19,14 +19,14 @@ import {
   LifecycleStatus,
   PromiseState,
   PromiseStatus,
-} from '@zedux/react/types'
-import { pluginActions } from '@zedux/react/utils/plugin-actions'
+} from '@zedux/atoms/types'
+import { pluginActions } from '@zedux/atoms/utils/plugin-actions'
 import {
   getErrorPromiseState,
   getInitialPromiseState,
   getSuccessPromiseState,
-} from '@zedux/react/utils/promiseUtils'
-import { InjectorDescriptor } from '@zedux/react/utils/types'
+} from '@zedux/atoms/utils/promiseUtils'
+import { InjectorDescriptor } from '@zedux/atoms/utils/types'
 import { Ecosystem } from '../Ecosystem'
 import { AtomApi } from '../AtomApi'
 import { AtomInstanceBase } from './AtomInstanceBase'

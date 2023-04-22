@@ -1,7 +1,11 @@
 import { is } from '@zedux/core'
 import { useContext } from 'react'
-import { AtomInstanceBase } from '../classes'
-import { AnyAtomTemplate, AtomInstanceType, AtomParamsType } from '../types'
+import {
+  AnyAtomTemplate,
+  AtomInstanceBase,
+  AtomInstanceType,
+  AtomParamsType,
+} from '@zedux/atoms'
 import { useEcosystem } from './useEcosystem'
 
 export const useAtomContext: {

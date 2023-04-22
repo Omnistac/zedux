@@ -1,12 +1,12 @@
-import { useMemo, useSyncExternalStore } from 'react'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
   AtomInstanceType,
   AtomParamsType,
   ParamlessTemplate,
-  ZeduxHookConfig,
-} from '../types'
+} from '@zedux/atoms'
+import { useMemo, useSyncExternalStore } from 'react'
+import { ZeduxHookConfig } from '../types'
 import { destroyed, External, Static } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
@@ -32,12 +32,14 @@ const OPERATION = 'useAtomInstance'
  * @param params The params for generating the instance's key.
  */
 export const useAtomInstance: {
-  <A extends ParamlessTemplate>(template: A): AtomInstanceType<A>
-
   <A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>,
     config?: ZeduxHookConfig
+  ): AtomInstanceType<A>
+
+  <A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
   ): AtomInstanceType<A>
 
   <I extends AnyAtomInstance>(
