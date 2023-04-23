@@ -12,6 +12,7 @@ import {
 } from '@zedux/core'
 import {
   AtomGenerics,
+  AtomGenericsToAtomApiGenerics,
   Cleanup,
   EvaluationReason,
   EvaluationSourceType,
@@ -72,7 +73,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   AtomTemplateBase<G, AtomInstance<G>>
 > {
   public status: LifecycleStatus = 'Initializing'
-  public api?: AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>
+  public api?: AtomApi<AtomGenericsToAtomApiGenerics<G>>
   public exports: G['Exports']
   public nextReasons: EvaluationReason[] = []
   public prevReasons?: EvaluationReason[]
@@ -394,20 +395,12 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       const val = (
         _value as (
           ...params: G['Params']
-        ) =>
-          | G['Store']
-          | G['State']
-          | AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>
+        ) => G['Store'] | G['State'] | AtomApi<AtomGenericsToAtomApiGenerics<G>>
       )(...this.params)
 
       if (!is(val, AtomApi)) return val as G['Store'] | G['State']
 
-      const api = (this.api = val as AtomApi<
-        G['State'],
-        G['Exports'],
-        G['Store'],
-        G['Promise']
-      >)
+      const api = (this.api = val as AtomApi<AtomGenericsToAtomApiGenerics<G>>)
 
       // Exports can only be set on initial evaluation
       if (this.status === 'Initializing' && api.exports) {

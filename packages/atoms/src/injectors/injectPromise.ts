@@ -61,18 +61,23 @@ export const injectPromise: {
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps: InjectorDeps,
     config: { initialState?: T; dataOnly: true } & InjectStoreConfig
-  ): AtomApi<T, Record<string, any>, Store<T>, Promise<T>>
+  ): AtomApi<{
+    Exports: Record<string, any>
+    Promise: Promise<T>
+    State: T
+    Store: Store<T>
+  }>
 
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps?: InjectorDeps,
     config?: { initialState?: T; dataOnly?: boolean } & InjectStoreConfig
-  ): AtomApi<
-    PromiseState<T>,
-    Record<string, any>,
-    Store<PromiseState<T>>,
-    Promise<T>
-  >
+  ): AtomApi<{
+    Exports: Record<string, any>
+    Promise: Promise<T>
+    State: PromiseState<T>
+    Store: Store<PromiseState<T>>
+  }>
 } = <T>(
   promiseFactory: (controller?: AbortController) => Promise<T>,
   deps?: InjectorDeps,

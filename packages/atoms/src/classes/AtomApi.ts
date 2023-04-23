@@ -1,61 +1,73 @@
 import { is, Store } from '@zedux/core'
-import { AtomInstanceTtl, AtomApiPromise } from '@zedux/atoms/types/index'
+import {
+  AtomInstanceTtl,
+  AtomApiGenerics,
+  Prettify,
+} from '@zedux/atoms/types/index'
 import { prefix } from '@zedux/atoms/utils/general'
 
-export class AtomApi<
-  State,
-  Exports extends Record<string, any>,
-  StoreType extends Store<State> | undefined,
-  PromiseType extends AtomApiPromise
-> {
+export class AtomApi<G extends AtomApiGenerics> {
   public static $$typeof = Symbol.for(`${prefix}/AtomApi`)
 
-  public exports?: Exports
-  public promise: PromiseType
-  public store: StoreType
+  public exports?: G['Exports']
+  public promise: G['Promise']
+  public store: G['Store']
   public ttl?: AtomInstanceTtl | (() => AtomInstanceTtl)
-  public value: State | StoreType
+  public value: G['State'] | G['Store']
 
-  constructor(
-    value: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
-  ) {
-    this.promise = undefined as PromiseType
-    this.value = value as StoreType | State
-    this.store = (is(value, Store) ? value : undefined) as StoreType
+  constructor(value: AtomApi<G> | G['Store'] | G['State']) {
+    this.promise = undefined as G['Promise']
+    this.value = value as G['Store'] | G['State']
+    this.store = (is(value, Store) ? value : undefined) as G['Store']
 
     if (is(value, AtomApi)) {
-      Object.assign(
-        this,
-        value as AtomApi<State, Exports, StoreType, PromiseType>
-      )
+      Object.assign(this, value as AtomApi<G>)
     }
   }
 
   public addExports<NewExports extends Record<string, any>>(
     exports: NewExports
-  ): AtomApi<State, Exports & NewExports, StoreType, PromiseType> {
+  ): Prettify<
+    AtomApi<
+      Omit<G, 'Exports'> & {
+        Exports: (G['Exports'] extends Record<string, never>
+          ? unknown
+          : G['Exports']) &
+          NewExports
+      }
+    >
+  > {
     if (!this.exports) this.exports = exports as any
     else this.exports = { ...this.exports, ...exports }
 
-    return this as AtomApi<State, Exports & NewExports, StoreType, PromiseType>
+    return this as AtomApi<
+      Omit<G, 'Exports'> & {
+        Exports: (G['Exports'] extends Record<string, never>
+          ? unknown
+          : G['Exports']) &
+          NewExports
+      }
+    >
   }
 
   public setExports<NewExports extends Record<string, any>>(
     exports: NewExports
-  ): AtomApi<State, NewExports, StoreType, PromiseType> {
+  ): Prettify<AtomApi<Omit<G, 'Exports'> & { Exports: NewExports }>> {
     ;(
-      this as unknown as AtomApi<State, NewExports, StoreType, PromiseType>
+      this as unknown as AtomApi<Omit<G, 'Exports'> & { Exports: NewExports }>
     ).exports = exports
 
-    return this as unknown as AtomApi<State, NewExports, StoreType, PromiseType> // for chaining
+    return this as unknown as AtomApi<
+      Omit<G, 'Exports'> & { Exports: NewExports }
+    > // for chaining
   }
 
   public setPromise<T>(
     promise: Promise<T>
-  ): AtomApi<State, Exports, StoreType, Promise<T>> {
-    this.promise = promise as unknown as PromiseType
+  ): Prettify<AtomApi<Omit<G, 'Promise'> & { Promise: Promise<T> }>> {
+    this.promise = promise as unknown as G['Promise']
 
-    return this as AtomApi<State, Exports, StoreType, Promise<T>> // for chaining
+    return this as AtomApi<Omit<G, 'Promise'> & { Promise: Promise<T> }> // for chaining
   }
 
   public setTtl(ttl: AtomInstanceTtl | (() => AtomInstanceTtl)) {

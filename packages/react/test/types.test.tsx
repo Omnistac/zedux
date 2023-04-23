@@ -1,4 +1,4 @@
-import { Store, StoreStateType } from '@zedux/core'
+import { Store, StoreStateType, createStore } from '@zedux/core'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
@@ -695,12 +695,12 @@ describe('types', () => {
       val4: string
       val5: boolean
       val6: () => boolean
-      val7: AtomApi<
-        PromiseState<number>,
-        Record<string, any>,
-        Store<PromiseState<number>>,
-        Promise<number>
-      >
+      val7: AtomApi<{
+        Exports: Record<string, any>
+        Promise: Promise<number>
+        State: PromiseState<number>
+        Store: Store<PromiseState<number>>
+      }>
     }>()
   })
 
@@ -712,5 +712,23 @@ describe('types', () => {
     const promise = getPromise(exampleAtom, ['a'])
 
     expectTypeOf<typeof promise>().resolves.toBeNumber()
+  })
+
+  test('AtomApi types helpers', () => {
+    const store = createStore(null, 'a')
+    const withEverything = api(store)
+      .addExports({ a: 1 })
+      .setPromise(Promise.resolve(true))
+
+    expectTypeOf<AtomExportsType<typeof withEverything>>().toEqualTypeOf<{
+      a: number
+    }>()
+    expectTypeOf<AtomPromiseType<typeof withEverything>>().toEqualTypeOf<
+      Promise<boolean>
+    >()
+    expectTypeOf<AtomStateType<typeof withEverything>>().toBeString()
+    expectTypeOf<AtomStoreType<typeof withEverything>>().toEqualTypeOf<
+      Store<string>
+    >()
   })
 })

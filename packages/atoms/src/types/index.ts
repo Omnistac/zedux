@@ -6,6 +6,7 @@ import {
   AnyAtomInstance,
   AnyAtomTemplate,
   AtomGenerics,
+  AtomGenericsToAtomApiGenerics,
   AtomInstanceType,
   AtomParamsType,
   AtomStateType,
@@ -147,10 +148,7 @@ export type AtomSelectorOrConfig<T = any, Args extends any[] = []> =
 
 export type AtomStateFactory<G extends AtomGenerics> = (
   ...params: G['Params']
-) =>
-  | AtomApi<G['State'], G['Exports'], G['Store'] | undefined, G['Promise']>
-  | G['Store']
-  | G['State']
+) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | G['Store'] | G['State']
 
 export type AtomTuple<A extends AnyAtomTemplate> = [A, AtomParamsType<A>]
 
@@ -268,10 +266,7 @@ export interface InjectStoreConfig {
 export type IonStateFactory<G extends AtomGenerics> = (
   getters: AtomGetters,
   ...params: G['Params']
-) =>
-  | AtomApi<G['State'], G['Exports'], G['Store'], G['Promise']>
-  | G['Store']
-  | G['State']
+) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | G['Store'] | G['State']
 
 export type LifecycleStatus = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
 
@@ -299,6 +294,11 @@ export type PartialAtomInstance = Omit<
   AnyAtomInstance,
   'api' | 'exports' | 'promise' | 'store'
 >
+
+// from Matt Pocock https://twitter.com/mattpocockuk/status/1622730173446557697
+export type Prettify<T> = {
+  [K in keyof T]: T[K]
+} & AnyNonNullishValue
 
 export interface PromiseState<T> {
   data?: T
