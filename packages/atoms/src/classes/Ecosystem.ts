@@ -43,9 +43,9 @@ const mapOverrides = (overrides: AnyAtomTemplate[]) =>
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements AtomGettersBase
 {
+  public atomDefaults?: EcosystemConfig['atomDefaults']
   public complexParams?: boolean
   public context: Context
-  public defaultTtl = -1
   public destroyOnUnmount?: boolean
   public flags?: string[]
   public hydration?: Record<string, any>

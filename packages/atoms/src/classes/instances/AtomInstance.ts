@@ -462,7 +462,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
   private _getTtl() {
     if (this.api?.ttl == null) {
-      return this.template.ttl ?? this.ecosystem.defaultTtl
+      return this.template.ttl ?? this.ecosystem.atomDefaults?.ttl
     }
 
     // this atom instance set its own ttl
