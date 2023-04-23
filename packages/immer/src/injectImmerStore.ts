@@ -1,12 +1,13 @@
 import {
-  createInjector,
+  injectEffect,
+  injectMemo,
+  injectSelf,
   InjectStoreConfig,
   internalTypes,
   PartialAtomInstance,
   Store,
 } from '@zedux/react'
 import { createImmerStore } from './createImmerStore'
-import { ImmerStore } from './ImmerStore'
 
 const operation = 'injectImmerStore'
 
@@ -55,51 +56,29 @@ const doSubscribe = <State>(
 export const injectImmerStore: {
   <State = any>(state: State, config?: InjectStoreConfig): Store<State>
   <State = undefined>(): Store<State>
-} = createInjector(
-  operation,
-  <State = any>(
-    instance: PartialAtomInstance,
-    state?: State,
-    config?: InjectStoreConfig
-  ) => {
-    const subscribe = config?.subscribe ?? true
-    const hydration = instance.ecosystem._consumeHydration(instance)
-    const store = createImmerStore<State>(hydration ?? state)
+} = <State = any>(state?: State, config?: InjectStoreConfig) => {
+  const instance = injectSelf()
+  const subscribe = config?.subscribe ?? true
 
-    const subscription = subscribe && doSubscribe(instance, store)
+  const store = injectMemo(() => {
+    const hydration = config?.hydrate
+      ? instance.ecosystem._consumeHydration(instance)
+      : undefined
 
-    return {
-      cleanup: subscription ? () => subscription.unsubscribe() : undefined,
-      result: store,
-      type: '@@zedux/immerStore',
-    }
-  },
-  <State = any>(
-    prevDescriptor: {
-      cleanup?: () => void
-      result: ImmerStore<State>
-      type: string
+    return createImmerStore<State>(hydration ?? state)
+  }, [])
+
+  injectEffect(
+    () => {
+      if (!subscribe) return
+
+      const subscription = doSubscribe(instance, store)
+
+      return () => subscription?.unsubscribe()
     },
-    instance: PartialAtomInstance,
-    state?: State,
-    config?: InjectStoreConfig
-  ) => {
-    const subscribe = config?.subscribe ?? true
-    const prevsubscribe = !!prevDescriptor.cleanup
+    [subscribe],
+    { synchronous: true }
+  )
 
-    if (prevsubscribe === subscribe) return prevDescriptor
-
-    // we were subscribed, now we're not
-    if (!subscribe) {
-      prevDescriptor.cleanup?.()
-      prevDescriptor.cleanup = undefined
-      return prevDescriptor
-    }
-
-    // we weren't subscribed, now we are
-    const subscription = doSubscribe(instance, prevDescriptor.result)
-    prevDescriptor.cleanup = () => subscription.unsubscribe()
-
-    return prevDescriptor
-  }
-)
+  return store
+}

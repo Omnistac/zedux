@@ -80,21 +80,73 @@ Atom APIs are designed to be passed around between injectors and ultimately comp
 [`injectPromise()`](../api/injectors/injectPromise) itself uses this pattern - returning an Atom API with a store and promise attached.
 :::
 
-## Native Injectors
+## `injectSelf()`
 
-Zedux actually exposes the [`createInjector()`](../api/factories/createInjector) factory it uses to create the built-in injectors like `injectEffect()` and `injectMemo()`. With this factory, you can create custom injectors with every capability that Zedux's own injectors have.
+Zedux's built-in injectors (`injectMemo`, `injectAtomInstance`, etc) have access to the currently-evaluating atom instance before it's fully initialized. When accessed during initial evaluation, the atom instance doesn't have its `exports`, `promise`, or `store` properties set yet - that's the purpose of the initial evaluation!
 
-The one capability that `createInjector()` gives you that nothing else does is access to the partially-created atom instance currently being created. This can be useful for custom injectors since they otherwise don't know which atom they're being used in.
+With that in mind, Zedux exports an injector that allows you to access the not-yet-initialized instance - [`injectSelf()`](../api/injectors/injectSelf):
 
-This "partial instance" is hidden from everything else because on initial evaluation, the atom instance doesn't have many things you'd expect to exist on an instance - namely the 3 "meta data types" (store, exports, promise). These haven't been created yet. That's the purpose of the initial evaluation!
+```ts
+import { atom, injectSelf } from '@zedux/react'
 
-This is a low-level feature. So low that it's out of the scope of this walkthrough. But if you're interested, check it out in [the API docs](../api/factories/createInjector).
+const exampleAtom = atom('example', () => {
+  const partialInstance = injectSelf()
+
+  partialInstance.store.setState() // ERROR! Store not set yet
+  partialInstance.promise.then(...) // ERROR! Promise not set yet
+  partialInstance.exports.myExportedFn() // ERROR! Exports not set yet
+
+  ...
+})
+```
+
+On subsequent evaluations, those properties will exist. It is safe to use them after a check that they exist:
+
+```ts
+const exampleAtom = atom('example', () => {
+  const partialInstance = injectSelf()
+
+  if ('store' in partialInstance) {
+    partialInstance.store.getState()
+  }
+
+  ...
+})
+```
+
+TypeScript users will see that `injectSelf()` returns a `PartialInstance | AnyAtomInstance` type. Type casts to improve this are safe enough after a type guard like in the above example. To get full type support, type-cast the value using the `AtomInstanceType` TS helper:
+
+```ts
+if ('store' in partialInstance) {
+  ;(partialInstance as AtomInstanceType<typeof exampleAtom>).store.setState()
+}
+```
+
+All other AtomInstance properties and methods are free game. For example, `injectSelf()` is often used to get the fully-qualified id of the current atom instance:
+
+```ts
+const exampleAtom = atom('example', (param1: string, param2: number) => {
+  const { id } = injectSelf()
+
+  return id
+})
+
+function ExampleComponent() {
+  const value = useAtomValue(exampleAtom, ['a', 1])
+  value // 'example-["a",1]'
+  ...
+}
+```
+
+:::tip
+Watch out for reevaluation loops when calling [`instance.invalidate()`](../api/classes/AtomInstance#invalidate) - make sure you gate it behind `if` statements or callback functions.
+:::
 
 ## Recap
 
 - Custom injectors can encapsulate any logic you want
 - Atom APIs are a convenient standard for passing stores, exports, and promises around
-- Low-level native injectors can be created with `createInjector()`.
+- Use [`injectSelf()`](../api/injectors/injectSelf) to get a reference to the currently-evaluating atom instance.
 
 ## Next Steps
 

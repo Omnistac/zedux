@@ -1,4 +1,4 @@
-import { createInjector } from '../factories'
+import { createInjector } from '../factories/createInjector'
 import { InjectorDeps, PartialAtomInstance } from '../types'
 import { haveDepsChanged, prefix } from '../utils'
 
