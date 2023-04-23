@@ -5,7 +5,7 @@ import {
   injectCallback,
   injectRef,
   injectStore,
-  internalTypes,
+  zeduxTypes,
 } from '@zedux/react'
 import { ecosystem } from '../utils/ecosystem'
 
@@ -98,7 +98,7 @@ describe('batching', () => {
     expect(evaluations).toEqual([0, 2, 1, 2])
   })
 
-  test('internalTypes.batch batches the update with all other synchronously batched updates', () => {
+  test('zeduxTypes.batch batches the update with all other synchronously batched updates', () => {
     jest.useFakeTimers()
 
     const evaluations: number[] = []
@@ -106,11 +106,11 @@ describe('batching', () => {
     const atom1 = atom('1', () => {
       const store = injectStore(0)
       const batchAllRef = injectRef(() => {
-        store.setState(1, internalTypes.batch)
-        store.setState(2, internalTypes.batch)
+        store.setState(1, zeduxTypes.batch)
+        store.setState(2, zeduxTypes.batch)
       })
       const batchOneRef = injectRef(() => {
-        store.setState(1, internalTypes.batch)
+        store.setState(1, zeduxTypes.batch)
         store.setState(2)
       })
       const noBatchRef = injectRef(() => {

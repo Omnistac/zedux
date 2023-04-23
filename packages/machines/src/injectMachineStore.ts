@@ -4,7 +4,7 @@ import {
   injectRef,
   injectSelf,
   InjectStoreConfig,
-  internalTypes,
+  zeduxTypes,
 } from '@zedux/atoms'
 import { MachineStore } from './MachineStore'
 import { MachineHook, MachineStateShape } from './types'
@@ -275,12 +275,12 @@ export const injectMachineStore: <
           }
 
           // Nothing to do if the state hasn't changed. Also ignore state updates
-          // during evaluation or that are caused by `internalTypes.ignore` actions
+          // during evaluation or that are caused by `zeduxTypes.ignore` actions
           if (
             !subscribeRef.current ||
             newState === oldState ||
             instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
-            action?.meta === internalTypes.ignore
+            action?.meta === zeduxTypes.ignore
           ) {
             return
           }
@@ -307,7 +307,7 @@ export const injectMachineStore: <
           )
 
           // run the scheduler synchronously after any store update
-          if (action?.meta !== internalTypes.batch) {
+          if (action?.meta !== zeduxTypes.batch) {
             instance.ecosystem._scheduler.flush()
           }
         },
@@ -324,7 +324,7 @@ export const injectMachineStore: <
   if (enterHooks[currentState.value]) {
     enterHooks[currentState.value].forEach(callback =>
       callback(store, {
-        action: { type: internalTypes.prime },
+        action: { type: zeduxTypes.prime },
         newState: currentState,
         store,
       })

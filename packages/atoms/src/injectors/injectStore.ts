@@ -1,4 +1,4 @@
-import { createStore, internalTypes, Store } from '@zedux/core'
+import { createStore, zeduxTypes, Store } from '@zedux/core'
 import { createInjector } from '../factories/createInjector'
 import { InjectStoreConfig, PartialAtomInstance } from '../types/index'
 import { InjectorDescriptor, prefix } from '../utils/index'
@@ -14,12 +14,12 @@ export const doSubscribe = <State>(
     // considered an anti-pattern.
     if (
       instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
-      action.meta === internalTypes.ignore
+      action.meta === zeduxTypes.ignore
     ) {
       return
     }
 
-    const isBatch = action?.meta === internalTypes.batch
+    const isBatch = action?.meta === zeduxTypes.batch
 
     instance._scheduleEvaluation(
       {

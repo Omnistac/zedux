@@ -1,8 +1,8 @@
-import { internalTypes } from '../api/constants'
 import { Store } from '../api/createStore'
 import { detailedTypeof } from '../api/detailedTypeof'
 import { is } from '../api/is'
 import { isPlainObject } from '../api/isPlainObject'
+import { zeduxTypes } from '../api/zeduxTypes'
 import {
   Action,
   ActionMeta,
@@ -151,18 +151,18 @@ export const wrapStoreInReducer = <State>(store: Store<State>) => {
     // If this is the special hydrate or partial hydrate action, re-create the
     // action's payload using the current state slice
     if (
-      action.type === internalTypes.hydrate ||
-      action.type === internalTypes.merge
+      action.type === zeduxTypes.hydrate ||
+      action.type === zeduxTypes.merge
     ) {
       action = {
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
         payload: state,
       }
     }
 
     // Tell the child store's effect subscribers that this action is inherited
     const inheritedAction: ActionMeta = {
-      metaType: internalTypes.inherit,
+      metaType: zeduxTypes.inherit,
       payload: action,
     }
 

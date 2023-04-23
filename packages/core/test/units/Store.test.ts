@@ -1,4 +1,4 @@
-import { createStore, internalTypes, Store } from '@zedux/core/index'
+import { createStore, zeduxTypes, Store } from '@zedux/core/index'
 import {
   dispatchables,
   nonDispatchables,
@@ -24,7 +24,7 @@ describe('Store.dispatch()', () => {
     const store = createStore()
 
     const action = {
-      type: internalTypes.hydrate,
+      type: zeduxTypes.hydrate,
       payload: { a: 1 },
     }
 
@@ -39,7 +39,7 @@ describe('Store.dispatch()', () => {
     const store = createStore()
 
     const action = {
-      type: internalTypes.merge,
+      type: zeduxTypes.merge,
       payload: { a: 1 },
     }
 
@@ -58,7 +58,7 @@ describe('Store.dispatch()', () => {
     })
 
     const action = {
-      metaType: internalTypes.delegate,
+      metaType: zeduxTypes.delegate,
       metaData: ['a'],
       payload: {
         type: 'b',
@@ -278,7 +278,7 @@ describe('Store.setState()', () => {
     expect(effectsSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
-          type: internalTypes.hydrate,
+          type: zeduxTypes.hydrate,
           payload: hydratedState,
         },
       })
@@ -295,7 +295,7 @@ describe('Store.setState()', () => {
 
     expect(subscriber).toHaveBeenCalledWith(hydratedState, undefined, {
       payload: hydratedState,
-      type: internalTypes.hydrate,
+      type: zeduxTypes.hydrate,
     })
   })
 
@@ -323,7 +323,7 @@ describe('Store.setState()', () => {
     expect(subscriber).toHaveBeenCalledWith('a', undefined, {
       meta: 'b',
       payload: 'a',
-      type: internalTypes.hydrate,
+      type: zeduxTypes.hydrate,
     })
   })
 })
@@ -417,7 +417,7 @@ describe('Store.setStateDeep()', () => {
     expect(subscriber).toHaveBeenCalledWith('a', undefined, {
       meta: 'b',
       payload: 'a',
-      type: internalTypes.merge,
+      type: zeduxTypes.merge,
     })
   })
 })

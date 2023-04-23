@@ -96,7 +96,7 @@ When a parent store receives a dispatched action, it handles it like any store w
 A "dispatched action" could be a real action dispatched by calling `store.dispatch()` or a [pseudo action](../api/glossary#pseudo-action) "dispatched" by calling `store.setState()` or `store.setStateDeep()`.
 :::
 
-This particular meta node is called [`inherit`](../api/utils/internalTypes#inherit). It looks like this:
+This particular meta node is called [`inherit`](../api/utils/zeduxTypes#inherit). It looks like this:
 
 ```ts
 // given this action:
@@ -154,7 +154,7 @@ a.dispatch({ type: 'addTodo' })
 
 Child stores don't dispatch actions to their parent, but they will notify their parent of state updates and the action that caused them. Parent stores register special subscriptions with their child stores to receive these notifications.
 
-The child store wraps the action in a [`delegate`](../api/utils/internalTypes#delegate) meta node before passing that to its parent. If that parent has parents, it will wrap the wrapped action again in another `delegate` meta node before notifying them. This recurses up through the store tree.
+The child store wraps the action in a [`delegate`](../api/utils/zeduxTypes#delegate) meta node before passing that to its parent. If that parent has parents, it will wrap the wrapped action again in another `delegate` meta node before notifying them. This recurses up through the store tree.
 
 :::note
 Unlike `inherit` nodes, `delegate` nodes can be nested indefinitely.

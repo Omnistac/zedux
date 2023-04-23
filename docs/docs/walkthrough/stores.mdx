@@ -377,15 +377,15 @@ Sometimes you will encounter an asynchronous evaluation loop, e.g. with `injectE
 
 Since Zedux can only skip updates that happen synchronously during evaluation, these situations require something extra. It may be possible in some cases to fix this by narrowing your effect's dependency so that only a piece of state causes the effect to rerun. Or you may be able to reorganize your state so that the effect updates a separate store than the one it depends on.
 
-If all else fails, you can pass [`internalTypes.ignore`](../api/utils/internalTypes#ignore) as an action's `meta` property to prevent Zedux from reevaluating this atom on this particular state change.
+If all else fails, you can pass [`zeduxTypes.ignore`](../api/utils/zeduxTypes#ignore) as an action's `meta` property to prevent Zedux from reevaluating this atom on this particular state change.
 
 ```ts
-import { internalTypes } from '@zedux/react'
+import { zeduxTypes } from '@zedux/react'
 
-myStore.dispatch({ type: 'my-action-type', meta: internalTypes.ignore })
+myStore.dispatch({ type: 'my-action-type', meta: zeduxTypes.ignore })
 
 // metadata can be passed as the second argument to .setState():
-myStore.setState(newState, internalTypes.ignore)
+myStore.setState(newState, zeduxTypes.ignore)
 ```
 
 :::info anti-pattern warning

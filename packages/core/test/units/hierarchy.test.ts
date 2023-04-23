@@ -1,5 +1,4 @@
-import { createStore } from '@zedux/core'
-import { internalTypes } from '@zedux/core/api/constants'
+import { createStore, zeduxTypes } from '@zedux/core'
 import {
   getHierarchyType,
   wrapStoreInReducer,
@@ -22,7 +21,7 @@ import {
 
 describe('delegate()', () => {
   const action1 = {
-    metaType: internalTypes.delegate,
+    metaType: zeduxTypes.delegate,
     metaData: ['a'],
     payload: {
       type: 'b',
@@ -30,7 +29,7 @@ describe('delegate()', () => {
   }
 
   const action2 = {
-    metaType: internalTypes.delegate,
+    metaType: zeduxTypes.delegate,
     metaData: ['a', 'b'],
     payload: {
       type: 'c',
@@ -38,10 +37,10 @@ describe('delegate()', () => {
   }
 
   const action3 = {
-    metaType: internalTypes.delegate,
+    metaType: zeduxTypes.delegate,
     metaData: ['a', 'b', 'c'],
     payload: {
-      metaType: internalTypes.delegate,
+      metaType: zeduxTypes.delegate,
       metaData: ['d', 'e'],
       payload: {
         type: 'f',

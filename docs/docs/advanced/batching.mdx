@@ -37,7 +37,7 @@ ecosystem.batch(() => {
 
 ## Open-Ended Batching
 
-Sometimes it isn't convenient to wrap synchronous dispatches in a single `ecosystem.batch()` call. For these situations, you can set the `meta` property of the dispatched action to [`internalTypes.batch`](../api/utils/internalTypes#batch).
+Sometimes it isn't convenient to wrap synchronous dispatches in a single `ecosystem.batch()` call. For these situations, you can set the `meta` property of the dispatched action to [`zeduxTypes.batch`](../api/utils/zeduxTypes#batch).
 
 ```ts
 // before:
@@ -45,15 +45,15 @@ anInstance.setState(newState)
 aStore.setStateDeep({ newValue })
 
 // after:
-anInstance.setState(newState, internalTypes.batch)
-aStore.setStateDeep({ newValue }, internalTypes.batch)
+anInstance.setState(newState, zeduxTypes.batch)
+aStore.setStateDeep({ newValue }, zeduxTypes.batch)
 ```
 
-When Zedux sees `internalTypes.batch`, it doesn't flush immediately. Instead, it sets a timeout to flush on the next event loop cycle. If any non-batching dispatch happens during the current event loop cycle, it will trigger a flush - canceling the timeout and batching itself with any previously-batched state updates.
+When Zedux sees `zeduxTypes.batch`, it doesn't flush immediately. Instead, it sets a timeout to flush on the next event loop cycle. If any non-batching dispatch happens during the current event loop cycle, it will trigger a flush - canceling the timeout and batching itself with any previously-batched state updates.
 
 ```ts
 // batches:
-anInstance.setState(newState, internalTypes.batch)
+anInstance.setState(newState, zeduxTypes.batch)
 
 // flushes the above state update (and itself):
 aStore.setStateDeep({ newValue })
@@ -217,6 +217,6 @@ Simply wrapping `switchAndIncrement` in `injectCallback()` "turns on" automatic 
 ## Recap
 
 - Use `ecosystem.batch()` to batch a specific set of updates.
-- Set an action's `meta` property to `internalTypes.batch` to batch open-endedly.
+- Set an action's `meta` property to `zeduxTypes.batch` to batch open-endedly.
 - Use `injectCallback()` to automatically batch updates.
 - Batching can prevent state tearing bugs. But you typically won't need to worry about it, especially if you structure side effects well.
