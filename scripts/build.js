@@ -40,18 +40,39 @@ const tscBuild = async isCjs => {
     process.exit(1)
   }
 
-  if (isCjs) return
+  if (isCjs) {
+    // in cjs builds, create a `package.json` with `type: 'commonjs'` in the
+    // dist/cjs folder
+    const makePackageJsonOutput = await cmd(
+      `echo '${JSON.stringify(
+        { type: 'commonjs' },
+        null,
+        2
+      )}' > dist/cjs/package.json`
+    )
+
+    if (makePackageJsonOutput.code) {
+      console.error(
+        `failed to create cjs package.json. Output: ${makePackageJsonOutput}`
+      )
+      process.exit(1)
+    }
+
+    return
+  }
 
   // in esm builds, add the `.js` file extension to all imports (required by
   // node and now webpack)
-  const addExtensions = await cmd(
+  const addExtensionsOutput = await cmd(
     `find dist/esm -type f -exec sed -i${
       platform() === 'darwin' ? " ''" : ''
     } "s|\\(from '\\..*\\)'|\\1.js'|" {} +`
   )
 
-  if (addExtensions.code) {
-    console.error(`adding .js extensions failed. Output: ${addExtensions}`)
+  if (addExtensionsOutput.code) {
+    console.error(
+      `adding .js extensions failed. Output: ${addExtensionsOutput}`
+    )
     process.exit(1)
   }
 }
