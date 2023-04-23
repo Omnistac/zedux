@@ -12,7 +12,8 @@ export const useReactComponentId = () => {
   // would be nice if React provided some way to know that multiple hooks are
   // from the same component. For now, every Zedux hook usage creates a new
   // graph node
-  return useMemo(() => ecosystem._idGenerator.generateReactComponentId(), [
-    ecosystem,
-  ])
+  return useMemo(
+    () => ecosystem._idGenerator.generateReactComponentId(),
+    [ecosystem]
+  )
 }

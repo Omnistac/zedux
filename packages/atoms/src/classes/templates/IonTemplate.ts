@@ -1,6 +1,10 @@
 import { ion } from '@zedux/atoms/factories/ion'
-import { injectAtomGetters } from '@zedux/atoms/injectors'
-import { AtomConfig, IonStateFactory, AtomGenerics } from '@zedux/atoms/types'
+import { injectAtomGetters } from '@zedux/atoms/injectors/injectAtomGetters'
+import {
+  AtomConfig,
+  IonStateFactory,
+  AtomGenerics,
+} from '@zedux/atoms/types/index'
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { AtomTemplateBase } from './AtomTemplateBase'

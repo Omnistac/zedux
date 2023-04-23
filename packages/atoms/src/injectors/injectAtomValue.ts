@@ -4,7 +4,7 @@ import {
   AtomParamsType,
   AtomStateType,
   ParamlessTemplate,
-} from '../types'
+} from '../types/index'
 import { injectAtomInstance } from './injectAtomInstance'
 
 export const injectAtomValue: {

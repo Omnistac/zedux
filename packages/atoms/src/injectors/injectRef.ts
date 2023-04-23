@@ -1,10 +1,10 @@
+import { createInjector } from '../factories/createInjector'
 import {
   MutableRefObject,
   PartialAtomInstance,
   RefObject,
-} from '@zedux/atoms/types'
-import { createInjector } from '../factories/createInjector'
-import { prefix } from '../utils'
+} from '../types/index'
+import { prefix } from '../utils/index'
 
 export const injectRef: {
   <T>(initialVal: T): MutableRefObject<T>

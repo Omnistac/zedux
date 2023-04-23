@@ -4,7 +4,7 @@ import {
   AtomApiPromise,
   AtomValueOrFactory,
   PromiseState,
-} from '../types'
+} from '../types/index'
 import { AtomTemplate } from '../classes/templates/AtomTemplate'
 import { AtomApi } from '../classes/AtomApi'
 

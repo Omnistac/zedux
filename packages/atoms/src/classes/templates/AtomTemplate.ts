@@ -1,5 +1,5 @@
 import { atom } from '@zedux/atoms/factories/atom'
-import { AtomGenerics, AtomValueOrFactory } from '@zedux/atoms/types'
+import { AtomGenerics, AtomValueOrFactory } from '@zedux/atoms/types/index'
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { AtomTemplateBase } from './AtomTemplateBase'

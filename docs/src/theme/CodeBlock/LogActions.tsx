@@ -1,7 +1,7 @@
 import React, { MutableRefObject, useState } from 'react'
 import { useMemo } from 'react'
 import styled from '@site/src/ssc'
-import * as ReactZedux from '../../../../packages/react/src'
+import * as ReactZedux from '@zedux/react'
 
 const options = {
   State: 'State',

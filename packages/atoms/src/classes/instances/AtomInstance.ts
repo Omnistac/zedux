@@ -19,7 +19,7 @@ import {
   LifecycleStatus,
   PromiseState,
   PromiseStatus,
-} from '@zedux/atoms/types'
+} from '@zedux/atoms/types/index'
 import { pluginActions } from '@zedux/atoms/utils/plugin-actions'
 import {
   getErrorPromiseState,

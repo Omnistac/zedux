@@ -26,8 +26,8 @@ import {
 import { withHistory } from 'slate-history'
 import { Slate, withReact, ReactEditor, RenderLeafProps } from 'slate-react'
 import { JsxEmit, transpile } from 'typescript/lib/typescript'
-import * as ReactImmer from '../../../../packages/immer/src'
-import * as ReactZedux from '../../../../packages/react/src'
+import * as ReactImmer from '@zedux/immer'
+import * as ReactZedux from '@zedux/react'
 import { LogActions } from './LogActions'
 import { onKeyDown, scrollSelectionIntoView } from './editorUtils'
 import {

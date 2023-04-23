@@ -1,5 +1,5 @@
 import { readInstance } from '../classes/EvaluationStack'
-import { Selectable } from '../types'
+import { Selectable } from '../types/index'
 
 export const injectAtomSelector = <T, Args extends any[]>(
   selectable: Selectable<T, Args>,

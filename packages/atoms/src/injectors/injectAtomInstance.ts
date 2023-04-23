@@ -1,5 +1,5 @@
 import { createInjector } from '../factories/createInjector'
-import { InjectorDescriptor, prefix, Static } from '../utils'
+import { InjectorDescriptor, prefix, Static } from '../utils/index'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
@@ -8,7 +8,7 @@ import {
   InjectAtomInstanceConfig,
   ParamlessTemplate,
   PartialAtomInstance,
-} from '../types'
+} from '../types/index'
 
 const defaultOperation = 'injectAtomInstance'
 

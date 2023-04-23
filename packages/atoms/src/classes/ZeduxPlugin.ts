@@ -5,7 +5,7 @@ import {
   Store,
 } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
-import { MaybeCleanup } from '../types'
+import { MaybeCleanup } from '../types/index'
 import { pluginActions } from '../utils/plugin-actions'
 
 type ValuesOf<Rec extends Record<any, any>> = Rec extends Record<any, infer T>
@@ -15,7 +15,7 @@ type ValuesOf<Rec extends Record<any, any>> = Rec extends Record<any, infer T>
 export type Mod = keyof typeof pluginActions
 export type ModAction = ActionFactoryActionType<ValuesOf<typeof pluginActions>>
 export type ModPayloadMap = {
-  [K in Mod]: ActionFactoryPayloadType<typeof pluginActions[K]>
+  [K in Mod]: ActionFactoryPayloadType<(typeof pluginActions)[K]>
 }
 
 export class ZeduxPlugin {

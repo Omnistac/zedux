@@ -2,7 +2,7 @@ import {
   AtomConfig,
   AtomValueOrFactory,
   AtomGenerics,
-} from '@zedux/atoms/types'
+} from '@zedux/atoms/types/index'
 import { Ecosystem } from '../Ecosystem'
 import { AtomInstance } from '../instances/AtomInstance'
 

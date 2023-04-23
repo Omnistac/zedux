@@ -1,7 +1,7 @@
 import { createStore } from '@zedux/core'
-import { Ecosystem } from '../classes'
+import { Ecosystem } from '../classes/Ecosystem'
 import { setStack, stack } from '../classes/EvaluationStack'
-import { StackItem } from '../utils'
+import { StackItem } from '../utils/index'
 
 export let internalStore = createStore(null, {} as Record<string, Ecosystem>)
 

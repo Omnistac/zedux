@@ -5,15 +5,15 @@ import {
   DependentCallback,
   AnyAtomTemplate,
   LifecycleStatus,
-} from '@zedux/atoms/types'
+} from '@zedux/atoms/types/index'
 import {
   Explicit,
   External,
   InjectorDescriptor,
   prefix,
-} from '@zedux/atoms/utils'
-import { Ecosystem } from '../Ecosystem'
+} from '@zedux/atoms/utils/index'
 import { Store } from '@zedux/core'
+import { Ecosystem } from '../Ecosystem'
 
 export abstract class AtomInstanceBase<
   State,

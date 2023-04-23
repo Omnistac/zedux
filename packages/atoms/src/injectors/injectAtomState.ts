@@ -6,7 +6,7 @@ import {
   AtomStateType,
   ParamlessTemplate,
   StateHookTuple,
-} from '../types'
+} from '../types/index'
 import { injectAtomInstance } from './injectAtomInstance'
 
 export const injectAtomState: {

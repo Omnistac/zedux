@@ -1,6 +1,6 @@
-import React, { FC, ReactNode } from 'react'
 import { AnyAtomInstance } from '@zedux/atoms'
-import { useEcosystem } from '../hooks'
+import React, { FC, ReactNode } from 'react'
+import { useEcosystem } from '../hooks/useEcosystem'
 
 /**
  * Provides an atom instance over React context.

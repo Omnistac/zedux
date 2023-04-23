@@ -1,5 +1,5 @@
 import { readInstance } from '../classes/EvaluationStack'
-import { AnyAtomInstance, PartialAtomInstance } from '../types'
+import { AnyAtomInstance, PartialAtomInstance } from '../types/index'
 
 /**
  * An unrestricted injector (can actually be used in loops and if statements).

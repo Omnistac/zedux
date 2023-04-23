@@ -1,5 +1,5 @@
 import { Store, StoreStateType } from '@zedux/core'
-import { AtomApi } from '../classes'
+import { AtomApi } from '../classes/AtomApi'
 import { IonTemplate } from '../classes/templates/IonTemplate'
 import {
   AtomConfig,
@@ -7,7 +7,7 @@ import {
   AtomApiPromise,
   IonStateFactory,
   PromiseState,
-} from '../types'
+} from '../types/index'
 
 export const ion: {
   // Query Atoms

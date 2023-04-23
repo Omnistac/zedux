@@ -1,5 +1,5 @@
 import { readInstance } from '../classes/EvaluationStack'
-import { PartialAtomInstance } from '../types'
+import { PartialAtomInstance } from '../types/index'
 import { InjectorDescriptor } from '../utils/types'
 
 export const createInjector = <

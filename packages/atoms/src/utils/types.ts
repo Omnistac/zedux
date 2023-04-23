@@ -1,5 +1,5 @@
-import { AnyAtomInstance } from '@zedux/atoms/types'
 import { SelectorCache } from '../classes/Selectors'
+import { AnyAtomInstance } from '../types/index'
 
 export type InjectorDescriptor<T = any> = T extends undefined
   ? {

@@ -5,8 +5,8 @@ import {
   MachineStore,
 } from '@zedux/core'
 import { createInjector } from '../factories/createInjector'
-import { InjectStoreConfig, PartialAtomInstance } from '../types'
-import { InjectorDescriptor, prefix } from '../utils'
+import { InjectStoreConfig, PartialAtomInstance } from '../types/index'
+import { InjectorDescriptor, prefix } from '../utils/index'
 import { doSubscribe } from './injectStore'
 
 type ArrToUnion<S extends string[]> = S extends [infer K, ...infer Rest]
