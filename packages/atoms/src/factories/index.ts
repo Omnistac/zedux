@@ -1,5 +1,4 @@
 export * from './api'
 export * from './atom'
 export * from './createEcosystem'
-export * from './createInjector'
 export * from './ion'

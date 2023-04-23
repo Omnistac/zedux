@@ -3,7 +3,7 @@ import {
   PartialAtomInstance,
   RefObject,
 } from '@zedux/atoms/types'
-import { createInjector } from '../factories'
+import { createInjector } from '../factories/createInjector'
 import { prefix } from '../utils'
 
 export const injectRef: {

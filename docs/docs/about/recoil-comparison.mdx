@@ -19,9 +19,11 @@ const myNumberState = atom({
 
 const myMultipliedState = selectorFamily({
   key: 'MyMultipliedNumber',
-  get: multiplier => ({ get }) => {
-    return get(myNumberState) * multiplier
-  },
+  get:
+    multiplier =>
+    ({ get }) => {
+      return get(myNumberState) * multiplier
+    },
 })
 
 function MyComponent() {
@@ -137,16 +139,18 @@ In Zedux, side effects are handled exactly as you'd handle them in React - using
 Recoil:
 
 ```tsx
-const localStorageEffect = key => ({ setSelf, onSet }) => {
-  const savedValue = localStorage.getItem(key)
-  if (savedValue != null) {
-    setSelf(JSON.parse(savedValue))
-  }
+const localStorageEffect =
+  key =>
+  ({ setSelf, onSet }) => {
+    const savedValue = localStorage.getItem(key)
+    if (savedValue != null) {
+      setSelf(JSON.parse(savedValue))
+    }
 
-  onSet(newValue => {
-    localStorage.setItem(key, JSON.stringify(newValue))
-  })
-}
+    onSet(newValue => {
+      localStorage.setItem(key, JSON.stringify(newValue))
+    })
+  }
 
 const currentUserIDState = atom({
   key: 'CurrentUserID',
@@ -227,7 +231,7 @@ const zeduxPlusRxEqualsLove = atom('❤️', () => {
   const store = injectStore([])
   const myObservable$ = injectAtomValue(myObservableAtom)
 
-  // yes, you can even abstract this out to a custom `injectSocket` injector
+  // yes, you can even abstract this out to a custom `injectObservable` injector
   injectEffect(() => {
     const subscription = myObservable$.subscribe(val =>
       store.setState(state => [...state, val])

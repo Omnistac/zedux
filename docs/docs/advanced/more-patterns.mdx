@@ -65,7 +65,7 @@ const loginAtom = atom('login', () => {
 
 (Note that the better solution here is to move the `logout` function somewhere else - e.g. inside `loginAtom` - completely avoiding the circular dependency in the first place).
 
-Another possible solution is to pass a [partial instance](../api/factories/createInjector#partial-instance) as a [param](../walkthrough/the-graph#instances-as-params) to the other atom (yes, a partial instance is supported just like a normal instance). This would work as long as the "child" atom doesn't register any kind of graph dependency on the received "parent" atom instance.
+Another possible solution is to pass a [partial instance](../api/injectors/injectSelf#partialatominstance) as a [param](../walkthrough/the-graph#instances-as-params) to the other atom (yes, a partial instance is supported just like a normal instance). This would work as long as the "child" atom doesn't register any kind of graph dependency on the received "parent" atom instance.
 
 :::info important
 You may be tempted to use manual graphing to create a real dependency asynchronously. This is not supported. Zedux's graph is acyclic, meaning circular dependencies break everything no matter how they're created. It is possible to change that, but we don't want to for performance reasons.
