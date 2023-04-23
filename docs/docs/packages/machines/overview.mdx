@@ -1,0 +1,63 @@
+---
+id: overview
+title: Overview
+---
+
+A small addon package that implements a simple TypeScript-first state machine model. This is not a replacement for [XState](https://github.com/statelyai/xstate).
+
+This package's purpose is to give you native Zedux state machines that are easy to create and "good enough" for many apps. The mental model is similar to XState and Zedux machines should be fairly easy to migrate to XState if needed.
+
+## Installation
+
+This package has a peer dependency on the [`@zedux/atoms`](https://www.npmjs.com/package/@zedux/atoms) package. Ensure that `@zedux/atoms` is installed at the same version as this package:
+
+```sh
+npm install @zedux/atoms @zedux/machines # npm
+yarn add @zedux/atoms @zedux/machines # yarn
+pnpm add @zedux/atoms @zedux/machines # pnpm
+```
+
+The `@zedux/react` package already includes `@zedux/atoms`. To use `@zedux/machines` in React apps, install it alongside `@zedux/react` instead:
+
+```sh
+npm install @zedux/react @zedux/machines # npm
+yarn add @zedux/react @zedux/machines # yarn
+pnpm add @zedux/react @zedux/machines # pnpm
+```
+
+## Usage
+
+See [the Zedux docs](https://omnistac.github.io/zedux/docs/packages/machines/overview) for full usage details.
+
+Simple example:
+
+```tsx
+import { injectMachineStore } from '@zedux/machines'
+import { api, atom } from '@zedux/react'
+
+const fetcherAtom = atom('fetcher', () => {
+  const store = injectMachineStore(state => [
+    // the first state is the initial state ('idle' here):
+    state('idle').on('request', 'fetching'),
+    state('fetching')
+      .on('fetchSuccessful', 'success')
+      .on('fetchFailed', 'error'),
+    state('success').on('invalidate', 'fetching'),
+    state('error').on('retry', 'fetching'),
+  ])
+
+  return store
+})
+```
+
+## Exports
+
+This package exports the following APIs:
+
+### Classes
+
+- [`MachineStore`](MachineStore)
+
+### Injectors
+
+- [`injectMachineStore()`](injectMachineStore)

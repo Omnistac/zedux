@@ -5,9 +5,9 @@ title: MachineStore
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-Extends [Store](Store). [`injectMachineStore()`](../injectors/injectMachineStore) returns an instance of this class.
+Extends [Store](../../api/classes/Store). [`injectMachineStore()`](injectMachineStore) returns an instance of this class.
 
-This class controls the store's state shape and exposes simple methods for working with the state machine. It is recommended to only use these methods to manipulate the state of the store, rather than using [`machineStore.setState()`](Store#setstate) or [`machineStore.setStateDeep()`](Store#setstatedeep). You can dispatch actions to the store via [`machineStore.dispatch()`](Store#dispatch), but the only use for that is to use the store as a message bus.
+This class controls the store's state shape and exposes simple methods for working with the state machine. It is recommended to only use these methods to manipulate the state of the store, rather than using [`machineStore.setState()`](../../api/classes/Store#setstate) or [`machineStore.setStateDeep()`](../../api/classes/Store#setstatedeep). You can dispatch actions to the store via [`machineStore.dispatch()`](../../api/classes/Store#dispatch), but the only use for that is to use the store as a message bus.
 
 These state machines have relative type safety. Type generics must be passed manually for full TS support, so it's recommended to use a higher-level factory (like `injectMachineStore()`) that does that for you to instantiate this class.
 
@@ -27,7 +27,7 @@ All machine stores store an object with the following properties:
 
 ## Creation
 
-Create using [`injectMachineStore()`](../injectors/injectMachineStore). It is so not recommended to instantiate this class yourself that we're not even documenting it here 😛
+Create using [`injectMachineStore()`](injectMachineStore). It is so not recommended to instantiate this class yourself that we're not even documenting it here 😛
 
 ## Methods
 
@@ -76,7 +76,7 @@ machineStore.is('some-state')`}</Ts>
       </Item>
       <Item name="meta">
         Optional. Can be anything, including the special{' '}
-        <Link to="../utils/internalTypes#ignore">
+        <Link to="../../api/utils/internalTypes#ignore">
           <code>ignore</code>
         </Link>{' '}
         meta type.
@@ -101,7 +101,7 @@ machineStore.is('some-state')`}</Ts>
       </Item>
       <Item name="meta">
         Optional. Can be anything, including the special{' '}
-        <Link to="../utils/internalTypes#ignore">
+        <Link to="../../api/utils/internalTypes#ignore">
           <code>ignore</code>
         </Link>{' '}
         meta type.
@@ -140,7 +140,7 @@ machineStore.setContext(context => ({ ...context, key: 'val' }))`}</Ts>
       </Item>
       <Item name="meta">
         Optional. Can be anything, including the special{' '}
-        <Link to="../utils/internalTypes#ignore">
+        <Link to="../../api/utils/internalTypes#ignore">
           <code>ignore</code>
         </Link>{' '}
         meta type.
@@ -162,5 +162,5 @@ machineStore.setContext(context => ({ key: state.key + 1 }))`}</Ts>
 
 ## See Also
 
-- [`injectMachineStore()`](../injectors/injectMachineStore)
-- [The State Machines walkthrough](../../walkthrough/state-machines)
+- [`injectMachineStore()`](injectMachineStore)
+- [The State Machines walkthrough](walkthrough)

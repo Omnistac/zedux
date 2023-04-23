@@ -1,13 +1,13 @@
 import {
+  injectEffect,
+  injectMemo,
+  injectRef,
+  injectSelf,
+  InjectStoreConfig,
   internalTypes,
-  MachineHook,
-  MachineStateShape,
-  MachineStore,
-} from '@zedux/core'
-import { createInjector } from '../factories/createInjector'
-import { InjectStoreConfig, PartialAtomInstance } from '../types/index'
-import { InjectorDescriptor, prefix } from '../utils/index'
-import { doSubscribe } from './injectStore'
+} from '@zedux/atoms'
+import { MachineStore } from './MachineStore'
+import { MachineHook, MachineStateShape } from './types'
 
 type ArrToUnion<S extends string[]> = S extends [infer K, ...infer Rest]
   ? Rest extends string[]
@@ -156,21 +156,21 @@ export const injectMachineStore: <
   MapStatesToStateNames<States, Context>,
   MapStatesToEvents<States, Context>,
   Context
-> = createInjector(
-  'injectMachineStore',
-  <
-    States extends MachineState[],
-    Context extends Record<string, any> | undefined = undefined
-  >(
-    instance: PartialAtomInstance,
-    ...[statesFactory, initialContext, config]: InjectMachineStoreParams<
-      States,
-      Context
-    >
-  ) => {
-    type EventNames = MapStatesToEvents<States, Context>
-    type StateNames = MapStatesToStateNames<States, Context>
+> = <
+  States extends MachineState[],
+  Context extends Record<string, any> | undefined = undefined
+>(
+  ...[statesFactory, initialContext, config]: InjectMachineStoreParams<
+    States,
+    Context
+  >
+) => {
+  type EventNames = MapStatesToEvents<States, Context>
+  type StateNames = MapStatesToStateNames<States, Context>
 
+  const instance = injectSelf()
+
+  const { enterHooks, leaveHooks, store } = injectMemo(() => {
     const enterHooks: Record<
       string,
       MachineHook<StateNames, EventNames, Context>[]
@@ -246,88 +246,90 @@ export const injectMachineStore: <
       config?.guard
     )
 
-    const subscription = store.subscribe({
-      effects: storeEffect => {
-        const { newState, oldState } = storeEffect
+    return { enterHooks, leaveHooks, store }
+  }, [])
 
-        if (newState.value === oldState?.value) return
+  const subscribeRef = injectRef<boolean | undefined>()
+  subscribeRef.current = config?.subscribe
 
-        if (oldState && leaveHooks[oldState.value]) {
-          leaveHooks[oldState.value].forEach(callback =>
-            callback(store, storeEffect)
+  injectEffect(
+    () => {
+      const subscription = store.subscribe({
+        effects: storeEffect => {
+          const { action, newState, oldState } = storeEffect
+
+          if (newState.value === oldState?.value) return
+
+          if (oldState && leaveHooks[oldState.value]) {
+            leaveHooks[oldState.value].forEach(callback =>
+              callback(store, storeEffect)
+            )
+          }
+          if (enterHooks[newState.value]) {
+            enterHooks[newState.value].forEach(callback =>
+              callback(store, storeEffect)
+            )
+          }
+          if (config?.onTransition) {
+            config.onTransition(store, storeEffect)
+          }
+
+          // Nothing to do if the state hasn't changed. Also ignore state updates
+          // during evaluation or that are caused by `internalTypes.ignore` actions
+          if (
+            !subscribeRef.current ||
+            newState === oldState ||
+            instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
+            action?.meta === internalTypes.ignore
+          ) {
+            return
+          }
+
+          instance._scheduleEvaluation(
+            {
+              newState,
+              oldState,
+              operation: 'injectMachineStore',
+              reasons: [
+                {
+                  action,
+                  newState,
+                  oldState,
+                  operation: 'dispatch',
+                  sourceType: 'Store',
+                  type: 'state changed',
+                },
+              ],
+              sourceType: 'Injector',
+              type: 'state changed',
+            },
+            false
           )
-        }
-        if (enterHooks[newState.value]) {
-          enterHooks[newState.value].forEach(callback =>
-            callback(store, storeEffect)
-          )
-        }
-        if (config?.onTransition) {
-          config.onTransition(store, storeEffect)
-        }
-      },
-    })
-    const updaterSub = config?.subscribe && doSubscribe(instance, store)
 
-    const currentState = store.getState()
+          // run the scheduler synchronously after any store update
+          if (action?.meta !== internalTypes.batch) {
+            instance.ecosystem._scheduler.flush()
+          }
+        },
+      })
 
-    if (enterHooks[currentState.value]) {
-      enterHooks[currentState.value].forEach(callback =>
-        callback(store, {
-          action: { type: internalTypes.prime },
-          newState: currentState,
-          store,
-        })
-      )
-    }
+      return () => subscription.unsubscribe()
+    },
+    [],
+    { synchronous: true }
+  )
 
-    const descriptor: InjectorDescriptor<
-      MachineStore<StateNames, EventNames, Context>
-    > & { cleanupUpdater?: () => void } = {
-      cleanup: () => {
-        subscription.unsubscribe()
-        descriptor.cleanupUpdater?.()
-      },
-      result: store,
-      type: `${prefix}/machineStore`,
-    }
+  const currentState = store.getState()
 
-    if (updaterSub) {
-      descriptor.cleanupUpdater = () => updaterSub.unsubscribe()
-    }
-
-    return descriptor
-  },
-  <
-    States extends MachineState[],
-    Context extends Record<string, any> | undefined = undefined
-  >(
-    prevDescriptor: InjectorDescriptor<
-      MachineStore<
-        MapStatesToStateNames<States, Context>,
-        MapStatesToEvents<States, Context>,
-        Context
-      >
-    > & { cleanupUpdater?: () => void },
-    instance: PartialAtomInstance,
-    ...[, , config]: InjectMachineStoreParams<States, Context>
-  ) => {
-    const subscribe = config?.subscribe ?? true
-    const prevsubscribe = !!prevDescriptor.cleanupUpdater
-
-    if (prevsubscribe === subscribe) return prevDescriptor
-
-    // we were subscribed, now we're not
-    if (!subscribe) {
-      prevDescriptor.cleanupUpdater?.()
-      prevDescriptor.cleanupUpdater = undefined
-      return prevDescriptor
-    }
-
-    // we weren't subscribed, now we are
-    const subscription = doSubscribe(instance, prevDescriptor.result)
-    prevDescriptor.cleanupUpdater = () => subscription.unsubscribe()
-
-    return prevDescriptor
+  if (enterHooks[currentState.value]) {
+    enterHooks[currentState.value].forEach(callback =>
+      callback(store, {
+        action: { type: internalTypes.prime },
+        newState: currentState,
+        store,
+      })
+    )
   }
-)
+
+  return store
+}

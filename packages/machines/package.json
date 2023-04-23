@@ -1,13 +1,16 @@
 {
-  "name": "@zedux/core",
+  "name": "@zedux/machines",
   "version": "0.5.11",
-  "description": "A high-level, declarative, composable form of Redux",
-  "main": "./dist/zedux.umd.js",
+  "description": "Simple native state machine implementation for Zedux atoms",
+  "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",
   "author": "Joshua Claunch",
   "bugs": {
     "url": "https://github.com/Omnistac/zedux/issues"
+  },
+  "devDependencies": {
+    "@zedux/atoms": "^0.5.11"
   },
   "exports": {
     ".": {
@@ -15,9 +18,9 @@
       "require": "./dist/cjs/index.js",
       "default": "./dist/cjs/index.js",
       "production": {
-        "import": "./dist/zedux.es.min.js",
-        "require": "./dist/zedux.umd.min.js",
-        "default": "./dist/zedux.umd.min.js"
+        "import": "./dist/zedux-machines.es.min.js",
+        "require": "./dist/zedux-machines.umd.min.js",
+        "default": "./dist/zedux-machines.umd.min.js"
       }
     }
   },
@@ -26,27 +29,22 @@
     "src",
     "README.md"
   ],
-  "homepage": "https://omnistac.github.io/zedux/",
-  "license": "MIT",
+  "homepage": "https://omnistac.github.io/zedux/docs/packages/machines",
   "keywords": [
-    "abstraction",
-    "beautiful",
-    "boilerplate",
-    "easy",
-    "flux",
-    "functional",
+    "atom",
+    "atomic",
     "immutable",
-    "management",
-    "memoized",
-    "performant",
-    "reducer",
-    "redux",
-    "simple",
+    "machine",
     "state",
+    "store",
     "zedux"
   ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@zedux/atoms": "^0.5.11"
+  },
   "repository": {
-    "directory": "packages/core",
+    "directory": "packages/machines",
     "type": "git",
     "url": "https://github.com/Omnistac/zedux.git"
   },
@@ -54,7 +52,7 @@
     "build": "../../scripts/build.js",
     "lint": "eslint 'src/**/*.ts' && tsc --noEmit",
     "prepublishOnly": "yarn build",
-    "test": "cd ../.. && yarn test packages/core --collectCoverageFrom=packages/core/src/**/*.ts"
+    "test": "cd ../.. && yarn test packages/machines --collectCoverageFrom=packages/machines/src/**/*.ts"
   },
   "sideEffects": false,
   "type": "module"

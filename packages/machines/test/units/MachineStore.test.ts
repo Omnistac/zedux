@@ -1,4 +1,4 @@
-import { Store } from '@zedux/core/index'
+import { Store } from '@zedux/core'
 import { getDoorMachine, getToggleMachine } from '../utils'
 
 describe('MachineStore', () => {

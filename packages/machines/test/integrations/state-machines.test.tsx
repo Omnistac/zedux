@@ -1,11 +1,10 @@
 import {
-  api,
-  atom,
   injectMachineStore,
   InjectMachineStoreParams,
   MachineState,
-} from '@zedux/react'
-import { ecosystem } from '../utils/ecosystem'
+} from '@zedux/machines'
+import { api, atom } from '@zedux/react'
+import { ecosystem } from '../../../react/test/utils/ecosystem'
 
 const injectMachine = <
   States extends MachineState[],

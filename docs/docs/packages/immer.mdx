@@ -3,11 +3,25 @@ id: immer
 title: '@zedux/immer'
 ---
 
+The official [Immer](https://immerjs.github.io/immer/) bindings for Zedux. This package exports a new `ImmerStore` class and a few helpers for insantiating it.
+
+## Installation
+
+This package has a peer dependency on the [`@zedux/atoms`](https://www.npmjs.com/package/@zedux/atoms) package and on Immer itself. Ensure that `@zedux/atoms` is installed at the same version as this package:
+
 ```sh
-yarn add @zedux/immer
+npm install immer @zedux/atoms @zedux/immer # npm
+yarn add immer @zedux/atoms @zedux/immer # yarn
+pnpm add immer @zedux/atoms @zedux/immer # pnpm
 ```
 
-The official [Immer](https://immerjs.github.io/immer/) bindings for Zedux. This package exports a new `ImmerStore` class and a few helpers for insantiating it.
+The `@zedux/react` package already includes `@zedux/atoms`. To use Immer in React apps, install this package alongside `@zedux/react` instead:
+
+```sh
+npm install immer @zedux/react @zedux/immer # npm
+yarn add immer @zedux/react @zedux/immer # yarn
+pnpm add immer @zedux/react @zedux/immer # pnpm
+```
 
 ## ImmerStore
 
