@@ -6,8 +6,8 @@ import {
   DependentCallback,
   EvaluationReason,
   Selectable,
-} from '../types'
-import { Explicit, External, prefix } from '../utils'
+} from '../types/index'
+import { Explicit, External, prefix } from '../utils/index'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 

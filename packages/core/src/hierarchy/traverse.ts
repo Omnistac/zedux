@@ -1,7 +1,7 @@
 import { internalTypes } from '../api/constants'
+import { getMetaData, removeMeta } from '../api/meta'
 import { ActionChain, HierarchyConfig } from '../types'
 import { BranchNodeType, StoreNodeType } from '../utils/general'
-import { getMetaData, removeMeta } from '../api/meta'
 import { HierarchyNode, StoreNode } from '../utils/types'
 
 const getErrorMessage = (subStorePath: string[]) =>

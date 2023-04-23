@@ -1,4 +1,4 @@
-import { PromiseState } from '../types'
+import { PromiseState } from '../types/index'
 
 export const getErrorPromiseState = <T>(error: Error): PromiseState<T> => ({
   error,

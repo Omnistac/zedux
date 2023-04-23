@@ -1,5 +1,5 @@
-import { detailedTypeof } from './detailedTypeof'
 import { Action, ActionChain, ActionMeta } from '../types'
+import { detailedTypeof } from './detailedTypeof'
 
 const assertActionExists = (action: ActionChain) => {
   if (action) return

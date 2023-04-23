@@ -1,16 +1,16 @@
 import { detailedTypeof, Store } from '@zedux/core'
-import { api } from '../factories'
+import { api } from '../factories/api'
 import {
   getErrorPromiseState,
   getInitialPromiseState,
   getSuccessPromiseState,
 } from '../utils/promiseUtils'
-import { InjectorDeps, InjectStoreConfig, PromiseState } from '../types'
+import { InjectorDeps, InjectStoreConfig, PromiseState } from '../types/index'
 import { injectEffect } from './injectEffect'
 import { injectMemo } from './injectMemo'
 import { injectStore } from './injectStore'
 import { injectRef } from './injectRef'
-import { AtomApi } from '../classes'
+import { AtomApi } from '../classes/AtomApi'
 
 /**
  * Create a memoized promise reference. Kicks off the promise immediately

@@ -1,6 +1,8 @@
 import { internalTypes } from '../api/constants'
 import { Store } from '../api/createStore'
+import { detailedTypeof } from '../api/detailedTypeof'
 import { is } from '../api/is'
+import { isPlainObject } from '../api/isPlainObject'
 import {
   Action,
   ActionMeta,
@@ -20,8 +22,6 @@ import {
   HierarchyNodeType,
   RegisterSubStore,
 } from '../utils/types'
-import { detailedTypeof } from '../api/detailedTypeof'
-import { isPlainObject } from '../api/isPlainObject'
 
 /**
  * Converts a Branch hierarchy descriptor to a HierarchyNode's children

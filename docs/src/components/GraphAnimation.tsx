@@ -8,7 +8,7 @@ import {
   injectStore,
   MutableRefObject,
   useAtomInstance,
-} from '../../../packages/react/src'
+} from '@zedux/react'
 
 interface Edge {
   from: [number, number]
@@ -65,7 +65,8 @@ const graphAnimation = atom(
   'graphAnimation',
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (id: string) => {
-    const canvasRef: MutableRefObject<HTMLCanvasElement> = injectRef<HTMLCanvasElement>()
+    const canvasRef: MutableRefObject<HTMLCanvasElement> =
+      injectRef<HTMLCanvasElement>()
     const cleanupRef = injectRef<() => void>()
     const idCounterRef = injectRef(0)
     const store = injectStore<{

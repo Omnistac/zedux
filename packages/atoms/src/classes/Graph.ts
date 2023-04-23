@@ -6,8 +6,8 @@ import {
   EvaluationReason,
   EvaluationType,
   GraphEdgeSignal,
-} from '../types'
-import { Explicit, External, Static } from '../utils'
+} from '../types/index'
+import { Explicit, External, Static } from '../utils/index'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 

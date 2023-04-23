@@ -1,6 +1,6 @@
 import { Ecosystem } from '../classes/Ecosystem'
-import { getEcosystem, internalStore } from '../store'
-import { EcosystemConfig } from '../types'
+import { getEcosystem, internalStore } from '../store/index'
+import { EcosystemConfig } from '../types/index'
 
 export const createEcosystem = <
   Context extends Record<string, any> | undefined = any

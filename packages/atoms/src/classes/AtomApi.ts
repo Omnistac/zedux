@@ -1,5 +1,5 @@
 import { is, Store } from '@zedux/core'
-import { AtomInstanceTtl, AtomApiPromise } from '@zedux/atoms/types'
+import { AtomInstanceTtl, AtomApiPromise } from '@zedux/atoms/types/index'
 import { prefix } from '@zedux/atoms/utils/general'
 
 export class AtomApi<

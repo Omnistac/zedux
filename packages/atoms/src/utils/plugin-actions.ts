@@ -1,13 +1,13 @@
 import { ActionChain, actionFactory } from '@zedux/core'
 import { Ecosystem } from '../classes/Ecosystem'
+import { SelectorCache } from '../classes/Selectors'
 import {
   LifecycleStatus,
   AnyAtomInstance,
   DependentEdge,
   EvaluationReason,
   AnyAtomTemplate,
-} from '../types'
-import { SelectorCache } from '../classes/Selectors'
+} from '../types/index'
 
 export const pluginActions = {
   ecosystemWiped: actionFactory<{ ecosystem: Ecosystem }, 'ecosystemWiped'>(

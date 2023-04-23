@@ -1,4 +1,4 @@
-import { InjectorDeps } from '../types'
+import { InjectorDeps } from '../types/index'
 import { injectAtomGetters } from './injectAtomGetters'
 import { injectMemo } from './injectMemo'
 

@@ -6,8 +6,8 @@ import {
   AtomParamsType,
   GraphEdgeInfo,
   Selectable,
-} from '../types'
-import { StackItem, Static } from '../utils'
+} from '../types/index'
+import { StackItem, Static } from '../utils/index'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 import { SelectorCache } from './Selectors'

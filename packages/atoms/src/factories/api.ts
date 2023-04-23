@@ -1,6 +1,6 @@
 import { Store, StoreStateType } from '@zedux/core'
 import { AtomApi } from '../classes/AtomApi'
-import { AtomApiPromise } from '../types'
+import { AtomApiPromise } from '../types/index'
 
 /**
  * Create an AtomApi

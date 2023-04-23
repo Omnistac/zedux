@@ -1,6 +1,6 @@
 import { createStore, is, isPlainObject } from '@zedux/core'
 import React, { createContext } from 'react'
-import { internalStore } from '../store'
+import { internalStore } from '../store/index'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
@@ -18,8 +18,8 @@ import {
   ParamlessTemplate,
   PartialAtomInstance,
   Selectable,
-} from '../types'
-import { External } from '../utils'
+} from '../types/index'
+import { External } from '../utils/index'
 import { pluginActions } from '../utils/plugin-actions'
 import { EvaluationStack } from './EvaluationStack'
 import { Graph } from './Graph'

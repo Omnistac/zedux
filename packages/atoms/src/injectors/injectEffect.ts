@@ -1,6 +1,6 @@
 import { createInjector } from '../factories/createInjector'
-import { EffectCallback, InjectorDeps } from '../types'
-import { haveDepsChanged, InjectorDescriptor, prefix } from '../utils'
+import { EffectCallback, InjectorDeps } from '../types/index'
+import { haveDepsChanged, InjectorDescriptor, prefix } from '../utils/index'
 
 interface EffectInjectorDescriptor extends InjectorDescriptor<undefined> {
   deps: InjectorDeps
