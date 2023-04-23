@@ -179,10 +179,10 @@ As you can imagine, this is extremely powerful. Some ideas for how to use this:
 
 ## Default TTL
 
-By default, all atom instances live forever. This default is fine for most apps. But in some cases, a default ttl of `0` or a short timeout might make more sense. Ecosystems have a config option for this, `defaultTtl`:
+By default, all atom instances live forever. This default is fine for most apps. But in some cases, a default ttl of `0` or a short timeout might make more sense. Ecosystems have a config option for this, `atomDefaults`. This is an object that can be given a `ttl` property to set a default TTL for all atoms in the ecosystem:
 
-```tsx live ecosystemId=defaultTtl-example noProvide=true resultVar=Parent
-const ttlTestAtom = atom('ttlTest', () => {
+```tsx live ecosystemId=atomDefaults-ttl-example noProvide=true resultVar=Parent
+const ttlExampleAtom = atom('ttlExample', () => {
   injectEffect(() => {
     // use the effect cleanup function to detect when this atom instance dies
     return () => {
@@ -194,7 +194,7 @@ const ttlTestAtom = atom('ttlTest', () => {
 }) // no ttl = use the ecosystem default
 
 function Child() {
-  useAtomInstance(ttlTestAtom)
+  useAtomInstance(ttlExampleAtom)
 
   return null
 }
@@ -203,7 +203,7 @@ function Parent() {
   const [isShowing, setIsShowing] = useState(false)
 
   return (
-    <EcosystemProvider defaultTtl={0} id="defaultTtl-example">
+    <EcosystemProvider atomDefaults={{ ttl: 0 }} id="atomDefaults-ttl-example">
       <button onClick={() => setIsShowing(state => !state)}>
         {isShowing ? 'destroy' : 'create'}
       </button>
@@ -213,23 +213,23 @@ function Parent() {
 }
 ```
 
-`defaultTtl` is a number in milliseconds.
+`atomDefaults.ttl` is a number in milliseconds.
 
 ## Config Priority
 
-Ecosystems have a `defaultTtl`, atoms have a `ttl` config option, and Atom APIs have a `setTtl` function. If you set ttl in multiple places, the "most specific" will take priority. Here's a little visual:
+Ecosystems have `atomDefaults.ttl`, atoms have a `ttl` config option, and Atom APIs have a `setTtl` function. If you set ttl in multiple places, the "most specific" will take priority. Here's a little visual:
 
 ![ecosystems -> atoms -> atom instances](/img/diagrams/config-specificity.png)
 
 Ecosystem config is the most general, atom template config is more specific, and atom instance config is the most specific. Thus for TTL, the "specificity order" is (from most to least specific):
 
 ```
-api().setTtl() -> ttl -> defaultTtl
+api().setTtl() -> ttl -> atomDefaults.ttl
 ```
 
 ## Recap
 
-- Set TTL using `.setTtl()` on an Atom API returned from a state factory, `ttl` on an atom config object, or `defaultTtl` in an ecosystem's config.
+- Set TTL using `.setTtl()` on an Atom API returned from a state factory, `ttl` on an atom config object, or `atomDefaults: { ttl }` in an ecosystem's config.
 - Set an atom's flags using the `flags` property on an atom config object.
 - Configure the currently-allowed flags with the `flags` property of an ecosystem's config.
 

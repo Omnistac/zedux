@@ -3,9 +3,9 @@ id: AtomInstanceTtl
 title: AtomInstanceTtl
 ---
 
-TTL (Time To Live) can be set at the [ecosystem](../classes/Ecosystem#defaultttl), [atom template](../classes/AtomTemplate#ttl), or [atom instance](../classes/AtomApi#setttl) levels. Setting a ttl at the atom instance level is the most specific and the most flexible. You can do so using an [AtomApi](../classes/AtomApi#setttl).
+TTL (Time To Live) can be set at the [ecosystem](../classes/Ecosystem#atomdefaults), [atom template](../classes/AtomTemplate#ttl), or [atom instance](../classes/AtomApi#setttl) levels. Setting a ttl at the atom instance level is the most specific and the most flexible. You can do so using an [AtomApi](../classes/AtomApi#setttl).
 
-A ttl set on an atom instance overrides any ttl on its atom template or ecosystem. A ttl set on an atom template overrides any `defaultTtl` on the ecosystem.
+A ttl set on an atom instance overrides any ttl on its atom template or ecosystem. A ttl set on an atom template overrides any `atomDefaults.ttl` on the ecosystem.
 
 ## Definition
 
