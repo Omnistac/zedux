@@ -29,14 +29,29 @@ const tscBuild = async isCjs => {
   }
 
   // replace usages of the DEV global with `true` in the built files
-  const sedOutput = await cmd(
+  const devReplaceOutput = await cmd(
     `find dist/${isCjs ? 'cjs' : 'esm'} -type f -exec sed -i${
       platform() === 'darwin' ? " ''" : ''
     } 's/DEV/true \\/* DEV *\\//g' {} +`
   )
 
-  if (sedOutput.code) {
-    console.error(`sed failed. Output: ${sedOutput}`)
+  if (devReplaceOutput.code) {
+    console.error(`DEV replacement failed. Output: ${devReplaceOutput}`)
+    process.exit(1)
+  }
+
+  if (isCjs) return
+
+  // in esm builds, add the `.js` file extension to all imports (required by
+  // node and now webpack)
+  const addExtensions = await cmd(
+    `find dist/esm -type f -exec sed -i${
+      platform() === 'darwin' ? " ''" : ''
+    } "s|\\(from '\\..*\\)'|\\1.js'|" {} +`
+  )
+
+  if (addExtensions.code) {
+    console.error(`adding .js extensions failed. Output: ${addExtensions}`)
     process.exit(1)
   }
 }
