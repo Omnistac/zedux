@@ -1,4 +1,4 @@
-import { createStore, internalTypes } from '@zedux/core/index'
+import { createStore, zeduxTypes } from '@zedux/core/index'
 
 describe('zero-configuration', () => {
   test('setState() can set the initial state of the store', () => {
@@ -25,7 +25,7 @@ describe('zero-configuration', () => {
     expect(effectSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
-          type: internalTypes.hydrate,
+          type: zeduxTypes.hydrate,
           payload: 2,
         },
       })
@@ -42,7 +42,7 @@ describe('zero-configuration', () => {
     expect(effectSubscriber).toHaveBeenCalledWith(
       expect.objectContaining({
         action: {
-          type: internalTypes.hydrate,
+          type: zeduxTypes.hydrate,
           payload: 2,
         },
       })

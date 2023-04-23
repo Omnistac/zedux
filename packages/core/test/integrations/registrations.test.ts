@@ -1,4 +1,4 @@
-import { Action, ActionChain, createStore, internalTypes } from '@zedux/core'
+import { Action, ActionChain, createStore, zeduxTypes } from '@zedux/core'
 import { createMockReducer } from '../utils'
 
 describe('registrations', () => {
@@ -17,7 +17,7 @@ describe('registrations', () => {
       subscribers.forEach(subscriber =>
         expect(subscriber).toHaveBeenCalledWith('a', undefined, {
           payload: 'a',
-          type: internalTypes.hydrate,
+          type: zeduxTypes.hydrate,
         })
       )
     })
@@ -32,7 +32,7 @@ describe('registrations', () => {
 
       expect(observer.next).toHaveBeenCalledWith('a', undefined, {
         payload: 'a',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(observer.next).toHaveBeenCalledTimes(1)
     })
@@ -58,11 +58,11 @@ describe('registrations', () => {
       expect(subscriber1).not.toHaveBeenCalled()
       expect(subscriber2).toHaveBeenCalledWith('a', undefined, {
         payload: 'a',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(subscriber3).toHaveBeenCalledWith('a', undefined, {
         payload: 'a',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
 
       subscription2.unsubscribe()
@@ -73,15 +73,15 @@ describe('registrations', () => {
 
       expect(subscriber1).toHaveBeenCalledWith('b', 'a', {
         payload: 'b',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(subscriber2).toHaveBeenLastCalledWith('a', undefined, {
         payload: 'a',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(subscriber3).toHaveBeenLastCalledWith('b', 'a', {
         payload: 'b',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
 
       subscription3.unsubscribe()
@@ -96,20 +96,20 @@ describe('registrations', () => {
 
       expect(subscriber1).toHaveBeenLastCalledWith('c', 'b', {
         payload: 'c',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(subscriber2).toHaveBeenLastCalledWith('a', undefined, {
         payload: 'a',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(subscriber3).toHaveBeenLastCalledWith('b', 'a', {
         payload: 'b',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(subscriber4).not.toHaveBeenCalled()
       expect(subscriber5).toHaveBeenCalledWith('c', 'b', {
         payload: 'c',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
 
       subscription1.unsubscribe()
@@ -118,23 +118,23 @@ describe('registrations', () => {
 
       expect(subscriber1).toHaveBeenLastCalledWith('c', 'b', {
         payload: 'c',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(subscriber2).toHaveBeenLastCalledWith('a', undefined, {
         payload: 'a',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(subscriber3).toHaveBeenLastCalledWith('b', 'a', {
         payload: 'b',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(subscriber4).toHaveBeenCalledWith('d', 'c', {
         payload: 'd',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
       expect(subscriber5).toHaveBeenLastCalledWith('d', 'c', {
         payload: 'd',
-        type: internalTypes.hydrate,
+        type: zeduxTypes.hydrate,
       })
     })
 
@@ -328,12 +328,12 @@ describe('registrations', () => {
         type: 'c',
       }
       const delegateAction: ActionChain = {
-        metaType: internalTypes.delegate,
+        metaType: zeduxTypes.delegate,
         metaData: [],
         payload: action,
       }
       const inheritAction: ActionChain = {
-        metaType: internalTypes.inherit,
+        metaType: zeduxTypes.inherit,
         payload: action,
       }
 
@@ -386,10 +386,10 @@ describe('registrations', () => {
       expect(effectsSubscriber).toHaveBeenLastCalledWith(
         expect.objectContaining({
           action: {
-            metaType: internalTypes.delegate,
+            metaType: zeduxTypes.delegate,
             metaData: ['b', 'c', 'd'],
             payload: {
-              type: internalTypes.hydrate,
+              type: zeduxTypes.hydrate,
               payload: 'a',
             },
           },

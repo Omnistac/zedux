@@ -21,10 +21,10 @@ import {
 import { STORE_IDENTIFIER } from '../utils/general'
 import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
 import { HierarchyNode } from '../utils/types'
-import { internalTypes } from './constants'
 import { detailedTypeof } from './detailedTypeof'
 import { isPlainObject } from './isPlainObject'
 import { removeAllMeta } from './meta'
+import { zeduxTypes } from './zeduxTypes'
 
 // When an action is dispatched to a parent store and delegated to a child
 // store, the child store needs to wait until the update propagates everywhere
@@ -36,7 +36,7 @@ const defaultScheduler: Scheduler = {
   scheduleNow: (job: Job) => job.task(),
 }
 
-const primeAction = { type: internalTypes.prime }
+const primeAction = { type: zeduxTypes.prime }
 
 /**
   Creates a new Zedux store.
@@ -403,7 +403,7 @@ export class Store<State = any> {
     meta?: any
   ) {
     const newState =
-      actionType === internalTypes.hydrate
+      actionType === zeduxTypes.hydrate
         ? state
         : mergeStateTrees(
             this._state,
@@ -450,7 +450,7 @@ export class Store<State = any> {
 
     return this._dispatchHydration(
       newState,
-      deep ? internalTypes.merge : internalTypes.hydrate,
+      deep ? zeduxTypes.merge : zeduxTypes.hydrate,
       meta
     )
   }
@@ -526,7 +526,7 @@ export class Store<State = any> {
       // (the parent) can use this info to determine how to recreate this state
       // update.
       const wrappedAction = {
-        metaType: internalTypes.delegate,
+        metaType: zeduxTypes.delegate,
         metaData: childStorePath,
         payload: action,
       }
@@ -549,8 +549,8 @@ export class Store<State = any> {
     }
 
     if (
-      unwrappedAction.type === internalTypes.hydrate ||
-      unwrappedAction.type === internalTypes.merge
+      unwrappedAction.type === zeduxTypes.hydrate ||
+      unwrappedAction.type === zeduxTypes.merge
     ) {
       return this._dispatchHydration(
         unwrappedAction.payload,
@@ -573,7 +573,7 @@ export class Store<State = any> {
 
     return this._dispatchHydration(
       settable,
-      deep ? internalTypes.merge : internalTypes.hydrate,
+      deep ? zeduxTypes.merge : zeduxTypes.hydrate,
       meta
     )
   }

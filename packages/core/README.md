@@ -57,7 +57,7 @@ This package exports the following APIs, along with many TypeScript types for wo
 - [`getMetaData()`](https://omnistac.github.io/zedux/docs/api/utils/action-chain-utils#getmetadata)
 - [`removeAllMeta()`](https://omnistac.github.io/zedux/docs/api/utils/action-chain-utils#removeallmeta)
 - [`removeMeta()`](https://omnistac.github.io/zedux/docs/api/utils/action-chain-utils#removemeta)
-- [`internalTypes`](https://omnistac.github.io/zedux/docs/api/utils/internalTypes)
+- [`zeduxTypes`](https://omnistac.github.io/zedux/docs/api/utils/zeduxTypes)
 - [`is()`](https://omnistac.github.io/zedux/docs/api/utils/is)
 
 ## For Authors

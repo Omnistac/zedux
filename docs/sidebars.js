@@ -138,8 +138,8 @@ module.exports = {
         items: [
           'api/utils/action-chain-utils',
           'api/utils/internal-utils',
-          'api/utils/internalTypes',
           'api/utils/is',
+          'api/utils/zeduxTypes',
         ],
       },
       'api/glossary',
