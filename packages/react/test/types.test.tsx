@@ -36,8 +36,8 @@ const exampleAtom = atom('example', (p: string) => {
 
   const partialInstance = injectSelf()
 
-  if ('store' in partialInstance) {
-    ;(partialInstance.store as AtomInstanceType<typeof exampleAtom>).getState()
+  if ((partialInstance as AtomInstanceType<typeof exampleAtom>).store) {
+    ;(partialInstance as AtomInstanceType<typeof exampleAtom>).store.getState()
   }
 
   return api(store)
