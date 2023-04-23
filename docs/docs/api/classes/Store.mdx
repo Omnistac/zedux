@@ -141,12 +141,12 @@ store.actionStream().subscribe({
     </p>
     <p>
       Generates and effectively dispatches a special{' '}
-      <Link to="../utils/internalTypes#hydrate">hydrate</Link> pseudo-action:
+      <Link to="../utils/zeduxTypes#hydrate">hydrate</Link> pseudo-action:
     </p>
     <Ts>{`// calling:
 store.setState('myState')
 // is exactly the same as calling:
-store.dispatch({ type: internalTypes.hydrate, payload: 'myState' })`}</Ts>
+store.dispatch({ type: zeduxTypes.hydrate, payload: 'myState' })`}</Ts>
     <p>
       This is important for store composition and time travel, but you won't
       usually need to worry about it.
@@ -175,7 +175,7 @@ store.dispatch({ type: internalTypes.hydrate, payload: 'myState' })`}</Ts>
         </p>
         <p>
           Can be set to the special{' '}
-          <Link to="../utils/internalTypes#ignore">ignore</Link> meta type to
+          <Link to="../utils/zeduxTypes#ignore">ignore</Link> meta type to
           prevent the atom instance that created this store from reevaluating.
         </p>
       </Item>
@@ -197,13 +197,13 @@ store.dispatch({ type: internalTypes.hydrate, payload: 'myState' })`}</Ts>
     </p>
     <p>
       Generates and effectively dispatches a special{' '}
-      <Link to="../utils/internalTypes#merge">merge</Link> pseudo-action:
+      <Link to="../utils/zeduxTypes#merge">merge</Link> pseudo-action:
     </p>
     <Ts>{`// calling:
 store.setStateDeep({ myField: 'myVal' })
 // is exactly the same as calling:
 store.dispatch({
-  type: internalTypes.merge,
+  type: zeduxTypes.merge,
   payload: { myField: 'myVal' }
 })`}</Ts>
     <p>
@@ -224,7 +224,7 @@ store.dispatch({
         </p>
         <p>
           Can be set to the special{' '}
-          <Link to="../utils/internalTypes#ignore">ignore</Link> meta type to
+          <Link to="../utils/zeduxTypes#ignore">ignore</Link> meta type to
           prevent the atom instance that created this store from reevaluating.
         </p>
       </Item>

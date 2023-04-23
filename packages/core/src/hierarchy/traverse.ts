@@ -1,5 +1,5 @@
-import { internalTypes } from '../api/constants'
 import { getMetaData, removeMeta } from '../api/meta'
+import { zeduxTypes } from '../api/zeduxTypes'
 import { ActionChain, HierarchyConfig } from '../types'
 import { BranchNodeType, StoreNodeType } from '../utils/general'
 import { HierarchyNode, StoreNode } from '../utils/types'
@@ -46,7 +46,7 @@ export const delegate = (
   tree: HierarchyNode | undefined,
   action: ActionChain
 ) => {
-  const subStorePath = getMetaData(action, internalTypes.delegate)
+  const subStorePath = getMetaData(action, zeduxTypes.delegate)
 
   if (!subStorePath || !tree) return false
 
@@ -56,9 +56,7 @@ export const delegate = (
     throw new TypeError(DEV ? getErrorMessage(subStorePath) : prodError)
   }
 
-  ;(child as StoreNode).store.dispatch(
-    removeMeta(action, internalTypes.delegate)
-  )
+  ;(child as StoreNode).store.dispatch(removeMeta(action, zeduxTypes.delegate))
 }
 
 /**

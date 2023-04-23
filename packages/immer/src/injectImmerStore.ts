@@ -3,7 +3,7 @@ import {
   injectMemo,
   injectSelf,
   InjectStoreConfig,
-  internalTypes,
+  zeduxTypes,
   PartialAtomInstance,
   Store,
 } from '@zedux/atoms'
@@ -17,11 +17,11 @@ const doSubscribe = <State>(
 ) =>
   store.subscribe((newState, oldState, action) => {
     // Nothing to do if the state hasn't changed. Also ignore state updates
-    // during evaluation or that are caused by `internalTypes.ignore` actions
+    // during evaluation or that are caused by `zeduxTypes.ignore` actions
     if (
       newState === oldState ||
       instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
-      action?.meta === internalTypes.ignore
+      action?.meta === zeduxTypes.ignore
     ) {
       return
     }
@@ -48,7 +48,7 @@ const doSubscribe = <State>(
     )
 
     // run the scheduler synchronously after any store update
-    if (action?.meta !== internalTypes.batch) {
+    if (action?.meta !== zeduxTypes.batch) {
       instance.ecosystem._scheduler.flush()
     }
   })

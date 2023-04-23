@@ -2,7 +2,7 @@ import {
   ActionChain,
   createStore,
   Dispatchable,
-  internalTypes,
+  zeduxTypes,
   is,
   Observable,
   RecursivePartial,
@@ -497,7 +497,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     }
 
     // run the scheduler synchronously after any atom instance state update
-    if (action.meta !== internalTypes.batch) {
+    if (action.meta !== zeduxTypes.batch) {
       this.ecosystem._scheduler.flush()
     }
   }
