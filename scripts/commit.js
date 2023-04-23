@@ -57,7 +57,7 @@ const getPackages = async () => {
 
 const promptBreaking = async type => {
   // only chores, features, and fixes can have breaking changes
-  if (!['chore', 'feature', 'fix'].includes(type)) return false
+  if (!['chore', 'feat', 'fix'].includes(type)) return false
 
   const { isBreaking } = await inquirer.prompt([
     {
