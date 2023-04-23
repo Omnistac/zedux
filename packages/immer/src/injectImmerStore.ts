@@ -6,7 +6,7 @@ import {
   internalTypes,
   PartialAtomInstance,
   Store,
-} from '@zedux/react'
+} from '@zedux/atoms'
 import { createImmerStore } from './createImmerStore'
 
 const operation = 'injectImmerStore'

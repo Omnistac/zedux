@@ -9,15 +9,15 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { injectSelf } from '@zedux/react'
 ```
 
-An [unrestricted injector](../glossary#unrestricted-injector) that returns the currently-evaluating atom instance. This atom instance is **not** fully initialized on initial evaluation. We call this not-fully-initialized instance a PartialInstance.
+An [unrestricted injector](../glossary#unrestricted-injector) that returns the currently-evaluating atom instance. This atom instance is **not** fully initialized on initial evaluation. We call this not-fully-initialized instance a PartialAtomInstance.
 
-## PartialInstance
+## PartialAtomInstance
 
-On initial evaluation, `injectSelf()` returns a "PartialInstance", which is an [AtomInstance](../classes/AtomInstance) without `exports`, `promise`, or `store` properties set. Those aren't set until the initial evaluation finishes.
+On initial evaluation, `injectSelf()` returns a "PartialAtomInstance", which is an [AtomInstance](../classes/AtomInstance) without `exports`, `promise`, or `store` properties set. Those aren't set until the initial evaluation finishes.
 
-This PartialInstance does have all other AtomInstance properties and methods.
+This PartialAtomInstance does have all other AtomInstance properties and methods.
 
-When initial evaluation ends, the PartialInstance is given its `exports`, `promise`, and `store` fields via mutation. This means that when used asynchronously e.g. in callbacks or effects, the instance _will_ have those fields:
+When initial evaluation ends, the PartialAtomInstance is given its `exports`, `promise`, and `store` fields via mutation. This means that when used asynchronously e.g. in callbacks or effects, the instance _will_ have those fields:
 
 ```ts
 const exampleAtom = atom('example', () => {
@@ -71,17 +71,19 @@ const counterAtom = atom('counter', () => {
 ## Signature
 
 <Tabs>
-  {tab1(`injectSelf = () => maybePartialInstance`)}
-  {tab2(`declare const injectSelf: () => AnyAtomInstance | PartialInstance`)}
+  {tab1(`injectSelf = () => maybePartialAtomInstance`)}
+  {tab2(
+    `declare const injectSelf: () => AnyAtomInstance | PartialAtomInstance`
+  )}
 </Tabs>
 
 <Legend>
   <Item name="Returns">
     <p>
-      A "PartialInstance" on initial evaluation. This PartialInstance _is_ the
-      currently-evaluating AtomInstance but without some properties that
-      AtomInstances always have - <code>exports</code>, <code>promise</code>,
-      and <code>store</code>.
+      A "PartialAtomInstance" on initial evaluation. This PartialAtomInstance
+      _is_ the currently-evaluating AtomInstance but without some properties
+      that AtomInstances always have - <code>exports</code>,{' '}
+      <code>promise</code>, and <code>store</code>.
     </p>
     <p>
       On subsequent evaluations, <code>injectSelf()</code> returns the full{' '}

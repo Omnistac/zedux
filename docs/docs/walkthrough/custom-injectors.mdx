@@ -114,7 +114,7 @@ const exampleAtom = atom('example', () => {
 })
 ```
 
-TypeScript users will see that `injectSelf()` returns a `PartialInstance | AnyAtomInstance` type. Type casts to improve this are safe enough after a type guard like in the above example. To get full type support, type-cast the value using the `AtomInstanceType` TS helper:
+TypeScript users will see that `injectSelf()` returns a `PartialAtomInstance | AnyAtomInstance` type. Type casts to improve this are safe enough after a type guard like in the above example. To get full type support, type-cast the value using the `AtomInstanceType` TS helper:
 
 ```ts
 if ('store' in partialInstance) {
