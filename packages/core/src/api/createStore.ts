@@ -137,6 +137,10 @@ export class Store<State = any> {
     function. But it's always bound and can be passed around easily.
   */
   public dispatch = (action: Dispatchable) => {
+    if (this._isSolo()) {
+      return this._dispatch(action)
+    }
+
     this._scheduler.scheduleNow({
       task: () => this._dispatch(action),
       type: 0, // UpdateStore (0)
@@ -179,6 +183,13 @@ export class Store<State = any> {
     around easily.
   */
   public setState = (settable: Settable<State>, meta?: any) => {
+    if (this._isSolo()) {
+      return this._setState(
+        settable as Settable<RecursivePartial<State>, State>,
+        meta
+      )
+    }
+
     this._scheduler.scheduleNow({
       task: () =>
         this._setState(
@@ -219,6 +230,14 @@ export class Store<State = any> {
     settable: Settable<RecursivePartial<State>, State>,
     meta?: any
   ) {
+    if (this._isSolo()) {
+      return this._setState(
+        settable as Settable<RecursivePartial<State>, State>,
+        meta,
+        true
+      )
+    }
+
     this._scheduler.scheduleNow({
       task: () =>
         this._setState(
@@ -476,6 +495,10 @@ export class Store<State = any> {
     }
   }
 
+  private _isSolo() {
+    return !this._rootReducer && !this._parents?.length
+  }
+
   private _notify(newState: State, action: ActionChain, error?: unknown) {
     const effect: StoreEffect<State, this> = {
       action,
@@ -487,6 +510,10 @@ export class Store<State = any> {
 
     // Update the stored state
     this._state = newState
+
+    if (this._isSolo()) {
+      return this._doNotify(effect)
+    }
 
     // defer informing if a parent store is currently dispatching
     this._scheduler.scheduleNow({
