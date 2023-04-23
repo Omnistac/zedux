@@ -6,10 +6,10 @@ title: injectMachineStore
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
 ```ts
-import { injectMachineStore } from '@zedux/react'
+import { injectMachineStore } from '@zedux/machines'
 ```
 
-An [injector](../glossary#injector) that creates and configures a [MachineStore](../classes/MachineStore).
+An [injector](../../api/glossary#injector) that creates and configures a [MachineStore](MachineStore).
 
 Accepts a `statesFactory` function, optional initial context state, and an optional config object.
 
@@ -102,8 +102,8 @@ function Theme() {
       <Item name="createState">
         <p>
           A function that accepts a single string - the name of the state.
-          Returns a <Link to="../types/MachineState">MachineState</Link>. This
-          function is often abbreviated as simply <code>state</code> or even{' '}
+          Returns a <Link to="MachineState">MachineState</Link>. This function
+          is often abbreviated as simply <code>state</code> or even{' '}
           <code>s</code>:
         </p>
         <Ts>{`injectMachineStore(state => [state('a'), state('b')])
@@ -111,8 +111,8 @@ injectMachineStore(s => [s('a'), s('b')])`}</Ts>
       </Item>
       <Item name="Returns">
         <p>
-          An array of <Link to="../types/MachineState">MachineStates</Link>{' '}
-          created using the <code>createState</code> factory function.
+          An array of <Link to="MachineState">MachineStates</Link> created using
+          the <code>createState</code> factory function.
         </p>
         <p>
           The first state in this list will become the initial state of the
@@ -163,8 +163,8 @@ store.getContext() // { foo: 'bar' }`}</Ts>
       <Item name="onTransition">
         <p>
           Optional. A function that receives the MachineStore and the{' '}
-          <Link to="../types/StoreEffect">StoreEffect</Link> of the action
-          responsible for the transition.
+          <Link to="../../api/types/StoreEffect">StoreEffect</Link> of the
+          action responsible for the transition.
         </p>
         <Tabs>
           {tab1(`onTransition = (currentState, nextState) => void`)}
@@ -182,7 +182,7 @@ store.getContext() // { foo: 'bar' }`}</Ts>
   </Item>
   <Item name="Returns">
     <p>
-      A <Link to="../classes/MachineStore">MachineStore</Link>.
+      A <Link to="MachineStore">MachineStore</Link>.
     </p>
     <p>
       This store's initial <code>.value</code> will be set to the first state
@@ -202,6 +202,6 @@ store.getContext() // { foo: 'bar' }`}</Ts>
 
 ## See Also
 
-- [The State Machines walkthrough](../../walkthrough/state-machines)
-- [The `MachineStore` class](../classes/MachineStore)
-- [The `MachineState` type](../types/MachineState)
+- [The State Machines walkthrough](walkthrough)
+- [The `MachineStore` class](MachineStore)
+- [The `MachineState` type](MachineState)
