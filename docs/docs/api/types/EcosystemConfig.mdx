@@ -13,9 +13,11 @@ The config object passed to [the `createEcosystem()` factory](../factories/creat
 interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
 > {
+  atomDefaults?: {
+    ttl?: number
+  }
   complexParams?: boolean
   context?: Context
-  defaultTtl?: number
   destroyOnUnmount?: boolean
   flags?: string[]
   id?: string
@@ -46,13 +48,14 @@ All fields are optional. It is recommended to at least pass an id.
       <Link to="../classes/Ecosystem#context">context</Link> for the ecosystem.
     </p>
   </Item>
-  <Item name="defaultTtl">
+  <Item name="atomDefaults">
     <p>
-      A number. Default <code>-1</code> (meaning infinite). Will be set as the{' '}
+      An object. This object currently accepts a single optional property -{' '}
+      <code>ttl</code>. If specified, this <code>ttl</code> will be used as the{' '}
       <Link to="../classes/AtomTemplate#ttl">
         <code>ttl</code>
       </Link>{' '}
-      for all atoms that don't specify one.
+      for all atoms in the ecosystem that don't specify one.
     </p>
   </Item>
   <Item name="destroyOnUnmount">

@@ -85,6 +85,24 @@ function Swapper() {
 All properties are readonly!
 
 <Legend>
+  <Item name="atomDefaults">
+    <p>
+      An object. This is set to the <code>atomDefaults</code> value you passed
+      via{' '}
+      <Link to="../types/EcosystemConfig#atomdefaults">EcosystemConfig</Link>{' '}
+      when creating this ecosystem.
+    </p>
+    <p>
+      This object currently has a single optional property - <code>ttl</code>.
+      This will be used as the ttl for all atom instances in the ecosystem that
+      don't specify their own.
+    </p>
+    <p>
+      If not set, <code>atomDefaults.ttl</code> defaults to <code>-1</code>,
+      which means all atom instances in the ecosystem will live forever by
+      default.
+    </p>
+  </Item>
   <Item name="complexParams">
     <p>
       A boolean. May be undefined. This is set to the <code>complexParams</code>{' '}
@@ -114,18 +132,6 @@ All properties are readonly!
         the <code>onReady</code> function
       </Link>{' '}
       as part of the reset.
-    </p>
-  </Item>
-  <Item name="defaultTtl">
-    <p>
-      A number. This is set to the <code>defaultTtl</code> value you passed via{' '}
-      <Link to="../types/EcosystemConfig#defaultttl">EcosystemConfig</Link> when
-      creating this ecosystem.
-    </p>
-    <p>The default ttl to use for all atom instances in the ecosystem.</p>
-    <p>
-      If not set, defaults to <code>-1</code>, which means all atom instances
-      will live forever by default.
     </p>
   </Item>
   <Item name="destroyOnUnmount">
