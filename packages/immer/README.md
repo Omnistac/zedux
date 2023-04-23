@@ -1,6 +1,6 @@
 # `@zedux/immer`
 
-The official [Immer](https://github.com/immerjs/immer) integration for Zedux. This is an addon package, meaning it doesn't have any own dependencies or re-export any APIs from other packages. It uses peer dependencies instead, expecting you to download the packages yourself.
+The official [Immer](https://github.com/immerjs/immer) integration for Zedux. This is an addon package, meaning it doesn't have any own dependencies or re-export any APIs from other packages. It uses peer dependencies instead, expecting you to download the needed packages yourself.
 
 See [the documentation](https://omnistac.github.io/zedux/docs/packages/immer) for this package.
 

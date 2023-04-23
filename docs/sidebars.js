@@ -25,7 +25,6 @@ module.exports = {
       'walkthrough/side-effects',
       'walkthrough/custom-injectors',
       'walkthrough/resets',
-      'walkthrough/state-machines',
     ],
     Advanced: [
       'advanced/batching',
@@ -49,7 +48,6 @@ module.exports = {
           'api/classes/AtomTemplate',
           'api/classes/Ecosystem',
           'api/classes/IonTemplate',
-          'api/classes/MachineStore',
           'api/classes/SelectorCache',
           'api/classes/Selectors',
           'api/classes/Store',
@@ -101,7 +99,6 @@ module.exports = {
           'api/injectors/injectCallback',
           'api/injectors/injectEffect',
           'api/injectors/injectInvalidate',
-          'api/injectors/injectMachineStore',
           'api/injectors/injectMemo',
           'api/injectors/injectPromise',
           'api/injectors/injectRef',
@@ -126,7 +123,6 @@ module.exports = {
           'api/types/EcosystemConfig',
           'api/types/EvaluationReason',
           'api/types/HierarchyDescriptor',
-          'api/types/MachineState',
           'api/types/PromiseState',
           'api/types/Reducer',
           'api/types/ReducerBuilder',
@@ -148,6 +144,19 @@ module.exports = {
       },
       'api/glossary',
     ],
-    Packages: ['packages/immer'],
+    Packages: [
+      'packages/immer',
+      {
+        type: 'category',
+        label: '@zedux/machines',
+        items: [
+          'packages/machines/overview',
+          'packages/machines/walkthrough',
+          'packages/machines/MachineStore',
+          'packages/machines/injectMachineStore',
+          'packages/machines/MachineState',
+        ],
+      },
+    ],
   },
 }

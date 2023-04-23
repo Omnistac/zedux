@@ -1,11 +1,11 @@
 ---
-id: state-machines
-title: State Machines
+id: walkthrough
+title: Walkthrough
 ---
 
 The state machine is one of the most important tools a statesmith can have in his belt. [XState](https://xstate.js.org/) is the current king of the JavaScript state machine world. Zedux is not out to change that, in fact we may build an official XState Zedux integration soon.
 
-However, Zedux does provide a minimal state machine implementation out of the box. These state machines use a high-level, TypeScript-first design that's meant to handle simple cases extremely well. For more power, use XState.
+However, Zedux does provide a minimal state machine implementation via the [`@zedux/machines`](https://www.npmjs.com/package/@zedux/atoms) package. These state machines use a high-level, TypeScript-first design that's meant to handle simple cases extremely well. For more power, use XState.
 
 :::tip you will learn:
 How to create simple TS-first state machines and add transition guards and listeners.
@@ -13,12 +13,13 @@ How to create simple TS-first state machines and add transition guards and liste
 
 ## Creating a machine
 
-Zedux provides a single high-level injector for creating automatically-typed state machines: `injectMachineStore()`.
+The `@zedux/machines` package provides a single high-level injector for creating automatically-typed state machines: [`injectMachineStore()`](injectMachineStore).
 
 Pass a function to `injectMachineStore()` that accepts a single `state` factory function and returns an array of states. The first state in the array becomes the initial state.
 
 ```ts
-import { atom, injectMachineStore } from '@zedux/react'
+import { injectMachineStore } from '@zedux/machines'
+import { atom } from '@zedux/react'
 
 const trafficLightAtom = atom('trafficLight', () => {
   const store = injectMachineStore(state => [
@@ -47,10 +48,11 @@ Now ... how do you send that event to the machine?
 
 ## MachineStore
 
-`injectMachineStore()` returns a special store called a MachineStore. MachineStore extends the Zedux Store class and adds some state machine functionality.
+`injectMachineStore()` returns a special store called a [MachineStore](MachineStore). MachineStore extends the Zedux Store class and adds some state machine functionality.
 
 ```ts
-import { injectMachineStore, MachineStore } from '@zedux/react'
+import { injectMachineStore, MachineStore } from '@zedux/machines'
+import { atom } from '@zedux/react'
 
 const exampleAtom = atom('example', () => {
   const store = injectMachineStore(() => [])
@@ -443,9 +445,8 @@ const maybeMovingAtom = atom('maybeMoving', () => {
 })
 
 function Controls() {
-  const [{ context }, { toggleFreeze, is, move }] = useAtomState(
-    maybeMovingAtom
-  )
+  const [{ context }, { toggleFreeze, is, move }] =
+    useAtomState(maybeMovingAtom)
 
   return (
     <div>
@@ -546,4 +547,8 @@ function Cycler() {
 
 ## Next Steps
 
-That's about it for the key features of Zedux. You're ready to jump in and get building! Check out the [advanced guides](../advanced/complex-params) and [API docs](../api/api-overview) as needed. Happy coding!
+Check out the API docs for:
+
+- [`injectMachineStore()`](injectMachineStore)
+- [The `MachineStore` class](MachineStore)
+- [The `MachineState` type](MachineState)

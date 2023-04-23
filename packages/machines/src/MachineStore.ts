@@ -1,9 +1,9 @@
-import { MachineStateShape, RecursivePartial, Settable } from '../types'
-import { Store } from './createStore'
+import { RecursivePartial, Settable, Store } from '@zedux/atoms'
+import { MachineStateShape } from './types'
 
 /**
  * An extremely low-level Store class that represents a state machine. Don't
- * create this class yourself, use a helper such as @zedux/react's
+ * create this class yourself, use a helper such as @zedux/machine's
  * `injectMachineStore()`
  */
 export class MachineStore<

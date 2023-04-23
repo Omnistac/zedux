@@ -5,7 +5,7 @@ title: MachineState
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-The object returned from [`injectMachineStore()`](../injectors/injectMachineStore)'s `createState` factory. The MachineState's API is used to define the state machine's transitions, listeners, and guards.
+The object returned from [`injectMachineStore()`](injectMachineStore)'s `createState` factory. The MachineState's API is used to define the state machine's transitions, listeners, and guards.
 
 ## Creation
 
@@ -59,7 +59,7 @@ interface MachineState<
         <p>
           Required. A string. Represents an event name that will be sent to the
           machine store via{' '}
-          <Link to="../classes/MachineStore#send">
+          <Link to="MachineStore#send">
             <code>machineStore.send(eventName)</code>
           </Link>
           .
@@ -75,7 +75,7 @@ interface MachineState<
         <p>
           Optional. A function that's called every time the machine is about to
           take this transition. Receives the machine store's current{' '}
-          <Link to="../classes/MachineStore#context">
+          <Link to="MachineStore#context">
             <code>.context</code>
           </Link>{' '}
           value and must return <code>true</code> to allow the transition.
@@ -96,8 +96,8 @@ interface MachineState<
     <Ts>{`(store, storeEffect) => void`}</Ts>
     <p>
       It receives a reference to the machine store and the{' '}
-      <Link to="StoreEffect">StoreEffect</Link> object that triggered the state
-      change.
+      <Link to="../../api/types/StoreEffect">StoreEffect</Link> object that
+      triggered the state change.
     </p>
   </Item>
   <Item name="onLeave">
@@ -110,8 +110,8 @@ interface MachineState<
     <Ts>{`(store, storeEffect) => void`}</Ts>
     <p>
       It receives a reference to the machine store and the{' '}
-      <Link to="StoreEffect">StoreEffect</Link> object that triggered the state
-      change.
+      <Link to="../../api/types/StoreEffect">StoreEffect</Link> object that
+      triggered the state change.
     </p>
   </Item>
   <Item name="stateName">
@@ -129,6 +129,6 @@ interface MachineState<
 
 ## See Also
 
-- [The State Machines walkthrough](../../walkthrough/state-machines)
-- [`injectMachineStore()`](../injectors/injectMachineStore)
-- [The `MachineStore` class](../classes/MachineStore)
+- [The State Machines walkthrough](walkthrough)
+- [`injectMachineStore()`](injectMachineStore)
+- [The `MachineStore` class](MachineStore)
