@@ -14,6 +14,7 @@ import {
   injectMemo,
   injectPromise,
   injectRef,
+  injectSelf,
   injectStore,
   injectWhy,
 } from '@zedux/react'
@@ -34,6 +35,7 @@ describe('injectors', () => {
       injectMemo,
       injectPromise,
       injectRef,
+      injectSelf,
       injectStore,
       injectWhy,
     ].forEach(injector => {

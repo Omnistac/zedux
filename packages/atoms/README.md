@@ -64,7 +64,6 @@ On top of this, `@zedux/atoms` exports the following APIs and many helper types 
 - [`api()`](https://omnistac.github.io/zedux/docs/api/factories/api)
 - [`atom()`](https://omnistac.github.io/zedux/docs/api/factories/atom)
 - [`createEcosystem()`](https://omnistac.github.io/zedux/docs/api/factories/createEcosystem)
-- [`createInjector()`](https://omnistac.github.io/zedux/docs/api/factories/createInjector)
 - [`ion()`](https://omnistac.github.io/zedux/docs/api/factories/ion)
 
 ### Injectors
@@ -81,6 +80,7 @@ On top of this, `@zedux/atoms` exports the following APIs and many helper types 
 - [`injectMemo()`](https://omnistac.github.io/zedux/docs/api/injectors/injectMemo)
 - [`injectPromise()`](https://omnistac.github.io/zedux/docs/api/injectors/injectPromise)
 - [`injectRef()`](https://omnistac.github.io/zedux/docs/api/injectors/injectRef)
+- [`injectSelf()`](https://omnistac.github.io/zedux/docs/api/injectors/injectSelf)
 - [`injectStore()`](https://omnistac.github.io/zedux/docs/api/injectors/injectStore)
 - [`injectWhy()`](https://omnistac.github.io/zedux/docs/api/injectors/injectWhy)
 

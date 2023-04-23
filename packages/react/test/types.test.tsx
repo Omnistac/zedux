@@ -23,6 +23,7 @@ import {
   injectCallback,
   injectMemo,
   injectPromise,
+  injectSelf,
   injectStore,
   ion,
   ParamlessTemplate,
@@ -32,6 +33,12 @@ import { expectTypeOf } from 'expect-type'
 
 const exampleAtom = atom('example', (p: string) => {
   const store = injectStore(p)
+
+  const partialInstance = injectSelf()
+
+  if ((partialInstance as AtomInstanceType<typeof exampleAtom>).store) {
+    ;(partialInstance as AtomInstanceType<typeof exampleAtom>).store.getState()
+  }
 
   return api(store)
     .setExports({

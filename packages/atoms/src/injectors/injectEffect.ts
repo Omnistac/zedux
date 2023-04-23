@@ -1,4 +1,4 @@
-import { createInjector } from '../factories'
+import { createInjector } from '../factories/createInjector'
 import { EffectCallback, InjectorDeps } from '../types'
 import { haveDepsChanged, InjectorDescriptor, prefix } from '../utils'
 

@@ -1,5 +1,5 @@
 import { createStore, internalTypes, Store } from '@zedux/core'
-import { createInjector } from '../factories'
+import { createInjector } from '../factories/createInjector'
 import { InjectStoreConfig, PartialAtomInstance } from '../types'
 import { InjectorDescriptor, prefix } from '../utils'
 
