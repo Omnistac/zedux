@@ -23,25 +23,45 @@ export const api: {
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
-  ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>
+    value: AtomApi<{
+      Exports: Exports
+      Promise: PromiseType
+      State: StoreStateType<StoreType>
+      Store: StoreType
+    }>
+  ): AtomApi<{
+    Exports: Exports
+    Promise: PromiseType
+    State: StoreStateType<StoreType>
+    Store: StoreType
+  }>
 
   // Custom Stores (normal)
-  <StoreType extends Store<any> = Store<any>>(value: StoreType): AtomApi<
-    StoreStateType<StoreType>,
-    Record<string, never>,
-    StoreType,
-    undefined
-  >
+  <StoreType extends Store<any> = Store<any>>(value: StoreType): AtomApi<{
+    Exports: Record<string, never>
+    Promise: undefined
+    State: StoreStateType<StoreType>
+    Store: StoreType
+  }>
 
   // No Value
-  (): AtomApi<undefined, Record<string, never>, undefined, undefined>
+  (): AtomApi<{
+    Exports: Record<string, never>
+    Promise: undefined
+    State: undefined
+    Store: undefined
+  }>
 
   <
     State = undefined,
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
-  >(): AtomApi<State, Exports, undefined, PromiseType>
+  >(): AtomApi<{
+    Exports: Exports
+    Promise: PromiseType
+    State: State
+    Store: undefined
+  }>
 
   // No Store (AtomApi cloning)
   <
@@ -49,16 +69,26 @@ export const api: {
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: AtomApi<State, Exports, undefined, PromiseType>
-  ): AtomApi<State, Exports, undefined, PromiseType>
+    value: AtomApi<{
+      Exports: Exports
+      Promise: PromiseType
+      State: State
+      Store: undefined
+    }>
+  ): AtomApi<{
+    Exports: Exports
+    Promise: PromiseType
+    State: State
+    Store: undefined
+  }>
 
   // No Store (normal)
-  <State = undefined>(value: State): AtomApi<
-    State,
-    Record<string, never>,
-    undefined,
-    undefined
-  >
+  <State = undefined>(value: State): AtomApi<{
+    Exports: Record<string, never>
+    Promise: undefined
+    State: State
+    Store: undefined
+  }>
 
   // Catch-all
   <
@@ -67,16 +97,45 @@ export const api: {
     StoreType extends Store<State> = Store<State>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: State | StoreType | AtomApi<State, Exports, StoreType, PromiseType>
-  ): AtomApi<State, Exports, StoreType, PromiseType>
+    value:
+      | State
+      | StoreType
+      | AtomApi<{
+          Exports: Exports
+          Promise: PromiseType
+          State: State
+          Store: StoreType
+        }>
+  ): AtomApi<{
+    Exports: Exports
+    Promise: PromiseType
+    State: State
+    Store: StoreType
+  }>
 } = <
   State = undefined,
   Exports extends Record<string, any> = Record<string, never>,
   StoreType extends Store<State> | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(
-  value?: AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
+  value?:
+    | AtomApi<{
+        Exports: Exports
+        Promise: PromiseType
+        State: State
+        Store: StoreType
+      }>
+    | StoreType
+    | State
 ) =>
   new AtomApi(
-    value as AtomApi<State, Exports, StoreType, PromiseType> | StoreType | State
+    value as
+      | AtomApi<{
+          Exports: Exports
+          Promise: PromiseType
+          State: State
+          Store: StoreType
+        }>
+      | StoreType
+      | State
   )

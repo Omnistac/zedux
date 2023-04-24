@@ -48,42 +48,67 @@ return api(val, false).setExports(myManuallyBatchedExports)
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>,
-    wrap?: boolean
-  ): AtomApi<StoreStateType<StoreType>, Exports, StoreType, PromiseType>\n
+    value: AtomApi<{
+      Exports: Exports
+      Promise: PromiseType
+      State: StoreStateType<StoreType>
+      Store: StoreType
+    }>
+  ): AtomApi<{
+    Exports: Exports
+    Promise: PromiseType
+    State: StoreStateType<StoreType>
+    Store: StoreType
+  }>\n
   // Custom Stores (normal)
-  <StoreType extends Store<any> = Store<any>>(
-    value: StoreType,
-    wrap?: boolean
-  ): AtomApi<
-    StoreStateType<StoreType>,
-    Record<string, never>,
-    StoreType,
-    undefined
-  >\n
+  <StoreType extends Store<any> = Store<any>>(value: StoreType): AtomApi<{
+    Exports: Record<string, never>
+    Promise: undefined
+    State: StoreStateType<StoreType>
+    Store: StoreType
+  }>\n
   // No Value
-  (): AtomApi<undefined, Record<string, never>, undefined, undefined>\n
+  (): AtomApi<{
+    Exports: Record<string, never>
+    Promise: undefined
+    State: undefined
+    Store: undefined
+  }>\n
   <
     State = undefined,
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
-  >(): AtomApi<State, Exports, undefined, PromiseType>\n
+  >(): AtomApi<{
+    Exports: Exports
+    Promise: PromiseType
+    State: State
+    Store: undefined
+  }>\n
   // No Store (AtomApi cloning)
   <
     State = undefined,
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: AtomApi<State, Exports, undefined, PromiseType>,
-    wrap?: boolean
-  ): AtomApi<State, Exports, undefined, PromiseType>\n
+    value: AtomApi<{
+      Exports: Exports
+      Promise: PromiseType
+      State: State
+      Store: undefined
+    }>
+  ): AtomApi<{
+    Exports: Exports
+    Promise: PromiseType
+    State: State
+    Store: undefined
+  }>\n
   // No Store (normal)
-  <State = undefined>(value: State, wrap?: boolean): AtomApi<
-    State,
-    Record<string, never>,
-    undefined,
-    undefined
-  >\n
+  <State = undefined>(value: State): AtomApi<{
+    Exports: Record<string, never>
+    Promise: undefined
+    State: State
+    Store: undefined
+  }>\n
   // Catch-all
   <
     State = undefined,
@@ -91,9 +116,21 @@ return api(val, false).setExports(myManuallyBatchedExports)
     StoreType extends Store<State> = Store<State>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: State | StoreType | AtomApi<State, Exports, StoreType, PromiseType>,
-    wrap?: boolean
-  ): AtomApi<State, Exports, StoreType, PromiseType>
+    value:
+      | State
+      | StoreType
+      | AtomApi<{
+          Exports: Exports
+          Promise: PromiseType
+          State: State
+          Store: StoreType
+        }>
+  ): AtomApi<{
+    Exports: Exports
+    Promise: PromiseType
+    State: State
+    Store: StoreType
+  }>
 }`)}
 </Tabs>
 

@@ -16,9 +16,12 @@ export const atom: {
     Exports extends Record<string, any> = Record<string, never>
   >(
     key: string,
-    value: (
-      ...params: Params
-    ) => AtomApi<Promise<State>, Exports, undefined, any>,
+    value: (...params: Params) => AtomApi<{
+      Exports: Exports
+      Promise: any
+      State: Promise<State>
+      Store: undefined
+    }>,
     config?: AtomConfig<State>
   ): AtomTemplate<{
     State: PromiseState<State>
@@ -36,11 +39,14 @@ export const atom: {
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    value: (
-      ...params: Params
-    ) =>
+    value: (...params: Params) =>
       | StoreType
-      | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
+      | AtomApi<{
+          Exports: Exports
+          Promise: PromiseType
+          State: StoreStateType<Store>
+          Store: StoreType
+        }>,
     config?: AtomConfig<StoreStateType<StoreType>>
   ): AtomTemplate<{
     State: StoreStateType<StoreType>
