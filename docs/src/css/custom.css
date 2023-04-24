@@ -117,6 +117,10 @@ pre {
   background: initial;
 }
 
+.EnhancedSearch__SearchModal__InnerBody .EnhancedSearch__SearchModal__ResultAnswerCode {
+  display: inline;
+}
+
 .main-wrapper {
   display: flex;
   flex-flow: column nowrap;

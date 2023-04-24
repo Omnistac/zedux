@@ -62,6 +62,11 @@ module.exports = {
           position: 'left',
         },
         {
+          to: 'blog',
+          label: 'Blog',
+          position: 'left',
+        },
+        {
           href: 'https://github.com/Omnistac/zedux',
           label: 'GitHub',
           position: 'right',

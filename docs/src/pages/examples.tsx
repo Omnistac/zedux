@@ -35,7 +35,6 @@ const Heading = styled.h3`
       transparent 25px
     ),
     linear-gradient(-45deg, var(--color-primary) 25px, transparent 25px);
-  background-color: #fff;
   border-bottom: 1px solid #e9e9e9;
   font-size: 1.6em;
   font-weight: normal;
@@ -88,6 +87,7 @@ const Wrapper = styled.div`
 const examples = {
   'zedux-counters-example-b5upgd': 'Counters',
   'zedux-todomvc-yfr2k6': 'TodoMVC',
+  'zedux-queries-example-x713si': 'Simple Queries',
 }
 
 export default function Examples() {
