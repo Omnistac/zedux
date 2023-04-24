@@ -126,8 +126,14 @@ pre {
   flex-flow: column nowrap;
 }
 
-.margin-vert--lg > .row {
+.container.margin-vert--lg > .row {
   gap: 0;
+}
+
+@media (min-width: 1440px) {
+  .container.margin-vert--lg > .row {
+    gap: 0;
+  }
 }
 
 .markdown {
