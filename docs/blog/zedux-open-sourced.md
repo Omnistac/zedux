@@ -4,7 +4,7 @@ image: /img/zedux-and-react.png
 tags: [history, introductory]
 ---
 
-Zedux: A Molecular State Engine for React is officially open-sourced. Version 1.0.0 released today!
+Zedux: A Molecular State Engine for React is officially open-sourced and version 1.0.0 has been released!
 
 Check it out on GitHub [here](https://github.com/Omnistac/zedux). Check out the docs [here](https://omnistac.github.io/zedux/). Check out the introduction [here](https://omnistac.github.io/zedux/docs/about/introduction). Check out the quick start [here](https://omnistac.github.io/zedux/docs/walkthrough/quick-start).
 
