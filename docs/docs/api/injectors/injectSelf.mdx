@@ -46,10 +46,10 @@ const exampleAtom = atom('example', (param1: string, param2: number) => {
   return id
 })
 
-function ExampleComponent() {
+function Id() {
   const value = useAtomValue(exampleAtom, ['a', 1])
 
-  return <div>{value}</div>
+  return <pre>{value}</pre>
 }
 ```
 
