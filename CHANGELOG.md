@@ -1,3 +1,19 @@
+## v1.0.0-rc.0 (Apr 24, 2023)
+
+### New Features:
+
+- **Breaking Change** `atoms`: `defaultTtl` -> `atomDefaults.ttl` (#38)
+- **Breaking Change** `atoms`: implement AtomApiGenerics type map and all its helpers (#40)
+- **Breaking Change** `react`: AtomInstanceProvider -> AtomProvider (#32)
+- **Breaking Change** `react`: make `instance.invalidate()` a normal method (#29)
+- **Breaking Change** `react`: move auto-batching from `api()` to `injectCallback()` (#31)
+- **Breaking Change** `react`: reuse names that can be shared between instances & selectors (#30)
+- **Breaking Change** `react`: useAtomConsumer -> useAtomContext (#33)
+- **Breaking Change** `atoms`, `immer`: don't export `createInjector` - replace with `injectSelf` (#35)
+- **Breaking Change** `atoms`, `core`, `machines`: break out state machines into their own `@zedux/machines` package (#36)
+- **Breaking Change** `atoms`, `core`, `immer`, `machines`, `react`: internalTypes -> zeduxTypes (#37)
+- `atoms`, `react`: break the atomic model into its own @zedux/atoms package (#34)
+
 ## v0.5.11 (Apr 20, 2023)
 
 ### New Features:
