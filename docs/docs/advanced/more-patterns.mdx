@@ -78,7 +78,9 @@ A common pattern is creating a helper function to create pre-configured atoms:
 ```ts
 const mapAtom = <State extends Map<any, any>, Params extends any[]>(
   key: string,
-  stateFactory: (...params: Params) => State | Store<State> | AtomApi<State>,
+  stateFactory: (
+    ...params: Params
+  ) => State | Store<State> | AnyAtomApi<{ State: State }>,
   config?: AtomConfig<State>
 ) => {
   return atom(key, stateFactory, {

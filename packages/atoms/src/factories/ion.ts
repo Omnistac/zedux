@@ -20,7 +20,12 @@ export const ion: {
     value: (
       getters: AtomGetters,
       ...params: Params
-    ) => AtomApi<Promise<State>, Exports, undefined, any>,
+    ) => AtomApi<{
+      Exports: Exports
+      Promise: any
+      State: Promise<State>
+      Store: undefined
+    }>,
     config?: AtomConfig<State>
   ): IonTemplate<{
     State: PromiseState<State>
@@ -43,7 +48,12 @@ export const ion: {
       ...params: Params
     ) =>
       | StoreType
-      | AtomApi<StoreStateType<Store>, Exports, StoreType, PromiseType>,
+      | AtomApi<{
+          Exports: Exports
+          Promise: PromiseType
+          State: StoreStateType<Store>
+          Store: StoreType
+        }>,
     config?: AtomConfig<StoreStateType<StoreType>>
   ): IonTemplate<{
     State: StoreStateType<StoreType>
@@ -64,7 +74,14 @@ export const ion: {
     get: (
       getters: AtomGetters,
       ...params: Params
-    ) => AtomApi<State, Exports, undefined, PromiseType> | State,
+    ) =>
+      | AtomApi<{
+          Exports: Exports
+          Promise: PromiseType
+          State: State
+          Store: undefined
+        }>
+      | State,
     config?: AtomConfig<State>
   ): IonTemplate<{
     State: State
