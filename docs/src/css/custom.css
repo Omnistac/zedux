@@ -126,6 +126,10 @@ pre {
   flex-flow: column nowrap;
 }
 
+.margin-vert--lg > .row {
+  gap: 0;
+}
+
 .markdown {
   container-type: inline-size;
   line-height: 1.8;
@@ -221,6 +225,12 @@ button.copyButton_node_modules-\@docusaurus-theme-classic-src-theme-CodeBlock- {
   display: block;
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
+}
+
+@media (max-width: 996px) {
+  .navbar__items > .searchBox_node_modules-\@docusaurus-theme-classic-lib-theme-Navbar-Search-styles-module {
+    position: initial;
+  }
 }
 
 .ssc-hide {

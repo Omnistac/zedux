@@ -6,6 +6,8 @@ tags: [introductory]
 
 Zedux is a molecular state engine for React. After years spent as proprietary software hidden in a private GitHub repo, it's officially open-sourced and version 1.0.0 has been released!
 
+<!-- truncate -->
+
 Here's a simple hello world example to start off:
 
 ```tsx
@@ -67,7 +69,9 @@ const getSortedOranges = ({ select }: AtomGetters) =>
   select(getRipeOranges).sort()
 ```
 
-If the tree and derived data get intensive, there's no way to make a selector in the middle of the tree debounce/throttle/buffer updates. In Zedux, you can turn any selector anywhere in the tree into an atom:
+If the tree and derived data get intensive, there's no way to make a selector in the middle of the tree debounce/throttle/buffer updates with Reselect. There are workarounds (we used several) at the cost of more indirection.
+
+In Zedux, you can turn any selector anywhere in the tree into an atom:
 
 ```ts
 // before:
@@ -179,7 +183,7 @@ instance.store.subscribe(newState => console.log('state changed:', newState))
 instance.setState(100)
 ```
 
-Zedux atoms can be given a TTL (Time To Live), which is patterned after React Query's `cacheTime`. This applies to all atoms, not just query atoms, meaning you have this powerful cache management for your UI state too.
+Zedux atoms can be given a [TTL](https://omnistac.github.io/zedux/docs/walkthrough/destruction#instance-destruction) (Time To Live), which is patterned after React Query's `cacheTime`. This applies to all atoms, not just query atoms, meaning you have this powerful cache management for your UI state too.
 
 Zedux atoms can also be given params. These actually work _exactly_ like query params in React Query. Different sets of params create different atom instances of an atom template. Reusing the same params (according to a [deterministic hash](https://tanstack.com/query/latest/docs/react/guides/query-keys#query-keys-are-hashed-deterministically)) tells Zedux to reuse a cached atom instance.
 
@@ -213,7 +217,7 @@ Zedux atoms excel at managing both UI data (like Zustand and Redux) and server d
 
 To sum up all these comparisons (and more that I could make but will spare you the melodrama), Zedux is the result of 5+ years of studying the React state management ecosystem. We borrowed (yes, _borrowed_) ideas from dozens of tools and put them all together into one powerhouse of a state management library.
 
-You can think of Zedux atoms as a cross between Recoil's `atom`, `atomFamily`, `selector`, and `selectorFamily`, a simplified version of React Query's queries and mutations, with every capability of Redux and Jotai in there too and then some.
+You can think of Zedux atoms as a cross between Recoil's `atom`, `atomFamily`, `selector`, and `selectorFamily`, a simplistic version of React Query's queries and mutations, with every capability of Redux and Jotai in there too and then some.
 
 Zedux is brand new to the open-source scene. No community plugins exist for it yet, but the potential is sky high. We crafted a uniquely powerful foundation with [standardized state primitives](http://localhost:3000/zedux/docs/about/introduction#standardized-primitives) and [plugin](http://localhost:3000/zedux/docs/advanced/plugins) support that make it capable of everything any other tool can do and then some. While it's a top contender out of the box, its full potential has not even been realized in all aspects yet.
 
@@ -239,7 +243,7 @@ On top of this, we accounted for many things with Zedux from the very beginning:
 
 - Conducive to micro frontend architectures (really, if your app uses code splitting, you may find Zedux is a joy to work with).
 
-- Catalyst for React context.
+- Able to take advantage of React context to control state in different component branches.
 
 - Testable. You can use Zedux completely outside React.
 
@@ -261,6 +265,6 @@ If you're a React dev, you're no stranger to the morass of state management tool
 
 Well, I'd almost like to believe that if a truly amazing tool came along, we would set aside our differences and rejoice that our lives just got a little easier. But such a belief would discredit our differences. Our differences give us a lot to teach each other. Critiquing is great - it stimulates progress. If I could ask one favor though: Be kind (not to me! You can tear me to pieces. Just pretty please don't go rip into Redux after reading this 🙏).
 
-So is Zedux the one we've all been waiting for? Well, sadly, there is no silver bullet. But if you've read this far, there is a decent chance that it's the one _you've_ been waiting for.
+So is Zedux the one we've all been waiting for? Well, sadly, there is no silver bullet. But if you've read this far, there is a decent chance that it's the state manager _you've_ been waiting for.
 
 Either way, that's the wrong question. The next generation of React state management tooling is here. The real question is: What are you going to build with it?
