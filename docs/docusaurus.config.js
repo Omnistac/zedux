@@ -12,7 +12,10 @@ const PathsPlugin = (context, options) => {
         devtool: 'eval-source-map',
         resolve: {
           alias: {
+            '@zedux/atoms': resolve('../packages/atoms/src'),
             '@zedux/core': resolve('../packages/core/src'),
+            '@zedux/immer': resolve('../packages/immer/src'),
+            '@zedux/machines': resolve('../packages/machines/src'),
             '@zedux/react': resolve('../packages/react/src'),
             react: resolve('node_modules/react'),
             'react-dom': resolve('node_modules/react-dom'),
