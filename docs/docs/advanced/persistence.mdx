@@ -43,7 +43,7 @@ const localStorageAtom = atom('localStorage', (key: string) => {
 // this atom's state now persists across page reloads:
 const usernameAtom = atom('username', () => {
   const [storedName, { update }] = injectAtomState(localStorageAtom, [
-    'username1', // <- the localStorage key
+    'username', // <- the localStorage key
   ])
 
   return api(storedName || '').setExports({ update })
@@ -55,7 +55,7 @@ function Username() {
   return (
     <div>
       <input onChange={event => update(event.target.value)} value={state} />
-      <button onClick={() => location.reload()}>Refresh page</button>
+      <button onClick={() => sandbox.reload()}>Refresh sandbox</button>
     </div>
   )
 }
@@ -83,7 +83,7 @@ const injectLocalStorage = (key: string, defaultVal: any) => {
 
 // this atom's state now persists across page reloads:
 const usernameAtom = atom('username', () => {
-  const [store, update] = injectLocalStorage('username2', '')
+  const [store, update] = injectLocalStorage('username', '')
 
   return api(store).setExports({ update })
 })
@@ -94,7 +94,7 @@ function Username() {
   return (
     <div>
       <input onChange={event => update(event.target.value)} value={state} />
-      <button onClick={() => location.reload()}>Refresh page</button>
+      <button onClick={() => sandbox.reload()}>Refresh sandbox</button>
     </div>
   )
 }

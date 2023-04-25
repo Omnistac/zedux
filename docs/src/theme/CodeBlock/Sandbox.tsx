@@ -117,8 +117,15 @@ const evalCode = (
   code: string,
   resultVarName: string,
   ecosystemIdRef?: MutableRefObject<string>,
-  extraScope?: Record<string, any>
+  extraSandboxScope?: Record<string, any>,
+  localStorage?: typeof window.localStorage,
+  reload?: () => void
 ) => {
+  const extraScope = {
+    ...extraSandboxScope,
+    localStorage,
+    sandbox: { reload },
+  }
   const resultStr = `var ${resultVarName}; ${code}; var _$_$res = typeof ${resultVarName} === 'function' ? React.createElement(${resultVarName}) : typeof ${resultVarName} === 'string' ? ${resultVarName} : React.createElement('pre', null, JSON.stringify(${resultVarName}, null, 2));`
   const wrapped = `${resultStr} return _$_$res`
 
@@ -206,6 +213,24 @@ export const Sandbox = ({
   noProvide?: string
   resultVar?: string
 }) => {
+  const localStorage = useMemo(() => {
+    const localStorageObj = {}
+    return {
+      clear: () =>
+        Object.keys(localStorageObj).forEach(key => {
+          delete localStorageObj[key]
+        }),
+      getItem: (key: string) => localStorageObj[key],
+      get length() {
+        return Object.keys(localStorageObj).length
+      },
+      key: (index: number) => Object.keys(localStorageObj)[index],
+      removeItem: (key: string) => {
+        delete localStorageObj[key]
+      },
+      setItem: (key: string, val: any) => (localStorageObj[key] = val),
+    }
+  }, [])
   const { baseUrl } = useDocusaurusContext().siteConfig
   const editor = useMemo(() => withHistory(withReact(createEditor())), [])
   const initialValue = useMemo(() => parse(children), [])
@@ -215,9 +240,22 @@ export const Sandbox = ({
   const ecosystemIdRef = useRef(ecosystemId)
   const lastLoggedErrorTimeRef = useRef<number | undefined>()
   const isMountedRef = useRef(true)
+  const isResettingRef = useRef(false)
+
+  const reset = (rawVal: Descendant[], text = 'resetting') => {
+    isResettingRef.current = true
+    setResult(`... ${text} ...`)
+
+    setTimeout(() => {
+      isResettingRef.current = false
+      runCode(rawVal)
+    }, 400)
+  }
 
   const runCode = useCallback(
     (rawVal: Descendant[]) => {
+      if (isResettingRef.current) return
+
       const val = serialize(rawVal)
 
       try {
@@ -238,7 +276,9 @@ export const Sandbox = ({
           jsCode,
           resultVar,
           ecosystemIdRef,
-          typeof extraScope === 'string' ? undefined : extraScope
+          typeof extraScope === 'string' ? undefined : extraScope,
+          localStorage,
+          () => reset(rawVal, 'refreshing sandbox')
         )
 
         lastLoggedErrorTimeRef.current = undefined
@@ -285,9 +325,10 @@ export const Sandbox = ({
             <LogActions ecosystemIdRef={ecosystemIdRef} Zedux={Zedux} />
             <ResetButton
               onClick={() => {
+                localStorage.clear()
                 setValue(initialValue)
-                runCode(initialValue)
                 editor.children = initialValue
+                reset(initialValue)
               }}
             >
               Reset
