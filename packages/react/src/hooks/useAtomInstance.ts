@@ -5,7 +5,8 @@ import {
   AtomParamsType,
   ParamlessTemplate,
 } from '@zedux/atoms'
-import { useMemo, useSyncExternalStore } from 'react'
+import { useMemo } from 'react'
+import { useSyncExternalStore } from 'use-sync-external-store/shim'
 import { ZeduxHookConfig } from '../types'
 import { destroyed, External, Static } from '../utils'
 import { useEcosystem } from './useEcosystem'
