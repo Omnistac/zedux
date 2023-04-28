@@ -19,7 +19,7 @@ pnpm add @zedux/react # pnpm
 
 The React package (`@zedux/react`) contains everything you need to use Zedux in a React app - the [core store model](https://www.npmjs.com/package/@zedux/core), the [core atomic model](https://www.npmjs.com/package/@zedux/atoms), and the React-specific APIs.
 
-`@zedux/react` has a peer dependency on React and is compatible with React 18+ only, as it uses the new `useSyncExternalStore` hook.
+`@zedux/react` has a peer dependency on React. It's heavily tested on React 18+ and makes use of the [`useSyncExternalStore()` shim](https://www.npmjs.com/package/use-sync-external-store) to support React versions 16.3.0 and up.
 
 ## Meet the Atoms
 
