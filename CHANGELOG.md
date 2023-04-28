@@ -1,3 +1,10 @@
+## v1.0.1 (Apr 28, 2023)
+
+### Fixes:
+
+- `atoms`: improve id generation; prevent selector with args cache reuse edge case (#46)
+- `react`: use `useSyncExternalStore` shim for now (#45)
+
 ## v1.0.0 (Apr 24, 2023)
 
 Zedux's API is officially stable. We have several additions planned, but no breaking changes for any user-facing or documented APIs in the pipeline for the near future. It's go time!
