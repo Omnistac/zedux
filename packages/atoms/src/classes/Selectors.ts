@@ -60,16 +60,12 @@ export class Selectors {
       operation?: string
     } = {}
   ): Cleanup {
-    const id = this.ecosystem._idGenerator.generateNodeId()
-    this.ecosystem._graph.addEdge(
-      id,
-      cacheItem.id,
-      operation,
-      Explicit | External,
-      callback
-    )
+    const { _graph, _idGenerator } = this.ecosystem
+    const id = _idGenerator.generateNodeId()
 
-    return () => this.ecosystem._graph.removeEdge(id, cacheItem.id)
+    _graph.addEdge(id, cacheItem.id, operation, Explicit | External, callback)
+
+    return () => _graph.removeEdge(id, cacheItem.id)
   }
 
   /**
@@ -185,11 +181,11 @@ export class Selectors {
    * Pass a selector reference or string to filter by caches whose id
    * weakly matches the passed selector name.
    */
-  public findAll(selectableOrName?: Selectable<any, any> | string) {
+  public findAll(selectableOrName: Selectable<any, any> | string = '') {
     const hash: Record<string, SelectorCache> = {}
     const filterKey =
-      !selectableOrName || typeof selectableOrName === 'string'
-        ? selectableOrName?.toLowerCase()
+      typeof selectableOrName === 'string'
+        ? selectableOrName.toLowerCase()
         : is(selectableOrName, SelectorCache)
         ? (selectableOrName as SelectorCache).id
         : this.getBaseKey(
@@ -200,11 +196,9 @@ export class Selectors {
     Object.values(this._items)
       .sort((a, b) => a.id.localeCompare(b.id))
       .forEach(item => {
-        if (filterKey && !item.id.toLowerCase().includes(filterKey)) {
-          return
+        if (!filterKey || item.id.toLowerCase().includes(filterKey)) {
+          hash[item.id] = item
         }
-
-        hash[item.id] = item
       })
 
     return hash
@@ -271,14 +265,14 @@ export class Selectors {
     args?: any[],
     weak?: boolean
   ) {
+    const { complexParams, _idGenerator } = this.ecosystem
+    const paramsHash = args?.length
+      ? _idGenerator.hashParams(args, complexParams)
+      : ''
+
     const baseKey = this.getBaseKey(selectorOrConfig, weak)
 
-    return args?.length
-      ? `${baseKey}-${this.ecosystem._idGenerator.hashParams(
-          args,
-          this.ecosystem.complexParams
-        )}`
-      : baseKey
+    return paramsHash ? `${baseKey}-${paramsHash}` : baseKey
   }
 
   /**
@@ -401,15 +395,13 @@ export class Selectors {
 
     if (existingId || weak) return existingId
 
-    const idealKey = this._getIdealCacheId(selectorOrConfig)
-    const prefixedKey = `@@selector-${idealKey}`
-    const keyExists = this._items[prefixedKey]
+    const selectorName =
+      this._getIdealCacheId(selectorOrConfig) ||
+      (DEV ? 'unknownSelector' : 'as')
 
-    // if the ideal key is taken, generate a new hash prefixed with the ideal key
-    const key =
-      !idealKey || keyExists
-        ? this.ecosystem._idGenerator.generateAtomSelectorId(idealKey)
-        : prefixedKey
+    const key = this.ecosystem._idGenerator.generateId(
+      `@@selector-${selectorName}`
+    )
 
     this._refBaseKeys.set(selectorOrConfig, key)
 

@@ -254,7 +254,7 @@ describe('selection', () => {
 
     const cache = ecosystem.selectors.getCache(selector)
 
-    expect(cache.id).toBe('@@selector-testName')
+    expect(cache.id).toBe('@@selector-testName-0')
   })
 
   test('same-name selectors share the namespace when destroyed and recreated at different times', () => {

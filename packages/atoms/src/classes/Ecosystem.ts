@@ -88,7 +88,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     Object.assign(this, config)
 
-    this.id ||= this._idGenerator.generateEcosystemId()
+    this.id ||= this._idGenerator.generateId('es')
 
     if (config.overrides) {
       this.setOverrides(config.overrides)

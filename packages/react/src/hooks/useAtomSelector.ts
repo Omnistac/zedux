@@ -54,7 +54,7 @@ const isRefDifferent = (
   const oldKey = selectors._getIdealCacheId(oldSelector)
 
   // if this last check is false, we're confident enough that it's an inline
-  // selector. It isn't a big deal if it isn't; it's just a for _ideal_ Dev X
+  // selector. It isn't a big deal if it isn't; it's just for _ideal_ Dev X
   return newKey !== oldKey
 }
 
