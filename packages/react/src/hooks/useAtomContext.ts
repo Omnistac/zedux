@@ -8,6 +8,30 @@ import { is } from '@zedux/core'
 import { useContext } from 'react'
 import { useEcosystem } from './useEcosystem'
 
+/**
+ * A React hook that accepts an atom template and returns an atom instance of
+ * that template that has been provided over React context via `<AtomProvider>`
+ * in a parent component.
+ *
+ * By default, returns undefined if no atom instance was provided.
+ *
+ * Pass an array of atom params (or an empty array if the atom doesn't take
+ * params) as the second argument to make Zedux find or create the atom instance
+ * matching the passed params if no atom instance was provided.
+ *
+ * Pass `true` as the second argument to make Zedux throw an error if no atom
+ * instance was provided. This is the recommended overload in almost all
+ * situations.
+ *
+ * If the provided atom instance is Destroyed, this hook logs an error but
+ * returns the Destroyed instance as-is. Most other Zedux APIs are able to
+ * recover from being passed a Destroyed instance by finding and using a new,
+ * non-Destroyed version of the instance. You should still fix the problem as it
+ * represents a memory leak.
+ *
+ * It can be fixed by simply using `useAtomInstance()` to get the atom instance
+ * in the providing component.
+ */
 export const useAtomContext: {
   <A extends AnyAtomTemplate>(template: A): AtomInstanceType<A> | undefined
 
