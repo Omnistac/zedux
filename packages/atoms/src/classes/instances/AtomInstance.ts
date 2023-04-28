@@ -53,7 +53,7 @@ const getStateStore = <
 
   const stateStore =
     stateType === StoreState
-      ? (factoryResult as StoreType)
+      ? (factoryResult as unknown as StoreType)
       : (createStore<State>() as StoreType)
 
   // define how we populate our store (doesn't apply to user-supplied stores)
@@ -61,7 +61,7 @@ const getStateStore = <
     stateStore.setState(
       typeof factoryResult === 'function'
         ? () => factoryResult as State
-        : (factoryResult as State)
+        : (factoryResult as unknown as State)
     )
   }
 
