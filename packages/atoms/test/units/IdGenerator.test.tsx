@@ -8,7 +8,7 @@ describe('IdGenerator', () => {
   test('.generateId() generates a random id using the prefix', () => {
     const generator = new IdGenerator()
 
-    expect(generator.generateId('a')).toMatch(/^a-1[a-zA-Z0-9]{12}$/)
-    expect(generator.generateId('bb')).toMatch(/^bb-2[a-zA-Z0-9]{12}$/)
+    expect(generator.generateId('a')).toMatch(/^a-1[a-z0-9]{6}$/)
+    expect(generator.generateId('bb')).toMatch(/^bb-2[a-z0-9]{6}$/)
   })
 })

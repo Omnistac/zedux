@@ -4,10 +4,10 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 {
   "1": {
     "dependencies": {
-      "@@selector-common-name": true,
+      "@@selector-common-name-0": true,
     },
     "dependents": {
-      "no-0": {
+      "no-1": {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 3,
@@ -17,7 +17,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "isSelector": undefined,
     "weight": 3,
   },
-  "@@selector-common-name": {
+  "@@selector-common-name-0": {
     "dependencies": {
       "root": true,
     },
@@ -35,7 +35,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "root": {
     "dependencies": {},
     "dependents": {
-      "@@selector-common-name": {
+      "@@selector-common-name-0": {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -52,10 +52,10 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 {
   "2": {
     "dependencies": {
-      "@@selector-common-name": true,
+      "@@selector-common-name-2": true,
     },
     "dependents": {
-      "no-1": {
+      "no-3": {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 3,
@@ -65,7 +65,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "isSelector": undefined,
     "weight": 3,
   },
-  "@@selector-common-name": {
+  "@@selector-common-name-2": {
     "dependencies": {
       "root": true,
     },
@@ -83,7 +83,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "root": {
     "dependencies": {},
     "dependents": {
-      "@@selector-common-name": {
+      "@@selector-common-name-2": {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -100,6 +100,21 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 {
   "1": {
     "dependencies": {
+      "@@selector-common-name-4": true,
+    },
+    "dependents": {
+      "no-5": {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "addDependent",
+      },
+    },
+    "isSelector": undefined,
+    "weight": 3,
+  },
+  "2": {
+    "dependencies": {
       "@@selector-common-name-2": true,
     },
     "dependents": {
@@ -113,22 +128,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "isSelector": undefined,
     "weight": 3,
   },
-  "2": {
-    "dependencies": {
-      "@@selector-common-name": true,
-    },
-    "dependents": {
-      "no-1": {
-        "callback": undefined,
-        "createdAt": 123456789,
-        "flags": 3,
-        "operation": "addDependent",
-      },
-    },
-    "isSelector": undefined,
-    "weight": 3,
-  },
-  "@@selector-common-name": {
+  "@@selector-common-name-2": {
     "dependencies": {
       "root": true,
     },
@@ -143,7 +143,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "isSelector": true,
     "weight": 2,
   },
-  "@@selector-common-name-2": {
+  "@@selector-common-name-4": {
     "dependencies": {
       "root": true,
     },
@@ -161,13 +161,13 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "root": {
     "dependencies": {},
     "dependents": {
-      "@@selector-common-name": {
+      "@@selector-common-name-2": {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
       },
-      "@@selector-common-name-2": {
+      "@@selector-common-name-4": {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -184,10 +184,10 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 {
   "1": {
     "dependencies": {
-      "@@selector-common-name-2": true,
+      "@@selector-common-name-4": true,
     },
     "dependents": {
-      "no-3": {
+      "no-5": {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 3,
@@ -197,7 +197,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "isSelector": undefined,
     "weight": 3,
   },
-  "@@selector-common-name-2": {
+  "@@selector-common-name-4": {
     "dependencies": {
       "root": true,
     },
@@ -215,7 +215,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "root": {
     "dependencies": {},
     "dependents": {
-      "@@selector-common-name-2": {
+      "@@selector-common-name-4": {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,

@@ -13,5 +13,7 @@ export const mockConsole = <K extends keyof typeof console>(
 }
 
 afterEach(() => {
-  cleanups.forEach(cleanup => cleanup())
+  while (cleanups.length) {
+    cleanups.pop()?.()
+  }
 })

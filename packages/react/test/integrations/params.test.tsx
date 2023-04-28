@@ -1,5 +1,5 @@
 import { AtomGetters, atom, createEcosystem } from '@zedux/react'
-import { ecosystem } from '../utils/ecosystem'
+import { ecosystem, generateIdMock } from '../utils/ecosystem'
 
 describe('params', () => {
   test('deeply nested params are stringified correctly', () => {
@@ -26,6 +26,7 @@ describe('params', () => {
       fn(get(atom1, [num => num.toString()]) + '2')
 
     const complexEcosystem = createEcosystem({ complexParams: true })
+    ecosystem._idGenerator.generateId = generateIdMock
 
     const reusedFn = (str: string) => Number(str)
     const value1 = complexEcosystem.selectors.getCache(selector1, [reusedFn])
@@ -35,7 +36,7 @@ describe('params', () => {
 
     expect(value1.result).toBe(1)
     expect(instanceKey).toMatch(/^1-\["anonFn-/)
-    expect(selectorKey).toMatch(/^@@selector-selector1-\["reusedFn-/)
+    expect(selectorKey).toMatch(/^@@selector-selector1-.*?-\["reusedFn-/)
 
     const value2 = complexEcosystem.selectors.getCache(selector2, [reusedFn])
 
@@ -53,11 +54,11 @@ describe('params', () => {
     // the instances received different function references
     expect(instanceKey1).not.toBe(instanceKey2)
 
-    expect(selectorKey1).toMatch(/^@@selector-selector1-\["reusedFn-/)
-    expect(selectorKey2).toMatch(/^@@selector-selector2-\["reusedFn-/)
+    expect(selectorKey1).toMatch(/^@@selector-selector1-.*?-\["reusedFn-/)
+    expect(selectorKey2).toMatch(/^@@selector-selector2-.*?-\["reusedFn-/)
 
     // the selectors received the same function reference
-    expect(selectorKey1.slice(20)).toBe(selectorKey2.slice(20))
+    expect(selectorKey1.slice(28)).toBe(selectorKey2.slice(28))
 
     complexEcosystem.destroy()
   })
@@ -81,6 +82,7 @@ describe('params', () => {
       converter.toNumber(get(atom1, [new (class extends Converter {})()]) + '2')
 
     const complexEcosystem = createEcosystem({ complexParams: true })
+    ecosystem._idGenerator.generateId = generateIdMock
 
     const reusedInstance = new Converter()
     const value1 = complexEcosystem.selectors.getCache(selector1, [
@@ -92,7 +94,7 @@ describe('params', () => {
 
     expect(value1.result).toBe(1)
     expect(instanceKey).toMatch(/^1-\["UnknownClass-/)
-    expect(selectorKey).toMatch(/^@@selector-selector1-\["Converter-/)
+    expect(selectorKey).toMatch(/^@@selector-selector1-.*?-\["Converter-/)
 
     const value2 = complexEcosystem.selectors.getCache(selector2, [
       reusedInstance,
@@ -112,11 +114,11 @@ describe('params', () => {
     // the instances received different function references
     expect(instanceKey1).not.toBe(instanceKey2)
 
-    expect(selectorKey1).toMatch(/^@@selector-selector1-\["Converter-/)
-    expect(selectorKey2).toMatch(/^@@selector-selector2-\["Converter-/)
+    expect(selectorKey1).toMatch(/^@@selector-selector1-.*?-\["Converter-/)
+    expect(selectorKey2).toMatch(/^@@selector-selector2-.*?-\["Converter-/)
 
     // the selectors received the same function reference
-    expect(selectorKey1.slice(20)).toBe(selectorKey2.slice(20))
+    expect(selectorKey1.slice(28)).toBe(selectorKey2.slice(28))
 
     complexEcosystem.destroy()
   })
