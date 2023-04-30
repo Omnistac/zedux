@@ -59,8 +59,8 @@ const getSortedApples = createSelector(getRipeApples, apples => apples.sort())
 
 // Zedux:
 const entities = atom('entities', () => ({}))
-const getFruits = ({ get }: AtomGetters) => get(entities)
-const getOranges = ({ select }: AtomGetters) => select(getFruits)
+const getFruits = ({ get }: AtomGetters) => get(entities).fruits || {}
+const getOranges = ({ select }: AtomGetters) => select(getFruits).oranges || []
 
 const getRipeOranges = ({ select }: AtomGetters) =>
   select(getOranges).filter(orange => orange.isRipe)
