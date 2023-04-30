@@ -26,6 +26,8 @@ import {
 import { withHistory } from 'slate-history'
 import { Slate, withReact, ReactEditor, RenderLeafProps } from 'slate-react'
 import { JsxEmit, transpile } from 'typescript/lib/typescript'
+import * as RxJS from 'rxjs'
+import * as RxJSOperators from 'rxjs/operators'
 import * as ZeduxImmer from '@zedux/immer'
 import * as ZeduxMachines from '@zedux/machines'
 import * as ZeduxReact from '@zedux/react'
@@ -56,6 +58,8 @@ declare module 'slate' {
 const Zedux = { ...ZeduxReact, ...ZeduxImmer, ...ZeduxMachines } // resolves all the getters
 
 const scope = {
+  ...RxJS,
+  ...RxJSOperators,
   ...Zedux,
   ...React,
 }

@@ -88,6 +88,7 @@ const examples = {
   'zedux-counters-example-b5upgd': 'Counters',
   'zedux-todomvc-yfr2k6': 'TodoMVC',
   'zedux-queries-example-x713si': 'Simple Queries',
+  'zedux-selector-upgrading-example-u09o3y': 'Upgrading Selectors',
 }
 
 export default function Examples() {

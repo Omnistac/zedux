@@ -21,6 +21,7 @@
     "react-dom": "^18.2.0",
     "react-icons": "^4.7.1",
     "redux": "^4.2.0",
+    "rxjs": "^7.8.1",
     "slate": "^0.87.0",
     "slate-history": "^0.86.0",
     "slate-react": "^0.87.1",
