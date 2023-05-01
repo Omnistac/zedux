@@ -232,13 +232,46 @@ Now no overloads are needed, at the cost of a little tuple spread ugliness. Of c
 
 ## Stores
 
-Zedux also exports a `StoreStateType` util for pulling the state generic off a Zedux store
+Zedux also exports a few helper types for working with stores, actions, and action factories:
+
+- `StoreStateType` - pulls the state generic off a Zedux store
+- `ActionFactoryTypeType` - yes - pulls the string action type off an action factory
+- `ActionFactoryPayloadType` - pulls the payload type off an action factory
+- `ActionFactoryActionType` - pulls the full action type (an object with type and payload properties) off an action factory
+- `ActionTypeType` - pulls the string action type off an action
+- `ActionPayloadType` - pulls the payload type off an action
+- `ActionMetaType` - pulls the meta type off an action
 
 ```ts
-import { createStore, StoreStateType } from '@zedux/react'
+import {
+  ActionFactoryTypeType,
+  ActionFactoryPayloadType,
+  ActionFactoryActionType,
+  ActionTypeType,
+  ActionPayloadType,
+  ActionMetaType,
+  actionFactory,
+  createStore,
+  StoreStateType,
+} from '@zedux/react'
+
+type Todo = { text: string }
 
 const store = createStore(null, 'Hello, world!')
 type State = StoreStateType<typeof store> // string
+
+const addTodo = actionFactory<Todo>('addTodo')
+const action = addTodo({ text: 'Use TS' })
+
+type Test = [
+  ActionFactoryTypeType<typeof addTodo>, // 'addTodo'
+  ActionFactoryPayloadType<typeof addTodo>, // Todo
+  ActionFactoryActionType<typeof addTodo>, // { type: 'addTodo'; payload: Todo }
+
+  ActionTypeType<typeof action>, // 'addTodo'
+  ActionPayloadType<typeof action>, // Todo
+  ActionMetaType<typeof action> // any
+]
 ```
 
 ## Recap
