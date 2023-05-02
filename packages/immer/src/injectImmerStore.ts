@@ -20,7 +20,7 @@ const doSubscribe = <State>(
     // during evaluation or that are caused by `zeduxTypes.ignore` actions
     if (
       newState === oldState ||
-      instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
+      instance._isEvaluating ||
       action?.meta === zeduxTypes.ignore
     ) {
       return

@@ -103,10 +103,6 @@ export class EvaluationStack {
     }
   }
 
-  public isEvaluating(id: string) {
-    return stack.some(item => item.node.id === id)
-  }
-
   public finish() {
     const item = stack.pop()
     const { _idGenerator, _mods, modBus } = this.ecosystem
@@ -129,11 +125,11 @@ export class EvaluationStack {
     return stack[stack.length - 1]
   }
 
-  public start(item: AnyAtomInstance | SelectorCache<any, any>) {
+  public start(node: AnyAtomInstance | SelectorCache<any, any>) {
     const { _idGenerator, _mods, _scheduler } = this.ecosystem
 
     const newItem: StackItem = {
-      node: item,
+      node,
       start: _mods.evaluationFinished ? _idGenerator.now(true) : undefined,
     }
 

@@ -83,6 +83,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   public _cancelDestruction?: Cleanup
   public _createdAt: number
   public _injectors?: InjectorDescriptor[]
+  public _isEvaluating?: boolean
   public _nextInjectors?: InjectorDescriptor[]
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
@@ -220,7 +221,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     this._subscription = this.store.subscribe((newState, oldState, action) => {
       // buffer updates (with cache size of 1) if this instance is currently
       // evaluating
-      if (this.ecosystem._evaluationStack.isEvaluating(this.id)) {
+      if (this._isEvaluating) {
         this._bufferedUpdate = { newState, oldState, action }
         return
       }
@@ -333,6 +334,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     this._nextInjectors = []
     let newFactoryResult: G['Store'] | G['State']
     _evaluationStack.start(this)
+    this._isEvaluating = true
     _graph.bufferUpdates(this.id)
 
     try {
@@ -348,6 +350,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
       throw err
     } finally {
       _evaluationStack.finish()
+      this._isEvaluating = false
 
       // even if evaluation errored, we need to update dependents if the store's
       // state changed

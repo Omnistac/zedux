@@ -279,7 +279,7 @@ export const injectMachineStore: <
           if (
             !subscribeRef.current ||
             newState === oldState ||
-            instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
+            instance._isEvaluating ||
             action?.meta === zeduxTypes.ignore
           ) {
             return
