@@ -89,6 +89,7 @@ const examples = {
   'zedux-todomvc-yfr2k6': 'TodoMVC',
   'zedux-queries-example-x713si': 'Simple Queries',
   'zedux-selector-upgrading-example-u09o3y': 'Upgrading Selectors',
+  'zedux-atoms-as-jotai-molecules-3ilmtt': 'Atoms as "Molecules"',
 }
 
 export default function Examples() {
