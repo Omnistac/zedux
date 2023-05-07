@@ -1,0 +1,59 @@
+```tsx live ecosystemId=perf/1 resultVar=App
+const entry = atom('entry', 0)
+const a = ion('a', ({ get }) => get(entry))
+const b = ion('b', ({ get }) => get(a) + 1)
+const c = ion('c', ({ get }) => get(a) + 1)
+const d = ion('d', ({ get }) => get(b) + get(c))
+const e = ion('e', ({ get }) => get(d) + 1)
+const f = ion('f', ({ get }) => get(d) + get(e))
+const g = ion('g', ({ get }) => get(d) + get(e))
+const h = ion('h', ({ get }) => get(f) + get(g))
+
+function App() {
+  const [start, setStart] = useState(false)
+  const ecosystem = useEcosystem()
+  // const val = useAtomValue(h)
+  const instance = useAtomInstance(entry)
+
+  useEffect(() => {
+    if (!start) return
+
+    let evaluations = 0
+    let startTime
+    let updates = 0
+    let timeSum = 0
+
+    const endInstance = ecosystem.getInstance(h)
+    const cleanup = endInstance.addDependent({
+      callback: () => {
+        evaluations++
+        timeSum += performance.now() - startTime
+      },
+    })
+
+    const intervalHandle = setInterval(() => {
+      updates++
+      startTime = performance.now()
+      instance.setState(state => state + 1)
+    }, 2)
+
+    const timeoutHandle = setTimeout(() => {
+      clearInterval(intervalHandle)
+      console.log('done', { evaluations, timeSum, updates })
+    }, 3000)
+
+    return () => {
+      clearInterval(intervalHandle)
+      clearTimeout(timeoutHandle)
+      cleanup()
+    }
+  }, [start])
+
+  return (
+    <>
+      {/* <div>val: {val}</div> */}
+      <button onClick={() => setStart(val => !val)}>update</button>
+    </>
+  )
+}
+```
