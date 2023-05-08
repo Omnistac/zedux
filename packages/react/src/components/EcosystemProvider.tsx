@@ -6,8 +6,21 @@ import { ecosystemContext } from '../utils'
 /**
  * EcosystemProvider
  *
- * Creates an atom ecosystem. The behavior of atoms inside this EcosystemProvider can
- * be configured with props passed here.
+ * If an `ecosystem` prop is passed, that ecosystem will take charge of all atom
+ * usages below it in the component tree.
+ *
+ * If no `ecosystem` prop is passed, EcosystemProvider creates an atom ecosystem
+ * and provides it. The created ecosystem will be destroyed when this
+ * EcosystemProvider unmounts. The auto-created ecosystem can be configured with
+ * props passed here.
+ *
+ * ```ts
+ * // gives you full control over the ecosystem:
+ * <EcosystemProvider ecosystem={ecosystem}>
+ *
+ * // a convenient shorthand, esp. useful in testing:
+ * <EcosystemProvider id="root">
+ * ```
  */
 export const EcosystemProvider = ({
   children,
