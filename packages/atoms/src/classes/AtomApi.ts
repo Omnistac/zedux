@@ -27,8 +27,8 @@ export class AtomApi<G extends AtomApiGenerics> {
 
   public addExports<NewExports extends Record<string, any>>(
     exports: NewExports
-  ): Prettify<
-    AtomApi<
+  ): AtomApi<
+    Prettify<
       Omit<G, 'Exports'> & {
         Exports: (G['Exports'] extends Record<string, never>
           ? unknown
@@ -52,7 +52,7 @@ export class AtomApi<G extends AtomApiGenerics> {
 
   public setExports<NewExports extends Record<string, any>>(
     exports: NewExports
-  ): Prettify<AtomApi<Omit<G, 'Exports'> & { Exports: NewExports }>> {
+  ): AtomApi<Prettify<Omit<G, 'Exports'> & { Exports: NewExports }>> {
     ;(
       this as unknown as AtomApi<Omit<G, 'Exports'> & { Exports: NewExports }>
     ).exports = exports
@@ -64,7 +64,7 @@ export class AtomApi<G extends AtomApiGenerics> {
 
   public setPromise<T>(
     promise: Promise<T>
-  ): Prettify<AtomApi<Omit<G, 'Promise'> & { Promise: Promise<T> }>> {
+  ): AtomApi<Prettify<Omit<G, 'Promise'> & { Promise: Promise<T> }>> {
     this.promise = promise as unknown as G['Promise']
 
     return this as AtomApi<Omit<G, 'Promise'> & { Promise: Promise<T> }> // for chaining
