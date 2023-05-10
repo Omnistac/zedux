@@ -599,6 +599,15 @@ describe('types', () => {
 
     // @ts-expect-error all params required, so params must be passed
     ecosystem.get(allRequiredParamsAtom)
+
+    function noParams<A extends AnyAtomTemplate<{ Params: [] }>>(atom: A) {
+      return ecosystem.get(atom)
+    }
+
+    // @ts-expect-error optional params not allowed
+    noParams(someOptionalParamsAtom)
+
+    expectTypeOf(noParams(atom('no-params-test', null))).toMatchTypeOf<null>()
   })
 
   test('accepting instances', () => {
