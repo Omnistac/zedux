@@ -15,8 +15,6 @@ import { useReactComponentId } from './useReactComponentId'
 const OPERATION = 'useAtomInstance'
 
 /**
- * useAtomInstance
- *
  * Creates an atom instance for the passed atom template based on the passed
  * params. If an instance has already been created for the passed params, reuses
  * the existing instance.
@@ -25,12 +23,27 @@ const OPERATION = 'useAtomInstance'
  * components that use this hook will not rerender when this atom instance's
  * state changes.
  *
- * If the params are large, serializing them every render can cause some
- * overhead.
+ * If the atom doesn't take params or an instance is passed, pass an empty array
+ * for the 2nd param when you need to supply the 3rd `config` param.
+ *
+ * The 3rd `config` param is an object with these fields:
+ *
+ * - `operation` - Used for debugging. Pass a string to describe the reason for
+ *   creating this graph edge
+ * - `subscribe` - Pass `subscribe: true` to make `useAtomInstance` create a
+ *   dynamic graph dependency instead
+ * - `suspend` - Pass `suspend: false` to prevent this hook from triggering
+ *   React suspense if the resolved atom has a promise set
+ *
+ * Note that if the params are large, serializing them every render can cause
+ * some overhead.
  *
  * @param atom The atom template to instantiate or reuse an instantiation of OR
  * an atom instance itself.
- * @param params The params for generating the instance's key.
+ * @param params The params for generating the instance's key. Required if an
+ * atom template is passed that requires params.
+ * @param config An object with optional `operation`, `subscribe`, and `suspend`
+ * fields.
  */
 export const useAtomInstance: {
   <A extends AnyAtomTemplate>(
