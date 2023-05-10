@@ -41,6 +41,8 @@ export const injectAtomInstance: {
     config?: InjectAtomInstanceConfig
   ): AtomInstanceType<A>
 
+  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): AtomInstanceType<A>
+
   <A extends AnyAtomTemplate>(
     template: ParamlessTemplate<A>
   ): AtomInstanceType<A>

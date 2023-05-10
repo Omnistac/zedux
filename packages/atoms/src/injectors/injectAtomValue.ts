@@ -13,6 +13,8 @@ export const injectAtomValue: {
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
+  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): AtomStateType<A>
+
   <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): AtomStateType<A>
 
   <I extends AnyAtomInstance>(instance: I): AtomStateType<I>

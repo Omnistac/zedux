@@ -286,6 +286,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     params: AtomParamsType<A>
   ): AtomInstanceType<A> | undefined
 
+  public find<A extends AnyAtomTemplate<{ Params: [] }>>(
+    template: A
+  ): AtomInstanceType<A> | undefined
+
   public find<A extends AnyAtomTemplate>(
     template: ParamlessTemplate<A>
   ): AtomInstanceType<A> | undefined
@@ -346,6 +350,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
+  public get<A extends AnyAtomTemplate<{ Params: [] }>>(
+    template: A
+  ): AtomStateType<A>
+
   public get<A extends AnyAtomTemplate>(
     template: ParamlessTemplate<A>
   ): AtomStateType<A>
@@ -376,6 +384,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     template: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
+  ): AtomInstanceType<A>
+
+  public getInstance<A extends AnyAtomTemplate<{ Params: [] }>>(
+    template: A
   ): AtomInstanceType<A>
 
   public getInstance<A extends AnyAtomTemplate>(

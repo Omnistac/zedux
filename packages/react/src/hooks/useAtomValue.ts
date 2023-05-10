@@ -15,6 +15,8 @@ export const useAtomValue: {
     config?: Omit<ZeduxHookConfig, 'subscribe'>
   ): AtomStateType<A>
 
+  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): AtomStateType<A>
+
   <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): AtomStateType<A>
 
   <I extends AnyAtomInstance>(

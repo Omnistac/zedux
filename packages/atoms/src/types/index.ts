@@ -40,6 +40,8 @@ export interface AtomGettersBase {
     params: AtomParamsType<A>
   ): AtomStateType<A>
 
+  get<A extends AnyAtomTemplate<{ Params: [] }>>(template: A): AtomStateType<A>
+
   get<A extends AnyAtomTemplate>(
     template: ParamlessTemplate<A>
   ): AtomStateType<A>
@@ -55,6 +57,10 @@ export interface AtomGettersBase {
     template: A,
     params: AtomParamsType<A>,
     edgeInfo?: GraphEdgeInfo
+  ): AtomInstanceType<A>
+
+  getInstance<A extends AnyAtomTemplate<{ Params: [] }>>(
+    template: A
   ): AtomInstanceType<A>
 
   getInstance<A extends AnyAtomTemplate>(

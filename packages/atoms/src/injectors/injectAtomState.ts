@@ -15,6 +15,11 @@ export const injectAtomState: {
     params: AtomParamsType<A>
   ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
 
+  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateHookTuple<
+    AtomStateType<A>,
+    AtomExportsType<A>
+  >
+
   <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateHookTuple<
     AtomStateType<A>,
     AtomExportsType<A>
