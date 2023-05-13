@@ -1,6 +1,7 @@
 import { AnyAtomInstance } from '@zedux/atoms'
 import React, { FC, ReactNode } from 'react'
 import { useEcosystem } from '../hooks/useEcosystem'
+import { getReactContext } from '../utils'
 
 /**
  * Provides an atom instance over React context.
@@ -37,7 +38,7 @@ export const AtomProvider: FC<
   const allInstances = instances || ([instance] as AnyAtomInstance[])
 
   if (allInstances.length === 1) {
-    const context = ecosystem._getReactContext(allInstances[0].template)
+    const context = getReactContext(ecosystem, allInstances[0].template)
 
     return (
       <context.Provider value={allInstances[0]}>{children}</context.Provider>
@@ -45,7 +46,7 @@ export const AtomProvider: FC<
   }
 
   const [parentInstance, ...childInstances] = allInstances
-  const context = ecosystem._getReactContext(parentInstance.template)
+  const context = getReactContext(ecosystem, parentInstance.template)
 
   return (
     <context.Provider value={parentInstance}>

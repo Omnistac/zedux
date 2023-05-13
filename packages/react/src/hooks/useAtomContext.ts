@@ -7,6 +7,7 @@ import {
 import { is } from '@zedux/core'
 import { useContext } from 'react'
 import { useEcosystem } from './useEcosystem'
+import { getReactContext } from '../utils'
 
 /**
  * A React hook that accepts an atom template and returns an atom instance of
@@ -50,7 +51,7 @@ export const useAtomContext: {
 ) => {
   const ecosystem = useEcosystem()
   const instance: AtomInstanceType<A> | undefined = useContext(
-    ecosystem._getReactContext(template)
+    getReactContext(ecosystem, template)
   )
 
   if (!defaultParams || is(instance, AtomInstanceBase)) {
@@ -63,7 +64,7 @@ export const useAtomContext: {
     return instance as AtomInstanceType<A>
   }
 
-  if (typeof defaultParams === 'boolean') {
+  if (defaultParams === true) {
     if (DEV) {
       throw new ReferenceError(
         `Zedux: useAtomContext - No atom instance was provided for atom "${template.key}".`
