@@ -1,5 +1,4 @@
 import { createStore, is, isPlainObject } from '@zedux/core'
-import React, { createContext } from 'react'
 import { internalStore } from '../store/index'
 import {
   AnyAtomInstance,
@@ -63,9 +62,15 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public _idGenerator = new IdGenerator()
   public _instances: Record<string, AnyAtomInstance> = {}
   public _mods: Record<Mod, number> = { ...defaultMods }
-  public _reactContexts: Record<string, React.Context<any>> = {}
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
+
+  /**
+   * Only for use by internal addon packages - lets us attach anything we want
+   * to the ecosystem. For example, the React package uses this to store React
+   * Context objects
+   */
+  public _storage: Record<string, any> = {}
 
   private cleanup?: MaybeCleanup
   private isInitialized = false
@@ -835,20 +840,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     // mods have already been notified of the instance's status changing to
     // Destroyed by this point. No need to notify anything of this mutation.
     delete this._instances[id]
-  }
-
-  /**
-   * Should only be used internally
-   */
-  public _getReactContext(atom: AnyAtomTemplate) {
-    const existingContext = this._reactContexts[atom.key]
-
-    if (existingContext) return existingContext
-
-    const newContext = createContext(undefined)
-    this._reactContexts[atom.key] = newContext
-
-    return newContext as React.Context<any>
   }
 
   /**

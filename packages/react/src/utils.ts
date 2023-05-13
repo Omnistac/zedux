@@ -1,4 +1,5 @@
-import { createContext } from 'react'
+import { AnyAtomTemplate, Ecosystem } from '@zedux/atoms'
+import React, { createContext } from 'react'
 
 export const ecosystemContext = createContext('@@global')
 
@@ -13,3 +14,17 @@ export const Static = 4
 // export const Deferred = 8
 
 export const destroyed = Symbol.for(`@@zedux/destroyed`)
+
+export const getReactContext = (
+  ecosystem: Ecosystem,
+  atom: AnyAtomTemplate
+) => {
+  const reactStorage: Record<
+    string,
+    React.Context<any>
+  > = (ecosystem._storage.react ||= {})
+
+  return (reactStorage[atom.key] ||= createContext(
+    undefined
+  ) as React.Context<any>)
+}
