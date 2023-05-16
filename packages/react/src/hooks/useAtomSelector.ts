@@ -5,7 +5,7 @@ import {
   SelectorCache,
 } from '@zedux/atoms'
 import { MutableRefObject, useMemo, useRef } from 'react'
-import { useSyncExternalStore } from 'use-sync-external-store/shim'
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 import { destroyed, External } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'

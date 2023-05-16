@@ -1,6 +1,6 @@
 import { createEcosystem, Ecosystem, EcosystemConfig } from '@zedux/atoms'
 import React, { ReactNode, useMemo } from 'react'
-import { useSyncExternalStore } from 'use-sync-external-store/shim'
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 import { ecosystemContext } from '../utils'
 
 /**

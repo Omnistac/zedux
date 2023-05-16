@@ -75,6 +75,17 @@ const tscBuild = async isCjs => {
     )
     process.exit(1)
   }
+
+  const fixJsxPragma = await cmd(
+    `find dist/esm -type f -exec sed -i${
+      platform() === 'darwin' ? " ''" : ''
+    } "s|\\(from \\"react/jsx-runtime\\)\\"|\\1.js\\"|" {} +`
+  )
+
+  if (fixJsxPragma.code) {
+    console.error(`fixing jsx pragma failed. Output: ${fixJsxPragma}`)
+    process.exit(1)
+  }
 }
 
 const run = async () => {
