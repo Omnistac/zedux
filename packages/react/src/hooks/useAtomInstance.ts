@@ -6,7 +6,7 @@ import {
   ParamlessTemplate,
 } from '@zedux/atoms'
 import { useMemo } from 'react'
-import { useSyncExternalStore } from 'use-sync-external-store/shim'
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 import { ZeduxHookConfig } from '../types'
 import { destroyed, External, Static } from '../utils'
 import { useEcosystem } from './useEcosystem'
