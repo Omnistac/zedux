@@ -1,5 +1,4 @@
 import {
-  AnyAtomInstance,
   DependentCallback,
   DependentEdge,
   EcosystemGraphNode,
@@ -11,6 +10,40 @@ import { Explicit, External, Static } from '../utils/index'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 
+/**
+ * When a node's refCount hits 0, schedule destruction of that node.
+ */
+const scheduleNodeDestruction = (
+  { ecosystem, nodes }: Graph,
+  nodeId: string
+) => {
+  const node = nodes[nodeId]
+
+  if (node && !node.refCount) {
+    if (node.isSelector) {
+      ecosystem.selectors._destroySelector(nodeId)
+    } else {
+      ecosystem._instances[nodeId]._scheduleDestruction()
+    }
+  }
+}
+
+/**
+ * When a node's refCount hits 0, we schedule destruction of that node. If
+ * that destruction is still pending and the refCount goes back up to 1,
+ * cancel the scheduled destruction.
+ */
+const unscheduleNodeDestruction = (
+  { ecosystem, nodes }: Graph,
+  nodeId: string
+) => {
+  const dependency = nodes[nodeId]
+
+  if (!dependency.isSelector) {
+    ecosystem._instances[nodeId]._cancelDestruction?.()
+  }
+}
+
 export class Graph {
   public nodes: Record<string, EcosystemGraphNode> = {}
   private updateStack: {
@@ -18,7 +51,7 @@ export class Graph {
     key: string
   }[] = []
 
-  public constructor(private readonly ecosystem: Ecosystem) {}
+  public constructor(public readonly ecosystem: Ecosystem) {}
 
   /**
    * Draw a new edge between two nodes in the graph. This is how dependencies
@@ -73,6 +106,7 @@ export class Graph {
       dependencies: {},
       dependents: {},
       isSelector,
+      refCount: 0,
       weight: 1, // this node doesn't have dependencies yet; its weight is 1
     }
   }
@@ -104,7 +138,7 @@ export class Graph {
       // the edge wasn't created during the evaluation that errored; keep it
       if (existingEdge) return
 
-      this.scheduleNodeDestruction(dependencyKey)
+      scheduleNodeDestruction(this, dependencyKey)
     })
 
     this.updateStack.pop()
@@ -195,6 +229,7 @@ export class Graph {
     // happens in React 18+ (see this method's jsdoc above)
     if (!dependentEdge) return
     delete dependency.dependents[dependentKey]
+    dependency.refCount--
 
     // static dependencies don't change a node's weight
     if (!(dependentEdge.flags & Static)) {
@@ -221,7 +256,7 @@ export class Graph {
       )
     }
 
-    this.scheduleNodeDestruction(dependencyKey)
+    scheduleNodeDestruction(this, dependencyKey)
   }
 
   // Should only be used internally
@@ -375,8 +410,9 @@ export class Graph {
       this.nodes[dependentKey].dependencies[dependencyKey] = true
     }
     dependency.dependents[dependentKey] = newEdge
+    dependency.refCount++
 
-    this.unscheduleNodeDestruction(dependencyKey)
+    unscheduleNodeDestruction(this, dependencyKey)
 
     // static dependencies don't change a node's weight
     if (!(newEdge.flags & Static)) {
@@ -417,38 +453,5 @@ export class Graph {
     Object.keys(node.dependents).forEach(dependentKey => {
       this.recalculateNodeWeight(dependentKey, weightDiff)
     })
-  }
-
-  /**
-   * When a node's refCount hits 0, schedule destruction of that node.
-   */
-  private scheduleNodeDestruction(nodeId: string) {
-    const node = this.nodes[nodeId]
-
-    if (node && !Object.keys(node.dependents).length) {
-      if (node.isSelector) {
-        this.ecosystem.selectors._destroySelector(nodeId)
-      } else {
-        this.ecosystem._instances[nodeId]._scheduleDestruction()
-      }
-    }
-  }
-
-  /**
-   * When a node's refCount hits 0, we schedule destruction of that node. If
-   * that destruction is still pending and the refCount goes back up to 1,
-   * cancel the scheduled destruction.
-   */
-  private unscheduleNodeDestruction(nodeId: string) {
-    const dependency = this.nodes[nodeId]
-
-    if (
-      !dependency.isSelector &&
-      Object.keys(dependency.dependents).length === 1
-    ) {
-      const instance = this.ecosystem._instances[nodeId] as AnyAtomInstance
-
-      instance._cancelDestruction?.()
-    }
   }
 }

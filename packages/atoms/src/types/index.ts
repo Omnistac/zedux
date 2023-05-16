@@ -202,6 +202,7 @@ export interface EcosystemGraphNode {
   dependencies: Record<string, true>
   dependents: Record<string, DependentEdge>
   isSelector?: boolean
+  refCount: number
   weight: number
 }
 
