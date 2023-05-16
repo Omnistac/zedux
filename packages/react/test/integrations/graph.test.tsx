@@ -152,6 +152,7 @@ describe('graph', () => {
           },
         },
         isSelector: undefined,
+        refCount: 1,
         weight: 1,
       },
       atom2: {
@@ -165,12 +166,14 @@ describe('graph', () => {
           },
         },
         isSelector: undefined,
+        refCount: 1,
         weight: 1,
       },
       ion1: {
         dependencies: { atom1: true, atom2: true },
         dependents: {},
         isSelector: undefined,
+        refCount: 0,
         weight: 1, // static dependencies don't affect the weight
       },
     })
@@ -211,6 +214,7 @@ describe('graph', () => {
           },
         },
         isSelector: undefined,
+        refCount: 1,
         weight: 1,
       },
       'b-["b"]': {
@@ -224,6 +228,7 @@ describe('graph', () => {
           },
         },
         isSelector: undefined,
+        refCount: 1,
         weight: 1,
       },
       d: {
@@ -233,6 +238,7 @@ describe('graph', () => {
         },
         dependents: {},
         isSelector: undefined,
+        refCount: 0,
         weight: 3,
       },
     })
@@ -253,12 +259,14 @@ describe('graph', () => {
           },
         },
         isSelector: undefined,
+        refCount: 1,
         weight: 1,
       },
       'b-["b"]': {
         dependencies: {},
         dependents: {},
         isSelector: undefined,
+        refCount: 0,
         weight: 1,
       },
       c: {
@@ -272,6 +280,7 @@ describe('graph', () => {
           },
         },
         isSelector: undefined,
+        refCount: 1,
         weight: 1,
       },
       d: {
@@ -281,6 +290,7 @@ describe('graph', () => {
         },
         dependents: {},
         isSelector: undefined,
+        refCount: 0,
         weight: 3,
       },
     })
