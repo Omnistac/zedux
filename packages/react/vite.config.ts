@@ -4,7 +4,11 @@ import { configureVite } from '../vite-base-config'
 
 export default configureVite({
   getConfig: () => ({
-    plugins: [react()],
+    plugins: [
+      react({
+        jsxRuntime: 'classic',
+      }),
+    ],
     resolve: {
       alias: {
         '@zedux/react': resolve(__dirname, 'src'),
