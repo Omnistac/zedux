@@ -77,6 +77,11 @@ export class Store<State = any> {
   static _scheduler?: Scheduler
   private _state: State
   private _isDispatching?: boolean
+
+  /**
+   * We can optimize some things if this store is never composed. Disable optimizations as soon as this store is used as a parent or child store.
+   */
+  private _isSolo = true
   private _parents?: EffectsSubscriber[]
   private _rootReducer?: Reducer<State>
   private _scheduler: Scheduler
@@ -137,7 +142,7 @@ export class Store<State = any> {
     function. But it's always bound and can be passed around easily.
   */
   public dispatch = (action: Dispatchable) => {
-    if (this._isSolo()) {
+    if (this._isSolo) {
       return this._dispatch(action)
     }
 
@@ -183,7 +188,7 @@ export class Store<State = any> {
     around easily.
   */
   public setState = (settable: Settable<State>, meta?: any) => {
-    if (this._isSolo()) {
+    if (this._isSolo) {
       return this._setState(
         settable as Settable<RecursivePartial<State>, State>,
         meta
@@ -230,7 +235,7 @@ export class Store<State = any> {
     settable: Settable<RecursivePartial<State>, State>,
     meta?: any
   ) {
-    if (this._isSolo()) {
+    if (this._isSolo) {
       return this._setState(
         settable as Settable<RecursivePartial<State>, State>,
         meta,
@@ -321,14 +326,13 @@ export class Store<State = any> {
         this._registerChildStore(childStorePath, childStore)
     )
 
-    this._tree = mergeHierarchies(
+    const tree = (this._tree = mergeHierarchies(
       this._tree,
       newTree,
       (this.constructor as typeof Store).hierarchyConfig
-    )
-    this._rootReducer = this._tree.reducer
+    ))
 
-    if (this._rootReducer) {
+    if ((this._rootReducer = tree.reducer)) {
       this._dispatchAction(primeAction, primeAction, this._state)
     }
 
@@ -341,6 +345,7 @@ export class Store<State = any> {
   public _register(effects: EffectsSubscriber) {
     const parents = this._parents || (this._parents = [])
     parents.push(effects)
+    this._isSolo = false
 
     return () => {
       const index = parents.indexOf(effects)
@@ -495,10 +500,6 @@ export class Store<State = any> {
     }
   }
 
-  private _isSolo() {
-    return !this._rootReducer && !this._parents?.length
-  }
-
   private _notify(newState: State, action: ActionChain, error?: unknown) {
     const effect: StoreEffect<State, this> = {
       action,
@@ -511,7 +512,7 @@ export class Store<State = any> {
     // Update the stored state
     this._state = newState
 
-    if (this._isSolo()) {
+    if (this._isSolo) {
       return this._doNotify(effect)
     }
 
@@ -528,6 +529,7 @@ export class Store<State = any> {
     childStorePath: string[],
     childStore: Store
   ) {
+    this._isSolo = false
     const effectsSubscriber: EffectsSubscriber<State> = ({
       action,
       error,
