@@ -3,9 +3,9 @@ import {
   AtomValueOrFactory,
   AtomGenerics,
 } from '@zedux/atoms/types/index'
+import { prefix } from '@zedux/atoms/utils/index'
 import { Ecosystem } from '../Ecosystem'
 import { AtomInstance } from '../instances/AtomInstance'
-import { prefix } from '@zedux/atoms/utils'
 
 export abstract class AtomTemplateBase<
   G extends AtomGenerics,
