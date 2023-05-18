@@ -740,4 +740,16 @@ describe('types', () => {
       Store<string>
     >()
   })
+
+  test('promises', () => {
+    const atom1 = atom('1', () => api().setPromise())
+    const atom2 = atom('1', () => api().setPromise(undefined))
+    const atom3 = atom('1', () =>
+      api().setPromise().setPromise(Promise.resolve(2))
+    )
+
+    expectTypeOf<AtomPromiseType<typeof atom1>>().toBeUndefined()
+    expectTypeOf<AtomPromiseType<typeof atom2>>().toBeUndefined()
+    expectTypeOf<AtomPromiseType<typeof atom3>>().resolves.toBeNumber()
+  })
 })
