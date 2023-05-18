@@ -62,12 +62,18 @@ export class AtomApi<G extends AtomApiGenerics> {
     > // for chaining
   }
 
-  public setPromise<T>(
-    promise: Promise<T>
-  ): AtomApi<Prettify<Omit<G, 'Promise'> & { Promise: Promise<T> }>> {
+  public setPromise(): AtomApi<Omit<G, 'Promise'> & { Promise: undefined }>
+
+  public setPromise<P extends Promise<any> | undefined>(
+    promise: P
+  ): AtomApi<Omit<G, 'Promise'> & { Promise: P }>
+
+  public setPromise<P extends Promise<any> | undefined>(
+    promise?: P
+  ): AtomApi<Prettify<Omit<G, 'Promise'> & { Promise: P }>> {
     this.promise = promise as unknown as G['Promise']
 
-    return this as AtomApi<Omit<G, 'Promise'> & { Promise: Promise<T> }> // for chaining
+    return this as unknown as AtomApi<Omit<G, 'Promise'> & { Promise: P }> // for chaining
   }
 
   public setTtl(ttl: AtomInstanceTtl | (() => AtomInstanceTtl)) {
