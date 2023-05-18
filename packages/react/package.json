@@ -25,12 +25,12 @@
     ".": {
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js",
-      "default": "./dist/cjs/index.js",
       "production": {
         "import": "./dist/zedux-react.es.min.js",
         "require": "./dist/zedux-react.umd.min.js",
         "default": "./dist/zedux-react.umd.min.js"
-      }
+      },
+      "default": "./dist/cjs/index.js"
     }
   },
   "files": [
