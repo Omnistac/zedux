@@ -1,4 +1,4 @@
-import { createStore, is, isPlainObject } from '@zedux/core'
+import { createStore, detailedTypeof, is, isPlainObject } from '@zedux/core'
 import { internalStore } from '../store/index'
 import {
   AnyAtomInstance,
@@ -27,6 +27,7 @@ import { AtomInstanceBase } from './instances/AtomInstanceBase'
 import { Scheduler } from './Scheduler'
 import { SelectorCache, Selectors } from './Selectors'
 import { Mod, ZeduxPlugin } from './ZeduxPlugin'
+import { AtomTemplate } from './templates/AtomTemplate'
 
 const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
   map[mod as Mod] = 0
@@ -414,6 +415,24 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>
   ) {
+    if (DEV) {
+      if (!atom || (!is(atom, AtomInstanceBase) && !is(atom, AtomTemplate))) {
+        throw new TypeError(
+          `Zedux: Expected an atom template or atom instance. Received ${detailedTypeof(
+            atom
+          )}`
+        )
+      }
+
+      if (typeof params !== 'undefined' && !Array.isArray(params)) {
+        throw new TypeError(
+          `Zedux: Expected atom params to be an array. Received ${detailedTypeof(
+            params
+          )}`
+        )
+      }
+    }
+
     if (is(atom, AtomInstanceBase)) {
       // if the passed atom instance is Destroyed, get(/create) the
       // non-Destroyed instance

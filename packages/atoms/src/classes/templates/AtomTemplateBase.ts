@@ -3,6 +3,7 @@ import {
   AtomValueOrFactory,
   AtomGenerics,
 } from '@zedux/atoms/types/index'
+import { prefix } from '@zedux/atoms/utils/index'
 import { Ecosystem } from '../Ecosystem'
 import { AtomInstance } from '../instances/AtomInstance'
 
@@ -10,6 +11,8 @@ export abstract class AtomTemplateBase<
   G extends AtomGenerics,
   InstanceType extends AtomInstance<G>
 > {
+  public static $$typeof = Symbol.for(`${prefix}/AtomTemplateBase`)
+
   public readonly dehydrate?: AtomConfig<G['State']>['dehydrate']
   public readonly flags?: string[]
   public readonly hydrate?: AtomConfig<G['State']>['hydrate']
