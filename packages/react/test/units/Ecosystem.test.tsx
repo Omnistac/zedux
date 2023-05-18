@@ -112,6 +112,25 @@ describe('Ecosystem', () => {
     expect(ecosystem.findAll()).toEqual(expected)
   })
 
+  test('getInstance() throws an error if bad values are passed', () => {
+    const atom1 = atom('1', (param: string) => param)
+
+    // @ts-expect-error first param must be an atom template or instance
+    expect(() => ecosystem.getInstance({})).toThrowError(
+      /Expected an atom template or atom instance. Received object/i
+    )
+
+    // @ts-expect-error first param must be an atom template or instance
+    expect(() => ecosystem.getInstance()).toThrowError(
+      /Expected an atom template or atom instance. Received undefined/i
+    )
+
+    // @ts-expect-error second param must be an array or undefined
+    expect(() => ecosystem.getInstance(atom1, 'a')).toThrowError(
+      /Expected atom params to be an array. Received string/i
+    )
+  })
+
   test("registerPlugin() ignores the plugin if it's already registered", () => {
     const plugin = new ZeduxPlugin()
 
