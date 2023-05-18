@@ -73,6 +73,32 @@ describe('Ecosystem', () => {
     expect(cleanup).toHaveBeenCalledTimes(2)
   })
 
+  test('find() with string returns the exact match if possible', () => {
+    const atom1 = atom('1', (id?: string) => id)
+    const atom2 = atom('someLongKey1', 1)
+    const atom3 = atom('someLongKey11', 1)
+    const atom4 = atom('someLongKey111', 1)
+
+    ecosystem.getInstance(atom1, ['a'])
+    ecosystem.getInstance(atom1)
+    ecosystem.getInstance(atom1, ['b'])
+    ecosystem.getInstance(atom2)
+    ecosystem.getInstance(atom3)
+    ecosystem.getInstance(atom4)
+
+    expect(ecosystem.find('1')).toBe(ecosystem.getInstance(atom1))
+    expect(ecosystem.find('someLongKey11')).toBe(ecosystem.getInstance(atom3))
+
+    // some more checks for fun
+    expect(ecosystem.find(atom4)).toBe(ecosystem.getInstance(atom4))
+    expect(ecosystem.find(atom1, ['a'])).toBe(
+      ecosystem.getInstance(atom1, ['a'])
+    )
+    expect(ecosystem.find(atom1, ['b'])).toBe(
+      ecosystem.getInstance(atom1, ['b'])
+    )
+  })
+
   test('findAll() with no params returns all atom instances', () => {
     const atom1 = atom('1', (id: number) => id)
 

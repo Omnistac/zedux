@@ -314,9 +314,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       return this._instances[id]
     }
 
-    return Object.values(this.findAll(template))[0] as
-      | AtomInstanceType<A>
-      | undefined
+    const matches = this.findAll(template)
+
+    return (
+      matches[template] ||
+      (Object.values(matches)[0] as AtomInstanceType<A> | undefined)
+    )
   }
 
   /**
@@ -327,9 +330,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    */
   public findAll(template?: AnyAtomTemplate | string) {
     const isAtom = (template as AnyAtomTemplate)?.key
-    const filterKey = isAtom
-      ? (template as AnyAtomTemplate).key
-      : (template as string)
+    const filterKey = isAtom || (template as string)?.toLowerCase()
     const hash: Record<string, AnyAtomInstance> = {}
 
     Object.values(this._instances)
@@ -338,7 +339,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         if (
           filterKey &&
           (isAtom
-            ? instance.template.key !== filterKey
+            ? instance.template.key !== (template as AnyAtomTemplate).key
             : !instance.id.toLowerCase().includes(filterKey))
         ) {
           return
