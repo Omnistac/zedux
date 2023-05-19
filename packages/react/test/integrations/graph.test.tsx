@@ -16,7 +16,6 @@ import {
   AtomGetters,
   EvaluationReason,
 } from '@zedux/react'
-import { Static } from '@zedux/react/utils'
 import React from 'react'
 import { ecosystem } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
@@ -72,20 +71,20 @@ describe('graph', () => {
       operation: 'get',
     }
 
-    expect(ecosystem._graph.nodes.atom1.dependents).toEqual({
-      atom4: expectedEdges,
-    })
+    expect([...ecosystem._graph.nodes.atom1.dependents.entries()]).toEqual([
+      ['atom4', expectedEdges],
+    ])
 
-    expect(ecosystem._graph.nodes.atom2.dependents).toEqual({
-      atom4: expectedEdges,
-    })
+    expect([...ecosystem._graph.nodes.atom2.dependents.entries()]).toEqual([
+      ['atom4', expectedEdges],
+    ])
 
     expect(ecosystem._graph.nodes.atom3).toBeUndefined()
 
-    expect(ecosystem._graph.nodes.atom4.dependencies).toEqual({
-      atom1: true,
-      atom2: true,
-    })
+    expect([...ecosystem._graph.nodes.atom4.dependencies.entries()]).toEqual([
+      ['atom1', true],
+      ['atom2', true],
+    ])
 
     const button = await findByText('toggle')
 
@@ -96,20 +95,20 @@ describe('graph', () => {
 
     expect(div).toHaveTextContent('4')
 
-    expect(ecosystem._graph.nodes.atom1.dependents).toEqual({
-      atom4: expectedEdges,
-    })
+    expect([...ecosystem._graph.nodes.atom1.dependents.entries()]).toEqual([
+      ['atom4', expectedEdges],
+    ])
 
-    expect(ecosystem._graph.nodes.atom2.dependents).toEqual({})
+    expect([...ecosystem._graph.nodes.atom2.dependents.entries()]).toEqual([])
 
-    expect(ecosystem._graph.nodes.atom3.dependents).toEqual({
-      atom4: expectedEdges,
-    })
+    expect([...ecosystem._graph.nodes.atom3.dependents.entries()]).toEqual([
+      ['atom4', expectedEdges],
+    ])
 
-    expect(ecosystem._graph.nodes.atom4.dependencies).toEqual({
-      atom1: true,
-      atom3: true,
-    })
+    expect([...ecosystem._graph.nodes.atom4.dependencies.entries()]).toEqual([
+      ['atom1', true],
+      ['atom3', true],
+    ])
 
     expect(ecosystem.viewGraph()).toMatchSnapshot()
     expect(ecosystem.viewGraph('bottom-up')).toMatchSnapshot()
@@ -140,43 +139,7 @@ describe('graph', () => {
       ion1: expect.any(Object),
     })
 
-    expect(ecosystem._graph.nodes).toEqual({
-      atom1: {
-        dependencies: {},
-        dependents: {
-          ion1: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: Static,
-            operation: 'getInstance',
-          },
-        },
-        isSelector: undefined,
-        refCount: 1,
-        weight: 1,
-      },
-      atom2: {
-        dependencies: {},
-        dependents: {
-          ion1: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: Static,
-            operation: 'getInstance',
-          },
-        },
-        isSelector: undefined,
-        refCount: 1,
-        weight: 1,
-      },
-      ion1: {
-        dependencies: { atom1: true, atom2: true },
-        dependents: {},
-        isSelector: undefined,
-        refCount: 0,
-        weight: 1, // static dependencies don't affect the weight
-      },
-    })
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
 
     expect(evaluations).toEqual([1])
 
@@ -202,98 +165,13 @@ describe('graph', () => {
 
     const instance = ecosystem.getInstance(atomD)
 
-    expect(ecosystem._graph.nodes).toEqual({
-      a: {
-        dependencies: {},
-        dependents: {
-          d: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'injectAtomValue',
-          },
-        },
-        isSelector: undefined,
-        refCount: 1,
-        weight: 1,
-      },
-      'b-["b"]': {
-        dependencies: {},
-        dependents: {
-          d: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'get',
-          },
-        },
-        isSelector: undefined,
-        refCount: 1,
-        weight: 1,
-      },
-      d: {
-        dependencies: {
-          a: true,
-          'b-["b"]': true,
-        },
-        dependents: {},
-        isSelector: undefined,
-        refCount: 0,
-        weight: 3,
-      },
-    })
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
 
     useB = false
     instance.invalidate()
     jest.runAllTimers()
 
-    expect(ecosystem._graph.nodes).toEqual({
-      a: {
-        dependencies: {},
-        dependents: {
-          d: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'injectAtomValue',
-          },
-        },
-        isSelector: undefined,
-        refCount: 1,
-        weight: 1,
-      },
-      'b-["b"]': {
-        dependencies: {},
-        dependents: {},
-        isSelector: undefined,
-        refCount: 0,
-        weight: 1,
-      },
-      c: {
-        dependencies: {},
-        dependents: {
-          d: {
-            callback: undefined,
-            createdAt: expect.any(Number),
-            flags: 0,
-            operation: 'get',
-          },
-        },
-        isSelector: undefined,
-        refCount: 1,
-        weight: 1,
-      },
-      d: {
-        dependencies: {
-          a: true,
-          c: true,
-        },
-        dependents: {},
-        isSelector: undefined,
-        refCount: 0,
-        weight: 3,
-      },
-    })
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
   })
 
   test('atom instances can be passed as atom params', () => {

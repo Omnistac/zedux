@@ -42,8 +42,7 @@ const isRefDifferent = (
   const oldSelector = cacheRef.current.selectorRef
   if (newSelector === oldSelector) return false
 
-  const { dependents } = _graph.nodes[cacheRef.current.id]
-  if (Object.keys(dependents).length !== 1) return true
+  if (_graph.nodes[cacheRef.current.id].refCount !== 1) return true
 
   const newIsFunction = typeof newSelector === 'function'
   const oldIsFunction = typeof oldSelector === 'function'
@@ -121,7 +120,7 @@ export const useAtomSelector = <T, Args extends any[]>(
         if (glob.IS_REACT_ACT_ENVIRONMENT) onStoreChange()
 
         // this function must be idempotent
-        if (!_graph.nodes[cache.id]?.dependents[dependentKey]) {
+        if (!_graph.nodes[cache.id]?.dependents.get(dependentKey)) {
           // React can unmount other components before calling this subscribe
           // function but after we got the cache above. Re-get the cache
           // if such unmountings destroyed it in the meantime:

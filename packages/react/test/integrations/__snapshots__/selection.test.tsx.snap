@@ -3,11 +3,11 @@
 exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 1`] = `
 {
   "1": {
-    "dependencies": {
-      "@@selector-common-name-0": true,
+    "dependencies": Map {
+      "@@selector-common-name-0" => true,
     },
-    "dependents": {
-      "no-1": {
+    "dependents": Map {
+      "no-1" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 3,
@@ -19,11 +19,11 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "weight": 3,
   },
   "@@selector-common-name-0": {
-    "dependencies": {
-      "root": true,
+    "dependencies": Map {
+      "root" => true,
     },
-    "dependents": {
-      "1": {
+    "dependents": Map {
+      "1" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -35,9 +35,9 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "weight": 2,
   },
   "root": {
-    "dependencies": {},
-    "dependents": {
-      "@@selector-common-name-0": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "@@selector-common-name-0" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -54,11 +54,11 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 2`] = `
 {
   "2": {
-    "dependencies": {
-      "@@selector-common-name-2": true,
+    "dependencies": Map {
+      "@@selector-common-name-2" => true,
     },
-    "dependents": {
-      "no-3": {
+    "dependents": Map {
+      "no-3" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 3,
@@ -70,11 +70,11 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "weight": 3,
   },
   "@@selector-common-name-2": {
-    "dependencies": {
-      "root": true,
+    "dependencies": Map {
+      "root" => true,
     },
-    "dependents": {
-      "2": {
+    "dependents": Map {
+      "2" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -86,9 +86,9 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "weight": 2,
   },
   "root": {
-    "dependencies": {},
-    "dependents": {
-      "@@selector-common-name-2": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "@@selector-common-name-2" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -105,11 +105,11 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 3`] = `
 {
   "1": {
-    "dependencies": {
-      "@@selector-common-name-4": true,
+    "dependencies": Map {
+      "@@selector-common-name-4" => true,
     },
-    "dependents": {
-      "no-5": {
+    "dependents": Map {
+      "no-5" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 3,
@@ -121,11 +121,11 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "weight": 3,
   },
   "2": {
-    "dependencies": {
-      "@@selector-common-name-2": true,
+    "dependencies": Map {
+      "@@selector-common-name-2" => true,
     },
-    "dependents": {
-      "no-3": {
+    "dependents": Map {
+      "no-3" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 3,
@@ -137,11 +137,11 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "weight": 3,
   },
   "@@selector-common-name-2": {
-    "dependencies": {
-      "root": true,
+    "dependencies": Map {
+      "root" => true,
     },
-    "dependents": {
-      "2": {
+    "dependents": Map {
+      "2" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -153,11 +153,11 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "weight": 2,
   },
   "@@selector-common-name-4": {
-    "dependencies": {
-      "root": true,
+    "dependencies": Map {
+      "root" => true,
     },
-    "dependents": {
-      "1": {
+    "dependents": Map {
+      "1" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -169,15 +169,15 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "weight": 2,
   },
   "root": {
-    "dependencies": {},
-    "dependents": {
-      "@@selector-common-name-2": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "@@selector-common-name-2" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
       },
-      "@@selector-common-name-4": {
+      "@@selector-common-name-4" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -194,11 +194,11 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 4`] = `
 {
   "1": {
-    "dependencies": {
-      "@@selector-common-name-4": true,
+    "dependencies": Map {
+      "@@selector-common-name-4" => true,
     },
-    "dependents": {
-      "no-5": {
+    "dependents": Map {
+      "no-5" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 3,
@@ -210,11 +210,11 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "weight": 3,
   },
   "@@selector-common-name-4": {
-    "dependencies": {
-      "root": true,
+    "dependencies": Map {
+      "root" => true,
     },
-    "dependents": {
-      "1": {
+    "dependents": Map {
+      "1" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -226,9 +226,9 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "weight": 2,
   },
   "root": {
-    "dependencies": {},
-    "dependents": {
-      "@@selector-common-name-4": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "@@selector-common-name-4" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,

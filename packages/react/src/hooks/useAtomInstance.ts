@@ -83,7 +83,9 @@ export const useAtomInstance: {
     return [
       (onStoreChange: () => void) => {
         // this function must be idempotent
-        if (!ecosystem._graph.nodes[instance.id]?.dependents[dependentKey]) {
+        if (
+          !ecosystem._graph.nodes[instance.id]?.dependents.get(dependentKey)
+        ) {
           // React can unmount other components before calling this subscribe
           // function but after we got the instance above. Re-get the instance
           // if such unmountings destroyed it in the meantime:

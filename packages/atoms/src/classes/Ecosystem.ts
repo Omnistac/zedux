@@ -9,6 +9,7 @@ import {
   AtomSelectorOrConfig,
   AtomStateType,
   Cleanup,
+  DependentEdge,
   EcosystemConfig,
   EcosystemGraphNode,
   GraphEdgeInfo,
@@ -699,6 +700,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * child nodes, recursively.
    */
   public viewGraph(view?: string) {
+    const { nodes } = this._graph
+
     if (view !== 'top-down' && view !== 'bottom-up') {
       const hash: Record<
         string,
@@ -709,17 +712,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         }
       > = {}
 
-      Object.keys(this._graph.nodes).forEach(id => {
-        const node = this._graph.nodes[id]
+      Object.keys(nodes).forEach(id => {
+        const node = nodes[id]
 
         hash[id] = {
-          dependencies: Object.keys(node.dependencies).map(key => ({
+          dependencies: [...node.dependencies.keys()].map(key => ({
             key,
-            operation: this._graph.nodes[key].dependents[id].operation,
+            operation: (nodes[key].dependents.get(id) as DependentEdge)
+              .operation,
           })),
-          dependents: Object.keys(node.dependents).map(key => ({
+          dependents: [...node.dependents.keys()].map(key => ({
             key,
-            operation: node.dependents[key].operation,
+            operation: (node.dependents.get(key) as DependentEdge).operation,
           })),
           weight: node.weight,
         }
@@ -730,16 +734,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     const hash: GraphViewRecursive = {}
 
-    Object.keys(this._graph.nodes).forEach(key => {
-      const node = this._graph.nodes[key]
+    Object.keys(nodes).forEach(key => {
+      const node = nodes[key]
       const isTopLevel =
         view === 'bottom-up'
-          ? Object.keys(node.dependents).every(key => {
-              const dependent = node.dependents[key]
-
-              return dependent.flags & External
-            })
-          : !Object.keys(node.dependencies).length
+          ? [...node.dependents.values()].every(
+              dependent => dependent.flags & External
+            )
+          : !node.dependencies.size
 
       if (isTopLevel) {
         hash[key] = {}
@@ -749,22 +751,20 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const recurse = (node?: EcosystemGraphNode) => {
       if (!node) return
 
-      const keys = Object.keys(
-        view === 'bottom-up' ? node.dependencies : node.dependents
-      )
+      const map = view === 'bottom-up' ? node.dependencies : node.dependents
       const children: GraphViewRecursive = {}
 
-      keys.forEach(key => {
-        const child = recurse(this._graph.nodes[key])
+      for (const key of map.keys()) {
+        const child = recurse(nodes[key])
 
         if (child) children[key] = child
-      })
+      }
 
       return children
     }
 
     Object.keys(hash).forEach(key => {
-      const node = this._graph.nodes[key]
+      const node = nodes[key]
       const children = recurse(node)
 
       if (children) hash[key] = children

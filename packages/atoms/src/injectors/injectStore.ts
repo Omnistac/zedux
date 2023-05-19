@@ -12,10 +12,7 @@ export const doSubscribe = <State>(
     // during evaluation. TODO: Create an ecosystem-level flag to turn on
     // warning logging for state-updates-during-evaluation, since this may be
     // considered an anti-pattern.
-    if (
-      instance.ecosystem._evaluationStack.isEvaluating(instance.id) ||
-      action.meta === zeduxTypes.ignore
-    ) {
+    if (instance._isEvaluating || action.meta === zeduxTypes.ignore) {
       return
     }
 
