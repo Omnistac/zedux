@@ -123,10 +123,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     if (this.status === 'Destroyed') return
 
     // If we're not force-destroying, don't destroy if there are dependents
-    if (
-      !force &&
-      Object.keys(this.ecosystem._graph.nodes[this.id]?.dependents || {}).length
-    ) {
+    if (!force && this.ecosystem._graph.nodes[this.id]?.refCount) {
       return
     }
 

@@ -131,9 +131,9 @@ export class Selectors {
 
     const node = this.ecosystem._graph.nodes[id]
 
-    if (!force && Object.keys(node.dependents).length) return
-
-    this._destroySelector(id)
+    if (force || !node.refCount) {
+      this._destroySelector(id)
+    }
   }
 
   /**

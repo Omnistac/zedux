@@ -1,5 +1,48 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`graph getInstance(atom) returns the instance 1`] = `
+{
+  "atom1": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "ion1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 4,
+        "operation": "getInstance",
+      },
+    },
+    "isSelector": undefined,
+    "refCount": 1,
+    "weight": 1,
+  },
+  "atom2": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "ion1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 4,
+        "operation": "getInstance",
+      },
+    },
+    "isSelector": undefined,
+    "refCount": 1,
+    "weight": 1,
+  },
+  "ion1": {
+    "dependencies": Map {
+      "atom1" => true,
+      "atom2" => true,
+    },
+    "dependents": Map {},
+    "isSelector": undefined,
+    "refCount": 0,
+    "weight": 1,
+  },
+}
+`;
+
 exports[`graph injectAtomGetters 1`] = `
 {
   "atom1": {
@@ -71,6 +114,99 @@ exports[`graph injectAtomGetters 3`] = `
   "atom2": {},
   "atom3": {
     "atom4": {},
+  },
+}
+`;
+
+exports[`graph on reevaluation, get() updates the graph 1`] = `
+{
+  "a": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "d" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "injectAtomValue",
+      },
+    },
+    "isSelector": undefined,
+    "refCount": 1,
+    "weight": 1,
+  },
+  "b-["b"]": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "d" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+    },
+    "isSelector": undefined,
+    "refCount": 1,
+    "weight": 1,
+  },
+  "d": {
+    "dependencies": Map {
+      "a" => true,
+      "b-["b"]" => true,
+    },
+    "dependents": Map {},
+    "isSelector": undefined,
+    "refCount": 0,
+    "weight": 3,
+  },
+}
+`;
+
+exports[`graph on reevaluation, get() updates the graph 2`] = `
+{
+  "a": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "d" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "injectAtomValue",
+      },
+    },
+    "isSelector": undefined,
+    "refCount": 1,
+    "weight": 1,
+  },
+  "b-["b"]": {
+    "dependencies": Map {},
+    "dependents": Map {},
+    "isSelector": undefined,
+    "refCount": 0,
+    "weight": 1,
+  },
+  "c": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "d" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+    },
+    "isSelector": undefined,
+    "refCount": 1,
+    "weight": 1,
+  },
+  "d": {
+    "dependencies": Map {
+      "a" => true,
+      "c" => true,
+    },
+    "dependents": Map {},
+    "isSelector": undefined,
+    "refCount": 0,
+    "weight": 3,
   },
 }
 `;

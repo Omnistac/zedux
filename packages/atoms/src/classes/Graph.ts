@@ -47,7 +47,7 @@ const unscheduleNodeDestruction = (
 export class Graph {
   public nodes: Record<string, EcosystemGraphNode> = {}
   private updateStack: {
-    dependencies: Record<string, DependentEdge>
+    dependencies: Map<string, DependentEdge>
     key: string
   }[] = []
 
@@ -86,16 +86,16 @@ export class Graph {
       )
     }
 
-    const dependency = dependencies[dependencyKey]
+    const dependency = dependencies.get(dependencyKey)
 
     // Don't overwrite a higher-prio edge with a lower one. Also ignore same-prio
     if (!dependency || dependency.flags > flags) {
-      dependencies[dependencyKey] = newEdge
+      dependencies.set(dependencyKey, newEdge)
       return newEdge
     }
 
     // if this edge was ignored, return the existing buffered edge
-    return dependencies[dependencyKey]
+    return dependency
   }
 
   // Should only be used internally
@@ -103,8 +103,8 @@ export class Graph {
     if (this.nodes[nodeId]) return // already added
 
     this.nodes[nodeId] = {
-      dependencies: {},
-      dependents: {},
+      dependencies: new Map(),
+      dependents: new Map(),
       isSelector,
       refCount: 0,
       weight: 1, // this node doesn't have dependencies yet; its weight is 1
@@ -120,7 +120,7 @@ export class Graph {
    * efficient as possible.
    */
   public bufferUpdates(key: string) {
-    this.updateStack.push({ key, dependencies: {} })
+    this.updateStack.push({ key, dependencies: new Map() })
   }
 
   /**
@@ -132,14 +132,12 @@ export class Graph {
     const { dependencies, key } = this.updateStack[this.updateStack.length - 1]
     const edges = this.nodes[key].dependencies
 
-    Object.keys(dependencies).forEach(dependencyKey => {
-      const existingEdge = edges[dependencyKey]
-
+    for (const dependencyKey of dependencies.keys()) {
       // the edge wasn't created during the evaluation that errored; keep it
-      if (existingEdge) return
+      if (edges.get(dependencyKey)) continue
 
       scheduleNodeDestruction(this, dependencyKey)
-    })
+    }
 
     this.updateStack.pop()
   }
@@ -149,42 +147,41 @@ export class Graph {
    * the buffered edges to the graph.
    */
   public flushUpdates() {
-    const { dependencies, key } = this.updateStack[this.updateStack.length - 1]
-    const edges = this.nodes[key].dependencies
+    const { nodes, updateStack } = this
+    const { dependencies, key } = updateStack[updateStack.length - 1]
+    const edges = nodes[key].dependencies
 
     // remove any edges that were not recreated while buffering. Don't remove
     // anything but implicit-internal edges (those are the only kind we
     // auto-create during evaluation - other types may have been added manually
     // by the user and we don't want to touch them here)
-    Object.keys(edges).forEach(dependencyKey => {
-      const existingEdge = this.nodes[dependencyKey].dependents[key]
+    for (const dependencyKey of edges.keys()) {
+      // this cast should be fine
+      const existingEdge = nodes[dependencyKey].dependents.get(
+        key
+      ) as DependentEdge
 
-      if (existingEdge.flags & (Explicit | External)) return
+      if (existingEdge.flags & (Explicit | External)) continue
 
-      const edgeToAdd = dependencies[dependencyKey]
+      const edgeToAdd = dependencies.get(dependencyKey)
 
-      // edge still exists; keep it
-      if (edgeToAdd && edgeToAdd.flags === existingEdge.flags) return
-
-      this.removeEdge(key, dependencyKey)
-    })
+      // if edge still exists, keep it
+      if (!edgeToAdd || edgeToAdd.flags !== existingEdge.flags) {
+        this.removeEdge(key, dependencyKey)
+      }
+    }
 
     // add new edges that we tracked while buffering
-    Object.keys(dependencies).forEach(dependencyKey => {
-      const edgeToAdd = dependencies[dependencyKey]
-      const existingEdge = edges[dependencyKey]
+    for (const [dependencyKey, edgeToAdd] of dependencies.entries()) {
+      const existingEdge = edges.get(dependencyKey)
 
-      // edge already exists; keep it
-      if (existingEdge) return
+      // if edge already exists, keep it
+      if (!existingEdge) {
+        this.finishAddingEdge(key, dependencyKey, edgeToAdd)
+      }
+    }
 
-      this.finishAddingEdge(key, dependencyKey, edgeToAdd)
-    })
-
-    this.updateStack.pop()
-  }
-
-  public getRefCount(dependencyKey: string) {
-    return Object.keys(this.nodes[dependencyKey]?.dependents || {}).length
+    updateStack.pop()
   }
 
   public removeDependencies(dependentKey: string) {
@@ -194,11 +191,11 @@ export class Graph {
 
     const edges = node.dependencies
 
-    if (!edges) return
+    if (!edges) return // TODO: delete
 
-    Object.keys(edges).forEach(dependencyKey => {
+    for (const dependencyKey of edges.keys()) {
       this.removeEdge(dependentKey, dependencyKey)
-    })
+    }
   }
 
   /**
@@ -216,7 +213,7 @@ export class Graph {
 
     // erase graph edge between dependent and dependency
     if (dependent) {
-      delete dependent.dependencies[dependencyKey]
+      dependent.dependencies.delete(dependencyKey)
     }
 
     // hmm could maybe happen when a dependency was force-destroyed if a child
@@ -224,11 +221,12 @@ export class Graph {
     // that though)
     if (!dependency) return
 
-    const dependentEdge = dependency.dependents[dependentKey]
+    const dependentEdge = dependency.dependents.get(dependentKey)
 
     // happens in React 18+ (see this method's jsdoc above)
     if (!dependentEdge) return
-    delete dependency.dependents[dependentKey]
+
+    dependency.dependents.delete(dependentKey)
     dependency.refCount--
 
     // static dependencies don't change a node's weight
@@ -284,22 +282,20 @@ export class Graph {
 
     // Remove this dependency from all its dependents and recalculate all
     // weights recursively
-    Object.keys(node.dependents).forEach(dependentKey => {
-      const dependentEdge = node.dependents[dependentKey]
-
+    for (const [dependentKey, dependentEdge] of node.dependents.entries()) {
       if (!(dependentEdge.flags & Static)) {
         this.recalculateNodeWeight(dependentKey, -node.weight)
       }
 
       const dependentNode = this.nodes[dependentKey]
 
-      if (dependentNode) delete dependentNode.dependencies[nodeId]
+      if (dependentNode) dependentNode.dependencies.delete(nodeId)
 
       // we _probably_ don't need to send edgeRemoved mod events to plugins for
       // these - it's better that they receive the duplicate edgeCreated event
       // when the dependency is recreated by its dependent(s) so they can infer
       // that the edge was "moved"
-    })
+    }
 
     delete this.nodes[nodeId]
   }
@@ -324,12 +320,10 @@ export class Graph {
     const cache = selectors._items[nodeId]
     const node = this.nodes[nodeId]
 
-    Object.keys(node.dependents).forEach(dependentKey => {
-      const dependentEdge = node.dependents[dependentKey]
-
+    for (const [dependentKey, dependentEdge] of node.dependents.entries()) {
       // if edge.task exists, this edge has already been scheduled
       if (dependentEdge.task) {
-        if (signal !== 'Destroyed') return
+        if (signal !== 'Destroyed') continue
 
         // destruction jobs supersede update jobs; cancel the existing job so we
         // can create a new one for the destruction
@@ -339,7 +333,7 @@ export class Graph {
       // Static deps don't update on state change. Dynamic deps don't update on
       // promise change. Both types update on instance force-destruction
       const isStatic = dependentEdge.flags & Static
-      if (isStatic && !scheduleStaticDeps) return
+      if (isStatic && !scheduleStaticDeps) continue
 
       const reason: EvaluationReason = {
         newState,
@@ -355,17 +349,12 @@ export class Graph {
       // own jobs
       if (!(dependentEdge.flags & External)) {
         if (this.nodes[dependentKey].isSelector) {
-          return selectors._scheduleEvaluation(
-            dependentKey,
-            reason,
-            shouldSetTimeout
-          )
+          selectors._scheduleEvaluation(dependentKey, reason, shouldSetTimeout)
+          continue
         }
 
-        return _instances[dependentKey]._scheduleEvaluation(
-          reason,
-          shouldSetTimeout
-        )
+        _instances[dependentKey]._scheduleEvaluation(reason, shouldSetTimeout)
+        continue
       }
 
       // schedule external dependents
@@ -389,7 +378,7 @@ export class Graph {
 
       // mutate the edge; give it the scheduled task so it can be cleaned up
       dependentEdge.task = task
-    })
+    }
   }
 
   /**
@@ -407,9 +396,9 @@ export class Graph {
 
     // draw graph edge between dependent and dependency
     if (!(newEdge.flags & External)) {
-      this.nodes[dependentKey].dependencies[dependencyKey] = true
+      this.nodes[dependentKey].dependencies.set(dependencyKey, true)
     }
-    dependency.dependents[dependentKey] = newEdge
+    dependency.dependents.set(dependentKey, newEdge)
     dependency.refCount++
 
     unscheduleNodeDestruction(this, dependencyKey)
@@ -450,8 +439,8 @@ export class Graph {
 
     node.weight += weightDiff
 
-    Object.keys(node.dependents).forEach(dependentKey => {
+    for (const dependentKey of node.dependents.keys()) {
       this.recalculateNodeWeight(dependentKey, weightDiff)
-    })
+    }
   }
 }
