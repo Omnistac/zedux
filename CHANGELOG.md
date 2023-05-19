@@ -1,3 +1,23 @@
+## v1.0.2 (May 19, 2023)
+
+Zedux got a big speed boost! In practice it won't matter much, but Zedux should now perform even better on stress tests and benchmarks. Enjoy!
+
+### New Features:
+
+- `atoms`: allow setting promise to undefined in AtomApi (#58)
+- `atoms`: improve graph perf by removing unnecessary `Object.keys()` calls (#52)
+- `atoms`: improve non-TS `.getInstance()` usage by throwing helpful errors (#59)
+- `atoms`, `react`: make atoms package fully framework agnostic (#51)
+
+### Fixes:
+
+- `atoms`: improve atom searching (#57)
+- `atoms`: make it easier for TS to infer AtomApi types from chained methods (#49)
+- `react`: make React imports specify file extensions in esm builds (#53)
+- `react`: update React peer dep to a minimum of v16.3.0 (#54)
+- `atoms`, `react`: improve overloads of atom-template-accepting functions for paramless atoms (#50)
+- `atoms`, `core`, `immer`, `machines`, `react`: fix package.json export order (#56)
+
 ## v1.0.1 (Apr 28, 2023)
 
 ### Fixes:
