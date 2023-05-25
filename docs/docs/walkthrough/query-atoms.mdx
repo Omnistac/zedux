@@ -284,6 +284,79 @@ Clicking the button now does nothing because `injectPromise()` prevents the prom
 Try modifying the above sandbox to make the button work again while still using `injectPromise()` (tip: As with most things in Zedux, there are several ways to go about it).
 :::
 
+## Multiple Atoms
+
+Managing asynchrony across the atom graph is more verbose in Zedux compared to Recoil and Jotai. This was a conscious decision we made to give you full control over asynchrony. The downside is that you need to exercise that control.
+
+Compare:
+
+```ts
+// Jotai
+const asyncAtom = atom(() => Promise.resolve('hello'))
+const derivedAtom = atom(async get => (await get(asyncAtom)).toUpperCase())
+
+// Zedux
+const asyncAtom = atom('async', () => api(Promise.resolve('hello')))
+const derivedAtom = ion('derived', ({ get }) =>
+  get(asyncAtom).data?.toUpperCase()
+)
+```
+
+While this isn't so bad so far, in Zedux, consumers of `derivedAtom` will need to handle `undefined` until the data comes in.
+
+When forwarding the promise, you can let React suspense take care of that in components:
+
+```ts
+const derivedAtom = ion('derived', ({ get, getInstance }) => {
+  const asyncInstance = getInstance(asyncAtom)
+  const { data } = get(asyncInstance)
+
+  // forward the promise:
+  return api(data?.toUpperCase()).setPromise(asyncInstance.promise)
+})
+
+function MyComponent() {
+  // this component will suspend until this string is defined
+  const uppercaseString = useAtomValue(derivedAtom)
+}
+```
+
+### Why Regress?
+
+In Recoil and Jotai, you "don't need to worry" about asynchrony like this. The atom graph takes care of it - auto-awaiting values wherever needed inside atoms themselves. This certainly seems like Zedux is taking a step backwards.
+
+An early prototype of Zedux implemented Recoil-esque promise handling for atoms. We got rid of it because we needed more control over async flows. With Recoil, you have to learn their promise helpers like [`waitForAll()`](https://recoiljs.org/docs/api-reference/utils/waitForAll), [`waitForAny()`](https://recoiljs.org/docs/api-reference/utils/waitForAny), etc. With Zedux, you can use absolutely anything.
+
+```ts
+const derivedAtom = ion('derived', ({ get, getInstance }) => {
+  const asyncInstance = getInstance(asyncAtom)
+  const store = injectStore('')
+
+  injectEffect(() => {
+    // use RxJS's `from` to convert a store to an observable of state updates:
+    const subscription = from(asyncInstance.store)
+      .pipe(throttleTime(1000))
+      .subscribe(state => store.setState(state.data?.toUpperCase()))
+
+    return () => subscription.unsubscribe()
+  }, [asyncInstance])
+
+  return store
+})
+```
+
+This is very verbose, but the beauty of Zedux's model is that, just like React hooks, all of this can be abstracted into a custom injector. The above code could be reduced to something like this:
+
+```ts
+const derivedAtom = ion('derived', () =>
+  injectThrottle(asyncAtom, state => state.data?.toUpperCase())
+)
+```
+
+Remember that Zedux was designed for Ultimate Power. We do some crazy stuff in our fintech apps at Omnistac. Some design decisions like this might seem annoying for smaller apps, but just remember that they scale very well.
+
+For more info, see [this discussion thread](https://github.com/Omnistac/zedux/discussions/62).
+
 ## Not React Query
 
 If you know React Query, you've surely noticed that these "query atoms" lack tons of features that React Query has. This is primarily because Zedux's objective is different from React Query's: React Query is a server cache manager. Zedux is _good_ at managing server caches and is extensible enough to at least match React Query in that regard, but Zedux is primarily a client state manager like Recoil and Redux.
