@@ -201,6 +201,12 @@ const blogPostAtom = atom('blogPost', (id: string) => {
 })
 ```
 
+:::tip
+Passing `subscribe: false` to child stores like this is _okay_, but not needed. Zedux is intelligent enough to prevent an atom from evaluating multiple times when composed stores update.
+
+However, each subscribed store _will_ add a reason to the [EvaluationReason](../api/types/EvaluationReason) list explaining the next evaluation. Passing `subscribe: false` is therefore a very tiny micro optimization. Don't use it unless you need it (tip: you probably don't).
+:::
+
 ### Cleanup
 
 Zedux passes an [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController) to the promise factory. Hook into this to cancel fetches or otherwise clean up your async flow.

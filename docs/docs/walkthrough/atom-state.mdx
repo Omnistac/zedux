@@ -230,13 +230,11 @@ Zedux stores have an Ultra Mega Superpower: They are composable.
 
 ```tsx live ecosystemId=atom-state/multiple-stores resultVar=MultipleStores
 const multipleStoresAtom = atom('multipleStores', () => {
-  // we use `subscribe: false` to prevent updates to these child stores
-  // from causing extra evaluations
-  const a = injectStore(1, { subscribe: false })
-  const b = injectStore(10, { subscribe: false })
+  const a = injectStore(1)
+  const b = injectStore(10)
+  const store = injectStore()
 
   // .use() configures the store after creation:
-  const store = injectStore()
   store.use({ a, b }) // <- the magic!
 
   return store
@@ -265,7 +263,7 @@ function MultipleStores() {
 }
 ```
 
-To return multiple stores, create a single "parent" store composed of all the stores you want to expose and return that.
+To return multiple stores, create a single "parent" store composed of all the stores you want to expose and return that. Calling [`store.use()`](../api/classes/Store#use) like this is the recommended way to create a composed store in an atom.
 
 :::tip
 You've just seen your first configured (not zero-config) store! We'll learn a lot more about this in the [stores walkthrough](stores).

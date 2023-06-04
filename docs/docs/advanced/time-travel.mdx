@@ -227,8 +227,8 @@ Alright! We're ready to put it all together. Here's the full example wrapped in 
 ```tsx live ecosystemId=time-travel/store-traveler resultVar=App
 const formAtom = atom('form', () => {
   const formStore = injectStore()
-  const emailStore = injectStore('', { subscribe: false }) // don't need to subscribe to child stores
-  const passwordStore = injectStore('', { subscribe: false }) // don't need to subscribe to child stores
+  const emailStore = injectStore('')
+  const passwordStore = injectStore('')
 
   formStore.use({
     email: emailStore,
@@ -377,8 +377,8 @@ Example usage:
 ```ts
 const formAtom = atom('form', () => {
   const formStore = injectStore()
-  const emailStore = injectStore('', { subscribe: false })
-  const passwordStore = injectStore('', { subscribe: false })
+  const emailStore = injectStore('')
+  const passwordStore = injectStore('')
 
   formStore.use({
     email: emailStore,
