@@ -16,7 +16,7 @@ configure({
         const newResult = result.replace(
           "tR+='</head>",
           `var __attr=it.metaAttributes.find(attr => attr.includes('property="og:url"'))
-var __match=__attr.match(/property="og:url" content="https:\\/\\/omnistac.github.io(.*?)"/)[1]
+var __match=__attr.match(/property="og:url" content="https:\\/\\/zedux.js.org(.*?)"/)[1]
 if (__match && global.styleTags[__match]) tR+='<style data-ssc="true">'+global.styleTags[__match].current.innerHTML+'</style>'
 tR+='</head>`
         )
