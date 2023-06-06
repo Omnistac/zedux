@@ -31,8 +31,8 @@ const PathsPlugin = (context, options) => {
 module.exports = {
   title: 'Zedux',
   tagline: 'A Molecular State Engine for React',
-  url: 'https://zedux.js.org',
-  baseUrl: '/',
+  url: 'https://omnistac.github.io',
+  baseUrl: '/zedux/',
   favicon: 'img/favicon.ico',
   organizationName: 'Omnistac',
   projectName: 'zedux',
