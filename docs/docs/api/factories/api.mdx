@@ -32,9 +32,6 @@ const ttlObservable = api().setTtl(my$)
 
 // query atoms:
 return api(myPromise)
-
-// prevent automatic batching:
-return api(val, false).setExports(myManuallyBatchedExports)
 ```
 
 ## Signature

@@ -92,7 +92,7 @@ const manualBatchingAtom = atom('manualBatching', () => {
     })
   }, [])
 
-  return api(store, false).setExports({ updateTwice })
+  return api(store).setExports({ updateTwice })
 })
 ```
 
@@ -110,7 +110,7 @@ const noBatchingAtom = atom('noBatching', () => {
     store.setState(state => state + 1)
   }
 
-  return api(store, false).setExports({ updateTwice })
+  return api(store).setExports({ updateTwice })
 })
 ```
 

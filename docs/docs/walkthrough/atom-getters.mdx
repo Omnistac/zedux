@@ -169,7 +169,7 @@ const exampleAtom = atom('example', () => {
   // registers a static graph dependency:
   getInstance(myOtherAtom) // essentially an alias of injectAtomInstance
 
-  // registers graph dependencies depending on myAtomSelector's implementation:
+  // registers a dynamic dependency on myAtomSelector's result:
   select(myAtomSelector) // essentially an alias of injectAtomSelector
 
   // doesn't update the graph; just returns the current value:
