@@ -8,7 +8,7 @@ tags: [atoms, dev-x, theory]
 
 Original photo by <a href="https://unsplash.com/@trails?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">trail</a> on <a href="https://unsplash.com/photos/yN1qXz6Hrfw?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>
 
-(originally posted on [HackerNoon](https://hackernoon.com/scalability-the-lost-level-of-react-state-management)).
+(Originally posted on [HackerNoon](https://hackernoon.com/scalability-the-lost-level-of-react-state-management)).
 
 In a recent conversation about state management in React, the topic of scalability came up. I was disappointed, but not at all surprised to hear it written off as an unimportant buzzword.
 
