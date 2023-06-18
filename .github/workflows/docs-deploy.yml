@@ -7,7 +7,7 @@ on:
 
 # Allow one concurrent deployment
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: true
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -29,20 +29,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - uses: enhancedocs/enhancedocs-github-action@0.1.0
+      - uses: enhancedocs/setup-enhancedocs@0.1.3
         with:
           api-key: ${{ secrets.ENHANCEDOCS_API_KEY }}
       - name: Install dependencies
-        run: yarn install
+        run: yarn
       - name: Build website
-        run: yarn run build
+        run: yarn build
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: "./docs/build"
+          path: './docs/build'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
@@ -50,4 +50,3 @@ jobs:
         run: enhancedocs build docs
       - name: Publish EnhanceDocs
         run: enhancedocs push 6435f1864f5eaca6c03bf1d4
-
