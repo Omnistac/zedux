@@ -7,9 +7,10 @@ const webpack = require('webpack')
 const PathsPlugin = (context, options) => {
   return {
     name: 'zedux-paths-plugin',
-    configureWebpack: (config, isServer, utls) => {
+    configureWebpack: (config, isServer, utils) => {
       return {
         devtool: 'eval-source-map',
+        plugins: [new webpack.DefinePlugin({ DEV: true })],
         resolve: {
           alias: {
             '@zedux/atoms': resolve('../packages/atoms/src'),
@@ -21,7 +22,6 @@ const PathsPlugin = (context, options) => {
             'react-dom': resolve('node_modules/react-dom'),
           },
         },
-        plugins: [new webpack.DefinePlugin({ DEV: true })],
       }
     },
   }
