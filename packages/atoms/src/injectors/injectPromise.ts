@@ -1,4 +1,4 @@
-import { detailedTypeof, Store } from '@zedux/core'
+import { detailedTypeof, RecursivePartial, Store } from '@zedux/core'
 import { api } from '../factories/api'
 import {
   getErrorPromiseState,
@@ -119,7 +119,12 @@ export const injectPromise: {
 
     if (!dataOnly) {
       // preserve previous data and error using setStateDeep:
-      store.setStateDeep(getInitialPromiseState())
+      store.setStateDeep(
+        state =>
+          getInitialPromiseState(
+            (state as PromiseState<T>).data
+          ) as RecursivePartial<PromiseState<T>>
+      )
     }
 
     promise
