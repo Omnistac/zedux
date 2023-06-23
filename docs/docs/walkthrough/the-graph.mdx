@@ -43,7 +43,7 @@ Zedux provides 3 simple graph "views" out of the box:
 
 Call `ecosystem.viewGraph('top-down')`, `ecosystem.viewGraph('bottom-up')`, or `ecosystem.viewGraph('flat')`. Flat is the default.
 
-```tsx live ecosystemId=the-graph/getting resultVar=Graph
+```tsx live ecosystemId=the-graph/getting resultVar=App
 const parentAtom = atom('parent', () => 'Hello, World!')
 
 const childAtom = atom('child', () => {
@@ -56,21 +56,28 @@ const grandchildAtom = atom('grandchild', () => {
   return state
 })
 
-function Graph() {
-  useAtomState(grandchildAtom)
+function GraphView({ name }: { name: string }) {
+  const [graph, setGraph] = useState('')
   const ecosystem = useEcosystem()
-  const flatGraph = ecosystem.viewGraph('flat') // this is the default
-  const bottomUpGraph = ecosystem.viewGraph('bottom-up')
-  const topDownGraph = ecosystem.viewGraph('top-down')
+
+  return graph ? (
+    <pre>{JSON.stringify(graph, null, 2)}</pre>
+  ) : (
+    <button onClick={() => setGraph(ecosystem.viewGraph(name))}>View</button>
+  )
+}
+
+function App() {
+  useAtomState(grandchildAtom)
 
   return (
     <>
       <div>Bottom-Up Graph:</div>
-      <pre>{JSON.stringify(bottomUpGraph, null, 2)}</pre>
+      <GraphView name="bottom-up" />
       <div>Top-Down Graph:</div>
-      <pre>{JSON.stringify(topDownGraph, null, 2)}</pre>
+      <GraphView name="top-down" />
       <div>Flat Graph (default):</div>
-      <pre>{JSON.stringify(flatGraph, null, 2)}</pre>
+      <GraphView name="flat" />
     </>
   )
 }
