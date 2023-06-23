@@ -1,3 +1,10 @@
+## v1.0.3 (Jun 23, 2023)
+
+### Fixes:
+
+- `atoms`: let the WeakMap clean up selector ref keys (#66)
+- `atoms`: make data retention consistent across `injectPromise` and `api(promise)` (#65)
+
 ## v1.0.2 (May 19, 2023)
 
 Zedux got a big speed boost! In practice it won't matter much, but Zedux should now perform even better on stress tests and benchmarks. Enjoy!
