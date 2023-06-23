@@ -294,7 +294,9 @@ export class Selectors {
     _graph.removeNode(id)
     delete this._items[id]
     cache.isDestroyed = true
-    this._refBaseKeys.delete(cache.selectorRef)
+    // don't delete the ref from this._refBaseKeys; this selector cache isn't
+    // necessarily the only one using it (if the selector takes params). Just
+    // let the WeakMap clean itself up.
 
     if (_mods.statusChanged) {
       modBus.dispatch(
