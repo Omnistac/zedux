@@ -62,8 +62,9 @@ describe('the Selectors class', () => {
     ecosystem.selectors.destroyCache(cache2b) // destroys only selector2
 
     expect(ecosystem.selectors._items).toEqual({
-      // id # is 3 by now 'cause #1 was destroyed with cache2a above
-      '@@selector-selector1-3': expect.any(Object),
+      // id # is still 1 'cause the Selector class's `_refBaseKeys` still holds
+      // the cached key despite `cache2b`'s destruction above
+      '@@selector-selector1-1': expect.any(Object),
     })
 
     cleanup()
@@ -115,8 +116,10 @@ describe('the Selectors class', () => {
     expect(cache1.isDestroyed).toBe(true)
     expect(cache2.isDestroyed).toBe(true)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-selector1-4': 'ab', // id # 4 - selector was recreated
-      '@@selector-selector2-3': 'abc', // id # 3 - selector was recreated
+      // ids 2 & 1 - the refs are still cached in the Selector class's
+      // `_refBaseKeys`
+      '@@selector-selector1-2': 'ab',
+      '@@selector-selector2-1': 'abc',
       '@@selector-selector3-0': 'abcd',
     })
 
