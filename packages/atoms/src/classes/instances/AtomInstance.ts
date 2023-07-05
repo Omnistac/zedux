@@ -511,7 +511,8 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   }
 
   private _setPromise(promise: Promise<any>, isStateUpdater?: boolean) {
-    if (promise === this.promise) return this.store.getState()
+    const currentState = this.store?.getState()
+    if (promise === this.promise) return currentState
 
     this.promise = promise as G['Promise']
 
@@ -541,7 +542,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
         )
       })
 
-    const state: PromiseState<any> = getInitialPromiseState()
+    const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
     this._promiseStatus = state.status
 
     this.ecosystem._graph.scheduleDependents(
