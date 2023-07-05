@@ -1,8 +1,8 @@
 import { readInstance } from '../classes/EvaluationStack'
 
 /**
- * A fake injector (can actually be used in loops and if statements). An alias
- * for:
+ * An "unrestricted" injector (can actually be used in loops and if statements).
+ * An alias for:
  *
  * ```ts
  * const { ecosystem } = injectAtomGetters()
