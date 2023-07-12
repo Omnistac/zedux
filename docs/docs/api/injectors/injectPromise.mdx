@@ -73,17 +73,19 @@ It also gives you access to the promise and store so you can compose them with o
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps: InjectorDeps,
-    config: { initialState?: T; dataOnly: true } & InjectStoreConfig
+    config: Omit<InjectPromiseConfig, 'dataOnly'> & {
+      dataOnly: true
+    } & InjectStoreConfig
   ): AtomApi<{
     Exports: Record<string, any>
     Promise: Promise<T>
     State: T
     Store: Store<T>
-  }>\n
+  }>
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps?: InjectorDeps,
-    config?: { initialState?: T; dataOnly?: boolean } & InjectStoreConfig
+    config?: InjectPromiseConfig<T> & InjectStoreConfig
   ): AtomApi<{
     Exports: Record<string, any>
     Promise: Promise<T>
@@ -143,7 +145,7 @@ store.getState() // <the data>
   </Item>
   <Item name="config">
     <p>Optional. An object with the following optional properties:</p>
-    <Ts>{`{ dataOnly, initialState, ...storeConfig }`}</Ts>
+    <Ts>{`{ dataOnly, initialState, runOnInvalidate, ...storeConfig }`}</Ts>
     <Legend>
       <Item name="dataOnly">
         <p>
@@ -170,6 +172,26 @@ store.getState() // <the data>
           Without this specified, the store's <code>data</code> will be{' '}
           <code>undefined</code> until the promise resolves
         </p>
+      </Item>
+      <Item name="runOnInvalidate">
+        <p>
+          Optional. Boolean. Default <code>false.</code>
+        </p>
+        <p>
+          If true, the promise factory will rerun when the current atom instance
+          reevaluates due to an{' '}
+          <Link to="../classes/AtomInstance#invalidate">
+            <code>invalidate</code>
+          </Link>{' '}
+          call.
+        </p>
+        <p>Essentially a shorthand for doing this yourself:</p>
+        <Ts>{`const reasons = injectWhy()
+const counterRef = injectRef(0)\n
+if (reasons.some(reason => reason.type === 'cache invalidated')) {
+  counterRef.current++
+}\n
+const promiseApi = injectPromise(myPromiseFactory, [counterRef.current])`}</Ts>
       </Item>
       <Item name="storeConfig">
         <p>Optional. Configuration properties for the created store.</p>

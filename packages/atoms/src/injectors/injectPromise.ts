@@ -66,10 +66,8 @@ export const injectPromise: {
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps: InjectorDeps,
-    config: {
+    config: Omit<InjectPromiseConfig, 'dataOnly'> & {
       dataOnly: true
-      initialState?: T
-      runOnInvalidate?: boolean
     } & InjectStoreConfig
   ): AtomApi<{
     Exports: Record<string, any>
