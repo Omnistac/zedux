@@ -265,6 +265,12 @@ export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   ? <D = any>(selector: (state: State) => D) => D
   : <D = any>(params: Params, selector: (state: State) => D) => D
 
+export interface InjectPromiseConfig<T = any> {
+  dataOnly?: boolean
+  initialState?: T
+  runOnInvalidate?: boolean
+}
+
 export interface InjectStoreConfig {
   hydrate?: boolean
   subscribe?: boolean

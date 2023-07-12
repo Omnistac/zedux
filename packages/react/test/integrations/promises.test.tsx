@@ -1,17 +1,25 @@
-import { api, atom, injectAtomValue, injectPromise } from '@zedux/react'
+import {
+  api,
+  atom,
+  injectAtomValue,
+  injectPromise,
+  injectRef,
+} from '@zedux/react'
 import { ecosystem } from '../utils/ecosystem'
 
 const reloadAtom = atom('reload', 0)
 
-const promiseAtom = atom('promise', () => {
+const promiseAtom = atom('promise', (runOnInvalidate?: boolean) => {
+  const countRef = injectRef(0)
   const reloadCounter = injectAtomValue(reloadAtom)
 
   const atomApi = injectPromise(
     () =>
       new Promise(resolve => {
-        setTimeout(() => resolve(reloadCounter), 1)
+        setTimeout(() => resolve(reloadCounter + countRef.current++), 1)
       }),
-    [reloadCounter]
+    [reloadCounter],
+    { runOnInvalidate }
   )
 
   return atomApi
@@ -67,7 +75,7 @@ describe('promises', () => {
     await Promise.resolve() // wait for injectPromise's `.then` to run
 
     expect(promiseInstance.getState()).toEqual({
-      data: 1,
+      data: 2,
       isError: false,
       isLoading: false,
       isSuccess: true,
@@ -115,6 +123,98 @@ describe('promises', () => {
 
     expect(queryInstance.getState()).toEqual({
       data: 1,
+      isError: false,
+      isLoading: false,
+      isSuccess: true,
+      status: 'success',
+    })
+  })
+
+  test('injectPromise runOnInvalidate reruns promise factory on atom invalidation', async () => {
+    jest.useFakeTimers()
+
+    const promiseInstance = ecosystem.getInstance(promiseAtom, [true])
+
+    expect(promiseInstance.getState()).toEqual({
+      data: undefined,
+      isError: false,
+      isLoading: true,
+      isSuccess: false,
+      status: 'loading',
+    })
+
+    jest.runAllTimers()
+    await Promise.resolve() // wait for injectPromise's `.then` to run
+
+    expect(promiseInstance.getState()).toEqual({
+      data: 0,
+      isError: false,
+      isLoading: false,
+      isSuccess: true,
+      status: 'success',
+    })
+
+    promiseInstance.invalidate()
+
+    expect(promiseInstance.getState()).toEqual({
+      data: 0,
+      isError: false,
+      isLoading: true,
+      isSuccess: false,
+      status: 'loading',
+    })
+
+    jest.runAllTimers()
+    await Promise.resolve() // wait for injectPromise's `.then` to run
+
+    expect(promiseInstance.getState()).toEqual({
+      data: 1,
+      isError: false,
+      isLoading: false,
+      isSuccess: true,
+      status: 'success',
+    })
+  })
+
+  test('injectPromise does not rerun promise function on atom invalidation when !runOnInvalidate', async () => {
+    jest.useFakeTimers()
+
+    const promiseInstance = ecosystem.getInstance(promiseAtom, [false])
+
+    expect(promiseInstance.getState()).toEqual({
+      data: undefined,
+      isError: false,
+      isLoading: true,
+      isSuccess: false,
+      status: 'loading',
+    })
+
+    jest.runAllTimers()
+    await Promise.resolve() // wait for injectPromise's `.then` to run
+
+    expect(promiseInstance.getState()).toEqual({
+      data: 0,
+      isError: false,
+      isLoading: false,
+      isSuccess: true,
+      status: 'success',
+    })
+
+    promiseInstance.invalidate()
+
+    expect(promiseInstance.getState()).toEqual({
+      data: 0,
+      isError: false,
+      isLoading: false,
+      isSuccess: true,
+      status: 'success',
+    })
+
+    jest.runAllTimers()
+    await Promise.resolve() // wait for injectPromise's `.then` to run
+
+    expect(promiseInstance.getState()).toEqual({
+      data: 0,
       isError: false,
       isLoading: false,
       isSuccess: true,

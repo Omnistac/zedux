@@ -5,12 +5,18 @@ import {
   getInitialPromiseState,
   getSuccessPromiseState,
 } from '../utils/promiseUtils'
-import { InjectorDeps, InjectStoreConfig, PromiseState } from '../types/index'
+import {
+  InjectorDeps,
+  InjectPromiseConfig,
+  InjectStoreConfig,
+  PromiseState,
+} from '../types/index'
 import { injectEffect } from './injectEffect'
 import { injectMemo } from './injectMemo'
 import { injectStore } from './injectStore'
 import { injectRef } from './injectRef'
 import { AtomApi } from '../classes/AtomApi'
+import { injectWhy } from './injectWhy'
 
 /**
  * Create a memoized promise reference. Kicks off the promise immediately
@@ -60,7 +66,9 @@ export const injectPromise: {
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps: InjectorDeps,
-    config: { initialState?: T; dataOnly: true } & InjectStoreConfig
+    config: Omit<InjectPromiseConfig, 'dataOnly'> & {
+      dataOnly: true
+    } & InjectStoreConfig
   ): AtomApi<{
     Exports: Record<string, any>
     Promise: Promise<T>
@@ -71,7 +79,7 @@ export const injectPromise: {
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps?: InjectorDeps,
-    config?: { initialState?: T; dataOnly?: boolean } & InjectStoreConfig
+    config?: InjectPromiseConfig<T> & InjectStoreConfig
   ): AtomApi<{
     Exports: Record<string, any>
     Promise: Promise<T>
@@ -84,17 +92,28 @@ export const injectPromise: {
   {
     dataOnly,
     initialState,
+    runOnInvalidate,
     ...storeConfig
-  }: { dataOnly?: boolean; initialState?: T } & InjectStoreConfig = {}
+  }: InjectPromiseConfig<T> & InjectStoreConfig = {}
 ) => {
-  const refs = injectRef(
-    {} as { controller?: AbortController; promise: Promise<T> }
-  )
+  const refs = injectRef({ counter: 0 } as {
+    controller?: AbortController
+    counter: number
+    promise: Promise<T>
+  })
 
   const store = injectStore(
     dataOnly ? initialState : getInitialPromiseState<T>(initialState),
     storeConfig
   )
+
+  if (
+    runOnInvalidate &&
+    // injectWhy is an unrestricted injector - using it conditionally is fine:
+    injectWhy().some(reason => reason.type === 'cache invalidated')
+  ) {
+    refs.current.counter++
+  }
 
   // setting a ref during evaluation is perfectly fine in Zedux
   refs.current.promise = injectMemo(() => {
@@ -141,7 +160,7 @@ export const injectPromise: {
       })
 
     return promise
-  }, deps)
+  }, deps && [...deps, refs.current.counter])
 
   injectEffect(
     () => () => {
