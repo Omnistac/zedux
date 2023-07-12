@@ -5,6 +5,18 @@ title: injectInvalidate
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
+:::warning
+This injector is deprecated and will be removed in the next major release. Use the following pattern instead:
+
+```ts
+const self = injectSelf()
+// then in a callback or effect:
+self.invalidate()
+```
+
+See [`injectSelf()`](injectSelf)
+:::
+
 ```ts
 import { injectInvalidate } from '@zedux/react'
 ```
