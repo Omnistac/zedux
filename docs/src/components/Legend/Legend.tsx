@@ -8,6 +8,12 @@ const ItemDesc = styled.div`
 
 const ItemName = styled.div`
   padding: 1rem;
+
+  @container (max-width: 600px) {
+    &:not(:first-of-type) {
+      border-top: 1px solid #ddd;
+    }
+  }
 `
 
 const Wrapper = styled.div`
@@ -16,6 +22,10 @@ const Wrapper = styled.div`
   display: grid;
   grid-template-columns: auto minmax(0, 4fr);
   margin: 0 -0.8rem var(--ifm-paragraph-margin-bottom);
+
+  @container (max-width: 600px) {
+    grid-template-columns: auto;
+  }
 `
 
 export const Legend = ({ children }: PropsWithChildren) => {
