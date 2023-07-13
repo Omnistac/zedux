@@ -237,7 +237,7 @@ export const injectMachineStore: <
 
     const [initialState] = statesFactory(createState)
     const hydration =
-      config?.hydrate && instance.ecosystem._consumeHydration(instance)
+      config?.hydrate && instance.ecosystem.hydration?.[instance.id]
 
     const store = new MachineStore<StateNames, EventNames, Context>(
       hydration?.value ?? (initialState.stateName as StateNames),

@@ -230,11 +230,11 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
     this.ecosystem._graph.flushUpdates()
 
     // hydrate if possible
-    if (this.template.manualHydration) return
-
     const hydration = this.ecosystem._consumeHydration(this)
 
-    if (typeof hydration === 'undefined') return
+    if (this.template.manualHydration || typeof hydration === 'undefined') {
+      return
+    }
 
     this.store.setState(hydration)
   }
