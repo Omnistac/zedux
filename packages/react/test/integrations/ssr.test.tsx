@@ -1,4 +1,4 @@
-import { atom, ion } from '@zedux/react'
+import { atom, createStore, injectStore, ion } from '@zedux/react'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('ssr', () => {
@@ -252,5 +252,29 @@ describe('ssr', () => {
         includeFlags: ['include-me'],
       })
     ).toEqual({})
+  })
+
+  test('all injectors receive the hydration', () => {
+    const atom1 = atom(
+      '1',
+      () => {
+        const a = injectStore('a', { hydrate: true })
+        const b = injectStore('b', { hydrate: true })
+
+        const store = injectStore(() => createStore({ a, b }))
+        store.use({ a, b })
+
+        return store
+      },
+      { manualHydration: true }
+    )
+
+    ecosystem.hydrate({ 1: 'ab' })
+    const instance = ecosystem.getInstance(atom1)
+
+    expect(instance.getState()).toEqual({
+      a: 'ab',
+      b: 'ab',
+    })
   })
 })
