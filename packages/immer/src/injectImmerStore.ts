@@ -62,7 +62,7 @@ export const injectImmerStore: {
 
   const store = injectMemo(() => {
     const hydration = config?.hydrate
-      ? instance.ecosystem._consumeHydration(instance)
+      ? instance.ecosystem.hydration?.[instance.id]
       : undefined
 
     return createImmerStore<State>(hydration ?? state)

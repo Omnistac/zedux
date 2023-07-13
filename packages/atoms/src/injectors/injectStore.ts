@@ -118,12 +118,10 @@ export const injectStore: {
       typeof storeFactory === 'function'
         ? (storeFactory as () => Store<State>)
         : (hydration?: State) =>
-            createStore<State>(null, hydration || storeFactory)
+            createStore<State>(null, hydration ?? storeFactory)
 
     const store = getStore(
-      config?.hydrate
-        ? instance.ecosystem._consumeHydration(instance)
-        : undefined
+      config?.hydrate ? instance.ecosystem.hydration?.[instance.id] : undefined
     )
 
     const subscription = subscribe && doSubscribe(instance, store)
