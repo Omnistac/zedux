@@ -19,12 +19,19 @@ export const getReactContext = (
   ecosystem: Ecosystem,
   atom: AnyAtomTemplate
 ) => {
-  const reactStorage: Record<
-    string,
-    React.Context<any>
-  > = (ecosystem._storage.react ||= {})
+  const reactStorage: {
+    contexts: WeakMap<typeof createContext, Record<string, React.Context<any>>>
+  } = (ecosystem._storage.react ||= {})
 
-  return (reactStorage[atom.key] ||= createContext(
+  const contexts = (reactStorage.contexts ||= new WeakMap())
+  const windowContexts =
+    contexts.get(createContext) ||
+    (contexts.set(createContext, {}).get(createContext) as Record<
+      string,
+      React.Context<any>
+    >)
+
+  return (windowContexts[atom.key] ||= createContext(
     undefined
   ) as React.Context<any>)
 }
