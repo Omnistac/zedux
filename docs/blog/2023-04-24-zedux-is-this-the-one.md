@@ -201,8 +201,8 @@ const fetcherAtom = atom(
 
 function FetchTwoUsers() {
   // create 2 different atom instances of the `fetcherAtom` template:
-  const { isLoading, data: joe } = useAtomValue(fetcherAtom, ['/users/joe'])
-  const { isLoading, data: bob } = useAtomValue(fetcherAtom, ['/users/bob'])
+  const { data: joe } = useAtomValue(fetcherAtom, ['/users/joe'])
+  const { data: bob } = useAtomValue(fetcherAtom, ['/users/bob'])
   ...
 }
 ```
