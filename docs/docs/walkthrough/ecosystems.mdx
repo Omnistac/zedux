@@ -103,6 +103,7 @@ import { EcosystemProvider, useEcosystem } from '@zedux/react'
 
 function Child() {
   const ecosystem = useEcosystem()
+  ...
 }
 
 function App() {
@@ -196,7 +197,7 @@ const ecosystem = createEcosystem({ onReady })
 
 ## Methods & Properties
 
-The ecosystem object itself has many useful methods. You can use these to inspect the dependency graph, get the current state of all atoms, set atom overrides, and a lot more. We'll get to most of these throughout the walkthrough. See the [`Ecosystem` API doc](../api/classes/Ecosystem) for all the goodness.
+The ecosystem object itself has many useful methods. You can use these to inspect the dependency graph, get the current state of all atoms, set atom overrides, and a lot more. We'll get to most of these throughout the walkthrough. See the [`Ecosystem` API doc](../api/classes/Ecosystem) for full details.
 
 ### `getInstance`
 
@@ -275,7 +276,7 @@ const reduxAtom = atom('redux', () => {
 :::note
 When accessing ecosystem context like this, it can't be strongly typed for TS users :(. This is because atoms don't know what ecosystem they'll be used in.
 
-You'll have to cast it (make sure to add type guards) or use a different approach like exporting a callback that you call in [`ecosystem.onReady`](../api/classes/Ecosystem#onready):
+You'll have to cast it (make sure to add type guards) or use a different approach like exporting a callback from an atom that you call in [`ecosystem.onReady`](../api/classes/Ecosystem#onready):
 
 ```ts
 const onReady = (ecosystem, context) => {

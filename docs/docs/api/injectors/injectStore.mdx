@@ -54,8 +54,11 @@ const composedStore = injectStore(() =>
 const nonSubscribingStore = injectStore('state', { subscribe: false })
 const hydratedStore = injectStore('default', { hydrate: true })
 const hydratedManually = injectStore(
-  hydration => createStore(hydration ?? 'default'),
+  hydration => createStore(null, hydration ?? 'default'),
   { hydrate: true }
+)
+const withExpensiveInitialState = injectStore(() =>
+  createStore(null, calculateExpensiveValue())
 )
 ```
 
@@ -143,8 +146,8 @@ While it's supported and we have found use cases for composing together stores f
           as the initial state of the store.
         </p>
         <p>
-          Does nothing if no hydration exists in the ecosystem that matches the
-          current atom instance.
+          Does nothing if the ecosystem doesn't have a hydration that matches
+          the current atom instance.
         </p>
         <p>
           If true, calls this atom's{' '}
