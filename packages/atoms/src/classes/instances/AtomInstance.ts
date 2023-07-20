@@ -87,7 +87,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
   public _nextInjectors?: InjectorDescriptor[]
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
-  public _stateType?: 1 | 2
+  public _stateType?: typeof StoreState | typeof RawState
 
   private _bufferedUpdate?: {
     newState: G['State']
