@@ -40,37 +40,15 @@ export class IdGenerator {
   /**
    * Generate a graph node key for a React component
    */
-  public generateReactComponentId() {
+  public generateReactComponentId(component: {
+    displayName?: string
+    name?: string
+  }) {
     if (!DEV) return this.generateId('rc')
 
-    const { stack } = new Error()
-
-    if (!stack) return ''
-
-    const lines = stack
-      .split('\n')
-      .slice(2)
-      .map(line =>
-        line
-          .trim()
-          // V8/JavaScriptCore:
-          .replace('at ', '')
-          .replace(/ \(.*\)/, '')
-          // SpiderMonkey:
-          .replace(/@.*/, '')
-      )
-
-    const componentName = lines
-      .find(line => {
-        if (!/\w/.test(line[0])) return false
-
-        const identifiers = line.split('.')
-        const fn = identifiers[identifiers.length - 1]
-        return fn[0]?.toUpperCase() === fn[0]
-      })
-      ?.split(' ')[0]
-
-    return this.generateId(componentName || 'UnknownComponent')
+    return this.generateId(
+      component.displayName || component.name || 'UnknownComponent'
+    )
   }
 
   /**
