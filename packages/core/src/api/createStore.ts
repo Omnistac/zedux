@@ -300,15 +300,21 @@ export class Store<State = any> {
 
     this._subscribers.push(subscriberObj as SubscriberObject)
 
-    return {
+    const subscription = {
       unsubscribe: () => {
-        const index = this._subscribers.indexOf(
-          subscriberObj as SubscriberObject
+        // Zedux stores rarely have more than 2-3 subscribers (most
+        // "subscriptions" are handled by the atom graph in the @zedux/atoms
+        // package). Array filter is the fastest way to immutably remove items
+        // from such small lists (compared to Array toSpliced, Array cloning and
+        // splicing, Array spreading slices, Map clone and delete, and Object
+        // clone and delete. Benchmark: https://jsbench.me/4ylihvvpo6)
+        this._subscribers = this._subscribers.filter(
+          obj => obj !== subscriberObj
         )
-
-        if (index > -1) this._subscribers.splice(index, 1)
       },
     }
+
+    return subscription
   }
 
   /**
@@ -480,15 +486,14 @@ export class Store<State = any> {
   }
 
   private _doNotify(effect: StoreEffect<State, this>) {
-    // Clone the subscribers in case of mutation mid-iteration
-    const subscribers = [...this._subscribers]
+    // the subscribers array is replaced when anyone unsubscribes
+    const { _subscribers } = this
+    const hasChanged = effect.newState !== effect.oldState
 
-    for (let i = 0; i < subscribers.length; i++) {
-      const subscriber = subscribers[i]
-
+    for (const subscriber of _subscribers) {
       if (effect.error && subscriber.error) subscriber.error(effect.error)
 
-      if (effect.newState !== effect.oldState && subscriber.next) {
+      if (hasChanged && subscriber.next) {
         subscriber.next(
           effect.newState,
           effect.oldState,
