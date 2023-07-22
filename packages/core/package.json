@@ -2,7 +2,7 @@
   "name": "@zedux/core",
   "version": "1.0.3",
   "description": "A high-level, declarative, composable form of Redux",
-  "main": "./dist/zedux.umd.js",
+  "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",
   "author": "Joshua Claunch",
