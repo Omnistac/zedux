@@ -106,7 +106,10 @@ describe('registrations', () => {
         payload: 'b',
         type: zeduxTypes.hydrate,
       })
-      expect(subscriber4).not.toHaveBeenCalled()
+      expect(subscriber4).toHaveBeenCalledWith('c', 'b', {
+        payload: 'c',
+        type: zeduxTypes.hydrate,
+      })
       expect(subscriber5).toHaveBeenCalledWith('c', 'b', {
         payload: 'c',
         type: zeduxTypes.hydrate,
