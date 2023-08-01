@@ -1,3 +1,20 @@
+## v1.1.0 (Aug 1, 2023)
+
+Republish of v1.1.0-rc.0 with no additional changes since the release candidate looks good
+
+### New Features:
+
+- `atoms`: add `runOnInvalidate` option to `injectPromise` (#69)
+- `atoms`: deprecate `injectInvalidate` (prefer `injectSelf`) (#70)
+- `core`: micro-optimize iterating and removing store subscribers (#76)
+
+### Fixes:
+
+- `atoms`: make query atoms retain data (#68)
+- `core`: point core package's field to the correct file (#75)
+- `react`: fix multiple renderers cross-window React warning (#72)
+- `atoms`, `immer`, `machines`: prevent injectors from consuming hydrations (#71)
+
 ## v1.1.0-rc.0 (Jul 22, 2023)
 
 ### New Features:
@@ -9,7 +26,7 @@
 ### Fixes:
 
 - `atoms`: make query atoms retain data (#68)
-- `core`: point core package's  field to the correct file (#75)
+- `core`: point core package's field to the correct file (#75)
 - `react`: fix multiple renderers cross-window React warning (#72)
 - `atoms`, `immer`, `machines`: prevent injectors from consuming hydrations (#71)
 
