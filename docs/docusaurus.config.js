@@ -34,6 +34,22 @@ module.exports = {
   url: 'https://omnistac.github.io',
   baseUrl: '/zedux/',
   favicon: 'img/favicon.ico',
+  headTags: [
+    {
+      attributes: {
+        content: 'article',
+        property: 'og:type',
+      },
+      tagName: 'meta',
+    },
+    {
+      attributes: {
+        content: 'https://omnistac.github.io/zedux/img/logo.png',
+        property: 'og:image',
+      },
+      tagName: 'meta',
+    },
+  ],
   organizationName: 'Omnistac',
   projectName: 'zedux',
   deploymentBranch: 'gh-pages',
