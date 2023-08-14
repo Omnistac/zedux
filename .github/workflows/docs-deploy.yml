@@ -30,7 +30,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install EnhanceDocs CLI
-        uses: enhancedocs/setup-enhancedocs@v0.1.3
+        uses: enhancedocs/setup-enhancedocs@v0.2.0
         with:
           api-key: ${{ secrets.ENHANCEDOCS_API_KEY }}
       - name: Install dependencies
