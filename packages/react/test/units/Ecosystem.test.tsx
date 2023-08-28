@@ -89,6 +89,9 @@ describe('Ecosystem', () => {
     expect(ecosystem.find('1')).toBe(ecosystem.getInstance(atom1))
     expect(ecosystem.find('someLongKey11')).toBe(ecosystem.getInstance(atom3))
 
+    // if no exact match, `.find()` does a fuzzy search
+    expect(ecosystem.find('1-["b')).toBe(ecosystem.getInstance(atom1, ['b']))
+
     // some more checks for fun
     expect(ecosystem.find(atom4)).toBe(ecosystem.getInstance(atom4))
     expect(ecosystem.find(atom1, ['a'])).toBe(
