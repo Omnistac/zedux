@@ -309,17 +309,20 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     template: A | string,
     params?: AtomParamsType<A>
   ) {
-    if (typeof template !== 'string') {
+    const isString = typeof template === 'string'
+    if (!isString) {
       const id = (template as A).getInstanceId(this, params)
 
       // try to find an existing instance
-      return this._instances[id]
+      const instance = this._instances[id]
+
+      if (instance) return instance
     }
 
     const matches = this.findAll(template)
 
     return (
-      matches[template] ||
+      (isString && matches[template]) ||
       (Object.values(matches)[0] as AtomInstanceType<A> | undefined)
     )
   }
@@ -336,17 +339,15 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const hash: Record<string, AnyAtomInstance> = {}
 
     Object.values(this._instances)
+      .filter(
+        instance =>
+          !filterKey ||
+          (isAtom
+            ? instance.template.key === (template as AnyAtomTemplate).key
+            : instance.id.toLowerCase().includes(filterKey))
+      )
       .sort((a, b) => a.id.localeCompare(b.id))
       .forEach(instance => {
-        if (
-          filterKey &&
-          (isAtom
-            ? instance.template.key !== (template as AnyAtomTemplate).key
-            : !instance.id.toLowerCase().includes(filterKey))
-        ) {
-          return
-        }
-
         hash[instance.id] = instance
       })
 

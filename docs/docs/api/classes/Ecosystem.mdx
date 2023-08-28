@@ -461,7 +461,7 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
         <code>ecosystem.getInstance()</code>
       </Link>{' '}
       except it does NOT create the atom instance if it doesn't exist. In that
-      case, <code>.find()</code> returns undefined
+      case, <code>.find()</code> returns undefined.
     </p>
     <Ts>{`// creates the atom instance if needed:
 instance = ecosystem.getInstance(myAtom, [...params])\n
@@ -473,7 +473,9 @@ instance = ecosystem.find(myAtom, [...params])`}</Ts>
     <Ts>{`instance = ecosystem.find('myAtomKey')`}</Ts>
     <p>
       In this case, <code>.find()</code> returns the first atom instance it
-      finds whose id contains the passed string (case-insensitive).
+      finds whose id contains the passed string (case-insensitive), unless an
+      exact match is found, in which case the exact-matching instance will be
+      returned.
     </p>
   </Item>
   <Item name="findAll">
