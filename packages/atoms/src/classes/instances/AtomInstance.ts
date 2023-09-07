@@ -68,10 +68,13 @@ const getStateStore = <
   return [stateType, stateStore] as const
 }
 
-export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
-  G['State'],
-  AtomTemplateBase<G, AtomInstance<G>>
-> {
+export class AtomInstance<
+  G extends AtomGenerics,
+  AtomTemplateType extends AtomTemplateBase<
+    G,
+    AtomInstance<G, AtomTemplateType>
+  > = AtomTemplateBase<G, AtomInstance<G, any>>
+> extends AtomInstanceBase<G['State'], AtomTemplateType> {
   public status: LifecycleStatus = 'Initializing'
   public api?: AtomApi<AtomGenericsToAtomApiGenerics<G>>
   public exports: G['Exports']
@@ -98,7 +101,7 @@ export class AtomInstance<G extends AtomGenerics> extends AtomInstanceBase<
 
   constructor(
     public readonly ecosystem: Ecosystem,
-    public readonly template: AtomTemplateBase<G, AtomInstance<G>>,
+    public readonly template: AtomTemplateType,
     public readonly id: string,
     public readonly params: G['Params']
   ) {

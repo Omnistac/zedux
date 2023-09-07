@@ -102,7 +102,16 @@ describe('types', () => {
           Store: AtomStore
           Promise: AtomPromise
         },
-        TAtomInstance
+        AtomInstance<
+          {
+            State: AtomState
+            Params: AtomParams
+            Exports: AtomExports
+            Store: AtomStore
+            Promise: AtomPromise
+          },
+          any
+        >
       >
     >()
 
@@ -180,7 +189,16 @@ describe('types', () => {
           Store: StoreAtomStore
           Promise: StoreAtomPromise
         },
-        TStoreAtomInstance
+        AtomInstance<
+          {
+            State: StoreAtomState
+            Params: StoreAtomParams
+            Exports: StoreAtomExports
+            Store: StoreAtomStore
+            Promise: StoreAtomPromise
+          },
+          any
+        >
       >
     >()
     expectTypeOf<TValueAtomInstance>().toEqualTypeOf<typeof storeInstance>()
@@ -193,7 +211,16 @@ describe('types', () => {
           Store: ValueAtomStore
           Promise: ValueAtomPromise
         },
-        TValueAtomInstance
+        AtomInstance<
+          {
+            State: ValueAtomState
+            Params: ValueAtomParams
+            Exports: ValueAtomExports
+            Store: ValueAtomStore
+            Promise: ValueAtomPromise
+          },
+          any
+        >
       >
     >()
   })
@@ -375,7 +402,16 @@ describe('types', () => {
           Store: StoreIonStore
           Promise: StoreIonPromise
         },
-        TStoreIonInstance
+        AtomInstance<
+          {
+            State: StoreIonState
+            Params: StoreIonParams
+            Exports: StoreIonExports
+            Store: StoreIonStore
+            Promise: StoreIonPromise
+          },
+          any
+        >
       >
     >()
     expectTypeOf<TValueIonInstance>().toEqualTypeOf<typeof storeInstance>()
@@ -388,7 +424,16 @@ describe('types', () => {
           Store: ValueIonStore
           Promise: ValueIonPromise
         },
-        TValueIonInstance
+        AtomInstance<
+          {
+            State: ValueIonState
+            Params: ValueIonParams
+            Exports: ValueIonExports
+            Store: ValueIonStore
+            Promise: ValueIonPromise
+          },
+          any
+        >
       >
     >()
   })
