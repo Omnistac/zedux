@@ -1,6 +1,6 @@
 {
   "name": "@zedux/machines",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Simple native state machine implementation for Zedux atoms",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -10,7 +10,7 @@
     "url": "https://github.com/Omnistac/zedux/issues"
   },
   "devDependencies": {
-    "@zedux/atoms": "^1.1.0"
+    "@zedux/atoms": "^1.1.1"
   },
   "exports": {
     ".": {
@@ -41,7 +41,7 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@zedux/atoms": "^1.1.0"
+    "@zedux/atoms": "^1.1.1"
   },
   "repository": {
     "directory": "packages/machines",
