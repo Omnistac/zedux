@@ -4,10 +4,10 @@ import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { AtomTemplateBase } from './AtomTemplateBase'
 
-export class AtomTemplate<G extends AtomGenerics> extends AtomTemplateBase<
-  G,
-  AtomInstance<G>
-> {
+export class AtomTemplate<
+  G extends AtomGenerics,
+  AtomInstanceType extends AtomInstance<G> = AtomInstance<G>
+> extends AtomTemplateBase<G, AtomInstanceType> {
   /**
    * This method should be overridden when creating custom atom classes that
    * create a custom atom instance class. Return a new instance of your atom
@@ -17,8 +17,8 @@ export class AtomTemplate<G extends AtomGenerics> extends AtomTemplateBase<
     ecosystem: Ecosystem,
     id: string,
     params: G['Params']
-  ): AtomInstance<G> {
-    return new AtomInstance<G>(ecosystem, this, id, params)
+  ): AtomInstanceType {
+    return new AtomInstance<G>(ecosystem, this, id, params) as AtomInstanceType
   }
 
   public getInstanceId(ecosystem: Ecosystem, params?: G['Params']) {
