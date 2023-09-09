@@ -1,3 +1,10 @@
+## v1.1.1 (Sep 9, 2023)
+
+### New Features:
+
+- `atoms`: give atom instances access to their real template type (#81)
+- `atoms`: make `ecosystem.find()` do a fuzzy search when no exact match (#79)
+
 ## v1.1.0 (Aug 1, 2023)
 
 Republish of v1.1.0-rc.0 with no additional changes since the release candidate looks good
