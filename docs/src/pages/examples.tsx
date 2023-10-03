@@ -90,13 +90,13 @@ const examples = {
   'zedux-queries-example-x713si': 'Simple Queries',
   'zedux-selector-upgrading-example-u09o3y': 'Upgrading Selectors',
   'zedux-atoms-as-jotai-molecules-3ilmtt': 'Atoms as "Molecules"',
+  'react-query-zedux-basic-zv9kty': 'React Query Integration',
 }
 
 export default function Examples() {
   const path =
     (typeof location !== 'undefined' &&
-      location.search &&
-      location.search.match(/example=(.*?)&?/)?.[1]) ||
+      new URL(location.href).searchParams.get('example')) ||
     Object.keys(examples)[0]
 
   const [id, setId] = useState(path)

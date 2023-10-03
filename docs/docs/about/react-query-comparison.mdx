@@ -5,7 +5,7 @@ title: React Query Comparison
 
 While Zedux doesn't (yet!) provide helpers for query operations (infinite scrolling, pagination, etc), Zedux is currently patterned after React Query more than any other library (yes, more than Redux or Recoil). React Query's cache management is unparalleled. So Zedux's atomic model borrows a lot of ideas from it.
 
-However, the purpose of Zedux is very different from React Query. React Query is designed around promises - managing their state, side effects, and result caches. Zedux is designed to manage both application state (a la Redux/Recoil) and cached server data. Zedux has _some_ special features for handling promises, but currently very little compared React Query.
+However, the purpose of Zedux is very different from React Query. React Query is designed around promises - managing their state, side effects, and result caches. Zedux is designed to manage both application state (a la Redux/Recoil) and cached server data. Zedux has _some_ special features for handling promises, but currently very little compared to React Query.
 
 ## Queries
 
@@ -77,7 +77,7 @@ const userProjectsAtom = atom('userProjects', (email: string) => {
 })
 ```
 
-Zedux doesn't have an `idle` state (currently). The above example would be `success` until `userByEmail` updates with a value. If you need an `idle` state, open an issue and let's discuss!
+Zedux doesn't have an `idle` state (currently). The above example would be `success` until `userByEmail` updates with a value. If you need an `idle` state, feel free to open a [GitHub discussion](https://github.com/Omnistac/zedux/discussions)!
 
 ## Mutations
 
@@ -156,3 +156,11 @@ const messagesAtom = atom('messages', () => {
 ```
 
 This is more flexible, but can require more boilerplate for promises. Most functionality can be abstracted, of course. We may provide a `@zedux/query` package someday that provides a full suite of tools for handling promises.
+
+## Using Both
+
+While Zedux and React Query have many things in common, it is possible to use both libraries together.
+
+The recommended approach is to use a React Query "bridge" atom to synchronize all of React Query's internal state with the atoms universe. This lets you use all the advanced query features of React Query combined with the powerful atomic state derivations of Zedux.
+
+See the [React Query Integration example](/examples?example=react-query-zedux-basic-zv9kty).
