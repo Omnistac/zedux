@@ -22,7 +22,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "injectAtomValue",
       },
       {
-        "key": "Child-4",
+        "key": "Child-:r4:",
         "operation": "useAtomValue",
       },
     ],
@@ -45,7 +45,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "injectAtomValue",
       },
       {
-        "key": "Child-3",
+        "key": "Child-:r3:",
         "operation": "useAtomValue",
       },
     ],
@@ -68,7 +68,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "injectAtomValue",
       },
       {
-        "key": "Child-2",
+        "key": "Child-:r2:",
         "operation": "useAtomValue",
       },
     ],
@@ -91,7 +91,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "injectAtomValue",
       },
       {
-        "key": "Child-1",
+        "key": "Child-:r1:",
         "operation": "useAtomState",
       },
     ],
@@ -114,7 +114,7 @@ exports[`ecosystem big graph 1`] = `
     ],
     "dependents": [
       {
-        "key": "Child-0",
+        "key": "Child-:r0:",
         "operation": "useAtomValue",
       },
     ],

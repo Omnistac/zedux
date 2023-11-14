@@ -5,10 +5,9 @@ import {
   AtomParamsType,
   ParamlessTemplate,
 } from '@zedux/atoms'
-import { useMemo } from 'react'
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
+import { useEffect, useState } from 'react'
 import { ZeduxHookConfig } from '../types'
-import { destroyed, External, Static } from '../utils'
+import { External, Static } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
 
@@ -72,81 +71,66 @@ export const useAtomInstance: {
 ) => {
   const ecosystem = useEcosystem()
   const dependentKey = useReactComponentId()
+  const [, render] = useState<undefined | object>()
 
-  // it should be fine for this to run every render. It's possible to change
+  // It should be fine for this to run every render. It's possible to change
   // approaches if it is too heavy sometimes. But don't memoize this call:
   const instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
+  const renderedState = instance.getState()
 
-  const [subscribeFn, getSnapshot] = useMemo(() => {
-    let tuple = [instance, instance.getState()]
-
-    return [
-      (onStoreChange: () => void) => {
-        // this function must be idempotent
-        if (
-          !ecosystem._graph.nodes[instance.id]?.dependents.get(dependentKey)
-        ) {
-          // React can unmount other components before calling this subscribe
-          // function but after we got the instance above. Re-get the instance
-          // if such unmountings destroyed it in the meantime:
-          if (instance.status === 'Destroyed') {
-            tuple[1] = destroyed
-            onStoreChange()
-
-            return () => {} // let the next render register the graph edge
-          }
-
-          ecosystem._graph.addEdge(
-            dependentKey,
-            instance.id,
-            operation,
-            External | (subscribe ? 0 : Static),
-            signal => {
-              // returning a unique symbol from `getSnapshot` after we call
-              // `onStoreChange` causes the component to rerender. On rerender,
-              // instance will be set again, so `useSyncExternalStore` will
-              // never actually return that symbol.
-              if (signal === 'Destroyed') tuple[1] = destroyed
-
-              onStoreChange()
-            }
-          )
+  const addEdge = () => {
+    if (!ecosystem._graph.nodes[instance.id]?.dependents.get(dependentKey)) {
+      ecosystem._graph.addEdge(
+        dependentKey,
+        instance.id,
+        operation,
+        External | (subscribe ? 0 : Static),
+        () => {
+          if ((render as any).mounted) render({})
         }
+      )
+    }
+  }
 
-        return () => {
-          ecosystem._graph.removeEdge(dependentKey, instance.id)
-        }
-      },
-      // this getSnapshot has to return a different val if either the instance
-      // or the state change (since in the case of primitive values, the new
-      // instance's state could be exactly the same (===) as the previous
-      // instance's value)
-      () => {
-        // This hack should work 'cause React can't use the return value unless
-        // it renders this component. And when it rerenders,
-        // `tuple[1]` will get defined again before this point
-        if (tuple[1] === destroyed) return destroyed as any
+  // Yes, subscribe during render. This operation is idempotent and we handle
+  // React's StrictMode specifically.
+  addEdge()
 
-        if (suspend !== false) {
-          const status = tuple[0]._promiseStatus
+  // Only remove the graph edge when the instance id changes or on component
+  // destruction.
+  useEffect(() => {
+    // Try adding the edge again (will be a no-op unless React's StrictMode ran
+    // this effect's cleanup unnecessarily)
+    addEdge()
 
-          if (status === 'loading') {
-            throw tuple[0].promise
-          } else if (status === 'error') {
-            throw tuple[0]._promiseError
-          }
-        }
+    // use the referentially stable render function as a ref :O
+    ;(render as any).mounted = true
 
-        if (!subscribe) return tuple
+    // an unmounting component's effect cleanup can update or force-destroy the
+    // atom instance before this component is mounted. If that happened, trigger
+    // a rerender to recreate the atom instance and/or get its new state
+    if (
+      instance.getState() !== renderedState ||
+      instance.status === 'Destroyed'
+    ) {
+      render({})
+    }
 
-        const state = tuple[0].getState()
+    return () => {
+      // no need to set the "ref"'s `.mounted` property to false here
+      ecosystem._graph.removeEdge(dependentKey, instance.id)
+    }
+  }, [instance.id])
 
-        if (state === tuple[1]) return tuple
+  if (suspend !== false) {
+    const status = instance._promiseStatus
 
-        return (tuple = [tuple[0], state])
-      },
-    ]
-  }, [instance, subscribe, suspend])
+    if (status === 'loading') {
+      throw instance.promise
+    } else if (status === 'error') {
+      throw instance._promiseError
+    }
+  }
 
-  return useSyncExternalStore(subscribeFn, getSnapshot, getSnapshot)[0]
+  return instance
 }

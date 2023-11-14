@@ -42,8 +42,8 @@ describe('selection', () => {
 
     const button = await findByTestId('button')
 
-    expect(selector1).toHaveBeenCalledTimes(1)
-    expect(selector2).toHaveBeenCalledTimes(1)
+    expect(selector1).toHaveBeenCalledTimes(2)
+    expect(selector2).toHaveBeenCalledTimes(2)
     expect((await findByTestId('text')).innerHTML).toBe('a')
 
     act(() => {
@@ -51,20 +51,20 @@ describe('selection', () => {
       jest.runAllTimers()
     })
 
-    expect(selector1).toHaveBeenCalledTimes(1)
-    expect(selector2).toHaveBeenCalledTimes(1)
+    expect(selector1).toHaveBeenCalledTimes(2)
+    expect(selector2).toHaveBeenCalledTimes(2)
 
     act(() => {
       ecosystem.find(testAtom, ['a'])?.setState('b')
       jest.runAllTimers()
     })
 
-    expect(selector1).toHaveBeenCalledTimes(2)
-    expect(selector2).toHaveBeenCalledTimes(2)
+    expect(selector1).toHaveBeenCalledTimes(3)
+    expect(selector2).toHaveBeenCalledTimes(3)
     expect((await findByTestId('text')).innerHTML).toBe('b')
   })
 
-  test('selector is recreated if an unmounted component destroys it after a newly-rendered component reads from the cache but before the new component can create the dependency', async () => {
+  test("a state change from an unmounting component's effect cleanup triggers rerenders in newly-created components that use the updated atom or its dependents", async () => {
     jest.useFakeTimers()
     const selector = jest.fn(({ get }: AtomGetters) => get(testAtom, ['a']))
 
@@ -102,7 +102,7 @@ describe('selection', () => {
 
     const button = await findByTestId('button')
 
-    expect(selector).toHaveBeenCalledTimes(1)
+    expect(selector).toHaveBeenCalledTimes(2)
     expect((await findByTestId('text')).innerHTML).toBe('a')
 
     act(() => {
@@ -110,7 +110,7 @@ describe('selection', () => {
       jest.runAllTimers()
     })
 
-    expect(selector).toHaveBeenCalledTimes(2)
+    expect(selector).toHaveBeenCalledTimes(3)
     expect((await findByTestId('text')).innerHTML).toBe('b')
   })
 
@@ -123,10 +123,10 @@ describe('selection', () => {
 
     function ResurrectingComponent({ view }: { view: number }) {
       useAtomSelector(selector1)
-      const { b } = useAtomSelector(selector2)
-      useAtomSelector(selector3, view)
+      useAtomSelector(selector2)
+      const val = useAtomSelector(selector3, view)
 
-      return <div data-testid="text">{b}</div>
+      return <div data-testid="text">{val}</div>
     }
 
     function Test() {
@@ -145,20 +145,20 @@ describe('selection', () => {
 
     const button = await findByTestId('button')
 
-    expect(selector1).toHaveBeenCalledTimes(1)
-    expect(selector2).toHaveBeenCalledTimes(1)
-    expect(selector3).toHaveBeenCalledTimes(1)
-    expect((await findByTestId('text')).innerHTML).toBe('2')
+    expect(selector1).toHaveBeenCalledTimes(3)
+    expect(selector2).toHaveBeenCalledTimes(2)
+    expect(selector3).toHaveBeenCalledTimes(2)
+    expect((await findByTestId('text')).innerHTML).toBe('c1')
 
     act(() => {
       fireEvent.click(button)
       jest.runAllTimers()
     })
 
-    expect(selector1).toHaveBeenCalledTimes(1)
-    expect(selector2).toHaveBeenCalledTimes(2)
-    expect(selector3).toHaveBeenCalledTimes(2)
-    expect((await findByTestId('text')).innerHTML).toBe('3')
+    expect(selector1).toHaveBeenCalledTimes(3)
+    expect(selector2).toHaveBeenCalledTimes(3)
+    expect(selector3).toHaveBeenCalledTimes(4)
+    expect((await findByTestId('text')).innerHTML).toBe('c2')
   })
 
   test('inline selectors are swapped out and evaluated every time the ref changes', async () => {
@@ -184,7 +184,7 @@ describe('selection', () => {
 
     const button = await findByTestId('button')
 
-    expect(selector).toHaveBeenCalledTimes(1)
+    expect(selector).toHaveBeenCalledTimes(2)
     expect(selector).toHaveBeenLastCalledWith(expect.any(Object), 1)
     expect((await findByTestId('text')).innerHTML).toBe('2')
 
@@ -193,7 +193,7 @@ describe('selection', () => {
       jest.runAllTimers()
     })
 
-    expect(selector).toHaveBeenCalledTimes(2)
+    expect(selector).toHaveBeenCalledTimes(4)
     expect(selector).toHaveBeenLastCalledWith(expect.any(Object), 2)
     expect((await findByTestId('text')).innerHTML).toBe('4')
   })
