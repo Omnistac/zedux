@@ -1,12 +1,21 @@
 import { render } from '@testing-library/react'
 import { Ecosystem, EcosystemProvider } from '@zedux/react'
-import React from 'react'
-import { ecosystem } from './ecosystem'
+import React, { StrictMode } from 'react'
+import { ecosystem as defaultEcosystem } from './ecosystem'
 
 export const renderInEcosystem = (
   children: JSX.Element,
-  theEcosystem: Ecosystem = ecosystem
-) =>
-  render(
-    <EcosystemProvider ecosystem={theEcosystem}>{children}</EcosystemProvider>
+  {
+    ecosystem = defaultEcosystem,
+    useStrictMode,
+  }: {
+    ecosystem?: Ecosystem
+    useStrictMode?: boolean
+  } = {}
+) => {
+  const provider = (
+    <EcosystemProvider ecosystem={ecosystem}>{children}</EcosystemProvider>
   )
+
+  return render(useStrictMode ? <StrictMode>{provider}</StrictMode> : provider)
+}

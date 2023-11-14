@@ -61,7 +61,7 @@ describe('useAtomSelector', () => {
     const div = await findByTestId('text')
 
     expect(div.innerHTML).toBe('a')
-    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector1).toHaveBeenCalledTimes(2)
 
     act(() => {
       fireEvent.click(button)
@@ -69,7 +69,7 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('a')
-    expect(selector1).toHaveBeenCalledTimes(2)
+    expect(selector1).toHaveBeenCalledTimes(4)
   })
 
   test('useAtomSelector creates/uses a different cache when args change', async () => {
@@ -100,9 +100,9 @@ describe('useAtomSelector', () => {
     const div = await findByTestId('text')
 
     expect(div.innerHTML).toBe('0')
-    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector1).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1-[0]': 0,
+      '@@selector-mockConstructor-0-[0]': 0,
     })
 
     act(() => {
@@ -111,9 +111,9 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('1')
-    expect(selector1).toHaveBeenCalledTimes(2)
+    expect(selector1).toHaveBeenCalledTimes(4)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1-[1]': 1,
+      '@@selector-mockConstructor-0-[1]': 1,
     })
   })
 
@@ -150,9 +150,9 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('2')
     expect(selector1).not.toHaveBeenCalled()
-    expect(selector2).toHaveBeenCalledTimes(1)
+    expect(selector2).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1': 2,
+      '@@selector-mockConstructor-0': 2,
     })
 
     act(() => {
@@ -161,10 +161,10 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('1')
-    expect(selector1).toHaveBeenCalledTimes(1)
-    expect(selector2).toHaveBeenCalledTimes(1)
+    expect(selector1).toHaveBeenCalledTimes(2)
+    expect(selector2).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-2-[1]': 1,
+      '@@selector-mockConstructor-1-[1]': 1,
     })
   })
 
@@ -195,9 +195,9 @@ describe('useAtomSelector', () => {
     const div = await findByTestId('text')
 
     expect(div.innerHTML).toBe('1')
-    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector1).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1': 1,
+      '@@selector-mockConstructor-0': 1,
     })
 
     act(() => {
@@ -206,9 +206,9 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('1')
-    expect(selector1).toHaveBeenCalledTimes(2)
+    expect(selector1).toHaveBeenCalledTimes(4)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-2': 1,
+      '@@selector-mockConstructor-1': 1,
     })
   })
 
@@ -241,9 +241,9 @@ describe('useAtomSelector', () => {
     const div = await findByTestId('text')
 
     expect(div.innerHTML).toBe('0')
-    expect(selector1.selector).toHaveBeenCalledTimes(1)
+    expect(selector1.selector).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1-[0]': 0,
+      '@@selector-mockConstructor-0-[0]': 0,
     })
 
     act(() => {
@@ -252,13 +252,13 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('0')
-    expect(selector1.selector).toHaveBeenCalledTimes(1)
+    expect(selector1.selector).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1-[0]': 0,
+      '@@selector-mockConstructor-0-[0]': 0,
     })
   })
 
-  test('argsComparator does not prevent an inline selector from running when refs are swapped', async () => {
+  test('argsComparator does not prevent an inline selector from (re)-running, but the previous args are reused', async () => {
     jest.useFakeTimers()
     const atom1 = atom('1', (id: number) => id)
     const selector1 = jest.fn(({ get }: AtomGetters, id: number) =>
@@ -292,9 +292,9 @@ describe('useAtomSelector', () => {
     const div = await findByTestId('text')
 
     expect(div.innerHTML).toBe('0')
-    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector1).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1-[0]': 0,
+      '@@selector-mockConstructor-0-[0]': 0,
     })
 
     act(() => {
@@ -303,7 +303,7 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('0')
-    expect(selector1).toHaveBeenCalledTimes(2)
+    expect(selector1).toHaveBeenCalledTimes(4)
     expect(ecosystem.selectors.dehydrate()).toEqual({
       '@@selector-mockConstructor-1-[0]': 0,
     })
@@ -341,9 +341,9 @@ describe('useAtomSelector', () => {
     const div = await findByTestId('text')
 
     expect(div.innerHTML).toBe('1')
-    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector1).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1': 1,
+      '@@selector-mockConstructor-0': 1,
     })
     expect(renders).toBe(1)
 
@@ -354,9 +354,9 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('1')
-    expect(selector1).toHaveBeenCalledTimes(2)
+    expect(selector1).toHaveBeenCalledTimes(4)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1': 1,
+      '@@selector-mockConstructor-2': 1,
     })
     expect(renders).toBe(2)
   })
@@ -402,12 +402,76 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('1')
-    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector1).toHaveBeenCalledTimes(2)
     expect(selector2).toHaveBeenCalledTimes(1)
     expect(ecosystem.selectors.dehydrate()).toEqual({
       '@@selector-mockConstructor-0': 2,
-      // id # 3 'cause Test component and `addDependent` generate ids 1 & 2:
-      '@@selector-mockConstructor-3': 1,
+      // id # 2 'cause `addDependent` generate id 1:
+      '@@selector-mockConstructor-2': 1,
     })
+  })
+
+  test('inline selectors are swapped out in strict mode double-renders', async () => {
+    const atom1 = atom('1', () => ({ val: 1 }))
+
+    function Test() {
+      const [state, setState] = useState(0)
+      const val = useAtomSelector(({ get }) => get(atom1).val)
+
+      return (
+        <>
+          <button
+            data-testid="button"
+            onClick={() => setState(state => state + 1)}
+          />
+          <div data-testid="text">
+            {val}
+            {state}
+          </div>
+        </>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Test />, {
+      useStrictMode: true,
+    })
+
+    const button = await findByTestId('button')
+    const div = await findByTestId('text')
+
+    expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
+      {
+        "@@selector-unnamed-0": SelectorCache {
+          "args": [],
+          "id": "@@selector-unnamed-0",
+          "nextReasons": [],
+          "prevReasons": [],
+          "result": 1,
+          "selectorRef": [Function],
+        },
+      }
+    `)
+    expect(div.innerHTML).toBe('10')
+
+    act(() => {
+      fireEvent.click(button)
+    })
+
+    await Promise.resolve()
+
+    expect(div.innerHTML).toBe('11')
+
+    expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
+      {
+        "@@selector-unnamed-1": SelectorCache {
+          "args": [],
+          "id": "@@selector-unnamed-1",
+          "nextReasons": [],
+          "prevReasons": [],
+          "result": 1,
+          "selectorRef": [Function],
+        },
+      }
+    `)
   })
 })

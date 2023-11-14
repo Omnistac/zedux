@@ -38,42 +38,6 @@ export class IdGenerator {
   }
 
   /**
-   * Generate a graph node key for a React component
-   */
-  public generateReactComponentId() {
-    if (!DEV) return this.generateId('rc')
-
-    const { stack } = new Error()
-
-    if (!stack) return ''
-
-    const lines = stack
-      .split('\n')
-      .slice(2)
-      .map(line =>
-        line
-          .trim()
-          // V8/JavaScriptCore:
-          .replace('at ', '')
-          .replace(/ \(.*\)/, '')
-          // SpiderMonkey:
-          .replace(/@.*/, '')
-      )
-
-    const componentName = lines
-      .find(line => {
-        if (!/\w/.test(line[0])) return false
-
-        const identifiers = line.split('.')
-        const fn = identifiers[identifiers.length - 1]
-        return fn[0]?.toUpperCase() === fn[0]
-      })
-      ?.split(' ')[0]
-
-    return this.generateId(componentName || 'UnknownComponent')
-  }
-
-  /**
    * Turn an array of anything into a predictable string. If any item is an atom
    * instance, it will be serialized as the instance's id. If
    * acceptComplexParams is true, map class instances and functions to a

@@ -1,6 +1,5 @@
 import { createEcosystem, Ecosystem, EcosystemConfig } from '@zedux/atoms'
-import React, { ReactNode, useMemo } from 'react'
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
+import React, { ReactNode, useEffect, useMemo } from 'react'
 import { ecosystemContext } from '../utils'
 
 /**
@@ -35,25 +34,21 @@ export const EcosystemProvider = ({
       children?: ReactNode
       ecosystem?: undefined
     })) => {
-  const [subscribe, getSnapshot] = useMemo(() => {
-    const resolvedEcosystem =
+  const ecosystem = useMemo(
+    () =>
       passedEcosystem ||
       createEcosystem({
         destroyOnUnmount: true,
         ...ecosystemConfig,
-      })
+      }),
+    [ecosystemConfig.id, passedEcosystem]
+  ) // don't pass other vals; just get snapshot when these change
 
-    return [
-      () => {
-        resolvedEcosystem._incrementRefCount()
+  useEffect(() => {
+    ecosystem._incrementRefCount()
 
-        return () => resolvedEcosystem._decrementRefCount()
-      },
-      () => resolvedEcosystem,
-    ]
-  }, [ecosystemConfig.id, passedEcosystem]) // don't pass other vals; just get snapshot when these change
-
-  const ecosystem = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+    return () => ecosystem._decrementRefCount()
+  }, [ecosystem])
 
   return (
     <ecosystemContext.Provider value={ecosystem.id}>

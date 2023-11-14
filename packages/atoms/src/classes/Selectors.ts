@@ -397,9 +397,7 @@ export class Selectors {
 
     if (existingId || weak) return existingId
 
-    const selectorName =
-      this._getIdealCacheId(selectorOrConfig) ||
-      (DEV ? 'unknownSelector' : 'as')
+    const selectorName = this._getIdealCacheId(selectorOrConfig) || 'unnamed'
 
     const key = this.ecosystem._idGenerator.generateId(
       `@@selector-${selectorName}`

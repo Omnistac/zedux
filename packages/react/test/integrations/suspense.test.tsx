@@ -2,8 +2,9 @@ import { api, atom, useAtomValue } from '@zedux/react'
 import React, { Suspense } from 'react'
 import { ErrorBoundary } from '../utils/ErrorBoundary'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
-import { ecosystem } from '../utils/ecosystem'
 import { mockConsole } from '../utils/console'
+import { ecosystem } from '../utils/ecosystem'
+import { act } from '@testing-library/react'
 
 describe('suspense', () => {
   test('api().setPromise() makes a component suspend', async () => {
@@ -21,7 +22,7 @@ describe('suspense', () => {
       </Suspense>
     )
 
-    const { findByTestId } = renderInEcosystem(<Parent />, ecosystem)
+    const { findByTestId } = renderInEcosystem(<Parent />)
 
     const div1 = await findByTestId('a')
 
@@ -49,7 +50,7 @@ describe('suspense', () => {
       </Suspense>
     )
 
-    const { findByTestId } = renderInEcosystem(<Parent />, ecosystem)
+    const { findByTestId } = renderInEcosystem(<Parent />)
 
     const div1 = await findByTestId('a')
 
@@ -81,7 +82,7 @@ describe('suspense', () => {
       </ErrorBoundary>
     )
 
-    const { findByTestId } = renderInEcosystem(<Parent />, ecosystem)
+    const { findByTestId } = renderInEcosystem(<Parent />)
 
     const div1 = await findByTestId('a')
 
@@ -120,7 +121,7 @@ describe('suspense', () => {
       </ErrorBoundary>
     )
 
-    const { findByTestId } = renderInEcosystem(<Parent />, ecosystem)
+    const { findByTestId } = renderInEcosystem(<Parent />)
 
     const div1 = await findByTestId('a')
 
@@ -138,5 +139,57 @@ describe('suspense', () => {
         message: expect.stringMatching(/uncaught 'b'/i),
       })
     )
+  })
+
+  test('dynamic hooks can update previously-suspended components', async () => {
+    let resolveB: (val?: any) => void = () => {}
+
+    const atom1 = atom('1', () => {
+      return api(Promise.resolve('b'))
+    })
+
+    let resolvedA = false
+    let resolvedB = false
+    const promiseA = Promise.resolve(1).then(() => (resolvedA = true))
+    const promiseB = new Promise(r => (resolveB = r)).then(
+      () => (resolvedB = true)
+    )
+
+    const Child = () => {
+      if (!resolvedA) throw promiseA
+      const val = useAtomValue(atom1)
+      if (!resolvedB) throw promiseB
+
+      return <div data-testid="b">{val.data}</div>
+    }
+
+    const Parent = () => (
+      <Suspense fallback={<div data-testid="a">a</div>}>
+        <Child />
+      </Suspense>
+    )
+
+    const { findByTestId } = renderInEcosystem(<Parent />, {
+      useStrictMode: true,
+    })
+
+    const div1 = await findByTestId('a')
+
+    expect(div1.innerHTML).toBe('a')
+
+    await promiseA
+    resolveB(2)
+
+    const div2 = await findByTestId('b')
+
+    expect(div2.innerHTML).toBe('b')
+
+    act(() => {
+      ecosystem.getInstance(atom1).setStateDeep({ data: 'c' })
+    })
+
+    await Promise.resolve()
+
+    expect(div2.innerHTML).toBe('c')
   })
 })
