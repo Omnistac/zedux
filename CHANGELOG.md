@@ -1,3 +1,11 @@
+## v1.2.0-rc.0 (Nov 14, 2023)
+
+This release featured a near-full rewrite of the `useAtomInstance` and `useAtomSelector` hooks. They should be stable, but we're releasing a release candidate version first to verify
+
+### New Features:
+
+- `atoms`, `react`: remove uSES usages and support strict mode (#86)
+
 ## v1.1.1 (Sep 9, 2023)
 
 ### New Features:
