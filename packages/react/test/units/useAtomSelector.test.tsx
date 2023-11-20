@@ -474,4 +474,74 @@ describe('useAtomSelector', () => {
       }
     `)
   })
+
+  test('inline selector that returns a different object reference every time only triggers one extra rerender (strict mode off)', async () => {
+    const atom1 = atom('1', () => ({ val: 1 }))
+    let renders = 0
+
+    function Test() {
+      renders++
+      const { val } = useAtomSelector(({ get }) => ({ val: get(atom1).val }))
+
+      return (
+        <>
+          <div data-testid="text">{val}</div>
+        </>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Test />)
+
+    const div = await findByTestId('text')
+
+    expect(div.innerHTML).toBe('1')
+    expect(renders).toBe(2)
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
+
+    act(() => {
+      ecosystem.getInstance(atom1).setState({ val: 2 })
+    })
+
+    await Promise.resolve()
+
+    expect(div.innerHTML).toBe('2')
+    expect(renders).toBe(4)
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
+  })
+
+  test('inline selector that returns a different object reference every time only triggers one extra rerender (strict mode on)', async () => {
+    const atom1 = atom('1', () => ({ val: 1 }))
+    let renders = 0
+
+    function Test() {
+      renders++
+      const { val } = useAtomSelector(({ get }) => ({ val: get(atom1).val }))
+
+      return (
+        <>
+          <div data-testid="text">{val}</div>
+        </>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Test />, {
+      useStrictMode: true,
+    })
+
+    const div = await findByTestId('text')
+
+    expect(div.innerHTML).toBe('1')
+    expect(renders).toBe(4) // 2 rerenders + 2 for strict mode
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
+
+    act(() => {
+      ecosystem.getInstance(atom1).setState({ val: 2 })
+    })
+
+    await Promise.resolve()
+
+    expect(div.innerHTML).toBe('2')
+    expect(renders).toBe(8) // 4 rerenders + 4 for strict mode
+    expect(ecosystem._graph.nodes).toMatchSnapshot()
+  })
 })
