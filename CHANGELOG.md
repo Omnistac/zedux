@@ -1,3 +1,9 @@
+## v1.2.0-rc.1 (Nov 20, 2023)
+
+### Fixes:
+
+- `react`: handle unstable inline selector results in `useAtomSelector` (#88)
+
 ## v1.2.0-rc.0 (Nov 14, 2023)
 
 This release featured a near-full rewrite of the `useAtomInstance` and `useAtomSelector` hooks. They should be stable, but we're releasing a release candidate version first to verify
