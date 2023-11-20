@@ -20,6 +20,7 @@ const validTypes = [
   'premajor',
   'preminor',
   'prepatch',
+  'prerelease',
 ]
 const validPreIds = ['alpha', 'beta', 'rc']
 
