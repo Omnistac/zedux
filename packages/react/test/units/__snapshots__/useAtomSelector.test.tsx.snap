@@ -1,0 +1,141 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode off) 1`] = `
+{
+  "1": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "@@selector-unnamed-1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+    },
+    "isSelector": undefined,
+    "refCount": 1,
+    "weight": 1,
+  },
+  "@@selector-unnamed-1": {
+    "dependencies": Map {
+      "1" => true,
+    },
+    "dependents": Map {
+      "Test-:rb:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "isSelector": true,
+    "refCount": 1,
+    "weight": 2,
+  },
+}
+`;
+
+exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode off) 2`] = `
+{
+  "1": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "@@selector-unnamed-3" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+    },
+    "isSelector": undefined,
+    "refCount": 1,
+    "weight": 1,
+  },
+  "@@selector-unnamed-3": {
+    "dependencies": Map {
+      "1" => true,
+    },
+    "dependents": Map {
+      "Test-:rb:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "isSelector": true,
+    "refCount": 1,
+    "weight": 2,
+  },
+}
+`;
+
+exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode on) 1`] = `
+{
+  "1": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "@@selector-unnamed-1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+    },
+    "isSelector": undefined,
+    "refCount": 1,
+    "weight": 1,
+  },
+  "@@selector-unnamed-1": {
+    "dependencies": Map {
+      "1" => true,
+    },
+    "dependents": Map {
+      "Test-:rd:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "isSelector": true,
+    "refCount": 1,
+    "weight": 2,
+  },
+}
+`;
+
+exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode on) 2`] = `
+{
+  "1": {
+    "dependencies": Map {},
+    "dependents": Map {
+      "@@selector-unnamed-3" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+    },
+    "isSelector": undefined,
+    "refCount": 1,
+    "weight": 1,
+  },
+  "@@selector-unnamed-3": {
+    "dependencies": Map {
+      "1" => true,
+    },
+    "dependents": Map {
+      "Test-:rd:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "isSelector": true,
+    "refCount": 1,
+    "weight": 2,
+  },
+}
+`;
