@@ -331,7 +331,7 @@ For these use cases, ecosystems (and only ecosystems) have 2 "Weak Getters":
 Returns an atom instance **if the atom instance exists**. Otherwise returns undefined.
 
 ```ts
-const val = ecosystem.find(myAtom)
+const instance = ecosystem.find(myAtom)
 const paramsExample = ecosystem.find(myAtom, ['param 1', 'param 2'])
 const fuzzySearchString = ecosystem.find('myAtomKey')
 ```
@@ -340,15 +340,24 @@ When a string is passed, `ecosystem.find()` returns the first atom instance it f
 
 ### `findAll`
 
-Returns an object containing all instances of the passed atom **if any atom instances exist**, keyed by each instance's id. Otherwise returns an empty object.
+Returns an object containing all instances of the passed atom, keyed by each instance's id.
 
 ```ts
 const instances = ecosystem.findAll(myAtom)
-const paramsExample = ecosystem.findAll(myAtom)
 const fuzzySearchString = ecosystem.findAll('myAtomKey')
 ```
 
-When a string is passed, `ecosystem.findAll()` returns all atom instance whose id contains the passed string (case-insensitive).
+When a string is passed, `ecosystem.findAll()` returns all atom instances whose id contains the passed string (case-insensitive).
+
+:::tip
+This can make finding your atoms a breeze. For example, if you're creating a dashboard component, give your atoms keys like `dashboardFilter`, `dashboardSelection` then use `ecosystem.findAll('dashboard')` to find all the atom instances you're working with.
+:::
+
+Pass nothing to `ecosystem.findAll()` to get every atom instance in the ecosystem.
+
+```ts
+const allAtomInstances = ecosystem.findAll()
+```
 
 ## Recap
 
@@ -359,7 +368,7 @@ When a string is passed, `ecosystem.findAll()` returns all atom instance whose i
 - The ecosystem's Atom Getters never register graph dependencies - and thus are your static analysis and testing friends.
 - When called after evaluation, Atom Getters do not register graph dependencies.
 - Atom Getters can be safely used in loops and conditional statements.
-- The Weak Getters (`find` and `findAll`) never create atom instances.
+- The Weak Getters ([`find`](../api/classes/Ecosystem#find) and [`findAll`](../api/classes/Ecosystem#findall)) never create atom instances.
 
 ## Next Steps
 
