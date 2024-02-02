@@ -159,9 +159,12 @@ export class Scheduler implements SchedulerInterface {
   /**
    * Run either all "full" jobs or all "now" jobs. Since the jobs are split, we
    * can essentially have two schedulers running at once. "Now" jobs must always
-   * run before any "full" jobs, so the "full" jobs runner has to flush any "now"s that come up while it's flushing "full"s.
+   * run before any "full" jobs, so the "full" jobs runner has to flush any
+   * "now"s that come up while it's flushing "full"s.
    *
-   * Don't run "full" jobs while "now"s are running. It leads to "now"s being deferred until after "full"s finish. This is backwards and can lead to reevaluation loops.
+   * Don't run "full" jobs while "now"s are running. It leads to "now"s being
+   * deferred until after "full"s finish. This is backwards and can lead to
+   * reevaluation loops.
    */
   private runJobs(isNows?: boolean) {
     // we prevent this function from running at all if no "full" jobs are
