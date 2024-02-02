@@ -29,10 +29,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install EnhanceDocs CLI
-        uses: enhancedocs/setup-enhancedocs@v0.2.0
-        with:
-          api-key: ${{ secrets.ENHANCEDOCS_API_KEY }}
       - name: Install dependencies
         run: yarn
       - name: Build website
@@ -46,7 +42,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
-      - name: Build EnhanceDocs
-        run: enhancedocs build docs
-      - name: Publish EnhanceDocs
-        run: enhancedocs push 6435f1864f5eaca6c03bf1d4
