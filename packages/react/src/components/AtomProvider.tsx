@@ -1,5 +1,5 @@
 import { AnyAtomInstance } from '@zedux/atoms'
-import React, { FC, ReactNode } from 'react'
+import React, { ReactElement, ReactNode } from 'react'
 import { useEcosystem } from '../hooks/useEcosystem'
 import { getReactContext } from '../utils'
 
@@ -15,18 +15,19 @@ import { getReactContext } from '../utils'
  * dependency on the provided instance via `useAtomInstance()` or manual
  * graphing inside `useEffect()`.
  */
-export const AtomProvider: FC<
-  | {
-      children?: ReactNode
-      instance: AnyAtomInstance
-      instances?: undefined
-    }
-  | {
-      children?: ReactNode
-      instance?: undefined
-      instances: AnyAtomInstance[]
-    }
-> = ({ children, instance, instances }) => {
+export const AtomProvider: (
+  props:
+    | {
+        children?: ReactNode
+        instance: AnyAtomInstance
+        instances?: undefined
+      }
+    | {
+        children?: ReactNode
+        instance?: undefined
+        instances: AnyAtomInstance[]
+      }
+) => ReactElement = ({ children, instance, instances }) => {
   const ecosystem = useEcosystem()
 
   if (DEV && !instance && !instances) {
