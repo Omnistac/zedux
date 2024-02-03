@@ -73,11 +73,9 @@ describe('React context', () => {
       const instance2 = useAtomInstance(atom2, ['b'])
 
       return (
-        <>
-          <AtomProvider instances={[instance1, instance2]}>
-            <Child />
-          </AtomProvider>
-        </>
+        <AtomProvider instances={[instance1, instance2]}>
+          <Child />
+        </AtomProvider>
       )
     }
 
