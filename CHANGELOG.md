@@ -1,3 +1,11 @@
+## v1.2.0 (Feb 6, 2024)
+
+This is mostly a republish of the last v1.2.0 release candidate. Looks good :+1:
+
+### Fixes:
+
+- `react`: improve types for AtomProvider (#92)
+
 ## v1.2.0-rc.1 (Nov 20, 2023)
 
 ### Fixes:
