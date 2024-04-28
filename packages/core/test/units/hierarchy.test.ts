@@ -10,7 +10,6 @@ import {
   ReducerNodeType,
   StoreNodeType,
 } from '@zedux/core/utils/general'
-import * as hierarchyConfig from '@zedux/core/utils/hierarchyConfig'
 import {
   createMockStore,
   nonPlainObjects,
@@ -249,7 +248,7 @@ describe('propagateChange()', () => {
     const subStorePath: any[] = []
     const newSubStoreState = {}
 
-    propagateChange(null, subStorePath, newSubStoreState, hierarchyConfig)
+    propagateChange(null, subStorePath, newSubStoreState)
   })
 
   test('sets a property on the top level of the state tree', () => {
@@ -262,8 +261,7 @@ describe('propagateChange()', () => {
     const newState = propagateChange(
       currentState,
       subStorePath,
-      newSubStoreState,
-      hierarchyConfig
+      newSubStoreState
     )
 
     expect(newState).not.toBe(currentState)
@@ -287,8 +285,7 @@ describe('propagateChange()', () => {
     const newState = propagateChange(
       currentState,
       subStorePath,
-      newSubStoreState,
-      hierarchyConfig
+      newSubStoreState
     )
 
     expect(newState).not.toBe(currentState)
