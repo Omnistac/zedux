@@ -38,4 +38,4 @@ describe('Zedux.createStore()', () => {
   })
 })
 
-// TODO: Test custom store classes that override hierarchyConfig
+// TODO: Test custom store classes with different hierarchical data structures.

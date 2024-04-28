@@ -7,7 +7,6 @@ import {
   Dispatchable,
   StoreEffect,
   EffectsSubscriber,
-  HierarchyConfig,
   HierarchyDescriptor,
   SetState,
   RecursivePartial,
@@ -20,7 +19,6 @@ import {
   KnownHierarchyDescriptor,
 } from '../types'
 import { STORE_IDENTIFIER } from '../utils/general'
-import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
 import { HierarchyNode } from '../utils/types'
 import { detailedTypeof } from './detailedTypeof'
 import { isPlainObject } from './isPlainObject'
@@ -60,15 +58,6 @@ export const createStore: {
 }
 
 export class Store<State = any> {
-  /**
-    Used by the store's branch reducers in the generated reducer hierarchy to
-    interact with the hierarchical data type returned by the store's reducers.
-
-    This "hierarchical data type" is a plain object by default. But these
-    hierarchy config options can teach Zedux how to use an Immutable `Map` or
-    any recursive, map-like data structure.
-  */
-  static readonly hierarchyConfig: HierarchyConfig = defaultHierarchyConfig
   static readonly $$typeof = STORE_IDENTIFIER
 
   /**
@@ -335,11 +324,7 @@ export class Store<State = any> {
         this._registerChildStore(childStorePath, childStore)
     )
 
-    const tree = (this._tree = mergeHierarchies(
-      this._tree,
-      newTree,
-      (this.constructor as typeof Store).hierarchyConfig
-    ))
+    const tree = (this._tree = mergeHierarchies(this._tree, newTree))
 
     if ((this._rootReducer = tree.reducer)) {
       this._dispatchAction(primeAction, primeAction, this._state)
@@ -438,11 +423,7 @@ export class Store<State = any> {
     const newState =
       actionType === zeduxTypes.hydrate
         ? state
-        : mergeStateTrees(
-            this._state,
-            state,
-            (this.constructor as typeof Store).hierarchyConfig
-          )[0]
+        : mergeStateTrees(this._state, state)[0]
 
     // short-circuit if there's no change and no metadata that needs to reach
     // this (or a parent/child) store's effects subscribers
@@ -553,12 +534,7 @@ export class Store<State = any> {
       const newOwnState =
         newState === oldState
           ? this._state
-          : propagateChange(
-              this._state,
-              childStorePath,
-              newState,
-              (this.constructor as typeof Store).hierarchyConfig
-            )
+          : propagateChange(this._state, childStorePath, newState)
 
       // Tell the subscribers what child store this action came from. This store
       // (the parent) can use this info to determine how to recreate this state
