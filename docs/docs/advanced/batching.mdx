@@ -85,12 +85,15 @@ const manualBatchingAtom = atom('manualBatching', () => {
 
   // use `injectMemo` to "turn off" automatic batching:
   // highlight-next-line
-  const updateTwice = injectMemo(() => {
-    ecosystem.batch(() => {
-      store.setState(state => state + 1)
-      store.setState(state => state + 1)
-    })
-  }, [])
+  const updateTwice = injectMemo(
+    () => () => {
+      ecosystem.batch(() => {
+        store.setState(state => state + 1)
+        store.setState(state => state + 1)
+      })
+    },
+    []
+  )
 
   return api(store).setExports({ updateTwice })
 })
