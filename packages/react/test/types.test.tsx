@@ -54,7 +54,7 @@ afterEach(() => {
   ecosystem.reset()
 })
 
-describe('types', () => {
+describe('react types', () => {
   test('atom generic getters', () => {
     const instance = ecosystem.getInstance(exampleAtom, ['a'])
 
