@@ -17,6 +17,7 @@ import {
   SubscriberObject,
   Scheduler,
   Job,
+  KnownHierarchyDescriptor,
 } from '../types'
 import { STORE_IDENTIFIER } from '../utils/general'
 import * as defaultHierarchyConfig from '../utils/hierarchyConfig'
@@ -95,7 +96,9 @@ export class Store<State = any> {
     this._state = initialState as State
     this._scheduler = Store._scheduler || defaultScheduler
 
-    if (initialHierarchy) this.use(initialHierarchy)
+    if (initialHierarchy) {
+      this.use(initialHierarchy as KnownHierarchyDescriptor<State>)
+    }
   }
 
   public actionStream() {
@@ -325,7 +328,7 @@ export class Store<State = any> {
 
     Dispatches the special `prime` action to the store.
   */
-  public use(newHierarchy: HierarchyDescriptor<State>) {
+  public use(newHierarchy: KnownHierarchyDescriptor<State>) {
     const newTree = hierarchyDescriptorToHierarchy(
       newHierarchy,
       (childStorePath: string[], childStore: Store) =>

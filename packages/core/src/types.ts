@@ -115,11 +115,43 @@ export interface HierarchyConfig<T = any> {
   size: (node: T) => number
 }
 
+/**
+ * Describes a store's dependency tree. A store can have any number of reducers
+ * or child stores nested indefinitely.
+ *
+ * ```ts
+ * import { createStore } from '@zedux/core'
+ *
+ * const store = createStore({
+ *   a: {
+ *     b: childStoreB,
+ *     c: childStoreC,
+ *     d: {
+ *       e: reducerE,
+ *     }
+ *   }
+ * })
+ * ```
+ */
 export type HierarchyDescriptor<State = any> =
   | Branch<State>
   | Store<State>
   | Reducer<State>
   | null
+
+/**
+ * After a store is created, TS knows the hierarchy shape and we can be more
+ * intelligent in e.g. the store's `.use()` method
+ */
+export type KnownHierarchyDescriptor<State = any> = State extends Record<
+  any,
+  any
+>
+  ? State extends any[]
+    ? // arrays match the Record type but can't be `Branch`es
+      Store<State> | Reducer<State> | null
+    : Branch<State> | Store<State> | Reducer<State> | null
+  : Store<State> | Reducer<State> | null
 
 export interface Job {
   flags?: number
