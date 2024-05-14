@@ -441,8 +441,9 @@ export class Store<State = any> {
             (this.constructor as typeof Store).hierarchyConfig
           )[0]
 
-    if (newState === this._state) {
-      // Nothing to do. TODO: Should this inform effects subscribers?
+    // short-circuit if there's no change and no metadata that needs to reach
+    // this (or a parent/child) store's effects subscribers
+    if (newState === this._state && !meta) {
       return this._state
     }
 
