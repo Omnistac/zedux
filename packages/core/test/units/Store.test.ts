@@ -326,6 +326,51 @@ describe('Store.setState()', () => {
       type: zeduxTypes.hydrate,
     })
   })
+
+  test('always informs effects subscribers if metadata is passed', () => {
+    const effectsSubscriber = jest.fn()
+    const nextSubscriber = jest.fn()
+    const parentEffectsSubscriber = jest.fn()
+    const parentNextSubscriber = jest.fn()
+    const store = createStore(null, 1)
+    const parentStore = createStore({ child: store })
+
+    store.subscribe({ effects: effectsSubscriber, next: nextSubscriber })
+    parentStore.subscribe({
+      effects: parentEffectsSubscriber,
+      next: parentNextSubscriber,
+    })
+
+    store.setState(1)
+
+    expect(effectsSubscriber).not.toHaveBeenCalled()
+    expect(nextSubscriber).not.toHaveBeenCalled()
+    expect(parentEffectsSubscriber).not.toHaveBeenCalled()
+    expect(parentNextSubscriber).not.toHaveBeenCalled()
+
+    store.setState(1, 'test metadata')
+
+    expect(effectsSubscriber).toHaveBeenCalledTimes(1)
+    expect(effectsSubscriber).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: expect.objectContaining({
+          meta: 'test metadata',
+        }),
+      })
+    )
+    expect(nextSubscriber).not.toHaveBeenCalled()
+    expect(parentEffectsSubscriber).toHaveBeenCalledTimes(1)
+    expect(parentEffectsSubscriber).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: expect.objectContaining({
+          metaType: zeduxTypes.delegate,
+          payload: expect.objectContaining({
+            meta: 'test metadata',
+          }),
+        }),
+      })
+    )
+  })
 })
 
 describe('Store.setStateDeep()', () => {
