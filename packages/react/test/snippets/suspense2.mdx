@@ -37,8 +37,10 @@ function Child() {
         <button
           onClick={() => {
             startTransition(() => {
+              console.log('starting transition')
               // React transitions don't apply to suspense. But if they ever do, this will be cool:
               changePromise()
+              console.log('ending transition')
             })
           }}
         >
@@ -53,6 +55,100 @@ function App() {
   return (
     <Suspense fallback={<div>Fallback</div>}>
       <Child />
+    </Suspense>
+  )
+}
+```
+
+```tsx live ecosystemId=test-transitions resultVar=Root
+const userIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+async function getUsersDetails(id: number): Promise<User> {
+  let data = await fetch(`https://jsonplaceholder.typicode.com/users/${id}`)
+  console.log('awaiting...')
+  await new Promise(res =>
+    setTimeout(() => {
+      console.log('in setTimeout')
+      res()
+    }, 1000)
+  ).then(() => console.log('in then...'))
+  console.log('resolving promise...')
+  return data.json()
+}
+
+const cache = {}
+
+const useStuff = (id: number) => {
+  if (cache[id]) return cache[id]
+
+  const promiseData = { promise: null as any, data: null as any }
+  console.log('sending request...')
+  promiseData.promise = getUsersDetails(id).then(data => {
+    promiseData.data = data
+    console.log('data set...', data)
+  })
+
+  return (cache[id] = promiseData)
+}
+
+function SetUserButton({ id, setUserId }) {
+  const [isPending, start] = useTransition()
+  return (
+    <button
+      disabled={isPending}
+      onClick={() => {
+        start(() => setUserId(id))
+      }}
+      className={isPending ? 'pending' : ''}
+    >
+      {id}
+    </button>
+  )
+}
+
+function App() {
+  const [userId, setUserId] = useState(1)
+  const { promise, data } = useStuff(userId)
+  const subscribe = useMemo(() => () => () => {}, [])
+
+  let rerender = useState()[1]
+
+  console.log('rendering...', data)
+  if (!data) {
+    throw promise
+  }
+
+  const user = useSyncExternalStore(subscribe, () => data)
+  console.log('returning stuff...', user)
+
+  // can be replaced with
+  // const user = api.use(userId);
+
+  return (
+    <div>
+      <section>
+        <summary>
+          <h3>Click to see user's details</h3>
+          <h5>Button will be disabled when pending</h5>
+        </summary>
+        {userIds.map(u => (
+          <SetUserButton key={u} id={u} setUserId={setUserId} />
+        ))}
+      </section>
+      <hr />
+
+      <details open>
+        <summary>User {user.username} details</summary>
+        <pre>{JSON.stringify(user, null, 4)}</pre>
+      </details>
+    </div>
+  )
+}
+
+function Root() {
+  return (
+    <Suspense fallback="Loading your App">
+      <App />
     </Suspense>
   )
 }
