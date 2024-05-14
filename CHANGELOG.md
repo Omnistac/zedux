@@ -1,3 +1,10 @@
+## v1.2.1 (May 14, 2024)
+
+### Fixes:
+
+- `core`: allow store-extending classes to have array state types (#96)
+- `core`: always notify effects subscribers when a hydration has metadata (#98)
+
 ## v1.2.0 (Feb 6, 2024)
 
 This is mostly a republish of the last v1.2.0 release candidate. Looks good :+1:
