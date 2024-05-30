@@ -42,8 +42,8 @@ describe('selection', () => {
 
     const button = await findByTestId('button')
 
-    expect(selector1).toHaveBeenCalledTimes(2)
-    expect(selector2).toHaveBeenCalledTimes(2)
+    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector2).toHaveBeenCalledTimes(1)
     expect((await findByTestId('text')).innerHTML).toBe('a')
 
     act(() => {
@@ -51,16 +51,16 @@ describe('selection', () => {
       jest.runAllTimers()
     })
 
-    expect(selector1).toHaveBeenCalledTimes(2)
-    expect(selector2).toHaveBeenCalledTimes(2)
+    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector2).toHaveBeenCalledTimes(1)
 
     act(() => {
       ecosystem.find(testAtom, ['a'])?.setState('b')
       jest.runAllTimers()
     })
 
-    expect(selector1).toHaveBeenCalledTimes(3)
-    expect(selector2).toHaveBeenCalledTimes(3)
+    expect(selector1).toHaveBeenCalledTimes(2)
+    expect(selector2).toHaveBeenCalledTimes(2)
     expect((await findByTestId('text')).innerHTML).toBe('b')
   })
 
@@ -102,7 +102,7 @@ describe('selection', () => {
 
     const button = await findByTestId('button')
 
-    expect(selector).toHaveBeenCalledTimes(2)
+    expect(selector).toHaveBeenCalledTimes(1)
     expect((await findByTestId('text')).innerHTML).toBe('a')
 
     act(() => {
@@ -110,7 +110,7 @@ describe('selection', () => {
       jest.runAllTimers()
     })
 
-    expect(selector).toHaveBeenCalledTimes(3)
+    expect(selector).toHaveBeenCalledTimes(2)
     expect((await findByTestId('text')).innerHTML).toBe('b')
   })
 
@@ -145,9 +145,9 @@ describe('selection', () => {
 
     const button = await findByTestId('button')
 
-    expect(selector1).toHaveBeenCalledTimes(3)
-    expect(selector2).toHaveBeenCalledTimes(2)
-    expect(selector3).toHaveBeenCalledTimes(2)
+    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector2).toHaveBeenCalledTimes(1)
+    expect(selector3).toHaveBeenCalledTimes(1)
     expect((await findByTestId('text')).innerHTML).toBe('c1')
 
     act(() => {
@@ -155,9 +155,9 @@ describe('selection', () => {
       jest.runAllTimers()
     })
 
-    expect(selector1).toHaveBeenCalledTimes(3)
-    expect(selector2).toHaveBeenCalledTimes(3)
-    expect(selector3).toHaveBeenCalledTimes(4)
+    expect(selector1).toHaveBeenCalledTimes(1)
+    expect(selector2).toHaveBeenCalledTimes(1)
+    expect(selector3).toHaveBeenCalledTimes(2)
     expect((await findByTestId('text')).innerHTML).toBe('c2')
   })
 
@@ -184,7 +184,7 @@ describe('selection', () => {
 
     const button = await findByTestId('button')
 
-    expect(selector).toHaveBeenCalledTimes(2)
+    expect(selector).toHaveBeenCalledTimes(1)
     expect(selector).toHaveBeenLastCalledWith(expect.any(Object), 1)
     expect((await findByTestId('text')).innerHTML).toBe('2')
 
@@ -193,7 +193,7 @@ describe('selection', () => {
       jest.runAllTimers()
     })
 
-    expect(selector).toHaveBeenCalledTimes(4)
+    expect(selector).toHaveBeenCalledTimes(2)
     expect(selector).toHaveBeenLastCalledWith(expect.any(Object), 2)
     expect((await findByTestId('text')).innerHTML).toBe('4')
   })

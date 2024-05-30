@@ -224,7 +224,14 @@ export class Graph {
     const dependentEdge = dependency.dependents.get(dependentKey)
 
     // happens in React 18+ (see this method's jsdoc above)
-    if (!dependentEdge) return
+    if (!dependentEdge) {
+      // useAtomSelector can delete edges that were never drawn 'cause React
+      // StrictMode double-renders can create an entirely new SelectorCache
+      // before the old one received dependents. Delete the old one in this case
+      if (dependency.isSelector) scheduleNodeDestruction(this, dependencyKey)
+
+      return
+    }
 
     dependency.dependents.delete(dependentKey)
     dependency.refCount--

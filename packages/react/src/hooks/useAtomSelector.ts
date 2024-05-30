@@ -2,8 +2,9 @@ import {
   AtomSelectorConfig,
   AtomSelectorOrConfig,
   haveDepsChanged,
+  SelectorCache,
 } from '@zedux/atoms'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { External } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
@@ -27,11 +28,11 @@ export const useAtomSelector = <T, Args extends any[]>(
   const ecosystem = useEcosystem()
   const { _graph, selectors } = ecosystem
   const dependentKey = useReactComponentId()
-  const cacheRef = useRef<{ args: Args }>()
   const [, render] = useState<undefined | object>()
+  const storage =
+    (render as any).storage || (selectors._storage[dependentKey] ||= {})
 
-  const existingCache =
-    cacheRef.current || selectors.find(selectorOrConfig, args)
+  const existingCache = storage.cache as SelectorCache<T, Args> | undefined
 
   const argsChanged =
     !existingCache ||
@@ -45,7 +46,17 @@ export const useAtomSelector = <T, Args extends any[]>(
       : haveDepsChanged(existingCache.args, args))
 
   const resolvedArgs = argsChanged ? args : (existingCache.args as Args)
-  const renderedResult = ecosystem.select(selectorOrConfig, ...resolvedArgs)
+  const cache = selectors.getCache(selectorOrConfig, resolvedArgs)
+  const renderedResult = cache.result
+
+  if (cache !== existingCache) {
+    if (existingCache) {
+      // yes, remove this during render
+      _graph.removeEdge(dependentKey, existingCache.id)
+    }
+
+    storage.cache = cache as SelectorCache<any, any[]>
+  }
 
   // When an inline selector returns a referentially unstable result every run,
   // we have to ignore the subsequent update. Do that using a "state machine"
@@ -53,26 +64,43 @@ export const useAtomSelector = <T, Args extends any[]>(
   // occurs after the component rerenders and the effect reruns after that
   // render. This works with strict mode on or off. Use the stable `render`
   // function as a "ref" :O
-  if ((render as any).ignorePhase === 1) {
-    ;(render as any).ignorePhase = 2
+  if (storage.ignorePhase === 1) {
+    storage.ignorePhase = 2
   }
 
-  useEffect(() => {
-    // Don't cache the selector until this effect runs. Sadly, this means that
-    // all selectors that are first invoked from React will be double-invoked.
-    // There's really nothing (performant and good) that we can do about this.
-    // React is really just missing lots of features for external stores.
-    const cache = selectors.getCache(selectorOrConfig, resolvedArgs)
+  let cancelCleanup = false
 
-    if (_graph.nodes[cache.id]?.dependents.get(dependentKey)) {
-      return () => {
-        if ((render as any).ignorePhase !== 1) {
-          _graph.removeEdge(dependentKey, cache.id)
-        }
+  useEffect(() => {
+    cancelCleanup = true
+    delete selectors._storage[dependentKey]
+    ;(render as any).storage = storage
+
+    // re-get the cache in case an unmounting component's effect cleanup
+    // destroyed it before we could add this dependent
+    const newCache = selectors.getCache(selectorOrConfig, resolvedArgs)
+
+    const cleanup = () => {
+      if (cancelCleanup) {
+        cancelCleanup = false
+
+        return
+      }
+
+      if (storage.ignorePhase !== 1) {
+        delete selectors._storage[dependentKey]
+
+        queueMicrotask(() => {
+          _graph.removeEdge(dependentKey, newCache.id)
+        })
       }
     }
 
-    _graph.addEdge(dependentKey, cache.id, OPERATION, External, () =>
+    // Make this function idempotent to guard against React's double-invocation
+    if (_graph.nodes[newCache.id]?.dependents.get(dependentKey)) {
+      return cleanup
+    }
+
+    _graph.addEdge(dependentKey, newCache.id, OPERATION, External, () =>
       render({})
     )
 
@@ -80,23 +108,29 @@ export const useAtomSelector = <T, Args extends any[]>(
     // or update its dependencies before this component is mounted. If that
     // happened, trigger a rerender to recache the selector and/or get its new
     // result. On the rerender, ignore changes
-    if (cache.result !== renderedResult && !(render as any).ignorePhase) {
-      ;(render as any).ignorePhase = 1
+    if (newCache.result !== renderedResult && !storage.ignorePhase) {
+      storage.ignorePhase = 1
       render({})
     }
 
-    if ((render as any).ignorePhase === 2) {
-      ;(render as any).ignorePhase = 0
+    if (storage.ignorePhase === 2) {
+      storage.ignorePhase = 0
     }
 
-    cacheRef.current = { args: resolvedArgs }
+    // React StrictMode's double renders can wreak havoc on the selector cache.
+    // Clean up havoc
+    queueMicrotask(() => {
+      cancelCleanup = false
 
-    return () => {
-      if ((render as any).ignorePhase !== 1) {
-        _graph.removeEdge(dependentKey, cache.id)
-      }
-    }
-  }, [selectorOrConfig, resolvedArgs])
+      Object.values(selectors._storage).forEach(storageItem => {
+        if (storageItem.cache?.id) {
+          selectors._destroySelector(storageItem.cache.id)
+        }
+      })
+    })
 
-  return renderedResult
+    return cleanup
+  }, [cache])
+
+  return renderedResult as T
 }
