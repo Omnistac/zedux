@@ -1,3 +1,9 @@
+## v1.2.2-rc.0 (May 30, 2024)
+
+### Fixes:
+
+- `atoms`, `react`: useAtomSelector - subscribe to the new selector before destroying the old (#101)
+
 ## v1.2.1 (May 14, 2024)
 
 ### Fixes:
