@@ -48,6 +48,17 @@ export class Selectors {
    */
   public _refBaseKeys = new WeakMap<AtomSelectorOrConfig<any, any>, string>()
 
+  /**
+   * Used to work around React double-renders and double-effects.
+   */
+  public _storage: Record<
+    string,
+    {
+      cache?: SelectorCache
+      ignorePhase?: number
+    }
+  > = {}
+
   constructor(private readonly ecosystem: Ecosystem) {}
 
   public addDependent(
@@ -383,6 +394,7 @@ export class Selectors {
     })
 
     this._refBaseKeys = new WeakMap()
+    this._storage = {}
   }
 
   /**
