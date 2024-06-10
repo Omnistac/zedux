@@ -287,6 +287,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   /**
    * Get an atom instance. Don't create the atom instance if it doesn't exist.
    * Don't register any graph dependencies.
+   *
+   * Tries to find an exact match, but falls back to doing a fuzzy search if no
+   * exact match is found. Pass atom params (or an empty array if no params or
+   * when passing a search string) for the second argument to disable fuzzy
+   * search.
    */
   public find<A extends AnyAtomTemplate>(
     template: A,
@@ -302,7 +307,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   ): AtomInstanceType<A> | undefined
 
   public find<A extends AnyAtomTemplate = any>(
-    key: string
+    searchStr: string,
+    params?: []
   ): AtomInstanceType<A> | undefined
 
   public find<A extends AnyAtomTemplate>(
@@ -310,6 +316,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     params?: AtomParamsType<A>
   ) {
     const isString = typeof template === 'string'
+
     if (!isString) {
       const id = (template as A).getInstanceId(this, params)
 
@@ -317,6 +324,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       const instance = this._instances[id]
 
       if (instance) return instance
+    }
+
+    // if params are passed, don't fuzzy search
+    if (params) {
+      return this._instances[
+        isString
+          ? template
+          : `${template.key}-${this._idGenerator.hashParams(
+              params,
+              this.complexParams
+            )}`
+      ]
     }
 
     const matches = this.findAll(template)
@@ -328,10 +347,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   /**
-   * Get an object of all atom instances in this ecosystem.
+   * Get an object of all atom instances in this ecosystem keyed by their id.
    *
-   * Pass an atom template or atom template key string to only return instances
-   * whose id weakly matches the passed key.
+   * Pass an atom template to only find instances of that atom. Pass an atom key
+   * string to only return instances whose id weakly matches the passed key.
    */
   public findAll(template?: AnyAtomTemplate | string) {
     const isAtom = (template as AnyAtomTemplate)?.key
