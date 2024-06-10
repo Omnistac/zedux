@@ -102,6 +102,25 @@ describe('Ecosystem', () => {
     )
   })
 
+  test('find() with params only returns exact matches', () => {
+    const atom1 = atom('1', (id?: string) => id)
+    const atom2 = atom('someLongKey1', 1)
+    const atom3 = atom('someLongKey11', 1)
+    const atom4 = atom('someLongKey111', 1)
+
+    ecosystem.getInstance(atom1, ['a'])
+    ecosystem.getInstance(atom1)
+    ecosystem.getInstance(atom1, ['b'])
+    ecosystem.getInstance(atom2)
+    ecosystem.getInstance(atom3)
+    ecosystem.getInstance(atom4)
+
+    expect(ecosystem.find('someLongKey', [])).toBeUndefined()
+    expect(ecosystem.find(atom1, ['b'])?.getState()).toBe('b')
+    expect(ecosystem.find(atom1, ['c'])).toBeUndefined()
+    expect(ecosystem.find(atom3, [])?.getState()).toBe(1)
+  })
+
   test('findAll() with no params returns all atom instances', () => {
     const atom1 = atom('1', (id: number) => id)
 
