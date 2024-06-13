@@ -1,4 +1,5 @@
-import { Action, HierarchyConfig, Reducer } from '../types'
+import { isPlainObject } from '../api/isPlainObject'
+import { Action, Reducer } from '../types'
 import { BranchNodeType, NullNodeType } from '../utils/general'
 import { BranchNode, Hierarchy, HierarchyNode } from '../utils/types'
 
@@ -12,14 +13,11 @@ import { BranchNode, Hierarchy, HierarchyNode } from '../utils/types'
  * node, and to find the size of the node.
  */
 const createBranchReducer =
-  (
-    children: Hierarchy,
-    { create, get, isNode, set, size }: HierarchyConfig
-  ): Reducer =>
-  (oldState = create(), action: Action) => {
+  (children: Hierarchy): Reducer =>
+  (oldState = {}, action: Action) => {
     // Make a new node to keep track of the values returned by
     // the child reducers.
-    let newState = create()
+    const newState: Record<string, any> = {}
     let hasChanges = false
 
     // Iterate over the child reducers, passing them their state slice
@@ -28,13 +26,13 @@ const createBranchReducer =
       const { reducer } = children[key] as { reducer: Reducer } // we've ensured reducer exists at this point
 
       // Grab the old state slice
-      const oldStatePiece = isNode(oldState) ? get(oldState, key) : undefined // yes, explicitly set it to undefined
+      const oldStatePiece = isPlainObject(oldState) ? oldState[key] : undefined // yes, explicitly set it to undefined
 
       // Calculate the new value
       const newStatePiece = reducer(oldStatePiece, action)
 
       // Record the result
-      newState = set(newState, key, newStatePiece)
+      newState[key] = newStatePiece
 
       // Check for changes
       hasChanges || (hasChanges = newStatePiece !== oldStatePiece)
@@ -43,10 +41,9 @@ const createBranchReducer =
     // Handle the case where `children` did not used to be an empty node. This
     // means there were changes, but our change detection failed since we didn't
     // actually iterate over anything.
-    hasChanges ||
-      (hasChanges =
-        !isNode(oldState) ||
-        (!Object.keys(children).length && !!size(oldState)))
+    hasChanges ||=
+      !isPlainObject(oldState) ||
+      (!Object.keys(children).length && !!Object.keys(oldState).length)
 
     // If nothing changed, discard the accumulated newState
     return hasChanges ? newState : oldState
@@ -77,8 +74,7 @@ const destroyTree = (tree?: HierarchyNode) => {
  */
 const mergeBranches = (
   oldTree: HierarchyNode,
-  newTree: BranchNode,
-  hierarchyConfig: HierarchyConfig
+  newTree: BranchNode
 ): BranchNode => {
   const mergedChildren = { ...(oldTree as BranchNode).children }
 
@@ -87,9 +83,9 @@ const mergeBranches = (
     const newChild = newTree.children[key]
     const oldChild = (oldTree as BranchNode).children?.[key]
 
-    // Attempt to recursively merge the two children
-    // Let `mergeHierarchies()` handle any destroying
-    const mergedChild = mergeHierarchies(oldChild, newChild, hierarchyConfig)
+    // Attempt to recursively merge the two children. Let `mergeHierarchies()`
+    // handle any destroying
+    const mergedChild = mergeHierarchies(oldChild, newChild)
 
     // If the new node is NULL, kill it.
     if (mergedChild.type === NullNodeType) {
@@ -103,7 +99,7 @@ const mergeBranches = (
 
   return {
     children: mergedChildren,
-    reducer: createBranchReducer(mergedChildren, hierarchyConfig),
+    reducer: createBranchReducer(mergedChildren),
     type: BranchNodeType,
   }
 }
@@ -134,8 +130,7 @@ const mergeBranches = (
  */
 export const mergeHierarchies = (
   oldTree: HierarchyNode | undefined,
-  newTree: HierarchyNode,
-  hierarchyConfig: HierarchyConfig
+  newTree: HierarchyNode
 ): HierarchyNode => {
   if (newTree.type !== BranchNodeType) {
     destroyTree(oldTree)
@@ -146,11 +141,11 @@ export const mergeHierarchies = (
   if (!oldTree || oldTree.type !== BranchNodeType) {
     destroyTree(oldTree)
 
-    return mergeBranches({ type: NullNodeType }, newTree, hierarchyConfig)
+    return mergeBranches({ type: NullNodeType }, newTree)
   }
 
   // They're both BRANCH nodes; recursively merge them
-  return mergeBranches(oldTree, newTree, hierarchyConfig)
+  return mergeBranches(oldTree, newTree)
 }
 
 /**
@@ -159,37 +154,33 @@ export const mergeHierarchies = (
  * If this hydration contains new state for a child store, this parent store
  * will create the child store's state for it :O
  *
- * This means that mixing hierarchyConfigs is not supported, since only the
- * parent's hierarchyConfig will be respected during this merge. The child's
- * state will be full-hydrated with its new state after this merge.
+ * This means that mixing dictionary-type structures in nested stores is not
+ * supported, since only the parent's dictionary-type structure will be
+ * respected during this merge. The child's state will be full-hydrated with its
+ * new state after this merge.
  */
-export const mergeStateTrees = (
-  oldStateTree: any,
-  newStateTree: any,
-  hierarchyConfig: HierarchyConfig
-) => {
-  if (
-    !hierarchyConfig.isNode(oldStateTree) ||
-    !hierarchyConfig.isNode(newStateTree)
-  ) {
+export const mergeStateTrees = (oldStateTree: any, newStateTree: any) => {
+  if (!isPlainObject(oldStateTree) || !isPlainObject(newStateTree)) {
     return [newStateTree, newStateTree !== oldStateTree] as const
   }
 
   let hasChanges = false
-  const mergedTree = hierarchyConfig.clone(oldStateTree)
+  const mergedTree = { ...oldStateTree }
 
-  hierarchyConfig.iterate(newStateTree, (key, newVal) => {
-    const oldVal = hierarchyConfig.get(mergedTree, key)
-    const [clonedVal, childHasChanges] = hierarchyConfig.isNode(newVal)
+  Object.keys(newStateTree).forEach(key => {
+    const newVal = newStateTree[key]
+    const oldVal = mergedTree[key]
+    const [clonedVal, childHasChanges] = isPlainObject(newVal)
       ? // Recursively merge the nested nodes.
-        mergeStateTrees(oldVal, newVal, hierarchyConfig)
+        mergeStateTrees(oldVal, newVal)
       : // Not a nested node (anymore, at least)
         [newVal, newVal !== oldVal]
 
     if (!childHasChanges) return
 
     if (!hasChanges) hasChanges = childHasChanges
-    hierarchyConfig.set(mergedTree, key, clonedVal)
+
+    mergedTree[key] = clonedVal
   })
 
   return [hasChanges ? mergedTree : oldStateTree, hasChanges] as const
