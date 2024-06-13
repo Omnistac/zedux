@@ -1,3 +1,9 @@
+## v1.2.2 (Jun 13, 2024)
+
+### Fixes:
+
+- `atoms`: disable `ecosystem.find()` fuzzy search if params are passed (#103)
+
 ## v1.2.2-rc.0 (May 30, 2024)
 
 ### Fixes:
