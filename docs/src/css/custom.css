@@ -34,6 +34,9 @@
 }
 
 html[data-theme='dark'] {
+  --ifm-color-info-contrast-foreground: var(--color-dark);
+  --ifm-color-success-contrast-foreground: var(--color-dark);
+  --ifm-color-secondary-contrast-foreground: var(--color-dark);
   --ifm-background-color: var(--color-dark);
 }
 
