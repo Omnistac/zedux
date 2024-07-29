@@ -24,7 +24,7 @@ const validTypes = [
 ]
 const validPreIds = ['alpha', 'beta', 'rc']
 
-const isNextBranch = branch => /^next\/v\d+\.x$/.test(branch)
+const isNextBranch = branch => /^next\/v\d+\.(\d+\.)?x$/.test(branch)
 const isSupportBranch = branch => /^v\d+\.x$/.test(branch)
 
 /**
@@ -364,8 +364,10 @@ const getBranch = async type => {
     process.exit(1)
   }
 
-  if (isNext && type !== 'premajor') {
-    console.error('Next branches can only publish premajor versions.')
+  if (isNext && type !== 'premajor' && type !== 'preminor') {
+    console.error(
+      'Next branches can only publish premajor or preminor versions.'
+    )
     process.exit(1)
   }
 
@@ -625,7 +627,7 @@ const returnToBranch = async (branch, tagName) => {
 
 /**
  * type is the `npm version ____` release type - can be 'major', 'minor',
- * 'patch', or 'pre<major|minor|patch>'
+ * 'patch', 'prerelease', or 'pre<major|minor|patch>'
  *
  * If type is 'pre<major|minor|patch>', also pass a preId of 'alpha', 'beta', or
  * 'rc'
