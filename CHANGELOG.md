@@ -1,3 +1,11 @@
+## v1.3.0-rc.0 (Jul 30, 2024)
+
+This version contains huge fixes for `useAtomSelector` that are only fully compatible with React 19 or with React 18 when not using StrictMode. It's recommended to wait for React 19 before upgrading to this version.
+
+### Fixes:
+
+- `atoms`, `react`: optimize `useAtomSelector` for React 19 (#106)
+
 ## v1.2.2 (Jun 13, 2024)
 
 ### Fixes:
