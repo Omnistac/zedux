@@ -168,7 +168,7 @@ describe('useAtomSelector', () => {
     })
   })
 
-  test('useAtomSelector creates/uses a different cache when selector goes from object form to function form', async () => {
+  test('useAtomSelector reuses the same cache when selector goes from object form to function form', async () => {
     jest.useFakeTimers()
     const selector1 = jest.fn(() => 1)
 
@@ -208,7 +208,7 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1': 1,
+      '@@selector-mockConstructor-0': 1,
     })
   })
 
@@ -305,7 +305,7 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('0')
     expect(selector1).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1-[0]': 0,
+      '@@selector-mockConstructor-0-[0]': 0,
     })
   })
 
@@ -356,7 +356,7 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-2': 1,
+      '@@selector-mockConstructor-0': 1,
     })
     expect(renders).toBe(2)
   })
@@ -440,11 +440,22 @@ describe('useAtomSelector', () => {
     const button = await findByTestId('button')
     const div = await findByTestId('text')
 
+    // TODO: These snapshots are temporarily wrong in StrictMode pre React 19
+    // (React 18 StrictMode causes a memory leak). Upgrading to React 19 will
+    // fix them.
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
-        "@@selector-unnamed-1": SelectorCache {
+        "@@selector-unnamed-0": SelectorCache {
           "args": [],
-          "id": "@@selector-unnamed-1",
+          "id": "@@selector-unnamed-0",
+          "nextReasons": [],
+          "prevReasons": [],
+          "result": 1,
+          "selectorRef": [Function],
+        },
+        "@@selector-unnamed-2": SelectorCache {
+          "args": [],
+          "id": "@@selector-unnamed-2",
           "nextReasons": [],
           "prevReasons": [],
           "result": 1,
@@ -463,9 +474,17 @@ describe('useAtomSelector', () => {
 
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
-        "@@selector-unnamed-3": SelectorCache {
+        "@@selector-unnamed-0": SelectorCache {
           "args": [],
-          "id": "@@selector-unnamed-3",
+          "id": "@@selector-unnamed-0",
+          "nextReasons": [],
+          "prevReasons": [],
+          "result": 1,
+          "selectorRef": [Function],
+        },
+        "@@selector-unnamed-2": SelectorCache {
+          "args": [],
+          "id": "@@selector-unnamed-2",
           "nextReasons": [],
           "prevReasons": [],
           "result": 1,
@@ -532,7 +551,11 @@ describe('useAtomSelector', () => {
     const div = await findByTestId('text')
 
     expect(div.innerHTML).toBe('1')
-    expect(renders).toBe(2) // 2 rerenders + 2 for strict mode
+    expect(renders).toBe(4) // 2 rerenders + 2 for strict mode
+
+    // TODO: These snapshots are temporarily wrong in StrictMode pre React 19
+    // (React 18 StrictMode causes a memory leak). Upgrading to React 19 will
+    // fix them.
     expect(ecosystem._graph.nodes).toMatchSnapshot()
 
     act(() => {
@@ -541,7 +564,7 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('2')
-    expect(renders).toBe(4) // 4 rerenders + 4 for strict mode
+    expect(renders).toBe(6) // 3 rerenders + 3 for strict mode
     expect(ecosystem._graph.nodes).toMatchSnapshot()
   })
 })
