@@ -364,7 +364,7 @@ const getBranch = async type => {
     process.exit(1)
   }
 
-  if (isNext && type !== 'premajor' && type !== 'preminor') {
+  if (isNext && !['premajor', 'preminor', 'prerelease'].includes(type)) {
     console.error(
       'Next branches can only publish premajor or preminor versions.'
     )
