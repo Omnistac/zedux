@@ -542,9 +542,9 @@ const makePullRequest = async (email, token, branch, tagName) => {
 const npmPublish = async (branch, packages, isPrerelease) => {
   let proceed = true
   const tagStr = isNextBranch(branch)
-    ? ` --tag next-${branch.slice(5, -2)}`
+    ? ` --tag canary`
     : isSupportBranch(branch)
-    ? ` --tag lts-${isPrerelease ? 'next-' : ''}${branch.slice(0, -2)}`
+    ? ` --tag lts`
     : isPrerelease
     ? ' --tag next'
     : ''
