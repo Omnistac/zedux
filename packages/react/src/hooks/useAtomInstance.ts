@@ -117,8 +117,12 @@ export const useAtomInstance: {
     }
 
     return () => {
-      // no need to set the "ref"'s `.mounted` property to false here
+      // remove the edge immediately - no need for a delay here. When StrictMode
+      // double-invokes (invokes, then cleans up, then re-invokes) this effect,
+      // it's expected that any `ttl: 0` atoms get destroyed and recreated -
+      // that's part of what StrictMode is ensuring
       ecosystem._graph.removeEdge(dependentKey, instance.id)
+      // no need to set `render.mounted` to false here
     }
   }, [instance.id])
 

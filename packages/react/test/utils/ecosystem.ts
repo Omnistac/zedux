@@ -1,5 +1,5 @@
 import { act } from '@testing-library/react'
-import { createEcosystem } from '@zedux/react'
+import { createEcosystem } from '@zedux/atoms'
 
 export const ecosystem = createEcosystem({ id: 'test' })
 
