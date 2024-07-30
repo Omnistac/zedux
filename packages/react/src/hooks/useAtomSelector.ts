@@ -68,7 +68,7 @@ export const useAtomSelector = <T, Args extends any[]>(
       selectorOrConfig as AtomSelectorOrConfig<any, any[]>,
       resolvedArgs
     )
-    ;(render as any).mounted = false
+    ;(render as any).mounted = true
   }
 
   const cache = isSwappingRefs
