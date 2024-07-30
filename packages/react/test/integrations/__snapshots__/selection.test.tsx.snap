@@ -106,10 +106,10 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 {
   "1": {
     "dependencies": Map {
-      "@@selector-common-name-0" => true,
+      "@@selector-common-name-4" => true,
     },
     "dependents": Map {
-      "no-4" => {
+      "no-5" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 3,
@@ -136,12 +136,12 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "refCount": 1,
     "weight": 3,
   },
-  "@@selector-common-name-0": {
+  "@@selector-common-name-2": {
     "dependencies": Map {
       "root" => true,
     },
     "dependents": Map {
-      "1" => {
+      "2" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -152,12 +152,12 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "refCount": 1,
     "weight": 2,
   },
-  "@@selector-common-name-2": {
+  "@@selector-common-name-4": {
     "dependencies": Map {
       "root" => true,
     },
     "dependents": Map {
-      "2" => {
+      "1" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -177,7 +177,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
         "flags": 0,
         "operation": "get",
       },
-      "@@selector-common-name-0" => {
+      "@@selector-common-name-4" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -195,10 +195,10 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 {
   "1": {
     "dependencies": Map {
-      "@@selector-common-name-0" => true,
+      "@@selector-common-name-4" => true,
     },
     "dependents": Map {
-      "no-4" => {
+      "no-5" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 3,
@@ -209,7 +209,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "refCount": 1,
     "weight": 3,
   },
-  "@@selector-common-name-0": {
+  "@@selector-common-name-4": {
     "dependencies": Map {
       "root" => true,
     },
@@ -228,7 +228,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "root": {
     "dependencies": Map {},
     "dependents": Map {
-      "@@selector-common-name-0" => {
+      "@@selector-common-name-4" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,

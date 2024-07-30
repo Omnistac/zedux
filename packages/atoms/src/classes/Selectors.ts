@@ -292,6 +292,7 @@ export class Selectors {
     _graph.removeDependencies(id)
     _graph.removeNode(id)
     delete this._items[id]
+    this._refBaseKeys.delete(cache.selectorRef)
     cache.isDestroyed = true
     // don't delete the ref from this._refBaseKeys; this selector cache isn't
     // necessarily the only one using it (if the selector takes params). Just
