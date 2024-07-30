@@ -150,6 +150,11 @@ describe('selection', () => {
     expect(selector3).toHaveBeenCalledTimes(1)
     expect((await findByTestId('text')).innerHTML).toBe('c1')
 
+    // reset the 3 useId calls in ResurrectingComponent's useAtomSelectors
+    ;(globalThis as any).clearUseIdEntry(1)
+    ;(globalThis as any).clearUseIdEntry(2)
+    ;(globalThis as any).clearUseIdEntry(3)
+
     act(() => {
       fireEvent.click(button)
       jest.runAllTimers()

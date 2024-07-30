@@ -21,7 +21,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
       "1" => true,
     },
     "dependents": Map {
-      "Test-:rb:" => {
+      "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
         "flags": 2,
@@ -40,7 +40,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "1": {
     "dependencies": Map {},
     "dependents": Map {
-      "@@selector-unnamed-1" => {
+      "@@selector-unnamed-0" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -51,16 +51,17 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "refCount": 1,
     "weight": 1,
   },
-  "@@selector-unnamed-1": {
+  "@@selector-unnamed-0": {
     "dependencies": Map {
       "1" => true,
     },
     "dependents": Map {
-      "Test-:rb:" => {
+      "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
+        "task": undefined,
       },
     },
     "isSelector": true,
@@ -75,7 +76,13 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "1": {
     "dependencies": Map {},
     "dependents": Map {
-      "@@selector-unnamed-1" => {
+      "@@selector-unnamed-0" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+      "@@selector-unnamed-2" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -83,15 +90,31 @@ exports[`useAtomSelector inline selector that returns a different object referen
       },
     },
     "isSelector": undefined,
-    "refCount": 1,
+    "refCount": 2,
     "weight": 1,
   },
-  "@@selector-unnamed-1": {
+  "@@selector-unnamed-0": {
     "dependencies": Map {
       "1" => true,
     },
     "dependents": Map {
-      "Test-:rd:" => {
+      "Test-:r0:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "isSelector": true,
+    "refCount": 1,
+    "weight": 2,
+  },
+  "@@selector-unnamed-2": {
+    "dependencies": Map {
+      "1" => true,
+    },
+    "dependents": Map {
+      "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
         "flags": 2,
@@ -110,7 +133,13 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "1": {
     "dependencies": Map {},
     "dependents": Map {
-      "@@selector-unnamed-3" => {
+      "@@selector-unnamed-0" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+      "@@selector-unnamed-2" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -118,19 +147,37 @@ exports[`useAtomSelector inline selector that returns a different object referen
       },
     },
     "isSelector": undefined,
-    "refCount": 1,
+    "refCount": 2,
     "weight": 1,
   },
-  "@@selector-unnamed-3": {
+  "@@selector-unnamed-0": {
     "dependencies": Map {
       "1" => true,
     },
     "dependents": Map {
-      "Test-:rd:" => {
+      "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
+        "task": undefined,
+      },
+    },
+    "isSelector": true,
+    "refCount": 1,
+    "weight": 2,
+  },
+  "@@selector-unnamed-2": {
+    "dependencies": Map {
+      "1" => true,
+    },
+    "dependents": Map {
+      "Test-:r0:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+        "task": undefined,
       },
     },
     "isSelector": true,

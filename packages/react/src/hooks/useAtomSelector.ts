@@ -29,10 +29,10 @@ export const useAtomSelector = <T, Args extends any[]>(
   const { _graph, selectors } = ecosystem
   const dependentKey = useReactComponentId()
   const [, render] = useState<undefined | object>()
-  const storage =
-    (render as any).storage || (selectors._storage[dependentKey] ||= {})
 
-  const existingCache = storage.cache as SelectorCache<T, Args> | undefined
+  const existingCache = (render as any).cache as
+    | SelectorCache<T, Args>
+    | undefined
 
   const argsChanged =
     !existingCache ||
@@ -46,98 +46,74 @@ export const useAtomSelector = <T, Args extends any[]>(
       : haveDepsChanged(existingCache.args, args))
 
   const resolvedArgs = argsChanged ? args : (existingCache.args as Args)
-  const cache = selectors.getCache(selectorOrConfig, resolvedArgs)
-  const renderedResult = cache.result
 
-  if (cache !== existingCache) {
-    if (existingCache) {
-      // yes, remove this during render
-      _graph.removeEdge(dependentKey, existingCache.id)
+  // if the refs/args don't match, existingCache has refCount: 1, there is no
+  // cache yet for the new ref, and the new ref has the same name, assume it's
+  // an inline selector
+  const isSwappingRefs =
+    existingCache &&
+    existingCache.selectorRef !== selectorOrConfig &&
+    !argsChanged
+      ? _graph.nodes[existingCache.id]?.refCount === 1 &&
+        !selectors._refBaseKeys.has(selectorOrConfig) &&
+        selectors._getIdealCacheId(existingCache.selectorRef) ===
+          selectors._getIdealCacheId(selectorOrConfig)
+      : false
+
+  if (isSwappingRefs) {
+    // switch `mounted` to false temporarily to prevent circular rerenders
+    ;(render as any).mounted = false
+    selectors._swapRefs(
+      existingCache as SelectorCache<any, any[]>,
+      selectorOrConfig as AtomSelectorOrConfig<any, any[]>,
+      resolvedArgs
+    )
+    ;(render as any).mounted = false
+  }
+
+  const cache = isSwappingRefs
+    ? (existingCache as SelectorCache<T, Args>)
+    : selectors.getCache(selectorOrConfig, resolvedArgs)
+
+  const addEdge = () => {
+    if (!_graph.nodes[cache.id]?.dependents.get(dependentKey)) {
+      _graph.addEdge(dependentKey, cache.id, OPERATION, External, () => {
+        if ((render as any).mounted) render({})
+      })
     }
-
-    storage.cache = cache as SelectorCache<any, any[]>
   }
 
-  // When an inline selector returns a referentially unstable result every run,
-  // we have to ignore the subsequent update. Do that using a "state machine"
-  // that goes from 0 -> 1 -> 2. This machine ensures that the ignored update
-  // occurs after the component rerenders and the effect reruns after that
-  // render. This works with strict mode on or off. Use the stable `render`
-  // function as a "ref" :O
-  if (storage.ignorePhase === 1) {
-    storage.ignorePhase = 2
-  }
+  // Yes, subscribe during render. This operation is idempotent.
+  addEdge()
 
-  let cancelCleanup = false
+  const renderedResult = cache.result
+  ;(render as any).cache = cache as SelectorCache<any, any[]>
 
   useEffect(() => {
-    cancelCleanup = true
-    delete selectors._storage[dependentKey]
-    ;(render as any).storage = storage
+    // Try adding the edge again (will be a no-op unless React's StrictMode ran
+    // this effect's cleanup unnecessarily)
+    addEdge()
 
-    // re-get the cache in case an unmounting component's effect cleanup
-    // destroyed it before we could add this dependent
-    const newCache = selectors.getCache(selectorOrConfig, resolvedArgs)
-
-    const cleanup = () => {
-      if (cancelCleanup) {
-        cancelCleanup = false
-
-        return
-      }
-
-      if (storage.ignorePhase !== 1) {
-        delete selectors._storage[dependentKey]
-
-        queueMicrotask(() => {
-          _graph.removeEdge(dependentKey, newCache.id)
-        })
-      }
-    }
-
-    // Make this function idempotent to guard against React's double-invocation
-    if (_graph.nodes[newCache.id]?.dependents.get(dependentKey)) {
-      return cleanup
-    }
-
-    _graph.addEdge(dependentKey, newCache.id, OPERATION, External, () =>
-      render({})
-    )
+    // use the referentially stable render function as a ref :O
+    ;(render as any).mounted = true
 
     // an unmounting component's effect cleanup can force-destroy the selector
-    // or update its dependencies before this component is mounted. If that
-    // happened, trigger a rerender to recache the selector and/or get its new
-    // result. On the rerender, ignore changes
-    if (newCache.result !== renderedResult && !storage.ignorePhase) {
-      storage.ignorePhase = 1
+    // or update the state of its dependencies (causing it to rerun) before we
+    // set `render.mounted`. If that happened, trigger a rerender to recreate
+    // the selector and/or get its new state
+    if (cache.isDestroyed || cache.result !== renderedResult) {
       render({})
     }
 
-    if (storage.ignorePhase === 2) {
-      storage.ignorePhase = 0
+    return () => {
+      // remove the edge immediately - no need for a delay here. When StrictMode
+      // double-invokes (invokes, then cleans up, then re-invokes) this effect,
+      // it's expected that selectors and `ttl: 0` atoms with no other
+      // dependents get destroyed and recreated - that's part of what StrictMode
+      // is ensuring
+      _graph.removeEdge(dependentKey, cache.id)
+      // no need to set `render.mounted` to false here
     }
-
-    // React StrictMode's double renders can wreak havoc on the selector cache.
-    // Clean up havoc
-    if (storage.timeoutId == null) {
-      const removeCruft = () => {
-        storage.timeoutId = null
-        cancelCleanup = false
-
-        Object.values(selectors._storage).forEach(storageItem => {
-          if (storageItem.cache?.id) {
-            selectors._destroySelector(storageItem.cache.id)
-          }
-        })
-      }
-
-      storage.timeoutId =
-        typeof requestIdleCallback !== 'undefined'
-          ? requestIdleCallback(removeCruft, { timeout: 500 })
-          : setTimeout(removeCruft, 500)
-    }
-
-    return cleanup
   }, [cache])
 
   return renderedResult as T

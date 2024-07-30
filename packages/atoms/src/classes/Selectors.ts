@@ -48,18 +48,6 @@ export class Selectors {
    */
   public _refBaseKeys = new WeakMap<AtomSelectorOrConfig<any, any>, string>()
 
-  /**
-   * Used to work around React double-renders and double-effects.
-   */
-  public _storage: Record<
-    string,
-    {
-      cache?: SelectorCache
-      ignorePhase?: number
-      timeoutId?: ReturnType<typeof requestIdleCallback | typeof setTimeout>
-    }
-  > = {}
-
   constructor(private readonly ecosystem: Ecosystem) {}
 
   public addDependent(
@@ -182,9 +170,8 @@ export class Selectors {
       args as Args,
       true
     )
-    if (!id) return
 
-    return this._items[id]
+    return id && this._items[id]
   }
 
   /**
@@ -305,6 +292,7 @@ export class Selectors {
     _graph.removeDependencies(id)
     _graph.removeNode(id)
     delete this._items[id]
+    this._refBaseKeys.delete(cache.selectorRef)
     cache.isDestroyed = true
     // don't delete the ref from this._refBaseKeys; this selector cache isn't
     // necessarily the only one using it (if the selector takes params). Just
@@ -369,20 +357,19 @@ export class Selectors {
   /**
    * Should only be used internally
    */
-  public _swapRefs(
-    oldRef: AtomSelectorOrConfig<any, any[]>,
-    newRef: AtomSelectorOrConfig<any, any[]>,
+  public _swapRefs<T, Args extends any[]>(
+    oldCache: SelectorCache<T, Args>,
+    newRef: AtomSelectorOrConfig<T, Args>,
     args: any[] = []
   ) {
-    const existingCache = this.find(oldRef, args)
-    const baseKey = this._refBaseKeys.get(oldRef)
+    const baseKey = this._refBaseKeys.get(oldCache.selectorRef)
 
-    if (!existingCache || !baseKey) return
+    if (!baseKey) return
 
     this._refBaseKeys.set(newRef, baseKey)
-    this._refBaseKeys.delete(oldRef)
-    existingCache.selectorRef = newRef
-    this.runSelector(existingCache.id, args)
+    this._refBaseKeys.delete(oldCache.selectorRef)
+    oldCache.selectorRef = newRef
+    this.runSelector(oldCache.id, args, false, true)
   }
 
   /**
@@ -395,7 +382,6 @@ export class Selectors {
     })
 
     this._refBaseKeys = new WeakMap()
-    this._storage = {}
   }
 
   /**
@@ -429,7 +415,8 @@ export class Selectors {
   private runSelector<T = any, Args extends any[] = []>(
     id: string,
     args: Args,
-    isInitializing?: boolean
+    isInitializing?: boolean,
+    skipNotifyingDependents?: boolean
   ) {
     const { _evaluationStack, _graph, _mods, modBus } = this.ecosystem
     _graph.bufferUpdates(id)
@@ -451,7 +438,9 @@ export class Selectors {
       const result = selector(_evaluationStack.atomGetters, ...args)
 
       if (!isInitializing && !resultsComparator(result, cache.result as T)) {
-        _graph.scheduleDependents(id, cache.nextReasons, result, cache.result)
+        if (!skipNotifyingDependents) {
+          _graph.scheduleDependents(id, cache.nextReasons, result, cache.result)
+        }
 
         if (_mods.stateChanged) {
           modBus.dispatch(
