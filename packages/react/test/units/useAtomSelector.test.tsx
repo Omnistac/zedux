@@ -442,9 +442,17 @@ describe('useAtomSelector', () => {
 
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
-        "@@selector-unnamed-1": SelectorCache {
+        "@@selector-unnamed-0": SelectorCache {
           "args": [],
-          "id": "@@selector-unnamed-1",
+          "id": "@@selector-unnamed-0",
+          "nextReasons": [],
+          "prevReasons": [],
+          "result": 1,
+          "selectorRef": [Function],
+        },
+        "@@selector-unnamed-2": SelectorCache {
+          "args": [],
+          "id": "@@selector-unnamed-2",
           "nextReasons": [],
           "prevReasons": [],
           "result": 1,

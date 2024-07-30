@@ -76,7 +76,13 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "1": {
     "dependencies": Map {},
     "dependents": Map {
-      "@@selector-unnamed-1" => {
+      "@@selector-unnamed-0" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+      },
+      "@@selector-unnamed-2" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -84,10 +90,10 @@ exports[`useAtomSelector inline selector that returns a different object referen
       },
     },
     "isSelector": undefined,
-    "refCount": 1,
+    "refCount": 2,
     "weight": 1,
   },
-  "@@selector-unnamed-1": {
+  "@@selector-unnamed-0": {
     "dependencies": Map {
       "1" => true,
     },
@@ -119,7 +125,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
       },
     },
     "isSelector": undefined,
-    "refCount": 1,
+    "refCount": 2,
     "weight": 1,
   },
   "@@selector-unnamed-1": {
