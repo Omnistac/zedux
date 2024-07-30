@@ -567,4 +567,52 @@ describe('useAtomSelector', () => {
     expect(renders).toBe(6) // 3 rerenders + 3 for strict mode
     expect(ecosystem._graph.nodes).toMatchSnapshot()
   })
+
+  test('inline selector stays subscribed after being swapped out', async () => {
+    jest.useFakeTimers()
+    const atom1 = atom('1', () => ({ val: 1 }))
+    const selector = ({ get }: AtomGetters) => get(atom1)
+
+    function Test() {
+      const { val } = useAtomSelector({
+        resultsComparator: (a, b) => a.val === b.val,
+        selector,
+      })
+
+      return (
+        <>
+          <div data-testid="text">{val}</div>
+        </>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Test />, {
+      useStrictMode: true,
+    })
+
+    const div = await findByTestId('text')
+
+    expect(div.innerHTML).toBe('1')
+
+    act(() => {
+      ecosystem.getInstance(atom1).setState({ val: 2 })
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('2')
+
+    act(() => {
+      ecosystem.getInstance(atom1).setState({ val: 3 })
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('3')
+
+    act(() => {
+      ecosystem.getInstance(atom1).setState({ val: 4 })
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('4')
+  })
 })
