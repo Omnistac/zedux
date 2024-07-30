@@ -5,7 +5,7 @@ import {
   ion,
   useAtomSelector,
   useAtomValue,
-} from '@zedux/react'
+} from '../../../react/src'
 import { injectMachineStore } from '@zedux/machines'
 import React, { Suspense, useState } from 'react'
 
