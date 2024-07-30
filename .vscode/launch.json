@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "yarn",
+      "args": ["jest", "--runInBand"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceRoot}",
+      "internalConsoleOptions": "neverOpen"
+    },
+  ]
+}
