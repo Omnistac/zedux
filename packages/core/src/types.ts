@@ -105,16 +105,6 @@ export type EffectsSubscriber<
 
 export type ErrorSubscriber = (error: unknown) => any
 
-export interface HierarchyConfig<T = any> {
-  clone: (node: T) => T
-  create: () => T
-  get: (node: T, key: string) => any
-  isNode: (node: any) => boolean
-  iterate: (node: T, callback: (key: string, val: any) => void) => void
-  set: (node: T, key: string, val: any) => T
-  size: (node: T) => number
-}
-
 /**
  * Describes a store's dependency tree. A store can have any number of reducers
  * or child stores nested indefinitely.
