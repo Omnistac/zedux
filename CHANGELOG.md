@@ -1,3 +1,9 @@
+## v1.3.0-rc.2 (Jul 31, 2024)
+
+### Fixes:
+
+- `react`: only rerun `useAtomSelector` effect on cache id change (#110)
+
 ## v1.3.0-rc.1 (Jul 30, 2024)
 
 ### Fixes:
