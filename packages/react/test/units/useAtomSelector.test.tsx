@@ -615,4 +615,51 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('4')
   })
+
+  test('when a selector is destroyed, other selectors that pass different params to the same ref retain their ids', async () => {
+    jest.useFakeTimers()
+    const atom1 = atom('1', () => '1')
+    const selector1 = ({ get }: AtomGetters, str: string) => get(atom1) + str
+
+    function Test() {
+      const a = useAtomSelector(selector1, 'a')
+      const b = useAtomSelector(selector1, 'b')
+      const c = useAtomSelector(selector1, 'c')
+
+      return (
+        <div data-testid="text">
+          {a}
+          {b}
+          {c}
+        </div>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Test />)
+
+    const div = await findByTestId('text')
+
+    expect(div.innerHTML).toBe('1a1b1c')
+    expect(ecosystem.selectors.dehydrate()).toMatchInlineSnapshot(`
+      {
+        "@@selector-selector1-0-["a"]": "1a",
+        "@@selector-selector1-0-["b"]": "1b",
+        "@@selector-selector1-0-["c"]": "1c",
+      }
+    `)
+
+    act(() => {
+      ecosystem.selectors.destroyCache(selector1, ['a'], true)
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('1a1b1c')
+    expect(ecosystem.selectors.dehydrate()).toMatchInlineSnapshot(`
+      {
+        "@@selector-selector1-0-["a"]": "1a",
+        "@@selector-selector1-0-["b"]": "1b",
+        "@@selector-selector1-0-["c"]": "1c",
+      }
+    `)
+  })
 })
