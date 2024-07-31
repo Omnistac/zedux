@@ -114,7 +114,7 @@ export const useAtomSelector = <T, Args extends any[]>(
       _graph.removeEdge(dependentKey, cache.id)
       // no need to set `render.mounted` to false here
     }
-  }, [cache])
+  }, [cache.id])
 
   return renderedResult as T
 }
