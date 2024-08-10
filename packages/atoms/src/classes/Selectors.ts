@@ -56,6 +56,7 @@ export class Selectors {
     {
       cache?: SelectorCache
       ignorePhase?: number
+      timeoutId?: ReturnType<typeof requestIdleCallback | typeof setTimeout>
     }
   > = {}
 
