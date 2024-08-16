@@ -46,7 +46,6 @@ export const getViteBaseConfig = async (
         name: moduleName,
       },
       minify: 'esbuild',
-      sourcemap: true,
       rollupOptions: {
         external: [...Object.keys(baseGlobals), ...Object.keys(globals)],
         output: {
