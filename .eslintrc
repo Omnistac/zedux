@@ -13,6 +13,7 @@
       }
     }
   ],
+  "ignorePatterns": ["**/dist", "node_modules"],
   "parserOptions": {
     "ecmaVersion": 2018,
     "sourceType": "module",
