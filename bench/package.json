@@ -1,0 +1,45 @@
+{
+  "name": "js-reactivity-benchmark",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "bench": "esbuild src/index.ts --external:v8-natives --bundle --format=cjs --platform=node | node --allow-natives-syntax",
+    "debug": "DEBUG=true node --allow-natives-syntax --inspect-brk -r ts-node/register src/index.ts",
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@angular/core": "16.0.0-next.0",
+    "@preact/signals": "^1.1.3",
+    "@reactively/core": "^0.0.8",
+    "@solidjs/reactivity": "^0.0.9",
+    "@vue/reactivity": "^3.2.47",
+    "compostate": "^0.5.1",
+    "jotai": "^2.9.1",
+    "kairo": "0.6.0-rc.0",
+    "mobx": "^6.9.0",
+    "mol_wire_lib": "^1.0.589",
+    "oby": "13.1.4",
+    "preact": "^10.13.2",
+    "s-js": "^0.4.9",
+    "solid-js": "^1.7.5",
+    "usignal": "^0.9.0",
+    "zone.js": "0.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.16.7",
+    "esbuild": "^0.17.18",
+    "rxjs": "^7.8.1",
+    "tsx": "^4.17.0",
+    "v8-natives": "^1.2.5",
+    "vitest": "^0.30.1"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@angular/core@16.0.0-next.0": "patches/@angular__core@16.0.0-next.0.patch"
+    }
+  }
+}
