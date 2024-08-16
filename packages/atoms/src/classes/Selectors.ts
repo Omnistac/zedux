@@ -19,9 +19,9 @@ export class SelectorCache<T = any, Args extends any[] = any[]> {
   public nextReasons: EvaluationReason[] = []
   public prevReasons?: EvaluationReason[]
   public result?: T
-  public task?: () => void
 
   constructor(
+    public task: () => void,
     public id: string,
     public selectorRef: AtomSelectorOrConfig<T, Args>,
     public args?: Args
@@ -39,7 +39,7 @@ export class Selectors {
   /**
    * Map selectorKey + params id strings to the SelectorCache for the selector
    */
-  public _items: Record<string, SelectorCache<any, any>> = {}
+  public _items = new Map<string, SelectorCache<any, any[]>>()
 
   /**
    * Map selectors (or selector config objects) to a base selectorKey that can
@@ -125,13 +125,13 @@ export class Selectors {
 
     const cache = is(selectable, SelectorCache)
       ? (selectable as SelectorCache<T, Args>)
-      : this._items[id]
+      : this._items.get(id)
 
     if (!cache || cache.isDestroyed) return
 
-    const node = this.ecosystem._graph.nodes[id]
+    const node = this.ecosystem._graph.nodes.get(id)
 
-    if (force || !node.refCount) {
+    if (force || !node!.refCount) {
       this._destroySelector(id)
     }
   }
@@ -171,7 +171,7 @@ export class Selectors {
       true
     )
 
-    return id && this._items[id]
+    return id && this._items.get(id)
   }
 
   /**
@@ -227,16 +227,24 @@ export class Selectors {
 
     const selectorOrConfig = selectable as AtomSelectorOrConfig<T, Args>
     const id = this.getCacheId(selectorOrConfig, args)
-    let cache = this._items[id] as SelectorCache<T, Args>
+    let cache = this._items.get(id) as SelectorCache<T, Args>
 
     if (cache) return cache
 
     // create the cache; it doesn't exist yet
-    cache = new SelectorCache(id, selectorOrConfig, args)
-    this._items[id] = cache as SelectorCache<any, any[]>
+    cache = new SelectorCache(
+      () => {
+        this.runSelector(cache as SelectorCache, cache.args as any[])
+      },
+      id,
+      selectorOrConfig,
+      args
+    )
+
+    this._items.set(id, cache as SelectorCache<any, any[]>)
     this.ecosystem._graph.addNode(id, true)
 
-    this.runSelector(id, args, true)
+    this.runSelector(cache, args, true)
 
     return cache
   }
@@ -279,20 +287,19 @@ export class Selectors {
    * the graph
    */
   public _destroySelector(id: string) {
-    const cache = this._items[id]
+    const cache = this._items.get(id)
 
     if (!cache) return // shouldn't happen
 
     const { _graph, _scheduler, _mods, modBus } = this.ecosystem
 
-    if (cache.nextReasons.length && cache.task) {
+    if (cache.nextReasons.length) {
       _scheduler.unschedule(cache.task)
     }
 
     _graph.removeDependencies(id)
-    _graph.removeNode(id)
-    delete this._items[id]
-    this._refBaseKeys.delete(cache.selectorRef)
+    _graph.removeNode(cache)
+    this._items.delete(id)
     cache.isDestroyed = true
     // don't delete the ref from this._refBaseKeys; this selector cache isn't
     // necessarily the only one using it (if the selector takes params). Just
@@ -333,21 +340,15 @@ export class Selectors {
     reason: EvaluationReason,
     shouldSetTimeout?: boolean
   ) {
-    const cache = this._items[id]
+    const cache = this._items.get(id) as SelectorCache
     cache.nextReasons.push(reason)
 
     if (cache.nextReasons.length > 1) return // job already scheduled
 
-    const task = () => {
-      cache.task = undefined
-      this.runSelector(id, cache.args as any[])
-    }
-    cache.task = task
-
     this.ecosystem._scheduler.schedule(
       {
-        id: id,
-        task,
+        id: cache.id,
+        task: cache.task,
         type: 2, // EvaluateGraphNode (2)
       },
       shouldSetTimeout
@@ -369,7 +370,7 @@ export class Selectors {
     this._refBaseKeys.set(newRef, baseKey)
     this._refBaseKeys.delete(oldCache.selectorRef)
     oldCache.selectorRef = newRef
-    this.runSelector(oldCache.id, args, false, true)
+    this.runSelector(oldCache as SelectorCache, args, false, true)
   }
 
   /**
@@ -412,15 +413,14 @@ export class Selectors {
    * update its cached result. Updates the graph efficiently (using
    * `.bufferUpdates()`)
    */
-  private runSelector<T = any, Args extends any[] = []>(
-    id: string,
+  private runSelector<T, Args extends any[]>(
+    cache: SelectorCache<T, Args>,
     args: Args,
     isInitializing?: boolean,
     skipNotifyingDependents?: boolean
   ) {
     const { _evaluationStack, _graph, _mods, modBus } = this.ecosystem
-    _graph.bufferUpdates(id)
-    const cache = this._items[id] as SelectorCache<T, Args>
+    _graph.bufferUpdates(cache.id)
 
     const selector =
       typeof cache.selectorRef === 'function'
@@ -439,13 +439,18 @@ export class Selectors {
 
       if (!isInitializing && !resultsComparator(result, cache.result as T)) {
         if (!skipNotifyingDependents) {
-          _graph.scheduleDependents(id, cache.nextReasons, result, cache.result)
+          _graph.scheduleDependents(
+            cache as SelectorCache,
+            cache.nextReasons,
+            result,
+            cache.result
+          )
         }
 
         if (_mods.stateChanged) {
           modBus.dispatch(
             pluginActions.stateChanged({
-              cache: cache as SelectorCache<any, any[]>,
+              cache: cache as SelectorCache,
               newState: result,
               oldState: cache.result,
               reasons: cache.nextReasons,
@@ -461,7 +466,7 @@ export class Selectors {
           modBus.dispatch(
             pluginActions.statusChanged({
               newStatus: 'Active',
-              node: cache as SelectorCache<any, any[]>,
+              node: cache as SelectorCache,
               oldStatus: 'Initializing',
             })
           )
@@ -470,7 +475,7 @@ export class Selectors {
     } catch (err) {
       _graph.destroyBuffer()
       console.error(
-        `Zedux encountered an error while running selector with id "${id}":`,
+        `Zedux encountered an error while running selector with id "${cache.id}":`,
         err
       )
 

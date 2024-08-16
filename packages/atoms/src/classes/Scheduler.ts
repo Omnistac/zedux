@@ -24,7 +24,7 @@ export class Scheduler implements SchedulerInterface {
    * The dynamic list of "now" jobs to run. Now jobs are:
    *
    * - UpdateStore (0)
-   * - InformSubscribers(1)
+   * - InformSubscribers (1)
    */
   private nows: Job[] = []
   private _handle?: ReturnType<typeof setTimeout>
@@ -131,14 +131,14 @@ export class Scheduler implements SchedulerInterface {
   private insertJob(newJob: Job) {
     const { nodes } = this.ecosystem._graph
     const flags = newJob.flags ?? 0
-    const weight = newJob.id ? nodes[newJob.id].weight : 0
+    const weight = newJob.id ? nodes.get(newJob.id)!.weight : 0
 
     const index = this.findIndex(job => {
       if (job.type !== newJob.type) return +(newJob.type - job.type > 0) || -1 // 1 or -1
 
       // EvaluateGraphNode (2) jobs use weight comparison
       if (job.id) {
-        const jobWeight = nodes[job.id].weight
+        const jobWeight = nodes.get(job.id)!.weight
 
         return weight < jobWeight ? -1 : +(weight > jobWeight) // + = 0 or 1
       }

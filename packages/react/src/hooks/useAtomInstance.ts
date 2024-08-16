@@ -79,7 +79,9 @@ export const useAtomInstance: {
   const renderedState = instance.getState()
 
   const addEdge = () => {
-    if (!ecosystem._graph.nodes[instance.id]?.dependents.get(dependentKey)) {
+    if (
+      !ecosystem._graph.nodes.get(instance.id)?.dependents.get(dependentKey)
+    ) {
       ecosystem._graph.addEdge(
         dependentKey,
         instance.id,

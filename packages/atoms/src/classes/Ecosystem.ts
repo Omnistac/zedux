@@ -732,13 +732,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         }
       > = {}
 
-      Object.keys(nodes).forEach(id => {
-        const node = nodes[id]
-
+      for (const [id, node] of nodes.entries()) {
         hash[id] = {
           dependencies: [...node.dependencies.keys()].map(key => ({
             key,
-            operation: (nodes[key].dependents.get(id) as DependentEdge)
+            operation: (nodes.get(key)?.dependents.get(id) as DependentEdge)
               .operation,
           })),
           dependents: [...node.dependents.keys()].map(key => ({
@@ -747,15 +745,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
           })),
           weight: node.weight,
         }
-      })
+      }
 
       return hash
     }
 
     const hash: GraphViewRecursive = {}
 
-    Object.keys(nodes).forEach(key => {
-      const node = nodes[key]
+    for (const [key, node] of nodes.entries()) {
       const isTopLevel =
         view === 'bottom-up'
           ? [...node.dependents.values()].every(
@@ -766,7 +763,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (isTopLevel) {
         hash[key] = {}
       }
-    })
+    }
 
     const recurse = (node?: EcosystemGraphNode) => {
       if (!node) return
@@ -775,7 +772,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       const children: GraphViewRecursive = {}
 
       for (const key of map.keys()) {
-        const child = recurse(nodes[key])
+        const child = recurse(nodes.get(key))
 
         if (child) children[key] = child
       }
@@ -784,7 +781,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
 
     Object.keys(hash).forEach(key => {
-      const node = nodes[key]
+      const node = nodes.get(key)
       const children = recurse(node)
 
       if (children) hash[key] = children
@@ -872,14 +869,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   /**
    * Should only be used internally
    */
-  public _destroyAtomInstance(id: string) {
+  public _destroyAtomInstance(node: AnyAtomInstance | SelectorCache) {
     // try to destroy instance (if not destroyed - this fn is called as part of
     // that destruction process too)
-    this._graph.removeNode(id)
+    this._graph.removeNode(node)
 
     // mods have already been notified of the instance's status changing to
     // Destroyed by this point. No need to notify anything of this mutation.
-    delete this._instances[id]
+    delete this._instances[node.id]
   }
 
   /**

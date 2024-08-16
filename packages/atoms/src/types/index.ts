@@ -176,6 +176,12 @@ export interface DependentEdge {
   createdAt: number
   flags: number // calculated from the EdgeFlags
   operation: string
+  /**
+   * `p`endingFlags - an internal marker used by the graph algorithm - tracks
+   * what the flags will be for this edge after the current evaluation (or
+   * undefined if it should be removed)
+   */
+  p?: number
   task?: () => void // for external edges - so they can unschedule jobs
 }
 
@@ -199,7 +205,7 @@ export interface EcosystemConfig<
 }
 
 export interface EcosystemGraphNode {
-  dependencies: Map<string, true>
+  dependencies: Map<string, DependentEdge>
   dependents: Map<string, DependentEdge>
   isSelector?: boolean
   refCount: number

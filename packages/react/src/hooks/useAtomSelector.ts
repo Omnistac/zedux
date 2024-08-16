@@ -54,7 +54,7 @@ export const useAtomSelector = <T, Args extends any[]>(
     existingCache &&
     existingCache.selectorRef !== selectorOrConfig &&
     !argsChanged
-      ? _graph.nodes[existingCache.id]?.refCount === 1 &&
+      ? _graph.nodes.get(existingCache.id)?.refCount === 1 &&
         !selectors._refBaseKeys.has(selectorOrConfig) &&
         selectors._getIdealCacheId(existingCache.selectorRef) ===
           selectors._getIdealCacheId(selectorOrConfig)
@@ -76,7 +76,7 @@ export const useAtomSelector = <T, Args extends any[]>(
     : selectors.getCache(selectorOrConfig, resolvedArgs)
 
   const addEdge = () => {
-    if (!_graph.nodes[cache.id]?.dependents.get(dependentKey)) {
+    if (!_graph.nodes.get(cache.id)?.dependents.get(dependentKey)) {
       _graph.addEdge(dependentKey, cache.id, OPERATION, External, () => {
         if ((render as any).mounted) render({})
       })

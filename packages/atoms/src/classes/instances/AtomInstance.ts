@@ -126,7 +126,7 @@ export class AtomInstance<
     if (this.status === 'Destroyed') return
 
     // If we're not force-destroying, don't destroy if there are dependents
-    if (!force && this.ecosystem._graph.nodes[this.id]?.refCount) {
+    if (!force && this.ecosystem._graph.nodes.get(this.id)?.refCount) {
       return
     }
 
@@ -154,7 +154,7 @@ export class AtomInstance<
 
     this.ecosystem._graph.removeDependencies(this.id)
     this._subscription?.unsubscribe()
-    this.ecosystem._destroyAtomInstance(this.id)
+    this.ecosystem._destroyAtomInstance(this)
   }
 
   /**
@@ -473,7 +473,7 @@ export class AtomInstance<
     action: ActionChain
   ) {
     this.ecosystem._graph.scheduleDependents(
-      this.id,
+      this,
       this.nextReasons,
       newState,
       oldState,
@@ -549,7 +549,7 @@ export class AtomInstance<
     this._promiseStatus = state.status
 
     this.ecosystem._graph.scheduleDependents(
-      this.id,
+      this,
       this.nextReasons,
       undefined,
       undefined,

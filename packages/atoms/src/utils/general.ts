@@ -14,7 +14,7 @@
 export const Explicit = 1
 export const External = 2
 export const Static = 4
-// export const Deferred = 8
+export const OutOfRange = 8 // not a flag; use a value bigger than any flag
 
 /**
  * Compare two arrays and see if any elements are different (===). Returns true
