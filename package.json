@@ -62,6 +62,7 @@
     "build": "yarn nx run-many -t build",
     "changelog": "npx conventional-changelog-cli -p angular -i CHANGELOG.md -s",
     "commit": "./scripts/commit.js",
+    "dev": "yarn nx -- watch --all -- yarn nx run \\$NX_PROJECT_NAME:build",
     "lint": "yarn nx run-many -t lint",
     "pretest": "yarn lint",
     "release": "./scripts/release.js",
