@@ -4,14 +4,14 @@ import {
   AnyAtomTemplate,
   AtomGetters,
   AtomParamsType,
-  GraphEdgeInfo,
+  GraphEdgeDetails,
   Selectable,
 } from '../types/index'
 import { StackItem, Static } from '../utils/index'
 import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
-import { SelectorCache } from './Selectors'
 import { AtomInstanceBase } from './instances/AtomInstanceBase'
+import { GraphNode } from './GraphNode'
 
 /**
  * A stack of AtomInstances and AtomSelectors that are currently evaluating -
@@ -58,7 +58,7 @@ export class EvaluationStack {
     const getInstance: AtomGetters['getInstance'] = <A extends AnyAtomTemplate>(
       atom: A,
       params?: AtomParamsType<A>,
-      edgeInfo?: GraphEdgeInfo
+      edgeInfo?: GraphEdgeDetails
     ) => {
       const instance = ecosystem.getInstance(atom, params as AtomParamsType<A>)
 
@@ -71,8 +71,8 @@ export class EvaluationStack {
       _graph.addEdge(
         stack[stack.length - 1].node.id,
         instance.id,
-        edgeInfo?.[1] || 'getInstance',
-        edgeInfo?.[0] ?? Static
+        edgeInfo?.op || 'getInstance',
+        edgeInfo?.f ?? Static
       )
 
       return instance
@@ -125,7 +125,7 @@ export class EvaluationStack {
     return stack[stack.length - 1]
   }
 
-  public start(node: AnyAtomInstance | SelectorCache<any, any>) {
+  public start(node: GraphNode) {
     const { _idGenerator, _mods, _scheduler } = this.ecosystem
 
     const newItem: StackItem = {

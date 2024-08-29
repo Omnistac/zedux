@@ -13,14 +13,14 @@ export const zeduxFramework: ReactiveFramework = {
 
     return {
       write: v => instance.setState(v),
-      read: () => ecosystem._evaluationStack.atomGetters.get(instance),
+      read: () => ecosystem.getters.get(instance),
     }
   },
   computed: <T>(fn: () => T): Computed<T> => {
     ecosystem.selectors.getCache(fn)
 
     return {
-      read: () => ecosystem._evaluationStack.atomGetters.select(fn),
+      read: () => ecosystem.getters.select(fn),
     }
   },
   effect: fn => ecosystem.selectors.getCache(fn),

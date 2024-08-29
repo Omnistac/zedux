@@ -1,7 +1,6 @@
 import { ActionChain, Observable, Settable } from '@zedux/core'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
-import { SelectorCache } from '../classes/Selectors'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
@@ -11,6 +10,7 @@ import {
   AtomParamsType,
   AtomStateType,
 } from './atoms'
+import { SelectorInstance } from '../classes/SelectorInstance'
 
 export * from './atoms'
 
@@ -56,7 +56,7 @@ export interface AtomGettersBase {
   getInstance<A extends AnyAtomTemplate>(
     template: A,
     params: AtomParamsType<A>,
-    edgeInfo?: GraphEdgeInfo
+    edgeInfo?: GraphEdgeDetails
   ): AtomInstanceType<A>
 
   getInstance<A extends AnyAtomTemplate<{ Params: [] }>>(
@@ -70,7 +70,7 @@ export interface AtomGettersBase {
   getInstance<I extends AnyAtomInstance>(
     instance: I,
     params?: [],
-    edgeInfo?: GraphEdgeInfo
+    edgeInfo?: GraphEdgeDetails
   ): I
 
   /**
@@ -92,10 +92,10 @@ export interface AtomGettersBase {
    *
    * @see AtomSelector
    */
-  select<T, Args extends any[]>(
-    selectorOrConfigOrCache: Selectable<T, Args>,
-    ...args: Args
-  ): T
+  select<G extends Pick<AtomGenerics, 'Params' | 'State'>>(
+    selectorOrConfigOrCache: Selectable<G>,
+    ...args: G['Params']
+  ): G['State']
 }
 
 /**
@@ -136,21 +136,22 @@ export interface AtomGetters extends AtomGettersBase {
 
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
 
-export type AtomSelector<T = any, Args extends any[] = []> = (
-  getters: AtomGetters,
-  ...args: Args
-) => T
+export type AtomSelector<
+  G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
+> = (getters: AtomGetters, ...args: G['Params']) => G['State']
 
-export interface AtomSelectorConfig<T = any, Args extends any[] = []> {
-  argsComparator?: (newArgs: Args, oldArgs: Args) => boolean
+export interface AtomSelectorConfig<
+  G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
+> {
+  argsComparator?: (newArgs: G['Params'], oldArgs: G['Params']) => boolean
   name?: string
-  resultsComparator?: (newResult: T, oldResult: T) => boolean
-  selector: AtomSelector<T, Args>
+  resultsComparator?: (newResult: G['State'], oldResult: G['State']) => boolean
+  selector: AtomSelector<G>
 }
 
-export type AtomSelectorOrConfig<T = any, Args extends any[] = []> =
-  | AtomSelector<T, Args>
-  | AtomSelectorConfig<T, Args>
+export type AtomSelectorOrConfig<
+  G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
+> = AtomSelector<G> | AtomSelectorConfig<G>
 
 export type AtomStateFactory<G extends AtomGenerics> = (
   ...params: G['Params']
@@ -165,12 +166,19 @@ export type AtomValueOrFactory<G extends AtomGenerics> =
 
 export type Cleanup = () => void
 
+export interface DehydrationOptions extends NodeFilterOptions {
+  transform?: boolean
+}
+
+export type DehydrationFilter = string | AnyAtomTemplate | DehydrationOptions
+
 export type DependentCallback = (
   signal: GraphEdgeSignal,
   val?: any,
   reason?: EvaluationReason
 ) => any
 
+// TODO: optimize this internal object to use single-letter properties
 export interface DependentEdge {
   callback?: DependentCallback
   createdAt: number
@@ -205,11 +213,61 @@ export interface EcosystemConfig<
 }
 
 export interface EcosystemGraphNode {
-  dependencies: Map<string, DependentEdge>
-  dependents: Map<string, DependentEdge>
-  isSelector?: boolean
-  refCount: number
-  weight: number
+  /**
+   * Detach this node from the ecosystem and clean up all graph edges and other
+   * subscriptions/effects created by this node.
+   *
+   * Destruction will bail out if this node still has dependents (`node.o.size
+   * !== 0`). Pass `true` to force-destroy the node anyway.
+   *
+   * When force-destroying a node that still has dependents, the node will be
+   * immediately recreated and all dependents notified of the destruction.
+   */
+  destroy: (force?: boolean) => void
+
+  /**
+   * The unique id of this node in the graph. Zedux always tries to make this
+   * somewhat human-readable for easier debugging.
+   */
+  id: string
+
+  // Internal fields - these are public and stable, but normal users should
+  // never need to use these:
+
+  /**
+   * `d`ehydrate - a function called internally by `ecosystem.dehydrate()` to
+   * transform the node's value into a serializable form.
+   */
+  d: (options?: DehydrationFilter) => any
+
+  /**
+   * `f`ilter - a function called internally by `ecosystem.findAll()` to
+   * determine whether this node should be included in the output. Also
+   * typically called by `node.d`ehydrate to perform its filtering logic.
+   */
+  f: (options?: NodeFilter) => boolean
+
+  /**
+   * `h`ydrate - a function called internally by `ecosystem.hydrate()` to
+   * transform a previously-serialized value and set it as the node's new value.
+   */
+  h: (serializedValue: any) => any
+
+  /**
+   * `o`bservers - a map of the edges drawn between this node and all of its
+   * dependents, keyed by id. Every edge stored here is reverse-mapped - the
+   * exact same object reference will also be stored in another node's
+   * `s`ources.
+   */
+  o: Map<string, DependentEdge>
+
+  /**
+   * `s`ources - a map of the edges drawn between this node and all of its
+   * dependencies, keyed by id. Every edge stored here is reverse-mapped - the
+   * exact same object reference will also be stored in another node's
+   * `o`bservers.
+   */
+  s: Map<string, DependentEdge>
 }
 
 export type EffectCallback = () => MaybeCleanup | Promise<any>
@@ -242,11 +300,18 @@ export type ExportsInfusedSetter<State, Exports> = Exports & {
   (settable: Settable<State>, meta?: any): State
 }
 
-export type GraphEdgeInfo = [
-  // these flags are calculated from EdgeFlags:
-  flags: number,
-  operation: string
-]
+export type GraphEdgeDetails = {
+  /**
+   * `f`lags - the binary EdgeFlags of this edge
+   */
+  f: number
+
+  /**
+   * `op`eration - an optional user-friendly string describing the operation
+   * that created this edge
+   */
+  op?: string
+}
 
 /**
  * A low-level detail that tells dependents what sort of event is causing the
@@ -295,14 +360,28 @@ export interface MutableRefObject<T = any> {
   current: T
 }
 
+export interface NodeFilterOptions {
+  exclude?: (AnyAtomTemplate | string)[]
+  excludeFlags?: string[]
+  include?: (AnyAtomTemplate | string)[]
+  includeFlags?: string[]
+}
+
+export type NodeFilter = string | AnyAtomTemplate | NodeFilterOptions
+
 /**
  * Many Zedux APIs make the `params` parameter optional if the atom doesn't take
  * params or has only optional params.
  */
-export type ParamlessTemplate<A extends AnyAtomTemplate> =
-  AtomParamsType<A> extends [AnyNonNullishValue | undefined | null, ...any[]]
-    ? never
-    : A
+export type ParamlessTemplate<
+  A extends
+    | AnyAtomTemplate
+    | AnyAtomInstance
+    | AtomSelectorOrConfig
+    | SelectorInstance
+> = AtomParamsType<A> extends [AnyNonNullishValue | undefined | null, ...any[]]
+  ? never
+  : A
 
 /**
  * Part of the atom instance can be accessed during initial evaluation. The only
@@ -336,10 +415,9 @@ export interface RefObject<T = any> {
   readonly current: T | null
 }
 
-export type Selectable<T = any, Args extends any[] = []> =
-  | AtomSelector<T, Args>
-  | AtomSelectorConfig<T, Args>
-  | SelectorCache<T, Args>
+export type Selectable<
+  G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
+> = AtomSelectorOrConfig<G> | SelectorInstance<G>
 
 export type StateHookTuple<State, Exports> = [
   State,

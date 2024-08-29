@@ -2,14 +2,13 @@ import {
   AtomConfig,
   AtomValueOrFactory,
   AtomGenerics,
+  AnyAtomGenerics,
 } from '@zedux/atoms/types/index'
 import { prefix } from '@zedux/atoms/utils/index'
 import { Ecosystem } from '../Ecosystem'
-import { AtomInstance } from '../instances/AtomInstance'
 
 export abstract class AtomTemplateBase<
-  G extends AtomGenerics,
-  InstanceType extends AtomInstance<G>
+  G extends AtomGenerics = AnyAtomGenerics
 > {
   public static $$typeof = Symbol.for(`${prefix}/AtomTemplateBase`)
 
@@ -43,12 +42,14 @@ export abstract class AtomTemplateBase<
     // console.log({ key: atom.key, map });
   }
 
+  // TODO: rename to `new`
   public abstract _createInstance(
     ecosystem: Ecosystem,
     id: string,
     params: G['Params']
-  ): InstanceType
+  ): G['Node']
 
+  // TODO: rename to `hash`
   public abstract getInstanceId(
     ecosystem: Ecosystem,
     params?: G['Params']

@@ -146,7 +146,7 @@ const evalCode = (
   // eslint-disable-next-line no-new-func
   const fn = new Function('React', ...keys, wrapped)
 
-  const { store } = ZeduxReact.getInternals()
+  const { s: store } = ZeduxReact.getInternals()
   const ecosystemsBefore = store.getState()
   const result = fn.call(null, React, ...vals)
   const ecosystemsAfter = store.getState()
@@ -275,9 +275,9 @@ export const Sandbox = ({
         if (!jsCode) return
 
         const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
-        if (Object.keys(ecosystem?._instances || {}).length) {
-          ecosystem?.wipe()
-          ecosystem?.setOverrides([])
+        if (ecosystem?.n.size) {
+          ecosystem.wipe()
+          ecosystem.setOverrides([])
         }
 
         const evalResult = evalCode(

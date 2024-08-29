@@ -9,10 +9,7 @@ import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { AtomTemplateBase } from './AtomTemplateBase'
 
-export class IonTemplate<G extends AtomGenerics> extends AtomTemplateBase<
-  G,
-  AtomInstance<G>
-> {
+export class IonTemplate<G extends AtomGenerics> extends AtomTemplateBase<G> {
   private _get: IonStateFactory<G>
 
   constructor(

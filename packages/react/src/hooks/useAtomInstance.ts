@@ -1,6 +1,7 @@
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
+  AtomInstance,
   AtomInstanceType,
   AtomParamsType,
   ParamlessTemplate,
@@ -70,25 +71,29 @@ export const useAtomInstance: {
   }
 ) => {
   const ecosystem = useEcosystem()
-  const dependentKey = useReactComponentId()
+  const observerId = useReactComponentId()
+  // use this referentially stable setState function as a ref. We lazily add
+  // untyped `m`ounted and `c`leanup properties
   const [, render] = useState<undefined | object>()
 
   // It should be fine for this to run every render. It's possible to change
   // approaches if it is too heavy sometimes. But don't memoize this call:
-  const instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
-  const renderedState = instance.getState()
+  const instance: AtomInstance = ecosystem.getInstance(
+    atom as A,
+    params as AtomParamsType<A>
+  )
+  const renderedState = instance.get()
 
   const addEdge = () => {
-    if (
-      !ecosystem._graph.nodes.get(instance.id)?.dependents.get(dependentKey)
-    ) {
-      ecosystem._graph.addEdge(
-        dependentKey,
-        instance.id,
-        operation,
-        External | (subscribe ? 0 : Static),
+    if (!instance.o.get(observerId)) {
+      ;(render as any).c = instance.on(
         () => {
-          if ((render as any).mounted) render({})
+          if ((render as any).m) render({})
+        },
+        {
+          f: External | (subscribe ? 0 : Static),
+          i: observerId,
+          op: operation,
         }
       )
     }
@@ -106,15 +111,12 @@ export const useAtomInstance: {
     addEdge()
 
     // use the referentially stable render function as a ref :O
-    ;(render as any).mounted = true
+    ;(render as any).m = true
 
     // an unmounting component's effect cleanup can update or force-destroy the
     // atom instance before this component is mounted. If that happened, trigger
     // a rerender to recreate the atom instance and/or get its new state
-    if (
-      instance.getState() !== renderedState ||
-      instance.status === 'Destroyed'
-    ) {
+    if (instance.get() !== renderedState || instance.l === 'Destroyed') {
       render({})
     }
 
@@ -123,8 +125,8 @@ export const useAtomInstance: {
       // double-invokes (invokes, then cleans up, then re-invokes) this effect,
       // it's expected that any `ttl: 0` atoms get destroyed and recreated -
       // that's part of what StrictMode is ensuring
-      ecosystem._graph.removeEdge(dependentKey, instance.id)
-      // no need to set `render.mounted` to false here
+      ;(render as any).c?.()
+      // no need to set `render.m`ounted to false here
     }
   }, [instance.id])
 

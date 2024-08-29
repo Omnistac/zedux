@@ -1,5 +1,15 @@
 import { Job, Scheduler as SchedulerInterface } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
+import { GraphNode } from './GraphNode'
+import { Static } from '../utils'
+
+// TODO: replace this with the new update propagation algorithm
+const tempCalcWeight = (node: GraphNode): number =>
+  [...node.s].reduce(
+    (sum, [id, edge]) =>
+      edge.flags & Static ? sum : sum + tempCalcWeight(node.e.n.get(id)!),
+    1
+  )
 
 export class Scheduler implements SchedulerInterface {
   /**
@@ -129,16 +139,16 @@ export class Scheduler implements SchedulerInterface {
    * Schedule an EvaluateGraphNode (2) or UpdateExternalDependent (3) job
    */
   private insertJob(newJob: Job) {
-    const { nodes } = this.ecosystem._graph
+    const { n } = this.ecosystem
     const flags = newJob.flags ?? 0
-    const weight = newJob.id ? nodes.get(newJob.id)!.weight : 0
+    const weight = newJob.id ? tempCalcWeight(n.get(newJob.id)!) : 0
 
     const index = this.findIndex(job => {
       if (job.type !== newJob.type) return +(newJob.type - job.type > 0) || -1 // 1 or -1
 
       // EvaluateGraphNode (2) jobs use weight comparison
       if (job.id) {
-        const jobWeight = nodes.get(job.id)!.weight
+        const jobWeight = tempCalcWeight(n.get(job.id)!)
 
         return weight < jobWeight ? -1 : +(weight > jobWeight) // + = 0 or 1
       }

@@ -76,7 +76,6 @@ export class Graph {
         callback,
         createdAt: ecosystem._idGenerator.now(),
         flags,
-        p: flags,
         operation,
       })
     }
@@ -93,7 +92,7 @@ export class Graph {
     const existingEdge = dependencies.get(dependencyKey)
 
     if (existingEdge) {
-      existingEdge.p = flags
+      if (flags < (existingEdge.p || OutOfRange)) existingEdge.p = flags
     } else {
       dependencies.set(dependencyKey, {
         callback,
@@ -145,7 +144,6 @@ export class Graph {
     const { dependencies, key } = this.updateStack[this.updateStack.length - 1]
     const edges = this.nodes.get(key)!.dependencies
 
-    // TODO NOW: unset any `node.p`endingFlags here
     for (const dependencyKey of dependencies.keys()) {
       // the edge wasn't created during the evaluation that errored; keep it
       if (edges.get(dependencyKey)) continue
@@ -174,7 +172,7 @@ export class Graph {
       if (source.p == null) {
         this.removeEdge(key, sourceKey)
       } else {
-        if (source.flags === 8) {
+        if (source.flags === OutOfRange) {
           // add new edges that we tracked while buffering
           this.finishAddingEdge(key, sourceKey, source)
         }

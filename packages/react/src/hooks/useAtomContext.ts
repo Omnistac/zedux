@@ -1,8 +1,10 @@
 import {
+  AnyAtomGenerics,
   AnyAtomTemplate,
-  AtomInstanceBase,
+  AtomInstance,
   AtomInstanceType,
   AtomParamsType,
+  AtomTemplateBase,
 } from '@zedux/atoms'
 import { is } from '@zedux/core'
 import { useContext } from 'react'
@@ -45,23 +47,23 @@ export const useAtomContext: {
     template: A,
     throwIfNotProvided: boolean
   ): AtomInstanceType<A>
-} = <A extends AnyAtomTemplate>(
-  template: A,
-  defaultParams?: AtomParamsType<A> | boolean
+} = <G extends AnyAtomGenerics<{ Node: AtomInstance }>>(
+  template: AtomTemplateBase<G>,
+  defaultParams?: G['Params'] | boolean
 ) => {
   const ecosystem = useEcosystem()
-  const instance: AtomInstanceType<A> | undefined = useContext(
+  const instance: G['Node'] | undefined = useContext(
     getReactContext(ecosystem, template)
   )
 
-  if (!defaultParams || is(instance, AtomInstanceBase)) {
-    if (DEV && instance?.status === 'Destroyed') {
+  if (!defaultParams || is(instance, AtomInstance)) {
+    if (DEV && instance?.l === 'Destroyed') {
       console.error(
         `Zedux: useAtomContext - A destroyed atom instance was provided with key "${instance.id}". This is not recommended. Provide an active atom instance instead e.g. by calling \`useAtomInstance()\` in the providing component.`
       )
     }
 
-    return instance as AtomInstanceType<A>
+    return instance
   }
 
   if (defaultParams === true) {
@@ -73,7 +75,7 @@ export const useAtomContext: {
 
     // TODO: this should probably still throw an error. Change this when we have
     // a decent system for minified prod errors
-    return instance as AtomInstanceType<A>
+    return instance
   }
 
   return ecosystem.getInstance(template, defaultParams)

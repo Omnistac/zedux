@@ -1,8 +1,10 @@
 import { Store } from '@zedux/core'
 import { AtomInstance } from '../classes/instances/AtomInstance'
-import { AtomInstanceBase } from '../classes/instances/AtomInstanceBase'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomApi } from '../classes/AtomApi'
+import { GraphNode } from '../classes/GraphNode'
+import { AnyNonNullishValue, AtomSelectorOrConfig } from '.'
+import { SelectorInstance } from '../classes/SelectorInstance'
 
 export type AtomApiGenericsPartial<G extends Partial<AtomApiGenerics>> = Omit<
   AnyAtomApiGenerics,
@@ -12,95 +14,143 @@ export type AtomApiGenericsPartial<G extends Partial<AtomApiGenerics>> = Omit<
 
 export type AnyAtomApiGenerics = { [K in keyof AtomGenerics]: any }
 
-export type AnyAtomGenerics = { [K in keyof AtomGenerics]: any }
+export type AnyAtomGenerics<
+  G extends Partial<AtomGenerics> = AnyNonNullishValue
+> = Omit<{ [K in keyof AtomGenerics]: any }, keyof G> & G
 
 export type AnyAtomApi<G extends Partial<AtomApiGenerics> | 'any' = 'any'> =
   AtomApi<G extends Partial<AtomApiGenerics> ? AtomApiGenericsPartial<G> : any>
 
 export type AnyAtomInstance<G extends Partial<AtomGenerics> | 'any' = 'any'> =
-  AtomInstance<G extends Partial<AtomGenerics> ? AtomGenericsPartial<G> : any>
+  AtomInstance<
+    G extends Partial<AtomGenerics>
+      ? { Template: AnyAtomTemplate<G> } & AnyAtomGenerics<G>
+      : any
+  >
 
 export type AnyAtomTemplate<G extends Partial<AtomGenerics> | 'any' = 'any'> =
   AtomTemplateBase<
-    G extends Partial<AtomGenerics> ? AtomGenericsPartial<G> : any,
-    AnyAtomInstance<G>
+    G extends Partial<AtomGenerics>
+      ? { Node: AnyAtomInstance<G> } & AnyAtomGenerics<G>
+      : any
   >
 
-export type AtomApiGenerics = Omit<AtomGenerics, 'Params' | 'Store'> & {
+export type AtomApiGenerics = Pick<
+  AtomGenerics,
+  'Exports' | 'Promise' | 'State'
+> & {
   Store: Store<any> | undefined
 }
 
-export type AtomGenericsToAtomApiGenerics<G extends AtomGenerics> = Omit<
+export type AtomGenericsToAtomApiGenerics<G extends AtomGenerics> = Pick<
   G,
-  'Params' | 'Store'
+  'Exports' | 'Promise' | 'State'
 > & { Store: G['Store'] | undefined }
 
 export interface AtomGenerics {
   Exports: Record<string, any>
+  Node?: GraphNode
   Params: any[]
   Promise: AtomApiPromise
   State: any
   Store: Store<any>
+  Template?: AtomTemplateBase
 }
-
-export type AtomGenericsPartial<G extends Partial<AtomGenerics>> = Omit<
-  AnyAtomGenerics,
-  keyof G
-> &
-  G
 
 export type AtomApiPromise = Promise<any> | undefined
 
 export type AtomExportsType<
-  A extends AnyAtomApi | AnyAtomTemplate | AnyAtomInstance
-> = A extends AtomTemplateBase<infer G, any>
+  A extends AnyAtomApi | AnyAtomTemplate | GraphNode
+> = A extends AtomTemplateBase<infer G>
   ? G['Exports']
-  : A extends AtomInstance<infer G>
-  ? G['Exports']
+  : A extends GraphNode<infer G>
+  ? G extends { Exports: infer Exports }
+    ? Exports
+    : never
   : A extends AtomApi<infer G>
   ? G['Exports']
   : never
 
 export type AtomInstanceType<A extends AnyAtomTemplate> =
-  A extends AtomTemplateBase<any, infer T> ? T : never
-
-export type AtomParamsType<A extends AnyAtomTemplate | AnyAtomInstance> =
-  A extends AtomTemplateBase<infer G, AtomInstance<infer G>>
-    ? G['Params']
-    : A extends AtomInstance<infer G>
-    ? G['Params']
+  A extends AtomTemplateBase<infer G>
+    ? G extends { Node: infer Node }
+      ? Node
+      : GraphNode<G>
     : never
 
+export type AtomParamsType<
+  A extends
+    | AnyAtomTemplate
+    | GraphNode
+    | AtomSelectorOrConfig
+    | SelectorInstance
+> = A extends AtomTemplateBase<infer G>
+  ? G['Params']
+  : A extends GraphNode<infer G>
+  ? G extends { Params: infer Params }
+    ? Params
+    : never
+  : A extends AtomSelectorOrConfig<infer G>
+  ? G['Params']
+  : A extends SelectorInstance<infer G>
+  ? G['Params']
+  : never
+
 export type AtomPromiseType<
-  A extends AnyAtomApi | AnyAtomTemplate | AnyAtomInstance
-> = A extends AtomTemplateBase<infer G, AtomInstance<infer G>>
+  A extends AnyAtomApi | AnyAtomTemplate | GraphNode
+> = A extends AtomTemplateBase<infer G>
   ? G['Promise']
-  : A extends AtomInstance<infer G>
-  ? G['Promise']
+  : A extends GraphNode<infer G>
+  ? G extends { Promise: infer Promise }
+    ? Promise
+    : never
   : A extends AtomApi<infer G>
   ? G['Promise']
   : never
 
 export type AtomStateType<
-  A extends AnyAtomApi | AnyAtomTemplate | AnyAtomInstance
-> = A extends AtomTemplateBase<infer G, AtomInstance<infer G>>
+  A extends
+    | AnyAtomApi
+    | AnyAtomTemplate
+    | GraphNode
+    | AtomSelectorOrConfig
+    | SelectorInstance
+> = A extends AtomTemplateBase<infer G>
   ? G['State']
-  : A extends AtomInstance<infer G>
+  : A extends GraphNode<infer G>
   ? G['State']
   : A extends AtomApi<infer G>
   ? G['State']
+  : A extends AtomSelectorOrConfig<infer G>
+  ? G['Params']
+  : A extends SelectorInstance<infer G>
+  ? G['Params']
   : never
 
-export type AtomStoreType<
-  A extends AnyAtomApi | AnyAtomTemplate | AnyAtomInstance
-> = A extends AtomTemplateBase<infer G, AtomInstance<infer G>>
-  ? G['Store']
-  : A extends AtomInstance<infer G>
-  ? G['Store']
-  : A extends AtomApi<infer G>
-  ? G['Store']
+export type AtomStoreType<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
+  A extends AtomTemplateBase<infer G>
+    ? G['Store']
+    : A extends GraphNode<infer G>
+    ? G extends { Store: infer Store }
+      ? Store
+      : never
+    : A extends AtomApi<infer G>
+    ? G['Store']
+    : never
+
+export type AtomTemplateType<A extends GraphNode> = A extends GraphNode<infer G>
+  ? G extends { Template: infer Template }
+    ? Template
+    : G extends AtomGenerics
+    ? AtomTemplateBase<G>
+    : never
   : never
 
-export type AtomTemplateType<
-  A extends AtomInstanceBase<any, AtomTemplateBase<any, AtomInstance<any>>>
-> = A extends AtomInstanceBase<any, infer T> ? T : never
+export type NodeOf<A extends AnyAtomTemplate | AtomSelectorOrConfig> =
+  A extends AtomTemplateBase<infer G>
+    ? G extends { Node: infer Node }
+      ? Node
+      : GraphNode<G>
+    : A extends AtomSelectorOrConfig<infer G>
+    ? SelectorInstance<G>
+    : never

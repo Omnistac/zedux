@@ -1,13 +1,14 @@
 import {
-  AnyAtomInstance,
+  AnyAtomGenerics,
   AnyAtomTemplate,
   AtomExportsType,
+  AtomInstance,
   AtomParamsType,
   AtomStateType,
+  AtomTemplateBase,
   ParamlessTemplate,
   StateHookTuple,
 } from '@zedux/atoms'
-import { ZeduxHookConfig } from '../types'
 import { useAtomInstance } from './useAtomInstance'
 
 /**
@@ -43,37 +44,35 @@ import { useAtomInstance } from './useAtomInstance'
  * })
  * ```
  */
+// `useAtomState` is currently only compatible with templates that create
+// instances of Zedux's internal AtomInstance (like Zedux's own AtomTemplate and
+// IonTemplate). TODO: change this.
 export const useAtomState: {
-  <A extends AnyAtomTemplate>(
+  <A extends AnyAtomTemplate<{ Node: AtomInstance }>>(
     template: A,
-    params: AtomParamsType<A>,
-    config?: Omit<ZeduxHookConfig, 'subscribe'>
+    params: AtomParamsType<A>
   ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
 
-  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateHookTuple<
-    AtomStateType<A>,
-    AtomExportsType<A>
-  >
+  <A extends AnyAtomTemplate<{ Node: AtomInstance; Params: [] }>>(
+    template: A
+  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
 
-  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateHookTuple<
-    AtomStateType<A>,
-    AtomExportsType<A>
-  >
+  <A extends AnyAtomTemplate<{ Node: AtomInstance }>>(
+    template: ParamlessTemplate<A>
+  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
 
-  <I extends AnyAtomInstance>(
-    instance: I,
-    params?: [],
-    config?: Omit<ZeduxHookConfig, 'subscribe'>
-  ): StateHookTuple<AtomStateType<I>, AtomExportsType<I>>
-} = <A extends AnyAtomTemplate>(
-  atom: A,
-  params?: AtomParamsType<A>,
-  config: Omit<ZeduxHookConfig, 'subscribe'> = { operation: 'useAtomState' }
-): StateHookTuple<AtomStateType<A>, AtomExportsType<A>> => {
-  const instance = useAtomInstance(atom, params as AtomParamsType<A>, {
-    ...config,
+  <I extends AtomInstance>(instance: I): StateHookTuple<
+    AtomStateType<I>,
+    AtomExportsType<I>
+  >
+} = <G extends AnyAtomGenerics<{ Node: AtomInstance }>>(
+  atom: AtomTemplateBase<G>,
+  params?: G['Params']
+): StateHookTuple<G['State'], G['Exports']> => {
+  const instance = useAtomInstance(atom, params, {
+    operation: 'useAtomState',
     subscribe: true,
   })
 
-  return [instance.getState(), instance._infusedSetter]
+  return [instance.get(), instance._infusedSetter]
 }

@@ -1,12 +1,12 @@
 import { Store, StoreStateType, createStore } from '@zedux/core'
 import {
+  AnyAtomGenerics,
   AnyAtomInstance,
   AnyAtomTemplate,
   api,
   atom,
   AtomApi,
   AtomExportsType,
-  AtomGenericsPartial,
   AtomInstance,
   AtomInstanceType,
   AtomParamsType,
@@ -525,12 +525,12 @@ describe('react types', () => {
     >()
   })
 
-  test('AtomGenericsPartial - instances as params', () => {
+  test('AnyAtomGenerics - instances as params', () => {
     const innerAtom = atom('inner', 'a')
 
     const outerAtom = atom(
       'outer',
-      (instance: AtomInstance<AtomGenericsPartial<{ State: string }>>) => {
+      (instance: AtomInstance<AnyAtomGenerics<{ State: string }>>) => {
         const val = injectAtomValue(instance) // subscribe to updates
 
         return val.toUpperCase()
@@ -557,7 +557,7 @@ describe('react types', () => {
         Exports: Record<string, never>
         Params: [
           instance: AtomInstance<
-            AtomGenericsPartial<{
+            AnyAtomGenerics<{
               State: string
             }>
           >
@@ -796,5 +796,26 @@ describe('react types', () => {
     expectTypeOf<AtomPromiseType<typeof atom1>>().toBeUndefined()
     expectTypeOf<AtomPromiseType<typeof atom2>>().toBeUndefined()
     expectTypeOf<AtomPromiseType<typeof atom3>>().resolves.toBeNumber()
+  })
+
+  test('recursive templates and nodes', () => {
+    const instanceA = exampleAtom._createInstance({} as any, 'a', ['b'])
+    const instanceB = instanceA.template._createInstance({} as any, '', ['b'])
+    const instanceC = instanceB.template._createInstance({} as any, '', ['b'])
+    const instanceD = instanceC.template._createInstance({} as any, '', ['b'])
+
+    expectTypeOf<AtomParamsType<typeof instanceD.template>>().toEqualTypeOf<
+      [p: string]
+    >()
+
+    const instanceE = ecosystem.getInstance(
+      ecosystem.getters.getInstance(
+        ecosystem.getInstance(ecosystem.getters.getInstance(exampleAtom))
+      )
+    )
+
+    expectTypeOf<AtomParamsType<typeof instanceE.template>>().toEqualTypeOf<
+      [p: string]
+    >()
   })
 })

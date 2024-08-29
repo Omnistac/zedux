@@ -9,6 +9,7 @@ import {
   PromiseState,
 } from '../types/index'
 
+// TODO: add IonTemplateRecursive type
 export const ion: {
   // Query Atoms
   <

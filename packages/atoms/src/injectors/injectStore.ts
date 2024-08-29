@@ -18,7 +18,7 @@ export const doSubscribe = <State>(
 
     const isBatch = action?.meta === zeduxTypes.batch
 
-    instance._scheduleEvaluation(
+    instance.r(
       {
         newState,
         oldState,
@@ -41,7 +41,7 @@ export const doSubscribe = <State>(
 
     // run the scheduler synchronously after every store update unless batching
     if (!isBatch) {
-      instance.ecosystem._scheduler.flush()
+      instance.e._scheduler.flush()
     }
   })
 
@@ -121,7 +121,7 @@ export const injectStore: {
             createStore<State>(null, hydration ?? storeFactory)
 
     const store = getStore(
-      config?.hydrate ? instance.ecosystem.hydration?.[instance.id] : undefined
+      config?.hydrate ? instance.e.hydration?.[instance.id] : undefined
     )
 
     const subscription = subscribe && doSubscribe(instance, store)

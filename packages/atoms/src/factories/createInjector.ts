@@ -1,5 +1,5 @@
-import { readInstance } from '../classes/EvaluationStack'
 import { PartialAtomInstance } from '../types/index'
+import { readInstance } from '../utils/evaluationContext'
 import { InjectorDescriptor } from '../utils/types'
 
 export const createInjector = <
@@ -14,9 +14,9 @@ export const createInjector = <
 
   const injector = (...args: A) => {
     const instance = readInstance()
-    const { _injectors, _nextInjectors, status, template } = instance
+    const { _injectors, _nextInjectors, l, template } = instance
 
-    if (status === 'Initializing') {
+    if (l === 'Initializing') {
       const descriptor = first(instance, ...args)
       type = descriptor.type
       _nextInjectors?.push(descriptor)

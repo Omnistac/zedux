@@ -1,4 +1,4 @@
-import { readInstance } from '../classes/EvaluationStack'
+import { readInstance } from '../utils/evaluationContext'
 
 /**
  * Returns a function that can be called to invalidate the current atom

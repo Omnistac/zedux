@@ -1,5 +1,5 @@
 import { is, isPlainObject } from '@zedux/core'
-import { AtomInstanceBase } from './instances/AtomInstanceBase'
+import { GraphNode } from './GraphNode'
 
 /**
  * When using SSR, only graph node ids should be generated (via
@@ -48,7 +48,7 @@ export class IdGenerator {
    */
   public hashParams(params: any[], acceptComplexParams?: boolean): string {
     return JSON.stringify(params, (_, param) => {
-      if (is(param, AtomInstanceBase)) return param.id
+      if (is(param, GraphNode)) return (param as GraphNode).id
       if (!param) return param
       if (!isPlainObject(param)) {
         if (!acceptComplexParams || Array.isArray(param)) return param

@@ -20,7 +20,12 @@ import {
   LifecycleStatus,
   PromiseState,
   PromiseStatus,
+  DehydrationFilter,
+  NodeFilter,
+  DehydrationOptions,
+  AnyAtomGenerics,
 } from '@zedux/atoms/types/index'
+import { prefix } from '@zedux/atoms/utils/general'
 import { pluginActions } from '@zedux/atoms/utils/plugin-actions'
 import {
   getErrorPromiseState,
@@ -30,8 +35,21 @@ import {
 import { InjectorDescriptor } from '@zedux/atoms/utils/types'
 import { Ecosystem } from '../Ecosystem'
 import { AtomApi } from '../AtomApi'
-import { AtomInstanceBase } from './AtomInstanceBase'
 import { AtomTemplateBase } from '../templates/AtomTemplateBase'
+import {
+  destroyNodeFinish,
+  destroyNodeStart,
+  GraphNode,
+  normalizeNodeFilter,
+  scheduleDependents,
+} from '../GraphNode'
+import {
+  destroyBuffer,
+  flushBuffer,
+  getEvaluationContext,
+  startBuffer,
+} from '@zedux/atoms/utils/evaluationContext'
+import { AtomTemplateRecursive } from '../templates/AtomTemplate'
 
 const StoreState = 1
 const RawState = 2
@@ -68,14 +86,16 @@ const getStateStore = <
   return [stateType, stateStore] as const
 }
 
+export type AtomInstanceRecursive<G extends AtomGenerics> = AtomInstance<
+  G & { Template: AtomTemplateRecursive<G> }
+>
+
 export class AtomInstance<
-  G extends AtomGenerics,
-  AtomTemplateType extends AtomTemplateBase<
-    G,
-    AtomInstance<G, AtomTemplateType>
-  > = AtomTemplateBase<G, AtomInstance<G, any>>
-> extends AtomInstanceBase<G['State'], AtomTemplateType> {
-  public status: LifecycleStatus = 'Initializing'
+  G extends AtomGenerics = AnyAtomGenerics
+> extends GraphNode<G> {
+  public static $$typeof = Symbol.for(`${prefix}/AtomInstance`)
+  public l: LifecycleStatus = 'Initializing'
+
   public api?: AtomApi<AtomGenericsToAtomApiGenerics<G>>
   public exports: G['Exports']
   public nextReasons: EvaluationReason[] = []
@@ -83,7 +103,7 @@ export class AtomInstance<
   public promise: G['Promise']
   public store: G['Store']
 
-  public _cancelDestruction?: Cleanup
+  public c?: Cleanup
   public _createdAt: number
   public _injectors?: InjectorDescriptor[]
   public _isEvaluating?: boolean
@@ -100,13 +120,15 @@ export class AtomInstance<
   private _subscription?: Subscription
 
   constructor(
-    public readonly ecosystem: Ecosystem,
-    public readonly template: AtomTemplateType,
+    public readonly e: Ecosystem,
+    public readonly template: G['Template'] extends AtomTemplateBase
+      ? G['Template']
+      : AtomTemplateBase<G>,
     public readonly id: string,
     public readonly params: G['Params']
   ) {
     super()
-    this._createdAt = ecosystem._idGenerator.now()
+    this._createdAt = e._idGenerator.now()
 
     // lol
     this.exports = (this as any).exports
@@ -123,21 +145,7 @@ export class AtomInstance<
    * `true` to force-destroy the atom instance anyway.
    */
   public destroy(force?: boolean) {
-    if (this.status === 'Destroyed') return
-
-    // If we're not force-destroying, don't destroy if there are dependents
-    if (!force && this.ecosystem._graph.nodes.get(this.id)?.refCount) {
-      return
-    }
-
-    this._cancelDestruction?.()
-    this._cancelDestruction = undefined
-
-    this._setStatus('Destroyed')
-
-    if (this.nextReasons.length) {
-      this.ecosystem._scheduler.unschedule(this.evaluationTask)
-    }
+    if (!destroyNodeStart(this, force)) return
 
     // Clean up effect injectors first, then everything else
     const nonEffectInjectors: InjectorDescriptor[] = []
@@ -151,10 +159,9 @@ export class AtomInstance<
     nonEffectInjectors.forEach(injector => {
       injector.cleanup?.()
     })
-
-    this.ecosystem._graph.removeDependencies(this.id)
     this._subscription?.unsubscribe()
-    this.ecosystem._destroyAtomInstance(this)
+
+    destroyNodeFinish(this)
   }
 
   /**
@@ -165,8 +172,19 @@ export class AtomInstance<
   /**
    * An alias for `instance.store.getState()`. Returns the current state of this
    * atom instance's store.
+   *
+   * @deprecated - use `instance.get()` instead
    */
   public getState(): G['State'] {
+    return this.store.getState()
+  }
+
+  /**
+   * @see GraphNode.get
+   *
+   * An alias for `instance.store.getState()`.
+   */
+  public get() {
     return this.store.getState()
   }
 
@@ -177,7 +195,7 @@ export class AtomInstance<
     operation = 'invalidate',
     sourceType: EvaluationSourceType = 'External'
   ) {
-    this._scheduleEvaluation(
+    this.r(
       {
         operation,
         sourceType,
@@ -187,7 +205,7 @@ export class AtomInstance<
     )
 
     // run the scheduler synchronously after invalidation
-    this.ecosystem._scheduler.flush()
+    this.e._scheduler.flush()
   }
 
   /**
@@ -204,17 +222,76 @@ export class AtomInstance<
     meta?: any
   ): G['State'] => this.store.setStateDeep(settable, meta)
 
-  public _set?: ExportsInfusedSetter<G['State'], G['Exports']>
-  public get _infusedSetter() {
-    if (this._set) return this._set
-    const setState: any = (settable: any, meta?: any) =>
-      this.setState(settable, meta)
+  /**
+   * @see GraphNode.d
+   */
+  public d(options?: DehydrationFilter) {
+    if (!this.f(options)) return
 
-    return (this._set = Object.assign(setState, this.exports))
+    const { template } = this
+    const state = this.getState()
+    const transform =
+      (typeof options === 'object' &&
+        !is(options, AtomTemplateBase) &&
+        (options as DehydrationOptions).transform) ??
+      true
+
+    return transform && template.dehydrate ? template.dehydrate(state) : state
   }
 
-  public _init() {
-    const factoryResult = this._doEvaluate()
+  /**
+   * @see GraphNode.f
+   */
+  public f(options?: NodeFilter) {
+    const { id, template } = this
+    const lowerCaseId = id.toLowerCase()
+    const {
+      exclude = [],
+      excludeFlags = [],
+      include = [],
+      includeFlags = [],
+    } = normalizeNodeFilter(options)
+
+    if (
+      exclude.some(atomOrKey =>
+        typeof atomOrKey === 'string'
+          ? lowerCaseId.includes(atomOrKey.toLowerCase())
+          : template.key === atomOrKey.key
+      ) ||
+      excludeFlags.some(flag => template.flags?.includes(flag))
+    ) {
+      return false
+    }
+
+    if (
+      (!include && !includeFlags) ||
+      include.some(atomOrKey =>
+        typeof atomOrKey === 'string'
+          ? lowerCaseId.includes(atomOrKey.toLowerCase())
+          : template.key === atomOrKey.key
+      ) ||
+      includeFlags.some(flag => template.flags?.includes(flag))
+    ) {
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * @see GraphNode.h
+   */
+  public h(val: any) {
+    this.setState(this.template.hydrate ? this.template.hydrate(val) : val)
+  }
+
+  /**
+   * `i`nit - Perform the initial run of this atom's state factory. Create the
+   * store, promise, exports, and hydrate (all optional except the store).
+   */
+  public i() {
+    const context = getEvaluationContext()
+    const factoryResult = this._doEvaluate(context)
 
     ;[this._stateType, this.store] = getStateStore(factoryResult)
 
@@ -230,10 +307,10 @@ export class AtomInstance<
     })
 
     this._setStatus('Active')
-    this.ecosystem._graph.flushUpdates()
+    flushBuffer(context.n, context.s)
 
     // hydrate if possible
-    const hydration = this.ecosystem._consumeHydration(this)
+    const hydration = this.e._consumeHydration(this)
 
     if (this.template.manualHydration || typeof hydration === 'undefined') {
       return
@@ -243,30 +320,26 @@ export class AtomInstance<
   }
 
   /**
-   * When a standard atom instance's refCount hits 0 and a ttl is set, we set a
-   * timeout to destroy this atom instance.
+   * @see GraphNode.m
    */
-  public _scheduleDestruction() {
-    // the atom is already scheduled for destruction or destroyed
-    if (this.status !== 'Active') return
+  public m() {
+    const ttl = this._getTtl()
+    if (ttl === 0) return this.destroy()
 
     this._setStatus('Stale')
-
-    const ttl = this._getTtl()
     if (ttl == null || ttl === -1) return
-    if (ttl === 0) return this.destroy()
 
     if (typeof ttl === 'number') {
       // ttl is > 0; schedule destruction
       const timeoutId = setTimeout(() => {
-        this._cancelDestruction = undefined
+        this.c = undefined
         this.destroy()
       }, ttl)
 
       // TODO: dispatch an action over stateStore for these mutations
-      this._cancelDestruction = () => {
+      this.c = () => {
         this._setStatus('Active')
-        this._cancelDestruction = undefined
+        this.c = undefined
         clearTimeout(timeoutId)
       }
 
@@ -276,13 +349,13 @@ export class AtomInstance<
     if (typeof (ttl as Promise<any>).then === 'function') {
       let isCanceled = false
       Promise.allSettled([ttl as Promise<any>]).then(() => {
-        this._cancelDestruction = undefined
+        this.c = undefined
         if (!isCanceled) this.destroy()
       })
 
-      this._cancelDestruction = () => {
+      this.c = () => {
         this._setStatus('Active')
-        this._cancelDestruction = undefined
+        this.c = undefined
         isCanceled = true
       }
 
@@ -291,51 +364,62 @@ export class AtomInstance<
 
     // ttl is an observable; destroy as soon as it emits
     const subscription = (ttl as Observable).subscribe(() => {
-      this._cancelDestruction = undefined
+      this.c = undefined
       this.destroy()
     })
 
-    this._cancelDestruction = () => {
+    this.c = () => {
       this._setStatus('Active')
-      this._cancelDestruction = undefined
+      this.c = undefined
       subscription.unsubscribe()
     }
   }
 
-  public _scheduleEvaluation = (
-    reason: EvaluationReason,
-    shouldSetTimeout?: boolean
-  ) => {
+  /**
+   * @see GraphNode.r
+   */
+  public r(reason: EvaluationReason, shouldSetTimeout?: boolean) {
     // TODO: Any calls in this case probably indicate a memory leak on the
     // user's part. Notify them. TODO: Can we pause evaluations while
     // status is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
-    if (this.status === 'Destroyed') return
+    if (this.l === 'Destroyed') return
 
     this.nextReasons.push(reason)
 
     if (this.nextReasons.length > 1) return // job already scheduled
 
-    this.ecosystem._scheduler.schedule(
+    this.e._scheduler.schedule(
       {
         id: this.id,
-        task: this.evaluationTask,
+        task: this.t,
         type: 2, // EvaluateGraphNode (2)
       },
       shouldSetTimeout
     )
   }
 
-  private evaluationTask = () => this._evaluationTask()
+  /**
+   * @see GraphNode.t
+   */
+  public t = () => this._evaluationTask()
 
-  private _doEvaluate(): G['Store'] | G['State'] {
-    const { _evaluationStack, _graph } = this.ecosystem
+  public _set?: ExportsInfusedSetter<G['State'], G['Exports']>
+  public get _infusedSetter() {
+    if (this._set) return this._set
+    const setState: any = (settable: any, meta?: any) =>
+      this.setState(settable, meta)
 
+    return (this._set = Object.assign(setState, this.exports))
+  }
+
+  private _doEvaluate(
+    { n, s } = getEvaluationContext()
+  ): G['Store'] | G['State'] {
     this._nextInjectors = []
     let newFactoryResult: G['Store'] | G['State']
-    _evaluationStack.start(this)
     this._isEvaluating = true
-    _graph.bufferUpdates(this.id)
+    startBuffer(this)
 
     try {
       newFactoryResult = this._evaluate()
@@ -345,11 +429,10 @@ export class AtomInstance<
       })
 
       this._nextInjectors = undefined
-      _graph.destroyBuffer()
+      destroyBuffer(n, s)
 
       throw err
     } finally {
-      _evaluationStack.finish()
       this._isEvaluating = false
 
       // even if evaluation errored, we need to update dependents if the store's
@@ -370,9 +453,9 @@ export class AtomInstance<
     this._injectors = this._nextInjectors
     this._nextInjectors = undefined
 
-    if (this.status !== 'Initializing') {
-      // let this._init flush updates after status is set to Active
-      _graph.flushUpdates()
+    if (this.l !== 'Initializing') {
+      // let this.i flush updates after status is set to Active
+      flushBuffer(n, s)
     }
 
     return newFactoryResult
@@ -406,7 +489,7 @@ export class AtomInstance<
       const api = (this.api = val as AtomApi<AtomGenericsToAtomApiGenerics<G>>)
 
       // Exports can only be set on initial evaluation
-      if (this.status === 'Initializing' && api.exports) {
+      if (this.l === 'Initializing' && api.exports) {
         this.exports = api.exports
       }
 
@@ -458,7 +541,7 @@ export class AtomInstance<
 
   private _getTtl() {
     if (this.api?.ttl == null) {
-      return this.template.ttl ?? this.ecosystem.atomDefaults?.ttl
+      return this.template.ttl ?? this.e.atomDefaults?.ttl
     }
 
     // this atom instance set its own ttl
@@ -472,19 +555,13 @@ export class AtomInstance<
     oldState: G['State'] | undefined,
     action: ActionChain
   ) {
-    this.ecosystem._graph.scheduleDependents(
-      this,
-      this.nextReasons,
-      newState,
-      oldState,
-      false
-    )
+    scheduleDependents(this, newState, oldState, false)
 
-    if (this.ecosystem._mods.stateChanged) {
-      this.ecosystem.modBus.dispatch(
+    if (this.e._mods.stateChanged) {
+      this.e.modBus.dispatch(
         pluginActions.stateChanged({
           action,
-          instance: this,
+          node: this,
           newState,
           oldState,
           reasons: this.nextReasons,
@@ -494,16 +571,16 @@ export class AtomInstance<
 
     // run the scheduler synchronously after any atom instance state update
     if (action.meta !== zeduxTypes.batch) {
-      this.ecosystem._scheduler.flush()
+      this.e._scheduler.flush()
     }
   }
 
   private _setStatus(newStatus: LifecycleStatus) {
-    const oldStatus = this.status
-    this.status = newStatus
+    const oldStatus = this.l
+    this.l = newStatus
 
-    if (this.ecosystem._mods.statusChanged) {
-      this.ecosystem.modBus.dispatch(
+    if (this.e._mods.statusChanged) {
+      this.e.modBus.dispatch(
         pluginActions.statusChanged({
           newStatus,
           node: this,
@@ -548,9 +625,8 @@ export class AtomInstance<
     const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
     this._promiseStatus = state.status
 
-    this.ecosystem._graph.scheduleDependents(
+    scheduleDependents(
       this,
-      this.nextReasons,
       undefined,
       undefined,
       true,
