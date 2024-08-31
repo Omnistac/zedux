@@ -257,9 +257,9 @@ describe('selection', () => {
       },
     }
 
-    const cache = ecosystem.selectors.getCache(selector)
+    const instance = ecosystem.getNode(selector)
 
-    expect(cache.id).toBe('@@selector-testName-0')
+    expect(instance.id).toBe('@@selector-testName-0')
   })
 
   test('same-name selectors share the namespace when destroyed and recreated at different times', () => {
@@ -276,33 +276,33 @@ describe('selection', () => {
     const instance1 = ecosystem.getInstance(atom1)
     const cleanup1 = instance1.addDependent()
 
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
+    expect(ecosystem.n).toMatchSnapshot()
     expect(instance1.getState()).toBe(3)
 
     cleanup1()
 
-    expect(ecosystem._graph.nodes).toEqual({})
+    expect(ecosystem.n).toEqual(new Map())
 
     const instance2 = ecosystem.getInstance(atom2)
     const cleanup2 = instance2.addDependent()
 
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
+    expect(ecosystem.n).toMatchSnapshot()
     expect(instance2.getState()).toBe(4)
 
     const instance3 = ecosystem.getInstance(atom1)
     const cleanup3 = instance3.addDependent()
 
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
+    expect(ecosystem.n).toMatchSnapshot()
     expect(instance1.getState()).toBe(3)
     expect(instance2.getState()).toBe(4)
 
     cleanup2()
 
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
+    expect(ecosystem.n).toMatchSnapshot()
     expect(instance1.getState()).toBe(3)
 
     cleanup3()
 
-    expect(ecosystem._graph.nodes).toEqual({})
+    expect(ecosystem.n).toEqual(new Map())
   })
 })

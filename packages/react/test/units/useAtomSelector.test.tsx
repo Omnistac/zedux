@@ -5,7 +5,7 @@ import { ecosystem } from '../utils/ecosystem'
 import { act, fireEvent } from '@testing-library/react'
 
 describe('useAtomSelector', () => {
-  test('triggers a reevaluation on selector cache force-destruction', async () => {
+  test('triggers a reevaluation on selector instance force-destruction', async () => {
     jest.useFakeTimers()
     const a = { a: 1 }
     const b = { a: 2 }
@@ -27,7 +27,7 @@ describe('useAtomSelector', () => {
     obj = b
 
     act(() => {
-      ecosystem.selectors.destroyCache(selector1, [], true)
+      ecosystem.getNode(selector1, []).destroy(true)
       jest.runAllTimers()
     })
 
@@ -72,7 +72,7 @@ describe('useAtomSelector', () => {
     expect(selector1).toHaveBeenCalledTimes(2)
   })
 
-  test('useAtomSelector creates/uses a different cache when args change', async () => {
+  test('useAtomSelector creates/uses a different instance when args change', async () => {
     jest.useFakeTimers()
     const atom1 = atom('1', (id: number) => id)
     const selector1 = jest.fn(({ get }: AtomGetters, id: number) =>
@@ -101,7 +101,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('0')
     expect(selector1).toHaveBeenCalledTimes(1)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0-[0]': 0,
     })
 
@@ -112,12 +112,12 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(2)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0-[1]': 1,
     })
   })
 
-  test('useAtomSelector creates/uses a different cache when selector is actually different', async () => {
+  test('useAtomSelector creates/uses a different instance when selector is actually different', async () => {
     jest.useFakeTimers()
     const atom1 = atom('1', (id: number) => id)
     const selector1 = jest.fn(({ get }: AtomGetters, id: number) =>
@@ -151,7 +151,7 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('2')
     expect(selector1).not.toHaveBeenCalled()
     expect(selector2).toHaveBeenCalledTimes(1)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0': 2,
     })
 
@@ -163,12 +163,12 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(1)
     expect(selector2).toHaveBeenCalledTimes(1)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-1-[1]': 1,
     })
   })
 
-  test('useAtomSelector reuses the same cache when selector goes from object form to function form', async () => {
+  test('useAtomSelector creates/uses a different instance when selector goes from object form to function form', async () => {
     jest.useFakeTimers()
     const selector1 = jest.fn(() => 1)
 
@@ -196,7 +196,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(1)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0': 1,
     })
 
@@ -207,7 +207,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(2)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0': 1,
     })
   })
@@ -242,7 +242,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('0')
     expect(selector1.selector).toHaveBeenCalledTimes(1)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0-[0]': 0,
     })
 
@@ -253,7 +253,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('0')
     expect(selector1.selector).toHaveBeenCalledTimes(1)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0-[0]': 0,
     })
   })
@@ -293,7 +293,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('0')
     expect(selector1).toHaveBeenCalledTimes(1)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0-[0]': 0,
     })
 
@@ -304,7 +304,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('0')
     expect(selector1).toHaveBeenCalledTimes(2)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0-[0]': 0,
     })
   })
@@ -342,20 +342,20 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(1)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0': 1,
     })
     expect(renders).toBe(1)
 
     act(() => {
       fireEvent.click(button)
-      ecosystem.selectors.destroyCache(selector1)
+      ecosystem.getNode(selector1).destroy()
       jest.runAllTimers()
     })
 
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(2)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0': 1,
     })
     expect(renders).toBe(2)
@@ -381,8 +381,8 @@ describe('useAtomSelector', () => {
       )
     }
 
-    const cache = ecosystem.selectors.getCache(selector2)
-    ecosystem.selectors.addDependent(cache)
+    const instance = ecosystem.getNode(selector2)
+    instance.on(() => {})
 
     const { findByTestId } = renderInEcosystem(<Test />)
 
@@ -392,7 +392,7 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('2')
     expect(selector1).not.toHaveBeenCalled()
     expect(selector2).toHaveBeenCalledTimes(1)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0': 2,
     })
 
@@ -404,7 +404,7 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(1)
     expect(selector2).toHaveBeenCalledTimes(1)
-    expect(ecosystem.selectors.dehydrate()).toEqual({
+    expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0': 2,
       // id # 2 'cause `addDependent` generate id 1:
       '@@selector-mockConstructor-2': 1,
@@ -442,7 +442,7 @@ describe('useAtomSelector', () => {
 
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
-        "@@selector-unnamed-0": SelectorCache {
+        "@@selector-unnamed-0": SelectorInstance {
           "args": [],
           "id": "@@selector-unnamed-0",
           "nextReasons": [],
@@ -450,7 +450,7 @@ describe('useAtomSelector', () => {
           "result": 1,
           "selectorRef": [Function],
         },
-        "@@selector-unnamed-2": SelectorCache {
+        "@@selector-unnamed-2": SelectorInstance {
           "args": [],
           "id": "@@selector-unnamed-2",
           "nextReasons": [],
@@ -469,7 +469,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('11')
 
-    expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
+    expect(ecosystem.findAll('@@selector')).toMatchInlineSnapshot(`
       {
         "@@selector-unnamed-1": SelectorCache {
           "args": [],
@@ -505,7 +505,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(renders).toBe(1)
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
+    expect(ecosystem.n).toMatchSnapshot()
 
     act(() => {
       ecosystem.getInstance(atom1).setState({ val: 2 })
@@ -514,7 +514,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('2')
     expect(renders).toBe(2)
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
+    expect(ecosystem.n).toMatchSnapshot()
   })
 
   test('inline selector that returns a different object reference every time only triggers one extra rerender (strict mode on)', async () => {
@@ -541,7 +541,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(renders).toBe(4) // 2 rerenders + 2 for strict mode
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
+    expect(ecosystem.n).toMatchSnapshot()
 
     act(() => {
       ecosystem.getInstance(atom1).setState({ val: 2 })
@@ -550,7 +550,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('2')
     expect(renders).toBe(6) // 3 rerenders + 3 for strict mode
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
+    expect(ecosystem.n).toMatchSnapshot()
   })
 
   test('inline selector stays subscribed after being swapped out', async () => {

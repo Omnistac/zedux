@@ -49,7 +49,6 @@ import {
   getEvaluationContext,
   startBuffer,
 } from '@zedux/atoms/utils/evaluationContext'
-import { AtomTemplateRecursive } from '../templates/AtomTemplate'
 
 const StoreState = 1
 const RawState = 2
@@ -86,12 +85,12 @@ const getStateStore = <
   return [stateType, stateStore] as const
 }
 
-export type AtomInstanceRecursive<G extends AtomGenerics> = AtomInstance<
-  G & { Template: AtomTemplateRecursive<G> }
->
-
 export class AtomInstance<
-  G extends AtomGenerics = AnyAtomGenerics
+  G extends Omit<AtomGenerics, 'Node'> & {
+    Template: any
+  } = AnyAtomGenerics<{
+    Node: any
+  }>
 > extends GraphNode<G> {
   public static $$typeof = Symbol.for(`${prefix}/AtomInstance`)
   public l: LifecycleStatus = 'Initializing'
@@ -121,9 +120,7 @@ export class AtomInstance<
 
   constructor(
     public readonly e: Ecosystem,
-    public readonly template: G['Template'] extends AtomTemplateBase
-      ? G['Template']
-      : AtomTemplateBase<G>,
+    public readonly template: G['Template'],
     public readonly id: string,
     public readonly params: G['Params']
   ) {
@@ -253,10 +250,11 @@ export class AtomInstance<
     } = normalizeNodeFilter(options)
 
     if (
-      exclude.some(atomOrKey =>
-        typeof atomOrKey === 'string'
-          ? lowerCaseId.includes(atomOrKey.toLowerCase())
-          : template.key === atomOrKey.key
+      exclude.some(templateOrKey =>
+        typeof templateOrKey === 'string'
+          ? lowerCaseId.includes(templateOrKey.toLowerCase())
+          : is(templateOrKey, AtomTemplateBase) &&
+            template.key === (templateOrKey as AtomTemplateBase).key
       ) ||
       excludeFlags.some(flag => template.flags?.includes(flag))
     ) {
@@ -265,10 +263,11 @@ export class AtomInstance<
 
     if (
       (!include && !includeFlags) ||
-      include.some(atomOrKey =>
-        typeof atomOrKey === 'string'
-          ? lowerCaseId.includes(atomOrKey.toLowerCase())
-          : template.key === atomOrKey.key
+      include.some(templateOrKey =>
+        typeof templateOrKey === 'string'
+          ? lowerCaseId.includes(templateOrKey.toLowerCase())
+          : is(templateOrKey, AtomTemplateBase) &&
+            template.key === (templateOrKey as AtomTemplateBase).key
       ) ||
       includeFlags.some(flag => template.flags?.includes(flag))
     ) {

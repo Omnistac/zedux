@@ -29,25 +29,27 @@ describe('params', () => {
     ecosystem._idGenerator.generateId = generateIdMock
 
     const reusedFn = (str: string) => Number(str)
-    const value1 = complexEcosystem.selectors.getCache(selector1, [reusedFn])
+    const value1 = complexEcosystem.getNode(selector1, [reusedFn])
 
-    const [instanceKey] = Object.keys(complexEcosystem._instances)
-    const [selectorKey] = Object.keys(complexEcosystem.selectors._items)
+    const nodes = [...complexEcosystem.n.keys()]
+    const [instanceKey] = nodes.filter(id => !id.startsWith('@@selector'))
+    const [selectorKey] = nodes.filter(id => id.startsWith('@@selector'))
 
-    expect(value1.result).toBe(1)
+    expect(value1.v).toBe(1)
     expect(instanceKey).toMatch(/^1-\["anonFn-/)
     expect(selectorKey).toMatch(/^@@selector-selector1-.*?-\["reusedFn-/)
 
-    const value2 = complexEcosystem.selectors.getCache(selector2, [reusedFn])
+    const value2 = complexEcosystem.getNode(selector2, [reusedFn])
 
-    const [instanceKey1, instanceKey2] = Object.keys(
-      complexEcosystem._instances
+    const nodes2 = [...complexEcosystem.n.keys()]
+    const [instanceKey1, instanceKey2] = nodes2.filter(
+      id => !id.startsWith('@@selector')
     )
-    const [selectorKey1, selectorKey2] = Object.keys(
-      complexEcosystem.selectors._items
+    const [selectorKey1, selectorKey2] = nodes2.filter(id =>
+      id.startsWith('@@selector')
     )
 
-    expect(value2.result).toBe(12)
+    expect(value2.v).toBe(12)
     expect(instanceKey1).toMatch(/^1-\["anonFn-/)
     expect(instanceKey2).toMatch(/^1-\["anonFn-/)
 
@@ -85,29 +87,27 @@ describe('params', () => {
     ecosystem._idGenerator.generateId = generateIdMock
 
     const reusedInstance = new Converter()
-    const value1 = complexEcosystem.selectors.getCache(selector1, [
-      reusedInstance,
-    ])
+    const value1 = complexEcosystem.getNode(selector1, [reusedInstance])
 
-    const [instanceKey] = Object.keys(complexEcosystem._instances)
-    const [selectorKey] = Object.keys(complexEcosystem.selectors._items)
+    const nodes = [...complexEcosystem.n.keys()]
+    const [instanceKey] = nodes.filter(id => !id.startsWith('@@selector'))
+    const [selectorKey] = nodes.filter(id => id.startsWith('@@selector'))
 
-    expect(value1.result).toBe(1)
+    expect(value1.v).toBe(1)
     expect(instanceKey).toMatch(/^1-\["UnknownClass-/)
     expect(selectorKey).toMatch(/^@@selector-selector1-.*?-\["Converter-/)
 
-    const value2 = complexEcosystem.selectors.getCache(selector2, [
-      reusedInstance,
-    ])
+    const value2 = complexEcosystem.getNode(selector2, [reusedInstance])
 
-    const [instanceKey1, instanceKey2] = Object.keys(
-      complexEcosystem._instances
+    const nodes2 = [...complexEcosystem.n.keys()]
+    const [instanceKey1, instanceKey2] = nodes2.filter(
+      id => !id.startsWith('@@selector')
     )
-    const [selectorKey1, selectorKey2] = Object.keys(
-      complexEcosystem.selectors._items
+    const [selectorKey1, selectorKey2] = nodes2.filter(id =>
+      id.startsWith('@@selector')
     )
 
-    expect(value2.result).toBe(12)
+    expect(value2.v).toBe(12)
     expect(instanceKey1).toMatch(/^1-\["UnknownClass-/)
     expect(instanceKey2).toMatch(/^1-\["UnknownClass-/)
 

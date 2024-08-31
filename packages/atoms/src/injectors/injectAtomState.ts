@@ -1,4 +1,5 @@
-import { AtomInstance, AtomTemplateBase } from '../classes'
+import { AtomInstance } from '../classes/instances/AtomInstance'
+import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import {
   AnyAtomGenerics,
   AnyAtomTemplate,

@@ -1,6 +1,9 @@
 import { Store, StoreStateType } from '@zedux/core'
 import { AtomApi } from '../classes/AtomApi'
-import { IonTemplate } from '../classes/templates/IonTemplate'
+import {
+  IonTemplate,
+  IonTemplateRecursive,
+} from '../classes/templates/IonTemplate'
 import {
   AtomConfig,
   AtomGetters,
@@ -9,7 +12,6 @@ import {
   PromiseState,
 } from '../types/index'
 
-// TODO: add IonTemplateRecursive type
 export const ion: {
   // Query Atoms
   <
@@ -28,7 +30,7 @@ export const ion: {
       Store: undefined
     }>,
     config?: AtomConfig<State>
-  ): IonTemplate<{
+  ): IonTemplateRecursive<{
     State: PromiseState<State>
     Params: Params
     Exports: Exports
@@ -56,7 +58,7 @@ export const ion: {
           Store: StoreType
         }>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): IonTemplate<{
+  ): IonTemplateRecursive<{
     State: StoreStateType<StoreType>
     Params: Params
     Exports: Exports
@@ -84,7 +86,7 @@ export const ion: {
         }>
       | State,
     config?: AtomConfig<State>
-  ): IonTemplate<{
+  ): IonTemplateRecursive<{
     State: State
     Params: Params
     Exports: Exports
@@ -109,7 +111,7 @@ export const ion: {
       Promise: PromiseType
     }>,
     config?: AtomConfig<State>
-  ): IonTemplate<{
+  ): IonTemplateRecursive<{
     State: State
     Params: Params
     Exports: Exports
@@ -132,4 +134,4 @@ export const ion: {
     Promise: PromiseType
   }>,
   config?: AtomConfig<State>
-) => new IonTemplate(key, get, config)
+) => new IonTemplate(key, get, config) as any

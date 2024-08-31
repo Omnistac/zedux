@@ -8,12 +8,13 @@ import {
   AtomApi,
   AtomExportsType,
   AtomInstance,
+  AtomInstanceRecursive,
   AtomInstanceType,
   AtomParamsType,
   AtomPromiseType,
   AtomStateType,
   AtomStoreType,
-  AtomTemplateBase,
+  AtomTemplateRecursive,
   AtomTemplateType,
   AtomTuple,
   createEcosystem,
@@ -26,6 +27,7 @@ import {
   injectSelf,
   injectStore,
   ion,
+  IonTemplateRecursive,
   ParamlessTemplate,
   PromiseState,
 } from '@zedux/react'
@@ -93,27 +95,7 @@ describe('react types', () => {
     expectTypeOf<AtomStore>().toEqualTypeOf<AtomInstanceStore>()
 
     expectTypeOf<TAtomInstance>().toEqualTypeOf<typeof instance>()
-    expectTypeOf<TAtomTemplate>().toEqualTypeOf<
-      AtomTemplateBase<
-        {
-          State: AtomState
-          Params: AtomParams
-          Exports: AtomExports
-          Store: AtomStore
-          Promise: AtomPromise
-        },
-        AtomInstance<
-          {
-            State: AtomState
-            Params: AtomParams
-            Exports: AtomExports
-            Store: AtomStore
-            Promise: AtomPromise
-          },
-          any
-        >
-      >
-    >()
+    expectTypeOf<TAtomTemplate>().toEqualTypeOf<typeof instance.template>()
 
     expectTypeOf<StoreStateType<AtomStore>>().toBeString()
   })
@@ -181,47 +163,17 @@ describe('react types', () => {
 
     expectTypeOf<TStoreAtomInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TStoreAtomTemplate>().toEqualTypeOf<
-      AtomTemplateBase<
-        {
-          State: StoreAtomState
-          Params: StoreAtomParams
-          Exports: StoreAtomExports
-          Store: StoreAtomStore
-          Promise: StoreAtomPromise
-        },
-        AtomInstance<
-          {
-            State: StoreAtomState
-            Params: StoreAtomParams
-            Exports: StoreAtomExports
-            Store: StoreAtomStore
-            Promise: StoreAtomPromise
-          },
-          any
-        >
-      >
+      typeof storeInstance.template
     >()
     expectTypeOf<TValueAtomInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TValueAtomTemplate>().toEqualTypeOf<
-      AtomTemplateBase<
-        {
-          State: ValueAtomState
-          Params: ValueAtomParams
-          Exports: ValueAtomExports
-          Store: ValueAtomStore
-          Promise: ValueAtomPromise
-        },
-        AtomInstance<
-          {
-            State: ValueAtomState
-            Params: ValueAtomParams
-            Exports: ValueAtomExports
-            Store: ValueAtomStore
-            Promise: ValueAtomPromise
-          },
-          any
-        >
-      >
+      AtomTemplateRecursive<{
+        State: ValueAtomState
+        Params: ValueAtomParams
+        Exports: ValueAtomExports
+        Store: ValueAtomStore
+        Promise: ValueAtomPromise
+      }>
     >()
   })
 
@@ -335,8 +287,8 @@ describe('react types', () => {
     const storeIon = ion('store', (_, p: string) => injectStore(p))
     const valueIon = ion('value', (_, p: string) => p)
 
-    const storeInstance = ecosystem.getInstance(storeIon, ['a'])
-    const valueInstance = ecosystem.getInstance(valueIon, ['a'])
+    const storeInstance = ecosystem.getNode(storeIon, ['a'])
+    const valueInstance = ecosystem.getNode(valueIon, ['a'])
 
     type StoreIonState = AtomStateType<typeof storeIon>
     type StoreIonParams = AtomParamsType<typeof storeIon>
@@ -394,47 +346,23 @@ describe('react types', () => {
 
     expectTypeOf<TStoreIonInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TStoreIonTemplate>().toEqualTypeOf<
-      AtomTemplateBase<
-        {
-          State: StoreIonState
-          Params: StoreIonParams
-          Exports: StoreIonExports
-          Store: StoreIonStore
-          Promise: StoreIonPromise
-        },
-        AtomInstance<
-          {
-            State: StoreIonState
-            Params: StoreIonParams
-            Exports: StoreIonExports
-            Store: StoreIonStore
-            Promise: StoreIonPromise
-          },
-          any
-        >
-      >
+      IonTemplateRecursive<{
+        State: StoreIonState
+        Params: StoreIonParams
+        Exports: StoreIonExports
+        Store: StoreIonStore
+        Promise: StoreIonPromise
+      }>
     >()
     expectTypeOf<TValueIonInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TValueIonTemplate>().toEqualTypeOf<
-      AtomTemplateBase<
-        {
-          State: ValueIonState
-          Params: ValueIonParams
-          Exports: ValueIonExports
-          Store: ValueIonStore
-          Promise: ValueIonPromise
-        },
-        AtomInstance<
-          {
-            State: ValueIonState
-            Params: ValueIonParams
-            Exports: ValueIonExports
-            Store: ValueIonStore
-            Promise: ValueIonPromise
-          },
-          any
-        >
-      >
+      IonTemplateRecursive<{
+        State: StoreIonState
+        Params: StoreIonParams
+        Exports: StoreIonExports
+        Store: StoreIonStore
+        Promise: StoreIonPromise
+      }>
     >()
   })
 
@@ -538,12 +466,12 @@ describe('react types', () => {
     )
 
     const innerInstance = ecosystem.getInstance(innerAtom)
-    const outerInstance = ecosystem.getInstance(outerAtom, [innerInstance])
-    const val = outerInstance.getState()
+    const outerInstance = ecosystem.getNode(outerAtom, [innerInstance])
+    const val = outerInstance.get()
 
     expect(val).toBe('A')
     expectTypeOf<typeof innerInstance>().toMatchTypeOf<
-      AtomInstance<{
+      AtomInstanceRecursive<{
         Exports: Record<string, never>
         Params: []
         State: string
@@ -553,7 +481,7 @@ describe('react types', () => {
     >()
 
     expectTypeOf<typeof outerInstance>().toMatchTypeOf<
-      AtomInstance<{
+      AtomInstanceRecursive<{
         Exports: Record<string, never>
         Params: [
           instance: AtomInstance<
@@ -618,7 +546,7 @@ describe('react types', () => {
 
     expectTypeOf<typeof key>().toBeString()
     expectTypeOf<typeof instance>().toMatchTypeOf<
-      AtomInstance<{
+      AtomInstanceRecursive<{
         State: string
         Params: [p: string]
         Exports: {
@@ -630,7 +558,7 @@ describe('react types', () => {
       }>
     >()
     expectTypeOf<typeof instance2>().toMatchTypeOf<
-      AtomInstance<{
+      AtomInstanceRecursive<{
         State: number | string[] | undefined
         Params: [a?: boolean | undefined, b?: string[] | undefined]
         Exports: Record<string, never>
@@ -810,7 +738,7 @@ describe('react types', () => {
 
     const instanceE = ecosystem.getInstance(
       ecosystem.getters.getInstance(
-        ecosystem.getInstance(ecosystem.getters.getInstance(exampleAtom))
+        ecosystem.getInstance(ecosystem.getters.getInstance(exampleAtom, ['a']))
       )
     )
 

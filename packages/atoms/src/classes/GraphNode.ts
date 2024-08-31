@@ -16,7 +16,7 @@ import {
 import { is } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
 import { pluginActions } from '../utils/plugin-actions'
-import { Explicit, External, prefix, Static } from '../utils'
+import { Explicit, External, prefix, Static } from '../utils/general'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 
 /**
@@ -252,6 +252,8 @@ export const setNodeStatus = (node: GraphNode, newStatus: LifecycleStatus) => {
 export abstract class GraphNode<
   G extends Pick<AtomGenerics, 'State'> = { State: any }
 > {
+  // TODO: do we need this defined here? `is` doesn't currently work with
+  // inherited classes that all define a $$typeof - the child class overrites it
   public static $$typeof = Symbol.for(`${prefix}/GraphNode`)
 
   /**

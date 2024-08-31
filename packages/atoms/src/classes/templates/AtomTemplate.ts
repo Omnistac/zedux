@@ -4,16 +4,33 @@ import {
   AtomGenerics,
   AtomValueOrFactory,
 } from '@zedux/atoms/types/index'
-import { AtomInstance, AtomInstanceRecursive } from '../instances/AtomInstance'
+import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { AtomTemplateBase } from './AtomTemplateBase'
 
-export type AtomTemplateRecursive<G extends AtomGenerics> = AtomTemplate<
-  G & { Node: AtomInstanceRecursive<G> }
+export type AtomInstanceRecursive<
+  G extends Omit<AtomGenerics, 'Node' | 'Template'>
+> = AtomInstance<
+  G & {
+    Node: AtomInstanceRecursive<G>
+    Template: AtomTemplateRecursive<G>
+  }
+>
+
+export type AtomTemplateRecursive<
+  G extends Omit<AtomGenerics, 'Node' | 'Template'>
+> = AtomTemplate<
+  G & {
+    Node: AtomInstanceRecursive<G>
+    Template: AtomTemplateRecursive<G>
+  }
 >
 
 export class AtomTemplate<
-  G extends AtomGenerics = AnyAtomGenerics
+  G extends AtomGenerics & {
+    Node: AtomInstanceRecursive<G>
+    Template: AtomTemplateRecursive<G>
+  } = AnyAtomGenerics
 > extends AtomTemplateBase<G> {
   /**
    * This method should be overridden when creating custom atom classes that
@@ -25,7 +42,7 @@ export class AtomTemplate<
     id: string,
     params: G['Params']
   ): G['Node'] {
-    return new AtomInstance<G>(ecosystem, this, id, params) as G['Node']
+    return new AtomInstance(ecosystem, this, id, params)
   }
 
   public getInstanceId(ecosystem: Ecosystem, params?: G['Params']) {
@@ -39,9 +56,9 @@ export class AtomTemplate<
     )}`
   }
 
-  public override(newValue: AtomValueOrFactory<G>) {
+  public override(newValue: AtomValueOrFactory<G>): AtomTemplate<G> {
     const newAtom = atom(this.key, newValue, this._config)
     newAtom._isOverride = true
-    return newAtom
+    return newAtom as any
   }
 }

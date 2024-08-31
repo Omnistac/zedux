@@ -8,9 +8,9 @@ import {
   createEcosystem,
   ion,
   is,
+  SelectorInstance,
   ZeduxPlugin,
 } from '@zedux/react'
-import { SelectorCache } from '@zedux/react'
 
 describe('plugins', () => {
   test('a plugin turns mods on and off dynamically', () => {
@@ -178,7 +178,7 @@ describe('plugins', () => {
 
     const instance1 = testEcosystem.getInstance(atom1)
     instance1.destroy()
-    testEcosystem.selectors.getCache(selector1)
+    testEcosystem.getNode(selector1)
 
     testEcosystem.destroy()
 
@@ -219,8 +219,8 @@ describe('plugins', () => {
               ).payload
 
               const state = is(node, AtomInstance)
-                ? (node as AnyAtomInstance).getState()
-                : (node as SelectorCache).result
+                ? (node as AnyAtomInstance).get()
+                : (node as SelectorInstance).v
 
               updates.push(state)
             }
@@ -235,7 +235,7 @@ describe('plugins', () => {
 
     testEcosystem.registerPlugin(plugin)
 
-    testEcosystem.selectors.getCache(selector1)
+    testEcosystem.getNode(selector1)
     const instance = testEcosystem.getInstance(atom1)
     instance.setState('aa')
 

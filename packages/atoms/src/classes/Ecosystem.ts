@@ -16,7 +16,6 @@ import {
   DehydrationFilter,
   DependentEdge,
   EcosystemConfig,
-  EcosystemGraphNode,
   GraphEdgeDetails,
   GraphViewRecursive,
   MaybeCleanup,
@@ -27,11 +26,8 @@ import {
 } from '../types/index'
 import { External, Static } from '../utils/index'
 import { pluginActions } from '../utils/plugin-actions'
-import { EvaluationStack } from './EvaluationStack'
-import { Graph } from './Graph'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'
-import { Selectors } from './Selectors'
 import { Mod, ZeduxPlugin } from './ZeduxPlugin'
 import { AtomTemplate } from './templates/AtomTemplate'
 import { addEdge, GraphNode } from './GraphNode'
@@ -45,7 +41,7 @@ const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
   return map
 }, {} as Record<Mod, number>)
 
-const getBaseKey = (
+export const getBaseKey = (
   ecosystem: Ecosystem,
   selectorOrConfig: AtomSelectorOrConfig
 ) => {
@@ -85,13 +81,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public modBus = createStore() // use an empty store as a message bus
   public onReady: EcosystemConfig<Context>['onReady']
   public overrides: Record<string, AnyAtomTemplate> = {}
-  public selectors: Selectors = new Selectors(this)
   public ssr?: boolean
-
-  public _graph: Graph = new Graph(this)
-
-  // define this after _graph so it can access _graph immediately
-  public _evaluationStack: EvaluationStack = new EvaluationStack(this)
   public _idGenerator = new IdGenerator()
 
   /**
@@ -148,8 +138,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.isInitialized = true
     this.cleanup = config.onReady?.(this)
 
-    const get: AtomGetters['get'] = ((atom, params) => {
-      const { id, store } = this.getInstance(atom, params)
+    const get: AtomGetters['get'] = <G extends AtomGenerics>(
+      atom: AtomTemplateBase<G>,
+      params?: G['Params']
+    ) => {
+      const instance = this.getNode(atom, params as G['Params'])
       const node = getEvaluationContext().n
 
       // If get is called in a reactive context, track the required atom
@@ -158,14 +151,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (node) {
         addEdge(
           node.id,
-          this.n.get(id)!,
+          this.n.get(instance.id)!,
           { createdAt: this._idGenerator.now(), flags: 0, operation: 'get' },
           node
         )
       }
 
-      return store.getState()
-    }) as AtomGetters['get']
+      return instance.get()
+    }
 
     const getInstance: AtomGetters['getInstance'] = <A extends AnyAtomTemplate>(
       atom: A,
@@ -359,32 +352,41 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * when passing a search string) for the second argument to disable fuzzy
    * search.
    */
-  public find<A extends AnyAtomTemplate>(
-    template: A,
-    params: AtomParamsType<A>
-  ): AtomInstanceType<A> | undefined
+  public find<G extends Pick<AtomGenerics, 'Node' | 'Params' | 'State'>>(
+    template: G extends AtomGenerics
+      ? AtomTemplateBase<G>
+      : AtomSelectorOrConfig<G>,
+    params: G['Params']
+  ): G['Node'] | undefined
 
-  public find<A extends AnyAtomTemplate<{ Params: [] }>>(
-    template: A
-  ): AtomInstanceType<A> | undefined
+  public find<G extends Pick<AtomGenerics, 'Node' | 'State'> & { Params: [] }>(
+    template: G extends AtomGenerics
+      ? AtomTemplateBase<G>
+      : AtomSelectorOrConfig<G>
+  ): G['Node'] | undefined
 
-  public find<A extends AnyAtomTemplate>(
-    template: ParamlessTemplate<A>
-  ): AtomInstanceType<A> | undefined
+  public find<G extends Pick<AtomGenerics, 'Node' | 'Params' | 'State'>>(
+    template: ParamlessTemplate<
+      G extends AtomGenerics ? AtomTemplateBase<G> : AtomSelectorOrConfig<G>
+    >
+  ): G['Node'] | undefined
 
-  public find<A extends AnyAtomTemplate = any>(
+  public find<G extends Pick<AtomGenerics, 'Node'> = any>(
     searchStr: string,
     params?: []
-  ): AtomInstanceType<A> | undefined
+  ): G['Node'] | undefined
 
-  public find<A extends AnyAtomTemplate>(
-    template: A | string,
-    params?: AtomParamsType<A>
+  public find<G extends AtomGenerics>(
+    template: AtomTemplateBase<G> | AtomSelectorOrConfig<G> | string,
+    params?: G['Params']
   ) {
     const isString = typeof template === 'string'
+    const isTemplate = is(template, AtomTemplateBase)
 
     if (!isString) {
-      const id = (template as A).getInstanceId(this, params)
+      const id = isTemplate
+        ? (template as AnyAtomTemplate).getInstanceId(this, params)
+        : getBaseKey(this, template as AtomSelectorOrConfig)
 
       // try to find an existing instance
       const instance = this.n.get(id)
@@ -396,10 +398,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       return this.n.get(
         isString
           ? template
-          : `${template.key}-${this._idGenerator.hashParams(
-              params,
-              this.complexParams
-            )}`
+          : `${
+              isTemplate
+                ? (template as AnyAtomTemplate).key
+                : getBaseKey(this, template as AtomSelectorOrConfig)
+            }-${this._idGenerator.hashParams(params, this.complexParams)}`
       )
     }
 
@@ -407,7 +410,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     return (
       (isString && matches[template]) ||
-      (Object.values(matches)[0] as AtomInstanceType<A> | undefined)
+      (Object.values(matches)[0] as G['Node'] | undefined)
     )
   }
 
@@ -418,7 +421,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * string to only return instances whose id weakly matches the passed key.
    */
   public findAll(options?: NodeFilter) {
-    const hash: Record<string, EcosystemGraphNode> = {}
+    const hash: Record<string, GraphNode> = {}
 
     ;[...this.n.values()]
       .filter(node => node.f(options))
@@ -488,6 +491,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   /**
    * Returns an atom instance. Creates the atom instance if it doesn't exist
    * yet. Doesn't register any graph dependencies.
+   *
+   * TODO: deprecate this in favor of `this.getNode`
    */
   public getInstance<A extends AnyAtomTemplate>(
     atom: A | AnyAtomInstance,
@@ -929,7 +934,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       }
     }
 
-    const recurse = (node?: EcosystemGraphNode) => {
+    const recurse = (node?: GraphNode) => {
       if (!node) return
 
       const map = view === 'bottom-up' ? node.s : node.o
@@ -979,7 +984,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * - preloading atoms, registering plugins, configuring context, etc
    */
   public wipe() {
-    const { n, _mods, _scheduler, modBus, selectors } = this
+    const { n, _mods, _scheduler, modBus } = this
 
     // call cleanup function first so it can configure the ecosystem for cleanup
     this.cleanup?.()
@@ -994,7 +999,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     })
 
     this.hydration = undefined
-    selectors._wipe()
 
     _scheduler.wipe()
     _scheduler.flush()

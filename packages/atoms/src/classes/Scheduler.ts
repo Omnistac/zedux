@@ -1,7 +1,7 @@
 import { Job, Scheduler as SchedulerInterface } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
 import { GraphNode } from './GraphNode'
-import { Static } from '../utils'
+import { Static } from '../utils/general'
 
 // TODO: replace this with the new update propagation algorithm
 const tempCalcWeight = (node: GraphNode): number =>

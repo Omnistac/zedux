@@ -8,7 +8,9 @@ import { prefix } from '@zedux/atoms/utils/index'
 import { Ecosystem } from '../Ecosystem'
 
 export abstract class AtomTemplateBase<
-  G extends AtomGenerics = AnyAtomGenerics
+  G extends AtomGenerics & { Node: any } = AnyAtomGenerics<{
+    Node: any
+  }>
 > {
   public static $$typeof = Symbol.for(`${prefix}/AtomTemplateBase`)
 

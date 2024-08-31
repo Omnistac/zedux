@@ -1,10 +1,11 @@
+import { is } from '@zedux/core'
 import {
   AtomGenerics,
   AtomSelectorOrConfig,
   DehydrationFilter,
   EvaluationReason,
   NodeFilter,
-} from '../types'
+} from '../types/index'
 import {
   destroyBuffer,
   flushBuffer,
@@ -13,7 +14,7 @@ import {
 } from '../utils/evaluationContext'
 import { prefix } from '../utils/general'
 import { pluginActions } from '../utils/plugin-actions'
-import { Ecosystem } from './Ecosystem'
+import { Ecosystem, getBaseKey } from './Ecosystem'
 import {
   destroyNodeFinish,
   destroyNodeStart,
@@ -22,6 +23,7 @@ import {
   scheduleDependents,
   setNodeStatus,
 } from './GraphNode'
+import { AtomTemplateBase } from './templates/AtomTemplateBase'
 
 const defaultResultsComparator = (a: any, b: any) => a === b
 
@@ -89,9 +91,16 @@ export class SelectorInstance<
   G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
 > extends GraphNode<G> {
   public static $$typeof = Symbol.for(`${prefix}/SelectorInstance`)
+
+  /**
+   * `v`alue - the current cached selector result
+   */
   public v?: G['State']
 
   constructor(
+    /**
+     * @see GraphNode.e
+     */
     public e: Ecosystem,
     public id: string,
     /**
@@ -138,16 +147,18 @@ export class SelectorInstance<
     const { exclude = [], include = [] } = normalizeNodeFilter(options)
 
     return (
-      !exclude.some(
-        atomOrKey =>
-          typeof atomOrKey === 'string' &&
-          lowerCaseId.includes(atomOrKey.toLowerCase())
+      !exclude.some(templateOrKey =>
+        typeof templateOrKey === 'string'
+          ? lowerCaseId.includes(templateOrKey.toLowerCase())
+          : !is(templateOrKey, AtomTemplateBase) &&
+            getBaseKey(this.e, templateOrKey as AtomSelectorOrConfig)
       ) &&
       (!include ||
-        include.some(
-          atomOrKey =>
-            typeof atomOrKey === 'string' &&
-            lowerCaseId.includes(atomOrKey.toLowerCase())
+        include.some(templateOrKey =>
+          typeof templateOrKey === 'string'
+            ? lowerCaseId.includes(templateOrKey.toLowerCase())
+            : !is(templateOrKey, AtomTemplateBase) &&
+              getBaseKey(this.e, templateOrKey as AtomSelectorOrConfig)
         ))
     )
   }

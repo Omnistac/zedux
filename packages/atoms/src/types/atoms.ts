@@ -3,7 +3,7 @@ import { AtomInstance } from '../classes/instances/AtomInstance'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomApi } from '../classes/AtomApi'
 import { GraphNode } from '../classes/GraphNode'
-import { AnyNonNullishValue, AtomSelectorOrConfig } from '.'
+import { AnyNonNullishValue, AtomSelectorOrConfig, Prettify } from './index'
 import { SelectorInstance } from '../classes/SelectorInstance'
 
 export type AtomApiGenericsPartial<G extends Partial<AtomApiGenerics>> = Omit<
@@ -16,7 +16,7 @@ export type AnyAtomApiGenerics = { [K in keyof AtomGenerics]: any }
 
 export type AnyAtomGenerics<
   G extends Partial<AtomGenerics> = AnyNonNullishValue
-> = Omit<{ [K in keyof AtomGenerics]: any }, keyof G> & G
+> = Prettify<Omit<{ [K in keyof AtomGenerics]: any }, keyof G> & G>
 
 export type AnyAtomApi<G extends Partial<AtomApiGenerics> | 'any' = 'any'> =
   AtomApi<G extends Partial<AtomApiGenerics> ? AtomApiGenericsPartial<G> : any>
@@ -42,19 +42,18 @@ export type AtomApiGenerics = Pick<
   Store: Store<any> | undefined
 }
 
-export type AtomGenericsToAtomApiGenerics<G extends AtomGenerics> = Pick<
-  G,
-  'Exports' | 'Promise' | 'State'
-> & { Store: G['Store'] | undefined }
+export type AtomGenericsToAtomApiGenerics<
+  G extends Pick<AtomGenerics, 'Exports' | 'Promise' | 'State' | 'Store'>
+> = Pick<G, 'Exports' | 'Promise' | 'State'> & { Store: G['Store'] | undefined }
 
 export interface AtomGenerics {
   Exports: Record<string, any>
-  Node?: GraphNode
+  Node: GraphNode
   Params: any[]
   Promise: AtomApiPromise
   State: any
   Store: Store<any>
-  Template?: AtomTemplateBase
+  Template: AtomTemplateBase
 }
 
 export type AtomApiPromise = Promise<any> | undefined

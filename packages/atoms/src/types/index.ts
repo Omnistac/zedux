@@ -149,20 +149,28 @@ export interface AtomSelectorConfig<
   selector: AtomSelector<G>
 }
 
+// TODO: rename to SelectorTemplate
 export type AtomSelectorOrConfig<
   G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
 > = AtomSelector<G> | AtomSelectorConfig<G>
 
-export type AtomStateFactory<G extends AtomGenerics> = (
+export type AtomStateFactory<
+  G extends Pick<
+    AtomGenerics,
+    'Exports' | 'Params' | 'Promise' | 'State' | 'Store'
+  >
+> = (
   ...params: G['Params']
 ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | G['Store'] | G['State']
 
 export type AtomTuple<A extends AnyAtomTemplate> = [A, AtomParamsType<A>]
 
-export type AtomValueOrFactory<G extends AtomGenerics> =
-  | AtomStateFactory<G>
-  | G['Store']
-  | G['State']
+export type AtomValueOrFactory<
+  G extends Pick<
+    AtomGenerics,
+    'Exports' | 'Params' | 'Promise' | 'State' | 'Store'
+  >
+> = AtomStateFactory<G> | G['Store'] | G['State']
 
 export type Cleanup = () => void
 
@@ -212,6 +220,7 @@ export interface EcosystemConfig<
   ssr?: boolean
 }
 
+// TODO: delete
 export interface EcosystemGraphNode {
   /**
    * Detach this node from the ecosystem and clean up all graph edges and other
@@ -347,10 +356,11 @@ export interface InjectStoreConfig {
   subscribe?: boolean
 }
 
-export type IonStateFactory<G extends AtomGenerics> = (
-  getters: AtomGetters,
-  ...params: G['Params']
-) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | G['Store'] | G['State']
+export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
+  (
+    getters: AtomGetters,
+    ...params: G['Params']
+  ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | G['Store'] | G['State']
 
 export type LifecycleStatus = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
 
@@ -361,13 +371,17 @@ export interface MutableRefObject<T = any> {
 }
 
 export interface NodeFilterOptions {
-  exclude?: (AnyAtomTemplate | string)[]
+  exclude?: (AnyAtomTemplate | AtomSelectorOrConfig | string)[]
   excludeFlags?: string[]
-  include?: (AnyAtomTemplate | string)[]
+  include?: (AnyAtomTemplate | AtomSelectorOrConfig | string)[]
   includeFlags?: string[]
 }
 
-export type NodeFilter = string | AnyAtomTemplate | NodeFilterOptions
+export type NodeFilter =
+  | string
+  | AnyAtomTemplate
+  | AtomSelectorOrConfig
+  | NodeFilterOptions
 
 /**
  * Many Zedux APIs make the `params` parameter optional if the atom doesn't take
