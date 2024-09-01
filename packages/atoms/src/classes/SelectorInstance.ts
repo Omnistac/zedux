@@ -1,6 +1,7 @@
 import { is } from '@zedux/core'
 import {
   AtomGenerics,
+  AtomSelectorConfig,
   AtomSelectorOrConfig,
   DehydrationFilter,
   EvaluationReason,
@@ -14,7 +15,7 @@ import {
 } from '../utils/evaluationContext'
 import { prefix } from '../utils/general'
 import { pluginActions } from '../utils/plugin-actions'
-import { Ecosystem, getBaseKey } from './Ecosystem'
+import { Ecosystem } from './Ecosystem'
 import {
   destroyNodeFinish,
   destroyNodeStart,
@@ -27,6 +28,26 @@ import { AtomTemplateBase } from './templates/AtomTemplateBase'
 
 const defaultResultsComparator = (a: any, b: any) => a === b
 
+export const getSelectorKey = (
+  ecosystem: Ecosystem,
+  template: AtomSelectorOrConfig
+) => {
+  const existingId = ecosystem.b.get(template)
+
+  if (existingId) return existingId
+
+  const key = ecosystem._idGenerator.generateId(
+    `@@selector-${getSelectorName(template)}`
+  )
+
+  ecosystem.b.set(template, key)
+
+  return key
+}
+
+export const getSelectorName = (template: AtomSelectorOrConfig) =>
+  template.name || (template as AtomSelectorConfig).selector?.name || 'unnamed'
+
 /**
  * Run an AtomSelector and, depending on the selector's resultsComparator,
  * update its cached result. Updates the graph efficiently (using
@@ -34,14 +55,14 @@ const defaultResultsComparator = (a: any, b: any) => a === b
  */
 export const runSelector = <G extends Pick<AtomGenerics, 'Params' | 'State'>>(
   node: SelectorInstance<G>,
-  isInitializing?: boolean
+  isInitializing?: boolean,
+  suppressNotify?: boolean
 ) => {
   const { _mods, modBus } = node.e
-
-  const selector = typeof node.a === 'function' ? node.a : node.a.selector
+  const selector = typeof node.t === 'function' ? node.t : node.t.selector
 
   const resultsComparator =
-    (typeof node.a !== 'function' && node.a.resultsComparator) ||
+    (typeof node.t !== 'function' && node.t.resultsComparator) ||
     defaultResultsComparator
 
   const { n, s } = getEvaluationContext()
@@ -51,13 +72,9 @@ export const runSelector = <G extends Pick<AtomGenerics, 'Params' | 'State'>>(
     const result = selector(node.e.getters, ...(node.args as G['Params']))
 
     if (isInitializing) {
-      node.v = result
-
-      return setNodeStatus(node, 'Active')
-    }
-
-    if (!isInitializing && !resultsComparator(result, node.v as G['State'])) {
-      scheduleDependents(node, result, node.v)
+      setNodeStatus(node, 'Active')
+    } else if (!resultsComparator(result, node.v as G['State'])) {
+      if (!suppressNotify) scheduleDependents(node, result, node.v)
 
       if (_mods.stateChanged) {
         modBus.dispatch(
@@ -69,10 +86,9 @@ export const runSelector = <G extends Pick<AtomGenerics, 'Params' | 'State'>>(
           })
         )
       }
-
-      node.v = result
-    } else if (isInitializing) {
     }
+
+    node.v = result
   } catch (err) {
     destroyBuffer(n, s)
     console.error(
@@ -82,9 +98,28 @@ export const runSelector = <G extends Pick<AtomGenerics, 'Params' | 'State'>>(
 
     throw err
   } finally {
-    flushBuffer(n, s)
     node.w = []
   }
+  flushBuffer(n, s)
+}
+
+export const swapSelectorRefs = <
+  G extends Pick<AtomGenerics, 'Params' | 'State'>
+>(
+  ecosystem: Ecosystem,
+  oldCache: SelectorInstance<G>,
+  newRef: AtomSelectorOrConfig<G>,
+  args: any[] = []
+) => {
+  const baseKey = ecosystem.b.get(oldCache.t)
+
+  if (!baseKey) return // TODO: remove
+
+  ecosystem.b.set(newRef, baseKey)
+  ecosystem.b.delete(oldCache.t)
+  oldCache.t = newRef
+  oldCache.args = args
+  runSelector(oldCache, false, true)
 }
 
 export class SelectorInstance<
@@ -104,11 +139,11 @@ export class SelectorInstance<
     public e: Ecosystem,
     public id: string,
     /**
-     * `a`tomSelectorOrConfigRef - the function or object reference of this
+     * `t`emplateRef - the function or object reference of this
      * selector or selector config object
      */
-    public a: AtomSelectorOrConfig<G>,
-    public args?: G['Params']
+    public t: AtomSelectorOrConfig<G>,
+    public args: G['Params']
   ) {
     super()
   }
@@ -151,14 +186,14 @@ export class SelectorInstance<
         typeof templateOrKey === 'string'
           ? lowerCaseId.includes(templateOrKey.toLowerCase())
           : !is(templateOrKey, AtomTemplateBase) &&
-            getBaseKey(this.e, templateOrKey as AtomSelectorOrConfig)
+            getSelectorKey(this.e, templateOrKey as AtomSelectorOrConfig)
       ) &&
       (!include ||
         include.some(templateOrKey =>
           typeof templateOrKey === 'string'
             ? lowerCaseId.includes(templateOrKey.toLowerCase())
             : !is(templateOrKey, AtomTemplateBase) &&
-              getBaseKey(this.e, templateOrKey as AtomSelectorOrConfig)
+              getSelectorKey(this.e, templateOrKey as AtomSelectorOrConfig)
         ))
     )
   }
@@ -170,6 +205,11 @@ export class SelectorInstance<
    * can't be hydrated as part of SSR, etc. This is a no-op.
    */
   public h() {}
+
+  /**
+   * @see GraphNode.j
+   */
+  public j = () => runSelector(this)
 
   /**
    * @see GraphNode.m
@@ -189,12 +229,10 @@ export class SelectorInstance<
     this.e._scheduler.schedule(
       {
         id: this.id,
-        task: this.t,
+        task: this.j,
         type: 2, // EvaluateGraphNode (2)
       },
       shouldSetTimeout
     )
   }
-
-  public t = () => runSelector(this)
 }

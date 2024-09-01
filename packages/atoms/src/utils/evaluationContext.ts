@@ -1,6 +1,6 @@
 import { ActionFactoryPayloadType, Store, is } from '@zedux/core'
 import { AnyAtomInstance, DependentCallback } from '../types/index'
-import { Explicit, External, OutOfRange } from '../utils/index'
+import { ExplicitExternal, OutOfRange } from '../utils/index'
 import { pluginActions } from '../utils/plugin-actions'
 import {
   addEdge,
@@ -9,8 +9,6 @@ import {
   scheduleNodeDestruction,
 } from '../classes/GraphNode'
 import { AtomInstance } from '../classes/instances/AtomInstance'
-
-const ExplicitExternal = Explicit | External
 
 export interface EvaluationContext {
   /**
@@ -33,7 +31,7 @@ export interface EvaluationContext {
  * This has to live in the module scope so `readInstance` can access it without
  * any ecosystem context. That's how injectors work.
  */
-export let evaluationContext: EvaluationContext = {}
+let evaluationContext: EvaluationContext = {}
 
 /**
  * In the current buffer, draw a new edge between the currently evaluating graph

@@ -24,15 +24,21 @@ import {
   PartialAtomInstance,
   Selectable,
 } from '../types/index'
-import { External, Static } from '../utils/index'
+import { External, haveDepsChanged, Static } from '../utils/index'
 import { pluginActions } from '../utils/plugin-actions'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'
 import { Mod, ZeduxPlugin } from './ZeduxPlugin'
 import { AtomTemplate } from './templates/AtomTemplate'
-import { addEdge, GraphNode } from './GraphNode'
-import { getEvaluationContext } from '../utils/evaluationContext'
-import { runSelector, SelectorInstance } from './SelectorInstance'
+import { GraphNode } from './GraphNode'
+import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
+import {
+  getSelectorKey,
+  getSelectorName,
+  runSelector,
+  SelectorInstance,
+  swapSelectorRefs,
+} from './SelectorInstance'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 import { AtomInstance } from './instances/AtomInstance'
 
@@ -40,26 +46,6 @@ const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
   map[mod as Mod] = 0
   return map
 }, {} as Record<Mod, number>)
-
-export const getBaseKey = (
-  ecosystem: Ecosystem,
-  selectorOrConfig: AtomSelectorOrConfig
-) => {
-  const existingId = ecosystem.b.get(selectorOrConfig)
-
-  if (existingId) return existingId
-
-  const selectorName =
-    selectorOrConfig.name ||
-    (selectorOrConfig as AtomSelectorConfig).selector?.name ||
-    'unnamed'
-
-  const key = ecosystem._idGenerator.generateId(`@@selector-${selectorName}`)
-
-  ecosystem.b.set(selectorOrConfig, key)
-
-  return key
-}
 
 const mapOverrides = (overrides: AnyAtomTemplate[]) =>
   overrides.reduce((map, atom) => {
@@ -149,23 +135,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       // instances so we can add graph edges for them. When called outside a
       // reactive context, get() is just an alias for ecosystem.get()
       if (node) {
-        addEdge(
-          node.id,
-          this.n.get(instance.id)!,
-          { createdAt: this._idGenerator.now(), flags: 0, operation: 'get' },
-          node
-        )
+        bufferEdge(instance.id, 'get', 0)
       }
 
       return instance.get()
     }
 
-    const getInstance: AtomGetters['getInstance'] = <A extends AnyAtomTemplate>(
-      atom: A,
-      params?: AtomParamsType<A>,
+    const getInstance: AtomGetters['getInstance'] = <G extends AtomGenerics>(
+      atom: AtomTemplateBase<G>,
+      params?: G['Params'],
       edgeInfo?: GraphEdgeDetails
     ) => {
-      const instance = this.getInstance(atom, params as AtomParamsType<A>)
+      const instance = this.getNode(atom, params as G['Params'])
       const node = getEvaluationContext().n
 
       // If getInstance is called in a reactive context, track the required atom
@@ -173,15 +154,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       // reactive context, getInstance() is just an alias for
       // ecosystem.getInstance()
       if (node) {
-        addEdge(
-          node.id,
-          instance,
-          {
-            createdAt: this._idGenerator.now(),
-            flags: edgeInfo?.f ?? Static,
-            operation: edgeInfo?.op || 'getInstance',
-          },
-          node
+        bufferEdge(
+          instance.id,
+          edgeInfo?.op || 'getInstance',
+          edgeInfo?.f ?? Static
         )
       }
 
@@ -204,12 +180,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (!node) return this.select(selectable, ...args)
 
       const instance = this.getNode(selectable, args)
-
-      addEdge(node.id, instance, {
-        createdAt: this._idGenerator.now(),
-        flags: 0,
-        operation: 'select',
-      })
+      bufferEdge(instance.id, 'select', 0)
 
       return instance.v as G['State']
     }
@@ -386,7 +357,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     if (!isString) {
       const id = isTemplate
         ? (template as AnyAtomTemplate).getInstanceId(this, params)
-        : getBaseKey(this, template as AtomSelectorOrConfig)
+        : getSelectorKey(this, template as AtomSelectorOrConfig)
 
       // try to find an existing instance
       const instance = this.n.get(id)
@@ -401,7 +372,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
           : `${
               isTemplate
                 ? (template as AnyAtomTemplate).key
-                : getBaseKey(this, template as AtomSelectorOrConfig)
+                : getSelectorKey(this, template as AtomSelectorOrConfig)
             }-${this._idGenerator.hashParams(params, this.complexParams)}`
       )
     }
@@ -618,7 +589,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     if (is(template, SelectorInstance)) {
       return (template as SelectorInstance).l === 'Destroyed'
         ? this.getNode(
-            (template as SelectorInstance).a,
+            (template as SelectorInstance).t,
             (template as SelectorInstance).args
           )
         : template
@@ -635,7 +606,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (instance) return instance
 
       // create the instance; it doesn't exist yet
-      instance = new SelectorInstance(this, id, selectorOrConfig, params)
+      instance = new SelectorInstance(this, id, selectorOrConfig, params || [])
 
       this.n.set(id, instance)
       runSelector(instance, true)
@@ -663,7 +634,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       ? this._idGenerator.hashParams(args, this.complexParams)
       : ''
 
-    const baseKey = getBaseKey(this, selectorOrConfig)
+    const baseKey = getSelectorKey(this, selectorOrConfig)
 
     return paramsHash ? `${baseKey}-${paramsHash}` : baseKey
   }
@@ -857,6 +828,44 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   /**
+   * `u`pdateSelectorRef - swaps out the `t`emplateRef of a selector instance if
+   * needed. Bails out if args have changed or the selector template ref hasn't
+   * changed.
+   *
+   * This is used for "inline" selectors e.g. passed to `useAtomSelector`
+   */
+  public u<G extends Pick<AtomGenerics, 'Params' | 'State'>>(
+    instance: SelectorInstance<G>,
+    template: AtomSelectorOrConfig<G>,
+    args: G['Params'],
+    ref: { m?: boolean }
+  ) {
+    const argsChanged = (
+      (template as AtomSelectorConfig).argsComparator || haveDepsChanged
+    )(args, instance.args || ([] as unknown as G['Params']))
+    const resolvedArgs = argsChanged ? args : (instance.args as G['Params'])
+
+    // if the refs/args don't match, instance has refCount: 1, there is no
+    // cache yet for the new ref, and the new ref has the same name, assume it's
+    // an inline selector
+    const isSwappingRefs =
+      instance.t !== template &&
+      !argsChanged &&
+      this.n.get(instance.id)?.o.size === 1 &&
+      !this.b.has(template) &&
+      getSelectorName(instance.t) === getSelectorName(template)
+
+    if (isSwappingRefs) {
+      // switch `m`ounted to false temporarily to prevent circular rerenders
+      ref.m = false
+      swapSelectorRefs(this, instance, template, resolvedArgs)
+      ref.m = true
+    }
+
+    return isSwappingRefs ? instance : this.getNode(template, resolvedArgs)
+  }
+
+  /**
    * Unregister a plugin registered in this ecosystem via `.registerPlugin()`
    */
   public unregisterPlugin(plugin: ZeduxPlugin) {
@@ -998,6 +1007,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       node.destroy(true)
     })
 
+    this.b = new WeakMap() // TODO: is this necessary?
     this.hydration = undefined
 
     _scheduler.wipe()

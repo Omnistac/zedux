@@ -13,6 +13,7 @@
  */
 export const Explicit = 1
 export const External = 2
+export const ExplicitExternal = Explicit | External
 export const Static = 4
 export const OutOfRange = 8 // not a flag; use a value bigger than any flag
 
@@ -20,7 +21,7 @@ export const OutOfRange = 8 // not a flag; use a value bigger than any flag
  * Compare two arrays and see if any elements are different (===). Returns true
  * by default if either array is undefined
  */
-export const haveDepsChanged = (prevDeps?: any[], nextDeps?: any[]) =>
+export const haveDepsChanged = (nextDeps?: any[], prevDeps?: any[]) =>
   !prevDeps ||
   !nextDeps ||
   prevDeps.length !== nextDeps.length ||

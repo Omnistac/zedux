@@ -16,5 +16,12 @@
  * @param classToCheck a class with a static $$typeof property
  * @returns boolean - whether val is an instanceof classToCheck
  */
-export const is = (val: any, classToCheck: { $$typeof: symbol }): boolean =>
-  val?.constructor?.$$typeof === classToCheck.$$typeof
+export const is = (val: any, classToCheck: { $$typeof: symbol }): boolean => {
+  const constructor = val && val.constructor
+
+  return (
+    constructor &&
+    (constructor.$$typeof === classToCheck.$$typeof ||
+      is(val.__proto__, classToCheck))
+  )
+}

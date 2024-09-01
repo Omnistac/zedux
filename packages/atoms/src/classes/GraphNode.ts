@@ -16,7 +16,7 @@ import {
 import { is } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
 import { pluginActions } from '../utils/plugin-actions'
-import { Explicit, External, prefix, Static } from '../utils/general'
+import { ExplicitExternal, External, prefix, Static } from '../utils/general'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 
 /**
@@ -62,7 +62,7 @@ export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
 
   setNodeStatus(node, 'Destroyed')
 
-  if (node.w.length) node.e._scheduler.unschedule(node.t)
+  if (node.w.length) node.e._scheduler.unschedule(node.j)
 
   return true
 }
@@ -188,11 +188,7 @@ export const scheduleDependents = (
       sourceId: node.id,
       // TODO: get rid of sourceType. Plugins can easily infer it from
       // `ecosystem.n`odes given the sourceId
-      sourceType: is(node, {
-        $$typeof: Symbol.for(`${prefix}/SelectorInstance`),
-      })
-        ? 'AtomSelector'
-        : 'Atom',
+      sourceType: 'Atom',
       type,
     }
 
@@ -252,8 +248,6 @@ export const setNodeStatus = (node: GraphNode, newStatus: LifecycleStatus) => {
 export abstract class GraphNode<
   G extends Pick<AtomGenerics, 'State'> = { State: any }
 > {
-  // TODO: do we need this defined here? `is` doesn't currently work with
-  // inherited classes that all define a $$typeof - the child class overrites it
   public static $$typeof = Symbol.for(`${prefix}/GraphNode`)
 
   /**
@@ -327,7 +321,7 @@ export abstract class GraphNode<
       callback: (signal, val, reason) =>
         (!eventName || eventName === signal) && callback(signal, val, reason),
       createdAt: this.e._idGenerator.now(),
-      flags: config.f ?? Explicit | External,
+      flags: config.f ?? ExplicitExternal,
       operation: config.op || 'on',
     })
 
@@ -371,6 +365,15 @@ export abstract class GraphNode<
    * If the node doesn't support hydration, it can make this a no-op.
    */
   public abstract h(serializedValue: any): any
+
+  /**
+   * `j`ob - The callback this node uses to schedule evaluation jobs. Used to
+   * cancel the job if the node is destroyed before it can run.
+   *
+   * This property may go away if we ever move fully off of node update
+   * scheduling
+   */
+  public abstract j: () => void
 
   /**
    * `l`ifecycleStatus - a string indicating the node's current state in its
@@ -421,15 +424,6 @@ export abstract class GraphNode<
    * `o`bservers.
    */
   public s = new Map<string, DependentEdge>()
-
-  /**
-   * `t`ask - The callback this node uses to schedule evaluation tasks. Used to
-   * cancel the task if the node is destroyed before it can run.
-   *
-   * This property may go away if we ever move fully off of node update
-   * scheduling
-   */
-  public abstract t: () => void
 
   /**
    * `w`hy - the list of reasons explaining why this graph node updated or is

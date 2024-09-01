@@ -48,7 +48,7 @@ export function sbench(framework: ReactiveFramework) {
     let start = 0
     let end = 0
 
-    framework.withBuild(cleanup => {
+    framework.withBuild(() => {
       // run 3 times to warm up
       let sources = createDataSignals(scount, []) as Computed<number>[] | null
       fn(n / 100, sources!)
@@ -73,7 +73,6 @@ export function sbench(framework: ReactiveFramework) {
 
       // end GC clean
       sources = null
-      cleanup?.()
       v8.collectGarbage()
       end = performance.now()
     })

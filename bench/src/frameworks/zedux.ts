@@ -17,13 +17,13 @@ export const zeduxFramework: ReactiveFramework = {
     }
   },
   computed: <T>(fn: () => T): Computed<T> => {
-    ecosystem.selectors.getCache(fn)
+    ecosystem.getNode(fn)
 
     return {
       read: () => ecosystem.getters.select(fn),
     }
   },
-  effect: fn => ecosystem.selectors.getCache(fn),
+  effect: fn => ecosystem.getNode(fn),
   withBatch: fn => ecosystem.batch(fn),
   withBuild: fn => {
     if (ecosystem) {

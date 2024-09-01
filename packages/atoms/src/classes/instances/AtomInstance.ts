@@ -289,8 +289,8 @@ export class AtomInstance<
    * store, promise, exports, and hydrate (all optional except the store).
    */
   public i() {
-    const context = getEvaluationContext()
-    const factoryResult = this._doEvaluate(context)
+    const { n, s } = getEvaluationContext()
+    const factoryResult = this._doEvaluate()
 
     ;[this._stateType, this.store] = getStateStore(factoryResult)
 
@@ -306,7 +306,7 @@ export class AtomInstance<
     })
 
     this._setStatus('Active')
-    flushBuffer(context.n, context.s)
+    flushBuffer(n, s)
 
     // hydrate if possible
     const hydration = this.e._consumeHydration(this)
@@ -317,6 +317,11 @@ export class AtomInstance<
 
     this.store.setState(hydration)
   }
+
+  /**
+   * @see GraphNode.j
+   */
+  public j = () => this._evaluationTask()
 
   /**
    * @see GraphNode.m
@@ -391,17 +396,12 @@ export class AtomInstance<
     this.e._scheduler.schedule(
       {
         id: this.id,
-        task: this.t,
+        task: this.j,
         type: 2, // EvaluateGraphNode (2)
       },
       shouldSetTimeout
     )
   }
-
-  /**
-   * @see GraphNode.t
-   */
-  public t = () => this._evaluationTask()
 
   public _set?: ExportsInfusedSetter<G['State'], G['Exports']>
   public get _infusedSetter() {
@@ -412,9 +412,8 @@ export class AtomInstance<
     return (this._set = Object.assign(setState, this.exports))
   }
 
-  private _doEvaluate(
-    { n, s } = getEvaluationContext()
-  ): G['Store'] | G['State'] {
+  private _doEvaluate(): G['Store'] | G['State'] {
+    const { n, s } = getEvaluationContext()
     this._nextInjectors = []
     let newFactoryResult: G['Store'] | G['State']
     this._isEvaluating = true
@@ -427,7 +426,6 @@ export class AtomInstance<
         injector.cleanup?.()
       })
 
-      this._nextInjectors = undefined
       destroyBuffer(n, s)
 
       throw err
@@ -447,10 +445,10 @@ export class AtomInstance<
 
       this.prevReasons = this.nextReasons
       this.nextReasons = []
+      this._nextInjectors = undefined
     }
 
     this._injectors = this._nextInjectors
-    this._nextInjectors = undefined
 
     if (this.l !== 'Initializing') {
       // let this.i flush updates after status is set to Active
