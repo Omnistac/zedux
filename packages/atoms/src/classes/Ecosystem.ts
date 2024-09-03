@@ -25,7 +25,12 @@ import {
   Selectable,
   SelectorGenerics,
 } from '../types/index'
-import { External, haveDepsChanged, isZeduxNode, Static } from '../utils/index'
+import {
+  External,
+  haveDepsChanged,
+  isZeduxNode,
+  Static,
+} from '../utils/general'
 import { pluginActions } from '../utils/plugin-actions'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'

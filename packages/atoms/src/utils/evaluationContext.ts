@@ -1,6 +1,6 @@
 import { ActionFactoryPayloadType, Store, is } from '@zedux/core'
 import { AnyAtomInstance, DependentCallback } from '../types/index'
-import { ExplicitExternal, OutOfRange } from '../utils/index'
+import { ExplicitExternal, OutOfRange } from '../utils/general'
 import { pluginActions } from '../utils/plugin-actions'
 import {
   addEdge,

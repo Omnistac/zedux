@@ -1,5 +1,6 @@
 import { createInjector } from '../factories/createInjector'
-import { InjectorDescriptor, prefix, Static } from '../utils/index'
+import { prefix, Static } from '../utils/general'
+import type { InjectorDescriptor } from '../utils/types'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,

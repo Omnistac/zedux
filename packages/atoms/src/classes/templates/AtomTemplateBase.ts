@@ -4,7 +4,7 @@ import {
   AtomGenerics,
   AnyAtomGenerics,
 } from '@zedux/atoms/types/index'
-import { prefix } from '@zedux/atoms/utils/index'
+import { prefix } from '@zedux/atoms/utils/general'
 import { Ecosystem } from '../Ecosystem'
 
 export abstract class AtomTemplateBase<

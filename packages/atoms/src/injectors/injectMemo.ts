@@ -1,6 +1,6 @@
 import { createInjector } from '../factories/createInjector'
 import { InjectorDeps, PartialAtomInstance } from '../types/index'
-import { haveDepsChanged, prefix } from '../utils/index'
+import { haveDepsChanged, prefix } from '../utils/general'
 
 type MemoInjectorDescriptor<T> = {
   deps: InjectorDeps

@@ -147,13 +147,13 @@ export type AtomTemplateType<A extends GraphNode> = A extends GraphNode<infer G>
 
 export type NodeOf<A extends AnyAtomTemplate | AtomSelectorOrConfig> =
   A extends AtomTemplateBase<infer G>
-    ? G extends { Node: infer Node }
+    ? // this allows the Node generic to be extracted from functions that don't
+      // even accept it but were passed one:
+      G extends { Node: infer Node }
       ? Node
       : GraphNode<G>
     : A extends AtomSelectorOrConfig<infer G>
-    ? G extends SelectorGenerics
-      ? SelectorInstance<G>
-      : never
+    ? SelectorInstance<G>
     : never
 
 export type SelectorGenerics = Pick<
