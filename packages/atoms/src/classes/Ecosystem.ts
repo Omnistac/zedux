@@ -23,8 +23,9 @@ import {
   ParamlessTemplate,
   PartialAtomInstance,
   Selectable,
+  SelectorGenerics,
 } from '../types/index'
-import { External, haveDepsChanged, Static } from '../utils/index'
+import { External, haveDepsChanged, isZeduxNode, Static } from '../utils/index'
 import { pluginActions } from '../utils/plugin-actions'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'
@@ -165,9 +166,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
 
     const select: AtomGetters['select'] = <
-      G extends Pick<AtomGenerics, 'Params' | 'State'> = {
+      G extends SelectorGenerics = {
         Params: any
         State: any
+        Template: any
       }
     >(
       selectable: Selectable<G>,
@@ -323,29 +325,34 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * when passing a search string) for the second argument to disable fuzzy
    * search.
    */
-  public find<G extends Pick<AtomGenerics, 'Node' | 'Params' | 'State'>>(
+  public find<
+    G extends Pick<AtomGenerics, 'Node' | 'Params' | 'State' | 'Template'>
+  >(
     template: G extends AtomGenerics
       ? AtomTemplateBase<G>
       : AtomSelectorOrConfig<G>,
     params: G['Params']
   ): G['Node'] | undefined
 
-  public find<G extends Pick<AtomGenerics, 'Node' | 'State'> & { Params: [] }>(
+  public find<
+    G extends Pick<AtomGenerics, 'Node' | 'State' | 'Template'> & { Params: [] }
+  >(
     template: G extends AtomGenerics
       ? AtomTemplateBase<G>
       : AtomSelectorOrConfig<G>
   ): G['Node'] | undefined
 
-  public find<G extends Pick<AtomGenerics, 'Node' | 'Params' | 'State'>>(
+  public find<
+    G extends Pick<AtomGenerics, 'Node' | 'Params' | 'State' | 'Template'>
+  >(
     template: ParamlessTemplate<
       G extends AtomGenerics ? AtomTemplateBase<G> : AtomSelectorOrConfig<G>
     >
   ): G['Node'] | undefined
 
-  public find<G extends Pick<AtomGenerics, 'Node'> = any>(
-    searchStr: string,
-    params?: []
-  ): G['Node'] | undefined
+  public find<
+    G extends Pick<AtomGenerics, 'Node' | 'State' | 'Template'> = any
+  >(searchStr: string, params?: []): G['Node'] | undefined
 
   public find<G extends AtomGenerics>(
     template: AtomTemplateBase<G> | AtomSelectorOrConfig<G> | string,
@@ -394,6 +401,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public findAll(options?: NodeFilter) {
     const hash: Record<string, GraphNode> = {}
 
+    // TODO: normalize filter options here, before passing to `node.f`ilter
     ;[...this.n.values()]
       .filter(node => node.f(options))
       .sort((a, b) => a.id.localeCompare(b.id))
@@ -427,7 +435,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>
   ) {
-    if (is(atom, GraphNode)) {
+    if ((atom as GraphNode)[isZeduxNode]) {
       return (atom as GraphNode).get()
     }
 
@@ -491,23 +499,26 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   // selectors
   public getNode<
-    G extends Pick<AtomGenerics, 'Params' | 'State'> = {
+    G extends SelectorGenerics = {
       Params: any
       State: any
+      Template: any
     }
   >(selectable: Selectable<G>, params: G['Params']): SelectorInstance<G>
 
   public getNode<
-    G extends Pick<AtomGenerics, 'Params' | 'State'> = {
+    G extends SelectorGenerics = {
       Params: any
       State: any
+      Template: any
     }
   >(selectable: Selectable<G>): SelectorInstance<G>
 
   public getNode<
-    G extends Pick<AtomGenerics, 'Params' | 'State'> = {
+    G extends SelectorGenerics = {
       Params: any
       State: any
+      Template: any
     }
   >(selectable: ParamlessTemplate<Selectable<G>>): SelectorInstance<G>
 
@@ -575,22 +586,13 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       return newInstance
     }
 
-    if (is(template, AtomInstance)) {
+    if ((template as GraphNode)[isZeduxNode]) {
       // if the passed atom instance is Destroyed, get(/create) the
       // non-Destroyed instance
       return (template as AtomInstance).l === 'Destroyed'
         ? this.getNode(
-            (template as AtomInstance).template,
-            (template as AtomInstance).params
-          )
-        : template
-    }
-
-    if (is(template, SelectorInstance)) {
-      return (template as SelectorInstance).l === 'Destroyed'
-        ? this.getNode(
-            (template as SelectorInstance).t,
-            (template as SelectorInstance).args
+            (template as AtomInstance).t,
+            (template as AtomInstance).p
           )
         : template
     }
@@ -767,7 +769,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    *
    * TODO: Deprecate this, replace with `ecosystem.get()` and `ecosystem.run()`
    */
-  public select<G extends Pick<AtomGenerics, 'Params' | 'State'>>(
+  public select<G extends SelectorGenerics>(
     selectable: Selectable<G>,
     ...args: G['Params']
   ): G['State'] {
@@ -828,29 +830,30 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   /**
-   * `u`pdateSelectorRef - swaps out the `t`emplateRef of a selector instance if
+   * `u`pdateSelectorRef - swaps out the `t`emplate of a selector instance if
    * needed. Bails out if args have changed or the selector template ref hasn't
    * changed.
    *
    * This is used for "inline" selectors e.g. passed to `useAtomSelector`
    */
-  public u<G extends Pick<AtomGenerics, 'Params' | 'State'>>(
+  public u<G extends SelectorGenerics>(
     instance: SelectorInstance<G>,
-    template: AtomSelectorOrConfig<G>,
-    args: G['Params'],
+    template: G['Template'],
+    params: G['Params'],
     ref: { m?: boolean }
   ) {
-    const argsChanged = (
+    const paramsChanged = (
       (template as AtomSelectorConfig).argsComparator || haveDepsChanged
-    )(args, instance.args || ([] as unknown as G['Params']))
-    const resolvedArgs = argsChanged ? args : (instance.args as G['Params'])
+    )(params, instance.p || ([] as unknown as G['Params']))
+
+    const resolvedArgs = paramsChanged ? params : instance.p
 
     // if the refs/args don't match, instance has refCount: 1, there is no
     // cache yet for the new ref, and the new ref has the same name, assume it's
     // an inline selector
     const isSwappingRefs =
       instance.t !== template &&
-      !argsChanged &&
+      !paramsChanged &&
       this.n.get(instance.id)?.o.size === 1 &&
       !this.b.has(template) &&
       getSelectorName(instance.t) === getSelectorName(template)
@@ -932,7 +935,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     const hash: GraphViewRecursive = {}
 
-    for (const [key, node] of this.n.entries()) {
+    for (const [key, node] of this.n) {
       const isTopLevel =
         view === 'bottom-up'
           ? [...node.o.values()].every(dependent => dependent.flags & External)
@@ -1029,8 +1032,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     // hydration must exist here. This cast is fine:
     delete (this.hydration as Record<string, any>)[instance.id]
 
-    return instance.template.hydrate
-      ? instance.template.hydrate(hydratedValue)
+    return instance.t.hydrate
+      ? instance.t.hydrate(hydratedValue)
       : hydratedValue
   }
 

@@ -1,11 +1,11 @@
 import { is } from '@zedux/core'
 import {
-  AtomGenerics,
   AtomSelectorConfig,
   AtomSelectorOrConfig,
   DehydrationFilter,
   EvaluationReason,
   NodeFilter,
+  SelectorGenerics,
 } from '../types/index'
 import {
   destroyBuffer,
@@ -53,7 +53,7 @@ export const getSelectorName = (template: AtomSelectorOrConfig) =>
  * update its cached result. Updates the graph efficiently (using
  * `.bufferUpdates()`)
  */
-export const runSelector = <G extends Pick<AtomGenerics, 'Params' | 'State'>>(
+export const runSelector = <G extends SelectorGenerics>(
   node: SelectorInstance<G>,
   isInitializing?: boolean,
   suppressNotify?: boolean
@@ -69,7 +69,7 @@ export const runSelector = <G extends Pick<AtomGenerics, 'Params' | 'State'>>(
   startBuffer(node)
 
   try {
-    const result = selector(node.e.getters, ...(node.args as G['Params']))
+    const result = selector(node.e.getters, ...node.p)
 
     if (isInitializing) {
       setNodeStatus(node, 'Active')
@@ -103,13 +103,11 @@ export const runSelector = <G extends Pick<AtomGenerics, 'Params' | 'State'>>(
   flushBuffer(n, s)
 }
 
-export const swapSelectorRefs = <
-  G extends Pick<AtomGenerics, 'Params' | 'State'>
->(
+export const swapSelectorRefs = <G extends SelectorGenerics>(
   ecosystem: Ecosystem,
   oldCache: SelectorInstance<G>,
-  newRef: AtomSelectorOrConfig<G>,
-  args: any[] = []
+  newRef: G['Template'],
+  params: any[] = []
 ) => {
   const baseKey = ecosystem.b.get(oldCache.t)
 
@@ -118,32 +116,36 @@ export const swapSelectorRefs = <
   ecosystem.b.set(newRef, baseKey)
   ecosystem.b.delete(oldCache.t)
   oldCache.t = newRef
-  oldCache.args = args
+  oldCache.p = params
   runSelector(oldCache, false, true)
 }
 
 export class SelectorInstance<
-  G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
+  G extends SelectorGenerics = {
+    Params: any
+    State: any
+    Template: any
+  }
 > extends GraphNode<G> {
   public static $$typeof = Symbol.for(`${prefix}/SelectorInstance`)
-
-  /**
-   * `v`alue - the current cached selector result
-   */
-  public v?: G['State']
 
   constructor(
     /**
      * @see GraphNode.e
      */
     public e: Ecosystem,
+    /**
+     * @see GraphNode.id
+     */
     public id: string,
     /**
-     * `t`emplateRef - the function or object reference of this
-     * selector or selector config object
+     * `t`emplate - the function or object reference of this selector or
+     * selector config object
+     *
+     * @see GraphNode.t
      */
-    public t: AtomSelectorOrConfig<G>,
-    public args: G['Params']
+    public t: G['Template'],
+    public p: G['Params']
   ) {
     super()
   }
@@ -154,7 +156,7 @@ export class SelectorInstance<
   public destroy(force?: boolean) {
     destroyNodeStart(this, force) && destroyNodeFinish(this)
 
-    // don't delete the ref from this._refBaseKeys; this selector cache isn't
+    // don't delete the ref from this.e.b; this selector instance isn't
     // necessarily the only one using it (if the selector takes params). Just
     // let the WeakMap clean itself up.
   }
@@ -226,13 +228,11 @@ export class SelectorInstance<
 
     if (this.w.length > 1) return // job already scheduled
 
-    this.e._scheduler.schedule(
-      {
-        id: this.id,
-        task: this.j,
-        type: 2, // EvaluateGraphNode (2)
-      },
-      shouldSetTimeout
-    )
+    this.e._scheduler.schedule(this, shouldSetTimeout)
   }
+
+  /**
+   * `v`alue - the current cached selector result
+   */
+  public v?: G['State']
 }

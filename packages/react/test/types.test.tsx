@@ -95,7 +95,7 @@ describe('react types', () => {
     expectTypeOf<AtomStore>().toEqualTypeOf<AtomInstanceStore>()
 
     expectTypeOf<TAtomInstance>().toEqualTypeOf<typeof instance>()
-    expectTypeOf<TAtomTemplate>().toEqualTypeOf<typeof instance.template>()
+    expectTypeOf<TAtomTemplate>().toEqualTypeOf<typeof instance.t>()
 
     expectTypeOf<StoreStateType<AtomStore>>().toBeString()
   })
@@ -162,9 +162,7 @@ describe('react types', () => {
     expectTypeOf<StoreAtomInstanceStore>().toEqualTypeOf<ValueAtomInstanceStore>()
 
     expectTypeOf<TStoreAtomInstance>().toEqualTypeOf<typeof storeInstance>()
-    expectTypeOf<TStoreAtomTemplate>().toEqualTypeOf<
-      typeof storeInstance.template
-    >()
+    expectTypeOf<TStoreAtomTemplate>().toEqualTypeOf<typeof storeInstance.t>()
     expectTypeOf<TValueAtomInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TValueAtomTemplate>().toEqualTypeOf<
       AtomTemplateRecursive<{
@@ -588,8 +586,7 @@ describe('react types', () => {
       i: I
     ) => i.getState()
 
-    const getKey = <I extends AnyAtomInstance>(instance: I) =>
-      instance.template.key
+    const getKey = <I extends AnyAtomInstance>(instance: I) => instance.t.key
 
     const getUppercase = <I extends AnyAtomInstance<{ State: string }>>(
       instance: I
@@ -728,11 +725,11 @@ describe('react types', () => {
 
   test('recursive templates and nodes', () => {
     const instanceA = exampleAtom._createInstance({} as any, 'a', ['b'])
-    const instanceB = instanceA.template._createInstance({} as any, '', ['b'])
-    const instanceC = instanceB.template._createInstance({} as any, '', ['b'])
-    const instanceD = instanceC.template._createInstance({} as any, '', ['b'])
+    const instanceB = instanceA.t._createInstance({} as any, '', ['b'])
+    const instanceC = instanceB.t._createInstance({} as any, '', ['b'])
+    const instanceD = instanceC.t._createInstance({} as any, '', ['b'])
 
-    expectTypeOf<AtomParamsType<typeof instanceD.template>>().toEqualTypeOf<
+    expectTypeOf<AtomParamsType<typeof instanceD.t>>().toEqualTypeOf<
       [p: string]
     >()
 
@@ -742,7 +739,7 @@ describe('react types', () => {
       )
     )
 
-    expectTypeOf<AtomParamsType<typeof instanceE.template>>().toEqualTypeOf<
+    expectTypeOf<AtomParamsType<typeof instanceE.t>>().toEqualTypeOf<
       [p: string]
     >()
   })

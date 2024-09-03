@@ -86,8 +86,8 @@ const getStateStore = <
 }
 
 export class AtomInstance<
-  G extends Omit<AtomGenerics, 'Node'> & {
-    Template: any
+  G extends Omit<AtomGenerics, 'Node' | 'Template'> & {
+    Template: AtomTemplateBase<G & { Node: any }>
   } = AnyAtomGenerics<{
     Node: any
   }>
@@ -102,6 +102,9 @@ export class AtomInstance<
   public promise: G['Promise']
   public store: G['Store']
 
+  /**
+   * @see GraphNode.c
+   */
   public c?: Cleanup
   public _createdAt: number
   public _injectors?: InjectorDescriptor[]
@@ -119,10 +122,22 @@ export class AtomInstance<
   private _subscription?: Subscription
 
   constructor(
+    /**
+     * @see GraphNode.e
+     */
     public readonly e: Ecosystem,
-    public readonly template: G['Template'],
+    /**
+     * @see GraphNode.t
+     */
+    public readonly t: G['Template'],
+    /**
+     * @see GraphNode.id
+     */
     public readonly id: string,
-    public readonly params: G['Params']
+    /**
+     * @see GraphNode.p
+     */
+    public readonly p: G['Params']
   ) {
     super()
     this._createdAt = e._idGenerator.now()
@@ -135,11 +150,7 @@ export class AtomInstance<
   }
 
   /**
-   * Detach this atom instance from the ecosystem and clean up all graph edges
-   * and other subscriptions/effects created by this atom instance.
-   *
-   * Destruction will bail out if this atom instance still has dependents. Pass
-   * `true` to force-destroy the atom instance anyway.
+   * @see GraphNode.destroy
    */
   public destroy(force?: boolean) {
     if (!destroyNodeStart(this, force)) return
@@ -225,22 +236,22 @@ export class AtomInstance<
   public d(options?: DehydrationFilter) {
     if (!this.f(options)) return
 
-    const { template } = this
-    const state = this.getState()
+    const { t } = this
+    const state = this.get()
     const transform =
       (typeof options === 'object' &&
         !is(options, AtomTemplateBase) &&
         (options as DehydrationOptions).transform) ??
       true
 
-    return transform && template.dehydrate ? template.dehydrate(state) : state
+    return transform && t.dehydrate ? t.dehydrate(state) : state
   }
 
   /**
    * @see GraphNode.f
    */
   public f(options?: NodeFilter) {
-    const { id, template } = this
+    const { id, t } = this
     const lowerCaseId = id.toLowerCase()
     const {
       exclude = [],
@@ -254,9 +265,9 @@ export class AtomInstance<
         typeof templateOrKey === 'string'
           ? lowerCaseId.includes(templateOrKey.toLowerCase())
           : is(templateOrKey, AtomTemplateBase) &&
-            template.key === (templateOrKey as AtomTemplateBase).key
+            t.key === (templateOrKey as AtomTemplateBase).key
       ) ||
-      excludeFlags.some(flag => template.flags?.includes(flag))
+      excludeFlags.some(flag => t.flags?.includes(flag))
     ) {
       return false
     }
@@ -267,9 +278,9 @@ export class AtomInstance<
         typeof templateOrKey === 'string'
           ? lowerCaseId.includes(templateOrKey.toLowerCase())
           : is(templateOrKey, AtomTemplateBase) &&
-            template.key === (templateOrKey as AtomTemplateBase).key
+            t.key === (templateOrKey as AtomTemplateBase).key
       ) ||
-      includeFlags.some(flag => template.flags?.includes(flag))
+      includeFlags.some(flag => t.flags?.includes(flag))
     ) {
       return true
     }
@@ -281,7 +292,7 @@ export class AtomInstance<
    * @see GraphNode.h
    */
   public h(val: any) {
-    this.setState(this.template.hydrate ? this.template.hydrate(val) : val)
+    this.setState(this.t.hydrate ? this.t.hydrate(val) : val)
   }
 
   /**
@@ -311,7 +322,7 @@ export class AtomInstance<
     // hydrate if possible
     const hydration = this.e._consumeHydration(this)
 
-    if (this.template.manualHydration || typeof hydration === 'undefined') {
+    if (this.t.manualHydration || typeof hydration === 'undefined') {
       return
     }
 
@@ -393,14 +404,7 @@ export class AtomInstance<
 
     if (this.nextReasons.length > 1) return // job already scheduled
 
-    this.e._scheduler.schedule(
-      {
-        id: this.id,
-        task: this.j,
-        type: 2, // EvaluateGraphNode (2)
-      },
-      shouldSetTimeout
-    )
+    this.e._scheduler.schedule(this, shouldSetTimeout)
   }
 
   public _set?: ExportsInfusedSetter<G['State'], G['Exports']>
@@ -468,7 +472,7 @@ export class AtomInstance<
    * - A function that returns an AtomApi
    */
   private _evaluate() {
-    const { _value } = this.template
+    const { _value } = this.t
 
     if (typeof _value !== 'function') {
       return _value
@@ -479,7 +483,7 @@ export class AtomInstance<
         _value as (
           ...params: G['Params']
         ) => G['Store'] | G['State'] | AtomApi<AtomGenericsToAtomApiGenerics<G>>
-      )(...this.params)
+      )(...this.p)
 
       if (!is(val, AtomApi)) return val as G['Store'] | G['State']
 
@@ -500,8 +504,8 @@ export class AtomInstance<
       return api.value as G['Store'] | G['State']
     } catch (err) {
       console.error(
-        `Zedux: Error while evaluating atom "${this.template.key}" with params:`,
-        this.params,
+        `Zedux: Error while evaluating atom "${this.t.key}" with params:`,
+        this.p,
         err
       )
 
@@ -516,13 +520,13 @@ export class AtomInstance<
 
     if (DEV && newStateType !== this._stateType) {
       throw new Error(
-        `Zedux: atom factory for atom "${this.template.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
+        `Zedux: atom factory for atom "${this.t.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
       )
     }
 
     if (DEV && newStateType === StoreState && newFactoryResult !== this.store) {
       throw new Error(
-        `Zedux: atom factory for atom "${this.template.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
+        `Zedux: atom factory for atom "${this.t.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
       )
     }
 
@@ -538,7 +542,7 @@ export class AtomInstance<
 
   private _getTtl() {
     if (this.api?.ttl == null) {
-      return this.template.ttl ?? this.e.atomDefaults?.ttl
+      return this.t.ttl ?? this.e.atomDefaults?.ttl
     }
 
     // this atom instance set its own ttl

@@ -48,12 +48,12 @@ export type AtomGenericsToAtomApiGenerics<
 
 export interface AtomGenerics {
   Exports: Record<string, any>
-  Node: GraphNode
+  Node: any
   Params: any[]
   Promise: AtomApiPromise
   State: any
   Store: Store<any>
-  Template: AtomTemplateBase
+  Template: any
 }
 
 export type AtomApiPromise = Promise<any> | undefined
@@ -151,5 +151,14 @@ export type NodeOf<A extends AnyAtomTemplate | AtomSelectorOrConfig> =
       ? Node
       : GraphNode<G>
     : A extends AtomSelectorOrConfig<infer G>
-    ? SelectorInstance<G>
+    ? G extends SelectorGenerics
+      ? SelectorInstance<G>
+      : never
     : never
+
+export type SelectorGenerics = Pick<
+  AtomGenerics,
+  'Params' | 'State' | 'Template'
+> & {
+  Template: AtomSelectorOrConfig
+}

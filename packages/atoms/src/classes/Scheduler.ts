@@ -1,15 +1,5 @@
 import { Job, Scheduler as SchedulerInterface } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
-import { GraphNode } from './GraphNode'
-import { Static } from '../utils/general'
-
-// TODO: replace this with the new update propagation algorithm
-const tempCalcWeight = (node: GraphNode): number =>
-  [...node.s].reduce(
-    (sum, [id, edge]) =>
-      edge.flags & Static ? sum : sum + tempCalcWeight(node.e.n.get(id)!),
-    1
-  )
 
 export class Scheduler implements SchedulerInterface {
   /**
@@ -67,7 +57,7 @@ export class Scheduler implements SchedulerInterface {
    * pass `shouldSetTimeout: false` when we're going to immediately flush
    */
   public schedule(newJob: Job, shouldSetTimeout = true) {
-    if (newJob.type === 4) {
+    if (newJob.T === 4) {
       // RunEffect (4) jobs run in any order, after everything else
       this.jobs.push(newJob)
     } else {
@@ -87,15 +77,15 @@ export class Scheduler implements SchedulerInterface {
    * InformSubscriber (1) jobs must run immediately after the current task.
    */
   public scheduleNow(newJob: Job) {
-    if (this._isRunningNows && newJob.type === 0) return newJob.task()
+    if (this._isRunningNows && newJob.T === 0) return newJob.j()
 
-    this.nows[newJob.type === 1 ? 'push' : 'unshift'](newJob)
+    this.nows[newJob.T === 1 ? 'push' : 'unshift'](newJob)
 
     this.runJobs(true)
   }
 
-  public unschedule(task: () => void) {
-    const index = this.jobs.findIndex(job => job.task === task)
+  public unschedule(job: Job) {
+    const index = this.jobs.indexOf(job)
 
     if (index !== -1) this.jobs.splice(index, 1)
   }
@@ -103,7 +93,7 @@ export class Scheduler implements SchedulerInterface {
   public wipe() {
     // allow external jobs to proceed. TODO: should we flush here?
     this.jobs = this.jobs.filter(
-      job => job.type === 3 // UpdateExternalDependent (3)
+      job => job.T === 3 // UpdateExternalDependent (3)
     )
   }
 
@@ -139,24 +129,19 @@ export class Scheduler implements SchedulerInterface {
    * Schedule an EvaluateGraphNode (2) or UpdateExternalDependent (3) job
    */
   private insertJob(newJob: Job) {
-    const { n } = this.ecosystem
-    const flags = newJob.flags ?? 0
-    const weight = newJob.id ? tempCalcWeight(n.get(newJob.id)!) : 0
+    const flags = newJob.F ?? 0
+    const weight = newJob.W ?? 0
 
     const index = this.findIndex(job => {
-      if (job.type !== newJob.type) return +(newJob.type - job.type > 0) || -1 // 1 or -1
+      if (job.T !== newJob.T) return +(newJob.T - job.T > 0) || -1 // 1 or -1
 
       // EvaluateGraphNode (2) jobs use weight comparison
-      if (job.id) {
-        const jobWeight = tempCalcWeight(n.get(job.id)!)
-
-        return weight < jobWeight ? -1 : +(weight > jobWeight) // + = 0 or 1
+      if (job.W) {
+        return weight < job.W ? -1 : +(weight > job.W) // + = 0 or 1
       }
 
       // UpdateExternalDependent (3) jobs use flags comparison
-      return flags < (job.flags as number)
-        ? -1
-        : +(flags > (job.flags as number))
+      return flags < (job.F as number) ? -1 : +(flags > (job.F as number))
     })
 
     if (index === -1) {
@@ -198,7 +183,7 @@ export class Scheduler implements SchedulerInterface {
     try {
       while (jobs.length) {
         const job = (nows.length ? nows : jobs).shift() as Job
-        job.task()
+        job.j()
 
         // this "break" idea could only break for "full" jobs, not "now" jobs
         // if (!(++counter % 20) && performance.now() - this._runStartTime >= 100) {

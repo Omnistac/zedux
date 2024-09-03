@@ -5,16 +5,10 @@ import {
   IonStateFactory,
   AtomGenerics,
   AnyAtomGenerics,
-  AtomStateType,
-  AtomParamsType,
-  AtomExportsType,
-  AtomStoreType,
-  AtomPromiseType,
 } from '@zedux/atoms/types/index'
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { AtomTemplateBase } from './AtomTemplateBase'
-import { injectStore } from '@zedux/atoms/injectors'
 
 export type IonInstanceRecursive<
   G extends Omit<AtomGenerics, 'Node' | 'Template'>
@@ -77,7 +71,6 @@ export class IonTemplate<
 
   public override(newGet?: IonStateFactory<G>): IonTemplate<G> {
     const newIon = ion(this.key, newGet || this._get, this._config)
-    // const test = newIon._createInstance({} as any, 'a', []).template
     newIon._isOverride = true
     return newIon as any
   }

@@ -17,6 +17,8 @@ export const ExplicitExternal = Explicit | External
 export const Static = 4
 export const OutOfRange = 8 // not a flag; use a value bigger than any flag
 
+export const isZeduxNode = 'isZeduxNode'
+
 /**
  * Compare two arrays and see if any elements are different (===). Returns true
  * by default if either array is undefined

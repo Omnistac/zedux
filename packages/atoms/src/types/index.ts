@@ -1,4 +1,4 @@
-import { ActionChain, Observable, Settable } from '@zedux/core'
+import { ActionChain, Job, Observable, Settable } from '@zedux/core'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
 import {
@@ -9,6 +9,7 @@ import {
   AtomInstanceType,
   AtomParamsType,
   AtomStateType,
+  SelectorGenerics,
 } from './atoms'
 import { SelectorInstance } from '../classes/SelectorInstance'
 
@@ -92,7 +93,7 @@ export interface AtomGettersBase {
    *
    * @see AtomSelector
    */
-  select<G extends Pick<AtomGenerics, 'Params' | 'State'>>(
+  select<G extends SelectorGenerics>(
     selectorOrConfigOrCache: Selectable<G>,
     ...args: G['Params']
   ): G['State']
@@ -137,11 +138,19 @@ export interface AtomGetters extends AtomGettersBase {
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
 
 export type AtomSelector<
-  G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
+  G extends SelectorGenerics = {
+    Params: any
+    State: any
+    Template: any
+  }
 > = (getters: AtomGetters, ...args: G['Params']) => G['State']
 
 export interface AtomSelectorConfig<
-  G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
+  G extends SelectorGenerics = {
+    Params: any
+    State: any
+    Template: any
+  }
 > {
   argsComparator?: (newArgs: G['Params'], oldArgs: G['Params']) => boolean
   name?: string
@@ -151,7 +160,11 @@ export interface AtomSelectorConfig<
 
 // TODO: rename to SelectorTemplate
 export type AtomSelectorOrConfig<
-  G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
+  G extends SelectorGenerics = {
+    Params: any
+    State: any
+    Template: any
+  }
 > = AtomSelector<G> | AtomSelectorConfig<G>
 
 export type AtomStateFactory<
@@ -192,13 +205,19 @@ export interface DependentEdge {
   createdAt: number
   flags: number // calculated from the EdgeFlags
   operation: string
+
   /**
    * `p`endingFlags - an internal marker used by the graph algorithm - tracks
    * what the flags will be for this edge after the current evaluation (or
    * undefined if it should be removed)
    */
   p?: number
-  task?: () => void // for external edges - so they can unschedule jobs
+
+  /**
+   * `j`ob - a reference to a scheduled job for external edges - so they can
+   * unschedule jobs
+   */
+  j?: Job
 }
 
 export interface EcosystemConfig<
@@ -430,7 +449,11 @@ export interface RefObject<T = any> {
 }
 
 export type Selectable<
-  G extends Pick<AtomGenerics, 'Params' | 'State'> = { Params: any; State: any }
+  G extends SelectorGenerics = {
+    Params: any
+    State: any
+    Template: any
+  }
 > = AtomSelectorOrConfig<G> | SelectorInstance<G>
 
 export type StateHookTuple<State, Exports> = [

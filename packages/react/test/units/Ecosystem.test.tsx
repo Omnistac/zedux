@@ -39,7 +39,7 @@ describe('Ecosystem', () => {
 
     const instance = testEcosystem.getInstance(atom1)
 
-    expect(instance.template).toBe(atom1Override)
+    expect(instance.t).toBe(atom1Override)
     expect(mock).toHaveBeenCalledTimes(1)
     expect(mock).toHaveBeenCalledWith(
       expect.stringContaining('encountered unsafe atom')

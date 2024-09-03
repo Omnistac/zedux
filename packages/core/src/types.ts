@@ -139,6 +139,36 @@ export type HierarchyDescriptor<State = any> =
   | Reducer<State>
   | null
 
+export interface Job {
+  /**
+   * `W`eight - the weight of the node (for EvaluateGraphNode jobs).
+   */
+  W?: number
+
+  /**
+   * `F`lags - the EdgeFlags of the edge between the scheduled node and the node
+   * that caused it to schedule an update (for UpdateExternalDependent jobs).
+   */
+  F?: number
+
+  /**
+   * `j`ob - the actual task to run.
+   */
+  j: () => void
+
+  /**
+   * `T`ype - the job type. Different types get different priorities in the
+   * scheduler.
+   *
+   * 0 - UpdateStore
+   * 1 - InformSubscribers
+   * 2 - EvaluateGraphNode
+   * 3 - UpdateExternalDependent
+   * 4 - RunEffect
+   */
+  T: 0 | 1 | 2 | 3 | 4
+}
+
 /**
  * After a store is created, TS knows the hierarchy shape and we can be more
  * intelligent in e.g. the store's `.use()` method
@@ -152,20 +182,6 @@ export type KnownHierarchyDescriptor<State = any> = State extends Record<
       Store<State> | Reducer<State> | null
     : Branch<State> | Store<State> | Reducer<State> | null
   : Store<State> | Reducer<State> | null
-
-export interface Job {
-  flags?: number
-  id?: string
-  task: () => void
-  /**
-   * 0 - UpdateStore
-   * 1 - InformSubscribers
-   * 2 - EvaluateGraphNode
-   * 3 - UpdateExternalDependent
-   * 4 - RunEffect
-   */
-  type: 0 | 1 | 2 | 3 | 4
-}
 
 export type NextSubscriber<State = any> = (
   newState: State,

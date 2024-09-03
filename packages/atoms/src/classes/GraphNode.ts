@@ -13,10 +13,15 @@ import {
   AtomGenerics,
   GraphEdgeDetails,
 } from '@zedux/atoms/types/index'
-import { is } from '@zedux/core'
+import { is, Job } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
 import { pluginActions } from '../utils/plugin-actions'
-import { ExplicitExternal, External, prefix, Static } from '../utils/general'
+import {
+  ExplicitExternal,
+  External,
+  isZeduxNode,
+  Static,
+} from '../utils/general'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 
 /**
@@ -40,6 +45,11 @@ export const addEdge = (
   dependency.o.set(dependentId, newEdge)
   dependency.c?.()
 
+  // static dependencies don't change a node's weight
+  if (!(newEdge.flags & Static)) {
+    recalculateNodeWeight(dependency.W, dependent)
+  }
+
   if (_mods.edgeCreated) {
     modBus.dispatch(
       pluginActions.edgeCreated({
@@ -62,7 +72,7 @@ export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
 
   setNodeStatus(node, 'Destroyed')
 
-  if (node.w.length) node.e._scheduler.unschedule(node.j)
+  if (node.w.length) node.e._scheduler.unschedule(node)
 
   return true
 }
@@ -87,7 +97,11 @@ export const destroyNodeFinish = (node: GraphNode) => {
   )
 
   // now remove all edges between this node and its dependents
-  for (const dependentId of node.o.keys()) {
+  for (const [dependentId, dependentEdge] of node.o) {
+    if (!(dependentEdge.flags & Static)) {
+      recalculateNodeWeight(-node.W, node.e.n.get(dependentId))
+    }
+
     const dependentNode = node.e.n.get(dependentId)
 
     // dependent won't exist if it's external
@@ -106,6 +120,16 @@ export const normalizeNodeFilter = (options?: NodeFilter) =>
   typeof options === 'object' && !is(options, AtomTemplateBase)
     ? (options as NodeFilterOptions)
     : { include: options ? [options as string | AnyAtomTemplate] : [] }
+
+const recalculateNodeWeight = (weightDiff: number, node?: GraphNode) => {
+  if (!node) return // happens when node is external
+
+  node.W += weightDiff
+
+  for (const observerId of node.o.keys()) {
+    recalculateNodeWeight(weightDiff, node.e.n.get(observerId))
+  }
+}
 
 /**
  * Remove the graph edge between two nodes. The dependent may not exist as a
@@ -135,10 +159,15 @@ export const removeEdge = (
 
   dependency.o.delete(dependentId)
 
+  // static dependencies don't change a node's weight
+  if (!(dependentEdge.flags & Static)) {
+    recalculateNodeWeight(-dependency.W, dependent)
+  }
+
   const { _mods, _scheduler, modBus } = dependency.e
 
-  if (dependentEdge.task) {
-    _scheduler.unschedule(dependentEdge.task)
+  if (dependentEdge.j) {
+    _scheduler.unschedule(dependentEdge.j)
   }
 
   if (_mods.edgeRemoved) {
@@ -165,20 +194,19 @@ export const scheduleDependents = (
 ) => {
   const { n, _scheduler } = node.e
 
-  for (const [dependentId, dependentEdge] of node.o.entries()) {
-    // if edge.task exists, this edge has already been scheduled
-    if (dependentEdge.task) {
+  for (const [dependentId, dependentEdge] of node.o) {
+    // if `edge.j`ob exists, this edge has already been scheduled
+    if (dependentEdge.j) {
       if (signal !== 'Destroyed') continue
 
       // destruction jobs supersede update jobs; cancel the existing job so we
       // can create a new one for the destruction
-      _scheduler.unschedule(dependentEdge.task)
+      _scheduler.unschedule(dependentEdge.j)
     }
 
-    // Static deps don't update on state change. Dynamic deps don't update on
-    // promise change. Both types update on instance force-destruction
-    const isStatic = dependentEdge.flags & Static
-    if (isStatic && !scheduleStaticDeps) continue
+    // Static deps don't update on state change, only on promise change or
+    // instance force-destruction
+    if (dependentEdge.flags & Static && !scheduleStaticDeps) continue
 
     const reason: EvaluationReason = {
       newState,
@@ -195,32 +223,29 @@ export const scheduleDependents = (
     // let internal dependents (other atoms and AtomSelectors) schedule their
     // own jobs
     if (!(dependentEdge.flags & External)) {
-      n.get(dependentId)?.r(reason, defer)
+      n.get(dependentId)!.r(reason, defer)
       continue
     }
 
     // schedule external dependents
-    const task = () => {
-      dependentEdge.task = undefined
-      dependentEdge.callback?.(
-        signal,
-        // don't use the snapshotted newState above
-        node.get(),
-        reason
-      )
+    const job = {
+      F: dependentEdge.flags,
+      j: () => {
+        dependentEdge.j = undefined
+        dependentEdge.callback?.(
+          signal,
+          // don't use the snapshotted newState above
+          node.get(),
+          reason
+        )
+      },
+      T: 3 as const, // UpdateExternalDependent (3)
     }
 
-    _scheduler.schedule(
-      {
-        flags: dependentEdge.flags,
-        task,
-        type: 3, // UpdateExternalDependent (3)
-      },
-      defer
-    )
+    _scheduler.schedule(job, defer)
 
     // mutate the edge; give it the scheduled task so it can be cleaned up
-    dependentEdge.task = task
+    dependentEdge.j = job
   }
 }
 
@@ -246,9 +271,24 @@ export const setNodeStatus = (node: GraphNode, newStatus: LifecycleStatus) => {
 }
 
 export abstract class GraphNode<
-  G extends Pick<AtomGenerics, 'State'> = { State: any }
-> {
-  public static $$typeof = Symbol.for(`${prefix}/GraphNode`)
+  G extends Pick<AtomGenerics, 'Params' | 'State' | 'Template'> = {
+    Params: any
+    State: any
+    Template: any
+  }
+> implements Job
+{
+  public [isZeduxNode] = true
+
+  /**
+   * @see Job.T
+   */
+  public T = 2 as const
+
+  /**
+   * @see Job.W
+   */
+  public W = 1
 
   /**
    * Detach this node from the ecosystem and clean up all graph edges and other
@@ -273,8 +313,9 @@ export abstract class GraphNode<
    */
   public abstract id: string
 
-  // TODO: Add overloads for specific events. Also add a `passive` option for
-  // listeners that don't prevent destruction
+  // TODO: Add overloads for specific events and change names to `change` and
+  // `cycle`. Also add a `passive` option for listeners that don't prevent
+  // destruction
   public on(
     eventName: GraphEdgeSignal,
     callback: DependentCallback,
@@ -328,6 +369,28 @@ export abstract class GraphNode<
     return () => removeEdge(id, this)
   }
 
+  /**
+   * A user-friendly wrapper for getting this node's `p`arams. Zedux uses the
+   * obfuscated `p` property internally for efficiency, but end users should
+   * prefer using `node.params`, invoking this getter.
+   *
+   * @see GraphNode.p
+   */
+  get params() {
+    return this.p
+  }
+
+  /**
+   * A user-friendly wrapper for getting this node's `t`emplate. Zedux uses the
+   * obfuscated `t` property internally for efficiency, but end users should
+   * prefer using `node.template`, invoking this getter.
+   *
+   * @see GraphNode.t
+   */
+  get template() {
+    return this.t
+  }
+
   // Internal fields - these are public and stable, but normal users should
   // never need to use these. So use single-letter property names for efficiency
   // and (kind of) obfuscation:
@@ -338,7 +401,7 @@ export abstract class GraphNode<
    * refCount goes back up to 1, we call this to cancel the scheduled
    * destruction.
    */
-  public c?: () => void
+  public c?: Cleanup
 
   /**
    * `d`ehydrate - a function called internally by `ecosystem.dehydrate()` to
@@ -373,7 +436,7 @@ export abstract class GraphNode<
    * This property may go away if we ever move fully off of node update
    * scheduling
    */
-  public abstract j: () => void
+  public abstract j(): void
 
   /**
    * `l`ifecycleStatus - a string indicating the node's current state in its
@@ -409,6 +472,15 @@ export abstract class GraphNode<
   public o = new Map<string, DependentEdge>()
 
   /**
+   * `p`arams - a reference to the exact params passed to this node. These never
+   * change except:
+   *
+   * TODO: when a node is passed as a param to another node. In that case, the
+   * ref will be swapped out if it's destroyed.
+   */
+  public abstract p: G['Params']
+
+  /**
    * `r`un - evaluate the graph node. If its value "changes", this in turn runs
    * this node's dependents, recursing down the graph tree.
    *
@@ -424,6 +496,13 @@ export abstract class GraphNode<
    * `o`bservers.
    */
   public s = new Map<string, DependentEdge>()
+
+  /**
+   * `t`emplate - a reference to the template that was used to create this node
+   * - e.g. an `AtomTemplate` instance for atom instances or an
+   * AtomSelectorOrConfig function or object for selector instances.
+   */
+  public abstract t: G['Template']
 
   /**
    * `w`hy - the list of reasons explaining why this graph node updated or is

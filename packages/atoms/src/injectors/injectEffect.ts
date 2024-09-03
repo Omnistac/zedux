@@ -49,19 +49,20 @@ export const injectEffect = createInjector(
     }
 
     if (!instance.e.ssr) {
-      const task = getTask(effect, descriptor)
+      const job = {
+        j: getTask(effect, descriptor),
+        T: 4 as const, // RunEffect (4)
+      }
+
       descriptor.cleanup = () => {
-        instance.e._scheduler.unschedule(task)
+        instance.e._scheduler.unschedule(job)
         descriptor.cleanup = undefined
       }
 
       if (config?.synchronous) {
-        task()
+        job.j()
       } else {
-        instance.e._scheduler.schedule({
-          task,
-          type: 4, // RunEffect (4)
-        })
+        instance.e._scheduler.schedule(job)
       }
     }
 
@@ -82,23 +83,24 @@ export const injectEffect = createInjector(
 
     prevDescriptor.cleanup?.()
 
-    const task = getTask(effect, prevDescriptor)
+    const job = {
+      j: getTask(effect, prevDescriptor),
+      T: 4 as const, // RunEffect (4)
+    }
+
     // this cleanup should be unnecessary since effects run immediately every
     // time except init. Leave this though in case we add a way to update an
     // atom instance without flushing the scheduler
     prevDescriptor.cleanup = () => {
-      instance.e._scheduler.unschedule(task)
+      instance.e._scheduler.unschedule(job)
       prevDescriptor.cleanup = undefined
     }
     prevDescriptor.deps = deps
 
     if (config?.synchronous) {
-      task()
+      job.j()
     } else {
-      instance.e._scheduler.schedule({
-        task,
-        type: 4, // RunEffect (4)
-      })
+      instance.e._scheduler.schedule(job)
     }
 
     return prevDescriptor

@@ -1,6 +1,6 @@
 import {
-  AtomGenerics,
   AtomSelectorOrConfig,
+  SelectorGenerics,
   SelectorInstance,
 } from '@zedux/atoms'
 import { useEffect, useState } from 'react'
@@ -20,9 +20,7 @@ const OPERATION = 'useAtomSelector'
  * Register a dynamic graph dependency between this React component (as a new
  * external node) and the AtomSelector.
  */
-export const useAtomSelector = <
-  G extends Pick<AtomGenerics, 'Params' | 'State'>
->(
+export const useAtomSelector = <G extends SelectorGenerics>(
   template: AtomSelectorOrConfig<G>,
   ...args: G['Params']
 ): G['State'] => {
