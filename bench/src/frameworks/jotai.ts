@@ -7,30 +7,30 @@ let globalGet: any
 export const jotaiFramework: ReactiveFramework = {
   name: 'Jotai',
   signal: initialValue => {
-    const theAtom = atom(initialValue)
+    const signal = atom(initialValue)
 
     return {
-      write: v => store.set(theAtom, v),
-      read: () => globalGet(theAtom),
+      write: v => store.set(signal, v),
+      read: () => globalGet(signal),
     }
   },
   computed: <T>(fn: () => T): Computed<T> => {
-    const theAtom = atom(get => {
+    const computed = atom(get => {
       globalGet = get
       return fn()
     })
 
     return {
-      read: () => globalGet(theAtom),
+      read: () => globalGet(computed),
     }
   },
   effect: fn => {
-    const theAtom = atom(get => {
+    const effect = atom(get => {
       globalGet = get
       fn()
     })
 
-    store.sub(theAtom, () => {})
+    store.sub(effect, () => {})
   },
   withBatch: fn => fn(),
   withBuild: fn => fn(),
