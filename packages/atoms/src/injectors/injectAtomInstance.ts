@@ -61,7 +61,7 @@ export const injectAtomInstance: {
     params?: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig
   ) => {
-    const injectedInstance = instance.e.getters.getInstance(
+    const injectedInstance = instance.e.live.getInstance(
       atom as A,
       params as AtomParamsType<A>,
       {
@@ -83,7 +83,7 @@ export const injectAtomInstance: {
     config?: InjectAtomInstanceConfig
   ) => {
     // make sure the dependency gets registered for this evaluation
-    const injectedInstance = instance.e.getters.getInstance(
+    const injectedInstance = instance.e.live.getInstance(
       atom as A,
       params as AtomParamsType<A>,
       {

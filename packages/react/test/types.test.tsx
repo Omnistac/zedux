@@ -734,8 +734,8 @@ describe('react types', () => {
     >()
 
     const instanceE = ecosystem.getInstance(
-      ecosystem.getters.getInstance(
-        ecosystem.getInstance(ecosystem.getters.getInstance(exampleAtom, ['a']))
+      ecosystem.live.getInstance(
+        ecosystem.getInstance(ecosystem.live.getInstance(exampleAtom, ['a']))
       )
     )
 

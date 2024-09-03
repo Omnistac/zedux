@@ -2,7 +2,7 @@ import { Ecosystem, atom, createEcosystem } from '@zedux/atoms'
 import { Computed, ReactiveFramework } from '../util/reactiveFramework'
 
 let ecosystem: Ecosystem
-let counter = 12345678
+let counter = 0
 
 export const zeduxFramework: ReactiveFramework = {
   name: 'Zedux',
@@ -13,14 +13,14 @@ export const zeduxFramework: ReactiveFramework = {
 
     return {
       write: v => instance.setState(v),
-      read: () => ecosystem.getters.get(instance),
+      read: () => ecosystem.live.get(instance),
     }
   },
   computed: <T>(fn: () => T): Computed<T> => {
-    ecosystem.getNode(fn)
+    const instance = ecosystem.getNode(fn)
 
     return {
-      read: () => ecosystem.getters.select(fn),
+      read: () => ecosystem.live.select(instance),
     }
   },
   effect: fn => ecosystem.getNode(fn),

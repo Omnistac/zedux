@@ -69,7 +69,7 @@ export const runSelector = <G extends SelectorGenerics>(
   startBuffer(node)
 
   try {
-    const result = selector(node.e.getters, ...node.p)
+    const result = selector(node.e.live, ...node.p)
 
     if (isInitializing) {
       setNodeStatus(node, 'Active')

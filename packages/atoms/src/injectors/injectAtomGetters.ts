@@ -24,4 +24,4 @@ import { readInstance } from '../utils/evaluationContext'
  *
  * @see AtomGetters
  */
-export const injectAtomGetters = () => readInstance().e.getters
+export const injectAtomGetters = () => readInstance().e.live

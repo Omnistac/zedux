@@ -67,9 +67,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public context: Context
   public destroyOnUnmount?: boolean
   public flags?: string[]
-  public getters: AtomGetters
   public hydration?: Record<string, any>
   public id: string
+  public live: AtomGetters
   public modBus = createStore() // use an empty store as a message bus
   public onReady: EcosystemConfig<Context>['onReady']
   public overrides: Record<string, AnyAtomTemplate> = {}
@@ -192,7 +192,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       return instance.v as G['State']
     }
 
-    this.getters = {
+    this.live = {
       ecosystem: this,
       get,
       getInstance,
@@ -551,6 +551,17 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       | SelectorInstance<G>,
     params?: G['Params']
   ) {
+    if ((template as GraphNode)[isZeduxNode]) {
+      // if the passed atom instance is Destroyed, get(/create) the
+      // non-Destroyed instance
+      return (template as AtomInstance).l === 'Destroyed'
+        ? this.getNode(
+            (template as AtomInstance).t,
+            (template as AtomInstance).p
+          )
+        : template
+    }
+
     if (DEV) {
       if (typeof params !== 'undefined' && !Array.isArray(params)) {
         throw new TypeError(
@@ -589,17 +600,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       newInstance.i()
 
       return newInstance
-    }
-
-    if ((template as GraphNode)[isZeduxNode]) {
-      // if the passed atom instance is Destroyed, get(/create) the
-      // non-Destroyed instance
-      return (template as AtomInstance).l === 'Destroyed'
-        ? this.getNode(
-            (template as AtomInstance).t,
-            (template as AtomInstance).p
-          )
-        : template
     }
 
     if (

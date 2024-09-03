@@ -22,6 +22,8 @@ export const isZeduxNode = 'isZeduxNode'
 /**
  * Compare two arrays and see if any elements are different (===). Returns true
  * by default if either array is undefined
+ *
+ * TODO: rename to `compare`
  */
 export const haveDepsChanged = (nextDeps?: any[], prevDeps?: any[]) =>
   !prevDeps ||

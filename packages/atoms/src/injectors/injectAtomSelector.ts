@@ -10,4 +10,4 @@ export const injectAtomSelector = <
 >(
   selectable: Selectable<G>,
   ...args: G['Params']
-): G['State'] => readInstance().e.getters.select(selectable, ...args)
+): G['State'] => readInstance().e.live.select(selectable, ...args)
