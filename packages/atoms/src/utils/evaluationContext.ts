@@ -181,7 +181,7 @@ export const startBuffer = (node: GraphNode) => {
   evaluationContext.n = node
 
   if (node.e._mods.evaluationFinished) {
-    evaluationContext.s = node.e._idGenerator.now()
+    evaluationContext.s = node.e._idGenerator.now(true)
   }
 
   // all stores created during evaluation automatically belong to the ecosystem

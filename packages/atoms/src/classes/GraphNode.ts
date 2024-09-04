@@ -439,6 +439,15 @@ export abstract class GraphNode<
   public abstract j(): void
 
   /**
+   * `k`illEdge - removes an edge between this node and the node with the passed
+   * id. Really, this just exposes the `removeEdge` function for use by other
+   * Zedux packages (e.g. the React package).
+   */
+  public k(id: string) {
+    removeEdge(id, this)
+  }
+
+  /**
    * `l`ifecycleStatus - a string indicating the node's current state in its
    * lifecycle status "state machine":
    *

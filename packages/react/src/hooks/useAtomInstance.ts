@@ -73,7 +73,7 @@ export const useAtomInstance: {
   const ecosystem = useEcosystem()
   const observerId = useReactComponentId()
   // use this referentially stable setState function as a ref. We lazily add
-  // untyped `m`ounted and `c`leanup properties
+  // an untyped `m`ounted property
   const [, render] = useState<undefined | object>()
 
   // It should be fine for this to run every render. It's possible to change
@@ -84,20 +84,18 @@ export const useAtomInstance: {
   )
   const renderedState = instance.get()
 
-  const addEdge = () => {
-    if (!instance.o.get(observerId)) {
-      ;(render as any).c = instance.on(
-        () => {
-          if ((render as any).m) render({})
-        },
-        {
-          f: External | (subscribe ? 0 : Static),
-          i: observerId,
-          op: operation,
-        }
-      )
-    }
-  }
+  const addEdge = () =>
+    instance.o.get(observerId) ??
+    instance.on(
+      () => {
+        if ((render as any).m) render({})
+      },
+      {
+        f: External | (subscribe ? 0 : Static),
+        i: observerId,
+        op: operation,
+      }
+    )
 
   // Yes, subscribe during render. This operation is idempotent and we handle
   // React's StrictMode specifically.
@@ -125,7 +123,7 @@ export const useAtomInstance: {
       // double-invokes (invokes, then cleans up, then re-invokes) this effect,
       // it's expected that any `ttl: 0` atoms get destroyed and recreated -
       // that's part of what StrictMode is ensuring
-      ;(render as any).c?.()
+      instance.k(observerId)
       // no need to set `render.m`ounted to false here
     }
   }, [instance.id])

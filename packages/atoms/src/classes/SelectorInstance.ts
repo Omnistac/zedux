@@ -1,5 +1,6 @@
 import { is } from '@zedux/core'
 import {
+  AtomSelector,
   AtomSelectorConfig,
   AtomSelectorOrConfig,
   DehydrationFilter,
@@ -32,9 +33,9 @@ export const getSelectorKey = (
   ecosystem: Ecosystem,
   template: AtomSelectorOrConfig
 ) => {
-  const existingId = ecosystem.b.get(template)
+  const existingKey = ecosystem.b.get(template)
 
-  if (existingId) return existingId
+  if (existingKey) return existingKey
 
   const key = ecosystem._idGenerator.generateId(
     `@@selector-${getSelectorName(template)}`
@@ -59,7 +60,9 @@ export const runSelector = <G extends SelectorGenerics>(
   suppressNotify?: boolean
 ) => {
   const { _mods, modBus } = node.e
-  const selector = typeof node.t === 'function' ? node.t : node.t.selector
+
+  const selector =
+    typeof node.t === 'function' ? (node.t as AtomSelector) : node.t.selector
 
   const resultsComparator =
     (typeof node.t !== 'function' && node.t.resultsComparator) ||
@@ -70,25 +73,25 @@ export const runSelector = <G extends SelectorGenerics>(
 
   try {
     const result = selector(node.e.live, ...node.p)
+    const oldState = node.v
+    node.v = result
 
     if (isInitializing) {
       setNodeStatus(node, 'Active')
-    } else if (!resultsComparator(result, node.v as G['State'])) {
-      if (!suppressNotify) scheduleDependents(node, result, node.v)
+    } else if (!resultsComparator(result, oldState)) {
+      if (!suppressNotify) scheduleDependents(node, result, oldState)
 
       if (_mods.stateChanged) {
         modBus.dispatch(
           pluginActions.stateChanged({
             newState: result,
             node,
-            oldState: node.v,
+            oldState,
             reasons: node.w,
           })
         )
       }
     }
-
-    node.v = result
   } catch (err) {
     destroyBuffer(n, s)
     console.error(
@@ -100,29 +103,30 @@ export const runSelector = <G extends SelectorGenerics>(
   } finally {
     node.w = []
   }
+
   flushBuffer(n, s)
 }
 
 export const swapSelectorRefs = <G extends SelectorGenerics>(
   ecosystem: Ecosystem,
-  oldCache: SelectorInstance<G>,
+  oldInstance: SelectorInstance<G>,
   newRef: G['Template'],
   params: any[] = []
 ) => {
-  const baseKey = ecosystem.b.get(oldCache.t)
+  const baseKey = ecosystem.b.get(oldInstance.t)
 
   if (!baseKey) return // TODO: remove
 
   ecosystem.b.set(newRef, baseKey)
-  ecosystem.b.delete(oldCache.t)
-  oldCache.t = newRef
-  oldCache.p = params
-  runSelector(oldCache, false, true)
+  ecosystem.b.delete(oldInstance.t)
+  oldInstance.t = newRef
+  oldInstance.p = params
+  runSelector(oldInstance, false, true)
 }
 
 export class SelectorInstance<
   G extends SelectorGenerics = {
-    Params: any
+    Params: any[]
     State: any
     Template: any
   }
@@ -179,7 +183,7 @@ export class SelectorInstance<
    * @see GraphNode.f
    */
   public f(options?: NodeFilter) {
-    const { id } = this
+    const { id, t } = this
     const lowerCaseId = id.toLowerCase()
     const { exclude = [], include = [] } = normalizeNodeFilter(options)
 
@@ -188,14 +192,14 @@ export class SelectorInstance<
         typeof templateOrKey === 'string'
           ? lowerCaseId.includes(templateOrKey.toLowerCase())
           : !is(templateOrKey, AtomTemplateBase) &&
-            getSelectorKey(this.e, templateOrKey as AtomSelectorOrConfig)
+            (templateOrKey as AtomSelectorOrConfig) === t
       ) &&
-      (!include ||
+      (!include.length ||
         include.some(templateOrKey =>
           typeof templateOrKey === 'string'
             ? lowerCaseId.includes(templateOrKey.toLowerCase())
             : !is(templateOrKey, AtomTemplateBase) &&
-              getSelectorKey(this.e, templateOrKey as AtomSelectorOrConfig)
+              (templateOrKey as AtomSelectorOrConfig) === t
         ))
     )
   }
@@ -211,7 +215,9 @@ export class SelectorInstance<
   /**
    * @see GraphNode.j
    */
-  public j = () => runSelector(this)
+  public j() {
+    runSelector(this)
+  }
 
   /**
    * @see GraphNode.m

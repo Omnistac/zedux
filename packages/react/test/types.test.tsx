@@ -7,6 +7,7 @@ import {
   atom,
   AtomApi,
   AtomExportsType,
+  AtomGetters,
   AtomInstance,
   AtomInstanceRecursive,
   AtomInstanceType,
@@ -724,10 +725,10 @@ describe('react types', () => {
   })
 
   test('recursive templates and nodes', () => {
-    const instanceA = exampleAtom._createInstance({} as any, 'a', ['b'])
-    const instanceB = instanceA.t._createInstance({} as any, '', ['b'])
-    const instanceC = instanceB.t._createInstance({} as any, '', ['b'])
-    const instanceD = instanceC.t._createInstance({} as any, '', ['b'])
+    const instanceA = exampleAtom._createInstance(ecosystem, 'a', ['b'])
+    const instanceB = instanceA.t._createInstance(ecosystem, '', ['b'])
+    const instanceC = instanceB.t._createInstance(ecosystem, '', ['b'])
+    const instanceD = instanceC.t._createInstance(ecosystem, '', ['b'])
 
     expectTypeOf<AtomParamsType<typeof instanceD.t>>().toEqualTypeOf<
       [p: string]
@@ -742,5 +743,46 @@ describe('react types', () => {
     expectTypeOf<AtomParamsType<typeof instanceE.t>>().toEqualTypeOf<
       [p: string]
     >()
+
+    const selectorInstance = ecosystem.getNode(
+      ecosystem.getNode(
+        ecosystem.getNode((_: AtomGetters, a?: string) => a, ['a'])
+      )
+    )
+
+    expectTypeOf<AtomStateType<typeof selectorInstance>>().toEqualTypeOf<
+      string | undefined
+    >()
+    expectTypeOf<AtomParamsType<typeof selectorInstance>>().toEqualTypeOf<
+      [a?: string]
+    >()
+    expectTypeOf<AtomTemplateType<typeof selectorInstance>>().toEqualTypeOf<
+      (_: AtomGetters, a?: string) => string | undefined
+    >()
+
+    const selectorInstance2 = ecosystem.getNode(
+      ecosystem.getNode(
+        ecosystem.getNode(
+          {
+            resultsComparator: () => true,
+            selector: (_: AtomGetters, a?: string) => a,
+            argsComparator: () => true,
+          },
+          ['a']
+        )
+      )
+    )
+
+    expectTypeOf<AtomStateType<typeof selectorInstance2>>().toEqualTypeOf<
+      string | undefined
+    >()
+    expectTypeOf<AtomParamsType<typeof selectorInstance2>>().toEqualTypeOf<
+      [a?: string]
+    >()
+    expectTypeOf<AtomTemplateType<typeof selectorInstance2>>().toEqualTypeOf<{
+      resultsComparator: () => boolean
+      selector: (_: AtomGetters, a?: string) => string | undefined
+      argsComparator: () => boolean
+    }>()
   })
 })

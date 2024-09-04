@@ -91,7 +91,7 @@ describe('ecosystem', () => {
 
     const { findByText } = renderInEcosystem(<Child />)
 
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       atom1: expect.any(Object),
       atom2: expect.any(Object),
       'atom3-["1"]': expect.any(Object),
@@ -143,14 +143,14 @@ describe('ecosystem', () => {
     const ecosystem = createEcosystem({ onReady })
 
     expect(evaluations).toEqual(['1'])
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       atom1: expect.any(Object),
     })
 
     ecosystem.reset()
 
     expect(evaluations).toEqual(['1', '1'])
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       atom1: expect.any(Object),
     })
 
@@ -175,7 +175,7 @@ describe('ecosystem', () => {
     ecosystem.getInstance(atomC)
     ecosystem.getInstance(atomD)
 
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       a: expect.any(Object),
       b: expect.any(Object),
       c: expect.any(Object),
@@ -189,7 +189,7 @@ describe('ecosystem', () => {
 
     ecosystem.setOverrides([overrideB, overrideC])
 
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       d: expect.any(Object),
     })
 
@@ -197,7 +197,7 @@ describe('ecosystem', () => {
     ecosystem.getInstance(atomB)
     ecosystem.getInstance(atomC)
 
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       a: expect.any(Object),
       b: expect.any(Object),
       c: expect.any(Object),
@@ -211,7 +211,7 @@ describe('ecosystem', () => {
 
     ecosystem.setOverrides([])
 
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       a: expect.any(Object),
       d: expect.any(Object),
     })
@@ -219,7 +219,7 @@ describe('ecosystem', () => {
     ecosystem.getInstance(atomB)
     ecosystem.getInstance(atomC)
 
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       a: expect.any(Object),
       b: expect.any(Object),
       c: expect.any(Object),
@@ -233,7 +233,7 @@ describe('ecosystem', () => {
 
     ecosystem.setOverrides([overrideA, overrideB, overrideC])
 
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       d: expect.any(Object),
     })
 
@@ -241,7 +241,7 @@ describe('ecosystem', () => {
     ecosystem.getInstance(atomB)
     ecosystem.getInstance(atomC)
 
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       a: expect.any(Object),
       b: expect.any(Object),
       c: expect.any(Object),
@@ -308,14 +308,14 @@ describe('ecosystem', () => {
       onReady,
     })
 
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       'a-["a"]': expect.any(Object),
       'a-["aa"]': expect.any(Object),
     })
 
     ecosystem.reset({ val: 'aa' })
 
-    expect(ecosystem._instances).toEqual({
+    expect(Object.fromEntries(ecosystem.n)).toEqual({
       'a-["aa"]': expect.any(Object),
       'a-["aaa"]': expect.any(Object),
     })

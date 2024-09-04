@@ -1,13 +1,7 @@
-import { Selectable, SelectorGenerics } from '../types/index'
+import { AtomParamsType, AtomStateType, Selectable } from '../types/index'
 import { readInstance } from '../utils/evaluationContext'
 
-export const injectAtomSelector = <
-  G extends SelectorGenerics = {
-    Params: any
-    State: any
-    Template: any
-  }
->(
-  selectable: Selectable<G>,
-  ...args: G['Params']
-): G['State'] => readInstance().e.live.select(selectable, ...args)
+export const injectAtomSelector = <S extends Selectable>(
+  selectable: S,
+  ...args: AtomParamsType<S>
+): AtomStateType<S> => readInstance().e.live.select(selectable, ...args)

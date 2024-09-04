@@ -3,24 +3,59 @@
 exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode off) 1`] = `
 {
   "1": {
-    "dependencies": Map {},
-    "dependents": Map {
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "1",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "@@selector-unnamed-0" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
+        "p": undefined,
       },
     },
-    "isSelector": undefined,
-    "refCount": 1,
-    "weight": 1,
+    "p": [],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": {
+        "val": 1,
+      },
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": [Function],
+      "key": "1",
+    },
+    "w": [],
   },
   "@@selector-unnamed-0": {
-    "dependencies": Map {
-      "1" => true,
-    },
-    "dependents": Map {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-unnamed-0",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
@@ -28,9 +63,21 @@ exports[`useAtomSelector inline selector that returns a different object referen
         "operation": "useAtomSelector",
       },
     },
-    "isSelector": true,
-    "refCount": 1,
-    "weight": 2,
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": {
+      "val": 1,
+    },
+    "w": [],
   },
 }
 `;
@@ -38,35 +85,82 @@ exports[`useAtomSelector inline selector that returns a different object referen
 exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode off) 2`] = `
 {
   "1": {
-    "dependencies": Map {},
-    "dependents": Map {
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "1",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "@@selector-unnamed-0" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
+        "p": undefined,
       },
     },
-    "isSelector": undefined,
-    "refCount": 1,
-    "weight": 1,
+    "p": [],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": {
+        "val": 2,
+      },
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": [Function],
+      "key": "1",
+    },
+    "w": [],
   },
   "@@selector-unnamed-0": {
-    "dependencies": Map {
-      "1" => true,
-    },
-    "dependents": Map {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-unnamed-0",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
         "flags": 2,
+        "j": undefined,
         "operation": "useAtomSelector",
-        "task": undefined,
       },
     },
-    "isSelector": true,
-    "refCount": 1,
-    "weight": 2,
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": {
+      "val": 2,
+    },
+    "w": [],
   },
 }
 `;
@@ -74,30 +168,66 @@ exports[`useAtomSelector inline selector that returns a different object referen
 exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode on) 1`] = `
 {
   "1": {
-    "dependencies": Map {},
-    "dependents": Map {
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "1",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "@@selector-unnamed-0" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
+        "p": undefined,
       },
       "@@selector-unnamed-2" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
+        "p": undefined,
       },
     },
-    "isSelector": undefined,
-    "refCount": 2,
-    "weight": 1,
+    "p": [],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": {
+        "val": 1,
+      },
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": [Function],
+      "key": "1",
+    },
+    "w": [],
   },
   "@@selector-unnamed-0": {
-    "dependencies": Map {
-      "1" => true,
-    },
-    "dependents": Map {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-unnamed-0",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
@@ -105,9 +235,51 @@ exports[`useAtomSelector inline selector that returns a different object referen
         "operation": "useAtomSelector",
       },
     },
-    "isSelector": true,
-    "refCount": 1,
-    "weight": 2,
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": {
+      "val": 1,
+    },
+    "w": [],
+  },
+  "@@selector-unnamed-2": {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-unnamed-2",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
+      "Test-:r0:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": {
+      "val": 1,
+    },
+    "w": [],
   },
 }
 `;
@@ -115,35 +287,242 @@ exports[`useAtomSelector inline selector that returns a different object referen
 exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode on) 2`] = `
 {
   "1": {
-    "dependencies": Map {},
-    "dependents": Map {
-      "@@selector-unnamed-1" => {
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "1",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
+      "@@selector-unnamed-0" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
+        "p": undefined,
+      },
+      "@@selector-unnamed-2" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
       },
     },
-    "isSelector": undefined,
-    "refCount": 2,
-    "weight": 1,
-  },
-  "@@selector-unnamed-1": {
-    "dependencies": Map {
-      "1" => true,
+    "p": [],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": {
+        "val": 2,
+      },
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
     },
-    "dependents": Map {
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": [Function],
+      "key": "1",
+    },
+    "w": [],
+  },
+  "@@selector-unnamed-0": {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-unnamed-0",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
+      "Test-:r0:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "j": undefined,
+        "operation": "useAtomSelector",
+      },
+    },
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": {
+      "val": 2,
+    },
+    "w": [],
+  },
+  "@@selector-unnamed-2": {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-unnamed-2",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
+      "Test-:r0:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "j": undefined,
+        "operation": "useAtomSelector",
+      },
+    },
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": {
+      "val": 2,
+    },
+    "w": [],
+  },
+}
+`;
+
+exports[`useAtomSelector inline selectors are swapped out in strict mode double-renders 1`] = `
+{
+  "@@selector-unnamed-0": {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-unnamed-0",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
-        "task": undefined,
       },
     },
-    "isSelector": true,
-    "refCount": 1,
-    "weight": 2,
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": 1,
+    "w": [],
+  },
+  "@@selector-unnamed-2": {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-unnamed-2",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
+      "Test-:r0:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": 1,
+    "w": [],
+  },
+}
+`;
+
+exports[`useAtomSelector inline selectors are swapped out in strict mode double-renders 2`] = `
+{
+  "@@selector-unnamed-0": {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-unnamed-0",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
+      "Test-:r0:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": 1,
+    "w": [],
+  },
+  "@@selector-unnamed-2": {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-unnamed-2",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
+      "Test-:r0:" => {
+        "callback": [Function],
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": 1,
+    "w": [],
   },
 }
 `;

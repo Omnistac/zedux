@@ -139,12 +139,12 @@ describe('Ecosystem', () => {
 
     // @ts-expect-error first param must be an atom template or instance
     expect(() => ecosystem.getInstance({})).toThrowError(
-      /Expected an atom template or atom instance. Received object/i
+      /Expected a template or node. Received object/i
     )
 
     // @ts-expect-error first param must be an atom template or instance
     expect(() => ecosystem.getInstance()).toThrowError(
-      /Expected an atom template or atom instance. Received undefined/i
+      "Cannot read properties of undefined (reading 'isZeduxNode')"
     )
 
     // @ts-expect-error second param must be an array or undefined

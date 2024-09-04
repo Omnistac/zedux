@@ -1,5 +1,9 @@
 import { atom, AtomGetters } from '@zedux/react'
-import { ecosystem } from '../utils/ecosystem'
+import {
+  ecosystem,
+  getSelectorNodes,
+  snapshotSelectorNodes,
+} from '../utils/ecosystem'
 import { mockConsole } from '../utils/console'
 
 const atom1 = atom('1', () => 'a', { ttl: 0 })
@@ -10,39 +14,22 @@ const selector3 = ({ select }: AtomGetters) => select(selector2) + 'd'
 describe('the SelectorInstance class', () => {
   test('deeply nested selectors get auto-created', () => {
     const instance = ecosystem.getNode(selector3)
-    const instance3 = {
-      a: selector3,
-      args: [],
+    const expected = {
       id: '@@selector-selector3-0',
+      p: [],
+      t: selector3,
       v: 'abcd',
       w: [],
     }
 
-    expect(instance).toEqual(instance3)
-
-    expect(ecosystem.findAll('@@selector')).toEqual({
-      '@@selector-selector1-2': {
-        a: selector1,
-        args: [],
-        id: '@@selector-selector1-2',
-        v: 'ab',
-        w: [],
-      },
-      '@@selector-selector2-1': {
-        a: selector2,
-        args: [],
-        id: '@@selector-selector2-1',
-        v: 'abc',
-        w: [],
-      },
-      [instance3.id]: instance3,
-    })
+    expect(instance).toEqual(expect.objectContaining(expected))
+    snapshotSelectorNodes()
   })
 
   test('on() adds and removes dependents', () => {
     const instance2a = ecosystem.getNode(selector2)
 
-    expect(ecosystem.findAll('@@selector')).toEqual({
+    expect(getSelectorNodes()).toEqual({
       '@@selector-selector1-1': expect.any(Object),
       '@@selector-selector2-0': expect.any(Object),
     })
@@ -50,7 +37,7 @@ describe('the SelectorInstance class', () => {
     // trigger cleanup without adding a dependent first
     instance2a.destroy()
 
-    expect(ecosystem.findAll('@@selector')).toEqual({})
+    expect(getSelectorNodes()).toEqual({})
 
     const instance2b = ecosystem.getNode(selector2)
     const instance1b = ecosystem.getNode(selector1)
@@ -58,7 +45,7 @@ describe('the SelectorInstance class', () => {
 
     instance2b.destroy() // destroys only selector2
 
-    expect(ecosystem.findAll('@@selector')).toEqual({
+    expect(getSelectorNodes()).toEqual({
       // id # is still 1 'cause the Selector class's `_refBaseKeys` still holds
       // the cached key despite `instance2b`'s destruction above
       '@@selector-selector1-1': expect.any(Object),
@@ -66,7 +53,7 @@ describe('the SelectorInstance class', () => {
 
     cleanup()
 
-    expect(ecosystem.findAll('@@selector')).toEqual({})
+    expect(getSelectorNodes()).toEqual({})
   })
 
   test('ecosystem.dehydrate("@@selector") returns all cached selectors', () => {
@@ -134,9 +121,10 @@ describe('the SelectorInstance class', () => {
 
   test('ecosystem.findAll() accepts selector refs or string ids', () => {
     const instance = ecosystem.getNode(selector3)
-    const allCaches = ecosystem.findAll()
+    const allNodes = ecosystem.findAll()
 
-    expect(Object.keys(allCaches)).toEqual([
+    expect(Object.keys(allNodes)).toEqual([
+      '1',
       '@@selector-selector1-2',
       '@@selector-selector2-1',
       '@@selector-selector3-0', // the id for selector3 is generated first
@@ -155,7 +143,7 @@ describe('the SelectorInstance class', () => {
     })
   })
 
-  test("findAll() returns an empty object if the selector hasn't been cached", () => {
+  test("ecosystem.findAll() returns an empty object if the selector hasn't been cached", () => {
     ecosystem.getNode(selector2)
 
     expect(ecosystem.findAll(selector3)).toEqual({})
@@ -196,29 +184,6 @@ describe('the SelectorInstance class', () => {
     ecosystem.getNode(selector1, ['a'])
     ecosystem.getNode(selector2, ['a'])
 
-    expect(ecosystem.findAll('@@selector')).toMatchInlineSnapshot(`
-      {
-        "@@selector-commonName-0-["a"]": SelectorInstance {
-          "args": [
-            "a",
-          ],
-          "id": "@@selector-commonName-0-["a"]",
-          "nextReasons": [],
-          "prevReasons": [],
-          "result": "ab",
-          "selectorRef": [Function],
-        },
-        "@@selector-commonName-1-["a"]": SelectorInstance {
-          "args": [
-            "a",
-          ],
-          "id": "@@selector-commonName-1-["a"]",
-          "nextReasons": [],
-          "prevReasons": [],
-          "result": "ac",
-          "selectorRef": [Function],
-        },
-      }
-    `)
+    snapshotSelectorNodes()
   })
 })

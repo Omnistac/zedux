@@ -1,6 +1,6 @@
 import { createInjector } from '../factories/createInjector'
 import { EffectCallback, InjectorDeps } from '../types/index'
-import { haveDepsChanged, prefix } from '../utils/general'
+import { compare, prefix } from '../utils/general'
 import type { InjectorDescriptor } from '../utils/types'
 
 interface EffectInjectorDescriptor extends InjectorDescriptor<undefined> {
@@ -78,9 +78,9 @@ export const injectEffect = createInjector(
   ) => {
     if (instance.e.ssr) return prevDescriptor
 
-    const depsHaveChanged = haveDepsChanged(prevDescriptor?.deps, deps)
+    const depsUnchanged = compare(prevDescriptor?.deps, deps)
 
-    if (!depsHaveChanged) return prevDescriptor
+    if (depsUnchanged) return prevDescriptor
 
     prevDescriptor.cleanup?.()
 

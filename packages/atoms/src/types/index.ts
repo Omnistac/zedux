@@ -9,7 +9,6 @@ import {
   AtomInstanceType,
   AtomParamsType,
   AtomStateType,
-  SelectorGenerics,
 } from './atoms'
 import { SelectorInstance } from '../classes/SelectorInstance'
 
@@ -93,10 +92,10 @@ export interface AtomGettersBase {
    *
    * @see AtomSelector
    */
-  select<G extends SelectorGenerics>(
-    selectorOrConfigOrCache: Selectable<G>,
-    ...args: G['Params']
-  ): G['State']
+  select<S extends Selectable>(
+    selectorOrConfigOrInstance: S,
+    ...args: AtomParamsType<S>
+  ): AtomStateType<S>
 }
 
 /**
@@ -137,35 +136,22 @@ export interface AtomGetters extends AtomGettersBase {
 
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
 
-export type AtomSelector<
-  G extends SelectorGenerics = {
-    Params: any
-    State: any
-    Template: any
-  }
-> = (getters: AtomGetters, ...args: G['Params']) => G['State']
+export type AtomSelector<State = any, Params extends any[] = any> = (
+  getters: AtomGetters,
+  ...args: Params
+) => State
 
-export interface AtomSelectorConfig<
-  G extends SelectorGenerics = {
-    Params: any
-    State: any
-    Template: any
-  }
-> {
-  argsComparator?: (newArgs: G['Params'], oldArgs: G['Params']) => boolean
+export interface AtomSelectorConfig<State = any, Params extends any[] = any> {
+  argsComparator?: (newArgs: Params, oldArgs: Params) => boolean
   name?: string
-  resultsComparator?: (newResult: G['State'], oldResult: G['State']) => boolean
-  selector: AtomSelector<G>
+  resultsComparator?: (newResult: State, oldResult: State) => boolean
+  selector: AtomSelector<State, Params>
 }
 
 // TODO: rename to SelectorTemplate
-export type AtomSelectorOrConfig<
-  G extends SelectorGenerics = {
-    Params: any
-    State: any
-    Template: any
-  }
-> = AtomSelector<G> | AtomSelectorConfig<G>
+export type AtomSelectorOrConfig<State = any, Params extends any[] = any> =
+  | AtomSelector<State, Params>
+  | AtomSelectorConfig<State, Params>
 
 export type AtomStateFactory<
   G extends Pick<
@@ -448,13 +434,13 @@ export interface RefObject<T = any> {
   readonly current: T | null
 }
 
-export type Selectable<
-  G extends SelectorGenerics = {
-    Params: any
-    State: any
-    Template: any
-  }
-> = AtomSelectorOrConfig<G> | SelectorInstance<G>
+export type Selectable<State = any, Params extends any[] = any[]> =
+  | AtomSelectorOrConfig<State, Params>
+  | SelectorInstance<{
+      Params: Params
+      State: State
+      Template: AtomSelectorOrConfig<State, Params>
+    }>
 
 export type StateHookTuple<State, Exports> = [
   State,

@@ -3,42 +3,158 @@
 exports[`graph getInstance(atom) returns the instance 1`] = `
 {
   "atom1": {
-    "dependencies": Map {},
-    "dependents": Map {
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "atom1",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "ion1" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 4,
         "operation": "getInstance",
+        "p": undefined,
       },
     },
-    "isSelector": undefined,
-    "refCount": 1,
-    "weight": 1,
+    "p": [],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": 1,
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": [Function],
+      "key": "atom1",
+    },
+    "w": [],
   },
   "atom2": {
-    "dependencies": Map {},
-    "dependents": Map {
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "atom2",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "ion1" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 4,
         "operation": "getInstance",
+        "p": undefined,
       },
     },
-    "isSelector": undefined,
-    "refCount": 1,
-    "weight": 1,
+    "p": [],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": 2,
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": [Function],
+      "key": "atom2",
+    },
+    "w": [],
   },
   "ion1": {
-    "dependencies": Map {
-      "atom1" => true,
-      "atom2" => true,
+    "T": 2,
+    "W": 3,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
     },
-    "dependents": Map {},
-    "isSelector": undefined,
-    "refCount": 0,
-    "weight": 1,
+    "api": AtomApi {
+      "exports": {
+        "set": [Function],
+      },
+      "promise": undefined,
+      "store": undefined,
+      "value": 3,
+    },
+    "dispatch": [Function],
+    "exports": {
+      "set": [Function],
+    },
+    "id": "ion1",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {},
+    "p": [],
+    "s": Map {
+      "atom1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 4,
+        "operation": "getInstance",
+        "p": undefined,
+      },
+      "atom2" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 4,
+        "operation": "getInstance",
+        "p": undefined,
+      },
+    },
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": 3,
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": IonTemplate {
+      "_config": undefined,
+      "_get": [Function],
+      "_value": [Function],
+      "key": "ion1",
+    },
+    "w": [],
   },
 }
 `;
@@ -121,42 +237,149 @@ exports[`graph injectAtomGetters 3`] = `
 exports[`graph on reevaluation, get() updates the graph 1`] = `
 {
   "a": {
-    "dependencies": Map {},
-    "dependents": Map {
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "a",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "d" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "injectAtomValue",
+        "p": undefined,
       },
     },
-    "isSelector": undefined,
-    "refCount": 1,
-    "weight": 1,
+    "p": [],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": "a",
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": [Function],
+      "key": "a",
+    },
+    "w": [],
   },
   "b-["b"]": {
-    "dependencies": Map {},
-    "dependents": Map {
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "b-["b"]",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "d" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
+        "p": undefined,
       },
     },
-    "isSelector": undefined,
-    "refCount": 1,
-    "weight": 1,
+    "p": [
+      "b",
+    ],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": "b",
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": [Function],
+      "key": "b",
+    },
+    "w": [],
   },
   "d": {
-    "dependencies": Map {
-      "a" => true,
-      "b-["b"]" => true,
+    "T": 2,
+    "W": 3,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
     },
-    "dependents": Map {},
-    "isSelector": undefined,
-    "refCount": 0,
-    "weight": 3,
+    "dispatch": [Function],
+    "id": "d",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {},
+    "p": [],
+    "s": Map {
+      "a" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+      "b-["b"]" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": "ab",
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": IonTemplate {
+      "_config": undefined,
+      "_get": [Function],
+      "_value": [Function],
+      "key": "d",
+    },
+    "w": [],
   },
 }
 `;
@@ -164,49 +387,186 @@ exports[`graph on reevaluation, get() updates the graph 1`] = `
 exports[`graph on reevaluation, get() updates the graph 2`] = `
 {
   "a": {
-    "dependencies": Map {},
-    "dependents": Map {
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "a",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "d" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "injectAtomValue",
+        "p": undefined,
       },
     },
-    "isSelector": undefined,
-    "refCount": 1,
-    "weight": 1,
+    "p": [],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": "a",
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": [Function],
+      "key": "a",
+    },
+    "w": [],
   },
   "b-["b"]": {
-    "dependencies": Map {},
-    "dependents": Map {},
-    "isSelector": undefined,
-    "refCount": 0,
-    "weight": 1,
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "b-["b"]",
+    "isZeduxNode": true,
+    "l": "Stale",
+    "o": Map {},
+    "p": [
+      "b",
+    ],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": "b",
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": [Function],
+      "key": "b",
+    },
+    "w": [],
   },
   "c": {
-    "dependencies": Map {},
-    "dependents": Map {
+    "T": 2,
+    "W": 1,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
+    },
+    "dispatch": [Function],
+    "id": "c",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {
       "d" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
+        "p": undefined,
       },
     },
-    "isSelector": undefined,
-    "refCount": 1,
-    "weight": 1,
+    "p": [],
+    "s": Map {},
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": "c",
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": AtomTemplate {
+      "_config": undefined,
+      "_value": "c",
+      "key": "c",
+    },
+    "w": [],
   },
   "d": {
-    "dependencies": Map {
-      "a" => true,
-      "c" => true,
+    "T": 2,
+    "W": 3,
+    "_createdAt": 123456789,
+    "_isEvaluating": false,
+    "_stateType": 2,
+    "_subscription": {
+      "unsubscribe": [Function],
     },
-    "dependents": Map {},
-    "isSelector": undefined,
-    "refCount": 0,
-    "weight": 3,
+    "dispatch": [Function],
+    "id": "d",
+    "isZeduxNode": true,
+    "l": "Active",
+    "o": Map {},
+    "p": [],
+    "s": Map {
+      "a" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+      "c" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "setState": [Function],
+    "setStateDeep": [Function],
+    "store": {
+      "_isDispatching": false,
+      "_isSolo": true,
+      "_state": "ac",
+      "_subscribers": [
+        {
+          "next": [Function],
+        },
+      ],
+      "dispatch": [Function],
+      "setState": [Function],
+    },
+    "t": IonTemplate {
+      "_config": undefined,
+      "_get": [Function],
+      "_value": [Function],
+      "key": "d",
+    },
+    "w": [],
   },
 }
 `;

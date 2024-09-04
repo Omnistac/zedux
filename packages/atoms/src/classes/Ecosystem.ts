@@ -25,12 +25,7 @@ import {
   Selectable,
   SelectorGenerics,
 } from '../types/index'
-import {
-  External,
-  haveDepsChanged,
-  isZeduxNode,
-  Static,
-} from '../utils/general'
+import { External, compare, isZeduxNode, Static } from '../utils/general'
 import { pluginActions } from '../utils/plugin-actions'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'
@@ -170,16 +165,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       return instance
     }
 
-    const select: AtomGetters['select'] = <
-      G extends SelectorGenerics = {
-        Params: any
-        State: any
-        Template: any
-      }
-    >(
-      selectable: Selectable<G>,
-      ...args: G['Params']
-    ) => {
+    const select: AtomGetters['select'] = <S extends Selectable>(
+      selectable: S,
+      ...args: AtomParamsType<S>
+    ): AtomStateType<S> => {
       const node = getEvaluationContext().n
 
       // when called outside a reactive context, select() is just an alias for
@@ -189,7 +178,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       const instance = this.getNode(selectable, args)
       bufferEdge(instance.id, 'select', 0)
 
-      return instance.v as G['State']
+      return instance.v
     }
 
     this.live = {
@@ -355,9 +344,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     >
   ): G['Node'] | undefined
 
-  public find<
-    G extends Pick<AtomGenerics, 'Node' | 'State' | 'Template'> = any
-  >(searchStr: string, params?: []): G['Node'] | undefined
+  public find(searchStr: string, params?: []): GraphNode | undefined
 
   public find<G extends AtomGenerics>(
     template: AtomTemplateBase<G> | AtomSelectorOrConfig<G> | string,
@@ -497,35 +484,42 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   ): G['Node']
 
   public getNode<G extends AtomGenerics = AnyAtomGenerics>(
-    template: ParamlessTemplate<AtomTemplateBase<G> | AtomInstance<G>>
+    templateOrInstance: ParamlessTemplate<AtomTemplateBase<G> | AtomInstance<G>>
   ): G['Node']
 
   public getNode<I extends AnyAtomInstance>(instance: I, params?: []): I
 
   // selectors
-  public getNode<
-    G extends SelectorGenerics = {
-      Params: any
-      State: any
-      Template: any
-    }
-  >(selectable: Selectable<G>, params: G['Params']): SelectorInstance<G>
+  public getNode<S extends Selectable>(
+    selectable: S,
+    params: AtomParamsType<S>
+  ): S extends AtomSelectorOrConfig
+    ? SelectorInstance<{
+        Params: AtomParamsType<S>
+        State: AtomStateType<S>
+        Template: S
+      }>
+    : S
 
-  public getNode<
-    G extends SelectorGenerics = {
-      Params: any
-      State: any
-      Template: any
-    }
-  >(selectable: Selectable<G>): SelectorInstance<G>
+  public getNode<S extends Selectable<any, []>>(
+    selectable: S
+  ): S extends AtomSelectorOrConfig
+    ? SelectorInstance<{
+        Params: AtomParamsType<S>
+        State: AtomStateType<S>
+        Template: S
+      }>
+    : S
 
-  public getNode<
-    G extends SelectorGenerics = {
-      Params: any
-      State: any
-      Template: any
-    }
-  >(selectable: ParamlessTemplate<Selectable<G>>): SelectorInstance<G>
+  public getNode<S extends Selectable>(
+    selectable: ParamlessTemplate<S>
+  ): S extends AtomSelectorOrConfig
+    ? SelectorInstance<{
+        Params: AtomParamsType<S>
+        State: AtomStateType<S>
+        Template: S
+      }>
+    : S
 
   public getNode<I extends SelectorInstance>(instance: I, params?: []): I
 
@@ -774,15 +768,15 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    *
    * TODO: Deprecate this, replace with `ecosystem.get()` and `ecosystem.run()`
    */
-  public select<G extends SelectorGenerics>(
-    selectable: Selectable<G>,
-    ...args: G['Params']
-  ): G['State'] {
+  public select<S extends Selectable>(
+    selectable: S,
+    ...args: AtomParamsType<S>
+  ): AtomStateType<S> {
     if (is(selectable, SelectorInstance)) {
-      return (selectable as SelectorInstance<G>).v
+      return (selectable as SelectorInstance).v
     }
 
-    const atomSelector = selectable as AtomSelectorOrConfig<G>
+    const atomSelector = selectable as AtomSelectorOrConfig
     const hash = this.hash(atomSelector, args)
     const instance = this.n.get(hash)
 
@@ -847,18 +841,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     params: G['Params'],
     ref: { m?: boolean }
   ) {
-    const paramsChanged = (
-      (template as AtomSelectorConfig).argsComparator || haveDepsChanged
+    const paramsUnchanged = (
+      (template as AtomSelectorConfig).argsComparator || compare
     )(params, instance.p || ([] as unknown as G['Params']))
 
-    const resolvedArgs = paramsChanged ? params : instance.p
+    const resolvedArgs = paramsUnchanged ? instance.p : params
 
     // if the refs/args don't match, instance has refCount: 1, there is no
     // cache yet for the new ref, and the new ref has the same name, assume it's
-    // an inline selector
+    // an inline selector and can be swapped
     const isSwappingRefs =
       instance.t !== template &&
-      !paramsChanged &&
+      paramsUnchanged &&
       this.n.get(instance.id)?.o.size === 1 &&
       !this.b.has(template) &&
       getSelectorName(instance.t) === getSelectorName(template)
@@ -870,7 +864,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       ref.m = true
     }
 
-    return isSwappingRefs ? instance : this.getNode(template, resolvedArgs)
+    return isSwappingRefs
+      ? instance
+      : this.getNode(template, resolvedArgs as AtomParamsType<G['Template']>)
   }
 
   /**
@@ -919,6 +915,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         {
           dependencies: { key: string; operation: string }[]
           dependents: { key: string; operation: string }[]
+          weight: number
         }
       > = {}
 
@@ -932,6 +929,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
             key,
             operation: (node.o.get(key) as DependentEdge).operation,
           })),
+          weight: node.W,
         }
       }
 

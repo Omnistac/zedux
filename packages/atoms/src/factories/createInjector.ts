@@ -16,15 +16,17 @@ export const createInjector = <
     const instance = readInstance()
     const { _injectors, _nextInjectors, l, t } = instance
 
+    // TODO: these `!`s should be replaced by making these properties not
+    // optional with a ts-expect-error in the AtomInstance class
     if (l === 'Initializing') {
       const descriptor = first(instance, ...args)
       type = descriptor.type
-      _nextInjectors?.push(descriptor)
+      _nextInjectors!.push(descriptor)
 
       return descriptor.result
     }
 
-    const prevDescriptor = _injectors?.[_nextInjectors?.length as number] as T
+    const prevDescriptor = _injectors![_nextInjectors!.length as number] as T
 
     if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
       throw new Error(
@@ -36,7 +38,7 @@ export const createInjector = <
       ? next(prevDescriptor, instance, ...args)
       : prevDescriptor
 
-    _nextInjectors?.push(descriptor)
+    _nextInjectors!.push(descriptor)
 
     return descriptor.result
   }

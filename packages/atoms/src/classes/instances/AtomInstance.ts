@@ -96,10 +96,15 @@ export class AtomInstance<
   public l: LifecycleStatus = 'Initializing'
 
   public api?: AtomApi<AtomGenericsToAtomApiGenerics<G>>
+
+  // @ts-expect-error this is set in `this.i`nit, right after instantiation, so
+  // it technically isn't set during construction. It's fine.
   public exports: G['Exports']
-  public nextReasons: EvaluationReason[] = []
-  public prevReasons?: EvaluationReason[]
+
+  // @ts-expect-error same as exports
   public promise: G['Promise']
+
+  // @ts-expect-error same as exports
   public store: G['Store']
 
   /**
@@ -141,12 +146,6 @@ export class AtomInstance<
   ) {
     super()
     this._createdAt = e._idGenerator.now()
-
-    // lol
-    this.exports = (this as any).exports
-    this.promise = (this as any).promise
-    this.store = (this as any).store
-    this._promiseStatus = (this as any)._promiseStatus
   }
 
   /**
@@ -273,7 +272,7 @@ export class AtomInstance<
     }
 
     if (
-      (!include && !includeFlags) ||
+      (!include.length && !includeFlags.length) ||
       include.some(templateOrKey =>
         typeof templateOrKey === 'string'
           ? lowerCaseId.includes(templateOrKey.toLowerCase())
@@ -332,7 +331,9 @@ export class AtomInstance<
   /**
    * @see GraphNode.j
    */
-  public j = () => this._evaluationTask()
+  public j() {
+    this._evaluationTask()
+  }
 
   /**
    * @see GraphNode.m
@@ -398,13 +399,10 @@ export class AtomInstance<
     // user's part. Notify them. TODO: Can we pause evaluations while
     // status is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
-    if (this.l === 'Destroyed') return
-
-    this.nextReasons.push(reason)
-
-    if (this.nextReasons.length > 1) return // job already scheduled
-
-    this.e._scheduler.schedule(this, shouldSetTimeout)
+    if (this.l !== 'Destroyed' && this.w.push(reason) === 1) {
+      // refCount just hit 1; we haven't scheduled a job for this node yet
+      this.e._scheduler.schedule(this, shouldSetTimeout)
+    }
   }
 
   public _set?: ExportsInfusedSetter<G['State'], G['Exports']>
@@ -447,9 +445,7 @@ export class AtomInstance<
         this._bufferedUpdate = undefined
       }
 
-      this.prevReasons = this.nextReasons
-      this.nextReasons = []
-      this._nextInjectors = undefined
+      this.w = []
     }
 
     this._injectors = this._nextInjectors
@@ -565,7 +561,7 @@ export class AtomInstance<
           node: this,
           newState,
           oldState,
-          reasons: this.nextReasons,
+          reasons: this.w,
         })
       )
     }

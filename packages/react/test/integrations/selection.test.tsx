@@ -8,7 +8,7 @@ import {
   useAtomSelector,
 } from '@zedux/react'
 import React, { useEffect, useState } from 'react'
-import { ecosystem } from '../utils/ecosystem'
+import { ecosystem, snapshotNodes } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 
 const testAtom = atom('testAtom', (key: string) => key)
@@ -274,32 +274,32 @@ describe('selection', () => {
     Object.defineProperty(selector2, 'name', { value: NAME })
 
     const instance1 = ecosystem.getInstance(atom1)
-    const cleanup1 = instance1.addDependent()
+    const cleanup1 = instance1.on(() => {})
 
-    expect(ecosystem.n).toMatchSnapshot()
-    expect(instance1.getState()).toBe(3)
+    snapshotNodes()
+    expect(instance1.get()).toBe(3)
 
     cleanup1()
 
     expect(ecosystem.n).toEqual(new Map())
 
     const instance2 = ecosystem.getInstance(atom2)
-    const cleanup2 = instance2.addDependent()
+    const cleanup2 = instance2.on(() => {})
 
-    expect(ecosystem.n).toMatchSnapshot()
-    expect(instance2.getState()).toBe(4)
+    snapshotNodes()
+    expect(instance2.get()).toBe(4)
 
     const instance3 = ecosystem.getInstance(atom1)
-    const cleanup3 = instance3.addDependent()
+    const cleanup3 = instance3.on(() => {})
 
-    expect(ecosystem.n).toMatchSnapshot()
-    expect(instance1.getState()).toBe(3)
-    expect(instance2.getState()).toBe(4)
+    snapshotNodes()
+    expect(instance1.get()).toBe(3)
+    expect(instance2.get()).toBe(4)
 
     cleanup2()
 
-    expect(ecosystem.n).toMatchSnapshot()
-    expect(instance1.getState()).toBe(3)
+    snapshotNodes()
+    expect(instance1.get()).toBe(3)
 
     cleanup3()
 

@@ -7,12 +7,12 @@ describe('AtomInstance', () => {
     const atom1 = atom('1', () => (param: string) => param + 1)
 
     const instance = ecosystem.getInstance(atom1)
-    const getVal = instance.getState()
+    const getVal = instance.get()
 
     expect(getVal('a')).toBe('a1')
 
     instance.invalidate()
-    const getVal2 = instance.getState()
+    const getVal2 = instance.get()
 
     expect(getVal2).not.toBe(getVal)
     expect(getVal2('a')).toBe('a1')

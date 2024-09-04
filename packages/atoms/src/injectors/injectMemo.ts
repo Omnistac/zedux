@@ -1,6 +1,6 @@
 import { createInjector } from '../factories/createInjector'
 import { InjectorDeps, PartialAtomInstance } from '../types/index'
-import { haveDepsChanged, prefix } from '../utils/general'
+import { compare, prefix } from '../utils/general'
 
 type MemoInjectorDescriptor<T> = {
   deps: InjectorDeps
@@ -29,9 +29,9 @@ export const injectMemo: <Value = any>(
     valueFactory: () => Value,
     deps?: InjectorDeps
   ) => {
-    const depsHaveChanged = haveDepsChanged(prevDescriptor.deps, deps)
+    const depsUnchanged = compare(prevDescriptor.deps, deps)
 
-    const result = depsHaveChanged ? valueFactory() : prevDescriptor.result
+    const result = depsUnchanged ? prevDescriptor.result : valueFactory()
 
     prevDescriptor.deps = deps
     prevDescriptor.result = result

@@ -17,7 +17,7 @@ import {
   EvaluationReason,
 } from '@zedux/react'
 import React from 'react'
-import { ecosystem } from '../utils/ecosystem'
+import { ecosystem, snapshotNodes } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 
 const atom1 = atom('atom1', () => 1)
@@ -77,10 +77,7 @@ describe('graph', () => {
 
     expect(ecosystem.n.get('atom3')).toBeUndefined()
 
-    expect([...ecosystem.n.get('atom4')!.s]).toEqual([
-      ['atom1', true],
-      ['atom2', true],
-    ])
+    expect([...ecosystem.n.get('atom4')!.s.keys()]).toEqual(['atom1', 'atom2'])
 
     const button = await findByText('toggle')
 
@@ -97,10 +94,7 @@ describe('graph', () => {
 
     expect([...ecosystem.n.get('atom3')!.o]).toEqual([['atom4', expectedEdges]])
 
-    expect([...ecosystem.n.get('atom4')!.s]).toEqual([
-      ['atom1', true],
-      ['atom3', true],
-    ])
+    expect([...ecosystem.n.get('atom4')!.s.keys()]).toEqual(['atom1', 'atom3'])
 
     expect(ecosystem.viewGraph()).toMatchSnapshot()
     expect(ecosystem.viewGraph('bottom-up')).toMatchSnapshot()
@@ -131,7 +125,7 @@ describe('graph', () => {
       ion1: expect.any(Object),
     })
 
-    expect(ecosystem.n).toMatchSnapshot()
+    snapshotNodes()
     expect(evaluations).toEqual([1])
 
     ionInstance.exports.set(11)
@@ -156,13 +150,13 @@ describe('graph', () => {
 
     const instance = ecosystem.getInstance(atomD)
 
-    expect(ecosystem.n).toMatchSnapshot()
+    snapshotNodes()
 
     useB = false
     instance.invalidate()
     jest.runAllTimers()
 
-    expect(ecosystem.n).toMatchSnapshot()
+    snapshotNodes()
   })
 
   test('atom instances can be passed as atom params', () => {

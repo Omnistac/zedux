@@ -1,7 +1,7 @@
 import { AtomGetters, atom, useAtomSelector } from '@zedux/react'
 import React, { useState } from 'react'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
-import { ecosystem } from '../utils/ecosystem'
+import { ecosystem, getSelectorNodes, snapshotNodes } from '../utils/ecosystem'
 import { act, fireEvent } from '@testing-library/react'
 
 describe('useAtomSelector', () => {
@@ -349,7 +349,7 @@ describe('useAtomSelector', () => {
 
     act(() => {
       fireEvent.click(button)
-      ecosystem.getNode(selector1).destroy()
+      ecosystem.find('@@selector')?.destroy()
       jest.runAllTimers()
     })
 
@@ -440,26 +440,7 @@ describe('useAtomSelector', () => {
     const button = await findByTestId('button')
     const div = await findByTestId('text')
 
-    expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
-      {
-        "@@selector-unnamed-0": SelectorInstance {
-          "args": [],
-          "id": "@@selector-unnamed-0",
-          "nextReasons": [],
-          "prevReasons": [],
-          "result": 1,
-          "selectorRef": [Function],
-        },
-        "@@selector-unnamed-2": SelectorInstance {
-          "args": [],
-          "id": "@@selector-unnamed-2",
-          "nextReasons": [],
-          "prevReasons": [],
-          "result": 1,
-          "selectorRef": [Function],
-        },
-      }
-    `)
+    expect(getSelectorNodes()).toMatchSnapshot()
     expect(div.innerHTML).toBe('10')
 
     act(() => {
@@ -469,18 +450,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('11')
 
-    expect(ecosystem.findAll('@@selector')).toMatchInlineSnapshot(`
-      {
-        "@@selector-unnamed-1": SelectorCache {
-          "args": [],
-          "id": "@@selector-unnamed-1",
-          "nextReasons": [],
-          "prevReasons": [],
-          "result": 1,
-          "selectorRef": [Function],
-        },
-      }
-    `)
+    expect(getSelectorNodes()).toMatchSnapshot()
   })
 
   test('inline selector that returns a different object reference every time only triggers one extra rerender (strict mode off)', async () => {
@@ -505,7 +475,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(renders).toBe(1)
-    expect(ecosystem.n).toMatchSnapshot()
+    snapshotNodes()
 
     act(() => {
       ecosystem.getInstance(atom1).setState({ val: 2 })
@@ -514,7 +484,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('2')
     expect(renders).toBe(2)
-    expect(ecosystem.n).toMatchSnapshot()
+    snapshotNodes()
   })
 
   test('inline selector that returns a different object reference every time only triggers one extra rerender (strict mode on)', async () => {
@@ -541,7 +511,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(renders).toBe(4) // 2 rerenders + 2 for strict mode
-    expect(ecosystem.n).toMatchSnapshot()
+    snapshotNodes()
 
     act(() => {
       ecosystem.getInstance(atom1).setState({ val: 2 })
@@ -550,7 +520,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('2')
     expect(renders).toBe(6) // 3 rerenders + 3 for strict mode
-    expect(ecosystem.n).toMatchSnapshot()
+    snapshotNodes()
   })
 
   test('inline selector stays subscribed after being swapped out', async () => {
@@ -625,7 +595,7 @@ describe('useAtomSelector', () => {
     const div = await findByTestId('text')
 
     expect(div.innerHTML).toBe('1a1b1c')
-    expect(ecosystem.selectors.dehydrate()).toMatchInlineSnapshot(`
+    expect(ecosystem.dehydrate('@@selector')).toMatchInlineSnapshot(`
       {
         "@@selector-selector1-0-["a"]": "1a",
         "@@selector-selector1-0-["b"]": "1b",
@@ -634,12 +604,12 @@ describe('useAtomSelector', () => {
     `)
 
     act(() => {
-      ecosystem.selectors.destroyCache(selector1, ['a'], true)
+      ecosystem.getNode(selector1, ['a']).destroy(true)
       jest.runAllTimers()
     })
 
     expect(div.innerHTML).toBe('1a1b1c')
-    expect(ecosystem.selectors.dehydrate()).toMatchInlineSnapshot(`
+    expect(ecosystem.dehydrate('@@selector')).toMatchInlineSnapshot(`
       {
         "@@selector-selector1-0-["a"]": "1a",
         "@@selector-selector1-0-["b"]": "1b",

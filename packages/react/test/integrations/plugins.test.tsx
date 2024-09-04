@@ -1,14 +1,10 @@
 import {
   Action,
   ActionFactoryActionType,
-  AnyAtomInstance,
   atom,
   AtomGetters,
-  AtomInstance,
   createEcosystem,
   ion,
-  is,
-  SelectorInstance,
   ZeduxPlugin,
 } from '@zedux/react'
 
@@ -218,10 +214,7 @@ describe('plugins', () => {
                 >
               ).payload
 
-              const state = is(node, AtomInstance)
-                ? (node as AnyAtomInstance).get()
-                : (node as SelectorInstance).v
-
+              const state = node.get()
               updates.push(state)
             }
           },

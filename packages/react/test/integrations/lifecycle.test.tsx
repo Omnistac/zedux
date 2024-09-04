@@ -169,11 +169,11 @@ describe('ttl', () => {
     const atom1 = atom('1', () => api().setTtl(promise))
     const instance1 = ecosystem.getInstance(atom1)
 
-    expect(instance1.status).toBe('Active')
+    expect(instance1.l).toBe('Active')
 
-    instance1.addDependent()() // add dependent and immediately clean it up
+    instance1.on(() => {})() // add dependent and immediately clean it up
 
-    expect(instance1.status).toBe('Stale')
+    expect(instance1.l).toBe('Stale')
 
     jest.runAllTimers()
 
@@ -181,7 +181,7 @@ describe('ttl', () => {
     // chained `.then` inside `AtomInstance.ts`
     await promise.then(() => {})
 
-    expect(instance1.status).toBe('Destroyed')
+    expect(instance1.l).toBe('Destroyed')
   })
 
   test('a promise ttl cancels destruction if the instance is revived', async () => {
@@ -195,31 +195,31 @@ describe('ttl', () => {
     const atom1 = atom('1', () => api().setTtl(promise))
     const instance1 = ecosystem.getInstance(atom1)
 
-    expect(instance1.status).toBe('Active')
+    expect(instance1.l).toBe('Active')
 
-    instance1.addDependent()() // add dependent and immediately clean it up
+    instance1.on(() => {})() // add dependent and immediately clean it up
 
-    expect(instance1.status).toBe('Stale')
+    expect(instance1.l).toBe('Stale')
 
     jest.runAllTimers()
-    const cleanup = instance1.addDependent()
+    const cleanup = instance1.on(() => {})
 
-    expect(instance1.status).toBe('Active')
+    expect(instance1.l).toBe('Active')
 
     // this `.then()` creates a new promise that's guaranteed to run after the
     // chained `.then` inside `AtomInstance.ts`
     await promise.then(() => {})
 
-    expect(instance1.status).toBe('Active')
+    expect(instance1.l).toBe('Active')
 
     cleanup()
 
-    expect(instance1.status).toBe('Stale')
+    expect(instance1.l).toBe('Stale')
 
     jest.runAllTimers()
     await promise.then(() => {})
 
-    expect(instance1.status).toBe('Destroyed')
+    expect(instance1.l).toBe('Destroyed')
   })
 
   test('an observable ttl waits until the observable emits to destroy the instance', async () => {
@@ -229,15 +229,15 @@ describe('ttl', () => {
     const atom1 = atom('1', () => api().setTtl(observable))
     const instance1 = ecosystem.getInstance(atom1)
 
-    expect(instance1.status).toBe('Active')
+    expect(instance1.l).toBe('Active')
 
-    instance1.addDependent()() // add dependent and immediately clean it up
+    instance1.on(() => {})() // add dependent and immediately clean it up
 
-    expect(instance1.status).toBe('Stale')
+    expect(instance1.l).toBe('Stale')
 
     jest.runAllTimers()
 
-    expect(instance1.status).toBe('Destroyed')
+    expect(instance1.l).toBe('Destroyed')
   })
 
   test('an observable ttl cancels destruction if the instance is revived', async () => {
@@ -247,24 +247,24 @@ describe('ttl', () => {
     const atom1 = atom('1', () => api().setTtl(observable))
     const instance1 = ecosystem.getInstance(atom1)
 
-    expect(instance1.status).toBe('Active')
+    expect(instance1.l).toBe('Active')
 
-    instance1.addDependent()() // add dependent and immediately clean it up
+    instance1.on(() => {})() // add dependent and immediately clean it up
 
-    expect(instance1.status).toBe('Stale')
+    expect(instance1.l).toBe('Stale')
 
     jest.advanceTimersByTime(1)
-    const cleanup = instance1.addDependent()
+    const cleanup = instance1.on(() => {})
 
-    expect(instance1.status).toBe('Active')
+    expect(instance1.l).toBe('Active')
 
     cleanup()
 
-    expect(instance1.status).toBe('Stale')
+    expect(instance1.l).toBe('Stale')
 
     jest.runAllTimers()
 
-    expect(instance1.status).toBe('Destroyed')
+    expect(instance1.l).toBe('Destroyed')
   })
 
   test('ecosystem `atomDefaults.ttl` is used as a default', () => {
@@ -272,12 +272,12 @@ describe('ttl', () => {
     const atom1 = atom('1', () => 'a')
 
     const instance1 = testEcosystem.getInstance(atom1)
-    const cleanup = instance1.addDependent()
+    const cleanup = instance1.on(() => {})
 
-    expect(Object.keys(testEcosystem._instances)).toEqual(['1'])
+    expect([...testEcosystem.n.keys()]).toEqual(['1'])
 
     cleanup()
 
-    expect(Object.keys(testEcosystem._instances)).toEqual([])
+    expect([...testEcosystem.n.keys()]).toEqual([])
   })
 })

@@ -78,21 +78,15 @@ export type AtomInstanceType<A extends AnyAtomTemplate> =
     : never
 
 export type AtomParamsType<
-  A extends
-    | AnyAtomTemplate
-    | GraphNode
-    | AtomSelectorOrConfig
-    | SelectorInstance
+  A extends AnyAtomTemplate | GraphNode | AtomSelectorOrConfig
 > = A extends AtomTemplateBase<infer G>
   ? G['Params']
   : A extends GraphNode<infer G>
   ? G extends { Params: infer Params }
     ? Params
     : never
-  : A extends AtomSelectorOrConfig<infer G>
-  ? G['Params']
-  : A extends SelectorInstance<infer G>
-  ? G['Params']
+  : A extends AtomSelectorOrConfig<any, infer Params>
+  ? Params
   : never
 
 export type AtomPromiseType<
@@ -108,22 +102,15 @@ export type AtomPromiseType<
   : never
 
 export type AtomStateType<
-  A extends
-    | AnyAtomApi
-    | AnyAtomTemplate
-    | GraphNode
-    | AtomSelectorOrConfig
-    | SelectorInstance
+  A extends AnyAtomApi | AnyAtomTemplate | AtomSelectorOrConfig | GraphNode
 > = A extends AtomTemplateBase<infer G>
   ? G['State']
   : A extends GraphNode<infer G>
   ? G['State']
   : A extends AtomApi<infer G>
   ? G['State']
-  : A extends AtomSelectorOrConfig<infer G>
-  ? G['Params']
-  : A extends SelectorInstance<infer G>
-  ? G['Params']
+  : A extends AtomSelectorOrConfig<infer State>
+  ? State
   : never
 
 export type AtomStoreType<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
@@ -137,6 +124,8 @@ export type AtomStoreType<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
     ? G['Store']
     : never
 
+// TODO: Now that GraphNode has the Template generic, this G extends { Template
+// ... } check shouldn't be necessary. Double check and remove.
 export type AtomTemplateType<A extends GraphNode> = A extends GraphNode<infer G>
   ? G extends { Template: infer Template }
     ? Template
@@ -152,13 +141,14 @@ export type NodeOf<A extends AnyAtomTemplate | AtomSelectorOrConfig> =
       G extends { Node: infer Node }
       ? Node
       : GraphNode<G>
-    : A extends AtomSelectorOrConfig<infer G>
-    ? SelectorInstance<G>
+    : A extends AtomSelectorOrConfig<infer State, infer Params>
+    ? SelectorInstance<{
+        Params: Params
+        State: State
+        Template: AtomSelectorOrConfig<State, Params>
+      }>
     : never
 
-export type SelectorGenerics = Pick<
-  AtomGenerics,
-  'Params' | 'State' | 'Template'
-> & {
+export type SelectorGenerics = Pick<AtomGenerics, 'Params' | 'State'> & {
   Template: AtomSelectorOrConfig
 }
