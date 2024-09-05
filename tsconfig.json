@@ -10,6 +10,18 @@
     "moduleResolution": "node",
     "noImplicitAny": true,
     "outDir": "./dist",
+    "paths": {
+      "@zedux/atoms": ["./packages/atoms/src"],
+      "@zedux/atoms/*": ["./packages/atoms/src/*"],
+      "@zedux/core": ["./packages/core/src"],
+      "@zedux/core/*": ["./packages/core/src/*"],
+      "@zedux/immer": ["./packages/immer/src"],
+      "@zedux/immer/*": ["./packages/immer/src/*"],
+      "@zedux/machines": ["./packages/machines/src"],
+      "@zedux/machines/*": ["./packages/machines/src/*"],
+      "@zedux/react": ["./packages/react/src"],
+      "@zedux/react/*": ["./packages/react/src/*"]
+    },
     "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,

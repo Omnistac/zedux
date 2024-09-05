@@ -1,12 +1,4 @@
 {
   "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "lib": ["ESNext"],
-    "outDir": "./dist/esm",
-    "paths": {
-      "@zedux/core": ["./packages/core/src"],
-      "@zedux/core/*": ["./packages/core/src/*"]
-    }
-  },
   "include": ["./src", "./test", "../../global.d.ts"]
 }

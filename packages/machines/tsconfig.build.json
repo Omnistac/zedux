@@ -1,4 +1,12 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "lib": ["DOM", "ESNext"],
+    "outDir": "./dist/esm",
+    "paths": {
+      "@zedux/machines": ["./packages/machines/src"],
+      "@zedux/machines/*": ["./packages/machines/src/*"]
+    }
+  },
   "include": ["./src", "../../global.d.ts"]
 }

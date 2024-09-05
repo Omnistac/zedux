@@ -36,7 +36,7 @@ async function main() {
     const rl = createInterface({ input: process.stdin, output: process.stdout })
 
     const response =
-      (await rl.question('Finished benchmarks. Rerun? [Y/n]')) || 'y'
+      (await rl.question('Finished benchmarks. Rerun? [Y/n] ')) || 'y'
 
     if (response.toLowerCase().startsWith('y')) {
       main()

@@ -1,12 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"],
-    "outDir": "./dist/esm",
-    "paths": {
-      "@zedux/atoms": ["./packages/atoms/src"],
-      "@zedux/atoms/*": ["./packages/atoms/src/*"]
-    }
+    "lib": ["DOM", "ESNext"]
   },
   "include": ["./src", "./test", "../../global.d.ts"]
 }
