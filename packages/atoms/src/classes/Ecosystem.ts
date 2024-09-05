@@ -14,8 +14,8 @@ import {
   AtomStateType,
   Cleanup,
   DehydrationFilter,
-  DependentEdge,
   EcosystemConfig,
+  GraphEdge,
   GraphEdgeDetails,
   GraphViewRecursive,
   MaybeCleanup,
@@ -923,11 +923,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         hash[id] = {
           dependencies: [...node.s.keys()].map(key => ({
             key,
-            operation: (this.n.get(key)?.o.get(id) as DependentEdge).operation,
+            operation: (this.n.get(key)?.o.get(id) as GraphEdge).operation,
           })),
           dependents: [...node.o.keys()].map(key => ({
             key,
-            operation: (node.o.get(key) as DependentEdge).operation,
+            operation: (node.o.get(key) as GraphEdge).operation,
           })),
           weight: node.W,
         }

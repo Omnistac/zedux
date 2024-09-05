@@ -185,27 +185,6 @@ export type DependentCallback = (
   reason?: EvaluationReason
 ) => any
 
-// TODO: optimize this internal object to use single-letter properties
-export interface DependentEdge {
-  callback?: DependentCallback
-  createdAt: number
-  flags: number // calculated from the EdgeFlags
-  operation: string
-
-  /**
-   * `p`endingFlags - an internal marker used by the graph algorithm - tracks
-   * what the flags will be for this edge after the current evaluation (or
-   * undefined if it should be removed)
-   */
-  p?: number
-
-  /**
-   * `j`ob - a reference to a scheduled job for external edges - so they can
-   * unschedule jobs
-   */
-  j?: Job
-}
-
 export interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
 > {
@@ -223,65 +202,6 @@ export interface EcosystemConfig<
   ) => MaybeCleanup
   overrides?: AnyAtomTemplate[]
   ssr?: boolean
-}
-
-// TODO: delete
-export interface EcosystemGraphNode {
-  /**
-   * Detach this node from the ecosystem and clean up all graph edges and other
-   * subscriptions/effects created by this node.
-   *
-   * Destruction will bail out if this node still has dependents (`node.o.size
-   * !== 0`). Pass `true` to force-destroy the node anyway.
-   *
-   * When force-destroying a node that still has dependents, the node will be
-   * immediately recreated and all dependents notified of the destruction.
-   */
-  destroy: (force?: boolean) => void
-
-  /**
-   * The unique id of this node in the graph. Zedux always tries to make this
-   * somewhat human-readable for easier debugging.
-   */
-  id: string
-
-  // Internal fields - these are public and stable, but normal users should
-  // never need to use these:
-
-  /**
-   * `d`ehydrate - a function called internally by `ecosystem.dehydrate()` to
-   * transform the node's value into a serializable form.
-   */
-  d: (options?: DehydrationFilter) => any
-
-  /**
-   * `f`ilter - a function called internally by `ecosystem.findAll()` to
-   * determine whether this node should be included in the output. Also
-   * typically called by `node.d`ehydrate to perform its filtering logic.
-   */
-  f: (options?: NodeFilter) => boolean
-
-  /**
-   * `h`ydrate - a function called internally by `ecosystem.hydrate()` to
-   * transform a previously-serialized value and set it as the node's new value.
-   */
-  h: (serializedValue: any) => any
-
-  /**
-   * `o`bservers - a map of the edges drawn between this node and all of its
-   * dependents, keyed by id. Every edge stored here is reverse-mapped - the
-   * exact same object reference will also be stored in another node's
-   * `s`ources.
-   */
-  o: Map<string, DependentEdge>
-
-  /**
-   * `s`ources - a map of the edges drawn between this node and all of its
-   * dependencies, keyed by id. Every edge stored here is reverse-mapped - the
-   * exact same object reference will also be stored in another node's
-   * `o`bservers.
-   */
-  s: Map<string, DependentEdge>
 }
 
 export type EffectCallback = () => MaybeCleanup | Promise<any>
@@ -325,6 +245,27 @@ export type GraphEdgeDetails = {
    * that created this edge
    */
   op?: string
+}
+
+// TODO: optimize this internal object to use single-letter properties
+export interface GraphEdge {
+  callback?: DependentCallback
+  createdAt: number
+  flags: number // calculated from the EdgeFlags
+  operation: string
+
+  /**
+   * `p`endingFlags - an internal marker used by the graph algorithm - tracks
+   * what the flags will be for this edge after the current evaluation (or
+   * undefined if it should be removed)
+   */
+  p?: number
+
+  /**
+   * `j`ob - a reference to a scheduled job for external edges - so they can
+   * unschedule jobs
+   */
+  j?: Job
 }
 
 /**

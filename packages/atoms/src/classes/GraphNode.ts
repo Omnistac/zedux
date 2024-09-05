@@ -1,17 +1,17 @@
 import {
-  DependentEdge,
+  AnyAtomTemplate,
+  AtomGenerics,
+  Cleanup,
   DehydrationFilter,
-  NodeFilter,
-  LifecycleStatus,
+  DependentCallback,
   EvaluationReason,
   EvaluationType,
-  GraphEdgeSignal,
-  NodeFilterOptions,
-  AnyAtomTemplate,
-  DependentCallback,
-  Cleanup,
-  AtomGenerics,
+  GraphEdge,
   GraphEdgeDetails,
+  GraphEdgeSignal,
+  LifecycleStatus,
+  NodeFilter,
+  NodeFilterOptions,
 } from '@zedux/atoms/types/index'
 import { is, Job } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
@@ -31,7 +31,7 @@ import { AtomTemplateBase } from './templates/AtomTemplateBase'
 export const addEdge = (
   dependentId: string,
   dependency: GraphNode,
-  newEdge: DependentEdge,
+  newEdge: GraphEdge,
   dependent = dependency.e.n.get(dependentId)
 ) => {
   const { _mods, modBus } = dependency.e
@@ -478,7 +478,7 @@ export abstract class GraphNode<
    * exact same object reference will also be stored in another node's
    * `s`ources. The only exception is pseudo-nodes.
    */
-  public o = new Map<string, DependentEdge>()
+  public o = new Map<string, GraphEdge>()
 
   /**
    * `p`arams - a reference to the exact params passed to this node. These never
@@ -504,7 +504,7 @@ export abstract class GraphNode<
    * exact same object reference will also be stored in another node's
    * `o`bservers.
    */
-  public s = new Map<string, DependentEdge>()
+  public s = new Map<string, GraphEdge>()
 
   /**
    * `t`emplate - a reference to the template that was used to create this node

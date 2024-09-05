@@ -1,11 +1,11 @@
 import { ActionChain, actionFactory } from '@zedux/core'
 import { Ecosystem } from '../classes/Ecosystem'
 import {
-  LifecycleStatus,
   AnyAtomInstance,
-  DependentEdge,
-  EvaluationReason,
   AnyAtomTemplate,
+  EvaluationReason,
+  GraphEdge,
+  LifecycleStatus,
 } from '../types/index'
 import { type GraphNode } from '../classes/GraphNode'
 
@@ -17,7 +17,7 @@ export const pluginActions = {
     {
       dependency: GraphNode
       dependent: GraphNode | string // string if edge is External
-      edge: DependentEdge
+      edge: GraphEdge
     },
     'edgeCreated'
   >('edgeCreated'),
@@ -25,7 +25,7 @@ export const pluginActions = {
     {
       dependency: GraphNode
       dependent: GraphNode | string // string if edge is External
-      edge: DependentEdge
+      edge: GraphEdge
     },
     'edgeRemoved'
   >('edgeRemoved'),
