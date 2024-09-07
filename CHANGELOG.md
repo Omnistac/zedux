@@ -1,3 +1,9 @@
+## v1.2.3 (Sep 7, 2024)
+
+### Fixes:
+
+- `react`: make `useAtomSelector` wait for idle time to do failsafe cleanup (#113)
+
 ## v1.2.2 (Jun 13, 2024)
 
 ### Fixes:
