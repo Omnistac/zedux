@@ -440,6 +440,8 @@ describe('useAtomSelector', () => {
     const button = await findByTestId('button')
     const div = await findByTestId('text')
 
+    jest.runAllTimers()
+
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
         "@@selector-unnamed-1": SelectorCache {
@@ -530,6 +532,8 @@ describe('useAtomSelector', () => {
     })
 
     const div = await findByTestId('text')
+
+    jest.runAllTimers()
 
     expect(div.innerHTML).toBe('1')
     expect(renders).toBe(2) // 2 rerenders + 2 for strict mode

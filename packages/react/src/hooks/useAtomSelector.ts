@@ -119,15 +119,23 @@ export const useAtomSelector = <T, Args extends any[]>(
 
     // React StrictMode's double renders can wreak havoc on the selector cache.
     // Clean up havoc
-    queueMicrotask(() => {
-      cancelCleanup = false
+    if (storage.timeoutId == null) {
+      const removeCruft = () => {
+        storage.timeoutId = null
+        cancelCleanup = false
 
-      Object.values(selectors._storage).forEach(storageItem => {
-        if (storageItem.cache?.id) {
-          selectors._destroySelector(storageItem.cache.id)
-        }
-      })
-    })
+        Object.values(selectors._storage).forEach(storageItem => {
+          if (storageItem.cache?.id) {
+            selectors._destroySelector(storageItem.cache.id)
+          }
+        })
+      }
+
+      storage.timeoutId =
+        typeof requestIdleCallback !== 'undefined'
+          ? requestIdleCallback(removeCruft, { timeout: 500 })
+          : setTimeout(removeCruft, 500)
+    }
 
     return cleanup
   }, [cache])
