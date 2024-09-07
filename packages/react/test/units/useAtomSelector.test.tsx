@@ -406,7 +406,7 @@ describe('useAtomSelector', () => {
     expect(selector2).toHaveBeenCalledTimes(1)
     expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-mockConstructor-0': 2,
-      // id # 2 'cause `addDependent` generate id 1:
+      // id # 2 'cause `.on` generated id 1:
       '@@selector-mockConstructor-2': 1,
     })
   })
