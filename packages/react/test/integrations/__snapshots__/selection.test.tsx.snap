@@ -467,7 +467,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
         "operation": "get",
         "p": undefined,
       },
-      "@@selector-common-name-4" => {
+      "@@selector-common-name-0" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
