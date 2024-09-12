@@ -16,12 +16,7 @@ import {
 import { is, Job } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
 import { pluginActions } from '../utils/plugin-actions'
-import {
-  ExplicitExternal,
-  External,
-  isZeduxNode,
-  Static,
-} from '../utils/general'
+import { ExplicitExternal, External, Static } from '../utils/general'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 
 /**
@@ -38,10 +33,7 @@ export const addEdge = (
 
   // draw the edge in both nodes. Dependent may not exist if it's an external
   // pseudo-node
-  if (!(newEdge.flags & External) && dependent) {
-    dependent.s.set(dependency.id, newEdge)
-  }
-
+  dependent && dependent.s.set(dependency.id, newEdge)
   dependency.o.set(dependentId, newEdge)
   dependency.c?.()
 
@@ -278,7 +270,10 @@ export abstract class GraphNode<
   }
 > implements Job
 {
-  public [isZeduxNode] = true
+  /**
+   * isZeduxNode - used internally to determine if objects are graph nodes.
+   */
+  public izn = true
 
   /**
    * @see Job.T

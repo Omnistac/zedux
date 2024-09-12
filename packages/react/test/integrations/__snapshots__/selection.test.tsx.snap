@@ -13,7 +13,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "dispatch": [Function],
     "id": "1",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "no-1" => {
@@ -61,7 +61,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "T": 2,
     "W": 2,
     "id": "@@selector-common-name-0",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "1" => {
@@ -97,7 +97,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "dispatch": [Function],
     "id": "root",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "@@selector-common-name-0" => {
@@ -150,7 +150,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "dispatch": [Function],
     "id": "2",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "no-3" => {
@@ -199,7 +199,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "T": 2,
     "W": 2,
     "id": "@@selector-common-name-2",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "2" => {
@@ -235,7 +235,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "dispatch": [Function],
     "id": "root",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "@@selector-common-name-2" => {
@@ -288,7 +288,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "dispatch": [Function],
     "id": "1",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "no-4" => {
@@ -343,7 +343,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "dispatch": [Function],
     "id": "2",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "no-3" => {
@@ -392,7 +392,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "T": 2,
     "W": 2,
     "id": "@@selector-common-name-0",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "1" => {
@@ -421,7 +421,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "T": 2,
     "W": 2,
     "id": "@@selector-common-name-2",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "2" => {
@@ -457,7 +457,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "dispatch": [Function],
     "id": "root",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "@@selector-common-name-2" => {
@@ -517,7 +517,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "dispatch": [Function],
     "id": "1",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "no-4" => {
@@ -565,7 +565,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "T": 2,
     "W": 2,
     "id": "@@selector-common-name-0",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "1" => {
@@ -601,7 +601,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "dispatch": [Function],
     "id": "root",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "@@selector-common-name-0" => {

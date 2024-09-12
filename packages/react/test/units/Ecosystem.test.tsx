@@ -144,7 +144,7 @@ describe('Ecosystem', () => {
 
     // @ts-expect-error first param must be an atom template or instance
     expect(() => ecosystem.getInstance()).toThrowError(
-      "Cannot read properties of undefined (reading 'isZeduxNode')"
+      "Cannot read properties of undefined (reading 'izn')"
     )
 
     // @ts-expect-error second param must be an array or undefined

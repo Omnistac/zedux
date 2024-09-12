@@ -13,7 +13,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     },
     "dispatch": [Function],
     "id": "1",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "@@selector-unnamed-0" => {
@@ -53,7 +53,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "T": 2,
     "W": 2,
     "id": "@@selector-unnamed-0",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "Test-:r0:" => {
@@ -95,7 +95,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     },
     "dispatch": [Function],
     "id": "1",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "@@selector-unnamed-0" => {
@@ -135,7 +135,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "T": 2,
     "W": 2,
     "id": "@@selector-unnamed-0",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "Test-:r0:" => {
@@ -178,7 +178,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     },
     "dispatch": [Function],
     "id": "1",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "@@selector-unnamed-0" => {
@@ -225,7 +225,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "T": 2,
     "W": 2,
     "id": "@@selector-unnamed-0",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "Test-:r0:" => {
@@ -255,7 +255,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "T": 2,
     "W": 2,
     "id": "@@selector-unnamed-2",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "Test-:r0:" => {
@@ -297,7 +297,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     },
     "dispatch": [Function],
     "id": "1",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "@@selector-unnamed-0" => {
@@ -344,7 +344,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "T": 2,
     "W": 2,
     "id": "@@selector-unnamed-0",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "Test-:r0:" => {
@@ -375,7 +375,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "T": 2,
     "W": 2,
     "id": "@@selector-unnamed-2",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "Test-:r0:" => {
@@ -411,7 +411,7 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
     "T": 2,
     "W": 2,
     "id": "@@selector-unnamed-0",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "Test-:r0:" => {
@@ -439,7 +439,7 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
     "T": 2,
     "W": 2,
     "id": "@@selector-unnamed-2",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "Test-:r0:" => {
@@ -472,7 +472,7 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
     "T": 2,
     "W": 2,
     "id": "@@selector-unnamed-0",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "Test-:r0:" => {
@@ -500,7 +500,7 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
     "T": 2,
     "W": 2,
     "id": "@@selector-unnamed-2",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "Test-:r0:" => {

@@ -25,7 +25,7 @@ import {
   Selectable,
   SelectorGenerics,
 } from '../types/index'
-import { External, compare, isZeduxNode, Static } from '../utils/general'
+import { External, compare, Static } from '../utils/general'
 import { pluginActions } from '../utils/plugin-actions'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'
@@ -427,7 +427,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     atom: A | AnyAtomInstance,
     params?: AtomParamsType<A>
   ) {
-    if ((atom as GraphNode)[isZeduxNode]) {
+    if ((atom as GraphNode).izn) {
       return (atom as GraphNode).get()
     }
 
@@ -545,7 +545,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       | SelectorInstance<G>,
     params?: G['Params']
   ) {
-    if ((template as GraphNode)[isZeduxNode]) {
+    if ((template as GraphNode).izn) {
       // if the passed atom instance is Destroyed, get(/create) the
       // non-Destroyed instance
       return (template as AtomInstance).l === 'Destroyed'

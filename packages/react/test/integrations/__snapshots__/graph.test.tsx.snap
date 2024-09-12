@@ -13,7 +13,7 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
     },
     "dispatch": [Function],
     "id": "atom1",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "ion1" => {
@@ -58,7 +58,7 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
     },
     "dispatch": [Function],
     "id": "atom2",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "ion1" => {
@@ -114,7 +114,7 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
       "set": [Function],
     },
     "id": "ion1",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {},
     "p": [],
@@ -247,7 +247,7 @@ exports[`graph on reevaluation, get() updates the graph 1`] = `
     },
     "dispatch": [Function],
     "id": "a",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "d" => {
@@ -292,7 +292,7 @@ exports[`graph on reevaluation, get() updates the graph 1`] = `
     },
     "dispatch": [Function],
     "id": "b-["b"]",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "d" => {
@@ -339,7 +339,7 @@ exports[`graph on reevaluation, get() updates the graph 1`] = `
     },
     "dispatch": [Function],
     "id": "d",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {},
     "p": [],
@@ -397,7 +397,7 @@ exports[`graph on reevaluation, get() updates the graph 2`] = `
     },
     "dispatch": [Function],
     "id": "a",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "d" => {
@@ -442,7 +442,7 @@ exports[`graph on reevaluation, get() updates the graph 2`] = `
     },
     "dispatch": [Function],
     "id": "b-["b"]",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Stale",
     "o": Map {},
     "p": [
@@ -481,7 +481,7 @@ exports[`graph on reevaluation, get() updates the graph 2`] = `
     },
     "dispatch": [Function],
     "id": "c",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {
       "d" => {
@@ -526,7 +526,7 @@ exports[`graph on reevaluation, get() updates the graph 2`] = `
     },
     "dispatch": [Function],
     "id": "d",
-    "isZeduxNode": true,
+    "izn": true,
     "l": "Active",
     "o": Map {},
     "p": [],
