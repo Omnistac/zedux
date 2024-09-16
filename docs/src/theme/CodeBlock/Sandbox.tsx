@@ -62,6 +62,7 @@ const scope = {
   ...RxJSOperators,
   ...Zedux,
   ...React,
+  window,
 }
 const scopeKeys = Object.keys(scope)
 const scopeValues = scopeKeys.map(key => scope[key])
