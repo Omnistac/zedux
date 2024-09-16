@@ -17,7 +17,7 @@ import {
   EvaluationReason,
 } from '@zedux/react'
 import React from 'react'
-import { ecosystem, snapshotNodes } from '../utils/ecosystem'
+import { ecosystem, getNodes, snapshotNodes } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 
 const atom1 = atom('atom1', () => 1)
@@ -65,19 +65,34 @@ describe('graph', () => {
     expect(div).toHaveTextContent('3')
 
     const expectedEdges = {
-      callback: undefined,
       createdAt: expect.any(Number),
       flags: 0,
       operation: 'get',
     }
 
-    expect([...ecosystem.n.get('atom1')!.o]).toEqual([['atom4', expectedEdges]])
+    const nodes = getNodes()
 
-    expect([...ecosystem.n.get('atom2')!.o]).toEqual([['atom4', expectedEdges]])
+    expect(nodes.atom1).toEqual(
+      expect.objectContaining({
+        observers: {
+          atom4: expectedEdges,
+        },
+      })
+    )
 
-    expect(ecosystem.n.get('atom3')).toBeUndefined()
+    expect(nodes.atom2).toEqual(
+      expect.objectContaining({
+        observers: {
+          atom4: expectedEdges,
+        },
+      })
+    )
 
-    expect([...ecosystem.n.get('atom4')!.s.keys()]).toEqual(['atom1', 'atom2'])
+    expect(nodes.atom3).toBeUndefined()
+
+    expect(
+      [...ecosystem.n.get('atom4')!.s.keys()].map(node => node.id)
+    ).toEqual(['atom1', 'atom2'])
 
     const button = await findByText('toggle')
 
@@ -86,15 +101,40 @@ describe('graph', () => {
       jest.runAllTimers()
     })
 
+    const nodes2 = getNodes()
+
     expect(div).toHaveTextContent('4')
 
-    expect([...ecosystem.n.get('atom1')!.o]).toEqual([['atom4', expectedEdges]])
+    expect(nodes2.atom1).toEqual(
+      expect.objectContaining({
+        observers: {
+          atom4: expectedEdges,
+        },
+      })
+    )
 
-    expect([...ecosystem.n.get('atom2')!.o]).toEqual([])
+    expect(nodes2.atom2).toEqual(
+      expect.objectContaining({
+        observers: {},
+      })
+    )
 
-    expect([...ecosystem.n.get('atom3')!.o]).toEqual([['atom4', expectedEdges]])
+    expect(nodes2.atom3).toEqual(
+      expect.objectContaining({
+        observers: {
+          atom4: expectedEdges,
+        },
+      })
+    )
 
-    expect([...ecosystem.n.get('atom4')!.s.keys()]).toEqual(['atom1', 'atom3'])
+    expect(nodes2.atom4).toEqual(
+      expect.objectContaining({
+        sources: {
+          atom1: expect.any(Object),
+          atom3: expect.any(Object),
+        },
+      })
+    )
 
     expect(ecosystem.viewGraph()).toMatchSnapshot()
     expect(ecosystem.viewGraph('bottom-up')).toMatchSnapshot()
@@ -214,27 +254,32 @@ describe('graph', () => {
 
     expect(selectorInstance.v).toBe('aaaab')
     expect(why).toHaveLength(2)
-    expect(why).toMatchInlineSnapshot(`
-      [
-        {
-          "newState": "aa",
-          "oldState": "a",
-          "operation": "get",
-          "reasons": [],
-          "sourceId": "1",
-          "sourceType": "Atom",
-          "type": "state changed",
-        },
-        {
-          "newState": "aab",
-          "oldState": "ab",
-          "operation": "get",
-          "reasons": [],
-          "sourceId": "2",
-          "sourceType": "Atom",
-          "type": "state changed",
-        },
-      ]
-    `)
+    expect(why).toEqual([
+      {
+        newState: 'aa',
+        oldState: 'a',
+        operation: 'get',
+        reasons: [],
+        source: expect.any(Object),
+        type: 'state changed',
+      },
+      {
+        newState: 'aab',
+        oldState: 'ab',
+        operation: 'get',
+        reasons: [
+          {
+            newState: 'aa',
+            oldState: 'a',
+            operation: 'get',
+            reasons: [],
+            source: expect.any(Object),
+            type: 'state changed',
+          },
+        ],
+        source: expect.any(Object),
+        type: 'state changed',
+      },
+    ])
   })
 })

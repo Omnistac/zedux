@@ -3,8 +3,8 @@ import { Ecosystem } from '../classes/Ecosystem'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
-  EvaluationReason,
   GraphEdge,
+  InternalEvaluationReason,
   LifecycleStatus,
 } from '../types/index'
 import { type GraphNode } from '../classes/GraphNode'
@@ -46,7 +46,7 @@ export const pluginActions = {
       newState: any
       node: GraphNode
       oldState: any
-      reasons: EvaluationReason[]
+      reasons: InternalEvaluationReason[]
     },
     'stateChanged'
   >('stateChanged'),

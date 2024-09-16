@@ -3,136 +3,76 @@
 exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 1`] = `
 {
   "1": {
-    "T": 2,
-    "W": 3,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "1",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "no-1" => {
-        "callback": [Function],
+    "className": "AtomInstance",
+    "observers": {
+      "no-1": {
         "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
     },
-    "p": [],
-    "s": Map {
-      "@@selector-common-name-0" => {
-        "callback": undefined,
+    "sources": {
+      "@@selector-common-name-0": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": 3,
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
-    },
-    "t": AtomTemplate {
-      "_config": {
-        "ttl": 0,
-      },
-      "_value": [Function],
-      "key": "1",
-      "ttl": 0,
-    },
-    "w": [],
+    "state": 3,
+    "status": "Active",
+    "weight": 3,
   },
   "@@selector-common-name-0": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-common-name-0",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "1" => {
-        "callback": undefined,
+    "className": "SelectorInstance",
+    "observers": {
+      "1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {
-      "root" => {
-        "callback": undefined,
+    "sources": {
+      "root": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": 3,
-    "w": [],
+    "state": 3,
+    "status": "Active",
+    "weight": 2,
+  },
+  "no-1": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "1": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
   },
   "root": {
-    "T": 2,
-    "W": 1,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "root",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "@@selector-common-name-0" => {
-        "callback": undefined,
+    "className": "AtomInstance",
+    "observers": {
+      "@@selector-common-name-0": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {},
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": 1,
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
-    },
-    "t": AtomTemplate {
-      "_config": {
-        "ttl": 0,
-      },
-      "_value": [Function],
-      "key": "root",
-      "ttl": 0,
-    },
-    "w": [],
+    "sources": {},
+    "state": 1,
+    "status": "Active",
+    "weight": 1,
   },
 }
 `;
@@ -140,137 +80,76 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 2`] = `
 {
   "2": {
-    "T": 2,
-    "W": 3,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "2",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "no-3" => {
-        "callback": [Function],
+    "className": "AtomInstance",
+    "observers": {
+      "no-3": {
         "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
     },
-    "p": [],
-    "s": Map {
-      "@@selector-common-name-2" => {
-        "callback": undefined,
+    "sources": {
+      "@@selector-common-name-2": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": 4,
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
-    },
-    "t": IonTemplate {
-      "_config": {
-        "ttl": 0,
-      },
-      "_get": [Function],
-      "_value": [Function],
-      "key": "2",
-      "ttl": 0,
-    },
-    "w": [],
+    "state": 4,
+    "status": "Active",
+    "weight": 3,
   },
   "@@selector-common-name-2": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-common-name-2",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "2" => {
-        "callback": undefined,
+    "className": "SelectorInstance",
+    "observers": {
+      "2": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {
-      "root" => {
-        "callback": undefined,
+    "sources": {
+      "root": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": 4,
-    "w": [],
+    "state": 4,
+    "status": "Active",
+    "weight": 2,
+  },
+  "no-3": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "2": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
   },
   "root": {
-    "T": 2,
-    "W": 1,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "root",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "@@selector-common-name-2" => {
-        "callback": undefined,
+    "className": "AtomInstance",
+    "observers": {
+      "@@selector-common-name-2": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {},
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": 1,
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
-    },
-    "t": AtomTemplate {
-      "_config": {
-        "ttl": 0,
-      },
-      "_value": [Function],
-      "key": "root",
-      "ttl": 0,
-    },
-    "w": [],
+    "sources": {},
+    "state": 1,
+    "status": "Active",
+    "weight": 1,
   },
 }
 `;
@@ -278,228 +157,139 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 3`] = `
 {
   "1": {
-    "T": 2,
-    "W": 3,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "1",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "no-4" => {
-        "callback": [Function],
+    "className": "AtomInstance",
+    "observers": {
+      "no-4": {
         "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
     },
-    "p": [],
-    "s": Map {
-      "@@selector-common-name-0" => {
-        "callback": undefined,
+    "sources": {
+      "@@selector-common-name-0": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": 3,
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
-    },
-    "t": AtomTemplate {
-      "_config": {
-        "ttl": 0,
-      },
-      "_value": [Function],
-      "key": "1",
-      "ttl": 0,
-    },
-    "w": [],
+    "state": 3,
+    "status": "Active",
+    "weight": 3,
   },
   "2": {
-    "T": 2,
-    "W": 3,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "2",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "no-3" => {
-        "callback": [Function],
+    "className": "AtomInstance",
+    "observers": {
+      "no-3": {
         "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
     },
-    "p": [],
-    "s": Map {
-      "@@selector-common-name-2" => {
-        "callback": undefined,
+    "sources": {
+      "@@selector-common-name-2": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": 4,
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
-    },
-    "t": IonTemplate {
-      "_config": {
-        "ttl": 0,
-      },
-      "_get": [Function],
-      "_value": [Function],
-      "key": "2",
-      "ttl": 0,
-    },
-    "w": [],
+    "state": 4,
+    "status": "Active",
+    "weight": 3,
   },
   "@@selector-common-name-0": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-common-name-0",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "1" => {
-        "callback": undefined,
+    "className": "SelectorInstance",
+    "observers": {
+      "1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {
-      "root" => {
-        "callback": undefined,
+    "sources": {
+      "root": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": 3,
-    "w": [],
+    "state": 3,
+    "status": "Active",
+    "weight": 2,
   },
   "@@selector-common-name-2": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-common-name-2",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "2" => {
-        "callback": undefined,
+    "className": "SelectorInstance",
+    "observers": {
+      "2": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {
-      "root" => {
-        "callback": undefined,
+    "sources": {
+      "root": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": 4,
-    "w": [],
+    "state": 4,
+    "status": "Active",
+    "weight": 2,
+  },
+  "no-3": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "2": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "no-4": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "1": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
   },
   "root": {
-    "T": 2,
-    "W": 1,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "root",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "@@selector-common-name-2" => {
-        "callback": undefined,
+    "className": "AtomInstance",
+    "observers": {
+      "@@selector-common-name-0": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
-      "@@selector-common-name-0" => {
-        "callback": undefined,
+      "@@selector-common-name-2": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {},
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": 1,
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
-    },
-    "t": AtomTemplate {
-      "_config": {
-        "ttl": 0,
-      },
-      "_value": [Function],
-      "key": "root",
-      "ttl": 0,
-    },
-    "w": [],
+    "sources": {},
+    "state": 1,
+    "status": "Active",
+    "weight": 1,
   },
 }
 `;
@@ -507,136 +297,76 @@ exports[`selection same-name selectors share the namespace when destroyed and re
 exports[`selection same-name selectors share the namespace when destroyed and recreated at different times 4`] = `
 {
   "1": {
-    "T": 2,
-    "W": 3,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "1",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "no-4" => {
-        "callback": [Function],
+    "className": "AtomInstance",
+    "observers": {
+      "no-4": {
         "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
     },
-    "p": [],
-    "s": Map {
-      "@@selector-common-name-0" => {
-        "callback": undefined,
+    "sources": {
+      "@@selector-common-name-0": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": 3,
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
-    },
-    "t": AtomTemplate {
-      "_config": {
-        "ttl": 0,
-      },
-      "_value": [Function],
-      "key": "1",
-      "ttl": 0,
-    },
-    "w": [],
+    "state": 3,
+    "status": "Active",
+    "weight": 3,
   },
   "@@selector-common-name-0": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-common-name-0",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "1" => {
-        "callback": undefined,
+    "className": "SelectorInstance",
+    "observers": {
+      "1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {
-      "root" => {
-        "callback": undefined,
+    "sources": {
+      "root": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": 3,
-    "w": [],
+    "state": 3,
+    "status": "Active",
+    "weight": 2,
+  },
+  "no-4": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "1": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
   },
   "root": {
-    "T": 2,
-    "W": 1,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "root",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "@@selector-common-name-0" => {
-        "callback": undefined,
+    "className": "AtomInstance",
+    "observers": {
+      "@@selector-common-name-0": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {},
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": 1,
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
-    },
-    "t": AtomTemplate {
-      "_config": {
-        "ttl": 0,
-      },
-      "_value": [Function],
-      "key": "root",
-      "ttl": 0,
-    },
-    "w": [],
+    "sources": {},
+    "state": 1,
+    "status": "Active",
+    "weight": 1,
   },
 }
 `;

@@ -1,7 +1,11 @@
 import { AtomGetters, atom, useAtomSelector } from '@zedux/react'
 import React, { useState } from 'react'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
-import { ecosystem, getSelectorNodes, snapshotNodes } from '../utils/ecosystem'
+import {
+  ecosystem,
+  snapshotNodes,
+  snapshotSelectorNodes,
+} from '../utils/ecosystem'
 import { act, fireEvent } from '@testing-library/react'
 
 describe('useAtomSelector', () => {
@@ -440,7 +444,7 @@ describe('useAtomSelector', () => {
     const button = await findByTestId('button')
     const div = await findByTestId('text')
 
-    expect(getSelectorNodes()).toMatchSnapshot()
+    snapshotSelectorNodes()
     expect(div.innerHTML).toBe('10')
 
     act(() => {
@@ -450,7 +454,7 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('11')
 
-    expect(getSelectorNodes()).toMatchSnapshot()
+    snapshotSelectorNodes()
   })
 
   test('inline selector that returns a different object reference every time only triggers one extra rerender (strict mode off)', async () => {

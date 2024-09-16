@@ -14,8 +14,6 @@ import {
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
   Cleanup,
-  EvaluationReason,
-  EvaluationSourceType,
   ExportsInfusedSetter,
   LifecycleStatus,
   PromiseState,
@@ -24,8 +22,9 @@ import {
   NodeFilter,
   DehydrationOptions,
   AnyAtomGenerics,
+  InternalEvaluationReason,
 } from '@zedux/atoms/types/index'
-import { prefix } from '@zedux/atoms/utils/general'
+import { Invalidate, prefix, PromiseChange } from '@zedux/atoms/utils/general'
 import { pluginActions } from '@zedux/atoms/utils/plugin-actions'
 import {
   getErrorPromiseState,
@@ -198,18 +197,8 @@ export class AtomInstance<
   /**
    * Force this atom instance to reevaluate.
    */
-  public invalidate(
-    operation = 'invalidate',
-    sourceType: EvaluationSourceType = 'External'
-  ) {
-    this.r(
-      {
-        operation,
-        sourceType,
-        type: 'cache invalidated',
-      },
-      false
-    )
+  public invalidate() {
+    this.r({ t: Invalidate }, false)
 
     // run the scheduler synchronously after invalidation
     this.e._scheduler.flush()
@@ -300,20 +289,7 @@ export class AtomInstance<
    */
   public i() {
     const { n, s } = getEvaluationContext()
-    const factoryResult = this._doEvaluate()
-
-    ;[this._stateType, this.store] = getStateStore(factoryResult)
-
-    this._subscription = this.store.subscribe((newState, oldState, action) => {
-      // buffer updates (with cache size of 1) if this instance is currently
-      // evaluating
-      if (this._isEvaluating) {
-        this._bufferedUpdate = { newState, oldState, action }
-        return
-      }
-
-      this._handleStateChange(newState, oldState, action)
-    })
+    this._doEvaluate()
 
     this._setStatus('Active')
     flushBuffer(n, s)
@@ -332,7 +308,7 @@ export class AtomInstance<
    * @see GraphNode.j
    */
   public j() {
-    this._evaluationTask()
+    this._doEvaluate()
   }
 
   /**
@@ -394,7 +370,7 @@ export class AtomInstance<
   /**
    * @see GraphNode.r
    */
-  public r(reason: EvaluationReason, shouldSetTimeout?: boolean) {
+  public r(reason: InternalEvaluationReason, shouldSetTimeout?: boolean) {
     // TODO: Any calls in this case probably indicate a memory leak on the
     // user's part. Notify them. TODO: Can we pause evaluations while
     // status is Stale (and should we just always evaluate once when
@@ -414,7 +390,7 @@ export class AtomInstance<
     return (this._set = Object.assign(setState, this.exports))
   }
 
-  private _doEvaluate(): G['Store'] | G['State'] {
+  private _doEvaluate() {
     const { n, s } = getEvaluationContext()
     this._nextInjectors = []
     let newFactoryResult: G['Store'] | G['State']
@@ -423,6 +399,50 @@ export class AtomInstance<
 
     try {
       newFactoryResult = this._evaluate()
+
+      if (this.l === 'Initializing') {
+        ;[this._stateType, this.store] = getStateStore(newFactoryResult)
+
+        this._subscription = this.store.subscribe(
+          (newState, oldState, action) => {
+            // buffer updates (with cache size of 1) if this instance is currently
+            // evaluating
+            if (this._isEvaluating) {
+              this._bufferedUpdate = { newState, oldState, action }
+              return
+            }
+
+            this._handleStateChange(newState, oldState, action)
+          }
+        )
+      } else {
+        const newStateType = getStateType(newFactoryResult)
+
+        if (DEV && newStateType !== this._stateType) {
+          throw new Error(
+            `Zedux: atom factory for atom "${this.t.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
+          )
+        }
+
+        if (
+          DEV &&
+          newStateType === StoreState &&
+          newFactoryResult !== this.store
+        ) {
+          throw new Error(
+            `Zedux: atom factory for atom "${this.t.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
+          )
+        }
+
+        // there is no way to cause an evaluation loop when the StateType is Value
+        if (newStateType === RawState) {
+          this.store.setState(
+            typeof newFactoryResult === 'function'
+              ? () => newFactoryResult as G['State']
+              : (newFactoryResult as G['State'])
+          )
+        }
+      }
     } catch (err) {
       this._nextInjectors.forEach(injector => {
         injector.cleanup?.()
@@ -454,8 +474,6 @@ export class AtomInstance<
       // let this.i flush updates after status is set to Active
       flushBuffer(n, s)
     }
-
-    return newFactoryResult
   }
 
   /**
@@ -509,33 +527,6 @@ export class AtomInstance<
     }
   }
 
-  private _evaluationTask() {
-    const newFactoryResult = this._doEvaluate()
-
-    const newStateType = getStateType(newFactoryResult)
-
-    if (DEV && newStateType !== this._stateType) {
-      throw new Error(
-        `Zedux: atom factory for atom "${this.t.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
-      )
-    }
-
-    if (DEV && newStateType === StoreState && newFactoryResult !== this.store) {
-      throw new Error(
-        `Zedux: atom factory for atom "${this.t.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
-      )
-    }
-
-    // there is no way to cause an evaluation loop when the StateType is Value
-    if (newStateType === RawState) {
-      this.store.setState(
-        typeof newFactoryResult === 'function'
-          ? () => newFactoryResult as G['State']
-          : (newFactoryResult as G['State'])
-      )
-    }
-  }
-
   private _getTtl() {
     if (this.api?.ttl == null) {
       return this.t.ttl ?? this.e.atomDefaults?.ttl
@@ -552,7 +543,7 @@ export class AtomInstance<
     oldState: G['State'] | undefined,
     action: ActionChain
   ) {
-    scheduleDependents(this, newState, oldState, false)
+    scheduleDependents(this, oldState, false)
 
     if (this.e._mods.stateChanged) {
       this.e.modBus.dispatch(
@@ -622,15 +613,7 @@ export class AtomInstance<
     const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
     this._promiseStatus = state.status
 
-    scheduleDependents(
-      this,
-      undefined,
-      undefined,
-      true,
-      'promise changed',
-      'Updated',
-      true
-    )
+    scheduleDependents(this, undefined, true, PromiseChange, true)
 
     return state as unknown as G['State']
   }

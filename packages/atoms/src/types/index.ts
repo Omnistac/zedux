@@ -1,4 +1,4 @@
-import { ActionChain, Job, Observable, Settable } from '@zedux/core'
+import { ActionChain, Observable, Settable } from '@zedux/core'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
 import {
@@ -11,6 +11,8 @@ import {
   AtomStateType,
 } from './atoms'
 import { SelectorInstance } from '../classes/SelectorInstance'
+import { GraphNode } from '../classes/GraphNode'
+import { InternalEvaluationType } from '../utils/general'
 
 export * from './atoms'
 
@@ -182,7 +184,7 @@ export type DehydrationFilter = string | AnyAtomTemplate | DehydrationOptions
 export type DependentCallback = (
   signal: GraphEdgeSignal,
   val?: any,
-  reason?: EvaluationReason
+  reason?: InternalEvaluationReason
 ) => any
 
 export interface EcosystemConfig<
@@ -210,9 +212,8 @@ export interface EvaluationReason<State = any> {
   action?: ActionChain
   newState?: State
   oldState?: State
-  operation: string // e.g. a method like "injectValue"
-  sourceType: EvaluationSourceType
-  sourceId?: string // e.g. a fully-qualified atom instance id like "myAtom-[0]"
+  operation?: string // e.g. a method like "injectValue"
+  source?: GraphNode
   reasons?: EvaluationReason[]
   type: EvaluationType
 }
@@ -249,7 +250,6 @@ export type GraphEdgeDetails = {
 
 // TODO: optimize this internal object to use single-letter properties
 export interface GraphEdge {
-  callback?: DependentCallback
   createdAt: number
   flags: number // calculated from the EdgeFlags
   operation: string
@@ -260,12 +260,6 @@ export interface GraphEdge {
    * undefined if it should be removed)
    */
   p?: number
-
-  /**
-   * `j`ob - a reference to a scheduled job for external edges - so they can
-   * unschedule jobs
-   */
-  j?: Job
 }
 
 /**
@@ -300,6 +294,31 @@ export interface InjectPromiseConfig<T = any> {
 export interface InjectStoreConfig {
   hydrate?: boolean
   subscribe?: boolean
+}
+
+export interface InternalEvaluationReason<State = any> {
+  /**
+   * `p`revState - the old state of the source node
+   */
+  p?: State
+
+  /**
+   * `s`ource - the node that caused its observer to update
+   */
+  s?: GraphNode
+
+  /**
+   * `r`easons - an indefinitely nested list of reasons that caused the `s`ource
+   * to update in the first place
+   */
+  r?: InternalEvaluationReason[]
+
+  /**
+   * `t`ype - an obfuscated number representing the type of update (e.g. whether
+   * the source node was force destroyed or its promise updated). Zedux's `why`
+   * utils translate this into a user-friendly string.
+   */
+  t?: InternalEvaluationType
 }
 
 export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =

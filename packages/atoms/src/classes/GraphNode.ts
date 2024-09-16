@@ -4,11 +4,10 @@ import {
   Cleanup,
   DehydrationFilter,
   DependentCallback,
-  EvaluationReason,
-  EvaluationType,
   GraphEdge,
   GraphEdgeDetails,
   GraphEdgeSignal,
+  InternalEvaluationReason,
   LifecycleStatus,
   NodeFilter,
   NodeFilterOptions,
@@ -16,7 +15,12 @@ import {
 import { is, Job } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
 import { pluginActions } from '../utils/plugin-actions'
-import { ExplicitExternal, External, Static } from '../utils/general'
+import {
+  Destroy,
+  ExplicitExternal,
+  InternalEvaluationType,
+  Static,
+} from '../utils/general'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 
 /**
@@ -24,17 +28,16 @@ import { AtomTemplateBase } from './templates/AtomTemplateBase'
  * really just deferring the calling of this method.
  */
 export const addEdge = (
-  dependentId: string,
+  dependent: GraphNode,
   dependency: GraphNode,
-  newEdge: GraphEdge,
-  dependent = dependency.e.n.get(dependentId)
+  newEdge: GraphEdge
 ) => {
   const { _mods, modBus } = dependency.e
 
   // draw the edge in both nodes. Dependent may not exist if it's an external
   // pseudo-node
-  dependent && dependent.s.set(dependency.id, newEdge)
-  dependency.o.set(dependentId, newEdge)
+  dependent && dependent.s.set(dependency, newEdge)
+  dependency.o.set(dependent, newEdge)
   dependency.c?.()
 
   // static dependencies don't change a node's weight
@@ -46,7 +49,7 @@ export const addEdge = (
     modBus.dispatch(
       pluginActions.edgeCreated({
         dependency,
-        dependent: dependent || dependentId, // unfortunate but not changing for now
+        dependent: dependent, // unfortunate but not changing for now
         edge: newEdge,
       })
     )
@@ -72,32 +75,21 @@ export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
 // TODO: merge this into destroyNodeStart. We should be able to
 export const destroyNodeFinish = (node: GraphNode) => {
   // first remove all edges between this node and its dependencies
-  for (const dependencyKey of node.s.keys()) {
-    removeEdge(node.id, node.e.n.get(dependencyKey)!, node)
+  for (const dependency of node.s.keys()) {
+    removeEdge(node, dependency)
   }
 
   // if an atom instance is force-destroyed, it could still have dependents.
   // Inform them of the destruction
-  scheduleDependents(
-    node,
-    undefined,
-    undefined,
-    true,
-    'node destroyed',
-    'Destroyed',
-    true
-  )
+  scheduleDependents(node, undefined, true, Destroy, true)
 
   // now remove all edges between this node and its dependents
-  for (const [dependentId, dependentEdge] of node.o) {
-    if (!(dependentEdge.flags & Static)) {
-      recalculateNodeWeight(-node.W, node.e.n.get(dependentId))
+  for (const [observer, edge] of node.o) {
+    if (!(edge.flags & Static)) {
+      recalculateNodeWeight(-node.W, observer)
     }
 
-    const dependentNode = node.e.n.get(dependentId)
-
-    // dependent won't exist if it's external
-    dependentNode && dependentNode.s.delete(node.id)
+    observer.s.delete(node)
 
     // we _probably_ don't need to send edgeRemoved mod events to plugins for
     // these - it's better that they receive the duplicate edgeCreated event
@@ -118,8 +110,8 @@ const recalculateNodeWeight = (weightDiff: number, node?: GraphNode) => {
 
   node.W += weightDiff
 
-  for (const observerId of node.o.keys()) {
-    recalculateNodeWeight(weightDiff, node.e.n.get(observerId))
+  for (const observer of node.o.keys()) {
+    recalculateNodeWeight(weightDiff, observer)
   }
 }
 
@@ -131,43 +123,33 @@ const recalculateNodeWeight = (weightDiff: number, node?: GraphNode) => {
  * means a parent EcosystemProvider may have already unmounted and wiped the
  * whole graph; this edge may already be destroyed.
  */
-export const removeEdge = (
-  dependentId: string,
-  dependency: GraphNode,
-  dependent = dependency.e.n.get(dependentId)
-) => {
+export const removeEdge = (dependent: GraphNode, dependency: GraphNode) => {
   // erase graph edge between dependent and dependency
-  dependent && dependent.s.delete(dependency.id)
+  dependent && dependent.s.delete(dependency)
 
   // hmm could maybe happen when a dependency was force-destroyed if a child
   // tries to destroy its edge before recreating it (I don't think we ever do
   // that though)
   if (!dependency) return
 
-  const dependentEdge = dependency.o.get(dependentId)
+  const edge = dependency.o.get(dependent)
 
   // happens in React 18+ (see this method's jsdoc above)
-  if (!dependentEdge) return
+  if (!edge) return
 
-  dependency.o.delete(dependentId)
+  dependency.o.delete(dependent)
 
   // static dependencies don't change a node's weight
-  if (!(dependentEdge.flags & Static)) {
+  if (!(edge.flags & Static)) {
     recalculateNodeWeight(-dependency.W, dependent)
   }
 
-  const { _mods, _scheduler, modBus } = dependency.e
-
-  if (dependentEdge.j) {
-    _scheduler.unschedule(dependentEdge.j)
-  }
-
-  if (_mods.edgeRemoved) {
-    modBus.dispatch(
+  if (dependency.e._mods.edgeRemoved) {
+    dependency.e.modBus.dispatch(
       pluginActions.edgeRemoved({
         dependency,
-        dependent: dependent || dependentId,
-        edge: dependentEdge,
+        dependent: dependent,
+        edge: edge,
       })
     )
   }
@@ -177,67 +159,24 @@ export const removeEdge = (
 
 export const scheduleDependents = (
   node: GraphNode,
-  newState: any,
-  oldState: any,
+  p: any,
   defer?: boolean,
-  type: EvaluationType = 'state changed',
-  signal: GraphEdgeSignal = 'Updated',
+  t?: InternalEvaluationType,
   scheduleStaticDeps = false
 ) => {
-  const { n, _scheduler } = node.e
+  const reason: InternalEvaluationReason = {
+    p,
+    r: node.w,
+    s: node,
+    t,
+  }
 
-  for (const [dependentId, dependentEdge] of node.o) {
-    // if `edge.j`ob exists, this edge has already been scheduled
-    if (dependentEdge.j) {
-      if (signal !== 'Destroyed') continue
-
-      // destruction jobs supersede update jobs; cancel the existing job so we
-      // can create a new one for the destruction
-      _scheduler.unschedule(dependentEdge.j)
-    }
-
+  for (const [observer, edge] of node.o) {
     // Static deps don't update on state change, only on promise change or
     // instance force-destruction
-    if (dependentEdge.flags & Static && !scheduleStaticDeps) continue
+    if (edge.flags & Static && !scheduleStaticDeps) continue
 
-    const reason: EvaluationReason = {
-      newState,
-      oldState,
-      operation: dependentEdge.operation,
-      reasons: node.w,
-      sourceId: node.id,
-      // TODO: get rid of sourceType. Plugins can easily infer it from
-      // `ecosystem.n`odes given the sourceId
-      sourceType: 'Atom',
-      type,
-    }
-
-    // let internal dependents (other atoms and AtomSelectors) schedule their
-    // own jobs
-    if (!(dependentEdge.flags & External)) {
-      n.get(dependentId)!.r(reason, defer)
-      continue
-    }
-
-    // schedule external dependents
-    const job = {
-      F: dependentEdge.flags,
-      j: () => {
-        dependentEdge.j = undefined
-        dependentEdge.callback?.(
-          signal,
-          // don't use the snapshotted newState above
-          node.get(),
-          reason
-        )
-      },
-      T: 3 as const, // UpdateExternalDependent (3)
-    }
-
-    _scheduler.schedule(job, defer)
-
-    // mutate the edge; give it the scheduled task so it can be cleaned up
-    dependentEdge.j = job
+    observer.r(reason, defer)
   }
 }
 
@@ -352,16 +291,16 @@ export abstract class GraphNode<
       {}) as GraphEdgeDetails & { i?: string }
 
     const id = config.i || this.e._idGenerator.generateNodeId()
+    const node = new ExternalNode(this.e, id, () => {
+      const signal = node.i ? 'Destroyed' : 'Updated'
 
-    addEdge(id, this, {
-      callback: (signal, val, reason) =>
-        (!eventName || eventName === signal) && callback(signal, val, reason),
-      createdAt: this.e._idGenerator.now(),
-      flags: config.f ?? ExplicitExternal,
-      operation: config.op || 'on',
+      ;(!eventName || eventName === signal) &&
+        callback(signal, this.get(), node.w[0]) // TODO: make DependentCallbacks receive the full reason list
     })
 
-    return () => removeEdge(id, this)
+    node.u(this, config.op || 'on', config.f ?? ExplicitExternal)
+
+    return () => node.k(this)
   }
 
   /**
@@ -414,7 +353,7 @@ export abstract class GraphNode<
    * determine whether this node should be included in the output. Also
    * typically called by `node.d`ehydrate to perform its filtering logic.
    */
-  public abstract f(options?: NodeFilter): boolean
+  public abstract f(options?: NodeFilter): boolean | undefined | void
 
   /**
    * `h`ydrate - a function called internally by `ecosystem.hydrate()` to
@@ -432,15 +371,6 @@ export abstract class GraphNode<
    * scheduling
    */
   public abstract j(): void
-
-  /**
-   * `k`illEdge - removes an edge between this node and the node with the passed
-   * id. Really, this just exposes the `removeEdge` function for use by other
-   * Zedux packages (e.g. the React package).
-   */
-  public k(id: string) {
-    removeEdge(id, this)
-  }
 
   /**
    * `l`ifecycleStatus - a string indicating the node's current state in its
@@ -473,7 +403,7 @@ export abstract class GraphNode<
    * exact same object reference will also be stored in another node's
    * `s`ources. The only exception is pseudo-nodes.
    */
-  public o = new Map<string, GraphEdge>()
+  public o = new Map<GraphNode, GraphEdge>()
 
   /**
    * `p`arams - a reference to the exact params passed to this node. These never
@@ -491,15 +421,15 @@ export abstract class GraphNode<
    * If `defer` is true, schedule the evaluation rather than running it right
    * away
    */
-  public abstract r(reason: EvaluationReason, defer?: boolean): void
+  public abstract r(reason: InternalEvaluationReason, defer?: boolean): void
 
   /**
    * `s`ources - a map of the edges drawn between this node and all of its
-   * dependencies, keyed by id. Every edge stored here is reverse-mapped - the
-   * exact same object reference will also be stored in another node's
-   * `o`bservers.
+   * dependencies, keyed by the GraphNode object reference of the source. Every
+   * edge stored here is reverse-mapped - the exact same object reference will
+   * also be stored in another node's `o`bservers.
    */
-  public s = new Map<string, GraphEdge>()
+  public s = new Map<GraphNode, GraphEdge>()
 
   /**
    * `t`emplate - a reference to the template that was used to create this node
@@ -512,5 +442,100 @@ export abstract class GraphNode<
    * `w`hy - the list of reasons explaining why this graph node updated or is
    * going to update.
    */
-  public w: EvaluationReason[] = []
+  public w: InternalEvaluationReason[] = []
+}
+
+export class ExternalNode extends GraphNode {
+  public T = 3 as 2 // temporary until we sort out new graph algo
+
+  /**
+   * `i`nstance - the single source node this external node is observing
+   */
+  public i?: GraphNode
+  p: undefined
+  t: undefined
+
+  constructor(
+    public readonly e: Ecosystem,
+    public readonly id: string,
+
+    /**
+     * `n`otify - tell the external node there's an update
+     */
+    public readonly n: ((newObjectReference: Record<string, never>) => void) & {
+      m?: boolean
+    }
+  ) {
+    super()
+    e.n.set(id, this)
+    setNodeStatus(this, 'Active')
+  }
+
+  destroy(skipUpdate?: boolean) {
+    if (!this.i) return
+    if (this.w.length) this.e._scheduler.unschedule(this)
+
+    // external nodes only have one source, no observers
+    removeEdge(this, this.i!)
+
+    this.i = undefined
+    this.e.n.delete(this.id)
+    setNodeStatus(this, 'Destroyed')
+
+    // notify the external observer of the destruction if needed (does nothing
+    // if the external observer initiated the destruction)
+    skipUpdate || this.j()
+  }
+
+  get() {}
+  d() {}
+  f() {}
+  h() {}
+
+  j() {
+    this.n.m && this.n({})
+    this.w = []
+  }
+
+  /**
+   * `k`illEdge - removes an edge between this node and the passed source node.
+   *
+   * External nodes only point to one source node. However, they can swap out
+   * which node they point to. We do that by first adding the new dep, then
+   * removing the old one by calling this method. So an external node can
+   * actually point to two source nodes momentarily.
+   *
+   * If the passed source is the only source, calling this method also destroys
+   * the external node. This setup is the simplest way to give React what it
+   * wants esp. in strict mode (usage in React hooks is currently the primary
+   * purpose of external nodes).
+   */
+  public k(source: GraphNode) {
+    removeEdge(this, source)
+    source === this.i && this.destroy(true)
+  }
+
+  m() {
+    this.destroy()
+  }
+
+  r(reason: InternalEvaluationReason, defer?: boolean) {
+    this.w.push(reason) === 1 && this.e._scheduler.schedule(this, defer)
+  }
+
+  /**
+   * `u`pdateEdge - ExternalNodes maintain a single edge on a source node. But
+   * the source can change. Call this to update it if needed.
+   */
+  u(source: GraphNode, operation: string, flags: number) {
+    this.i && removeEdge(this, this.i)
+
+    this.i = source
+
+    addEdge(this, source, {
+      createdAt: this.e._idGenerator.now(),
+      flags,
+      operation: operation,
+    })
+  }
 }

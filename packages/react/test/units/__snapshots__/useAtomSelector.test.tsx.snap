@@ -3,81 +3,58 @@
 exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode off) 1`] = `
 {
   "1": {
-    "T": 2,
-    "W": 1,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "1",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "@@selector-unnamed-0" => {
-        "callback": undefined,
+    "className": "AtomInstance",
+    "observers": {
+      "@@selector-unnamed-0": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {},
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": {
-        "val": 1,
-      },
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
+    "sources": {},
+    "state": {
+      "val": 1,
     },
-    "t": AtomTemplate {
-      "_config": undefined,
-      "_value": [Function],
-      "key": "1",
-    },
-    "w": [],
+    "status": "Active",
+    "weight": 1,
   },
   "@@selector-unnamed-0": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-unnamed-0",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "Test-:r0:" => {
-        "callback": [Function],
+    "className": "SelectorInstance",
+    "observers": {
+      "Test-:r0:": {
         "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
     },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
+    "sources": {
+      "1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": {
+    "state": {
       "val": 1,
     },
-    "w": [],
+    "status": "Active",
+    "weight": 2,
+  },
+  "Test-:r0:": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@@selector-unnamed-0": {
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 3,
   },
 }
 `;
@@ -85,82 +62,58 @@ exports[`useAtomSelector inline selector that returns a different object referen
 exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode off) 2`] = `
 {
   "1": {
-    "T": 2,
-    "W": 1,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "1",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "@@selector-unnamed-0" => {
-        "callback": undefined,
+    "className": "AtomInstance",
+    "observers": {
+      "@@selector-unnamed-0": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {},
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": {
-        "val": 2,
-      },
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
+    "sources": {},
+    "state": {
+      "val": 2,
     },
-    "t": AtomTemplate {
-      "_config": undefined,
-      "_value": [Function],
-      "key": "1",
-    },
-    "w": [],
+    "status": "Active",
+    "weight": 1,
   },
   "@@selector-unnamed-0": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-unnamed-0",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "Test-:r0:" => {
-        "callback": [Function],
+    "className": "SelectorInstance",
+    "observers": {
+      "Test-:r0:": {
         "createdAt": 123456789,
         "flags": 2,
-        "j": undefined,
         "operation": "useAtomSelector",
       },
     },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
+    "sources": {
+      "1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": {
+    "state": {
       "val": 2,
     },
-    "w": [],
+    "status": "Active",
+    "weight": 2,
+  },
+  "Test-:r0:": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@@selector-unnamed-0": {
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 3,
   },
 }
 `;
@@ -168,81 +121,58 @@ exports[`useAtomSelector inline selector that returns a different object referen
 exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode on) 1`] = `
 {
   "1": {
-    "T": 2,
-    "W": 1,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "1",
-    "izn": true,
-    "l": "Stale",
-    "o": Map {
-      "@@selector-unnamed-1" => {
-        "callback": undefined,
+    "className": "AtomInstance",
+    "observers": {
+      "@@selector-unnamed-2": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {},
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": {
-        "val": 1,
-      },
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
+    "sources": {},
+    "state": {
+      "val": 1,
     },
-    "t": AtomTemplate {
-      "_config": undefined,
-      "_value": [Function],
-      "key": "1",
-    },
-    "w": [],
+    "status": "Stale",
+    "weight": 1,
   },
-  "@@selector-unnamed-1": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-unnamed-1",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "Test-:r0:" => {
-        "callback": [Function],
+  "@@selector-unnamed-2": {
+    "className": "SelectorInstance",
+    "observers": {
+      "Test-:r0:": {
         "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
     },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
+    "sources": {
+      "1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": {
+    "state": {
       "val": 1,
     },
-    "w": [],
+    "status": "Active",
+    "weight": 2,
+  },
+  "Test-:r0:": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@@selector-unnamed-2": {
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 3,
   },
 }
 `;
@@ -250,148 +180,110 @@ exports[`useAtomSelector inline selector that returns a different object referen
 exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode on) 2`] = `
 {
   "1": {
-    "T": 2,
-    "W": 1,
-    "_createdAt": 123456789,
-    "_isEvaluating": false,
-    "_stateType": 2,
-    "_subscription": {
-      "unsubscribe": [Function],
-    },
-    "dispatch": [Function],
-    "id": "1",
-    "izn": true,
-    "l": "Stale",
-    "o": Map {
-      "@@selector-unnamed-1" => {
-        "callback": undefined,
+    "className": "AtomInstance",
+    "observers": {
+      "@@selector-unnamed-2": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {},
-    "setState": [Function],
-    "setStateDeep": [Function],
-    "store": {
-      "_isDispatching": false,
-      "_isSolo": true,
-      "_state": {
-        "val": 2,
-      },
-      "_subscribers": [
-        {
-          "next": [Function],
-        },
-      ],
-      "dispatch": [Function],
-      "setState": [Function],
+    "sources": {},
+    "state": {
+      "val": 2,
     },
-    "t": AtomTemplate {
-      "_config": undefined,
-      "_value": [Function],
-      "key": "1",
-    },
-    "w": [],
+    "status": "Stale",
+    "weight": 1,
   },
-  "@@selector-unnamed-1": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-unnamed-1",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "Test-:r0:" => {
-        "callback": [Function],
+  "@@selector-unnamed-2": {
+    "className": "SelectorInstance",
+    "observers": {
+      "Test-:r0:": {
         "createdAt": 123456789,
         "flags": 2,
-        "j": undefined,
         "operation": "useAtomSelector",
       },
     },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
+    "sources": {
+      "1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": {
+    "state": {
       "val": 2,
     },
-    "w": [],
+    "status": "Active",
+    "weight": 2,
+  },
+  "Test-:r0:": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@@selector-unnamed-2": {
+        "createdAt": 123456789,
+        "flags": 2,
+        "operation": "useAtomSelector",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 3,
   },
 }
 `;
 
 exports[`useAtomSelector inline selectors are swapped out in strict mode double-renders 1`] = `
 {
-  "@@selector-unnamed-1": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-unnamed-1",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "Test-:r0:" => {
-        "callback": [Function],
+  "@@selector-unnamed-2": {
+    "className": "SelectorInstance",
+    "observers": {
+      "Test-:r0:": {
         "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
     },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
+    "sources": {
+      "1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": 1,
-    "w": [],
+    "state": 1,
+    "status": "Active",
+    "weight": 2,
   },
 }
 `;
 
 exports[`useAtomSelector inline selectors are swapped out in strict mode double-renders 2`] = `
 {
-  "@@selector-unnamed-1": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-unnamed-1",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "Test-:r0:" => {
-        "callback": [Function],
+  "@@selector-unnamed-2": {
+    "className": "SelectorInstance",
+    "observers": {
+      "Test-:r0:": {
         "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
     },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
+    "sources": {
+      "1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": 1,
-    "w": [],
+    "state": 1,
+    "status": "Active",
+    "weight": 2,
   },
 }
 `;

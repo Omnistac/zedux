@@ -15,7 +15,6 @@ import {
   Cleanup,
   DehydrationFilter,
   EcosystemConfig,
-  GraphEdge,
   GraphEdgeDetails,
   GraphViewRecursive,
   MaybeCleanup,
@@ -25,7 +24,12 @@ import {
   Selectable,
   SelectorGenerics,
 } from '../types/index'
-import { External, compare, Static } from '../utils/general'
+import {
+  External,
+  compare,
+  Static,
+  makeReasonsReadable,
+} from '../utils/general'
 import { pluginActions } from '../utils/plugin-actions'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'
@@ -136,7 +140,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       // instances so we can add graph edges for them. When called outside a
       // reactive context, get() is just an alias for ecosystem.get()
       if (node) {
-        bufferEdge(instance.id, 'get', 0)
+        bufferEdge(instance, 'get', 0)
       }
 
       return instance.get()
@@ -156,7 +160,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       // ecosystem.getInstance()
       if (node) {
         bufferEdge(
-          instance.id,
+          instance,
           edgeInfo?.op || 'getInstance',
           edgeInfo?.f ?? Static
         )
@@ -176,7 +180,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (!node) return this.select(selectable, ...args)
 
       const instance = this.getNode(selectable, args)
-      bufferEdge(instance.id, 'select', 0)
+      bufferEdge(instance, 'select', 0)
 
       return instance.v
     }
@@ -921,13 +925,13 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
       for (const [id, node] of this.n) {
         hash[id] = {
-          dependencies: [...node.s.keys()].map(key => ({
-            key,
-            operation: (this.n.get(key)?.o.get(id) as GraphEdge).operation,
+          dependencies: [...node.s].map(([source, edge]) => ({
+            key: source.id,
+            operation: edge.operation,
           })),
-          dependents: [...node.o.keys()].map(key => ({
-            key,
-            operation: (node.o.get(key) as GraphEdge).operation,
+          dependents: [...node.o].map(([observer, edge]) => ({
+            key: observer.id,
+            operation: edge.operation,
           })),
           weight: node.W,
         }
@@ -956,9 +960,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       const children: GraphViewRecursive = {}
 
       for (const key of map.keys()) {
-        const child = recurse(this.n.get(key))
+        const child = recurse(typeof key === 'string' ? this.n.get(key) : key)
 
-        if (child) children[key] = child
+        if (child) children[typeof key === 'string' ? key : key.id] = child
       }
 
       return children
@@ -982,7 +986,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * array if this is the first evaluation of the instance or selector.
    */
   public why() {
-    return getEvaluationContext().n?.w
+    return makeReasonsReadable(getEvaluationContext().n)
   }
 
   /**

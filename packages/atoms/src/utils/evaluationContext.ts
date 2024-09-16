@@ -1,5 +1,5 @@
 import { ActionFactoryPayloadType, Store, is } from '@zedux/core'
-import { AnyAtomInstance, DependentCallback } from '../types/index'
+import { AnyAtomInstance } from '../types/index'
 import { ExplicitExternal, OutOfRange } from '../utils/general'
 import { pluginActions } from '../utils/plugin-actions'
 import {
@@ -43,19 +43,17 @@ let evaluationContext: EvaluationContext = {}
  * checks and throws.
  */
 export const bufferEdge = (
-  sourceId: string,
+  source: GraphNode,
   operation: string,
-  flags: number,
-  callback?: DependentCallback
+  flags: number
 ) => {
   const { e, s } = evaluationContext.n!
-  const existingEdge = s.get(sourceId)
+  const existingEdge = s.get(source)
 
   if (existingEdge) {
     if (flags < (existingEdge.p || OutOfRange)) existingEdge.p = flags
   } else {
-    s.set(sourceId, {
-      callback,
+    s.set(source, {
       createdAt: e._idGenerator.now(),
       flags: OutOfRange, // set to an out-of-range flag to indicate a new edge
       p: flags,
@@ -75,12 +73,10 @@ export const destroyBuffer = (
   previousNode: GraphNode | undefined,
   previousStartTime: number | undefined
 ) => {
-  const { e, s } = evaluationContext.n!
-
-  for (const [sourceId, sourceEdge] of s) {
+  for (const [source, sourceEdge] of evaluationContext.n!.s) {
     // the edge wasn't created during the evaluation that errored; keep it
     if (sourceEdge.flags === OutOfRange) {
-      scheduleNodeDestruction(e.n.get(sourceId)!)
+      scheduleNodeDestruction(source)
     }
 
     sourceEdge.p = undefined
@@ -122,27 +118,25 @@ export const flushBuffer = (
   previousNode: GraphNode | undefined,
   previousStartTime: number | undefined
 ) => {
-  const { e, id, s } = evaluationContext.n!
-
-  for (const [sourceId, source] of s) {
+  for (const [source, sourceEdge] of evaluationContext.n!.s) {
     // remove the edge if it wasn't recreated while buffering. Don't remove
     // anything but implicit-internal edges (those are the only kind we
     // auto-create during evaluation - other types may have been added
     // manually by the user and we don't want to touch them here)
-    if (source.flags & ExplicitExternal) continue
+    if (sourceEdge.flags & ExplicitExternal) continue
 
-    if (source.p == null) {
-      removeEdge(id, e.n.get(sourceId)!, evaluationContext.n)
+    if (sourceEdge.p == null) {
+      removeEdge(evaluationContext.n!, source)
     } else {
-      if (source.flags === OutOfRange) {
+      if (sourceEdge.flags === OutOfRange) {
         // add new edges that we tracked while buffering
-        addEdge(id, e.n.get(sourceId)!, source)
+        addEdge(evaluationContext.n!, source, sourceEdge)
       }
 
-      source.flags = source.p
+      sourceEdge.flags = sourceEdge.p
     }
 
-    source.p = undefined
+    sourceEdge.p = undefined
   }
 
   finishBuffer(previousNode, previousStartTime)

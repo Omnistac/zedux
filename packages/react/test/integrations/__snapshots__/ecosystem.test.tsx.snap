@@ -2,6 +2,56 @@
 
 exports[`ecosystem big graph 1`] = `
 {
+  "Child-:r0:": {
+    "dependencies": [
+      {
+        "key": "atom5",
+        "operation": "useAtomValue",
+      },
+    ],
+    "dependents": [],
+    "weight": 11,
+  },
+  "Child-:r1:": {
+    "dependencies": [
+      {
+        "key": "atom4",
+        "operation": "useAtomState",
+      },
+    ],
+    "dependents": [],
+    "weight": 7,
+  },
+  "Child-:r2:": {
+    "dependencies": [
+      {
+        "key": "atom3-["1"]",
+        "operation": "useAtomValue",
+      },
+    ],
+    "dependents": [],
+    "weight": 5,
+  },
+  "Child-:r3:": {
+    "dependencies": [
+      {
+        "key": "atom2",
+        "operation": "useAtomValue",
+      },
+    ],
+    "dependents": [],
+    "weight": 3,
+  },
+  "Child-:r4:": {
+    "dependencies": [
+      {
+        "key": "atom1",
+        "operation": "useAtomValue",
+      },
+    ],
+    "dependents": [],
+    "weight": 2,
+  },
   "atom1": {
     "dependencies": [],
     "dependents": [
@@ -125,6 +175,50 @@ exports[`ecosystem big graph 1`] = `
 
 exports[`ecosystem big graph 2`] = `
 {
+  "Child-:r0:": {
+    "atom5": {
+      "atom1": {},
+      "atom2": {
+        "atom1": {},
+      },
+      "atom4": {
+        "atom1": {},
+        "atom3-["1"]": {
+          "atom1": {},
+          "atom2": {
+            "atom1": {},
+          },
+        },
+      },
+    },
+  },
+  "Child-:r1:": {
+    "atom4": {
+      "atom1": {},
+      "atom3-["1"]": {
+        "atom1": {},
+        "atom2": {
+          "atom1": {},
+        },
+      },
+    },
+  },
+  "Child-:r2:": {
+    "atom3-["1"]": {
+      "atom1": {},
+      "atom2": {
+        "atom1": {},
+      },
+    },
+  },
+  "Child-:r3:": {
+    "atom2": {
+      "atom1": {},
+    },
+  },
+  "Child-:r4:": {
+    "atom1": {},
+  },
   "atom5": {
     "atom1": {},
     "atom2": {
@@ -146,23 +240,40 @@ exports[`ecosystem big graph 2`] = `
 exports[`ecosystem big graph 3`] = `
 {
   "atom1": {
+    "Child-:r4:": {},
     "atom2": {
+      "Child-:r3:": {},
       "atom3-["1"]": {
+        "Child-:r2:": {},
         "atom4": {
-          "atom5": {},
+          "Child-:r1:": {},
+          "atom5": {
+            "Child-:r0:": {},
+          },
         },
       },
-      "atom5": {},
+      "atom5": {
+        "Child-:r0:": {},
+      },
     },
     "atom3-["1"]": {
+      "Child-:r2:": {},
       "atom4": {
-        "atom5": {},
+        "Child-:r1:": {},
+        "atom5": {
+          "Child-:r0:": {},
+        },
       },
     },
     "atom4": {
-      "atom5": {},
+      "Child-:r1:": {},
+      "atom5": {
+        "Child-:r0:": {},
+      },
     },
-    "atom5": {},
+    "atom5": {
+      "Child-:r0:": {},
+    },
   },
 }
 `;

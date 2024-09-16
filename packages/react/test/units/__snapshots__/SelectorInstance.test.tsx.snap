@@ -3,83 +3,63 @@
 exports[`the SelectorInstance class deeply nested selectors get auto-created 1`] = `
 {
   "@@selector-selector1-2": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-selector1-2",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "@@selector-selector2-1" => {
-        "callback": undefined,
+    "className": "SelectorInstance",
+    "observers": {
+      "@@selector-selector2-1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
+    "sources": {
+      "1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": "ab",
-    "w": [],
+    "state": "ab",
+    "status": "Active",
+    "weight": 2,
   },
   "@@selector-selector2-1": {
-    "T": 2,
-    "W": 3,
-    "id": "@@selector-selector2-1",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "@@selector-selector3-0" => {
-        "callback": undefined,
+    "className": "SelectorInstance",
+    "observers": {
+      "@@selector-selector3-0": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "p": [],
-    "s": Map {
-      "@@selector-selector1-2" => {
-        "callback": undefined,
+    "sources": {
+      "@@selector-selector1-2": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": "abc",
-    "w": [],
+    "state": "abc",
+    "status": "Active",
+    "weight": 3,
   },
   "@@selector-selector3-0": {
-    "T": 2,
-    "W": 4,
-    "id": "@@selector-selector3-0",
-    "izn": true,
-    "l": "Active",
-    "o": Map {},
-    "p": [],
-    "s": Map {
-      "@@selector-selector2-1" => {
-        "callback": undefined,
+    "className": "SelectorInstance",
+    "observers": {},
+    "sources": {
+      "@@selector-selector2-1": {
         "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
       },
     },
-    "t": [Function],
-    "v": "abcd",
-    "w": [],
+    "state": "abcd",
+    "status": "Active",
+    "weight": 4,
   },
 }
 `;
@@ -87,34 +67,20 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
 exports[`the SelectorInstance class different arg-accepting selectors with the exact same name and args create different instances 1`] = `
 {
   "@@selector-commonName-0-["a"]": {
-    "T": 2,
-    "W": 1,
-    "id": "@@selector-commonName-0-["a"]",
-    "izn": true,
-    "l": "Active",
-    "o": Map {},
-    "p": [
-      "a",
-    ],
-    "s": Map {},
-    "t": [Function],
-    "v": "ab",
-    "w": [],
+    "className": "SelectorInstance",
+    "observers": {},
+    "sources": {},
+    "state": "ab",
+    "status": "Active",
+    "weight": 1,
   },
   "@@selector-commonName-1-["a"]": {
-    "T": 2,
-    "W": 1,
-    "id": "@@selector-commonName-1-["a"]",
-    "izn": true,
-    "l": "Active",
-    "o": Map {},
-    "p": [
-      "a",
-    ],
-    "s": Map {},
-    "t": [Function],
-    "v": "ac",
-    "w": [],
+    "className": "SelectorInstance",
+    "observers": {},
+    "sources": {},
+    "state": "ac",
+    "status": "Active",
+    "weight": 1,
   },
 }
 `;

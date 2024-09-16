@@ -16,5 +16,5 @@ import { readInstance } from '../utils/evaluationContext'
 export const injectInvalidate = () => {
   const instance = readInstance()
 
-  return () => instance.invalidate('injectInvalidate', 'Injector')
+  return () => instance.invalidate()
 }

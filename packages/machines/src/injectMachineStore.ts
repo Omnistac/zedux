@@ -284,26 +284,7 @@ export const injectMachineStore: <
             return
           }
 
-          instance.r(
-            {
-              newState,
-              oldState,
-              operation: 'injectMachineStore',
-              reasons: [
-                {
-                  action,
-                  newState,
-                  oldState,
-                  operation: 'dispatch',
-                  sourceType: 'Store',
-                  type: 'state changed',
-                },
-              ],
-              sourceType: 'Injector',
-              type: 'state changed',
-            },
-            false
-          )
+          instance.r({ p: oldState }, false)
 
           // run the scheduler synchronously after any store update
           if (action?.meta !== zeduxTypes.batch) {
