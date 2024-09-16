@@ -440,22 +440,11 @@ describe('useAtomSelector', () => {
     const button = await findByTestId('button')
     const div = await findByTestId('text')
 
-    // TODO: These snapshots are temporarily wrong in StrictMode pre React 19
-    // (React 18 StrictMode causes a memory leak). Upgrading to React 19 will
-    // fix them.
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
-        "@@selector-unnamed-0": SelectorCache {
+        "@@selector-unnamed-1": SelectorCache {
           "args": [],
-          "id": "@@selector-unnamed-0",
-          "nextReasons": [],
-          "prevReasons": [],
-          "result": 1,
-          "selectorRef": [Function],
-        },
-        "@@selector-unnamed-2": SelectorCache {
-          "args": [],
-          "id": "@@selector-unnamed-2",
+          "id": "@@selector-unnamed-1",
           "nextReasons": [],
           "prevReasons": [],
           "result": 1,
@@ -474,17 +463,9 @@ describe('useAtomSelector', () => {
 
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
-        "@@selector-unnamed-0": SelectorCache {
+        "@@selector-unnamed-1": SelectorCache {
           "args": [],
-          "id": "@@selector-unnamed-0",
-          "nextReasons": [],
-          "prevReasons": [],
-          "result": 1,
-          "selectorRef": [Function],
-        },
-        "@@selector-unnamed-2": SelectorCache {
-          "args": [],
-          "id": "@@selector-unnamed-2",
+          "id": "@@selector-unnamed-1",
           "nextReasons": [],
           "prevReasons": [],
           "result": 1,
@@ -552,10 +533,6 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(renders).toBe(4) // 2 rerenders + 2 for strict mode
-
-    // TODO: These snapshots are temporarily wrong in StrictMode pre React 19
-    // (React 18 StrictMode causes a memory leak). Upgrading to React 19 will
-    // fix them.
     expect(ecosystem._graph.nodes).toMatchSnapshot()
 
     act(() => {
