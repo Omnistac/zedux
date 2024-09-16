@@ -93,12 +93,15 @@ describe('suspense', () => {
     const div2 = await findByTestId('error')
 
     expect(div2.innerHTML).toBe('b')
-    expect(mock).toHaveBeenCalledTimes(3)
-    expect(mock).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        message: expect.stringMatching(/uncaught 'b'/i),
-      })
+    expect(mock).toHaveBeenCalledTimes(1)
+    expect(mock).toHaveBeenCalledWith(
+      expect.any(String),
+      'b',
+      expect.stringContaining(
+        'The above error occurred in the <Child> component'
+      ),
+      expect.any(String),
+      expect.any(String)
     )
   })
 
@@ -132,12 +135,15 @@ describe('suspense', () => {
     const div2 = await findByTestId('error')
 
     expect(div2.innerHTML).toBe('b')
-    expect(mock).toHaveBeenCalledTimes(3)
-    expect(mock).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        message: expect.stringMatching(/uncaught 'b'/i),
-      })
+    expect(mock).toHaveBeenCalledTimes(1)
+    expect(mock).toHaveBeenCalledWith(
+      expect.any(String),
+      'b',
+      expect.stringContaining(
+        'The above error occurred in the <Child> component'
+      ),
+      expect.any(String),
+      expect.any(String)
     )
   })
 

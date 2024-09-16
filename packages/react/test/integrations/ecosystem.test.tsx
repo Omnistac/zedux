@@ -11,7 +11,7 @@ import {
   getEcosystem,
 } from '@zedux/react'
 import React, { useState } from 'react'
-import { act } from 'react-dom/test-utils'
+import { act } from '@testing-library/react'
 import { ecosystem } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 import { fireEvent, render } from '@testing-library/react'
