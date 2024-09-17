@@ -13,17 +13,20 @@
  */
 export const Explicit = 1
 export const External = 2
+export const ExplicitExternal = Explicit | External
 export const Static = 4
-// export const Deferred = 8
+export const OutOfRange = 8 // not a flag; use a value bigger than any flag
+
+export const isZeduxNode = 'isZeduxNode'
 
 /**
- * Compare two arrays and see if any elements are different (===). Returns true
- * by default if either array is undefined
+ * Compare two arrays for shallow equality. Returns true if they're "equal".
+ * Returns false if either array is undefined
  */
-export const haveDepsChanged = (prevDeps?: any[], nextDeps?: any[]) =>
-  !prevDeps ||
-  !nextDeps ||
-  prevDeps.length !== nextDeps.length ||
-  prevDeps.some((dep, i) => nextDeps[i] !== dep)
+export const compare = (nextDeps?: any[], prevDeps?: any[]) =>
+  prevDeps &&
+  nextDeps &&
+  prevDeps.length === nextDeps.length &&
+  !prevDeps.some((dep, i) => nextDeps[i] !== dep)
 
 export const prefix = '@@zedux'

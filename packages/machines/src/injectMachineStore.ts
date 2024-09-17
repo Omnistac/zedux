@@ -236,8 +236,7 @@ export const injectMachineStore: <
     }
 
     const [initialState] = statesFactory(createState)
-    const hydration =
-      config?.hydrate && instance.ecosystem.hydration?.[instance.id]
+    const hydration = config?.hydrate && instance.e.hydration?.[instance.id]
 
     const store = new MachineStore<StateNames, EventNames, Context>(
       hydration?.value ?? (initialState.stateName as StateNames),
@@ -285,7 +284,7 @@ export const injectMachineStore: <
             return
           }
 
-          instance._scheduleEvaluation(
+          instance.r(
             {
               newState,
               oldState,
@@ -308,7 +307,7 @@ export const injectMachineStore: <
 
           // run the scheduler synchronously after any store update
           if (action?.meta !== zeduxTypes.batch) {
-            instance.ecosystem._scheduler.flush()
+            instance.e._scheduler.flush()
           }
         },
       })

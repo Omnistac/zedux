@@ -23,7 +23,6 @@
       "@zedux/react/*": ["./packages/react/src/*"]
     },
     "resolveJsonModule": true,
-    "sourceMap": true,
     "strict": true,
     "target": "ES2015"
   },

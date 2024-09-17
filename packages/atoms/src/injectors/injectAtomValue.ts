@@ -1,4 +1,6 @@
+import { AtomInstance, AtomTemplateBase } from '../classes'
 import {
+  AnyAtomGenerics,
   AnyAtomInstance,
   AnyAtomTemplate,
   AtomParamsType,
@@ -18,11 +20,11 @@ export const injectAtomValue: {
   <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): AtomStateType<A>
 
   <I extends AnyAtomInstance>(instance: I): AtomStateType<I>
-} = <A extends AnyAtomTemplate>(atom: A, params?: AtomParamsType<A>) => {
-  const instance = injectAtomInstance(atom, params as AtomParamsType<A>, {
+} = <G extends AnyAtomGenerics<{ Node: AtomInstance }>>(
+  atom: AtomTemplateBase<G>,
+  params?: G['Params']
+) =>
+  injectAtomInstance(atom, params, {
     operation: 'injectAtomValue',
     subscribe: true,
-  })
-
-  return instance.store.getState()
-}
+  }).get()

@@ -34,7 +34,7 @@ import { zeduxTypes } from './zeduxTypes'
 // parent store to wait to notify their subscribers until all stores in the
 // hierarchy are done dispatching.
 const defaultScheduler: Scheduler = {
-  scheduleNow: (job: Job) => job.task(),
+  scheduleNow: (job: Job) => job.j(),
 }
 
 const primeAction = { type: zeduxTypes.prime }
@@ -150,8 +150,8 @@ export class Store<State = any> {
     }
 
     this._scheduler.scheduleNow({
-      task: () => this._dispatch(action),
-      type: 0, // UpdateStore (0)
+      j: () => this._dispatch(action),
+      T: 0, // UpdateStore (0)
     })
 
     return this._state
@@ -199,12 +199,12 @@ export class Store<State = any> {
     }
 
     this._scheduler.scheduleNow({
-      task: () =>
+      j: () =>
         this._setState(
           settable as Settable<RecursivePartial<State>, State>,
           meta
         ),
-      type: 0, // UpdateStore (0)
+      T: 0, // UpdateStore (0)
     })
 
     return this._state
@@ -247,13 +247,13 @@ export class Store<State = any> {
     }
 
     this._scheduler.scheduleNow({
-      task: () =>
+      j: () =>
         this._setState(
           settable as Settable<RecursivePartial<State>, State>,
           meta,
           true
         ),
-      type: 0, // UpdateStore (0)
+      T: 0, // UpdateStore (0)
     })
 
     return this._state
@@ -527,8 +527,8 @@ export class Store<State = any> {
 
     // defer informing if a parent store is currently dispatching
     this._scheduler.scheduleNow({
-      task: () => this._doNotify(effect),
-      type: 1, // InformSubscribers (1)
+      j: () => this._doNotify(effect),
+      T: 1, // InformSubscribers (1)
     })
 
     this._parents?.forEach(parent => parent(effect))

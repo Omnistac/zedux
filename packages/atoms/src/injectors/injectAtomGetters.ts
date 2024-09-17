@@ -1,4 +1,4 @@
-import { readInstance } from '../classes/EvaluationStack'
+import { readInstance } from '../utils/evaluationContext'
 
 /**
  * injectAtomGetters
@@ -24,8 +24,4 @@ import { readInstance } from '../classes/EvaluationStack'
  *
  * @see AtomGetters
  */
-export const injectAtomGetters = () => {
-  const instance = readInstance()
-
-  return instance.ecosystem._evaluationStack.atomGetters
-}
+export const injectAtomGetters = () => readInstance().e.live

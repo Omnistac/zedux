@@ -26,7 +26,7 @@ const doSubscribe = <State>(
       return
     }
 
-    instance._scheduleEvaluation(
+    instance.r(
       {
         newState,
         oldState,
@@ -49,7 +49,7 @@ const doSubscribe = <State>(
 
     // run the scheduler synchronously after any store update
     if (action?.meta !== zeduxTypes.batch) {
-      instance.ecosystem._scheduler.flush()
+      instance.e._scheduler.flush()
     }
   })
 
@@ -62,7 +62,7 @@ export const injectImmerStore: {
 
   const store = injectMemo(() => {
     const hydration = config?.hydrate
-      ? instance.ecosystem.hydration?.[instance.id]
+      ? instance.e.hydration?.[instance.id]
       : undefined
 
     return createImmerStore<State>(hydration ?? state)

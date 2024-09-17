@@ -1,6 +1,7 @@
 import { createInjector } from '../factories/createInjector'
 import { EffectCallback, InjectorDeps } from '../types/index'
-import { haveDepsChanged, InjectorDescriptor, prefix } from '../utils/index'
+import { compare, prefix } from '../utils/general'
+import type { InjectorDescriptor } from '../utils/types'
 
 interface EffectInjectorDescriptor extends InjectorDescriptor<undefined> {
   deps: InjectorDeps
@@ -48,20 +49,21 @@ export const injectEffect = createInjector(
       type: `${prefix}/effect`,
     }
 
-    if (!instance.ecosystem.ssr) {
-      const task = getTask(effect, descriptor)
+    if (!instance.e.ssr) {
+      const job = {
+        j: getTask(effect, descriptor),
+        T: 4 as const, // RunEffect (4)
+      }
+
       descriptor.cleanup = () => {
-        instance.ecosystem._scheduler.unschedule(task)
+        instance.e._scheduler.unschedule(job)
         descriptor.cleanup = undefined
       }
 
       if (config?.synchronous) {
-        task()
+        job.j()
       } else {
-        instance.ecosystem._scheduler.schedule({
-          task,
-          type: 4, // RunEffect (4)
-        })
+        instance.e._scheduler.schedule(job)
       }
     }
 
@@ -74,31 +76,32 @@ export const injectEffect = createInjector(
     deps?: InjectorDeps,
     config?: { synchronous?: boolean }
   ) => {
-    if (instance.ecosystem.ssr) return prevDescriptor
+    if (instance.e.ssr) return prevDescriptor
 
-    const depsHaveChanged = haveDepsChanged(prevDescriptor?.deps, deps)
+    const depsUnchanged = compare(prevDescriptor?.deps, deps)
 
-    if (!depsHaveChanged) return prevDescriptor
+    if (depsUnchanged) return prevDescriptor
 
     prevDescriptor.cleanup?.()
 
-    const task = getTask(effect, prevDescriptor)
+    const job = {
+      j: getTask(effect, prevDescriptor),
+      T: 4 as const, // RunEffect (4)
+    }
+
     // this cleanup should be unnecessary since effects run immediately every
     // time except init. Leave this though in case we add a way to update an
     // atom instance without flushing the scheduler
     prevDescriptor.cleanup = () => {
-      instance.ecosystem._scheduler.unschedule(task)
+      instance.e._scheduler.unschedule(job)
       prevDescriptor.cleanup = undefined
     }
     prevDescriptor.deps = deps
 
     if (config?.synchronous) {
-      task()
+      job.j()
     } else {
-      instance.ecosystem._scheduler.schedule({
-        task,
-        type: 4, // RunEffect (4)
-      })
+      instance.e._scheduler.schedule(job)
     }
 
     return prevDescriptor

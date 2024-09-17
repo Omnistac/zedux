@@ -1,5 +1,5 @@
-import { readInstance } from '../classes/EvaluationStack'
 import { PartialAtomInstance } from '../types/index'
+import { readInstance } from '../utils/evaluationContext'
 import { InjectorDescriptor } from '../utils/types'
 
 export const createInjector = <
@@ -14,21 +14,23 @@ export const createInjector = <
 
   const injector = (...args: A) => {
     const instance = readInstance()
-    const { _injectors, _nextInjectors, status, template } = instance
+    const { _injectors, _nextInjectors, l, t } = instance
 
-    if (status === 'Initializing') {
+    // TODO: these `!`s should be replaced by making these properties not
+    // optional with a ts-expect-error in the AtomInstance class
+    if (l === 'Initializing') {
       const descriptor = first(instance, ...args)
       type = descriptor.type
-      _nextInjectors?.push(descriptor)
+      _nextInjectors!.push(descriptor)
 
       return descriptor.result
     }
 
-    const prevDescriptor = _injectors?.[_nextInjectors?.length as number] as T
+    const prevDescriptor = _injectors![_nextInjectors!.length as number] as T
 
     if (DEV && (!prevDescriptor || prevDescriptor.type !== type)) {
       throw new Error(
-        `Zedux: ${operation} in atom "${template.key}" - injectors cannot be added, removed, or reordered`
+        `Zedux: ${operation} in atom "${t.key}" - injectors cannot be added, removed, or reordered`
       )
     }
 
@@ -36,7 +38,7 @@ export const createInjector = <
       ? next(prevDescriptor, instance, ...args)
       : prevDescriptor
 
-    _nextInjectors?.push(descriptor)
+    _nextInjectors!.push(descriptor)
 
     return descriptor.result
   }

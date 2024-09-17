@@ -1,13 +1,13 @@
 import { ActionChain, actionFactory } from '@zedux/core'
 import { Ecosystem } from '../classes/Ecosystem'
-import { SelectorCache } from '../classes/Selectors'
 import {
-  LifecycleStatus,
   AnyAtomInstance,
-  DependentEdge,
-  EvaluationReason,
   AnyAtomTemplate,
+  EvaluationReason,
+  GraphEdge,
+  LifecycleStatus,
 } from '../types/index'
+import { type GraphNode } from '../classes/GraphNode'
 
 export const pluginActions = {
   ecosystemWiped: actionFactory<{ ecosystem: Ecosystem }, 'ecosystemWiped'>(
@@ -15,24 +15,23 @@ export const pluginActions = {
   ),
   edgeCreated: actionFactory<
     {
-      dependency: AnyAtomInstance | SelectorCache
-      // string if `edge.flags & External`:
-      dependent: AnyAtomInstance | SelectorCache | string
-      edge: DependentEdge
+      dependency: GraphNode
+      dependent: GraphNode | string // string if edge is External
+      edge: GraphEdge
     },
     'edgeCreated'
   >('edgeCreated'),
   edgeRemoved: actionFactory<
     {
-      dependency: AnyAtomInstance | SelectorCache
-      dependent: AnyAtomInstance | SelectorCache | string // string if edge is External
-      edge: DependentEdge
+      dependency: GraphNode
+      dependent: GraphNode | string // string if edge is External
+      edge: GraphEdge
     },
     'edgeRemoved'
   >('edgeRemoved'),
   evaluationFinished: actionFactory<
     {
-      node: AnyAtomInstance | SelectorCache
+      node: GraphNode
       time: number
     },
     'evaluationFinished'
@@ -41,13 +40,11 @@ export const pluginActions = {
     instance: AnyAtomInstance
     template: AnyAtomTemplate
   }>('instanceReused'),
-  // either cache or instance will always be defined, depending on the node type
   stateChanged: actionFactory<
     {
       action?: ActionChain
-      cache?: SelectorCache
-      instance?: AnyAtomInstance
       newState: any
+      node: GraphNode
       oldState: any
       reasons: EvaluationReason[]
     },
@@ -56,7 +53,7 @@ export const pluginActions = {
   statusChanged: actionFactory<
     {
       newStatus: LifecycleStatus
-      node: AnyAtomInstance | SelectorCache
+      node: GraphNode
       oldStatus: LifecycleStatus
     },
     'statusChanged'

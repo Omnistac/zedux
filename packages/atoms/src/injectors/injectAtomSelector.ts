@@ -1,14 +1,7 @@
-import { readInstance } from '../classes/EvaluationStack'
-import { Selectable } from '../types/index'
+import { AtomParamsType, AtomStateType, Selectable } from '../types/index'
+import { readInstance } from '../utils/evaluationContext'
 
-export const injectAtomSelector = <T, Args extends any[]>(
-  selectable: Selectable<T, Args>,
-  ...args: Args
-): T => {
-  const instance = readInstance()
-
-  return instance.ecosystem._evaluationStack.atomGetters.select(
-    selectable,
-    ...args
-  )
-}
+export const injectAtomSelector = <S extends Selectable>(
+  selectable: S,
+  ...args: AtomParamsType<S>
+): AtomStateType<S> => readInstance().e.live.select(selectable, ...args)

@@ -1,19 +1,21 @@
 import { Store, StoreStateType, createStore } from '@zedux/core'
 import {
+  AnyAtomGenerics,
   AnyAtomInstance,
   AnyAtomTemplate,
   api,
   atom,
   AtomApi,
   AtomExportsType,
-  AtomGenericsPartial,
+  AtomGetters,
   AtomInstance,
+  AtomInstanceRecursive,
   AtomInstanceType,
   AtomParamsType,
   AtomPromiseType,
   AtomStateType,
   AtomStoreType,
-  AtomTemplateBase,
+  AtomTemplateRecursive,
   AtomTemplateType,
   AtomTuple,
   createEcosystem,
@@ -26,6 +28,7 @@ import {
   injectSelf,
   injectStore,
   ion,
+  IonTemplateRecursive,
   ParamlessTemplate,
   PromiseState,
 } from '@zedux/react'
@@ -93,27 +96,7 @@ describe('react types', () => {
     expectTypeOf<AtomStore>().toEqualTypeOf<AtomInstanceStore>()
 
     expectTypeOf<TAtomInstance>().toEqualTypeOf<typeof instance>()
-    expectTypeOf<TAtomTemplate>().toEqualTypeOf<
-      AtomTemplateBase<
-        {
-          State: AtomState
-          Params: AtomParams
-          Exports: AtomExports
-          Store: AtomStore
-          Promise: AtomPromise
-        },
-        AtomInstance<
-          {
-            State: AtomState
-            Params: AtomParams
-            Exports: AtomExports
-            Store: AtomStore
-            Promise: AtomPromise
-          },
-          any
-        >
-      >
-    >()
+    expectTypeOf<TAtomTemplate>().toEqualTypeOf<typeof instance.t>()
 
     expectTypeOf<StoreStateType<AtomStore>>().toBeString()
   })
@@ -180,48 +163,16 @@ describe('react types', () => {
     expectTypeOf<StoreAtomInstanceStore>().toEqualTypeOf<ValueAtomInstanceStore>()
 
     expectTypeOf<TStoreAtomInstance>().toEqualTypeOf<typeof storeInstance>()
-    expectTypeOf<TStoreAtomTemplate>().toEqualTypeOf<
-      AtomTemplateBase<
-        {
-          State: StoreAtomState
-          Params: StoreAtomParams
-          Exports: StoreAtomExports
-          Store: StoreAtomStore
-          Promise: StoreAtomPromise
-        },
-        AtomInstance<
-          {
-            State: StoreAtomState
-            Params: StoreAtomParams
-            Exports: StoreAtomExports
-            Store: StoreAtomStore
-            Promise: StoreAtomPromise
-          },
-          any
-        >
-      >
-    >()
+    expectTypeOf<TStoreAtomTemplate>().toEqualTypeOf<typeof storeInstance.t>()
     expectTypeOf<TValueAtomInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TValueAtomTemplate>().toEqualTypeOf<
-      AtomTemplateBase<
-        {
-          State: ValueAtomState
-          Params: ValueAtomParams
-          Exports: ValueAtomExports
-          Store: ValueAtomStore
-          Promise: ValueAtomPromise
-        },
-        AtomInstance<
-          {
-            State: ValueAtomState
-            Params: ValueAtomParams
-            Exports: ValueAtomExports
-            Store: ValueAtomStore
-            Promise: ValueAtomPromise
-          },
-          any
-        >
-      >
+      AtomTemplateRecursive<{
+        State: ValueAtomState
+        Params: ValueAtomParams
+        Exports: ValueAtomExports
+        Store: ValueAtomStore
+        Promise: ValueAtomPromise
+      }>
     >()
   })
 
@@ -335,8 +286,8 @@ describe('react types', () => {
     const storeIon = ion('store', (_, p: string) => injectStore(p))
     const valueIon = ion('value', (_, p: string) => p)
 
-    const storeInstance = ecosystem.getInstance(storeIon, ['a'])
-    const valueInstance = ecosystem.getInstance(valueIon, ['a'])
+    const storeInstance = ecosystem.getNode(storeIon, ['a'])
+    const valueInstance = ecosystem.getNode(valueIon, ['a'])
 
     type StoreIonState = AtomStateType<typeof storeIon>
     type StoreIonParams = AtomParamsType<typeof storeIon>
@@ -394,47 +345,23 @@ describe('react types', () => {
 
     expectTypeOf<TStoreIonInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TStoreIonTemplate>().toEqualTypeOf<
-      AtomTemplateBase<
-        {
-          State: StoreIonState
-          Params: StoreIonParams
-          Exports: StoreIonExports
-          Store: StoreIonStore
-          Promise: StoreIonPromise
-        },
-        AtomInstance<
-          {
-            State: StoreIonState
-            Params: StoreIonParams
-            Exports: StoreIonExports
-            Store: StoreIonStore
-            Promise: StoreIonPromise
-          },
-          any
-        >
-      >
+      IonTemplateRecursive<{
+        State: StoreIonState
+        Params: StoreIonParams
+        Exports: StoreIonExports
+        Store: StoreIonStore
+        Promise: StoreIonPromise
+      }>
     >()
     expectTypeOf<TValueIonInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TValueIonTemplate>().toEqualTypeOf<
-      AtomTemplateBase<
-        {
-          State: ValueIonState
-          Params: ValueIonParams
-          Exports: ValueIonExports
-          Store: ValueIonStore
-          Promise: ValueIonPromise
-        },
-        AtomInstance<
-          {
-            State: ValueIonState
-            Params: ValueIonParams
-            Exports: ValueIonExports
-            Store: ValueIonStore
-            Promise: ValueIonPromise
-          },
-          any
-        >
-      >
+      IonTemplateRecursive<{
+        State: StoreIonState
+        Params: StoreIonParams
+        Exports: StoreIonExports
+        Store: StoreIonStore
+        Promise: StoreIonPromise
+      }>
     >()
   })
 
@@ -525,12 +452,12 @@ describe('react types', () => {
     >()
   })
 
-  test('AtomGenericsPartial - instances as params', () => {
+  test('AnyAtomGenerics - instances as params', () => {
     const innerAtom = atom('inner', 'a')
 
     const outerAtom = atom(
       'outer',
-      (instance: AtomInstance<AtomGenericsPartial<{ State: string }>>) => {
+      (instance: AtomInstance<AnyAtomGenerics<{ State: string }>>) => {
         const val = injectAtomValue(instance) // subscribe to updates
 
         return val.toUpperCase()
@@ -538,12 +465,12 @@ describe('react types', () => {
     )
 
     const innerInstance = ecosystem.getInstance(innerAtom)
-    const outerInstance = ecosystem.getInstance(outerAtom, [innerInstance])
-    const val = outerInstance.getState()
+    const outerInstance = ecosystem.getNode(outerAtom, [innerInstance])
+    const val = outerInstance.get()
 
     expect(val).toBe('A')
     expectTypeOf<typeof innerInstance>().toMatchTypeOf<
-      AtomInstance<{
+      AtomInstanceRecursive<{
         Exports: Record<string, never>
         Params: []
         State: string
@@ -553,11 +480,11 @@ describe('react types', () => {
     >()
 
     expectTypeOf<typeof outerInstance>().toMatchTypeOf<
-      AtomInstance<{
+      AtomInstanceRecursive<{
         Exports: Record<string, never>
         Params: [
           instance: AtomInstance<
-            AtomGenericsPartial<{
+            AnyAtomGenerics<{
               State: string
             }>
           >
@@ -618,7 +545,7 @@ describe('react types', () => {
 
     expectTypeOf<typeof key>().toBeString()
     expectTypeOf<typeof instance>().toMatchTypeOf<
-      AtomInstance<{
+      AtomInstanceRecursive<{
         State: string
         Params: [p: string]
         Exports: {
@@ -630,7 +557,7 @@ describe('react types', () => {
       }>
     >()
     expectTypeOf<typeof instance2>().toMatchTypeOf<
-      AtomInstance<{
+      AtomInstanceRecursive<{
         State: number | string[] | undefined
         Params: [a?: boolean | undefined, b?: string[] | undefined]
         Exports: Record<string, never>
@@ -660,8 +587,7 @@ describe('react types', () => {
       i: I
     ) => i.getState()
 
-    const getKey = <I extends AnyAtomInstance>(instance: I) =>
-      instance.template.key
+    const getKey = <I extends AnyAtomInstance>(instance: I) => instance.t.key
 
     const getUppercase = <I extends AnyAtomInstance<{ State: string }>>(
       instance: I
@@ -796,5 +722,67 @@ describe('react types', () => {
     expectTypeOf<AtomPromiseType<typeof atom1>>().toBeUndefined()
     expectTypeOf<AtomPromiseType<typeof atom2>>().toBeUndefined()
     expectTypeOf<AtomPromiseType<typeof atom3>>().resolves.toBeNumber()
+  })
+
+  test('recursive templates and nodes', () => {
+    const instanceA = exampleAtom._createInstance(ecosystem, 'a', ['b'])
+    const instanceB = instanceA.t._createInstance(ecosystem, '', ['b'])
+    const instanceC = instanceB.t._createInstance(ecosystem, '', ['b'])
+    const instanceD = instanceC.t._createInstance(ecosystem, '', ['b'])
+
+    expectTypeOf<AtomParamsType<typeof instanceD.t>>().toEqualTypeOf<
+      [p: string]
+    >()
+
+    const instanceE = ecosystem.getInstance(
+      ecosystem.live.getInstance(
+        ecosystem.getInstance(ecosystem.live.getInstance(exampleAtom, ['a']))
+      )
+    )
+
+    expectTypeOf<AtomParamsType<typeof instanceE.t>>().toEqualTypeOf<
+      [p: string]
+    >()
+
+    const selectorInstance = ecosystem.getNode(
+      ecosystem.getNode(
+        ecosystem.getNode((_: AtomGetters, a?: string) => a, ['a'])
+      )
+    )
+
+    expectTypeOf<AtomStateType<typeof selectorInstance>>().toEqualTypeOf<
+      string | undefined
+    >()
+    expectTypeOf<AtomParamsType<typeof selectorInstance>>().toEqualTypeOf<
+      [a?: string]
+    >()
+    expectTypeOf<AtomTemplateType<typeof selectorInstance>>().toEqualTypeOf<
+      (_: AtomGetters, a?: string) => string | undefined
+    >()
+
+    const selectorInstance2 = ecosystem.getNode(
+      ecosystem.getNode(
+        ecosystem.getNode(
+          {
+            resultsComparator: () => true,
+            selector: (_: AtomGetters, a?: string) => a,
+            argsComparator: () => true,
+          },
+          ['a']
+        )
+      )
+    )
+
+    expectTypeOf<AtomStateType<typeof selectorInstance2>>().toEqualTypeOf<
+      string | undefined
+    >()
+    expectTypeOf<AtomParamsType<typeof selectorInstance2>>().toEqualTypeOf<
+      [a?: string]
+    >()
+    expectTypeOf<AtomTemplateType<typeof selectorInstance2>>().toEqualTypeOf<{
+      resultsComparator: () => boolean
+      selector: (_: AtomGetters, a?: string) => string | undefined
+      argsComparator: () => boolean
+    }>()
   })
 })

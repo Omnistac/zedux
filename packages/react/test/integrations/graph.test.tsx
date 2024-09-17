@@ -17,7 +17,7 @@ import {
   EvaluationReason,
 } from '@zedux/react'
 import React from 'react'
-import { ecosystem } from '../utils/ecosystem'
+import { ecosystem, snapshotNodes } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 
 const atom1 = atom('atom1', () => 1)
@@ -71,20 +71,13 @@ describe('graph', () => {
       operation: 'get',
     }
 
-    expect([...ecosystem._graph.nodes.atom1.dependents.entries()]).toEqual([
-      ['atom4', expectedEdges],
-    ])
+    expect([...ecosystem.n.get('atom1')!.o]).toEqual([['atom4', expectedEdges]])
 
-    expect([...ecosystem._graph.nodes.atom2.dependents.entries()]).toEqual([
-      ['atom4', expectedEdges],
-    ])
+    expect([...ecosystem.n.get('atom2')!.o]).toEqual([['atom4', expectedEdges]])
 
-    expect(ecosystem._graph.nodes.atom3).toBeUndefined()
+    expect(ecosystem.n.get('atom3')).toBeUndefined()
 
-    expect([...ecosystem._graph.nodes.atom4.dependencies.entries()]).toEqual([
-      ['atom1', true],
-      ['atom2', true],
-    ])
+    expect([...ecosystem.n.get('atom4')!.s.keys()]).toEqual(['atom1', 'atom2'])
 
     const button = await findByText('toggle')
 
@@ -95,20 +88,13 @@ describe('graph', () => {
 
     expect(div).toHaveTextContent('4')
 
-    expect([...ecosystem._graph.nodes.atom1.dependents.entries()]).toEqual([
-      ['atom4', expectedEdges],
-    ])
+    expect([...ecosystem.n.get('atom1')!.o]).toEqual([['atom4', expectedEdges]])
 
-    expect([...ecosystem._graph.nodes.atom2.dependents.entries()]).toEqual([])
+    expect([...ecosystem.n.get('atom2')!.o]).toEqual([])
 
-    expect([...ecosystem._graph.nodes.atom3.dependents.entries()]).toEqual([
-      ['atom4', expectedEdges],
-    ])
+    expect([...ecosystem.n.get('atom3')!.o]).toEqual([['atom4', expectedEdges]])
 
-    expect([...ecosystem._graph.nodes.atom4.dependencies.entries()]).toEqual([
-      ['atom1', true],
-      ['atom3', true],
-    ])
+    expect([...ecosystem.n.get('atom4')!.s.keys()]).toEqual(['atom1', 'atom3'])
 
     expect(ecosystem.viewGraph()).toMatchSnapshot()
     expect(ecosystem.viewGraph('bottom-up')).toMatchSnapshot()
@@ -133,14 +119,13 @@ describe('graph', () => {
 
     const ionInstance = ecosystem.getInstance(ion1)
 
-    expect(ecosystem._instances).toEqual({
+    expect(ecosystem.findAll()).toEqual({
       atom1: expect.any(Object),
       atom2: expect.any(Object),
       ion1: expect.any(Object),
     })
 
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
-
+    snapshotNodes()
     expect(evaluations).toEqual([1])
 
     ionInstance.exports.set(11)
@@ -165,13 +150,13 @@ describe('graph', () => {
 
     const instance = ecosystem.getInstance(atomD)
 
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
+    snapshotNodes()
 
     useB = false
     instance.invalidate()
     jest.runAllTimers()
 
-    expect(ecosystem._graph.nodes).toMatchSnapshot()
+    snapshotNodes()
   })
 
   test('atom instances can be passed as atom params', () => {
@@ -219,15 +204,15 @@ describe('graph', () => {
       return get(atom1) + get(atom2)
     }
 
-    const cache = ecosystem.selectors.getCache(selector1)
-    const instance = ecosystem.getInstance(atom1)
+    const selectorInstance = ecosystem.getNode(selector1)
+    const atomInstance = ecosystem.getInstance(atom1)
 
-    expect(cache.result).toBe('aab')
+    expect(selectorInstance.v).toBe('aab')
     expect(why).toHaveLength(0)
 
-    instance.setState('aa')
+    atomInstance.setState('aa')
 
-    expect(cache.result).toBe('aaaab')
+    expect(selectorInstance.v).toBe('aaaab')
     expect(why).toHaveLength(2)
     expect(why).toMatchInlineSnapshot(`
       [

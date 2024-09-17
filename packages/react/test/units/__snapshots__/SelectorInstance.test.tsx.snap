@@ -1,0 +1,120 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`the SelectorInstance class deeply nested selectors get auto-created 1`] = `
+{
+  "@@selector-selector1-2": {
+    "T": 2,
+    "W": 2,
+    "id": "@@selector-selector1-2",
+    "izn": true,
+    "l": "Active",
+    "o": Map {
+      "@@selector-selector2-1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "select",
+        "p": undefined,
+      },
+    },
+    "p": [],
+    "s": Map {
+      "1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": "ab",
+    "w": [],
+  },
+  "@@selector-selector2-1": {
+    "T": 2,
+    "W": 3,
+    "id": "@@selector-selector2-1",
+    "izn": true,
+    "l": "Active",
+    "o": Map {
+      "@@selector-selector3-0" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "select",
+        "p": undefined,
+      },
+    },
+    "p": [],
+    "s": Map {
+      "@@selector-selector1-2" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "select",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": "abc",
+    "w": [],
+  },
+  "@@selector-selector3-0": {
+    "T": 2,
+    "W": 4,
+    "id": "@@selector-selector3-0",
+    "izn": true,
+    "l": "Active",
+    "o": Map {},
+    "p": [],
+    "s": Map {
+      "@@selector-selector2-1" => {
+        "callback": undefined,
+        "createdAt": 123456789,
+        "flags": 0,
+        "operation": "select",
+        "p": undefined,
+      },
+    },
+    "t": [Function],
+    "v": "abcd",
+    "w": [],
+  },
+}
+`;
+
+exports[`the SelectorInstance class different arg-accepting selectors with the exact same name and args create different instances 1`] = `
+{
+  "@@selector-commonName-0-["a"]": {
+    "T": 2,
+    "W": 1,
+    "id": "@@selector-commonName-0-["a"]",
+    "izn": true,
+    "l": "Active",
+    "o": Map {},
+    "p": [
+      "a",
+    ],
+    "s": Map {},
+    "t": [Function],
+    "v": "ab",
+    "w": [],
+  },
+  "@@selector-commonName-1-["a"]": {
+    "T": 2,
+    "W": 1,
+    "id": "@@selector-commonName-1-["a"]",
+    "izn": true,
+    "l": "Active",
+    "o": Map {},
+    "p": [
+      "a",
+    ],
+    "s": Map {},
+    "t": [Function],
+    "v": "ac",
+    "w": [],
+  },
+}
+`;

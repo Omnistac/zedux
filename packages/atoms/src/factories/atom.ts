@@ -5,7 +5,10 @@ import {
   AtomValueOrFactory,
   PromiseState,
 } from '../types/index'
-import { AtomTemplate } from '../classes/templates/AtomTemplate'
+import {
+  AtomTemplate,
+  AtomTemplateRecursive,
+} from '../classes/templates/AtomTemplate'
 import { AtomApi } from '../classes/AtomApi'
 
 export const atom: {
@@ -23,7 +26,7 @@ export const atom: {
       Store: undefined
     }>,
     config?: AtomConfig<State>
-  ): AtomTemplate<{
+  ): AtomTemplateRecursive<{
     State: PromiseState<State>
     Params: Params
     Exports: Exports
@@ -48,7 +51,7 @@ export const atom: {
           Store: StoreType
         }>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): AtomTemplate<{
+  ): AtomTemplateRecursive<{
     State: StoreStateType<StoreType>
     Params: Params
     Exports: Exports
@@ -73,7 +76,7 @@ export const atom: {
       Store: StoreType
     }>,
     config?: AtomConfig<State>
-  ): AtomTemplate<{
+  ): AtomTemplateRecursive<{
     Exports: Exports
     Params: Params
     Promise: PromiseType
@@ -101,11 +104,5 @@ export const atom: {
     throw new TypeError('Zedux: All atoms must have a key')
   }
 
-  return new AtomTemplate<{
-    State: State
-    Params: Params
-    Exports: Exports
-    Store: StoreType
-    Promise: PromiseType
-  }>(key, value, config)
+  return new AtomTemplate(key, value, config) as any
 }

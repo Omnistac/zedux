@@ -86,7 +86,7 @@ function Theme() {
 >`)}
 </Tabs>
 
-<Legend>
+{<Legend>
   <Item name="statesFactory">
     <p>
       Required. A function that returns an array of "states". States are created
@@ -98,7 +98,7 @@ function Theme() {
   createState: <Name extends string>(stateName: Name) => MachineState<Context, Name>
 ) => [...States]`)}
     </Tabs>
-    <Legend>
+    {<Legend>
       <Item name="createState">
         <p>
           A function that accepts a single string - the name of the state.
@@ -120,7 +120,7 @@ injectMachineStore(s => [s('a'), s('b')])`}</Ts>
         </p>
         <Ts>{`injectMachineStore(state => [state('initial'), state('other')])`}</Ts>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="initialContext">
     <p>
@@ -136,7 +136,7 @@ store.getContext() // { foo: 'bar' }`}</Ts>
   <Item name="config">
     <p>Optional. An object with the following optional properties:</p>
     <Ts>{`{ guard, onTransition }`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="guard">
         <p>
           Optional. A function that receives the MachineStore's current state
@@ -178,7 +178,7 @@ store.getContext() // { foo: 'bar' }`}</Ts>
   onTransition: (machineStore, storeEffect) => console.log(storeEffect)
 })`}</Ts>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="Returns">
     <p>
@@ -198,7 +198,7 @@ store.getContext() // { foo: 'bar' }`}</Ts>
       <code>onTransition</code> listener.
     </p>
   </Item>
-</Legend>
+</Legend>}
 
 ## See Also
 

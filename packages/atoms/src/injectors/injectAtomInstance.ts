@@ -1,5 +1,6 @@
 import { createInjector } from '../factories/createInjector'
-import { InjectorDescriptor, prefix, Static } from '../utils/index'
+import { prefix, Static } from '../utils/general'
+import type { InjectorDescriptor } from '../utils/types'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
@@ -60,12 +61,14 @@ export const injectAtomInstance: {
     params?: AtomParamsType<A>,
     config?: InjectAtomInstanceConfig
   ) => {
-    const injectedInstance =
-      instance.ecosystem._evaluationStack.atomGetters.getInstance(
-        atom as A,
-        params as AtomParamsType<A>,
-        [config?.subscribe ? 0 : Static, config?.operation || defaultOperation]
-      )
+    const injectedInstance = instance.e.live.getInstance(
+      atom as A,
+      params as AtomParamsType<A>,
+      {
+        f: config?.subscribe ? 0 : Static,
+        op: config?.operation || defaultOperation,
+      }
+    )
 
     return {
       result: injectedInstance as AtomInstanceType<A>,
@@ -80,12 +83,14 @@ export const injectAtomInstance: {
     config?: InjectAtomInstanceConfig
   ) => {
     // make sure the dependency gets registered for this evaluation
-    const injectedInstance =
-      instance.ecosystem._evaluationStack.atomGetters.getInstance(
-        atom as A,
-        params as AtomParamsType<A>,
-        [config?.subscribe ? 0 : Static, config?.operation || defaultOperation]
-      )
+    const injectedInstance = instance.e.live.getInstance(
+      atom as A,
+      params as AtomParamsType<A>,
+      {
+        f: config?.subscribe ? 0 : Static,
+        op: config?.operation || defaultOperation,
+      }
+    )
 
     prevDescriptor.result = injectedInstance as AtomInstanceType<A>
 

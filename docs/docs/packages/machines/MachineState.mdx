@@ -42,7 +42,7 @@ interface MachineState<
 }
 ```
 
-<Legend>
+{<Legend>
   <Item name="on">
     <p>
       Defines a transition for the machine from the current state to another
@@ -54,7 +54,7 @@ interface MachineState<
     </p>
     <p>Signature:</p>
     <Ts>{`on = (eventName, nextState, guard?) => machineState`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="eventName">
         <p>
           Required. A string. Represents an event name that will be sent to the
@@ -84,7 +84,7 @@ interface MachineState<
       <Item name="Returns">
         <p>The MachineState for chaining.</p>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="onEnter">
     <p>
@@ -125,7 +125,7 @@ interface MachineState<
   ...
 })`}</Ts>
   </Item>
-</Legend>
+</Legend>}
 
 ## See Also
 

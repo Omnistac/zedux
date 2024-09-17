@@ -3,14 +3,14 @@ import { ecosystem } from '../utils/ecosystem'
 import { mockConsole } from '../utils/console'
 
 describe('Ecosystem', () => {
-  test('passing a SelectorCache to .select() returns the result of the passed cache', () => {
+  test('passing a SelectorInstance to .select() returns the result of the passed instance', () => {
     const selector1 = () => ({ a: 1 })
 
-    const cache = ecosystem.selectors.getCache(selector1)
-    const value = ecosystem.select(cache)
+    const instance = ecosystem.getNode(selector1)
+    const value = ecosystem.select(instance)
 
     expect(value).toEqual({ a: 1 })
-    expect(cache.result).toBe(value)
+    expect(instance.v).toBe(value)
   })
 
   test('flags must be an array', () => {
@@ -39,7 +39,7 @@ describe('Ecosystem', () => {
 
     const instance = testEcosystem.getInstance(atom1)
 
-    expect(instance.template).toBe(atom1Override)
+    expect(instance.t).toBe(atom1Override)
     expect(mock).toHaveBeenCalledTimes(1)
     expect(mock).toHaveBeenCalledWith(
       expect.stringContaining('encountered unsafe atom')
@@ -139,12 +139,12 @@ describe('Ecosystem', () => {
 
     // @ts-expect-error first param must be an atom template or instance
     expect(() => ecosystem.getInstance({})).toThrowError(
-      /Expected an atom template or atom instance. Received object/i
+      /Expected a template or node. Received object/i
     )
 
     // @ts-expect-error first param must be an atom template or instance
     expect(() => ecosystem.getInstance()).toThrowError(
-      /Expected an atom template or atom instance. Received undefined/i
+      "Cannot read properties of undefined (reading 'izn')"
     )
 
     // @ts-expect-error second param must be an array or undefined
@@ -194,9 +194,9 @@ describe('Ecosystem', () => {
     const a = { a: 1 }
     const selector1 = () => a
 
-    const cache = ecosystem.selectors.getCache(selector1)
+    const instance = ecosystem.getNode(selector1)
 
-    expect(cache.result).toBe(a)
+    expect(instance.v).toBe(a)
     expect(ecosystem.select(selector1)).toBe(a)
   })
 

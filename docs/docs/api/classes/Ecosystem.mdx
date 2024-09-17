@@ -84,7 +84,7 @@ function Swapper() {
 
 All properties are readonly!
 
-<Legend>
+{<Legend>
   <Item name="atomDefaults">
     <p>
       An object. This is set to the <code>atomDefaults</code> value you passed
@@ -118,9 +118,8 @@ All properties are readonly!
   <Item name="context">
     <p>
       An object. May be undefined. A reference to the `context` object passed to
-      <Link to="../factories/createEcosystem">
-        the <code>createEcosystem()</code> factory
-      </Link> (if any) or the latest <Link to="#reset">
+      <Link to="../factories/createEcosystem">the <code>createEcosystem()</code> factory</Link>
+      (if any) or the latest <Link to="#reset">
         <code>.reset</code>
       </Link> call. This object should be constant until the ecosystem is reset via
       <code>.reset()</code>.
@@ -239,7 +238,7 @@ createEcosystem({ flags: ['a'] }) // all atom flags except 'a' will log warnings
     </p>
     <p>Signature:</p>
     <Ts>{`(ecosystem, prevContext?) => maybeCleanup`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="ecosystem">A reference to this ecosystem</Item>
       <Item name="prevContext">
         <p>
@@ -281,7 +280,7 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
         Either <code>undefined</code> or a cleanup function that will be called
         when the ecosystem is reset or destroyed.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="overrides">
     <p>
@@ -317,11 +316,11 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
       mode prevents effects from running at all in this ecosystem.
     </p>
   </Item>
-</Legend>
+</Legend>}
 
 ## Methods
 
-<Legend>
+{<Legend>
   <Item name="addOverrides">
     <p>
       Adds new overrides to the ecosystem's current list of overrides and/or
@@ -332,11 +331,11 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
     </p>
     <p>Signature:</p>
     <Ts>{`addOverrides = (overrides) => void`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="overrides">
         Required. An array of <Link to="AtomTemplate">atom templates</Link>.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="batch">
     <p>
@@ -362,7 +361,7 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
   includeFlags?,
   transform?
 }) => snapshot`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="exclude">
         <p>
           Optional. An array of atom templates and/or case-insensitive
@@ -427,7 +426,7 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
           <code>transform: false</code>) of their current state.
         </p>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="destroy">
     <p>
@@ -437,7 +436,7 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
     </p>
     <p>Signature:</p>
     <Ts>{`destroy = (force?) => void`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="force">
         <p>
           Optional. A boolean. Default: <code>false</code>.
@@ -452,7 +451,7 @@ ecosystem.reset({ redux: otherReduxStore }) // replaces context`}</Ts>{' '}
           this in a normal app.
         </p>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="find">
     <p>
@@ -482,7 +481,7 @@ instance = ecosystem.find(myAtom, [...params])`}</Ts>
     <p>Get all atom instances in the ecosystem.</p>
     <p>Signature:</p>
     <Ts>{`findAll = (atom?) => instances`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="atom">
         An atom template or fuzzy search string. If an atom template is passed,{' '}
         <code>.findAll()</code> returns only instances of the passed template.
@@ -493,7 +492,7 @@ instance = ecosystem.find(myAtom, [...params])`}</Ts>
         An object of all Active and Stale atom instances in the ecosystem, keyed
         by the instance's id.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="get">
     <p>
@@ -543,7 +542,7 @@ instance.setState('new state')`}</Ts>
     </p>
     <p>Signature:</p>
     <Ts>{`hydrate = (snapshot, config?) => void`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="snapshot">
         <p>
           Required. An object. The keys of this object are ids corresponding to
@@ -559,7 +558,7 @@ instance.setState('new state')`}</Ts>
           <code>{`{ retroactive: false }`}</code>.
         </p>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="registerPlugin">
     <p>
@@ -587,13 +586,13 @@ instance.setState('new state')`}</Ts>
     </p>
     <p>Signature:</p>
     <Ts>{`removeOverrides = (overrides) => void`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="overrides">
         Required. An array of <Link to="AtomTemplate">atom templates</Link>{' '}
         and/or template key strings. If any haven't been set as overrides
         previously, they'll be ignored.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="reset">
     <p>
@@ -721,7 +720,7 @@ const withArgs = myEcosystem.select(myAtomSelector, 'param 1', 'param 2')`}</Ts>
     </p>
     <p>Signature:</p>
     <Ts>{`viewGraph = (view) => graph`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="view">
         Optional. One of <code>'flat'</code>, <code>'top-down'</code>, or{' '}
         <code>'bottom-up'</code>. Default: <code>'flat'</code>.
@@ -733,7 +732,7 @@ const withArgs = myEcosystem.select(myAtomSelector, 'param 1', 'param 2')`}</Ts>
         </Link>
         .
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="why">
     <p>
@@ -750,7 +749,7 @@ const withArgs = myEcosystem.select(myAtomSelector, 'param 1', 'param 2')`}</Ts>
       <code>ecosystem.why()</code> returns an empty array.
     </p>
   </Item>
-</Legend>
+</Legend>}
 
 ## See Also
 

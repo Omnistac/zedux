@@ -1,10 +1,10 @@
 import { createInjector } from '../factories/createInjector'
-import {
+import type {
   MutableRefObject,
   PartialAtomInstance,
   RefObject,
 } from '../types/index'
-import { prefix } from '../utils/index'
+import { prefix } from '../utils/general'
 
 export const injectRef: {
   <T>(initialVal: T): MutableRefObject<T>

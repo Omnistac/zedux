@@ -17,7 +17,7 @@ export const destroyed = Symbol.for(`@@zedux/destroyed`)
 
 export const getReactContext = (
   ecosystem: Ecosystem,
-  atom: AnyAtomTemplate
+  template: AnyAtomTemplate
 ) => {
   const reactStorage: {
     contexts: WeakMap<typeof createContext, Record<string, React.Context<any>>>
@@ -31,7 +31,7 @@ export const getReactContext = (
       React.Context<any>
     >)
 
-  return (windowContexts[atom.key] ||= createContext(
+  return (windowContexts[template.key] ||= createContext(
     undefined
   ) as React.Context<any>)
 }

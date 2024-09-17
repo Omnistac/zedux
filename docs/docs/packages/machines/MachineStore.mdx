@@ -31,7 +31,7 @@ Create using [`injectMachineStore()`](injectMachineStore). It is so not recommen
 
 ## Methods
 
-<Legend>
+{<Legend>
   <Item name="getContext">
     <p>
       Returns the current state of the machine store's <code>.context</code>{' '}
@@ -69,7 +69,7 @@ machineStore.is('some-state')`}</Ts>
     <p>This is how you transition the machine to a new state.</p>
     <p>Signature:</p>
     <Ts>{`send = (eventName, meta?) => newState`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="eventName">
         Required. A string. This must be one of the recognized event names of
         the store.
@@ -86,7 +86,7 @@ machineStore.is('some-state')`}</Ts>
         <code>value</code> properties), or the existing state if there was no
         valid transition for the passed event.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="setContext">
     <p>
@@ -94,7 +94,7 @@ machineStore.is('some-state')`}</Ts>
     </p>
     <p>Signature:</p>
     <Ts>{`setContext = (contextOrFactory, meta?) => newState`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="contextOrFactory">
         Either the new context or a function that accepts the current context
         and returns a new context object.
@@ -110,7 +110,7 @@ machineStore.is('some-state')`}</Ts>
         The new state of the store (an object with <code>context</code> and{' '}
         <code>value</code> properties).
       </Item>
-    </Legend>
+    </Legend>}
     <p>Examples:</p>
     <Ts>{`// these 2 lines are equivalent:
 machineStore.setState(state => ({ ...state, context: { key: 'val' } }))
@@ -133,7 +133,7 @@ machineStore.setContext(context => ({ ...context, key: 'val' }))`}</Ts>
     </p>
     <p>Signature:</p>
     <Ts>{`setContextDeep = (contextOrFactory, meta?) => newState`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="contextOrFactory">
         Either the new deep-partial context or a function that accepts the
         current context and returns a deep-partial context object.
@@ -149,7 +149,7 @@ machineStore.setContext(context => ({ ...context, key: 'val' }))`}</Ts>
         The new state of the store (an object with <code>context</code> and{' '}
         <code>value</code> properties).
       </Item>
-    </Legend>
+    </Legend>}
     <p>Examples:</p>
     <Ts>{`// these 2 lines are equivalent:
 machineStore.setStateDeep({ context: { key: 'val' } })
@@ -158,7 +158,7 @@ machineStore.setContextDeep({ key: 'val' })
 machineStore.setStateDeep(state => ({ context: { key: state.key + 1 } }))
 machineStore.setContext(context => ({ key: state.key + 1 }))`}</Ts>
   </Item>
-</Legend>
+</Legend>}
 
 ## See Also
 

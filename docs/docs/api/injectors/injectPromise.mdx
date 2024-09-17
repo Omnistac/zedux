@@ -102,14 +102,14 @@ const { store } = injectPromise(promiseFactory, [], { dataOnly: true })
 store.getState() // <the data>
 `
 
-<Legend>
+{<Legend>
   <Item name="promiseFactory">
     <p>Required. A function that returns a promise. Signature:</p>
     <Tabs>
       {tab1(`promiseFactory = (controller) => promise`)}
       {tab2(`promiseFactory: (controller?: AbortController) => Promise<T>`)}
     </Tabs>
-    <Legend>
+    {<Legend>
       <Item name="controller">
         <p>
           An{' '}
@@ -128,7 +128,7 @@ store.getState() // <the data>
         The promise you want to memoize and whose state you want{' '}
         <code>injectPromise</code>'s store to track.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="deps">
     <p>Optional. An array containing anything.</p>
@@ -146,7 +146,7 @@ store.getState() // <the data>
   <Item name="config">
     <p>Optional. An object with the following optional properties:</p>
     <Ts>{`{ dataOnly, initialState, runOnInvalidate, ...storeConfig }`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="dataOnly">
         <p>
           Optional. Boolean. Default <code>false</code>.
@@ -203,7 +203,7 @@ const promiseApi = injectPromise(myPromiseFactory, [counterRef.current])`}</Ts>
           . See available options <Link to="injectStore#config">here</Link>.
         </p>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="Returns">
     <p>
@@ -220,7 +220,7 @@ const promiseApi = injectPromise(myPromiseFactory, [counterRef.current])`}</Ts>
     </p>
     <Ts>{`const { promise, store } = injectPromise(...)`}</Ts>
   </Item>
-</Legend>
+</Legend>}
 
 ## See Also
 

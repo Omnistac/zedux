@@ -116,7 +116,7 @@ injectEffect(async () => {
 ) => any`)}
 </Tabs>
 
-<Legend>
+{<Legend>
   <Item name="effect">
     <p>Required. A function.</p>
     <p>
@@ -129,7 +129,7 @@ injectEffect(async () => {
       {tab1(`effect = () => cleanup`)}
       {tab2(`effect: () => (() => void) | Promise<any> | void`)}
     </Tabs>
-    <Legend>
+    {<Legend>
       <Item name="Returns">
         <p>A cleanup function, a promise, or nothing.</p>
         <p>
@@ -143,7 +143,7 @@ injectEffect(async () => {
           is rerun.
         </p>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="deps">
     <p>
@@ -188,7 +188,7 @@ injectEffect(async () => {
     </p>
   </Item>
   <Item name="Returns">Nothing. Void. Emptiness.</Item>
-</Legend>
+</Legend>}
 
 ## See Also
 

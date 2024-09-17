@@ -2,7 +2,10 @@
   "extends": "@tsconfig/docusaurus/tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "target": "ES5"
+    "lib": ["DOM", "ES2019"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2019"
   },
   "include": [
     "docs/",

@@ -1,8 +1,8 @@
 import {
-  AtomSelectorConfig,
-  AtomSelectorOrConfig,
-  haveDepsChanged,
-  SelectorCache,
+  AtomParamsType,
+  AtomStateType,
+  Selectable,
+  SelectorInstance,
 } from '@zedux/atoms'
 import { useEffect, useState } from 'react'
 import { External } from '../utils'
@@ -21,73 +21,40 @@ const OPERATION = 'useAtomSelector'
  * Register a dynamic graph dependency between this React component (as a new
  * external node) and the AtomSelector.
  */
-export const useAtomSelector = <T, Args extends any[]>(
-  selectorOrConfig: AtomSelectorOrConfig<T, Args>,
-  ...args: Args
-): T => {
+export const useAtomSelector = <S extends Selectable>(
+  template: S,
+  ...args: AtomParamsType<S>
+): AtomStateType<S> => {
   const ecosystem = useEcosystem()
-  const { _graph, selectors } = ecosystem
-  const dependentKey = useReactComponentId()
+  const observerId = useReactComponentId()
+  // use this referentially stable setState function as a ref. We lazily add
+  // untyped `i`nstance and `m`ounted properties
   const [, render] = useState<undefined | object>()
 
-  const existingCache = (render as any).cache as
-    | SelectorCache<T, Args>
-    | undefined
+  const existingInstance = (render as any).i as SelectorInstance | undefined
 
-  const argsChanged =
-    !existingCache ||
-    ((selectorOrConfig as AtomSelectorConfig<T, Args>).argsComparator
-      ? !(
-          (selectorOrConfig as AtomSelectorConfig<T, Args>).argsComparator as (
-            newArgs: Args,
-            oldArgs: Args
-          ) => boolean
-        )(args, existingCache.args || ([] as unknown as Args))
-      : haveDepsChanged(existingCache.args, args))
+  const instance = existingInstance
+    ? ecosystem.u(existingInstance, template, args, render as any)
+    : ecosystem.getNode(template, args)
 
-  const resolvedArgs = argsChanged ? args : (existingCache.args as Args)
-
-  // if the refs/args don't match, existingCache has refCount: 1, there is no
-  // cache yet for the new ref, and the new ref has the same name, assume it's
-  // an inline selector
-  const isSwappingRefs =
-    existingCache &&
-    existingCache.selectorRef !== selectorOrConfig &&
-    !argsChanged
-      ? _graph.nodes[existingCache.id]?.refCount === 1 &&
-        !selectors._refBaseKeys.has(selectorOrConfig) &&
-        selectors._getIdealCacheId(existingCache.selectorRef) ===
-          selectors._getIdealCacheId(selectorOrConfig)
-      : false
-
-  if (isSwappingRefs) {
-    // switch `mounted` to false temporarily to prevent circular rerenders
-    ;(render as any).mounted = false
-    selectors._swapRefs(
-      existingCache as SelectorCache<any, any[]>,
-      selectorOrConfig as AtomSelectorOrConfig<any, any[]>,
-      resolvedArgs
+  const addEdge = () =>
+    instance.o.get(observerId) ??
+    instance.on(
+      () => {
+        if ((render as any).m) render({})
+      },
+      {
+        f: External,
+        i: observerId,
+        op: OPERATION,
+      }
     )
-    ;(render as any).mounted = true
-  }
-
-  const cache = isSwappingRefs
-    ? (existingCache as SelectorCache<T, Args>)
-    : selectors.getCache(selectorOrConfig, resolvedArgs)
-
-  const addEdge = () => {
-    if (!_graph.nodes[cache.id]?.dependents.get(dependentKey)) {
-      _graph.addEdge(dependentKey, cache.id, OPERATION, External, () => {
-        if ((render as any).mounted) render({})
-      })
-    }
-  }
 
   // Yes, subscribe during render. This operation is idempotent.
   addEdge()
 
-  const renderedResult = cache.result
-  ;(render as any).cache = cache as SelectorCache<any, any[]>
+  const renderedResult = instance.v
+  ;(render as any).i = instance as SelectorInstance
 
   useEffect(() => {
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
@@ -95,13 +62,13 @@ export const useAtomSelector = <T, Args extends any[]>(
     addEdge()
 
     // use the referentially stable render function as a ref :O
-    ;(render as any).mounted = true
+    ;(render as any).m = true
 
     // an unmounting component's effect cleanup can force-destroy the selector
     // or update the state of its dependencies (causing it to rerun) before we
-    // set `render.mounted`. If that happened, trigger a rerender to recreate
+    // set `render.m`ounted. If that happened, trigger a rerender to recreate
     // the selector and/or get its new state
-    if (cache.isDestroyed || cache.result !== renderedResult) {
+    if (instance.l === 'Destroyed' || instance.v !== renderedResult) {
       render({})
     }
 
@@ -111,10 +78,10 @@ export const useAtomSelector = <T, Args extends any[]>(
       // it's expected that selectors and `ttl: 0` atoms with no other
       // dependents get destroyed and recreated - that's part of what StrictMode
       // is ensuring
-      _graph.removeEdge(dependentKey, cache.id)
+      instance.k(observerId)
       // no need to set `render.mounted` to false here
     }
-  }, [cache.id])
+  }, [instance.id])
 
-  return renderedResult as T
+  return renderedResult
 }

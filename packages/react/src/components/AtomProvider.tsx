@@ -39,7 +39,7 @@ export const AtomProvider: (
   const [nextInstance, ...childInstances] =
     instances || ([instance] as AnyAtomInstance[])
 
-  const context = getReactContext(ecosystem, nextInstance.template)
+  const context = getReactContext(ecosystem, nextInstance.t)
 
   return (
     <context.Provider value={nextInstance}>

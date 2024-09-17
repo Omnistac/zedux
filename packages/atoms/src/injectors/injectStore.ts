@@ -1,7 +1,8 @@
 import { createStore, zeduxTypes, Store } from '@zedux/core'
 import { createInjector } from '../factories/createInjector'
 import { InjectStoreConfig, PartialAtomInstance } from '../types/index'
-import { InjectorDescriptor, prefix } from '../utils/index'
+import { prefix } from '../utils/general'
+import type { InjectorDescriptor } from '../utils/types'
 
 export const doSubscribe = <State>(
   instance: PartialAtomInstance,
@@ -18,7 +19,7 @@ export const doSubscribe = <State>(
 
     const isBatch = action?.meta === zeduxTypes.batch
 
-    instance._scheduleEvaluation(
+    instance.r(
       {
         newState,
         oldState,
@@ -41,7 +42,7 @@ export const doSubscribe = <State>(
 
     // run the scheduler synchronously after every store update unless batching
     if (!isBatch) {
-      instance.ecosystem._scheduler.flush()
+      instance.e._scheduler.flush()
     }
   })
 
@@ -121,7 +122,7 @@ export const injectStore: {
             createStore<State>(null, hydration ?? storeFactory)
 
     const store = getStore(
-      config?.hydrate ? instance.ecosystem.hydration?.[instance.id] : undefined
+      config?.hydrate ? instance.e.hydration?.[instance.id] : undefined
     )
 
     const subscription = subscribe && doSubscribe(instance, store)

@@ -34,7 +34,6 @@
   },
   "files": [
     "dist",
-    "src",
     "README.md"
   ],
   "homepage": "https://omnistac.github.io/zedux/",

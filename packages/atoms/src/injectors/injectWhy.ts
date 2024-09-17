@@ -1,4 +1,4 @@
-import { readInstance } from '../classes/EvaluationStack'
+import { readInstance } from '../utils/evaluationContext'
 
 /**
  * An "unrestricted" injector (can actually be used in loops and if statements).
@@ -9,4 +9,4 @@ import { readInstance } from '../classes/EvaluationStack'
  * const reasons = ecosystem.why()
  * ```
  */
-export const injectWhy = () => readInstance().nextReasons
+export const injectWhy = () => readInstance().w
