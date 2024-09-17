@@ -80,7 +80,7 @@ There are many aspects of a store's behavior you can overwrite when extending th
 
 Stores expose the following methods:
 
-<Legend>
+{<Legend>
   <Item name="actionStream">
     <p>
       Returns an "observable"-like object. This object has a single{' '}
@@ -153,7 +153,7 @@ store.dispatch({ type: zeduxTypes.hydrate, payload: 'myState' })`}</Ts>
     </p>
     <p>Signature:</p>
     <Ts>{`setState = (stateOrFactory, meta?) => newState`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="stateOrFactory">
         <p>
           Required. Either the new state or a function that accepts the current
@@ -183,7 +183,7 @@ store.dispatch({ type: zeduxTypes.hydrate, payload: 'myState' })`}</Ts>
         The new state after notifying all subscribers of the state change.
         Returns the existing state if there was no state change.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="setStateDeep">
     <p>
@@ -212,7 +212,7 @@ store.dispatch({
     </p>
     <p>Signature:</p>
     <Ts>{`setStateDeep = (partialStateOrFactory, meta?) => newState`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="partialStateOrFactory">
         Required. Either a recursive partial state object or a function that
         returns one.
@@ -228,7 +228,7 @@ store.dispatch({
           prevent the atom instance that created this store from reevaluating.
         </p>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="subscribe">
     <p>
@@ -275,7 +275,7 @@ myStore.use({
 })
 myStore.use(null) // wipe everything`}</Ts>
   </Item>
-</Legend>
+</Legend>}
 
 ## See Also
 

@@ -18,6 +18,8 @@ It isn't.
 
 Join me for a minute and I'll tell you why.
 
+{/* truncate */}
+
 ## What Is Scalability?
 
 I hate to be one of those blogs that starts off a lawn-treatment article by defining grass. But the very definition of scalability when it comes to state management has been lost in the React community.

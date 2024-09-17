@@ -19,7 +19,7 @@ export const AddDependentConfigParam = () => (
   <Item name="config">
     <p>Optional. An object containing the following optional properties:</p>
     <Ts>{`{ callback, operation }`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="callback">
         <p>
           A <Link to="../types/DependentCallback">DependentCallback</Link>{' '}
@@ -33,7 +33,7 @@ export const AddDependentConfigParam = () => (
           caused the graph edge to be added.
         </p>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
 )
 
@@ -126,7 +126,7 @@ There are many aspects of an atom instance's behavior you can change when extend
 
 Atom instances have the following **readonly** properties:
 
-<Legend>
+{<Legend>
   <Item name="ecosystem">
     <p>
       A reference to the <Link to="Ecosystem">ecosystem</Link> that created and
@@ -266,11 +266,11 @@ function Shout() {
       atom instance was created from.
     </p>
   </Item>
-</Legend>
+</Legend>}
 
 ## Methods
 
-<Legend>
+{<Legend>
   <Item name="addDependent">
     <p>
       Manually adds a graph edge between this atom instance and a new external
@@ -282,9 +282,9 @@ function Shout() {
     </p>
     <p>Signature:</p>
     <Ts>{`addDependent = (config?) => cleanup`}</Ts>
-    <Legend>
+    {<Legend>
       <AddDependentConfigParam />
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="destroy">
     <p>
@@ -363,7 +363,7 @@ function Coin() {
       .
     </p>
   </Item>
-</Legend>
+</Legend>}
 
 ## See Also
 

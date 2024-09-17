@@ -68,7 +68,7 @@ invalidate()
   {tab2(`declare const injectInvalidate: () => () => void`)}
 </Tabs>
 
-<Legend>
+{<Legend>
   <Item name="Returns">
     <p>
       A function that can be called to force a reevaluation of the current atom
@@ -80,7 +80,7 @@ invalidate()
 const invalidate = injectInvalidate()
 invalidate()`}</Ts>
   </Item>
-</Legend>
+</Legend>}
 
 ## See Also
 

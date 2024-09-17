@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useState } from 'react'
+import React, { useState } from 'react'
 import { useMemo } from 'react'
 import styled from '@site/src/ssc'
 import * as ReactZedux from '@zedux/react'
@@ -93,10 +93,10 @@ const CaretDownIcon = () => (
 )
 
 export const LogActions = ({
-  ecosystemIdRef,
+  ecosystem,
   Zedux,
 }: {
-  ecosystemIdRef: MutableRefObject<string>
+  ecosystem?: ReactZedux.Ecosystem
   Zedux: typeof ReactZedux
 }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -105,7 +105,6 @@ export const LogActions = ({
   const actions = useMemo<Record<keyof typeof options, () => void>>(
     () => ({
       State: () => {
-        const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
         if (!ecosystem) {
           return console.log(
             "Looks like this sandbox doesn't have an ecosystem"
@@ -123,7 +122,6 @@ export const LogActions = ({
         console.groupEnd()
       },
       Ecosystem: () => {
-        const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
         if (!ecosystem) {
           return console.log(
             "Looks like this sandbox doesn't have an ecosystem"
@@ -134,7 +132,6 @@ export const LogActions = ({
         console.groupEnd()
       },
       Graph: () => {
-        const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
         if (!ecosystem) {
           return console.log(
             "Looks like this sandbox doesn't have an ecosystem"

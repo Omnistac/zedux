@@ -280,16 +280,16 @@ Every Atom Selector + params combo creates its own node in the graph.
 
 ```tsx live ecosystemId=selectors/the-graph resultVar=Graph
 const usersAtom = atom('users', () => [
-  { name: 'Joe', id: 1 },
-  { name: 'Jill', id: 2 },
-  { name: 'Jim', id: 3 },
+  { name: 'Joe', id: 0 },
+  { name: 'Jill', id: 1 },
+  { name: 'Jim', id: 2 },
 ])
 
 const getUserById = ({ get }: AtomGetters, id: number) => get(usersAtom)[id]
 
 function Graph() {
-  const joe = useAtomSelector(getUserById, 1)
-  const jill = useAtomSelector(getUserById, 2)
+  const joe = useAtomSelector(getUserById, 0)
+  const jill = useAtomSelector(getUserById, 1)
 
   return (
     <div>
