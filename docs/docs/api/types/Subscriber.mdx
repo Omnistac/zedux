@@ -38,7 +38,7 @@ type NextSubscriber<State = any> = (
 ) => void
 ```
 
-<Legend>
+{<Legend>
   <Item name="newState">
     <p>
       The current state of the store, after the latest operation changed it.
@@ -58,7 +58,7 @@ type NextSubscriber<State = any> = (
       reproduce the state update from this store for time travel.
     </p>
   </Item>
-</Legend>
+</Legend>}
 
 ## Error
 
@@ -84,14 +84,14 @@ Error subscribers receive a single parameter:
 type ErrorSubscriber = (error: Error) => void
 ```
 
-<Legend>
+{<Legend>
   <Item name="error">
     <p>
       The error thrown by the store's reducer layer or by the function passed to{' '}
       <code>store.setState()</code> or <code>store.setStateDeep()</code>.
     </p>
   </Item>
-</Legend>
+</Legend>}
 
 ## Effects
 

@@ -67,7 +67,15 @@ const withLiveEditor = (Component: typeof CodeBlock) => {
     const theme = usePrismTheme()
 
     if (props.live) {
-      return <Sandbox {...props} />
+      return (
+        <Sandbox
+          {...Object.fromEntries(
+            props.metastring?.split(' ').map(str => str.split('='))
+          )}
+        >
+          {props.children}
+        </Sandbox>
+      )
     }
 
     return <Component {...props} />

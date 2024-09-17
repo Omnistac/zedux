@@ -4,14 +4,7 @@ import Prism from 'prismjs'
 import 'prismjs/components/prism-jsx'
 import 'prismjs/components/prism-typescript'
 import 'prismjs/components/prism-tsx'
-import React, {
-  MutableRefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Text,
   createEditor,
@@ -124,7 +117,6 @@ const decorate = ([node, path]: NodeEntry) => {
 const evalCode = (
   code: string,
   resultVarName: string,
-  ecosystemIdRef?: MutableRefObject<string>,
   extraSandboxScope?: Record<string, any>,
   localStorage?: typeof window.localStorage,
   reload?: () => void
@@ -145,17 +137,7 @@ const evalCode = (
 
   // eslint-disable-next-line no-new-func
   const fn = new Function('React', ...keys, wrapped)
-
-  const { s: store } = ZeduxReact.getInternals()
-  const ecosystemsBefore = store.getState()
   const result = fn.call(null, React, ...vals)
-  const ecosystemsAfter = store.getState()
-
-  if (!ecosystemIdRef.current) {
-    Object.keys(ecosystemsAfter).forEach(key => {
-      if (!ecosystemsBefore[key]) ecosystemIdRef.current = key
-    })
-  }
 
   return result
 }
@@ -245,10 +227,17 @@ export const Sandbox = ({
   const [value, setValue] = useState(initialValue)
   const [result, setResult] = useState('')
   const theme = usePrismTheme()
-  const ecosystemIdRef = useRef(ecosystemId)
   const lastLoggedErrorTimeRef = useRef<number | undefined>()
   const isMountedRef = useRef(true)
   const isResettingRef = useRef(false)
+
+  const [ecosystem] = useState(() =>
+    noProvide
+      ? undefined
+      : ZeduxReact.createEcosystem(
+          ecosystemId ? { id: ecosystemId } : undefined
+        )
+  )
 
   const reset = (rawVal: Descendant[], text = 'resetting') => {
     isResettingRef.current = true
@@ -274,8 +263,8 @@ export const Sandbox = ({
 
         if (!jsCode) return
 
-        const ecosystem = Zedux.getEcosystem(ecosystemIdRef.current)
-        if (ecosystem?.n.size) {
+        // if (ecosystem?.n.size) {
+        if (ecosystem && Object.keys(ecosystem?._instances).length) {
           ecosystem.wipe()
           ecosystem.setOverrides([])
         }
@@ -283,7 +272,6 @@ export const Sandbox = ({
         const evalResult = evalCode(
           jsCode,
           resultVar,
-          ecosystemIdRef,
           typeof extraScope === 'string' ? undefined : extraScope,
           localStorage,
           () => reset(rawVal, 'refreshing sandbox')
@@ -330,7 +318,7 @@ export const Sandbox = ({
           <img src={`${baseUrl}img/zedux-icon-75x75.png`} />
           <HeaderText>Live Sandbox</HeaderText>
           <HeaderActions>
-            <LogActions ecosystemIdRef={ecosystemIdRef} Zedux={Zedux} />
+            <LogActions ecosystem={ecosystem} Zedux={Zedux} />
             <ResetButton
               onClick={() => {
                 localStorage.clear()
@@ -365,9 +353,9 @@ export const Sandbox = ({
     </Slate>
   )
 
-  return ecosystemIdRef.current && !noProvide ? (
-    <Zedux.EcosystemProvider id={ecosystemId}>{slate}</Zedux.EcosystemProvider>
-  ) : (
+  return noProvide ? (
     slate
+  ) : (
+    <Zedux.EcosystemProvider id={ecosystemId}>{slate}</Zedux.EcosystemProvider>
   )
 }

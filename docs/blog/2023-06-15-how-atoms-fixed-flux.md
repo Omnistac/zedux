@@ -18,6 +18,8 @@ Other articles will focus on the differences between these tools. This article w
 
 They fixed Flux.
 
+{/* truncate */}
+
 ## Flux
 
 If you don't know Flux, here's a quick gist:
@@ -28,7 +30,7 @@ Besides Redux, all Flux-based libraries basically followed this pattern: An app 
 
 For example, take an e-commerce app setup:
 
-![UserStore <-> CartStore <-> PromosStore](/img/how-atoms-fixed-flux/ecommerce-stores.png)
+![UserStore \<-> CartStore \<-> PromosStore](/img/how-atoms-fixed-flux/ecommerce-stores.png)
 
 When the user moves, say, a banana to their cart, the PromosStore needs to wait for CartStore's state to update before sending off a request to see if there's an available banana coupon.
 

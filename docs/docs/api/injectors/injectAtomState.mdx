@@ -202,9 +202,8 @@ const [state, { export1, export2 }] = ${name}(myAtom)`}</Ts>
         There are other ways to accomplish everything this {type} does. For
         example:
       </p>
-      <Ts>{`const instance = ${
-        type === 'hook' ? 'use' : 'inject'
-      }AtomInstance(myAtom)
+      <Ts>{`const instance = ${type === 'hook' ? 'use' : 'inject'
+        }AtomInstance(myAtom)
 const state = ${type === 'hook' ? 'use' : 'inject'}AtomValue(instance)
 const { setState } = instance
 const { export1, export2 } = instance.exports`}</Ts>

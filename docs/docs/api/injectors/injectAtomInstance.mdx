@@ -123,7 +123,7 @@ export const InjectAtomInstanceLegend = ({
     <Item name="config">
       <p>Optional. An object containing the following optional properties:</p>
       <Ts>{`{ operation, subscribe${extraConfigDef} }`}</Ts>
-      <Legend>
+      {<Legend>
         <Item name="operation">
           <p>
             A string. Default <code>'{name}'</code>.
@@ -155,12 +155,11 @@ export const InjectAtomInstanceLegend = ({
   { subscribe: true }
 ).getState()\n
 // the above is equivalent to:
-const val = ${
-            name.startsWith('inject') ? 'inject' : 'use'
-          }AtomValue(myAtom)`}</Ts>
+const val = ${name.startsWith('inject') ? 'inject' : 'use'
+            }AtomValue(myAtom)`}</Ts>
         </Item>
         {extraConfig}
-      </Legend>
+      </Legend>}
     </Item>
     <Item name="Returns">
       <p>The resolved atom instance.</p>

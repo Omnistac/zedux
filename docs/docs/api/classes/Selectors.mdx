@@ -16,7 +16,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
 
 ## Methods
 
-<Legend>
+{<Legend>
   <Item name="addDependent">
     <p>
       Manually adds a graph edge between an atom selector and a new external
@@ -24,7 +24,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
     </p>
     <p>Signature:</p>
     <Ts>{`addDependent = (cacheItem, config?) => cleanup`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="cacheItem">
         <p>
           Required. A <Link to="SelectorCache">SelectorCache</Link> instance.
@@ -32,13 +32,13 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
         <p>This is the dependency you're adding a dependent to.</p>
       </Item>
       <AddDependentConfigParam />
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="dehydrate">
     <p>Gets a snapshot of current cache item values.</p>
     <p>Signature:</p>
     <Ts>{`dehydrate = (selectableOrName?) => cacheItems`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="selectableOrName">
         <p>Optional. One of:</p>
         <ul>
@@ -67,7 +67,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
         Returns an object mapping fully qualified SelectorCache ids to the
         cached result for that selector + params combo.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="destroyCache">
     <p>
@@ -85,7 +85,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
     </p>
     <p>Signature:</p>
     <Ts>{`destroyCache = (selectable, args?, force?) => void`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="selectable">
         <p>
           Required. An <Link to="../types/AtomSelector">atom selector</Link>,{' '}
@@ -104,7 +104,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
         Optional. A boolean. Whether to force destruction regardless of whether
         the cached selector still has dependents.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="find">
     <p>
@@ -135,7 +135,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
     </p>
     <p>Signature:</p>
     <Ts>{`findAll = (selectableOrName?) => cacheItems`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="selectableOrName">
         <p>Optional. One of:</p>
         <ul>
@@ -165,7 +165,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
         Returns an object mapping fully qualified SelectorCache ids to their{' '}
         <Link to="SelectorCache">SelectorCache</Link> instances.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="getCache">
     <p>
@@ -188,7 +188,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
     </p>
     <p>Signature:</p>
     <Ts>{`getCache = (selectable, args?) => cacheItem`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="selectable">
         <p>
           Required. An <Link to="../types/AtomSelector">atom selector</Link>,{' '}
@@ -211,7 +211,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
       <Item name="Returns">
         A <Link to="SelectorCache">SelectorCache</Link> instance.
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
   <Item name="getCacheId">
     <p>
@@ -220,7 +220,7 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
     </p>
     <p>Signature:</p>
     <Ts>{`getCacheId = (selectable, args?, weak?) => id`}</Ts>
-    <Legend>
+    {<Legend>
       <Item name="selectable">
         <p>
           Required. An <Link to="../types/AtomSelector">atom selector</Link>,{' '}
@@ -249,9 +249,9 @@ Every ecosystem creates a single Selectors instance - [`ecosystem.selectors`](Ec
           selector + args combo yet.
         </p>
       </Item>
-    </Legend>
+    </Legend>}
   </Item>
-</Legend>
+</Legend>}
 
 ## See Also
 
