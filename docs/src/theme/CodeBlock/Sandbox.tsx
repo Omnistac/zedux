@@ -62,7 +62,10 @@ const scope = {
   ...RxJSOperators,
   ...Zedux,
   ...React,
-  window,
+  window:
+    typeof window === 'undefined'
+      ? { addEventListener() {}, removeEventListener() {} }
+      : window,
 }
 const scopeKeys = Object.keys(scope)
 const scopeValues = scopeKeys.map(key => scope[key])
