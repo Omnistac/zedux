@@ -119,7 +119,6 @@ describe('React context', () => {
 
       render() {
         if (this.state.error) {
-          // You can render any custom fallback UI
           return <div data-testid="1">{this.state.error}</div>
         }
 
@@ -136,7 +135,7 @@ describe('React context', () => {
     const div = await findByTestId('1')
 
     expect(div.innerHTML).toMatch(/AtomProvider.*requires.*prop/i)
-    expect(spy).toHaveBeenCalledTimes(3)
+    expect(spy).toHaveBeenCalledTimes(1)
 
     spy.mockReset()
   })
@@ -209,7 +208,6 @@ describe('React context', () => {
 
   test('useAtomContext() throws an error if 2nd param is true and no instance was provided', async () => {
     jest.useFakeTimers()
-    const mock = mockConsole('error')
     const atom1 = atom('1', (id: string) => id)
 
     function Test() {
@@ -222,11 +220,5 @@ describe('React context', () => {
     const pattern = /no atom instance was provided/i
 
     expect(() => renderInEcosystem(<Test />)).toThrowError(pattern)
-    expect(mock).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        message: expect.stringMatching(pattern),
-      })
-    )
   })
 })

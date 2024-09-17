@@ -168,7 +168,7 @@ describe('useAtomSelector', () => {
     })
   })
 
-  test('useAtomSelector creates/uses a different cache when selector goes from object form to function form', async () => {
+  test('useAtomSelector reuses the same cache when selector goes from object form to function form', async () => {
     jest.useFakeTimers()
     const selector1 = jest.fn(() => 1)
 
@@ -208,7 +208,7 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1': 1,
+      '@@selector-mockConstructor-0': 1,
     })
   })
 
@@ -305,7 +305,7 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('0')
     expect(selector1).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-1-[0]': 0,
+      '@@selector-mockConstructor-0-[0]': 0,
     })
   })
 
@@ -356,7 +356,7 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(2)
     expect(ecosystem.selectors.dehydrate()).toEqual({
-      '@@selector-mockConstructor-2': 1,
+      '@@selector-mockConstructor-0': 1,
     })
     expect(renders).toBe(2)
   })
@@ -440,8 +440,6 @@ describe('useAtomSelector', () => {
     const button = await findByTestId('button')
     const div = await findByTestId('text')
 
-    jest.runAllTimers()
-
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
         "@@selector-unnamed-1": SelectorCache {
@@ -465,9 +463,9 @@ describe('useAtomSelector', () => {
 
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
-        "@@selector-unnamed-3": SelectorCache {
+        "@@selector-unnamed-1": SelectorCache {
           "args": [],
-          "id": "@@selector-unnamed-3",
+          "id": "@@selector-unnamed-1",
           "nextReasons": [],
           "prevReasons": [],
           "result": 1,
@@ -533,10 +531,8 @@ describe('useAtomSelector', () => {
 
     const div = await findByTestId('text')
 
-    jest.runAllTimers()
-
     expect(div.innerHTML).toBe('1')
-    expect(renders).toBe(2) // 2 rerenders + 2 for strict mode
+    expect(renders).toBe(4) // 2 rerenders + 2 for strict mode
     expect(ecosystem._graph.nodes).toMatchSnapshot()
 
     act(() => {
@@ -545,7 +541,102 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('2')
-    expect(renders).toBe(4) // 4 rerenders + 4 for strict mode
+    expect(renders).toBe(6) // 3 rerenders + 3 for strict mode
     expect(ecosystem._graph.nodes).toMatchSnapshot()
+  })
+
+  test('inline selector stays subscribed after being swapped out', async () => {
+    jest.useFakeTimers()
+    const atom1 = atom('1', () => ({ val: 1 }))
+    const selector = ({ get }: AtomGetters) => get(atom1)
+
+    function Test() {
+      const { val } = useAtomSelector({
+        resultsComparator: (a, b) => a.val === b.val,
+        selector,
+      })
+
+      return (
+        <>
+          <div data-testid="text">{val}</div>
+        </>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Test />, {
+      useStrictMode: true,
+    })
+
+    const div = await findByTestId('text')
+
+    expect(div.innerHTML).toBe('1')
+
+    act(() => {
+      ecosystem.getInstance(atom1).setState({ val: 2 })
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('2')
+
+    act(() => {
+      ecosystem.getInstance(atom1).setState({ val: 3 })
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('3')
+
+    act(() => {
+      ecosystem.getInstance(atom1).setState({ val: 4 })
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('4')
+  })
+
+  test('when a selector is destroyed, other selectors that pass different params to the same ref retain their ids', async () => {
+    jest.useFakeTimers()
+    const atom1 = atom('1', () => '1')
+    const selector1 = ({ get }: AtomGetters, str: string) => get(atom1) + str
+
+    function Test() {
+      const a = useAtomSelector(selector1, 'a')
+      const b = useAtomSelector(selector1, 'b')
+      const c = useAtomSelector(selector1, 'c')
+
+      return (
+        <div data-testid="text">
+          {a}
+          {b}
+          {c}
+        </div>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Test />)
+
+    const div = await findByTestId('text')
+
+    expect(div.innerHTML).toBe('1a1b1c')
+    expect(ecosystem.selectors.dehydrate()).toMatchInlineSnapshot(`
+      {
+        "@@selector-selector1-0-["a"]": "1a",
+        "@@selector-selector1-0-["b"]": "1b",
+        "@@selector-selector1-0-["c"]": "1c",
+      }
+    `)
+
+    act(() => {
+      ecosystem.selectors.destroyCache(selector1, ['a'], true)
+      jest.runAllTimers()
+    })
+
+    expect(div.innerHTML).toBe('1a1b1c')
+    expect(ecosystem.selectors.dehydrate()).toMatchInlineSnapshot(`
+      {
+        "@@selector-selector1-0-["a"]": "1a",
+        "@@selector-selector1-0-["b"]": "1b",
+        "@@selector-selector1-0-["c"]": "1c",
+      }
+    `)
   })
 })

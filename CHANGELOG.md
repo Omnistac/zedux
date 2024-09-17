@@ -1,3 +1,23 @@
+## v1.3.0-rc.2 (Jul 31, 2024)
+
+### Fixes:
+
+- `react`: only rerun `useAtomSelector` effect on cache id change (#110)
+
+## v1.3.0-rc.1 (Jul 30, 2024)
+
+### Fixes:
+
+- `react`: restore `useAtomSelector` mounted state when swapping inline refs (#108)
+
+## v1.3.0-rc.0 (Jul 30, 2024)
+
+This version contains huge fixes for `useAtomSelector` that are only fully compatible with React 19 or with React 18 when not using StrictMode. It's recommended to wait for React 19 before upgrading to this version.
+
+### Fixes:
+
+- `atoms`, `react`: optimize `useAtomSelector` for React 19 (#106)
+
 ## v1.2.3 (Sep 7, 2024)
 
 ### Fixes:
