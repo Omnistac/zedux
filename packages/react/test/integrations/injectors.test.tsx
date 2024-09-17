@@ -254,7 +254,30 @@ describe('injectors', () => {
 
     instance1.setState('b')
 
-    expect(whys).toMatchSnapshot()
+    expect(whys).toEqual([
+      [],
+      [],
+      [
+        {
+          newState: undefined, // TODO: this will be defined again when atoms use signals
+          oldState: 'a',
+          operation: undefined,
+          reasons: undefined,
+          source: undefined,
+          type: 'state changed',
+        },
+      ],
+      [
+        {
+          newState: undefined, // TODO: this will be defined again when atoms use signals
+          oldState: 'a',
+          operation: undefined,
+          reasons: undefined,
+          source: undefined,
+          type: 'state changed',
+        },
+      ],
+    ])
     expect(whys[2]).toEqual(whys[3])
   })
 })

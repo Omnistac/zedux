@@ -1,10 +1,11 @@
 import {
   AtomParamsType,
   AtomStateType,
+  ExternalNode,
   Selectable,
   SelectorInstance,
 } from '@zedux/atoms'
-import { useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { External } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
@@ -12,14 +13,14 @@ import { useReactComponentId } from './useReactComponentId'
 const OPERATION = 'useAtomSelector'
 
 /**
- * Get the result of running an AtomSelector in the current ecosystem.
+ * Get the result of running a selector in the current ecosystem.
  *
  * If the exact selector function (or object if it's an AtomSelectorConfig
  * object) reference + params combo has been used in this ecosystem before,
  * return the cached result.
  *
  * Register a dynamic graph dependency between this React component (as a new
- * external node) and the AtomSelector.
+ * external node) and the selector.
  */
 export const useAtomSelector = <S extends Selectable>(
   template: S,
@@ -28,47 +29,46 @@ export const useAtomSelector = <S extends Selectable>(
   const ecosystem = useEcosystem()
   const observerId = useReactComponentId()
   // use this referentially stable setState function as a ref. We lazily add
-  // untyped `i`nstance and `m`ounted properties
-  const [, render] = useState<undefined | object>()
+  // `i`nstance and `m`ounted properties
+  const [, render] = useState<undefined | object>() as [
+    any,
+    Dispatch<SetStateAction<object | undefined>> & {
+      m: boolean
+      i?: SelectorInstance
+    }
+  ]
 
-  const existingInstance = (render as any).i as SelectorInstance | undefined
-
-  const instance = existingInstance
-    ? ecosystem.u(existingInstance, template, args, render as any)
+  const instance: SelectorInstance = render.i
+    ? ecosystem.u(render.i, template, args, render)
     : ecosystem.getNode(template, args)
 
-  const addEdge = () =>
-    instance.o.get(observerId) ??
-    instance.on(
-      () => {
-        if ((render as any).m) render({})
-      },
-      {
-        f: External,
-        i: observerId,
-        op: OPERATION,
-      }
-    )
+  const renderedValue = instance.v
+  render.i = instance
+
+  let node =
+    (ecosystem.n.get(observerId) as ExternalNode) ??
+    new ExternalNode(ecosystem, observerId, render)
+
+  const addEdge = () => {
+    node.l === 'Destroyed' &&
+      (node = new ExternalNode(ecosystem, observerId, render))
+    node.i === instance || node.u(instance, OPERATION, External)
+  }
 
   // Yes, subscribe during render. This operation is idempotent.
   addEdge()
-
-  const renderedResult = instance.v
-  ;(render as any).i = instance as SelectorInstance
 
   useEffect(() => {
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
     // this effect's cleanup unnecessarily)
     addEdge()
-
-    // use the referentially stable render function as a ref :O
-    ;(render as any).m = true
+    render.m = true
 
     // an unmounting component's effect cleanup can force-destroy the selector
     // or update the state of its dependencies (causing it to rerun) before we
     // set `render.m`ounted. If that happened, trigger a rerender to recreate
     // the selector and/or get its new state
-    if (instance.l === 'Destroyed' || instance.v !== renderedResult) {
+    if (instance.v !== renderedValue || instance.l === 'Destroyed') {
       render({})
     }
 
@@ -78,10 +78,10 @@ export const useAtomSelector = <S extends Selectable>(
       // it's expected that selectors and `ttl: 0` atoms with no other
       // dependents get destroyed and recreated - that's part of what StrictMode
       // is ensuring
-      instance.k(observerId)
-      // no need to set `render.mounted` to false here
+      node.k(instance)
+      // don't set `render.m = false` here
     }
   }, [instance.id])
 
-  return renderedResult
+  return renderedValue
 }

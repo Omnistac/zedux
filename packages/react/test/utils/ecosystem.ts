@@ -1,5 +1,10 @@
 import { act } from '@testing-library/react'
-import { AtomInstance, createEcosystem } from '@zedux/atoms'
+import {
+  createEcosystem,
+  GraphEdge,
+  GraphNode,
+  SelectorInstance,
+} from '@zedux/atoms'
 
 export const ecosystem = createEcosystem({ id: 'test' })
 
@@ -9,31 +14,28 @@ export const generateIdMock = jest.fn(
   (prefix: string) => `${prefix}-${idCounter++}`
 )
 
+export const getEdges = (map: Map<GraphNode, GraphEdge>) =>
+  Object.fromEntries([...map].map(([node, edge]) => [node.id, edge]))
+
 export const getNodes = () =>
   Object.fromEntries(
-    [...ecosystem.n.entries()].map(([id, { e, ...node }]) => {
-      e // remove this circular reference from node
-
-      if ((node as AtomInstance).store) {
-        const store = { ...(node as AtomInstance).store }
-        delete store._scheduler
-        delete (node as AtomInstance)._injectors
-        delete (node as AtomInstance)._nextInjectors
-        ;(node as AtomInstance).store = store
-      }
-
-      return [id, node]
-    })
+    [...ecosystem.n.entries()].map(([id, node]) => [
+      id,
+      {
+        className: node.constructor.name,
+        observers: getEdges(node.o),
+        sources: getEdges(node.s),
+        state: node.get(),
+        status: node.l,
+        weight: node.W,
+      },
+    ])
   )
 
 export const getSelectorNodes = () =>
   Object.fromEntries(
-    Object.entries(ecosystem.findAll('@@selector')).map(
-      ([id, { e, ...node }]) => {
-        e // remove this circular reference from node
-
-        return [id, node]
-      }
+    Object.entries(getNodes()).filter(
+      ([, { className }]) => className === SelectorInstance.name
     )
   )
 

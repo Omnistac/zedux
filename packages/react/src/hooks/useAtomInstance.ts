@@ -4,9 +4,10 @@ import {
   AtomInstance,
   AtomInstanceType,
   AtomParamsType,
+  ExternalNode,
   ParamlessTemplate,
 } from '@zedux/atoms'
-import { useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { ZeduxHookConfig } from '../types'
 import { External, Static } from '../utils'
 import { useEcosystem } from './useEcosystem'
@@ -72,30 +73,29 @@ export const useAtomInstance: {
 ) => {
   const ecosystem = useEcosystem()
   const observerId = useReactComponentId()
+
   // use this referentially stable setState function as a ref. We lazily add
-  // an untyped `m`ounted property
-  const [, render] = useState<undefined | object>()
+  // a `m`ounted property
+  const [, render] = useState<undefined | object>() as [
+    any,
+    Dispatch<SetStateAction<object | undefined>> & { m: boolean }
+  ]
 
   // It should be fine for this to run every render. It's possible to change
   // approaches if it is too heavy sometimes. But don't memoize this call:
-  const instance: AtomInstance = ecosystem.getInstance(
-    atom as A,
-    params as AtomParamsType<A>
-  )
-  const renderedState = instance.get()
+  const instance: AtomInstance = ecosystem.getNode(atom, params)
+  const renderedValue = instance.get()
 
-  const addEdge = () =>
-    instance.o.get(observerId) ??
-    instance.on(
-      () => {
-        if ((render as any).m) render({})
-      },
-      {
-        f: External | (subscribe ? 0 : Static),
-        i: observerId,
-        op: operation,
-      }
-    )
+  let node =
+    (ecosystem.n.get(observerId) as ExternalNode) ??
+    new ExternalNode(ecosystem, observerId, render)
+
+  const addEdge = () => {
+    node.l === 'Destroyed' &&
+      (node = new ExternalNode(ecosystem, observerId, render))
+    node.i === instance ||
+      node.u(instance, operation, External | (subscribe ? 0 : Static))
+  }
 
   // Yes, subscribe during render. This operation is idempotent and we handle
   // React's StrictMode specifically.
@@ -107,14 +107,12 @@ export const useAtomInstance: {
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
     // this effect's cleanup unnecessarily)
     addEdge()
-
-    // use the referentially stable render function as a ref :O
-    ;(render as any).m = true
+    render.m = true
 
     // an unmounting component's effect cleanup can update or force-destroy the
     // atom instance before this component is mounted. If that happened, trigger
     // a rerender to recreate the atom instance and/or get its new state
-    if (instance.get() !== renderedState || instance.l === 'Destroyed') {
+    if (instance.get() !== renderedValue || instance.l === 'Destroyed') {
       render({})
     }
 
@@ -123,8 +121,8 @@ export const useAtomInstance: {
       // double-invokes (invokes, then cleans up, then re-invokes) this effect,
       // it's expected that any `ttl: 0` atoms get destroyed and recreated -
       // that's part of what StrictMode is ensuring
-      instance.k(observerId)
-      // no need to set `render.m`ounted to false here
+      node.k(instance)
+      // don't set `render.m = false` here
     }
   }, [instance.id])
 

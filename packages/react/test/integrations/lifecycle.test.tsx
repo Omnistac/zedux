@@ -273,8 +273,11 @@ describe('ttl', () => {
 
     const instance1 = testEcosystem.getInstance(atom1)
     const cleanup = instance1.on(() => {})
+    const keys = [...testEcosystem.n.keys()]
 
-    expect([...testEcosystem.n.keys()]).toEqual(['1'])
+    expect(keys).toHaveLength(2)
+    expect(keys[0]).toBe('1')
+    expect(keys[1].slice(0, 3)).toBe('no-')
 
     cleanup()
 

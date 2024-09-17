@@ -9,8 +9,6 @@ import {
 } from '@zedux/atoms'
 import { createImmerStore } from './createImmerStore'
 
-const operation = 'injectImmerStore'
-
 const doSubscribe = <State>(
   instance: PartialAtomInstance,
   store: Store<State>
@@ -26,26 +24,7 @@ const doSubscribe = <State>(
       return
     }
 
-    instance.r(
-      {
-        newState,
-        oldState,
-        operation,
-        reasons: [
-          {
-            action,
-            newState,
-            oldState,
-            operation: 'dispatch',
-            sourceType: 'Store',
-            type: 'state changed',
-          },
-        ],
-        sourceType: 'Injector',
-        type: 'state changed',
-      },
-      false
-    )
+    instance.r({ p: oldState }, false)
 
     // run the scheduler synchronously after any store update
     if (action?.meta !== zeduxTypes.batch) {

@@ -1,3 +1,6 @@
+import type { GraphNode } from '../classes/GraphNode'
+import { EvaluationReason, InternalEvaluationReason } from '../types/index'
+
 /**
  * The EdgeFlags. These are used as bitwise flags.
  *
@@ -17,6 +20,19 @@ export const ExplicitExternal = Explicit | External
 export const Static = 4
 export const OutOfRange = 8 // not a flag; use a value bigger than any flag
 
+/**
+ * The InternalEvaluationTypes. These get translated to user-friendly
+ * EvaluationTypes by `ecosytem.why`.
+ */
+export const Invalidate = 1
+export const Destroy = 2
+export const PromiseChange = 3
+
+export type InternalEvaluationType =
+  | typeof Destroy
+  | typeof Invalidate
+  | typeof PromiseChange
+
 export const isZeduxNode = 'isZeduxNode'
 
 /**
@@ -30,3 +46,23 @@ export const compare = (nextDeps?: any[], prevDeps?: any[]) =>
   !prevDeps.some((dep, i) => nextDeps[i] !== dep)
 
 export const prefix = '@@zedux'
+
+const reasonTypeMap = {
+  [Destroy]: 'node destroyed',
+  [Invalidate]: 'cache invalidated',
+  [PromiseChange]: 'promise changed',
+  4: 'state changed',
+} as const
+
+export const makeReasonsReadable = (
+  node?: GraphNode,
+  internalReasons: InternalEvaluationReason[] | undefined = node?.w
+): EvaluationReason[] | undefined =>
+  internalReasons?.map(reason => ({
+    newState: reason.s?.get(),
+    oldState: reason.p,
+    operation: node?.s.get(reason.s!)?.operation,
+    reasons: reason.r && makeReasonsReadable(reason.s, reason.r),
+    source: reason.s,
+    type: reasonTypeMap[reason.t ?? 4],
+  }))

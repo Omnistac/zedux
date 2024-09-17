@@ -4,7 +4,7 @@ import {
   AtomSelectorConfig,
   AtomSelectorOrConfig,
   DehydrationFilter,
-  EvaluationReason,
+  InternalEvaluationReason,
   NodeFilter,
   SelectorGenerics,
 } from '../types/index'
@@ -79,7 +79,7 @@ export const runSelector = <G extends SelectorGenerics>(
     if (isInitializing) {
       setNodeStatus(node, 'Active')
     } else if (!resultsComparator(result, oldState)) {
-      if (!suppressNotify) scheduleDependents(node, result, oldState)
+      if (!suppressNotify) scheduleDependents(node, oldState)
 
       if (_mods.stateChanged) {
         modBus.dispatch(
@@ -229,12 +229,8 @@ export class SelectorInstance<
   /**
    * @see GraphNode.r
    */
-  public r(reason: EvaluationReason, shouldSetTimeout?: boolean) {
-    this.w.push(reason)
-
-    if (this.w.length > 1) return // job already scheduled
-
-    this.e._scheduler.schedule(this, shouldSetTimeout)
+  public r(reason: InternalEvaluationReason, defer?: boolean) {
+    this.w.push(reason) === 1 && this.e._scheduler.schedule(this, defer)
   }
 
   /**
