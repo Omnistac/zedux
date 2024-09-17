@@ -179,16 +179,9 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "dispatch": [Function],
     "id": "1",
     "izn": true,
-    "l": "Active",
+    "l": "Stale",
     "o": Map {
-      "@@selector-unnamed-0" => {
-        "callback": undefined,
-        "createdAt": 123456789,
-        "flags": 0,
-        "operation": "get",
-        "p": undefined,
-      },
-      "@@selector-unnamed-2" => {
+      "@@selector-unnamed-1" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -221,40 +214,10 @@ exports[`useAtomSelector inline selector that returns a different object referen
     },
     "w": [],
   },
-  "@@selector-unnamed-0": {
+  "@@selector-unnamed-1": {
     "T": 2,
     "W": 2,
-    "id": "@@selector-unnamed-0",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "Test-:r0:" => {
-        "callback": [Function],
-        "createdAt": 123456789,
-        "flags": 2,
-        "operation": "useAtomSelector",
-      },
-    },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
-        "createdAt": 123456789,
-        "flags": 0,
-        "operation": "get",
-        "p": undefined,
-      },
-    },
-    "t": [Function],
-    "v": {
-      "val": 1,
-    },
-    "w": [],
-  },
-  "@@selector-unnamed-2": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-unnamed-2",
+    "id": "@@selector-unnamed-1",
     "izn": true,
     "l": "Active",
     "o": Map {
@@ -298,16 +261,9 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "dispatch": [Function],
     "id": "1",
     "izn": true,
-    "l": "Active",
+    "l": "Stale",
     "o": Map {
-      "@@selector-unnamed-0" => {
-        "callback": undefined,
-        "createdAt": 123456789,
-        "flags": 0,
-        "operation": "get",
-        "p": undefined,
-      },
-      "@@selector-unnamed-2" => {
+      "@@selector-unnamed-1" => {
         "callback": undefined,
         "createdAt": 123456789,
         "flags": 0,
@@ -340,41 +296,10 @@ exports[`useAtomSelector inline selector that returns a different object referen
     },
     "w": [],
   },
-  "@@selector-unnamed-0": {
+  "@@selector-unnamed-1": {
     "T": 2,
     "W": 2,
-    "id": "@@selector-unnamed-0",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "Test-:r0:" => {
-        "callback": [Function],
-        "createdAt": 123456789,
-        "flags": 2,
-        "j": undefined,
-        "operation": "useAtomSelector",
-      },
-    },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
-        "createdAt": 123456789,
-        "flags": 0,
-        "operation": "get",
-        "p": undefined,
-      },
-    },
-    "t": [Function],
-    "v": {
-      "val": 2,
-    },
-    "w": [],
-  },
-  "@@selector-unnamed-2": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-unnamed-2",
+    "id": "@@selector-unnamed-1",
     "izn": true,
     "l": "Active",
     "o": Map {
@@ -407,38 +332,10 @@ exports[`useAtomSelector inline selector that returns a different object referen
 
 exports[`useAtomSelector inline selectors are swapped out in strict mode double-renders 1`] = `
 {
-  "@@selector-unnamed-0": {
+  "@@selector-unnamed-1": {
     "T": 2,
     "W": 2,
-    "id": "@@selector-unnamed-0",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "Test-:r0:" => {
-        "callback": [Function],
-        "createdAt": 123456789,
-        "flags": 2,
-        "operation": "useAtomSelector",
-      },
-    },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
-        "createdAt": 123456789,
-        "flags": 0,
-        "operation": "get",
-        "p": undefined,
-      },
-    },
-    "t": [Function],
-    "v": 1,
-    "w": [],
-  },
-  "@@selector-unnamed-2": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-unnamed-2",
+    "id": "@@selector-unnamed-1",
     "izn": true,
     "l": "Active",
     "o": Map {
@@ -468,38 +365,10 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
 
 exports[`useAtomSelector inline selectors are swapped out in strict mode double-renders 2`] = `
 {
-  "@@selector-unnamed-0": {
+  "@@selector-unnamed-1": {
     "T": 2,
     "W": 2,
-    "id": "@@selector-unnamed-0",
-    "izn": true,
-    "l": "Active",
-    "o": Map {
-      "Test-:r0:" => {
-        "callback": [Function],
-        "createdAt": 123456789,
-        "flags": 2,
-        "operation": "useAtomSelector",
-      },
-    },
-    "p": [],
-    "s": Map {
-      "1" => {
-        "callback": undefined,
-        "createdAt": 123456789,
-        "flags": 0,
-        "operation": "get",
-        "p": undefined,
-      },
-    },
-    "t": [Function],
-    "v": 1,
-    "w": [],
-  },
-  "@@selector-unnamed-2": {
-    "T": 2,
-    "W": 2,
-    "id": "@@selector-unnamed-2",
+    "id": "@@selector-unnamed-1",
     "izn": true,
     "l": "Active",
     "o": Map {
