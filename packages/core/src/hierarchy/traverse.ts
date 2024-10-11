@@ -1,6 +1,6 @@
 import { getMetaData, removeMeta } from '../api/meta'
 import { zeduxTypes } from '../api/zeduxTypes'
-import { ActionChain, HierarchyConfig } from '../types'
+import { ActionChain } from '../types'
 import { BranchNodeType, StoreNodeType } from '../utils/general'
 import { HierarchyNode, StoreNode } from '../utils/types'
 
@@ -70,24 +70,20 @@ export const delegate = (
 export const propagateChange = <State = any>(
   currentState: State,
   subStorePath: string[],
-  newSubStoreState: any,
-  hierarchyConfig: HierarchyConfig
+  newSubStoreState: any
 ): State => {
   if (!subStorePath.length) return newSubStoreState
 
   // at this point we can assume that currentState is a hierarhical structure
   // these "currentState as any" casts should be fine
-  const newNode = hierarchyConfig.clone(currentState as any)
+  const newNode = { ...currentState }
   const nextNodeKey = subStorePath[0]
 
-  return hierarchyConfig.set(
-    newNode,
-    nextNodeKey,
-    propagateChange(
-      hierarchyConfig.get(currentState as any, nextNodeKey),
-      subStorePath.slice(1),
-      newSubStoreState,
-      hierarchyConfig
-    )
-  ) as any
+  ;(newNode as any)[nextNodeKey] = propagateChange(
+    (currentState as any)[nextNodeKey],
+    subStorePath.slice(1),
+    newSubStoreState
+  )
+
+  return newNode
 }
