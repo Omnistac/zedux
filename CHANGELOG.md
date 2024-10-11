@@ -1,3 +1,11 @@
+## v2.0.0-alpha.0 (Oct 11, 2024)
+
+### New Features:
+
+- **Breaking Change** `core`: remove hierarchy config (#94)
+- **Breaking Change** `atoms`, `immer`, `machines`, `react`: implement ExternalNode class and make nodes the keys of edge maps (#120)
+- **Breaking Change** `atoms`, `core`, `immer`, `machines`, `react`: make instances valid graph nodes and jobs (#114)
+
 ## v1.3.0-rc.2 (Jul 31, 2024)
 
 ### Fixes:
