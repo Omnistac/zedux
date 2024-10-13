@@ -1,3 +1,9 @@
+## v2.0.0-alpha.1 (Oct 13, 2024)
+
+### Auxiliary Changes:
+
+- `react`: relax React peer dep for now - use `>=18` (#125)
+
 ## v2.0.0-alpha.0 (Oct 11, 2024)
 
 ### New Features:
