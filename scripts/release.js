@@ -24,6 +24,7 @@ const validTypes = [
 ]
 const validPreIds = ['alpha', 'beta', 'rc']
 
+const includeChoresFlag = '--chores'
 const isNextBranch = branch => /^next\/v\d+\.(\d+\.)?x$/.test(branch)
 const isSupportBranch = branch => /^v\d+\.x$/.test(branch)
 
@@ -236,7 +237,7 @@ const formatList = (header, list) => {
  *
  * Output markdown at the beginning of the CHANGELOG.md file
  */
-const generateChangelog = async (type, tagName) => {
+const generateChangelog = async (type, tagName, includeChores) => {
   const [day, month, year] = new Date().toUTCString().split(' ').slice(1, 4)
   const date = `${month} ${day.replace(/^0/, '')}, ${year}`
   const file = 'CHANGELOG.md'
@@ -274,8 +275,8 @@ const generateChangelog = async (type, tagName) => {
         features.push(item)
       } else if (/^fix[(!:]/.test(message)) {
         fixes.push(item)
-      } else if (/^chore(\(.+?\))?!:/.test(message)) {
-        // only include breaking chores
+      } else if ((includeChores ? /^chore[(!:]/ : /^chore(\(.+?\))?!:/).test(message)) {
+        // only include breaking chores if !includeChores
         item.message = `Chore: ${shortMessage}`
         chores.push(item)
       }
@@ -314,7 +315,7 @@ const generateChangelog = async (type, tagName) => {
 
   if (!notes.trim() && !chores.length && !features.length && !fixes.length) {
     console.error(
-      '\nNo fixes, features, or chores since last release and no notes given. Exiting.\n'
+      `\nNo fixes, features, or chores since last release and no notes given. Maybe you meant to include the "${includeChoresFlag}" flag. Exiting.\n`
     )
     process.exit(1)
   }
@@ -632,7 +633,7 @@ const returnToBranch = async (branch, tagName) => {
  * If type is 'pre<major|minor|patch>', also pass a preId of 'alpha', 'beta', or
  * 'rc'
  */
-const run = async (type, preId) => {
+const run = async ([type, preId], flags) => {
   assertValidArgs(type, preId)
 
   const isPrerelease = type.startsWith('pre')
@@ -659,7 +660,7 @@ const run = async (type, preId) => {
 
   // start modifying things
   const tagName = await incrementVersion(packages, type, preId)
-  const changelogBody = await generateChangelog(type, tagName)
+  const changelogBody = await generateChangelog(type, tagName, flags.includes(includeChoresFlag))
 
   await commitChanges(tagName)
 
@@ -674,4 +675,11 @@ const run = async (type, preId) => {
   logPackageLinks(packages)
 }
 
-run(...process.argv.slice(2))
+const { args, flags } = process.argv.slice(2).reduce((buckets, argOrFlag) => {
+  const bucket = argOrFlag.startsWith('-') ? buckets.flags : buckets.args
+  bucket.push(argOrFlag)
+
+  return buckets
+}, { args: [], flags: [] })
+
+run(args, flags)
