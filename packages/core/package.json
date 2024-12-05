@@ -11,13 +11,13 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
       "production": {
         "import": "./dist/zedux.es.min.js",
         "require": "./dist/zedux.umd.min.js",
         "default": "./dist/zedux.umd.min.js"
       },
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
       "default": "./dist/cjs/index.js"
     }
   },
