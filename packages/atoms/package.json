@@ -14,11 +14,6 @@
   },
   "exports": {
     ".": {
-      "production": {
-        "import": "./dist/zedux-atoms.es.min.js",
-        "require": "./dist/zedux-atoms.umd.min.js",
-        "default": "./dist/zedux-atoms.umd.min.js"
-      },
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js",
       "default": "./dist/cjs/index.js"
