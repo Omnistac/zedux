@@ -1,3 +1,12 @@
+## v1.3.0 (Dec 11, 2024)
+
+Since React 19 is officially released, we can finally release v1.3.0 officially. In addition to the selector changes from this version's release candidates, this version removes Zedux's package.json `production` exports, which were previously unused except by some rogue build pipelines. Credit to [@marbemac](https://github.com/marbemac) :tada:.
+
+### Fixes:
+
+- `react`: fallback to React 18 internals for getting component names (#139)
+- `atoms`, `core`, `immer`, `machines`, `react`: remove package.json production exports (#137)
+
 ## v1.3.0-rc.2 (Jul 31, 2024)
 
 ### Fixes:
