@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react'
 import { Ecosystem, EcosystemProvider } from '@zedux/react'
-import React, { StrictMode } from 'react'
+import React, { JSX, StrictMode } from 'react'
 import { ecosystem as defaultEcosystem } from './ecosystem'
 
 export const renderInEcosystem = (
