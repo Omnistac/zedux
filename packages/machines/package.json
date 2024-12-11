@@ -16,11 +16,6 @@
     ".": {
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js",
-      "production": {
-        "import": "./dist/zedux-machines.es.min.js",
-        "require": "./dist/zedux-machines.umd.min.js",
-        "default": "./dist/zedux-machines.umd.min.js"
-      },
       "default": "./dist/cjs/index.js"
     }
   },
