@@ -43,9 +43,12 @@ const serverKey = `__SERVER${react19KeyBase}` as const
  * can at the cost of some DX.
  */
 export const useReactComponentId = () => {
-  const component: MaybeComponent = (
-    (React as React19)[clientKey] || (React as React19)[serverKey]
-  )?.A?.getOwner?.()?.type
+  const component: MaybeComponent =
+    (
+      (React as React19)[clientKey] || (React as React19)[serverKey]
+    )?.A?.getOwner?.()?.type ||
+    (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      ?.ReactCurrentOwner?.current?.type
 
   const name = component?.displayName || component?.name || 'rc'
 
