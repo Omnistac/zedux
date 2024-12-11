@@ -100,7 +100,6 @@ describe('suspense', () => {
       expect.stringContaining(
         'The above error occurred in the <Child> component'
       ),
-      expect.any(String),
       expect.any(String)
     )
   })
@@ -142,7 +141,6 @@ describe('suspense', () => {
       expect.stringContaining(
         'The above error occurred in the <Child> component'
       ),
-      expect.any(String),
       expect.any(String)
     )
   })
