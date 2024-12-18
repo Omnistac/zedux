@@ -2,7 +2,9 @@ import { Config } from '@jest/types'
 import { pathsToModuleNameMapper, RawCompilerOptions } from 'ts-jest'
 import { compilerOptions } from './tsconfig.json'
 
-const jestCompilerOptions: RawCompilerOptions = {
+const jestCompilerOptions: Omit<RawCompilerOptions, 'paths'> & {
+  paths: Record<string, string[]>
+} = {
   ...(compilerOptions as any),
   lib: [...compilerOptions.lib, 'DOM'],
   paths: {
