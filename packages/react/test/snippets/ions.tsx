@@ -1,13 +1,10 @@
 import {
-  api,
-  atom,
   AtomProvider,
-  AtomInstanceType,
-  ion,
   useAtomContext,
   useAtomInstance,
   useAtomValue,
 } from '@zedux/react'
+import { api, atom, AtomInstanceType, ion } from '@zedux/stores'
 import React, { useState } from 'react'
 
 const otherAtom = atom('other', () => 'hello')

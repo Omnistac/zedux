@@ -1,5 +1,6 @@
 import {
   EvaluationReason,
+  StateOf,
   api,
   atom,
   injectAtomGetters,
@@ -14,7 +15,7 @@ import {
   injectPromise,
   injectRef,
   injectSelf,
-  injectStore,
+  injectSignal,
   injectWhy,
 } from '@zedux/react'
 import { ecosystem } from '../utils/ecosystem'
@@ -34,7 +35,7 @@ describe('injectors', () => {
       injectPromise,
       injectRef,
       injectSelf,
-      injectStore,
+      injectSignal,
       injectWhy,
     ].forEach(injector => {
       expect(injector).toThrowError(
@@ -54,34 +55,34 @@ describe('injectors', () => {
     const cbB = () => 'bb'
 
     const atom1 = atom('1', () => {
-      const store = injectStore('a')
-      const val1 = injectMemo(() => store.getState())
-      const val2 = injectMemo(() => store.getState(), [])
-      const val3 = injectMemo(() => store.getState(), [store.getState()])
+      const signal = injectSignal('a')
+      const val1 = injectMemo(() => signal.get())
+      const val2 = injectMemo(() => signal.get(), [])
+      const val3 = injectMemo(() => signal.get(), [signal.get()])
       vals.push(val1, val2, val3)
 
       const injectedRef = injectRef(ref)
       refs.push(injectedRef.current)
 
-      const cb1 = injectCallback(store.getState() === 'a' ? cbA : cbB)
-      const cb2 = injectCallback(store.getState() === 'a' ? cbA : cbB, [])
-      const cb3 = injectCallback(store.getState() === 'a' ? cbA : cbB, [
-        store.getState(),
+      const cb1 = injectCallback(signal.get() === 'a' ? cbA : cbB)
+      const cb2 = injectCallback(signal.get() === 'a' ? cbA : cbB, [])
+      const cb3 = injectCallback(signal.get() === 'a' ? cbA : cbB, [
+        signal.get(),
       ])
       cbs.push(cb1(), cb2(), cb3())
 
       injectEffect(() => {
-        effects.push(store.getState())
+        effects.push(signal.get())
 
-        return () => cleanups.push(store.getState())
-      }, [store.getState()])
+        return () => cleanups.push(signal.get())
+      }, [signal.get()])
 
-      return store
+      return signal
     })
 
     const instance = ecosystem.getInstance(atom1)
 
-    instance.setState('b')
+    instance.set('b')
 
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b'])
     expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb'])
@@ -89,7 +90,7 @@ describe('injectors', () => {
     expect(cleanups).toEqual([])
     expect(refs).toEqual([ref, ref])
 
-    instance.setState('c')
+    instance.set('c')
 
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b', 'c', 'a', 'c'])
     expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb', 'bb', 'aa', 'bb'])
@@ -103,30 +104,30 @@ describe('injectors', () => {
 
     const atom1 = atom('1', () => 1)
     const atom2 = atom('2', () => {
-      const store = injectStore(2)
+      const signal = injectSignal(2)
 
-      return api(store).setExports({
-        set2: (val: number) => store.setState(val),
+      return api(signal).setExports({
+        set2: (val: number) => signal.set(val),
       })
     })
 
     const atom3 = atom('3', () => {
       const invalidate = injectInvalidate()
-      const store = injectStore('a')
+      const signal = injectSignal('a')
       const one = injectAtomValue(atom1)
       const [two, setTwo] = injectAtomState(atom2)
       const { set2 } = setTwo
 
-      vals.push([store.getState(), one, two])
+      vals.push([signal.get(), one, two])
 
-      return api(store).setExports({ invalidate, set2, setTwo })
+      return api(signal).setExports({ invalidate, set2, setTwo })
     })
 
     const instance = ecosystem.getInstance(atom3)
 
     expect(vals).toEqual([['a', 1, 2]])
 
-    instance.setState('b')
+    instance.set('b')
 
     expect(vals).toEqual([
       ['a', 1, 2],
@@ -160,16 +161,16 @@ describe('injectors', () => {
     const atom3 = atom('3', () => {
       const invalidate = injectInvalidate()
       const instance1 = injectAtomInstance(atom1)
-      const [subscribe, setSubscribe] = injectAtomState(instance1)
-      const store = injectStore('a', { subscribe })
+      const [isReactive, setIsReactive] = injectAtomState(instance1)
+      const signal = injectSignal('a', { reactive: isReactive })
       const instance2 = injectAtomInstance(atom2)
 
-      vals.push([store.getState(), subscribe, instance2.getState()])
+      vals.push([signal.get(), isReactive, instance2.get()])
 
-      return api(store).setExports({
+      return api(signal).setExports({
         invalidate,
-        setSubscribe,
-        setTwo: instance2.setState,
+        setIsReactive,
+        setTwo: (val: StateOf<typeof instance2>) => instance2.set(val),
       })
     })
 
@@ -177,7 +178,7 @@ describe('injectors', () => {
 
     expect(vals).toEqual([['a', true, 2]])
 
-    instance.exports.setSubscribe(false)
+    instance.exports.setIsReactive(false)
 
     expect(vals).toEqual([
       ['a', true, 2],
@@ -191,7 +192,7 @@ describe('injectors', () => {
       ['a', false, 2],
     ])
 
-    instance.exports.setSubscribe(true)
+    instance.exports.setIsReactive(true)
 
     expect(vals).toEqual([
       ['a', true, 2],
@@ -220,7 +221,7 @@ describe('injectors', () => {
 
     const instance = ecosystem.getInstance(atom1)
     const getValue = instance.exports.get(atom1)
-    const getInstanceValue = instance.exports.getInstance(atom1).getState()
+    const getInstanceValue = instance.exports.getInstance(atom1).get()
     const selectValue = instance.exports.select(selector1)
 
     expect(getValue).toBe('a')
@@ -239,41 +240,41 @@ describe('injectors', () => {
     const whys: (EvaluationReason[] | undefined)[] = []
 
     const atom1 = atom('1', () => {
-      const store = injectStore('a')
+      const signal = injectSignal('a')
       const { ecosystem } = injectAtomGetters()
 
       whys.push(injectWhy())
       whys.push(ecosystem.why())
 
-      return store
+      return signal
     })
 
     const instance1 = ecosystem.getInstance(atom1)
 
     expect(whys).toEqual([[], []])
 
-    instance1.setState('b')
+    instance1.set('b')
 
     expect(whys).toEqual([
       [],
       [],
       [
         {
-          newState: undefined, // TODO: this will be defined again when atoms use signals
+          newState: 'b',
           oldState: 'a',
-          operation: undefined,
-          reasons: undefined,
-          source: undefined,
+          operation: 'injectSignal',
+          reasons: [],
+          source: ecosystem.find('@signal(1)'),
           type: 'state changed',
         },
       ],
       [
         {
-          newState: undefined, // TODO: this will be defined again when atoms use signals
+          newState: 'b',
           oldState: 'a',
-          operation: undefined,
-          reasons: undefined,
-          source: undefined,
+          operation: 'injectSignal',
+          reasons: [],
+          source: ecosystem.find('@signal(1)'),
           type: 'state changed',
         },
       ],

@@ -16,6 +16,8 @@ const jestCompilerOptions: Omit<RawCompilerOptions, 'paths'> & {
     '@zedux/machines/*': ['./packages/machines/src/*'],
     '@zedux/react': ['./packages/react/src'],
     '@zedux/react/*': ['./packages/react/src/*'],
+    '@zedux/stores': ['./packages/stores/src'],
+    '@zedux/stores/*': ['./packages/stores/src/*'],
   },
 }
 
@@ -40,6 +42,8 @@ const config: Config.InitialOptions = {
     '<rootDir>/packages/machines/test',
     '<rootDir>/packages/react/src',
     '<rootDir>/packages/react/test',
+    '<rootDir>/packages/core/src',
+    '<rootDir>/packages/core/test',
   ],
   setupFilesAfterEnv: ['./jest.setup.ts'],
   testEnvironment: 'jsdom',

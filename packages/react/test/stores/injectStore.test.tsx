@@ -1,4 +1,4 @@
-import { atom, injectStore } from '@zedux/react'
+import { atom, injectStore } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('injectStore()', () => {

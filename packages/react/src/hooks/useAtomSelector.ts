@@ -1,9 +1,9 @@
 import {
-  AtomParamsType,
-  AtomStateType,
   ExternalNode,
+  ParamsOf,
   Selectable,
   SelectorInstance,
+  StateOf,
 } from '@zedux/atoms'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { External } from '../utils'
@@ -24,8 +24,8 @@ const OPERATION = 'useAtomSelector'
  */
 export const useAtomSelector = <S extends Selectable>(
   template: S,
-  ...args: AtomParamsType<S>
-): AtomStateType<S> => {
+  ...args: ParamsOf<S>
+): StateOf<S> => {
   const ecosystem = useEcosystem()
   const observerId = useReactComponentId()
   // use this referentially stable setState function as a ref. We lazily add

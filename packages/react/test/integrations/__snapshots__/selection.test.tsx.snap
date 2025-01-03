@@ -57,7 +57,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "state": undefined,
     "status": "Active",
-    "weight": 4,
+    "weight": 5,
   },
   "root": {
     "className": "AtomInstance",
@@ -134,7 +134,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "state": undefined,
     "status": "Active",
-    "weight": 4,
+    "weight": 7,
   },
   "root": {
     "className": "AtomInstance",
@@ -254,7 +254,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "state": undefined,
     "status": "Active",
-    "weight": 4,
+    "weight": 7,
   },
   "no-4": {
     "className": "ExternalNode",
@@ -268,7 +268,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "state": undefined,
     "status": "Active",
-    "weight": 4,
+    "weight": 8,
   },
   "root": {
     "className": "AtomInstance",
@@ -351,7 +351,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     },
     "state": undefined,
     "status": "Active",
-    "weight": 4,
+    "weight": 8,
   },
   "root": {
     "className": "AtomInstance",

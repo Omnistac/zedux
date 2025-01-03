@@ -1,10 +1,6 @@
 import { createStore } from '@zedux/core'
-import {
-  atom,
-  injectAtomInstance,
-  injectEffect,
-  injectStore,
-} from '@zedux/react'
+import { injectAtomInstance, injectEffect } from '@zedux/react'
+import { atom, injectStore } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('stores in atoms', () => {

@@ -3,7 +3,7 @@ import {
   InjectMachineStoreParams,
   MachineState,
 } from '@zedux/machines'
-import { api, atom } from '@zedux/atoms'
+import { api, atom } from '@zedux/stores'
 import { ecosystem } from '../../../react/test/utils/ecosystem'
 
 const injectMachine = <

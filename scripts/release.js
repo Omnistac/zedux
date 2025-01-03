@@ -277,7 +277,6 @@ const generateChangelog = async (type, tagName, includeChores) => {
         fixes.push(item)
       } else if ((includeChores ? /^chore[(!:]/ : /^chore(\(.+?\))?!:/).test(message)) {
         // only include breaking chores if !includeChores
-        item.message = `Chore: ${shortMessage}`
         chores.push(item)
       }
     })

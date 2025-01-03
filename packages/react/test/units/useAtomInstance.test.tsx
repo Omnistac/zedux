@@ -12,7 +12,7 @@ describe('useAtomInstance', () => {
     function Test() {
       const instance = useAtomInstance(atom1, [], { subscribe: true })
 
-      return <div data-testid="text">{instance.getState()}</div>
+      return <div data-testid="text">{instance.get()}</div>
     }
 
     const { findByTestId } = renderInEcosystem(<Test />)
@@ -22,7 +22,7 @@ describe('useAtomInstance', () => {
     expect(div.innerHTML).toBe('a')
 
     act(() => {
-      ecosystem.getInstance(atom1).setState('b')
+      ecosystem.getInstance(atom1).set('b')
       jest.runAllTimers()
     })
 
@@ -36,7 +36,7 @@ describe('useAtomInstance', () => {
     function Test() {
       const instance = useAtomInstance(atom1, [], { subscribe: true })
 
-      return <div data-testid="text">{instance.getState()}</div>
+      return <div data-testid="text">{instance.get()}</div>
     }
 
     const { findByTestId } = renderInEcosystem(<Test />)
@@ -46,7 +46,7 @@ describe('useAtomInstance', () => {
     expect(div.innerHTML).toBe('a')
 
     act(() => {
-      ecosystem.getInstance(atom1).setState('b')
+      ecosystem.getInstance(atom1).set('b')
       jest.runAllTimers()
     })
 
@@ -68,13 +68,13 @@ describe('useAtomInstance', () => {
     function TestA() {
       const instance = useAtomInstance(atom1, [], { subscribe: true })
 
-      return <div data-testid="text">{instance.getState()}</div>
+      return <div data-testid="text">{instance.get()}</div>
     }
 
     function TestB() {
       const instance = useAtomInstance(atom1, [], { subscribe: true })
 
-      return <div data-testid="text">{instance.getState()}</div>
+      return <div data-testid="text">{instance.get()}</div>
     }
 
     function Parent() {
@@ -88,14 +88,14 @@ describe('useAtomInstance', () => {
     expect((await findByTestId('text')).innerHTML).toBe('a')
 
     act(() => {
-      ecosystem.getInstance(toggleAtom).setState(false)
+      ecosystem.getInstance(toggleAtom).set(false)
       jest.runAllTimers()
     })
 
     expect((await findByTestId('text')).innerHTML).toBe('a')
 
     act(() => {
-      ecosystem.getInstance(atom1).setState('b')
+      ecosystem.getInstance(atom1).set('b')
       jest.runAllTimers()
     })
 

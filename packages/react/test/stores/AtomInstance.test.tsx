@@ -1,4 +1,5 @@
-import { atom, createStore, injectEffect, injectStore } from '@zedux/react'
+import { createStore, injectEffect } from '@zedux/atoms'
+import { atom, injectStore } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 import { mockConsole } from '../utils/console'
 

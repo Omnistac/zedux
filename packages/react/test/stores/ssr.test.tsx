@@ -1,4 +1,5 @@
-import { atom, createStore, injectStore, ion } from '@zedux/react'
+import { createStore } from '@zedux/core'
+import { atom, injectStore, ion } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('ssr', () => {

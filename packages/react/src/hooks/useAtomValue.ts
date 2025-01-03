@@ -2,10 +2,10 @@ import {
   AnyAtomGenerics,
   AnyAtomInstance,
   AnyAtomTemplate,
-  AtomParamsType,
-  AtomStateType,
   AtomTemplateBase,
   ParamlessTemplate,
+  ParamsOf,
+  StateOf,
 } from '@zedux/atoms'
 import { ZeduxHookConfig } from '../types'
 import { useAtomInstance } from './useAtomInstance'
@@ -40,19 +40,19 @@ import { useAtomInstance } from './useAtomInstance'
 export const useAtomValue: {
   <A extends AnyAtomTemplate>(
     template: A,
-    params: AtomParamsType<A>,
+    params: ParamsOf<A>,
     config?: Omit<ZeduxHookConfig, 'subscribe'>
-  ): AtomStateType<A>
+  ): StateOf<A>
 
-  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): AtomStateType<A>
+  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateOf<A>
 
-  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): AtomStateType<A>
+  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateOf<A>
 
   <I extends AnyAtomInstance>(
     instance: I,
     params?: [],
     config?: Omit<ZeduxHookConfig, 'subscribe'>
-  ): AtomStateType<I>
+  ): StateOf<I>
 } = <G extends AnyAtomGenerics>(
   atom: AtomTemplateBase<G>,
   params?: G['Params'],

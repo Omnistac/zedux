@@ -20,9 +20,12 @@
       "@zedux/machines": ["./packages/machines/src"],
       "@zedux/machines/*": ["./packages/machines/src/*"],
       "@zedux/react": ["./packages/react/src"],
-      "@zedux/react/*": ["./packages/react/src/*"]
+      "@zedux/react/*": ["./packages/react/src/*"],
+      "@zedux/stores": ["./packages/stores/src"],
+      "@zedux/stores/*": ["./packages/stores/src/*"]
     },
     "resolveJsonModule": true,
+    "skipLibCheck": true,
     "strict": true,
     "target": "ES2015"
   },

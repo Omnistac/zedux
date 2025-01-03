@@ -2,6 +2,16 @@
 
 exports[`ecosystem big graph 1`] = `
 {
+  "@signal(atom1)-0": {
+    "dependencies": [],
+    "dependents": [
+      {
+        "key": "atom1",
+        "operation": "injectSignal",
+      },
+    ],
+    "weight": 1,
+  },
   "Child-:r0:": {
     "dependencies": [
       {
@@ -10,7 +20,7 @@ exports[`ecosystem big graph 1`] = `
       },
     ],
     "dependents": [],
-    "weight": 11,
+    "weight": 16,
   },
   "Child-:r1:": {
     "dependencies": [
@@ -20,7 +30,7 @@ exports[`ecosystem big graph 1`] = `
       },
     ],
     "dependents": [],
-    "weight": 7,
+    "weight": 10,
   },
   "Child-:r2:": {
     "dependencies": [
@@ -30,7 +40,7 @@ exports[`ecosystem big graph 1`] = `
       },
     ],
     "dependents": [],
-    "weight": 5,
+    "weight": 7,
   },
   "Child-:r3:": {
     "dependencies": [
@@ -40,7 +50,7 @@ exports[`ecosystem big graph 1`] = `
       },
     ],
     "dependents": [],
-    "weight": 3,
+    "weight": 4,
   },
   "Child-:r4:": {
     "dependencies": [
@@ -50,10 +60,15 @@ exports[`ecosystem big graph 1`] = `
       },
     ],
     "dependents": [],
-    "weight": 2,
+    "weight": 3,
   },
   "atom1": {
-    "dependencies": [],
+    "dependencies": [
+      {
+        "key": "@signal(atom1)-0",
+        "operation": "injectSignal",
+      },
+    ],
     "dependents": [
       {
         "key": "atom2",
@@ -76,7 +91,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "useAtomValue",
       },
     ],
-    "weight": 1,
+    "weight": 2,
   },
   "atom2": {
     "dependencies": [
@@ -99,7 +114,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "useAtomValue",
       },
     ],
-    "weight": 2,
+    "weight": 3,
   },
   "atom3-["1"]": {
     "dependencies": [
@@ -122,7 +137,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "useAtomValue",
       },
     ],
-    "weight": 4,
+    "weight": 6,
   },
   "atom4": {
     "dependencies": [
@@ -145,7 +160,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "useAtomState",
       },
     ],
-    "weight": 6,
+    "weight": 9,
   },
   "atom5": {
     "dependencies": [
@@ -168,7 +183,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "useAtomValue",
       },
     ],
-    "weight": 10,
+    "weight": 15,
   },
 }
 `;
@@ -177,16 +192,26 @@ exports[`ecosystem big graph 2`] = `
 {
   "Child-:r0:": {
     "atom5": {
-      "atom1": {},
+      "atom1": {
+        "@signal(atom1)-0": {},
+      },
       "atom2": {
-        "atom1": {},
+        "atom1": {
+          "@signal(atom1)-0": {},
+        },
       },
       "atom4": {
-        "atom1": {},
+        "atom1": {
+          "@signal(atom1)-0": {},
+        },
         "atom3-["1"]": {
-          "atom1": {},
+          "atom1": {
+            "@signal(atom1)-0": {},
+          },
           "atom2": {
-            "atom1": {},
+            "atom1": {
+              "@signal(atom1)-0": {},
+            },
           },
         },
       },
@@ -194,42 +219,66 @@ exports[`ecosystem big graph 2`] = `
   },
   "Child-:r1:": {
     "atom4": {
-      "atom1": {},
+      "atom1": {
+        "@signal(atom1)-0": {},
+      },
       "atom3-["1"]": {
-        "atom1": {},
+        "atom1": {
+          "@signal(atom1)-0": {},
+        },
         "atom2": {
-          "atom1": {},
+          "atom1": {
+            "@signal(atom1)-0": {},
+          },
         },
       },
     },
   },
   "Child-:r2:": {
     "atom3-["1"]": {
-      "atom1": {},
+      "atom1": {
+        "@signal(atom1)-0": {},
+      },
       "atom2": {
-        "atom1": {},
+        "atom1": {
+          "@signal(atom1)-0": {},
+        },
       },
     },
   },
   "Child-:r3:": {
     "atom2": {
-      "atom1": {},
+      "atom1": {
+        "@signal(atom1)-0": {},
+      },
     },
   },
   "Child-:r4:": {
-    "atom1": {},
+    "atom1": {
+      "@signal(atom1)-0": {},
+    },
   },
   "atom5": {
-    "atom1": {},
+    "atom1": {
+      "@signal(atom1)-0": {},
+    },
     "atom2": {
-      "atom1": {},
+      "atom1": {
+        "@signal(atom1)-0": {},
+      },
     },
     "atom4": {
-      "atom1": {},
+      "atom1": {
+        "@signal(atom1)-0": {},
+      },
       "atom3-["1"]": {
-        "atom1": {},
+        "atom1": {
+          "@signal(atom1)-0": {},
+        },
         "atom2": {
-          "atom1": {},
+          "atom1": {
+            "@signal(atom1)-0": {},
+          },
         },
       },
     },
@@ -239,10 +288,24 @@ exports[`ecosystem big graph 2`] = `
 
 exports[`ecosystem big graph 3`] = `
 {
-  "atom1": {
-    "Child-:r4:": {},
-    "atom2": {
-      "Child-:r3:": {},
+  "@signal(atom1)-0": {
+    "atom1": {
+      "Child-:r4:": {},
+      "atom2": {
+        "Child-:r3:": {},
+        "atom3-["1"]": {
+          "Child-:r2:": {},
+          "atom4": {
+            "Child-:r1:": {},
+            "atom5": {
+              "Child-:r0:": {},
+            },
+          },
+        },
+        "atom5": {
+          "Child-:r0:": {},
+        },
+      },
       "atom3-["1"]": {
         "Child-:r2:": {},
         "atom4": {
@@ -252,27 +315,15 @@ exports[`ecosystem big graph 3`] = `
           },
         },
       },
-      "atom5": {
-        "Child-:r0:": {},
-      },
-    },
-    "atom3-["1"]": {
-      "Child-:r2:": {},
       "atom4": {
         "Child-:r1:": {},
         "atom5": {
           "Child-:r0:": {},
         },
       },
-    },
-    "atom4": {
-      "Child-:r1:": {},
       "atom5": {
         "Child-:r0:": {},
       },
-    },
-    "atom5": {
-      "Child-:r0:": {},
     },
   },
 }

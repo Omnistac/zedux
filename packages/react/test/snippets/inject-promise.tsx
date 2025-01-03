@@ -1,11 +1,11 @@
+import { useAtomValue } from '@zedux/react'
 import {
   api,
   atom,
   createStore,
   injectPromise,
   injectStore,
-  useAtomValue,
-} from '@zedux/react'
+} from '@zedux/stores'
 import React, { Suspense } from 'react'
 
 const asyncAtom = atom('async', () => {

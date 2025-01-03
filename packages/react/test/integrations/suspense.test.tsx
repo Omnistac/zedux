@@ -189,7 +189,7 @@ describe('suspense', () => {
     expect(div2.innerHTML).toBe('b')
 
     act(() => {
-      ecosystem.getInstance(atom1).setStateDeep({ data: 'c' })
+      ecosystem.getInstance(atom1).mutate({ data: 'c' })
     })
 
     await Promise.resolve()

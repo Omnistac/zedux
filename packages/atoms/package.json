@@ -17,6 +17,16 @@
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js",
       "default": "./dist/cjs/index.js"
+    },
+    "./factories": {
+      "import": "./dist/esm/factories",
+      "require": "./dist/cjs/factories",
+      "default": "./dist/cjs/factories"
+    },
+    "./utils": {
+      "import": "./dist/esm/utils",
+      "require": "./dist/cjs/utils",
+      "default": "./dist/cjs/utils"
     }
   },
   "files": [

@@ -24,7 +24,7 @@ const instance2 = ecosystem.getInstance(circularAtom, [200])
 const start2 = performance.now()
 for (let i = 0; i < 50; i++) {
   const instance = ecosystem.getNode(circularAtom, [(i + 1) * 1000 + 99])
-  instance.setState(state => state + 1)
+  instance.set(state => state + 1)
 }
 const end2 = performance.now()
 

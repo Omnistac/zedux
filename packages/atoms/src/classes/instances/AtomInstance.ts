@@ -1,15 +1,5 @@
-import {
-  ActionChain,
-  createStore,
-  Dispatchable,
-  zeduxTypes,
-  is,
-  Observable,
-  RecursivePartial,
-  Settable,
-  Store,
-  Subscription,
-} from '@zedux/core'
+import { is, Observable, Settable } from '@zedux/core'
+import { Mutatable, SendableEvents } from '@zedux/atoms/types/events'
 import {
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
@@ -19,12 +9,17 @@ import {
   PromiseState,
   PromiseStatus,
   DehydrationFilter,
-  NodeFilter,
   DehydrationOptions,
   AnyAtomGenerics,
   InternalEvaluationReason,
+  ExplicitEvents,
 } from '@zedux/atoms/types/index'
-import { Invalidate, prefix, PromiseChange } from '@zedux/atoms/utils/general'
+import {
+  EventSent,
+  Invalidate,
+  prefix,
+  PromiseChange,
+} from '@zedux/atoms/utils/general'
 import { pluginActions } from '@zedux/atoms/utils/plugin-actions'
 import {
   getErrorPromiseState,
@@ -38,8 +33,7 @@ import { AtomTemplateBase } from '../templates/AtomTemplateBase'
 import {
   destroyNodeFinish,
   destroyNodeStart,
-  GraphNode,
-  normalizeNodeFilter,
+  handleStateChange,
   scheduleDependents,
 } from '../GraphNode'
 import {
@@ -48,40 +42,104 @@ import {
   getEvaluationContext,
   startBuffer,
 } from '@zedux/atoms/utils/evaluationContext'
+import { SignalInstance } from '../SignalInstance'
 
-const StoreState = 1
-const RawState = 2
-
-const getStateType = (val: any) => {
-  if (is(val, Store)) return StoreState
-
-  return RawState
-}
-
-const getStateStore = <
-  State = any,
-  StoreType extends Store<State> = Store<State>,
-  P extends State | StoreType = State | StoreType
->(
-  factoryResult: P
+/**
+ * A standard atom's value can be one of:
+ *
+ * - A raw value
+ * - A signal instance
+ * - A function that returns a raw value
+ * - A function that returns a signal instance
+ * - A function that returns an atom api
+ */
+const evaluate = <G extends Omit<AtomGenerics, 'Node'>>(
+  instance: AtomInstance<G>
 ) => {
-  const stateType = getStateType(factoryResult)
+  const { _value } = instance.t
 
-  const stateStore =
-    stateType === StoreState
-      ? (factoryResult as unknown as StoreType)
-      : (createStore<State>() as StoreType)
-
-  // define how we populate our store (doesn't apply to user-supplied stores)
-  if (stateType === RawState) {
-    stateStore.setState(
-      typeof factoryResult === 'function'
-        ? () => factoryResult as State
-        : (factoryResult as unknown as State)
-    )
+  if (typeof _value !== 'function') {
+    return _value
   }
 
-  return [stateType, stateStore] as const
+  try {
+    const val = (
+      _value as (
+        ...params: G['Params']
+      ) =>
+        | SignalInstance<G>
+        | G['State']
+        | AtomApi<AtomGenericsToAtomApiGenerics<G>>
+    )(...instance.p)
+
+    if (!is(val, AtomApi)) return val as SignalInstance<G> | G['State']
+
+    const api = (instance.api = val as AtomApi<
+      AtomGenericsToAtomApiGenerics<G>
+    >)
+
+    // Exports can only be set on initial evaluation
+    if (instance.l === 'Initializing' && api.exports) {
+      instance.exports = api.exports
+    }
+
+    // if api.value is a promise, we ignore api.promise
+    if (typeof (api.value as unknown as Promise<any>)?.then === 'function') {
+      return setPromise(instance, api.value as unknown as Promise<any>, true)
+    } else if (api.promise) {
+      setPromise(instance, api.promise)
+    }
+
+    return api.value as SignalInstance<G> | G['State']
+  } catch (err) {
+    console.error(
+      `Zedux: Error while evaluating atom "${instance.t.key}" with params:`,
+      instance.p,
+      err
+    )
+
+    throw err
+  }
+}
+
+const setPromise = <G extends Omit<AtomGenerics, 'Node'>>(
+  instance: AtomInstance<G>,
+  promise: Promise<any>,
+  isStateUpdater?: boolean
+) => {
+  const currentState = instance.get()
+  if (promise === instance.promise) return currentState
+
+  instance.promise = promise as G['Promise']
+
+  // since we're the first to chain off the returned promise, we don't need to
+  // track the chained promise - it will run first, before React suspense's
+  // `.then` on the thrown promise, for example
+  promise
+    .then(data => {
+      if (instance.promise !== promise) return
+
+      instance._promiseStatus = 'success'
+      if (!isStateUpdater) return
+
+      instance.set(getSuccessPromiseState(data) as unknown as G['State'])
+    })
+    .catch(error => {
+      if (instance.promise !== promise) return
+
+      instance._promiseStatus = 'error'
+      instance._promiseError = error
+      if (!isStateUpdater) return
+
+      instance.set(getErrorPromiseState(error) as unknown as G['State'])
+    })
+
+  const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
+  instance._promiseStatus = state.status
+
+  scheduleDependents({ s: instance, t: PromiseChange }, true, true)
+
+  return state as unknown as G['State']
 }
 
 export class AtomInstance<
@@ -90,8 +148,12 @@ export class AtomInstance<
   } = AnyAtomGenerics<{
     Node: any
   }>
-> extends GraphNode<G> {
+> extends SignalInstance<G> {
   public static $$typeof = Symbol.for(`${prefix}/AtomInstance`)
+
+  /**
+   * @see SignalInstance.l
+   */
   public l: LifecycleStatus = 'Initializing'
 
   public api?: AtomApi<AtomGenericsToAtomApiGenerics<G>>
@@ -103,11 +165,20 @@ export class AtomInstance<
   // @ts-expect-error same as exports
   public promise: G['Promise']
 
-  // @ts-expect-error same as exports
-  public store: G['Store']
+  /**
+   * `b`ufferedEvents - when the wrapped signal emits events, we
+   */
+  public b?: Partial<G['Events'] & ExplicitEvents>
 
   /**
-   * @see GraphNode.c
+   * `S`ignal - the signal returned from this atom's state factory. If this is
+   * undefined, no signal was returned, and this atom itself becomes the signal.
+   * If this is defined, this atom becomes a thin wrapper around this signal.
+   */
+  public S?: SignalInstance<G>
+
+  /**
+   * @see SignalInstance.c
    */
   public c?: Cleanup
   public _createdAt: number
@@ -116,45 +187,38 @@ export class AtomInstance<
   public _nextInjectors?: InjectorDescriptor[]
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
-  public _stateType?: typeof StoreState | typeof RawState
-
-  private _bufferedUpdate?: {
-    newState: G['State']
-    oldState?: G['State']
-    action: ActionChain
-  }
-  private _subscription?: Subscription
 
   constructor(
     /**
-     * @see GraphNode.e
+     * @see SignalInstance.e
      */
     public readonly e: Ecosystem,
     /**
-     * @see GraphNode.t
+     * @see SignalInstance.t
      */
     public readonly t: G['Template'],
     /**
-     * @see GraphNode.id
+     * @see SignalInstance.id
      */
     public readonly id: string,
     /**
-     * @see GraphNode.p
+     * @see SignalInstance.p
      */
     public readonly p: G['Params']
   ) {
-    super()
+    super(e, id, undefined) // TODO NOW: fix this undefined
     this._createdAt = e._idGenerator.now()
   }
 
   /**
-   * @see GraphNode.destroy
+   * @see SignalInstance.destroy
    */
   public destroy(force?: boolean) {
     if (!destroyNodeStart(this, force)) return
 
     // Clean up effect injectors first, then everything else
     const nonEffectInjectors: InjectorDescriptor[] = []
+
     this._injectors?.forEach(injector => {
       if (injector.type !== '@@zedux/effect') {
         nonEffectInjectors.push(injector)
@@ -162,36 +226,25 @@ export class AtomInstance<
       }
       injector.cleanup?.()
     })
+
     nonEffectInjectors.forEach(injector => {
       injector.cleanup?.()
     })
-    this._subscription?.unsubscribe()
 
     destroyNodeFinish(this)
   }
 
   /**
-   * An alias for `.store.dispatch()`
-   */
-  public dispatch = (action: Dispatchable) => this.store.dispatch(action)
-
-  /**
-   * An alias for `instance.store.getState()`. Returns the current state of this
-   * atom instance's store.
+   * @see SignalInstance.get
    *
-   * @deprecated - use `instance.get()` instead
-   */
-  public getState(): G['State'] {
-    return this.store.getState()
-  }
-
-  /**
-   * @see GraphNode.get
-   *
-   * An alias for `instance.store.getState()`.
+   * If this atom is wrapping an internal signal, returns the current value of
+   * that signal. Otherwise, this atom _is_ the signal, and this returns its
+   * value.
    */
   public get() {
-    return this.store.getState()
+    const { S, v } = this
+
+    return S ? S.get() : v
   }
 
   /**
@@ -205,21 +258,50 @@ export class AtomInstance<
   }
 
   /**
-   * An alias for `.store.setState()`
+   * @see SignalInstance.mutate
+   *
+   * If this atom is wrapping an internal signal, calls `mutate` on the wrapped
+   * signal. Otherwise, this atom _is_ the signal, and the mutation is applied
+   * to this atom's own value.
    */
-  public setState = (settable: Settable<G['State']>, meta?: any): G['State'] =>
-    this.store.setState(settable, meta)
+  public mutate(
+    mutatable: Mutatable<G['State']>,
+    events?: Partial<G['Events'] & ExplicitEvents>
+  ) {
+    return this.S
+      ? this.S.mutate(mutatable, events)
+      : super.mutate(mutatable, events)
+  }
 
   /**
-   * An alias for `.store.setStateDeep()`
+   * @see SignalInstance.send atoms don't have events themselves, but they
+   * inherit them from any signal returned from the state factory.
+   *
+   * This is a noop if no signal was returned (the atom's types reflect this).
    */
-  public setStateDeep = (
-    settable: Settable<RecursivePartial<G['State']>, G['State']>,
-    meta?: any
-  ): G['State'] => this.store.setStateDeep(settable, meta)
+  public send<E extends keyof SendableEvents<G>>(
+    eventName: E,
+    payload?: G['Events'][E]
+  ) {
+    this.S?.send(eventName, payload as SendableEvents<G>[E])
+  }
 
   /**
-   * @see GraphNode.d
+   * @see SignalInstance.set
+   *
+   * If this atom is wrapping an internal signal, calls `set` on the wrapped
+   * signal. Otherwise, this atom _is_ the signal, and the state change is
+   * applied to this atom's own value.
+   */
+  public set(
+    settable: Settable<G['State']>,
+    events?: Partial<G['Events'] & ExplicitEvents>
+  ) {
+    return this.S ? this.S.set(settable, events) : super.set(settable, events)
+  }
+
+  /**
+   * @see SignalInstance.d
    */
   public d(options?: DehydrationFilter) {
     if (!this.f(options)) return
@@ -236,51 +318,10 @@ export class AtomInstance<
   }
 
   /**
-   * @see GraphNode.f
-   */
-  public f(options?: NodeFilter) {
-    const { id, t } = this
-    const lowerCaseId = id.toLowerCase()
-    const {
-      exclude = [],
-      excludeFlags = [],
-      include = [],
-      includeFlags = [],
-    } = normalizeNodeFilter(options)
-
-    if (
-      exclude.some(templateOrKey =>
-        typeof templateOrKey === 'string'
-          ? lowerCaseId.includes(templateOrKey.toLowerCase())
-          : is(templateOrKey, AtomTemplateBase) &&
-            t.key === (templateOrKey as AtomTemplateBase).key
-      ) ||
-      excludeFlags.some(flag => t.flags?.includes(flag))
-    ) {
-      return false
-    }
-
-    if (
-      (!include.length && !includeFlags.length) ||
-      include.some(templateOrKey =>
-        typeof templateOrKey === 'string'
-          ? lowerCaseId.includes(templateOrKey.toLowerCase())
-          : is(templateOrKey, AtomTemplateBase) &&
-            t.key === (templateOrKey as AtomTemplateBase).key
-      ) ||
-      includeFlags.some(flag => t.flags?.includes(flag))
-    ) {
-      return true
-    }
-
-    return false
-  }
-
-  /**
-   * @see GraphNode.h
+   * @see SignalInstance.h
    */
   public h(val: any) {
-    this.setState(this.t.hydrate ? this.t.hydrate(val) : val)
+    this.set(this.t.hydrate ? this.t.hydrate(val) : val)
   }
 
   /**
@@ -289,7 +330,7 @@ export class AtomInstance<
    */
   public i() {
     const { n, s } = getEvaluationContext()
-    this._doEvaluate()
+    this.j()
 
     this._setStatus('Active')
     flushBuffer(n, s)
@@ -301,18 +342,77 @@ export class AtomInstance<
       return
     }
 
-    this.store.setState(hydration)
+    this.set(hydration)
   }
 
   /**
-   * @see GraphNode.j
+   * @see SignalInstance.j
    */
   public j() {
-    this._doEvaluate()
+    const { n, s } = getEvaluationContext()
+    this._nextInjectors = []
+    this._isEvaluating = true
+    startBuffer(this)
+
+    try {
+      const newFactoryResult = evaluate(this)
+
+      if (this.l === 'Initializing') {
+        if ((newFactoryResult as SignalInstance)?.izn) {
+          this.S = newFactoryResult
+          this.v = (newFactoryResult as SignalInstance).v
+        } else {
+          this.v = newFactoryResult
+        }
+      } else {
+        if (
+          DEV &&
+          (this.S
+            ? newFactoryResult !== this.S
+            : (newFactoryResult as SignalInstance)?.izn)
+        ) {
+          throw new Error(
+            `Zedux: state factories must either return the same signal or a non-signal value every evaluation. Check the implementation of atom "${this.id}".`
+          )
+        }
+
+        const oldState = this.v
+        this.v = this.S ? newFactoryResult.v : newFactoryResult
+
+        this.v === oldState || handleStateChange(this, oldState, this.b)
+      }
+    } catch (err) {
+      this._nextInjectors.forEach(injector => {
+        injector.cleanup?.()
+      })
+
+      destroyBuffer(n, s)
+
+      throw err
+    } finally {
+      this._isEvaluating = false
+
+      // even if evaluation errored, we need to update dependents if the store's
+      // state changed
+      if (this.S && this.S.v !== this.v) {
+        const oldState = this.v
+        this.v = this.S.v
+
+        handleStateChange(this, oldState, this.b)
+      }
+
+      this.b = undefined
+      this.w = []
+    }
+
+    this._injectors = this._nextInjectors
+
+    // let this.i flush updates after status is set to Active
+    this.l === 'Initializing' || flushBuffer(n, s)
   }
 
   /**
-   * @see GraphNode.m
+   * @see SignalInstance.m
    */
   public m() {
     const ttl = this._getTtl()
@@ -368,16 +468,35 @@ export class AtomInstance<
   }
 
   /**
-   * @see GraphNode.r
+   * @see SignalInstance.r
    */
-  public r(reason: InternalEvaluationReason, shouldSetTimeout?: boolean) {
+  public r(reason: InternalEvaluationReason, defer?: boolean) {
+    if (reason.t === EventSent) {
+      // forward events from `this.S`ignal to observers of this atom instance.
+      // Ignore events from other sources (shouldn't happen, but either way
+      // those shouldn't be forwarded). Use `super.send` for this 'cause
+      // `this.send` captures events and sends them the other way (up to
+      // `this.S`ignal)
+      reason.s === this.S && super.send(reason.e as SendableEvents<G>)
+
+      return
+    }
+
     // TODO: Any calls in this case probably indicate a memory leak on the
     // user's part. Notify them. TODO: Can we pause evaluations while
     // status is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
     if (this.l !== 'Destroyed' && this.w.push(reason) === 1) {
       // refCount just hit 1; we haven't scheduled a job for this node yet
-      this.e._scheduler.schedule(this, shouldSetTimeout)
+      this.e._scheduler.schedule(this, defer)
+
+      // when `this.S`ignal gives us events along with a state update, we need
+      // to buffer those and emit them together after this atom evaluates
+      if (reason.s === this.S && reason.e) {
+        this.b = this.b
+          ? { ...this.b, ...(reason.e as typeof this.b) }
+          : (reason.e as unknown as typeof this.b)
+      }
     }
   }
 
@@ -385,146 +504,9 @@ export class AtomInstance<
   public get _infusedSetter() {
     if (this._set) return this._set
     const setState: any = (settable: any, meta?: any) =>
-      this.setState(settable, meta)
+      this.set(settable, meta)
 
     return (this._set = Object.assign(setState, this.exports))
-  }
-
-  private _doEvaluate() {
-    const { n, s } = getEvaluationContext()
-    this._nextInjectors = []
-    let newFactoryResult: G['Store'] | G['State']
-    this._isEvaluating = true
-    startBuffer(this)
-
-    try {
-      newFactoryResult = this._evaluate()
-
-      if (this.l === 'Initializing') {
-        ;[this._stateType, this.store] = getStateStore(newFactoryResult)
-
-        this._subscription = this.store.subscribe(
-          (newState, oldState, action) => {
-            // buffer updates (with cache size of 1) if this instance is currently
-            // evaluating
-            if (this._isEvaluating) {
-              this._bufferedUpdate = { newState, oldState, action }
-              return
-            }
-
-            this._handleStateChange(newState, oldState, action)
-          }
-        )
-      } else {
-        const newStateType = getStateType(newFactoryResult)
-
-        if (DEV && newStateType !== this._stateType) {
-          throw new Error(
-            `Zedux: atom factory for atom "${this.t.key}" returned a different type than the previous evaluation. This can happen if the atom returned a store initially but then returned a non-store value on a later evaluation or vice versa`
-          )
-        }
-
-        if (
-          DEV &&
-          newStateType === StoreState &&
-          newFactoryResult !== this.store
-        ) {
-          throw new Error(
-            `Zedux: atom factory for atom "${this.t.key}" returned a different store. Did you mean to use \`injectStore()\`, or \`injectMemo()\`?`
-          )
-        }
-
-        // there is no way to cause an evaluation loop when the StateType is Value
-        if (newStateType === RawState) {
-          this.store.setState(
-            typeof newFactoryResult === 'function'
-              ? () => newFactoryResult as G['State']
-              : (newFactoryResult as G['State'])
-          )
-        }
-      }
-    } catch (err) {
-      this._nextInjectors.forEach(injector => {
-        injector.cleanup?.()
-      })
-
-      destroyBuffer(n, s)
-
-      throw err
-    } finally {
-      this._isEvaluating = false
-
-      // even if evaluation errored, we need to update dependents if the store's
-      // state changed
-      if (this._bufferedUpdate) {
-        this._handleStateChange(
-          this._bufferedUpdate.newState,
-          this._bufferedUpdate.oldState,
-          this._bufferedUpdate.action
-        )
-        this._bufferedUpdate = undefined
-      }
-
-      this.w = []
-    }
-
-    this._injectors = this._nextInjectors
-
-    if (this.l !== 'Initializing') {
-      // let this.i flush updates after status is set to Active
-      flushBuffer(n, s)
-    }
-  }
-
-  /**
-   * A standard atom's value can be one of:
-   *
-   * - A raw value
-   * - A Zedux store
-   * - A function that returns a raw value
-   * - A function that returns a Zedux store
-   * - A function that returns an AtomApi
-   */
-  private _evaluate() {
-    const { _value } = this.t
-
-    if (typeof _value !== 'function') {
-      return _value
-    }
-
-    try {
-      const val = (
-        _value as (
-          ...params: G['Params']
-        ) => G['Store'] | G['State'] | AtomApi<AtomGenericsToAtomApiGenerics<G>>
-      )(...this.p)
-
-      if (!is(val, AtomApi)) return val as G['Store'] | G['State']
-
-      const api = (this.api = val as AtomApi<AtomGenericsToAtomApiGenerics<G>>)
-
-      // Exports can only be set on initial evaluation
-      if (this.l === 'Initializing' && api.exports) {
-        this.exports = api.exports
-      }
-
-      // if api.value is a promise, we ignore api.promise
-      if (typeof (api.value as unknown as Promise<any>)?.then === 'function') {
-        return this._setPromise(api.value as unknown as Promise<any>, true)
-      } else if (api.promise) {
-        this._setPromise(api.promise)
-      }
-
-      return api.value as G['Store'] | G['State']
-    } catch (err) {
-      console.error(
-        `Zedux: Error while evaluating atom "${this.t.key}" with params:`,
-        this.p,
-        err
-      )
-
-      throw err
-    }
   }
 
   private _getTtl() {
@@ -536,31 +518,6 @@ export class AtomInstance<
     const { ttl } = this.api
 
     return typeof ttl === 'function' ? ttl() : ttl
-  }
-
-  private _handleStateChange(
-    newState: G['State'],
-    oldState: G['State'] | undefined,
-    action: ActionChain
-  ) {
-    scheduleDependents(this, oldState, false)
-
-    if (this.e._mods.stateChanged) {
-      this.e.modBus.dispatch(
-        pluginActions.stateChanged({
-          action,
-          node: this,
-          newState,
-          oldState,
-          reasons: this.w,
-        })
-      )
-    }
-
-    // run the scheduler synchronously after any atom instance state update
-    if (action.meta !== zeduxTypes.batch) {
-      this.e._scheduler.flush()
-    }
   }
 
   private _setStatus(newStatus: LifecycleStatus) {
@@ -576,45 +533,5 @@ export class AtomInstance<
         })
       )
     }
-  }
-
-  private _setPromise(promise: Promise<any>, isStateUpdater?: boolean) {
-    const currentState = this.store?.getState()
-    if (promise === this.promise) return currentState
-
-    this.promise = promise as G['Promise']
-
-    // since we're the first to chain off the returned promise, we don't need to
-    // track the chained promise - it will run first, before React suspense's
-    // `.then` on the thrown promise, for example
-    promise
-      .then(data => {
-        if (this.promise !== promise) return
-
-        this._promiseStatus = 'success'
-        if (!isStateUpdater) return
-
-        this.store.setState(
-          getSuccessPromiseState(data) as unknown as G['State']
-        )
-      })
-      .catch(error => {
-        if (this.promise !== promise) return
-
-        this._promiseStatus = 'error'
-        this._promiseError = error
-        if (!isStateUpdater) return
-
-        this.store.setState(
-          getErrorPromiseState(error) as unknown as G['State']
-        )
-      })
-
-    const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
-    this._promiseStatus = state.status
-
-    scheduleDependents(this, undefined, true, PromiseChange, true)
-
-    return state as unknown as G['State']
   }
 }

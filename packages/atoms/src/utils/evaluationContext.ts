@@ -1,4 +1,4 @@
-import { ActionFactoryPayloadType, Store, is } from '@zedux/core'
+import { ActionFactoryPayloadType, is } from '@zedux/core'
 import { AnyAtomInstance } from '../types/index'
 import { ExplicitExternal, OutOfRange } from '../utils/general'
 import { pluginActions } from '../utils/plugin-actions'
@@ -88,10 +88,6 @@ export const destroyBuffer = (
 const finishBuffer = (previousNode?: GraphNode, previousStartTime?: number) => {
   const { _idGenerator, _mods, modBus } = evaluationContext.n!.e
 
-  // if we just popped the last thing off the stack, restore the default
-  // scheduler
-  if (!previousNode) Store._scheduler = undefined
-
   if (_mods.evaluationFinished) {
     const time = evaluationContext.s
       ? _idGenerator.now(true) - evaluationContext.s
@@ -172,14 +168,12 @@ export const setEvaluationContext = (newContext: EvaluationContext) =>
  * ```
  */
 export const startBuffer = (node: GraphNode) => {
+  // TODO: when `evaluationFinished` is replaced with `runStart`/`runEnd`, make
+  // this function return the previous `evaluationContext.n` value so all
+  // callers don't have to `getEvaluationContext()` first
   evaluationContext.n = node
 
   if (node.e._mods.evaluationFinished) {
     evaluationContext.s = node.e._idGenerator.now(true)
   }
-
-  // all stores created during evaluation automatically belong to the ecosystem
-  // TODO: remove this brittle requirement. It's the only piece of Zedux that
-  // isn't cross-window compatible. The core package needs its own scheduler.
-  Store._scheduler = node.e._scheduler
 }

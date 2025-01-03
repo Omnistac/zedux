@@ -1,4 +1,3 @@
-import { Store, StoreStateType } from '@zedux/core'
 import { AtomApi } from '../classes/AtomApi'
 import {
   IonTemplate,
@@ -10,14 +9,18 @@ import {
   AtomApiPromise,
   IonStateFactory,
   PromiseState,
+  StateOf,
+  EventsOf,
+  None,
 } from '../types/index'
+import { SignalInstance } from '../classes/SignalInstance'
 
 export const ion: {
   // Query Atoms
   <
     State = any,
     Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>
+    Exports extends Record<string, any> = None
   >(
     key: string,
     value: (
@@ -26,71 +29,71 @@ export const ion: {
     ) => AtomApi<{
       Exports: Exports
       Promise: any
+      Signal: undefined
       State: Promise<State>
-      Store: undefined
     }>,
     config?: AtomConfig<State>
   ): IonTemplateRecursive<{
     State: PromiseState<State>
     Params: Params
+    Events: None
     Exports: Exports
-    Store: Store<PromiseState<State>>
     Promise: Promise<State>
   }>
 
-  // Custom Stores
+  // Signals
   <
-    StoreType extends Store<any> = Store<any>,
+    SignalType extends SignalInstance<any> = SignalInstance<any>,
     Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>,
+    Exports extends Record<string, any> = None,
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    get: (
+    value: (
       getters: AtomGetters,
       ...params: Params
     ) =>
-      | StoreType
+      | SignalType
       | AtomApi<{
           Exports: Exports
           Promise: PromiseType
-          State: StoreStateType<Store>
-          Store: StoreType
+          Signal: SignalType
+          State: StateOf<SignalType>
         }>,
-    config?: AtomConfig<StoreStateType<StoreType>>
+    config?: AtomConfig<StateOf<SignalType>>
   ): IonTemplateRecursive<{
-    State: StoreStateType<StoreType>
+    State: StateOf<SignalType>
     Params: Params
+    Events: EventsOf<SignalType>
     Exports: Exports
-    Store: StoreType
     Promise: PromiseType
   }>
 
-  // No Store
+  // No Signal (TODO: Is this overload unnecessary? `atom` doesn't have it)
   <
     State = any,
     Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>,
+    Exports extends Record<string, any> = None,
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    get: (
+    value: (
       getters: AtomGetters,
       ...params: Params
     ) =>
       | AtomApi<{
           Exports: Exports
           Promise: PromiseType
+          Signal: undefined
           State: State
-          Store: undefined
         }>
       | State,
     config?: AtomConfig<State>
   ): IonTemplateRecursive<{
     State: State
     Params: Params
+    Events: None
     Exports: Exports
-    Store: Store<State>
     Promise: PromiseType
   }>
 
@@ -98,40 +101,40 @@ export const ion: {
   <
     State = any,
     Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>,
-    StoreType extends Store<any> = Store<any>,
+    Exports extends Record<string, any> = None,
+    EventsType extends Record<string, any> = None,
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    get: IonStateFactory<{
+    value: IonStateFactory<{
       State: State
       Params: Params
+      Events: EventsType
       Exports: Exports
-      Store: StoreType
       Promise: PromiseType
     }>,
     config?: AtomConfig<State>
   ): IonTemplateRecursive<{
     State: State
     Params: Params
+    Events: EventsType
     Exports: Exports
-    Store: StoreType
     Promise: PromiseType
   }>
 } = <
   State = any,
   Params extends any[] = [],
-  Exports extends Record<string, any> = Record<string, never>,
-  StoreType extends Store<State> = Store<State>,
+  Exports extends Record<string, any> = None,
+  EventsType extends Record<string, any> = None,
   PromiseType extends AtomApiPromise = undefined
 >(
   key: string,
-  get: IonStateFactory<{
+  value: IonStateFactory<{
     State: State
     Params: Params
+    Events: EventsType
     Exports: Exports
-    Store: StoreType
     Promise: PromiseType
   }>,
   config?: AtomConfig<State>
-) => new IonTemplate(key, get, config) as any
+) => new IonTemplate(key, value, config) as any

@@ -29,7 +29,7 @@ describe('plugins', () => {
     testEcosystem.registerPlugin(plugin)
 
     const instance1 = testEcosystem.getInstance(atom1)
-    instance1.setState('b')
+    instance1.set('b')
 
     expect(actionList).toEqual([
       [
@@ -230,7 +230,7 @@ describe('plugins', () => {
 
     testEcosystem.getNode(selector1)
     const instance = testEcosystem.getInstance(atom1)
-    instance.setState('aa')
+    instance.set('aa')
 
     testEcosystem.destroy()
 

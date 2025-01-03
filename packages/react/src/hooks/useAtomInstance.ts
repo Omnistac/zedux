@@ -2,10 +2,10 @@ import {
   AnyAtomInstance,
   AnyAtomTemplate,
   AtomInstance,
-  AtomInstanceType,
-  AtomParamsType,
   ExternalNode,
+  NodeOf,
   ParamlessTemplate,
+  ParamsOf,
 } from '@zedux/atoms'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { ZeduxHookConfig } from '../types'
@@ -49,15 +49,13 @@ const OPERATION = 'useAtomInstance'
 export const useAtomInstance: {
   <A extends AnyAtomTemplate>(
     template: A,
-    params: AtomParamsType<A>,
+    params: ParamsOf<A>,
     config?: ZeduxHookConfig
-  ): AtomInstanceType<A>
+  ): NodeOf<A>
 
-  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): AtomInstanceType<A>
+  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): NodeOf<A>
 
-  <A extends AnyAtomTemplate>(
-    template: ParamlessTemplate<A>
-  ): AtomInstanceType<A>
+  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): NodeOf<A>
 
   <I extends AnyAtomInstance>(
     instance: I,
@@ -66,7 +64,7 @@ export const useAtomInstance: {
   ): I
 } = <A extends AnyAtomTemplate>(
   atom: A | AnyAtomInstance,
-  params?: AtomParamsType<A>,
+  params?: ParamsOf<A>,
   { operation = OPERATION, subscribe, suspend }: ZeduxHookConfig = {
     operation: OPERATION,
   }
