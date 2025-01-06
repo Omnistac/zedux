@@ -1,6 +1,6 @@
-import { Store, StoreStateType } from '@zedux/core'
 import { AtomApi } from '../classes/AtomApi'
-import { AtomApiPromise } from '../types/index'
+import { AtomApiPromise, StateOf } from '../types/index'
+import { Signal } from '../classes/Signal'
 
 /**
  * Create an AtomApi
@@ -17,41 +17,42 @@ import { AtomApiPromise } from '../types/index'
  *     triggers the appropriate updates in all the atom's dynamic dependents.
  */
 export const api: {
-  // Custom Stores (AtomApi cloning)
+  // Signals (AtomApi cloning)
   <
-    StoreType extends Store<any> = Store<any>,
+    SignalType extends Signal<any> = Signal<any>,
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
     value: AtomApi<{
       Exports: Exports
       Promise: PromiseType
-      State: StoreStateType<StoreType>
-      Store: StoreType
+      Signal: SignalType
+      State: StateOf<SignalType>
     }>
   ): AtomApi<{
     Exports: Exports
     Promise: PromiseType
-    State: StoreStateType<StoreType>
-    Store: StoreType
+    Signal: SignalType
+    State: StateOf<SignalType>
   }>
 
-  // Custom Stores (normal)
-  <StoreType extends Store<any> = Store<any>>(value: StoreType): AtomApi<{
+  // Signals (normal)
+  <SignalType extends Signal<any> = Signal<any>>(value: SignalType): AtomApi<{
     Exports: Record<string, never>
     Promise: undefined
-    State: StoreStateType<StoreType>
-    Store: StoreType
+    Signal: SignalType
+    State: StateOf<SignalType>
   }>
 
   // No Value
   (): AtomApi<{
     Exports: Record<string, never>
     Promise: undefined
+    Signal: undefined
     State: undefined
-    Store: undefined
   }>
 
+  // No Value (passing generics manually)
   <
     State = undefined,
     Exports extends Record<string, any> = Record<string, never>,
@@ -59,11 +60,11 @@ export const api: {
   >(): AtomApi<{
     Exports: Exports
     Promise: PromiseType
+    Signal: undefined
     State: State
-    Store: undefined
   }>
 
-  // No Store (AtomApi cloning)
+  // No Signal (AtomApi cloning)
   <
     State = undefined,
     Exports extends Record<string, any> = Record<string, never>,
@@ -72,60 +73,46 @@ export const api: {
     value: AtomApi<{
       Exports: Exports
       Promise: PromiseType
+      Signal: undefined
       State: State
-      Store: undefined
     }>
   ): AtomApi<{
     Exports: Exports
     Promise: PromiseType
+    Signal: undefined
     State: State
-    Store: undefined
   }>
 
-  // No Store (normal)
-  <State = undefined>(value: State): AtomApi<{
-    Exports: Record<string, never>
-    Promise: undefined
-    State: State
-    Store: undefined
-  }>
-
-  // Catch-all
+  // Normal Value
   <
     State = undefined,
     Exports extends Record<string, any> = Record<string, never>,
-    StoreType extends Store<State> = Store<State>,
-    PromiseType extends AtomApiPromise = undefined
+    SignalType extends
+      | Signal<{ Events: any; State: State }>
+      | undefined = undefined
   >(
-    value:
-      | State
-      | StoreType
-      | AtomApi<{
-          Exports: Exports
-          Promise: PromiseType
-          State: State
-          Store: StoreType
-        }>
+    value: State
   ): AtomApi<{
     Exports: Exports
-    Promise: PromiseType
+    Promise: undefined
+    Signal: SignalType
     State: State
-    Store: StoreType
   }>
 } = <
   State = undefined,
   Exports extends Record<string, any> = Record<string, never>,
-  StoreType extends Store<State> | undefined = undefined,
+  SignalType extends
+    | Signal<{ Events: any; State: State }>
+    | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(
   value?:
     | AtomApi<{
         Exports: Exports
         Promise: PromiseType
+        Signal: SignalType
         State: State
-        Store: StoreType
       }>
-    | StoreType
     | State
 ) =>
   new AtomApi(
@@ -133,9 +120,8 @@ export const api: {
       | AtomApi<{
           Exports: Exports
           Promise: PromiseType
+          Signal: SignalType
           State: State
-          Store: StoreType
         }>
-      | StoreType
       | State
   )

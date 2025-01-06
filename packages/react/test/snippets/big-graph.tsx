@@ -1,10 +1,5 @@
-import {
-  atom,
-  injectAtomInstance,
-  injectAtomValue,
-  injectStore,
-  useAtomValue,
-} from '@zedux/react'
+import { injectAtomInstance, injectAtomValue, useAtomValue } from '@zedux/react'
+import { atom, injectStore } from '@zedux/stores'
 import React from 'react'
 
 const atom1 = atom('atom1', () => {

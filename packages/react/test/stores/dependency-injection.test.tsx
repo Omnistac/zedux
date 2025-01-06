@@ -2,15 +2,12 @@ import { fireEvent } from '@testing-library/dom'
 import '@testing-library/jest-dom/extend-expect'
 import { act } from '@testing-library/react'
 import {
-  api,
-  atom,
   createStore,
   injectEffect,
-  injectStore,
-  ion,
   useAtomInstance,
   useAtomValue,
 } from '@zedux/react'
+import { api, atom, injectStore, ion } from '@zedux/stores'
 import React, { FC } from 'react'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 import { ecosystem } from '../utils/ecosystem'

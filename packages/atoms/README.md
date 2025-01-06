@@ -1,6 +1,6 @@
 # `@zedux/atoms`
 
-The core atomic model of Zedux. This is a standalone package, meaning it's the only package you need to install to use Zedux's atomic model. It includes the Zedux core store package as well as all APIs related to atoms and ecosystems.
+The core atomic model of Zedux. This is a standalone package, meaning it's the only package you need to install to use Zedux's atomic model. It includes the Zedux core store package as well as all APIs related to signals, atoms, and ecosystems.
 
 This package is framework-independent, though many of its APIs are heavily inspired by React.
 
@@ -32,10 +32,10 @@ import { atom, createEcosystem } from '@zedux/atoms'
 const greetingAtom = atom('greeting', 'Hello, World!')
 const ecosystem = createEcosystem({ id: 'root' })
 
-const instance = ecosystem.getInstance(greetingAtom)
+const instance = ecosystem.getNode(greetingAtom)
 
-instance.store.subscribe(newState => console.log('state updated:', newState))
-instance.setState('Goodbye, World!')
+instance.on('change', ({ newState }) => console.log('state updated:', newState))
+instance.set('Goodbye, World!')
 instance.destroy()
 ```
 
@@ -51,12 +51,13 @@ On top of this, `@zedux/atoms` exports the following APIs and many helper types 
 
 - [`AtomApi`](https://omnistac.github.io/zedux/docs/api/classes/AtomApi)
 - [`AtomInstance`](https://omnistac.github.io/zedux/docs/api/classes/AtomInstance)
-- [`AtomInstanceBase`](https://omnistac.github.io/zedux/docs/api/classes/AtomInstanceBase)
 - [`AtomTemplate`](https://omnistac.github.io/zedux/docs/api/classes/AtomTemplate)
 - [`AtomTemplateBase`](https://omnistac.github.io/zedux/docs/api/classes/AtomTemplateBase)
 - [`Ecosystem`](https://omnistac.github.io/zedux/docs/api/classes/Ecosystem)
 - [`IonTemplate`](https://omnistac.github.io/zedux/docs/api/classes/IonTemplate)
-- [`SelectorCache`](https://omnistac.github.io/zedux/docs/api/classes/SelectorCache)
+- [`MappedSignal`](https://omnistac.github.io/zedux/docs/api/classes/MappedSignal)
+- [`SelectorInstance`](https://omnistac.github.io/zedux/docs/api/classes/SelectorInstance)
+- [`Signal`](https://omnistac.github.io/zedux/docs/api/classes/Signal)
 - [`ZeduxPlugin`](https://omnistac.github.io/zedux/docs/api/classes/ZeduxPlugin)
 
 ### Factories
@@ -76,11 +77,12 @@ On top of this, `@zedux/atoms` exports the following APIs and many helper types 
 - [`injectCallback()`](https://omnistac.github.io/zedux/docs/api/injectors/injectCallback)
 - [`injectEffect()`](https://omnistac.github.io/zedux/docs/api/injectors/injectEffect)
 - [`injectInvalidate()`](https://omnistac.github.io/zedux/docs/api/injectors/injectInvalidate)
+- [`injectMappedSignal()`](https://omnistac.github.io/zedux/docs/api/injectors/injectMappedSignal)
 - [`injectMemo()`](https://omnistac.github.io/zedux/docs/api/injectors/injectMemo)
 - [`injectPromise()`](https://omnistac.github.io/zedux/docs/api/injectors/injectPromise)
 - [`injectRef()`](https://omnistac.github.io/zedux/docs/api/injectors/injectRef)
 - [`injectSelf()`](https://omnistac.github.io/zedux/docs/api/injectors/injectSelf)
-- [`injectStore()`](https://omnistac.github.io/zedux/docs/api/injectors/injectStore)
+- [`injectSignal()`](https://omnistac.github.io/zedux/docs/api/injectors/injectSignal)
 - [`injectWhy()`](https://omnistac.github.io/zedux/docs/api/injectors/injectWhy)
 
 ### Utils

@@ -116,9 +116,9 @@ describe('Ecosystem', () => {
     ecosystem.getInstance(atom4)
 
     expect(ecosystem.find('someLongKey', [])).toBeUndefined()
-    expect(ecosystem.find(atom1, ['b'])?.getState()).toBe('b')
+    expect(ecosystem.find(atom1, ['b'])?.get()).toBe('b')
     expect(ecosystem.find(atom1, ['c'])).toBeUndefined()
-    expect(ecosystem.find(atom3, [])?.getState()).toBe(1)
+    expect(ecosystem.find(atom3, [])?.get()).toBe(1)
   })
 
   test('findAll() with no params returns all atom instances', () => {

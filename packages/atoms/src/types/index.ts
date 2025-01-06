@@ -1,20 +1,25 @@
 import { ActionChain, Observable, Settable } from '@zedux/core'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
+import { GraphNode } from '../classes/GraphNode'
+import { SelectorInstance } from '../classes/SelectorInstance'
+import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
+import { Signal } from '../classes/Signal'
+import { InternalEvaluationType } from '../utils/general'
 import {
+  AnyAtomGenerics,
   AnyAtomInstance,
   AnyAtomTemplate,
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
-  AtomInstanceType,
-  AtomParamsType,
-  AtomStateType,
+  NodeOf,
+  ParamsOf,
+  StateOf,
 } from './atoms'
-import { SelectorInstance } from '../classes/SelectorInstance'
-import { GraphNode } from '../classes/GraphNode'
-import { InternalEvaluationType } from '../utils/general'
+import { ExplicitEvents, ImplicitEvents } from './events'
 
 export * from './atoms'
+export * from './events'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type AnyNonNullishValue = {}
@@ -37,43 +42,102 @@ export interface AtomGettersBase {
    * synchronously during atom or AtomSelector evaluation. When called
    * asynchronously, is just an alias for `ecosystem.get`
    */
-  get<A extends AnyAtomTemplate>(
-    template: A,
-    params: AtomParamsType<A>
-  ): AtomStateType<A>
+  get<A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>): StateOf<A>
 
-  get<A extends AnyAtomTemplate<{ Params: [] }>>(template: A): AtomStateType<A>
+  get<A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateOf<A>
 
-  get<A extends AnyAtomTemplate>(
-    template: ParamlessTemplate<A>
-  ): AtomStateType<A>
+  get<A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateOf<A>
 
-  get<I extends AnyAtomInstance>(instance: I): AtomStateType<I>
+  get<N extends GraphNode>(node: N): StateOf<N>
 
   /**
    * Registers a static graph edge on the resolved atom instance when called
    * synchronously during atom or AtomSelector evaluation. When called
    * asynchronously, is just an alias for `ecosystem.getInstance`
+   *
+   * @deprecated in favor of `getNode`
    */
   getInstance<A extends AnyAtomTemplate>(
     template: A,
-    params: AtomParamsType<A>,
-    edgeInfo?: GraphEdgeDetails
-  ): AtomInstanceType<A>
+    params: ParamsOf<A>,
+    edgeInfo?: GraphEdgeConfig
+  ): NodeOf<A>
 
-  getInstance<A extends AnyAtomTemplate<{ Params: [] }>>(
-    template: A
-  ): AtomInstanceType<A>
+  getInstance<A extends AnyAtomTemplate<{ Params: [] }>>(template: A): NodeOf<A>
 
   getInstance<A extends AnyAtomTemplate>(
     template: ParamlessTemplate<A>
-  ): AtomInstanceType<A>
+  ): NodeOf<A>
 
   getInstance<I extends AnyAtomInstance>(
     instance: I,
     params?: [],
-    edgeInfo?: GraphEdgeDetails
+    edgeInfo?: GraphEdgeConfig
   ): I
+
+  // TODO: Dedupe these overloads
+  // atoms
+  getNode<G extends AtomGenerics = AnyAtomGenerics>(
+    templateOrNode: AtomTemplateBase<G> | GraphNode<G>,
+    params: G['Params'],
+    edgeConfig?: GraphEdgeConfig
+  ): G['Node']
+
+  getNode<G extends AtomGenerics = AnyAtomGenerics<{ Params: [] }>>(
+    templateOrNode: AtomTemplateBase<G> | GraphNode<G>
+  ): G['Node']
+
+  getNode<G extends AtomGenerics = AnyAtomGenerics>(
+    templateOrInstance: ParamlessTemplate<AtomTemplateBase<G> | GraphNode<G>>
+  ): G['Node']
+
+  getNode<I extends AnyAtomInstance>(instance: I, params?: []): I
+
+  // selectors
+  getNode<S extends Selectable>(
+    selectable: S,
+    params: ParamsOf<S>,
+    edgeConfig?: GraphEdgeConfig
+  ): S extends AtomSelectorOrConfig
+    ? SelectorInstance<{
+        Params: ParamsOf<S>
+        State: StateOf<S>
+        Template: S
+      }>
+    : S
+
+  getNode<S extends Selectable<any, []>>(
+    selectable: S
+  ): S extends AtomSelectorOrConfig
+    ? SelectorInstance<{
+        Params: ParamsOf<S>
+        State: StateOf<S>
+        Template: S
+      }>
+    : S
+
+  getNode<S extends Selectable>(
+    selectable: ParamlessTemplate<S>
+  ): S extends AtomSelectorOrConfig
+    ? SelectorInstance<{
+        Params: ParamsOf<S>
+        State: StateOf<S>
+        Template: S
+      }>
+    : S
+
+  getNode<N extends GraphNode>(
+    node: N,
+    params?: [],
+    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
+  ): N
+
+  // catch-all
+  getNode<G extends AtomGenerics>(
+    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+    params?: G['Params'],
+    edgeConfig?: GraphEdgeConfig
+  ): G['Node']
 
   /**
    * Runs an AtomSelector which receives its own AtomGetters object and can use
@@ -96,8 +160,8 @@ export interface AtomGettersBase {
    */
   select<S extends Selectable>(
     selectorOrConfigOrInstance: S,
-    ...args: AtomParamsType<S>
-  ): AtomStateType<S>
+    ...args: ParamsOf<S>
+  ): StateOf<S>
 }
 
 /**
@@ -156,22 +220,23 @@ export type AtomSelectorOrConfig<State = any, Params extends any[] = any> =
   | AtomSelectorConfig<State, Params>
 
 export type AtomStateFactory<
-  G extends Pick<
-    AtomGenerics,
-    'Exports' | 'Params' | 'Promise' | 'State' | 'Store'
-  >
+  G extends Pick<AtomGenerics, 'Exports' | 'Params' | 'Promise' | 'State'> & {
+    Signal: Signal | undefined
+  }
 > = (
   ...params: G['Params']
-) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | G['Store'] | G['State']
+) =>
+  | AtomApi<Pick<G, 'Exports' | 'Promise' | 'State'> & { Signal: G['Signal'] }>
+  | G['Signal']
+  | G['State']
 
-export type AtomTuple<A extends AnyAtomTemplate> = [A, AtomParamsType<A>]
+export type AtomTuple<A extends AnyAtomTemplate> = [A, ParamsOf<A>]
 
 export type AtomValueOrFactory<
-  G extends Pick<
-    AtomGenerics,
-    'Exports' | 'Params' | 'Promise' | 'State' | 'Store'
-  >
-> = AtomStateFactory<G> | G['Store'] | G['State']
+  G extends Pick<AtomGenerics, 'Exports' | 'Params' | 'Promise' | 'State'> & {
+    Signal: Signal | undefined
+  }
+> = AtomStateFactory<G> | G['State']
 
 export type Cleanup = () => void
 
@@ -180,12 +245,6 @@ export interface DehydrationOptions extends NodeFilterOptions {
 }
 
 export type DehydrationFilter = string | AnyAtomTemplate | DehydrationOptions
-
-export type DependentCallback = (
-  signal: GraphEdgeSignal,
-  val?: any,
-  reason?: InternalEvaluationReason
-) => any
 
 export interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
@@ -231,11 +290,22 @@ export type EvaluationType =
   | 'promise changed'
   | 'state changed'
 
+/**
+ * A user-defined object mapping custom event names to unused placeholder
+ * functions whose return types are used to infer expected event payloads.
+ *
+ * We map all Zedux built-in events to `never` here to prevent users from
+ * specifying those events
+ */
+export type EventMap = {
+  [K in keyof ExplicitEvents & ImplicitEvents]?: never
+} & Record<string, () => any>
+
 export type ExportsInfusedSetter<State, Exports> = Exports & {
   (settable: Settable<State>, meta?: any): State
 }
 
-export type GraphEdgeDetails = {
+export interface GraphEdgeConfig {
   /**
    * `f`lags - the binary EdgeFlags of this edge
    */
@@ -262,14 +332,6 @@ export interface GraphEdge {
   p?: number
 }
 
-/**
- * A low-level detail that tells dependents what sort of event is causing the
- * current update. Promise changes and state updates are lumped together as
- * 'Update' signals. If you need to distinguish between them, look at the
- * EvaluationType (the `type` field) in the full reasons list.
- */
-export type GraphEdgeSignal = 'Destroyed' | 'Updated'
-
 export interface GraphViewRecursive {
   [key: string]: GraphViewRecursive
 }
@@ -291,12 +353,25 @@ export interface InjectPromiseConfig<T = any> {
   runOnInvalidate?: boolean
 }
 
+export interface InjectSignalConfig<MappedEvents extends EventMap> {
+  events?: MappedEvents
+  reactive?: boolean
+}
+
 export interface InjectStoreConfig {
   hydrate?: boolean
   subscribe?: boolean
 }
 
 export interface InternalEvaluationReason<State = any> {
+  /**
+   * `e`ventMap - any events sent along with the update that should notify this
+   * node's listeners and/or trigger special functionality in Zedux (e.g. via
+   * the `batch` event). These are always either custom events or
+   * ExplicitEvents, never ImplicitEvents
+   */
+  e?: Record<string, any>
+
   /**
    * `p`revState - the old state of the source node
    */
@@ -317,6 +392,9 @@ export interface InternalEvaluationReason<State = any> {
    * `t`ype - an obfuscated number representing the type of update (e.g. whether
    * the source node was force destroyed or its promise updated). Zedux's `why`
    * utils translate this into a user-friendly string.
+   *
+   * If not specified, it's assumed to be a "normal" update (usually a state
+   * change).
    */
   t?: InternalEvaluationType
 }
@@ -325,9 +403,13 @@ export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
   (
     getters: AtomGetters,
     ...params: G['Params']
-  ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | G['Store'] | G['State']
+  ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | Signal<G> | G['State']
 
 export type LifecycleStatus = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
+
+export type MapEvents<T extends EventMap> = Prettify<{
+  [K in keyof T]: ReturnType<T[K]>
+}>
 
 export type MaybeCleanup = Cleanup | void
 
@@ -349,16 +431,17 @@ export type NodeFilter =
   | NodeFilterOptions
 
 /**
+ * Reads better than `Record<never, never>` in atom generics
+ */
+export type None = Prettify<Record<never, never>>
+
+/**
  * Many Zedux APIs make the `params` parameter optional if the atom doesn't take
  * params or has only optional params.
  */
 export type ParamlessTemplate<
-  A extends
-    | AnyAtomTemplate
-    | AnyAtomInstance
-    | AtomSelectorOrConfig
-    | SelectorInstance
-> = AtomParamsType<A> extends [AnyNonNullishValue | undefined | null, ...any[]]
+  A extends AnyAtomTemplate | AtomSelectorOrConfig | GraphNode
+> = ParamsOf<A> extends [AnyNonNullishValue | undefined | null, ...any[]]
   ? never
   : A
 

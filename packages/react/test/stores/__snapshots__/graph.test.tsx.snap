@@ -8,7 +8,7 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
       "ion1": {
         "createdAt": 123456789,
         "flags": 4,
-        "operation": "getInstance",
+        "operation": "getNode",
         "p": undefined,
       },
     },
@@ -23,7 +23,7 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
       "ion1": {
         "createdAt": 123456789,
         "flags": 4,
-        "operation": "getInstance",
+        "operation": "getNode",
         "p": undefined,
       },
     },
@@ -39,13 +39,13 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
       "atom1": {
         "createdAt": 123456789,
         "flags": 4,
-        "operation": "getInstance",
+        "operation": "getNode",
         "p": undefined,
       },
       "atom2": {
         "createdAt": 123456789,
         "flags": 4,
-        "operation": "getInstance",
+        "operation": "getNode",
         "p": undefined,
       },
     },
@@ -66,7 +66,7 @@ exports[`graph injectAtomGetters 1`] = `
       },
     ],
     "dependents": [],
-    "weight": 4,
+    "weight": 3,
   },
   "Test-:r1:": {
     "dependencies": [
@@ -76,7 +76,7 @@ exports[`graph injectAtomGetters 1`] = `
       },
     ],
     "dependents": [],
-    "weight": 1,
+    "weight": 0,
   },
   "atom1": {
     "dependencies": [],

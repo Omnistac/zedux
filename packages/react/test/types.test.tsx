@@ -1,4 +1,4 @@
-import { Store, StoreStateType, createStore } from '@zedux/core'
+import { Signal } from '@zedux/atoms/classes/Signal'
 import {
   AnyAtomGenerics,
   AnyAtomInstance,
@@ -6,52 +6,57 @@ import {
   api,
   atom,
   AtomApi,
-  AtomExportsType,
+  ExportsOf,
   AtomGetters,
   AtomInstance,
   AtomInstanceRecursive,
-  AtomInstanceType,
-  AtomParamsType,
-  AtomPromiseType,
-  AtomStateType,
-  AtomStoreType,
+  NodeOf,
+  ParamsOf,
+  PromiseOf,
+  StateOf,
   AtomTemplateRecursive,
-  AtomTemplateType,
+  TemplateOf,
   AtomTuple,
-  createEcosystem,
   injectAtomInstance,
   injectAtomState,
   injectAtomValue,
   injectCallback,
   injectMemo,
   injectPromise,
-  injectSelf,
-  injectStore,
   ion,
   IonTemplateRecursive,
   ParamlessTemplate,
   PromiseState,
+  injectSignal,
+  EventsOf,
+  As,
+  None,
+  Transaction,
 } from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
+import { ecosystem, snapshotNodes } from './utils/ecosystem'
+
+const exampleEvents = {
+  numEvent: As<number>,
+  strEvent: As<string>,
+}
+
+type ExampleEvents = {
+  [K in keyof typeof exampleEvents]: ReturnType<(typeof exampleEvents)[K]>
+}
 
 const exampleAtom = atom('example', (p: string) => {
-  const store = injectStore(p)
+  const signal = injectSignal(p, {
+    events: exampleEvents,
+  })
 
-  const partialInstance = injectSelf()
-
-  if ((partialInstance as AtomInstanceType<typeof exampleAtom>).store) {
-    ;(partialInstance as AtomInstanceType<typeof exampleAtom>).store.getState()
-  }
-
-  return api(store)
+  return api(signal)
     .setExports({
-      getBool: () => Boolean(store.getState()),
-      getNum: () => Number(store.getState()),
+      getBool: () => Boolean(signal.get()),
+      getNum: () => Number(signal.get()),
     })
     .setPromise(Promise.resolve(2))
 })
-
-const ecosystem = createEcosystem({ id: 'root' })
 
 afterEach(() => {
   ecosystem.reset()
@@ -61,20 +66,20 @@ describe('react types', () => {
   test('atom generic getters', () => {
     const instance = ecosystem.getInstance(exampleAtom, ['a'])
 
-    type AtomState = AtomStateType<typeof exampleAtom>
-    type AtomParams = AtomParamsType<typeof exampleAtom>
-    type AtomExports = AtomExportsType<typeof exampleAtom>
-    type AtomPromise = AtomPromiseType<typeof exampleAtom>
-    type AtomStore = AtomStoreType<typeof exampleAtom>
+    type AtomState = StateOf<typeof exampleAtom>
+    type AtomParams = ParamsOf<typeof exampleAtom>
+    type AtomExports = ExportsOf<typeof exampleAtom>
+    type AtomPromise = PromiseOf<typeof exampleAtom>
+    type AtomEvents = EventsOf<typeof exampleAtom>
 
-    type AtomInstanceState = AtomStateType<typeof instance>
-    type AtomInstanceParams = AtomParamsType<typeof instance>
-    type AtomInstanceExports = AtomExportsType<typeof instance>
-    type AtomInstancePromise = AtomPromiseType<typeof instance>
-    type AtomInstanceStore = AtomStoreType<typeof instance>
+    type AtomInstanceState = StateOf<typeof instance>
+    type AtomInstanceParams = ParamsOf<typeof instance>
+    type AtomInstanceExports = ExportsOf<typeof instance>
+    type AtomInstancePromise = PromiseOf<typeof instance>
+    type AtomInstanceStore = EventsOf<typeof instance>
 
-    type TAtomInstance = AtomInstanceType<typeof exampleAtom>
-    type TAtomTemplate = AtomTemplateType<typeof instance>
+    type TAtomInstance = NodeOf<typeof exampleAtom>
+    type TAtomTemplate = TemplateOf<typeof instance>
 
     expectTypeOf<AtomState>().toBeString()
     expectTypeOf<AtomState>().toEqualTypeOf<AtomInstanceState>()
@@ -92,95 +97,95 @@ describe('react types', () => {
     expectTypeOf<AtomPromise>().resolves.toBeNumber()
     expectTypeOf<AtomPromise>().toEqualTypeOf<AtomInstancePromise>()
 
-    expectTypeOf<AtomStore>().toEqualTypeOf<Store<string>>()
-    expectTypeOf<AtomStore>().toEqualTypeOf<AtomInstanceStore>()
+    expectTypeOf<AtomEvents>().toEqualTypeOf<ExampleEvents>()
+    expectTypeOf<AtomEvents>().toEqualTypeOf<AtomInstanceStore>()
 
     expectTypeOf<TAtomInstance>().toEqualTypeOf<typeof instance>()
     expectTypeOf<TAtomTemplate>().toEqualTypeOf<typeof instance.t>()
-
-    expectTypeOf<StoreStateType<AtomStore>>().toBeString()
   })
 
   test('non-atom-api inference in atoms', () => {
-    const storeAtom = atom('store', (p: string) => injectStore(p))
+    const signalAtom = atom('signal', (p: string) => injectSignal(p))
     const valueAtom = atom('value', (p: string) => p)
 
-    const storeInstance = ecosystem.getInstance(storeAtom, ['a'])
+    const signalInstance = ecosystem.getInstance(signalAtom, ['a'])
     const valueInstance = ecosystem.getInstance(valueAtom, ['a'])
 
-    type StoreAtomState = AtomStateType<typeof storeAtom>
-    type StoreAtomParams = AtomParamsType<typeof storeAtom>
-    type StoreAtomExports = AtomExportsType<typeof storeAtom>
-    type StoreAtomPromise = AtomPromiseType<typeof storeAtom>
-    type StoreAtomStore = AtomStoreType<typeof storeAtom>
-    type ValueAtomState = AtomStateType<typeof valueAtom>
-    type ValueAtomParams = AtomParamsType<typeof valueAtom>
-    type ValueAtomExports = AtomExportsType<typeof valueAtom>
-    type ValueAtomPromise = AtomPromiseType<typeof valueAtom>
-    type ValueAtomStore = AtomStoreType<typeof valueAtom>
+    type SignalAtomState = StateOf<typeof signalAtom>
+    type SignalAtomParams = ParamsOf<typeof signalAtom>
+    type SignalAtomExports = ExportsOf<typeof signalAtom>
+    type SignalAtomPromise = PromiseOf<typeof signalAtom>
+    type SignalAtomEvents = EventsOf<typeof signalAtom>
+    type ValueAtomState = StateOf<typeof valueAtom>
+    type ValueAtomParams = ParamsOf<typeof valueAtom>
+    type ValueAtomExports = ExportsOf<typeof valueAtom>
+    type ValueAtomPromise = PromiseOf<typeof valueAtom>
+    type ValueAtomEvents = EventsOf<typeof valueAtom>
 
-    type StoreAtomInstanceState = AtomStateType<typeof storeInstance>
-    type StoreAtomInstanceParams = AtomParamsType<typeof storeInstance>
-    type StoreAtomInstanceExports = AtomExportsType<typeof storeInstance>
-    type StoreAtomInstancePromise = AtomPromiseType<typeof storeInstance>
-    type StoreAtomInstanceStore = AtomStoreType<typeof storeInstance>
-    type ValueAtomInstanceState = AtomStateType<typeof storeInstance>
-    type ValueAtomInstanceParams = AtomParamsType<typeof storeInstance>
-    type ValueAtomInstanceExports = AtomExportsType<typeof storeInstance>
-    type ValueAtomInstancePromise = AtomPromiseType<typeof storeInstance>
-    type ValueAtomInstanceStore = AtomStoreType<typeof storeInstance>
+    type SignalAtomInstanceState = StateOf<typeof signalInstance>
+    type SignalAtomInstanceParams = ParamsOf<typeof signalInstance>
+    type SignalAtomInstanceExports = ExportsOf<typeof signalInstance>
+    type SignalAtomInstancePromise = PromiseOf<typeof signalInstance>
+    type SignalAtomInstanceEvents = EventsOf<typeof signalInstance>
+    type ValueAtomInstanceState = StateOf<typeof signalInstance>
+    type ValueAtomInstanceParams = ParamsOf<typeof signalInstance>
+    type ValueAtomInstanceExports = ExportsOf<typeof signalInstance>
+    type ValueAtomInstancePromise = PromiseOf<typeof signalInstance>
+    type ValueAtomInstanceEvents = EventsOf<typeof signalInstance>
 
-    type TStoreAtomInstance = AtomInstanceType<typeof storeAtom>
-    type TStoreAtomTemplate = AtomTemplateType<typeof storeInstance>
-    type TValueAtomInstance = AtomInstanceType<typeof valueAtom>
-    type TValueAtomTemplate = AtomTemplateType<typeof valueInstance>
+    type TSignalAtomInstance = NodeOf<typeof signalAtom>
+    type TSignalAtomTemplate = TemplateOf<typeof signalInstance>
+    type TValueAtomInstance = NodeOf<typeof valueAtom>
+    type TValueAtomTemplate = TemplateOf<typeof valueInstance>
 
-    expectTypeOf<StoreAtomState>().toBeString()
-    expectTypeOf<StoreAtomState>().toEqualTypeOf<ValueAtomState>()
-    expectTypeOf<StoreAtomInstanceState>().toBeString()
-    expectTypeOf<StoreAtomInstanceState>().toEqualTypeOf<ValueAtomInstanceState>()
+    expectTypeOf<SignalAtomState>().toBeString()
+    expectTypeOf<SignalAtomState>().toEqualTypeOf<ValueAtomState>()
+    expectTypeOf<SignalAtomInstanceState>().toBeString()
+    expectTypeOf<SignalAtomInstanceState>().toEqualTypeOf<ValueAtomInstanceState>()
 
-    expectTypeOf<StoreAtomParams>().toEqualTypeOf<[p: string]>()
-    expectTypeOf<StoreAtomParams>().toEqualTypeOf<ValueAtomParams>()
-    expectTypeOf<StoreAtomInstanceParams>().toEqualTypeOf<[p: string]>()
-    expectTypeOf<StoreAtomInstanceParams>().toEqualTypeOf<ValueAtomInstanceParams>()
+    expectTypeOf<SignalAtomParams>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<SignalAtomParams>().toEqualTypeOf<ValueAtomParams>()
+    expectTypeOf<SignalAtomInstanceParams>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<SignalAtomInstanceParams>().toEqualTypeOf<ValueAtomInstanceParams>()
 
-    expectTypeOf<StoreAtomExports>().toEqualTypeOf<Record<string, never>>()
-    expectTypeOf<StoreAtomExports>().toEqualTypeOf<ValueAtomExports>()
-    expectTypeOf<StoreAtomInstanceExports>().toEqualTypeOf<
+    expectTypeOf<SignalAtomExports>().toEqualTypeOf<Record<string, never>>()
+    expectTypeOf<SignalAtomExports>().toEqualTypeOf<ValueAtomExports>()
+    expectTypeOf<SignalAtomInstanceExports>().toEqualTypeOf<
       Record<string, never>
     >()
-    expectTypeOf<StoreAtomInstanceExports>().toEqualTypeOf<ValueAtomInstanceExports>()
+    expectTypeOf<SignalAtomInstanceExports>().toEqualTypeOf<ValueAtomInstanceExports>()
 
-    expectTypeOf<StoreAtomPromise>().toBeUndefined()
-    expectTypeOf<StoreAtomPromise>().toEqualTypeOf<ValueAtomPromise>()
-    expectTypeOf<StoreAtomInstancePromise>().toBeUndefined()
-    expectTypeOf<StoreAtomInstancePromise>().toEqualTypeOf<ValueAtomInstancePromise>()
+    expectTypeOf<SignalAtomPromise>().toBeUndefined()
+    expectTypeOf<SignalAtomPromise>().toEqualTypeOf<ValueAtomPromise>()
+    expectTypeOf<SignalAtomInstancePromise>().toBeUndefined()
+    expectTypeOf<SignalAtomInstancePromise>().toEqualTypeOf<ValueAtomInstancePromise>()
 
-    expectTypeOf<StoreAtomStore>().toEqualTypeOf<Store<string>>()
-    expectTypeOf<StoreAtomStore>().toEqualTypeOf<ValueAtomStore>()
-    expectTypeOf<StoreAtomInstanceStore>().toEqualTypeOf<Store<string>>()
-    expectTypeOf<StoreAtomInstanceStore>().toEqualTypeOf<ValueAtomInstanceStore>()
+    expectTypeOf<SignalAtomEvents>().toEqualTypeOf<Record<never, never>>()
+    expectTypeOf<SignalAtomEvents>().toEqualTypeOf<ValueAtomEvents>()
+    expectTypeOf<SignalAtomInstanceEvents>().toEqualTypeOf<
+      Record<never, never>
+    >()
+    expectTypeOf<SignalAtomInstanceEvents>().toEqualTypeOf<ValueAtomInstanceEvents>()
 
-    expectTypeOf<TStoreAtomInstance>().toEqualTypeOf<typeof storeInstance>()
-    expectTypeOf<TStoreAtomTemplate>().toEqualTypeOf<typeof storeInstance.t>()
-    expectTypeOf<TValueAtomInstance>().toEqualTypeOf<typeof storeInstance>()
+    expectTypeOf<TSignalAtomInstance>().toEqualTypeOf<typeof signalInstance>()
+    expectTypeOf<TSignalAtomTemplate>().toEqualTypeOf<typeof signalInstance.t>()
+    expectTypeOf<TValueAtomInstance>().toEqualTypeOf<typeof signalInstance>()
     expectTypeOf<TValueAtomTemplate>().toEqualTypeOf<
       AtomTemplateRecursive<{
         State: ValueAtomState
         Params: ValueAtomParams
         Exports: ValueAtomExports
-        Store: ValueAtomStore
+        Events: Record<never, never>
         Promise: ValueAtomPromise
       }>
     >()
   })
 
   test('atom api inference in atoms', () => {
-    const storeAtom = atom('store', (p: string) => {
-      const store = injectStore(p)
+    const signalAtom = atom('signal', (p: string) => {
+      const signal = injectSignal(p)
 
-      return api(store)
+      return api(signal)
         .setExports({ toNum: (str: string) => Number(str) })
         .setPromise(Promise.resolve('b'))
     })
@@ -209,167 +214,147 @@ describe('react types', () => {
       toNum: (str: string) => number
     }
 
-    expectTypeOf<AtomStateType<typeof storeAtom>>().toBeString()
-    expectTypeOf<AtomStateType<typeof valueAtom>>().toBeString()
-    expectTypeOf<AtomStateType<typeof queryAtom>>().toEqualTypeOf<
+    expectTypeOf<StateOf<typeof signalAtom>>().toBeString()
+    expectTypeOf<StateOf<typeof valueAtom>>().toBeString()
+    expectTypeOf<StateOf<typeof queryAtom>>().toEqualTypeOf<
       PromiseState<string>
     >()
-    expectTypeOf<AtomStateType<typeof queryWithPromiseAtom>>().toEqualTypeOf<
+    expectTypeOf<StateOf<typeof queryWithPromiseAtom>>().toEqualTypeOf<
       PromiseState<string>
     >()
-    expectTypeOf<AtomStateType<typeof noExportsAtom>>().toBeString()
+    expectTypeOf<StateOf<typeof noExportsAtom>>().toBeString()
 
-    expectTypeOf<AtomParamsType<typeof storeAtom>>().toEqualTypeOf<
+    expectTypeOf<ParamsOf<typeof signalAtom>>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<ParamsOf<typeof valueAtom>>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<ParamsOf<typeof queryAtom>>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<ParamsOf<typeof queryWithPromiseAtom>>().toEqualTypeOf<
       [p: string]
     >()
-    expectTypeOf<AtomParamsType<typeof valueAtom>>().toEqualTypeOf<
-      [p: string]
-    >()
-    expectTypeOf<AtomParamsType<typeof queryAtom>>().toEqualTypeOf<
-      [p: string]
-    >()
-    expectTypeOf<AtomParamsType<typeof queryWithPromiseAtom>>().toEqualTypeOf<
-      [p: string]
-    >()
-    expectTypeOf<AtomParamsType<typeof noExportsAtom>>().toEqualTypeOf<[]>()
+    expectTypeOf<ParamsOf<typeof noExportsAtom>>().toEqualTypeOf<[]>()
 
     expectTypeOf<
-      AtomExportsType<typeof storeAtom>
+      ExportsOf<typeof signalAtom>
     >().toEqualTypeOf<ExpectedExports>()
+    expectTypeOf<ExportsOf<typeof valueAtom>>().toEqualTypeOf<ExpectedExports>()
+    expectTypeOf<ExportsOf<typeof queryAtom>>().toEqualTypeOf<ExpectedExports>()
     expectTypeOf<
-      AtomExportsType<typeof valueAtom>
+      ExportsOf<typeof queryWithPromiseAtom>
     >().toEqualTypeOf<ExpectedExports>()
-    expectTypeOf<
-      AtomExportsType<typeof queryAtom>
-    >().toEqualTypeOf<ExpectedExports>()
-    expectTypeOf<
-      AtomExportsType<typeof queryWithPromiseAtom>
-    >().toEqualTypeOf<ExpectedExports>()
-    expectTypeOf<AtomExportsType<typeof noExportsAtom>>().toEqualTypeOf<
+    expectTypeOf<ExportsOf<typeof noExportsAtom>>().toEqualTypeOf<
       Record<string, never>
     >()
 
-    expectTypeOf<AtomStoreType<typeof storeAtom>>().toEqualTypeOf<
-      Store<string>
+    expectTypeOf<EventsOf<typeof signalAtom>>().toEqualTypeOf<
+      Record<never, never>
     >()
-    expectTypeOf<AtomStoreType<typeof valueAtom>>().toEqualTypeOf<
-      Store<string>
+    expectTypeOf<EventsOf<typeof valueAtom>>().toEqualTypeOf<
+      Record<never, never>
     >()
-    expectTypeOf<AtomStoreType<typeof queryAtom>>().toEqualTypeOf<
-      Store<PromiseState<string>>
-    >()
-    expectTypeOf<AtomStoreType<typeof queryWithPromiseAtom>>().toEqualTypeOf<
-      Store<PromiseState<string>>
-    >()
-    expectTypeOf<AtomStoreType<typeof noExportsAtom>>().toEqualTypeOf<
-      Store<string>
-    >()
+    expectTypeOf<EventsOf<typeof queryAtom>>().toEqualTypeOf<None>()
+    expectTypeOf<EventsOf<typeof queryWithPromiseAtom>>().toEqualTypeOf<None>()
+    expectTypeOf<EventsOf<typeof noExportsAtom>>().toEqualTypeOf<None>()
 
-    expectTypeOf<AtomPromiseType<typeof storeAtom>>().toEqualTypeOf<
+    expectTypeOf<PromiseOf<typeof signalAtom>>().toEqualTypeOf<
       Promise<string>
     >()
-    expectTypeOf<AtomPromiseType<typeof valueAtom>>().toEqualTypeOf<
+    expectTypeOf<PromiseOf<typeof valueAtom>>().toEqualTypeOf<Promise<string>>()
+    expectTypeOf<PromiseOf<typeof queryAtom>>().toEqualTypeOf<Promise<string>>()
+    expectTypeOf<PromiseOf<typeof queryWithPromiseAtom>>().toEqualTypeOf<
       Promise<string>
     >()
-    expectTypeOf<AtomPromiseType<typeof queryAtom>>().toEqualTypeOf<
-      Promise<string>
-    >()
-    expectTypeOf<AtomPromiseType<typeof queryWithPromiseAtom>>().toEqualTypeOf<
-      Promise<string>
-    >()
-    expectTypeOf<
-      AtomPromiseType<typeof noExportsAtom>
-    >().toEqualTypeOf<undefined>()
+    expectTypeOf<PromiseOf<typeof noExportsAtom>>().toEqualTypeOf<undefined>()
   })
 
   test('non-atom-api inference in ions', () => {
-    const storeIon = ion('store', (_, p: string) => injectStore(p))
+    const signalIon = ion('signal', (_, p: string) => injectSignal(p))
     const valueIon = ion('value', (_, p: string) => p)
 
-    const storeInstance = ecosystem.getNode(storeIon, ['a'])
+    const signalInstance = ecosystem.getNode(signalIon, ['a'])
     const valueInstance = ecosystem.getNode(valueIon, ['a'])
 
-    type StoreIonState = AtomStateType<typeof storeIon>
-    type StoreIonParams = AtomParamsType<typeof storeIon>
-    type StoreIonExports = AtomExportsType<typeof storeIon>
-    type StoreIonPromise = AtomPromiseType<typeof storeIon>
-    type StoreIonStore = AtomStoreType<typeof storeIon>
-    type ValueIonState = AtomStateType<typeof valueIon>
-    type ValueIonParams = AtomParamsType<typeof valueIon>
-    type ValueIonExports = AtomExportsType<typeof valueIon>
-    type ValueIonPromise = AtomPromiseType<typeof valueIon>
-    type ValueIonStore = AtomStoreType<typeof valueIon>
+    type SignalIonState = StateOf<typeof signalIon>
+    type SignalIonParams = ParamsOf<typeof signalIon>
+    type SignalIonExports = ExportsOf<typeof signalIon>
+    type SignalIonPromise = PromiseOf<typeof signalIon>
+    type SignalIonEvents = EventsOf<typeof signalIon>
+    type ValueIonState = StateOf<typeof valueIon>
+    type ValueIonParams = ParamsOf<typeof valueIon>
+    type ValueIonExports = ExportsOf<typeof valueIon>
+    type ValueIonPromise = PromiseOf<typeof valueIon>
+    type ValueIonEvents = EventsOf<typeof valueIon>
 
-    type StoreIonInstanceState = AtomStateType<typeof storeInstance>
-    type StoreIonInstanceParams = AtomParamsType<typeof storeInstance>
-    type StoreIonInstanceExports = AtomExportsType<typeof storeInstance>
-    type StoreIonInstancePromise = AtomPromiseType<typeof storeInstance>
-    type StoreIonInstanceStore = AtomStoreType<typeof storeInstance>
-    type ValueIonInstanceState = AtomStateType<typeof storeInstance>
-    type ValueIonInstanceParams = AtomParamsType<typeof storeInstance>
-    type ValueIonInstanceExports = AtomExportsType<typeof storeInstance>
-    type ValueIonInstancePromise = AtomPromiseType<typeof storeInstance>
-    type ValueIonInstanceStore = AtomStoreType<typeof storeInstance>
+    type SignalIonInstanceState = StateOf<typeof signalInstance>
+    type SignalIonInstanceParams = ParamsOf<typeof signalInstance>
+    type SignalIonInstanceExports = ExportsOf<typeof signalInstance>
+    type SignalIonInstancePromise = PromiseOf<typeof signalInstance>
+    type SignalIonInstanceEvents = EventsOf<typeof signalInstance>
+    type ValueIonInstanceState = StateOf<typeof signalInstance>
+    type ValueIonInstanceParams = ParamsOf<typeof signalInstance>
+    type ValueIonInstanceExports = ExportsOf<typeof signalInstance>
+    type ValueIonInstancePromise = PromiseOf<typeof signalInstance>
+    type ValueIonInstanceEvents = EventsOf<typeof signalInstance>
 
-    type TStoreIonInstance = AtomInstanceType<typeof storeIon>
-    type TStoreIonTemplate = AtomTemplateType<typeof storeInstance>
-    type TValueIonInstance = AtomInstanceType<typeof valueIon>
-    type TValueIonTemplate = AtomTemplateType<typeof valueInstance>
+    type TSignalIonInstance = NodeOf<typeof signalIon>
+    type TSignalIonTemplate = TemplateOf<typeof signalInstance>
+    type TValueIonInstance = NodeOf<typeof valueIon>
+    type TValueIonTemplate = TemplateOf<typeof valueInstance>
 
-    expectTypeOf<StoreIonState>().toBeString()
-    expectTypeOf<StoreIonState>().toEqualTypeOf<ValueIonState>()
-    expectTypeOf<StoreIonInstanceState>().toBeString()
-    expectTypeOf<StoreIonInstanceState>().toEqualTypeOf<ValueIonInstanceState>()
+    expectTypeOf<SignalIonState>().toBeString()
+    expectTypeOf<SignalIonState>().toEqualTypeOf<ValueIonState>()
+    expectTypeOf<SignalIonInstanceState>().toBeString()
+    expectTypeOf<SignalIonInstanceState>().toEqualTypeOf<ValueIonInstanceState>()
 
-    expectTypeOf<StoreIonParams>().toEqualTypeOf<[p: string]>()
-    expectTypeOf<StoreIonParams>().toEqualTypeOf<ValueIonParams>()
-    expectTypeOf<StoreIonInstanceParams>().toEqualTypeOf<[p: string]>()
-    expectTypeOf<StoreIonInstanceParams>().toEqualTypeOf<ValueIonInstanceParams>()
+    expectTypeOf<SignalIonParams>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<SignalIonParams>().toEqualTypeOf<ValueIonParams>()
+    expectTypeOf<SignalIonInstanceParams>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<SignalIonInstanceParams>().toEqualTypeOf<ValueIonInstanceParams>()
 
-    expectTypeOf<StoreIonExports>().toEqualTypeOf<Record<string, never>>()
-    expectTypeOf<StoreIonExports>().toEqualTypeOf<ValueIonExports>()
-    expectTypeOf<StoreIonInstanceExports>().toEqualTypeOf<
-      Record<string, never>
+    expectTypeOf<SignalIonExports>().toEqualTypeOf<Record<never, never>>()
+    expectTypeOf<SignalIonExports>().toEqualTypeOf<ValueIonExports>()
+    expectTypeOf<SignalIonInstanceExports>().toEqualTypeOf<
+      Record<never, never>
     >()
-    expectTypeOf<StoreIonInstanceExports>().toEqualTypeOf<ValueIonInstanceExports>()
+    expectTypeOf<SignalIonInstanceExports>().toEqualTypeOf<ValueIonInstanceExports>()
 
-    expectTypeOf<StoreIonPromise>().toBeUndefined()
-    expectTypeOf<StoreIonPromise>().toEqualTypeOf<ValueIonPromise>()
-    expectTypeOf<StoreIonInstancePromise>().toBeUndefined()
-    expectTypeOf<StoreIonInstancePromise>().toEqualTypeOf<ValueIonInstancePromise>()
+    expectTypeOf<SignalIonPromise>().toBeUndefined()
+    expectTypeOf<SignalIonPromise>().toEqualTypeOf<ValueIonPromise>()
+    expectTypeOf<SignalIonInstancePromise>().toBeUndefined()
+    expectTypeOf<SignalIonInstancePromise>().toEqualTypeOf<ValueIonInstancePromise>()
 
-    expectTypeOf<StoreIonStore>().toEqualTypeOf<Store<string>>()
-    expectTypeOf<StoreIonStore>().toEqualTypeOf<ValueIonStore>()
-    expectTypeOf<StoreIonInstanceStore>().toEqualTypeOf<Store<string>>()
-    expectTypeOf<StoreIonInstanceStore>().toEqualTypeOf<ValueIonInstanceStore>()
+    expectTypeOf<SignalIonEvents>().toEqualTypeOf<None>()
+    expectTypeOf<SignalIonEvents>().toEqualTypeOf<ValueIonEvents>()
+    expectTypeOf<SignalIonInstanceEvents>().toEqualTypeOf<None>()
+    expectTypeOf<SignalIonInstanceEvents>().toEqualTypeOf<ValueIonInstanceEvents>()
 
-    expectTypeOf<TStoreIonInstance>().toEqualTypeOf<typeof storeInstance>()
-    expectTypeOf<TStoreIonTemplate>().toEqualTypeOf<
+    expectTypeOf<TSignalIonInstance>().toEqualTypeOf<typeof signalInstance>()
+    expectTypeOf<TSignalIonTemplate>().toEqualTypeOf<
       IonTemplateRecursive<{
-        State: StoreIonState
-        Params: StoreIonParams
-        Exports: StoreIonExports
-        Store: StoreIonStore
-        Promise: StoreIonPromise
+        State: SignalIonState
+        Params: SignalIonParams
+        Exports: SignalIonExports
+        Events: SignalIonEvents
+        Promise: SignalIonPromise
       }>
     >()
-    expectTypeOf<TValueIonInstance>().toEqualTypeOf<typeof storeInstance>()
+    expectTypeOf<TValueIonInstance>().toEqualTypeOf<typeof signalInstance>()
     expectTypeOf<TValueIonTemplate>().toEqualTypeOf<
       IonTemplateRecursive<{
-        State: StoreIonState
-        Params: StoreIonParams
-        Exports: StoreIonExports
-        Store: StoreIonStore
-        Promise: StoreIonPromise
+        State: SignalIonState
+        Params: SignalIonParams
+        Exports: SignalIonExports
+        Events: SignalIonEvents
+        Promise: SignalIonPromise
       }>
     >()
   })
 
   test('atom api inference in ions', () => {
-    const storeIon = ion('store', (_, p: string) => {
-      const store = injectStore(p)
+    const signalIon = ion('signal', (_, p: string) => {
+      const signal = injectSignal(p, {
+        events: exampleEvents,
+      })
 
-      return api(store)
+      return api(signal)
         .setExports({ toNum: (str: string) => Number(str) })
         .setPromise(Promise.resolve('b'))
     })
@@ -396,58 +381,38 @@ describe('react types', () => {
       toNum: (str: string) => number
     }
 
-    expectTypeOf<AtomStateType<typeof storeIon>>().toBeString()
-    expectTypeOf<AtomStateType<typeof valueIon>>().toBeString()
-    expectTypeOf<AtomStateType<typeof queryIon>>().toEqualTypeOf<
+    expectTypeOf<StateOf<typeof signalIon>>().toBeString()
+    expectTypeOf<StateOf<typeof valueIon>>().toBeString()
+    expectTypeOf<StateOf<typeof queryIon>>().toEqualTypeOf<
       PromiseState<string>
     >()
-    expectTypeOf<AtomStateType<typeof queryWithPromiseIon>>().toEqualTypeOf<
+    expectTypeOf<StateOf<typeof queryWithPromiseIon>>().toEqualTypeOf<
       PromiseState<string>
     >()
 
-    expectTypeOf<AtomParamsType<typeof storeIon>>().toEqualTypeOf<[p: string]>()
-    expectTypeOf<AtomParamsType<typeof valueIon>>().toEqualTypeOf<[p: string]>()
-    expectTypeOf<AtomParamsType<typeof queryIon>>().toEqualTypeOf<[p: string]>()
-    expectTypeOf<AtomParamsType<typeof queryWithPromiseIon>>().toEqualTypeOf<
+    expectTypeOf<ParamsOf<typeof signalIon>>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<ParamsOf<typeof valueIon>>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<ParamsOf<typeof queryIon>>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<ParamsOf<typeof queryWithPromiseIon>>().toEqualTypeOf<
       [p: string]
     >()
 
+    expectTypeOf<ExportsOf<typeof signalIon>>().toEqualTypeOf<ExpectedExports>()
+    expectTypeOf<ExportsOf<typeof valueIon>>().toEqualTypeOf<ExpectedExports>()
+    expectTypeOf<ExportsOf<typeof queryIon>>().toEqualTypeOf<ExpectedExports>()
     expectTypeOf<
-      AtomExportsType<typeof storeIon>
-    >().toEqualTypeOf<ExpectedExports>()
-    expectTypeOf<
-      AtomExportsType<typeof valueIon>
-    >().toEqualTypeOf<ExpectedExports>()
-    expectTypeOf<
-      AtomExportsType<typeof queryIon>
-    >().toEqualTypeOf<ExpectedExports>()
-    expectTypeOf<
-      AtomExportsType<typeof queryWithPromiseIon>
+      ExportsOf<typeof queryWithPromiseIon>
     >().toEqualTypeOf<ExpectedExports>()
 
-    expectTypeOf<AtomStoreType<typeof storeIon>>().toEqualTypeOf<
-      Store<string>
-    >()
-    expectTypeOf<AtomStoreType<typeof valueIon>>().toEqualTypeOf<
-      Store<string>
-    >()
-    expectTypeOf<AtomStoreType<typeof queryIon>>().toEqualTypeOf<
-      Store<PromiseState<string>>
-    >()
-    expectTypeOf<AtomStoreType<typeof queryWithPromiseIon>>().toEqualTypeOf<
-      Store<PromiseState<string>>
-    >()
+    expectTypeOf<EventsOf<typeof signalIon>>().toEqualTypeOf<ExampleEvents>()
+    expectTypeOf<EventsOf<typeof valueIon>>().toEqualTypeOf<None>()
+    expectTypeOf<EventsOf<typeof queryIon>>().toEqualTypeOf<None>()
+    expectTypeOf<EventsOf<typeof queryWithPromiseIon>>().toEqualTypeOf<None>()
 
-    expectTypeOf<AtomPromiseType<typeof storeIon>>().toEqualTypeOf<
-      Promise<string>
-    >()
-    expectTypeOf<AtomPromiseType<typeof valueIon>>().toEqualTypeOf<
-      Promise<string>
-    >()
-    expectTypeOf<AtomPromiseType<typeof queryIon>>().toEqualTypeOf<
-      Promise<string>
-    >()
-    expectTypeOf<AtomPromiseType<typeof queryWithPromiseIon>>().toEqualTypeOf<
+    expectTypeOf<PromiseOf<typeof signalIon>>().toEqualTypeOf<Promise<string>>()
+    expectTypeOf<PromiseOf<typeof valueIon>>().toEqualTypeOf<Promise<string>>()
+    expectTypeOf<PromiseOf<typeof queryIon>>().toEqualTypeOf<Promise<string>>()
+    expectTypeOf<PromiseOf<typeof queryWithPromiseIon>>().toEqualTypeOf<
       Promise<string>
     >()
   })
@@ -474,7 +439,7 @@ describe('react types', () => {
         Exports: Record<string, never>
         Params: []
         State: string
-        Store: Store<string>
+        Events: None
         Promise: undefined
       }>
     >()
@@ -490,7 +455,7 @@ describe('react types', () => {
           >
         ]
         State: string
-        Store: Store<string>
+        Events: None
         Promise: undefined
       }>
     >()
@@ -500,9 +465,9 @@ describe('react types', () => {
     const allOptionalParamsAtom = atom(
       'allOptionalParams',
       (a?: boolean, b?: string[]) => {
-        const store = injectStore(a ? b : 2)
+        const signal = injectSignal(a ? b : 2)
 
-        return store
+        return signal
       }
     )
 
@@ -524,9 +489,7 @@ describe('react types', () => {
     >(
       template: A
     ) =>
-      ecosystem.getInstance(template, [
-        (idCounter++).toString(),
-      ] as AtomParamsType<A>)
+      ecosystem.getInstance(template, [(idCounter++).toString()] as ParamsOf<A>)
 
     const key = getKey(exampleAtom)
     const instance = instantiateWithId(exampleAtom)
@@ -552,7 +515,7 @@ describe('react types', () => {
           getBool: () => boolean
           getNum: () => number
         }
-        Store: Store<string>
+        Events: ExampleEvents
         Promise: Promise<number>
       }>
     >()
@@ -561,7 +524,7 @@ describe('react types', () => {
         State: number | string[] | undefined
         Params: [a?: boolean | undefined, b?: string[] | undefined]
         Exports: Record<string, never>
-        Store: Store<number | string[] | undefined>
+        Events: None
         Promise: undefined
       }>
     >()
@@ -579,19 +542,22 @@ describe('react types', () => {
     // @ts-expect-error optional params not allowed
     noParams(someOptionalParamsAtom)
 
+    expectTypeOf(
+      ecosystem.get(someOptionalParamsAtom, ['a'])
+    ).toMatchTypeOf<string>()
+
     expectTypeOf(noParams(atom('no-params-test', null))).toMatchTypeOf<null>()
   })
 
   test('accepting instances', () => {
-    const getExampleVal = <I extends AtomInstanceType<typeof exampleAtom>>(
-      i: I
-    ) => i.getState()
+    const getExampleVal = <I extends NodeOf<typeof exampleAtom>>(i: I) =>
+      i.get()
 
     const getKey = <I extends AnyAtomInstance>(instance: I) => instance.t.key
 
     const getUppercase = <I extends AnyAtomInstance<{ State: string }>>(
       instance: I
-    ) => instance.getState().toUpperCase()
+    ) => instance.get().toUpperCase()
 
     const getNum = <
       I extends Omit<AnyAtomInstance<{ State: string }>, 'exports'> & {
@@ -606,21 +572,16 @@ describe('react types', () => {
 
     const getValue: {
       // params ("family"):
-      <A extends AnyAtomTemplate>(
-        template: A,
-        params: AtomParamsType<A>
-      ): AtomStateType<A>
+      <A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>): StateOf<A>
 
       // no params ("singleton"):
-      <A extends AnyAtomTemplate>(
-        template: ParamlessTemplate<A>
-      ): AtomStateType<A>
+      <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateOf<A>
 
       // also accept instances:
-      <I extends AnyAtomInstance>(instance: I): AtomStateType<I>
+      <I extends AnyAtomInstance>(instance: I): StateOf<I>
     } = <A extends AnyAtomTemplate | AnyAtomInstance>(
       template: A,
-      params?: AtomParamsType<A>
+      params?: ParamsOf<A>
     ) => ecosystem.get(template as AnyAtomTemplate, params)
 
     const instance = ecosystem.getInstance(exampleAtom, ['a'])
@@ -654,7 +615,7 @@ describe('react types', () => {
       const val6 = injectCallback(() => true, [])
       const val7 = injectPromise(() => Promise.resolve(1), [])
 
-      return api(injectStore(instance.getState())).setExports({
+      return api(injectSignal(instance.get())).setExports({
         val1,
         val2,
         val3,
@@ -667,8 +628,8 @@ describe('react types', () => {
 
     const instance = ecosystem.getInstance(injectingAtom)
 
-    expectTypeOf<AtomStateType<typeof instance>>().toBeString()
-    expectTypeOf<AtomExportsType<typeof instance>>().toMatchTypeOf<{
+    expectTypeOf<StateOf<typeof instance>>().toBeString()
+    expectTypeOf<ExportsOf<typeof instance>>().toMatchTypeOf<{
       val1: string
       val2: string
       val3: string
@@ -679,7 +640,7 @@ describe('react types', () => {
         Exports: Record<string, any>
         Promise: Promise<number>
         State: PromiseState<number>
-        Store: Store<PromiseState<number>>
+        Signal: Signal<{ Events: None; State: PromiseState<number> }>
       }>
     }>()
   })
@@ -687,7 +648,7 @@ describe('react types', () => {
   test('AtomTuple', () => {
     const getPromise = <A extends AnyAtomTemplate<{ Promise: Promise<any> }>>(
       ...[template, params]: AtomTuple<A>
-    ) => ecosystem.getInstance(template, params).promise as AtomPromiseType<A>
+    ) => ecosystem.getInstance(template, params).promise as PromiseOf<A>
 
     const promise = getPromise(exampleAtom, ['a'])
 
@@ -695,21 +656,28 @@ describe('react types', () => {
   })
 
   test('AtomApi types helpers', () => {
-    const store = createStore(null, 'a')
-    const withEverything = api(store)
+    const signal = ecosystem.signal('a', {
+      events: {
+        eventA: () => 1,
+        eventB: () => 2,
+      },
+    })
+
+    const withEverything = api(signal)
       .addExports({ a: 1 })
       .setPromise(Promise.resolve(true))
 
-    expectTypeOf<AtomExportsType<typeof withEverything>>().toEqualTypeOf<{
+    expectTypeOf<ExportsOf<typeof withEverything>>().toEqualTypeOf<{
       a: number
     }>()
-    expectTypeOf<AtomPromiseType<typeof withEverything>>().toEqualTypeOf<
+    expectTypeOf<PromiseOf<typeof withEverything>>().toEqualTypeOf<
       Promise<boolean>
     >()
-    expectTypeOf<AtomStateType<typeof withEverything>>().toBeString()
-    expectTypeOf<AtomStoreType<typeof withEverything>>().toEqualTypeOf<
-      Store<string>
-    >()
+    expectTypeOf<StateOf<typeof withEverything>>().toBeString()
+    expectTypeOf<EventsOf<typeof withEverything>>().toEqualTypeOf<{
+      eventA: 1
+      eventB: 2
+    }>()
   })
 
   test('promises', () => {
@@ -719,9 +687,9 @@ describe('react types', () => {
       api().setPromise().setPromise(Promise.resolve(2))
     )
 
-    expectTypeOf<AtomPromiseType<typeof atom1>>().toBeUndefined()
-    expectTypeOf<AtomPromiseType<typeof atom2>>().toBeUndefined()
-    expectTypeOf<AtomPromiseType<typeof atom3>>().resolves.toBeNumber()
+    expectTypeOf<PromiseOf<typeof atom1>>().toBeUndefined()
+    expectTypeOf<PromiseOf<typeof atom2>>().toBeUndefined()
+    expectTypeOf<PromiseOf<typeof atom3>>().resolves.toBeNumber()
   })
 
   test('recursive templates and nodes', () => {
@@ -730,9 +698,7 @@ describe('react types', () => {
     const instanceC = instanceB.t._createInstance(ecosystem, '', ['b'])
     const instanceD = instanceC.t._createInstance(ecosystem, '', ['b'])
 
-    expectTypeOf<AtomParamsType<typeof instanceD.t>>().toEqualTypeOf<
-      [p: string]
-    >()
+    expectTypeOf<ParamsOf<typeof instanceD.t>>().toEqualTypeOf<[p: string]>()
 
     const instanceE = ecosystem.getInstance(
       ecosystem.live.getInstance(
@@ -740,9 +706,7 @@ describe('react types', () => {
       )
     )
 
-    expectTypeOf<AtomParamsType<typeof instanceE.t>>().toEqualTypeOf<
-      [p: string]
-    >()
+    expectTypeOf<ParamsOf<typeof instanceE.t>>().toEqualTypeOf<[p: string]>()
 
     const selectorInstance = ecosystem.getNode(
       ecosystem.getNode(
@@ -750,13 +714,13 @@ describe('react types', () => {
       )
     )
 
-    expectTypeOf<AtomStateType<typeof selectorInstance>>().toEqualTypeOf<
+    expectTypeOf<StateOf<typeof selectorInstance>>().toEqualTypeOf<
       string | undefined
     >()
-    expectTypeOf<AtomParamsType<typeof selectorInstance>>().toEqualTypeOf<
+    expectTypeOf<ParamsOf<typeof selectorInstance>>().toEqualTypeOf<
       [a?: string]
     >()
-    expectTypeOf<AtomTemplateType<typeof selectorInstance>>().toEqualTypeOf<
+    expectTypeOf<TemplateOf<typeof selectorInstance>>().toEqualTypeOf<
       (_: AtomGetters, a?: string) => string | undefined
     >()
 
@@ -773,16 +737,103 @@ describe('react types', () => {
       )
     )
 
-    expectTypeOf<AtomStateType<typeof selectorInstance2>>().toEqualTypeOf<
+    expectTypeOf<StateOf<typeof selectorInstance2>>().toEqualTypeOf<
       string | undefined
     >()
-    expectTypeOf<AtomParamsType<typeof selectorInstance2>>().toEqualTypeOf<
+    expectTypeOf<ParamsOf<typeof selectorInstance2>>().toEqualTypeOf<
       [a?: string]
     >()
-    expectTypeOf<AtomTemplateType<typeof selectorInstance2>>().toEqualTypeOf<{
+    expectTypeOf<TemplateOf<typeof selectorInstance2>>().toEqualTypeOf<{
       resultsComparator: () => boolean
       selector: (_: AtomGetters, a?: string) => string | undefined
       argsComparator: () => boolean
     }>()
+  })
+
+  test('signals', () => {
+    const signal = ecosystem.signal(1, {
+      events: {
+        a: As<number>,
+        b: As<undefined>,
+      },
+    })
+
+    type TestListenableEvents = Partial<{
+      a: number
+      b: undefined
+      batch: boolean
+      mutate: Transaction[]
+      change: {
+        newState: number
+        oldState: number
+      }
+    }>
+
+    const calls: any[] = []
+
+    signal.on('a', (payload, eventMap) => {
+      expectTypeOf(payload).toEqualTypeOf<number>()
+      expectTypeOf(eventMap).toEqualTypeOf<TestListenableEvents>()
+      calls.push(['a', payload, eventMap])
+    })
+
+    signal.on('change', ({ newState, oldState }, eventMap) => {
+      expectTypeOf(newState).toEqualTypeOf<number>()
+      expectTypeOf(oldState).toEqualTypeOf<number>()
+      expectTypeOf(eventMap).toEqualTypeOf<TestListenableEvents>()
+      calls.push(['change', { newState, oldState }, eventMap])
+    })
+
+    signal.on(eventMap => {
+      expectTypeOf(eventMap).toEqualTypeOf<TestListenableEvents>()
+      calls.push(['*', eventMap])
+    })
+
+    snapshotNodes()
+
+    signal.set(state => state + 1, { a: 11 })
+
+    expect(calls).toEqual([
+      ['a', 11, { a: 11, change: { newState: 2, oldState: 1 } }],
+      [
+        'change',
+        { newState: 2, oldState: 1 },
+        { a: 11, change: { newState: 2, oldState: 1 } },
+      ],
+      ['*', { a: 11, change: { newState: 2, oldState: 1 } }],
+    ])
+    calls.splice(0, 3)
+
+    signal.send('a', 11)
+
+    expect(calls).toEqual([
+      ['a', 11, { a: 11 }],
+      ['*', { a: 11 }],
+    ])
+    calls.splice(0, 2)
+
+    signal.send('b')
+
+    expect(calls).toEqual([['*', { b: undefined }]])
+    calls.splice(0, 1)
+
+    signal.send({
+      a: 12,
+      b: undefined,
+    })
+
+    expect(calls).toEqual([
+      ['a', 12, { a: 12, b: undefined }],
+      ['*', { a: 12, b: undefined }],
+    ])
+    calls.splice(0, 2)
+
+    type SignalEvents = EventsOf<typeof signal>
+    type SignalState = StateOf<typeof signal>
+
+    expectTypeOf<SignalEvents>().toEqualTypeOf<{ a: number; b: undefined }>()
+    expectTypeOf<SignalState>().toEqualTypeOf<number>()
+
+    expect(ecosystem.get(signal)).toBe(2)
   })
 })

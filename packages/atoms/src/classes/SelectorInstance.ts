@@ -1,11 +1,9 @@
-import { is } from '@zedux/core'
 import {
   AtomSelector,
   AtomSelectorConfig,
   AtomSelectorOrConfig,
   DehydrationFilter,
   InternalEvaluationReason,
-  NodeFilter,
   SelectorGenerics,
 } from '../types/index'
 import {
@@ -21,11 +19,9 @@ import {
   destroyNodeFinish,
   destroyNodeStart,
   GraphNode,
-  normalizeNodeFilter,
   scheduleDependents,
   setNodeStatus,
 } from './GraphNode'
-import { AtomTemplateBase } from './templates/AtomTemplateBase'
 
 const defaultResultsComparator = (a: any, b: any) => a === b
 
@@ -79,7 +75,7 @@ export const runSelector = <G extends SelectorGenerics>(
     if (isInitializing) {
       setNodeStatus(node, 'Active')
     } else if (!resultsComparator(result, oldState)) {
-      if (!suppressNotify) scheduleDependents(node, oldState)
+      if (!suppressNotify) scheduleDependents({ p: oldState, s: node })
 
       if (_mods.stateChanged) {
         modBus.dispatch(
@@ -130,8 +126,13 @@ export class SelectorInstance<
     State: any
     Template: any
   }
-> extends GraphNode<G> {
+> extends GraphNode<G & { Events: any }> {
   public static $$typeof = Symbol.for(`${prefix}/SelectorInstance`)
+
+  /**
+   * `v`alue - the current cached selector result
+   */
+  public v?: G['State']
 
   constructor(
     /**
@@ -149,6 +150,9 @@ export class SelectorInstance<
      * @see GraphNode.t
      */
     public t: G['Template'],
+    /**
+     * @see GraphNode.p
+     */
     public p: G['Params']
   ) {
     super()
@@ -180,31 +184,6 @@ export class SelectorInstance<
   }
 
   /**
-   * @see GraphNode.f
-   */
-  public f(options?: NodeFilter) {
-    const { id, t } = this
-    const lowerCaseId = id.toLowerCase()
-    const { exclude = [], include = [] } = normalizeNodeFilter(options)
-
-    return (
-      !exclude.some(templateOrKey =>
-        typeof templateOrKey === 'string'
-          ? lowerCaseId.includes(templateOrKey.toLowerCase())
-          : !is(templateOrKey, AtomTemplateBase) &&
-            (templateOrKey as AtomSelectorOrConfig) === t
-      ) &&
-      (!include.length ||
-        include.some(templateOrKey =>
-          typeof templateOrKey === 'string'
-            ? lowerCaseId.includes(templateOrKey.toLowerCase())
-            : !is(templateOrKey, AtomTemplateBase) &&
-              (templateOrKey as AtomSelectorOrConfig) === t
-        ))
-    )
-  }
-
-  /**
    * @see GraphNode.h
    *
    * While selectors can be dehydrated for debugging purposes, they currently
@@ -232,9 +211,4 @@ export class SelectorInstance<
   public r(reason: InternalEvaluationReason, defer?: boolean) {
     this.w.push(reason) === 1 && this.e._scheduler.schedule(this, defer)
   }
-
-  /**
-   * `v`alue - the current cached selector result
-   */
-  public v?: G['State']
 }

@@ -4,10 +4,10 @@ import type { InjectorDescriptor } from '../utils/types'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
-  AtomInstanceType,
-  AtomParamsType,
   InjectAtomInstanceConfig,
+  NodeOf,
   ParamlessTemplate,
+  ParamsOf,
   PartialAtomInstance,
 } from '../types/index'
 
@@ -38,15 +38,13 @@ const defaultOperation = 'injectAtomInstance'
 export const injectAtomInstance: {
   <A extends AnyAtomTemplate>(
     template: A,
-    params: AtomParamsType<A>,
+    params: ParamsOf<A>,
     config?: InjectAtomInstanceConfig
-  ): AtomInstanceType<A>
+  ): NodeOf<A>
 
-  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): AtomInstanceType<A>
+  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): NodeOf<A>
 
-  <A extends AnyAtomTemplate>(
-    template: ParamlessTemplate<A>
-  ): AtomInstanceType<A>
+  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): NodeOf<A>
 
   <I extends AnyAtomInstance>(
     instance: I,
@@ -58,12 +56,12 @@ export const injectAtomInstance: {
   <A extends AnyAtomTemplate>(
     instance: PartialAtomInstance,
     atom: A | AnyAtomInstance,
-    params?: AtomParamsType<A>,
+    params?: ParamsOf<A>,
     config?: InjectAtomInstanceConfig
   ) => {
     const injectedInstance = instance.e.live.getInstance(
       atom as A,
-      params as AtomParamsType<A>,
+      params as ParamsOf<A>,
       {
         f: config?.subscribe ? 0 : Static,
         op: config?.operation || defaultOperation,
@@ -71,28 +69,28 @@ export const injectAtomInstance: {
     )
 
     return {
-      result: injectedInstance as AtomInstanceType<A>,
+      result: injectedInstance as NodeOf<A>,
       type: `${prefix}/atom`,
-    } as InjectorDescriptor<AtomInstanceType<A>>
+    } as InjectorDescriptor<NodeOf<A>>
   },
   <A extends AnyAtomTemplate>(
-    prevDescriptor: InjectorDescriptor<AtomInstanceType<A>>,
+    prevDescriptor: InjectorDescriptor<NodeOf<A>>,
     instance: PartialAtomInstance,
     atom: A | AnyAtomInstance,
-    params?: AtomParamsType<A>,
+    params?: ParamsOf<A>,
     config?: InjectAtomInstanceConfig
   ) => {
     // make sure the dependency gets registered for this evaluation
     const injectedInstance = instance.e.live.getInstance(
       atom as A,
-      params as AtomParamsType<A>,
+      params as ParamsOf<A>,
       {
         f: config?.subscribe ? 0 : Static,
         op: config?.operation || defaultOperation,
       }
     )
 
-    prevDescriptor.result = injectedInstance as AtomInstanceType<A>
+    prevDescriptor.result = injectedInstance as NodeOf<A>
 
     return prevDescriptor
   }

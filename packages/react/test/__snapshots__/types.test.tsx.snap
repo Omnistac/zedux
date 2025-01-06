@@ -1,0 +1,72 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`react types signals 1`] = `
+{
+  "@signal-0": {
+    "className": "Signal",
+    "observers": {
+      "no-1": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+      "no-2": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+      "no-3": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+    },
+    "sources": {},
+    "state": 1,
+    "status": "Initializing",
+    "weight": 1,
+  },
+  "no-1": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@signal-0": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 3,
+  },
+  "no-2": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@signal-0": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "no-3": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@signal-0": {
+        "createdAt": 123456789,
+        "flags": 3,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 5,
+  },
+}
+`;

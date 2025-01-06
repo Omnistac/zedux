@@ -10,7 +10,8 @@
     "url": "https://github.com/Omnistac/zedux/issues"
   },
   "devDependencies": {
-    "@zedux/atoms": "^2.0.0-alpha.1"
+    "@zedux/atoms": "^2.0.0-alpha.1",
+    "@zedux/core": "^2.0.0-alpha.1"
   },
   "exports": {
     ".": {
@@ -35,7 +36,8 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@zedux/atoms": "^2.0.0-alpha.1"
+    "@zedux/atoms": "^2.0.0-alpha.1",
+    "@zedux/core": "^2.0.0-alpha.1"
   },
   "repository": {
     "directory": "packages/machines",

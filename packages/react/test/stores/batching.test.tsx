@@ -1,12 +1,10 @@
 import {
-  api,
-  atom,
   injectAtomGetters,
   injectCallback,
   injectRef,
-  injectStore,
   zeduxTypes,
-} from '@zedux/react'
+} from '@zedux/atoms'
+import { api, atom, injectStore } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('batching', () => {

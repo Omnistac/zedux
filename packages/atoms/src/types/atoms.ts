@@ -1,10 +1,11 @@
-import { Store } from '@zedux/core'
 import { AtomInstance } from '../classes/instances/AtomInstance'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomApi } from '../classes/AtomApi'
 import { GraphNode } from '../classes/GraphNode'
 import { AnyNonNullishValue, AtomSelectorOrConfig, Prettify } from './index'
 import { SelectorInstance } from '../classes/SelectorInstance'
+import { Signal } from '../classes/Signal'
+import { MappedSignal } from '../classes/MappedSignal'
 
 export type AtomApiGenericsPartial<G extends Partial<AtomApiGenerics>> = Omit<
   AnyAtomApiGenerics,
@@ -39,100 +40,54 @@ export type AtomApiGenerics = Pick<
   AtomGenerics,
   'Exports' | 'Promise' | 'State'
 > & {
-  Store: Store<any> | undefined
+  Signal: Signal | undefined
 }
 
 export type AtomGenericsToAtomApiGenerics<
-  G extends Pick<AtomGenerics, 'Exports' | 'Promise' | 'State' | 'Store'>
-> = Pick<G, 'Exports' | 'Promise' | 'State'> & { Store: G['Store'] | undefined }
+  G extends Pick<AtomGenerics, 'Events' | 'Exports' | 'Promise' | 'State'>
+> = Pick<G, 'Exports' | 'Promise' | 'State'> & {
+  Signal: Signal<Pick<G, 'Events' | 'State'>> | undefined
+}
 
 export interface AtomGenerics {
+  Events: Record<string, any>
   Exports: Record<string, any>
   Node: any
-  Params: any[]
+  Params: any
   Promise: AtomApiPromise
   State: any
-  Store: Store<any>
   Template: any
 }
 
 export type AtomApiPromise = Promise<any> | undefined
 
-export type AtomExportsType<
-  A extends AnyAtomApi | AnyAtomTemplate | GraphNode
-> = A extends AtomTemplateBase<infer G>
-  ? G['Exports']
-  : A extends GraphNode<infer G>
-  ? G extends { Exports: infer Exports }
-    ? Exports
-    : never
-  : A extends AtomApi<infer G>
-  ? G['Exports']
-  : never
-
-export type AtomInstanceType<A extends AnyAtomTemplate> =
+export type EventsOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
   A extends AtomTemplateBase<infer G>
-    ? G extends { Node: infer Node }
-      ? Node
-      : GraphNode<G>
-    : never
-
-export type AtomParamsType<
-  A extends AnyAtomTemplate | GraphNode | AtomSelectorOrConfig
-> = A extends AtomTemplateBase<infer G>
-  ? G['Params']
-  : A extends GraphNode<infer G>
-  ? G extends { Params: infer Params }
-    ? Params
-    : never
-  : A extends AtomSelectorOrConfig<any, infer Params>
-  ? Params
-  : never
-
-export type AtomPromiseType<
-  A extends AnyAtomApi | AnyAtomTemplate | GraphNode
-> = A extends AtomTemplateBase<infer G>
-  ? G['Promise']
-  : A extends GraphNode<infer G>
-  ? G extends { Promise: infer Promise }
-    ? Promise
-    : never
-  : A extends AtomApi<infer G>
-  ? G['Promise']
-  : never
-
-export type AtomStateType<
-  A extends AnyAtomApi | AnyAtomTemplate | AtomSelectorOrConfig | GraphNode
-> = A extends AtomTemplateBase<infer G>
-  ? G['State']
-  : A extends GraphNode<infer G>
-  ? G['State']
-  : A extends AtomApi<infer G>
-  ? G['State']
-  : A extends AtomSelectorOrConfig<infer State>
-  ? State
-  : never
-
-export type AtomStoreType<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
-  A extends AtomTemplateBase<infer G>
-    ? G['Store']
+    ? G['Events']
     : A extends GraphNode<infer G>
-    ? G extends { Store: infer Store }
-      ? Store
+    ? G['Events']
+    : A extends Signal<infer G>
+    ? G['Events']
+    : A extends MappedSignal<infer G>
+    ? G['Events']
+    : A extends AtomApi<infer G>
+    ? G['Signal'] extends Signal
+      ? EventsOf<G['Signal']>
+      : never
+    : A extends AtomSelectorOrConfig<infer Events>
+    ? Events
+    : never
+
+export type ExportsOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
+  A extends AtomTemplateBase<infer G>
+    ? G['Exports']
+    : A extends GraphNode<infer G>
+    ? G extends { Exports: infer Exports }
+      ? Exports
       : never
     : A extends AtomApi<infer G>
-    ? G['Store']
+    ? G['Exports']
     : never
-
-// TODO: Now that GraphNode has the Template generic, this G extends { Template
-// ... } check shouldn't be necessary. Double check and remove.
-export type AtomTemplateType<A extends GraphNode> = A extends GraphNode<infer G>
-  ? G extends { Template: infer Template }
-    ? Template
-    : G extends AtomGenerics
-    ? AtomTemplateBase<G>
-    : never
-  : never
 
 export type NodeOf<A extends AnyAtomTemplate | AtomSelectorOrConfig> =
   A extends AtomTemplateBase<infer G>
@@ -149,6 +104,56 @@ export type NodeOf<A extends AnyAtomTemplate | AtomSelectorOrConfig> =
       }>
     : never
 
-export type SelectorGenerics = Pick<AtomGenerics, 'Params' | 'State'> & {
+export type ParamsOf<
+  A extends AnyAtomTemplate | GraphNode | AtomSelectorOrConfig
+> = A extends AtomTemplateBase<infer G>
+  ? G['Params']
+  : A extends GraphNode<infer G>
+  ? G extends { Params: infer Params }
+    ? Params
+    : never
+  : A extends AtomSelectorOrConfig<any, infer Params>
+  ? Params
+  : never
+
+export type PromiseOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
+  A extends AtomTemplateBase<infer G>
+    ? G['Promise']
+    : A extends GraphNode<infer G>
+    ? G extends { Promise: infer Promise }
+      ? Promise
+      : never
+    : A extends AtomApi<infer G>
+    ? G['Promise']
+    : never
+
+export type SelectorGenerics = Pick<AtomGenerics, 'State'> & {
+  Params: any[]
   Template: AtomSelectorOrConfig
 }
+
+export type StateOf<
+  A extends AnyAtomApi | AnyAtomTemplate | AtomSelectorOrConfig | GraphNode
+> = A extends AtomTemplateBase<infer G>
+  ? G['State']
+  : A extends GraphNode<infer G>
+  ? G['State']
+  : A extends Signal<infer G>
+  ? G['State']
+  : A extends MappedSignal<infer G>
+  ? G['State']
+  : A extends AtomApi<infer G>
+  ? G['State']
+  : A extends AtomSelectorOrConfig<infer State>
+  ? State
+  : never
+
+// TODO: Now that GraphNode has the Template generic, this G extends { Template
+// ... } check shouldn't be necessary. Double check and remove.
+export type TemplateOf<A extends GraphNode> = A extends GraphNode<infer G>
+  ? G extends { Template: infer Template }
+    ? Template
+    : G extends AtomGenerics
+    ? AtomTemplateBase<G>
+    : never
+  : never

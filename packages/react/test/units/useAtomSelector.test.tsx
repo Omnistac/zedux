@@ -482,7 +482,7 @@ describe('useAtomSelector', () => {
     snapshotNodes()
 
     act(() => {
-      ecosystem.getInstance(atom1).setState({ val: 2 })
+      ecosystem.getInstance(atom1).set({ val: 2 })
       jest.runAllTimers()
     })
 
@@ -518,7 +518,7 @@ describe('useAtomSelector', () => {
     snapshotNodes()
 
     act(() => {
-      ecosystem.getInstance(atom1).setState({ val: 2 })
+      ecosystem.getInstance(atom1).set({ val: 2 })
       jest.runAllTimers()
     })
 
@@ -554,21 +554,21 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('1')
 
     act(() => {
-      ecosystem.getInstance(atom1).setState({ val: 2 })
+      ecosystem.getInstance(atom1).set({ val: 2 })
       jest.runAllTimers()
     })
 
     expect(div.innerHTML).toBe('2')
 
     act(() => {
-      ecosystem.getInstance(atom1).setState({ val: 3 })
+      ecosystem.getInstance(atom1).set({ val: 3 })
       jest.runAllTimers()
     })
 
     expect(div.innerHTML).toBe('3')
 
     act(() => {
-      ecosystem.getInstance(atom1).setState({ val: 4 })
+      ecosystem.getInstance(atom1).set({ val: 4 })
       jest.runAllTimers()
     })
 

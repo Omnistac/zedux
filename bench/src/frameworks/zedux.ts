@@ -12,7 +12,7 @@ export const zeduxFramework: ReactiveFramework = {
     )
 
     return {
-      write: v => instance.setState(v),
+      write: v => instance.set(v),
       read: () => ecosystem.live.get(instance),
     }
   },

@@ -35,7 +35,7 @@ const forwardingAtom = atom('forwarding', (param?: string) => {
 function Grandchild() {
   const instance = useAtomInstance(forwardingAtom, ['param'])
 
-  return <div>The Second Value! {instance.store.getState()}</div>
+  return <div>The Second Value! {instance.get()}</div>
 }
 
 function Child() {

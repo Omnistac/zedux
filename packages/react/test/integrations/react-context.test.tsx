@@ -158,7 +158,7 @@ describe('React context', () => {
     expect(div.innerHTML).toBe('a')
 
     act(() => {
-      ecosystem.getInstance(atom1, ['a']).setState('aa')
+      ecosystem.getNode(atom1, ['a']).set('aa')
       jest.runAllTimers()
     })
 
@@ -179,7 +179,7 @@ describe('React context', () => {
 
     function Parent() {
       // useAtomInstance will naturally update the reference on force-destroy
-      const instance = ecosystem.getInstance(atom1, ['a'])
+      const instance = ecosystem.getNode(atom1, ['a'])
 
       return (
         <AtomProvider instance={instance}>
@@ -196,7 +196,7 @@ describe('React context', () => {
     expect(mock).not.toHaveBeenCalled()
 
     act(() => {
-      ecosystem.getInstance(atom1, ['a']).destroy(true)
+      ecosystem.getNode(atom1, ['a']).destroy(true)
       jest.runAllTimers()
     })
 

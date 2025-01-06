@@ -1,12 +1,6 @@
-import {
-  api,
-  atom,
-  injectStore,
-  ion,
-  useAtomSelector,
-  useAtomValue,
-} from '../../../react/src'
+import { useAtomSelector, useAtomValue } from '../../../react/src'
 import { injectMachineStore } from '@zedux/machines'
+import { api, atom, injectStore, ion } from '@zedux/stores'
 import React, { Suspense, useState } from 'react'
 
 const a = atom('a', () => injectStore('a'))

@@ -2,9 +2,9 @@ import {
   AnyAtomGenerics,
   AnyAtomTemplate,
   AtomInstance,
-  AtomInstanceType,
-  AtomParamsType,
   AtomTemplateBase,
+  NodeOf,
+  ParamsOf,
 } from '@zedux/atoms'
 import { is } from '@zedux/core'
 import { useContext } from 'react'
@@ -36,17 +36,17 @@ import { getReactContext } from '../utils'
  * in the providing component.
  */
 export const useAtomContext: {
-  <A extends AnyAtomTemplate>(template: A): AtomInstanceType<A> | undefined
+  <A extends AnyAtomTemplate>(template: A): NodeOf<A> | undefined
 
   <A extends AnyAtomTemplate>(
     template: A,
-    defaultParams: AtomParamsType<A>
-  ): AtomInstanceType<A>
+    defaultParams: ParamsOf<A>
+  ): NodeOf<A>
 
   <A extends AnyAtomTemplate>(
     template: A,
     throwIfNotProvided: boolean
-  ): AtomInstanceType<A>
+  ): NodeOf<A>
 } = <G extends AnyAtomGenerics<{ Node: AtomInstance }>>(
   template: AtomTemplateBase<G>,
   defaultParams?: G['Params'] | boolean

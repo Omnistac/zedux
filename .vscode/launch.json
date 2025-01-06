@@ -6,10 +6,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "yarn",
-      "args": ["jest", "--runInBand"],
+      "args": ["jest", "--runInBand", "--coverage=false"],
       "console": "integratedTerminal",
       "cwd": "${workspaceRoot}",
       "internalConsoleOptions": "neverOpen"
-    },
+    }
   ]
 }

@@ -1,4 +1,4 @@
-import { is, Store } from '@zedux/core'
+import { is } from '@zedux/core'
 import {
   AtomInstanceTtl,
   AtomApiGenerics,
@@ -11,14 +11,14 @@ export class AtomApi<G extends AtomApiGenerics> {
 
   public exports?: G['Exports']
   public promise: G['Promise']
-  public store: G['Store']
+  public signal: G['Signal']
   public ttl?: AtomInstanceTtl | (() => AtomInstanceTtl)
-  public value: G['State'] | G['Store']
+  public value: G['State'] | G['Signal']
 
-  constructor(value: AtomApi<G> | G['Store'] | G['State']) {
+  constructor(value: AtomApi<G> | G['Signal'] | G['State']) {
     this.promise = undefined as G['Promise']
-    this.value = value as G['Store'] | G['State']
-    this.store = (is(value, Store) ? value : undefined) as G['Store']
+    this.value = value as G['Signal'] | G['State']
+    this.signal = (value?.izn ? value : undefined) as G['Signal']
 
     if (is(value, AtomApi)) {
       Object.assign(this, value as AtomApi<G>)

@@ -129,19 +129,15 @@ export class Scheduler implements SchedulerInterface {
    * Schedule an EvaluateGraphNode (2) or UpdateExternalDependent (3) job
    */
   private insertJob(newJob: Job) {
-    const flags = newJob.F ?? 0
     const weight = newJob.W ?? 0
 
     const index = this.findIndex(job => {
       if (job.T !== newJob.T) return +(newJob.T - job.T > 0) || -1 // 1 or -1
 
-      // EvaluateGraphNode (2) jobs use weight comparison
-      if (job.W) {
-        return weight < job.W ? -1 : +(weight > job.W) // + = 0 or 1
-      }
-
-      // UpdateExternalDependent (3) jobs use flags comparison
-      return flags < (job.F as number) ? -1 : +(flags > (job.F as number))
+      // EvaluateGraphNode (2) and UpdateExternalDependent (3) jobs use weight
+      // comparison. `W` will always be defined here. TODO: use discriminated
+      // union types to reflect this
+      return weight < job.W! ? -1 : +(weight > job.W!) // + = 0 or 1
     })
 
     if (index === -1) {
@@ -176,20 +172,12 @@ export class Scheduler implements SchedulerInterface {
       : '_isRunning'
 
     const nows = this.nows
-    // this._runStartTime = performance.now()
-    // let counter = 0
 
     this[runningKey] = true
     try {
       while (jobs.length) {
         const job = (nows.length ? nows : jobs).shift() as Job
         job.j()
-
-        // this "break" idea could only break for "full" jobs, not "now" jobs
-        // if (!(++counter % 20) && performance.now() - this._runStartTime >= 100) {
-        //   setTimeout(() => this.runJobs())
-        //   break
-        // }
       }
     } finally {
       this[runningKey] = false

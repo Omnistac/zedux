@@ -7,6 +7,7 @@ import {
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { AtomTemplateBase } from './AtomTemplateBase'
+import { Signal } from '../Signal'
 
 export type AtomInstanceRecursive<
   G extends Omit<AtomGenerics, 'Node' | 'Template'>
@@ -56,7 +57,13 @@ export class AtomTemplate<
     )}`
   }
 
-  public override(newValue: AtomValueOrFactory<G>): AtomTemplate<G> {
+  public override(
+    newValue: AtomValueOrFactory<
+      G & {
+        Signal: Signal<{ State: G['State']; Events: G['Events'] }> | undefined
+      }
+    >
+  ): AtomTemplate<G> {
     const newAtom = atom(this.key, newValue, this._config)
     newAtom._isOverride = true
     return newAtom as any

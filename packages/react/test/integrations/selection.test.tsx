@@ -55,7 +55,7 @@ describe('selection', () => {
     expect(selector2).toHaveBeenCalledTimes(1)
 
     act(() => {
-      ecosystem.find(testAtom, ['a'])?.setState('b')
+      ecosystem.find(testAtom, ['a'])?.set('b')
       jest.runAllTimers()
     })
 
@@ -75,7 +75,7 @@ describe('selection', () => {
       const val = useAtomSelector(selector)
 
       useEffect(() => () => {
-        instance.setState('b')
+        instance.set('b')
       })
 
       return <div data-testid="text">{val}</div>
@@ -226,7 +226,7 @@ describe('selection', () => {
     expect(div.innerHTML).toBe('object')
 
     act(() => {
-      instance.setState(undefined)
+      instance.set(undefined)
     })
 
     jest.runAllTimers()
@@ -234,7 +234,7 @@ describe('selection', () => {
     expect(div.innerHTML).toBe('undefined')
 
     act(() => {
-      instance.setState(1)
+      instance.set(1)
     })
 
     jest.runAllTimers()
@@ -242,7 +242,7 @@ describe('selection', () => {
     expect(div.innerHTML).toBe('number')
 
     act(() => {
-      instance.setState(undefined)
+      instance.set(undefined)
     })
 
     jest.runAllTimers()

@@ -1,0 +1,57 @@
+{
+  "name": "@zedux/stores",
+  "version": "2.0.0-alpha.1",
+  "description": "The legacy composable store model of Zedux",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "author": "Joshua Claunch",
+  "bugs": {
+    "url": "https://github.com/Omnistac/zedux/issues"
+  },
+  "dependencies": {
+    "@zedux/atoms": "^2.0.0-alpha.1",
+    "@zedux/core": "^2.0.0-alpha.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "homepage": "https://omnistac.github.io/zedux/",
+  "keywords": [
+    "atom",
+    "atomic",
+    "composable",
+    "DI",
+    "easy",
+    "flexible",
+    "molecular",
+    "redux",
+    "simple",
+    "state",
+    "store",
+    "testable",
+    "zedux"
+  ],
+  "license": "MIT",
+  "repository": {
+    "directory": "packages/stores",
+    "type": "git",
+    "url": "https://github.com/Omnistac/zedux.git"
+  },
+  "scripts": {
+    "build": "../../scripts/build.js",
+    "lint": "eslint 'src/**/*.@(tsx|ts)' && tsc --noEmit",
+    "prepublishOnly": "yarn build",
+    "test": "cd ../.. && yarn test packages/stores --collectCoverageFrom=packages/stores/src/**/*.ts"
+  },
+  "sideEffects": false,
+  "type": "module"
+}

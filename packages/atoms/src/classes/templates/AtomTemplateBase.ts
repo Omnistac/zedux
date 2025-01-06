@@ -6,6 +6,7 @@ import {
 } from '@zedux/atoms/types/index'
 import { prefix } from '@zedux/atoms/utils/general'
 import { Ecosystem } from '../Ecosystem'
+import { Signal } from '../Signal'
 
 export abstract class AtomTemplateBase<
   G extends AtomGenerics & { Node: any } = AnyAtomGenerics<{
@@ -33,8 +34,12 @@ export abstract class AtomTemplateBase<
 
   constructor(
     public readonly key: string,
-    public readonly _value: AtomValueOrFactory<G>,
-    protected readonly _config?: AtomConfig<G['State']>
+    public readonly _value: AtomValueOrFactory<
+      G & {
+        Signal: Signal<{ State: G['State']; Events: G['Events'] }> | undefined
+      }
+    >,
+    public readonly _config?: AtomConfig<G['State']>
   ) {
     Object.assign(this, _config)
 

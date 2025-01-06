@@ -23,15 +23,19 @@ export const OutOfRange = 8 // not a flag; use a value bigger than any flag
 /**
  * The InternalEvaluationTypes. These get translated to user-friendly
  * EvaluationTypes by `ecosytem.why`.
+ *
+ * IMPORTANT! Keep these in sync with `@zedux/stores/atoms-port.ts`
  */
 export const Invalidate = 1
 export const Destroy = 2
 export const PromiseChange = 3
+export const EventSent = 4
 
 export type InternalEvaluationType =
   | typeof Destroy
   | typeof Invalidate
   | typeof PromiseChange
+  | typeof EventSent
 
 export const isZeduxNode = 'isZeduxNode'
 

@@ -1,14 +1,13 @@
 import {
-  atom,
   createEcosystem,
   EcosystemProvider,
   injectAtomGetters,
   injectAtomValue,
   injectEffect,
   injectInvalidate,
-  injectStore,
   useAtomValue,
 } from '@zedux/react'
+import { atom, injectStore } from '@zedux/stores'
 import React, { useState } from 'react'
 
 const testEcosystem = createEcosystem({ id: 'test' })

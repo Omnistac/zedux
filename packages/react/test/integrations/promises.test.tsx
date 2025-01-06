@@ -15,7 +15,7 @@ const promiseAtom = atom('promise', (runOnInvalidate?: boolean) => {
 
   const atomApi = injectPromise(
     () =>
-      new Promise(resolve => {
+      new Promise<number>(resolve => {
         setTimeout(() => resolve(reloadCounter + countRef.current++), 1)
       }),
     [reloadCounter],
@@ -42,7 +42,7 @@ describe('promises', () => {
     const promiseInstance = ecosystem.getInstance(promiseAtom)
     const reloadInstance = ecosystem.getInstance(reloadAtom)
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: undefined,
       isError: false,
       isLoading: true,
@@ -53,7 +53,7 @@ describe('promises', () => {
     jest.runAllTimers()
     await Promise.resolve() // wait for injectPromise's `.then` to run
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: 0,
       isError: false,
       isLoading: false,
@@ -61,9 +61,9 @@ describe('promises', () => {
       status: 'success',
     })
 
-    reloadInstance.setState(1)
+    reloadInstance.set(1)
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: 0,
       isError: false,
       isLoading: true,
@@ -74,7 +74,7 @@ describe('promises', () => {
     jest.runAllTimers()
     await Promise.resolve() // wait for injectPromise's `.then` to run
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: 2,
       isError: false,
       isLoading: false,
@@ -89,7 +89,7 @@ describe('promises', () => {
     const queryInstance = ecosystem.getInstance(queryAtom)
     const reloadInstance = ecosystem.getInstance(reloadAtom)
 
-    expect(queryInstance.getState()).toEqual({
+    expect(queryInstance.get()).toEqual({
       data: undefined,
       isError: false,
       isLoading: true,
@@ -100,7 +100,7 @@ describe('promises', () => {
     jest.runAllTimers()
     await Promise.resolve() // wait for AtomInstance's `.then` to run
 
-    expect(queryInstance.getState()).toEqual({
+    expect(queryInstance.get()).toEqual({
       data: 0,
       isError: false,
       isLoading: false,
@@ -108,9 +108,9 @@ describe('promises', () => {
       status: 'success',
     })
 
-    reloadInstance.setState(1)
+    reloadInstance.set(1)
 
-    expect(queryInstance.getState()).toEqual({
+    expect(queryInstance.get()).toEqual({
       data: 0,
       isError: false,
       isLoading: true,
@@ -121,7 +121,7 @@ describe('promises', () => {
     jest.runAllTimers()
     await Promise.resolve() // wait for AtomInstance's `.then` to run
 
-    expect(queryInstance.getState()).toEqual({
+    expect(queryInstance.get()).toEqual({
       data: 1,
       isError: false,
       isLoading: false,
@@ -133,9 +133,9 @@ describe('promises', () => {
   test('injectPromise runOnInvalidate reruns promise factory on atom invalidation', async () => {
     jest.useFakeTimers()
 
-    const promiseInstance = ecosystem.getInstance(promiseAtom, [true])
+    const promiseInstance = ecosystem.getNode(promiseAtom, [true])
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: undefined,
       isError: false,
       isLoading: true,
@@ -146,7 +146,7 @@ describe('promises', () => {
     jest.runAllTimers()
     await Promise.resolve() // wait for injectPromise's `.then` to run
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: 0,
       isError: false,
       isLoading: false,
@@ -156,7 +156,7 @@ describe('promises', () => {
 
     promiseInstance.invalidate()
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: 0,
       isError: false,
       isLoading: true,
@@ -167,7 +167,7 @@ describe('promises', () => {
     jest.runAllTimers()
     await Promise.resolve() // wait for injectPromise's `.then` to run
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: 1,
       isError: false,
       isLoading: false,
@@ -181,7 +181,7 @@ describe('promises', () => {
 
     const promiseInstance = ecosystem.getInstance(promiseAtom, [false])
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: undefined,
       isError: false,
       isLoading: true,
@@ -192,7 +192,7 @@ describe('promises', () => {
     jest.runAllTimers()
     await Promise.resolve() // wait for injectPromise's `.then` to run
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: 0,
       isError: false,
       isLoading: false,
@@ -202,7 +202,7 @@ describe('promises', () => {
 
     promiseInstance.invalidate()
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: 0,
       isError: false,
       isLoading: false,
@@ -213,7 +213,7 @@ describe('promises', () => {
     jest.runAllTimers()
     await Promise.resolve() // wait for injectPromise's `.then` to run
 
-    expect(promiseInstance.getState()).toEqual({
+    expect(promiseInstance.get()).toEqual({
       data: 0,
       isError: false,
       isLoading: false,

@@ -132,14 +132,10 @@ export type HierarchyDescriptor<State = any> =
 export interface Job {
   /**
    * `W`eight - the weight of the node (for EvaluateGraphNode jobs).
+   * UpdateExternalDependent jobs also use this to track the order they were
+   * added as dependents, since that's the order they should evaluate in.
    */
   W?: number
-
-  /**
-   * `F`lags - the EdgeFlags of the edge between the scheduled node and the node
-   * that caused it to schedule an update (for UpdateExternalDependent jobs).
-   */
-  F?: number
 
   /**
    * `j`ob - the actual task to run.

@@ -7,15 +7,15 @@ import {
   AtomGenerics,
   AtomGetters,
   AtomGettersBase,
-  AtomInstanceType,
-  AtomParamsType,
+  NodeOf,
+  ParamsOf,
   AtomSelectorConfig,
   AtomSelectorOrConfig,
-  AtomStateType,
+  StateOf,
   Cleanup,
   DehydrationFilter,
   EcosystemConfig,
-  GraphEdgeDetails,
+  GraphEdgeConfig,
   GraphViewRecursive,
   MaybeCleanup,
   NodeFilter,
@@ -23,6 +23,10 @@ import {
   PartialAtomInstance,
   Selectable,
   SelectorGenerics,
+  EventMap,
+  None,
+  InjectSignalConfig,
+  MapEvents,
 } from '../types/index'
 import {
   External,
@@ -46,6 +50,7 @@ import {
 } from './SelectorInstance'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 import { AtomInstance } from './instances/AtomInstance'
+import { Signal } from './Signal'
 
 const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
   map[mod as Mod] = 0
@@ -149,9 +154,15 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const getInstance: AtomGetters['getInstance'] = <G extends AtomGenerics>(
       atom: AtomTemplateBase<G>,
       params?: G['Params'],
-      edgeInfo?: GraphEdgeDetails
+      edgeConfig?: GraphEdgeConfig
+    ) => getNode(atom, params, edgeConfig)
+
+    const getNode: AtomGetters['getNode'] = <G extends AtomGenerics>(
+      template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+      params?: G['Params'],
+      edgeConfig?: GraphEdgeConfig
     ) => {
-      const instance = this.getNode(atom, params as G['Params'])
+      const instance = this.getNode(template, params as G['Params'])
       const node = getEvaluationContext().n
 
       // If getInstance is called in a reactive context, track the required atom
@@ -161,8 +172,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (node) {
         bufferEdge(
           instance,
-          edgeInfo?.op || 'getInstance',
-          edgeInfo?.f ?? Static
+          edgeConfig?.op || 'getNode',
+          edgeConfig?.f ?? Static
         )
       }
 
@@ -171,8 +182,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     const select: AtomGetters['select'] = <S extends Selectable>(
       selectable: S,
-      ...args: AtomParamsType<S>
-    ): AtomStateType<S> => {
+      ...args: ParamsOf<S>
+    ): StateOf<S> => {
       const node = getEvaluationContext().n
 
       // when called outside a reactive context, select() is just an alias for
@@ -189,6 +200,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       ecosystem: this,
       get,
       getInstance,
+      getNode,
       select,
     }
   }
@@ -291,8 +303,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * internal store.
    *
    * Destruction will bail out by default if this ecosystem is still being
-   * provided via an <EcosystemProvider>. Pass `true` as the first parameter to
-   * force destruction anyway.
+   * provided via an '<EcosystemProvider>'. Pass `true` as the first parameter
+   * to force destruction anyway.
    */
   public destroy(force?: boolean) {
     if (!force && this._refCount > 0) return
@@ -410,18 +422,18 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   public get<A extends AnyAtomTemplate>(
     template: A,
-    params: AtomParamsType<A>
-  ): AtomStateType<A>
+    params: ParamsOf<A>
+  ): StateOf<A>
 
-  public get<A extends AnyAtomTemplate<{ Params: [] }>>(
-    template: A
-  ): AtomStateType<A>
+  public get<A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateOf<A>
 
   public get<A extends AnyAtomTemplate>(
     template: ParamlessTemplate<A>
-  ): AtomStateType<A>
+  ): StateOf<A>
 
-  public get<I extends AnyAtomInstance>(instance: I): AtomStateType<I>
+  // public get<G extends AtomGenerics>(template: AnyAtomTemplate<G>): G['State']
+
+  public get<N extends GraphNode>(node: N): StateOf<N>
 
   /**
    * Returns an atom instance's value. Creates the atom instance if it doesn't
@@ -429,7 +441,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    */
   public get<A extends AnyAtomTemplate>(
     atom: A | AnyAtomInstance,
-    params?: AtomParamsType<A>
+    params?: ParamsOf<A>
   ) {
     if ((atom as GraphNode).izn) {
       return (atom as GraphNode).get()
@@ -437,41 +449,41 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     const instance = this.getInstance(
       atom as A,
-      params as AtomParamsType<A>
+      params as ParamsOf<A>
     ) as AnyAtomInstance
 
-    return instance.store.getState()
+    return instance.get()
   }
 
   public getInstance<A extends AnyAtomTemplate>(
     template: A,
-    params: AtomParamsType<A>,
-    edgeInfo?: GraphEdgeDetails // only here for AtomGetters type compatibility
-  ): AtomInstanceType<A>
+    params: ParamsOf<A>,
+    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
+  ): NodeOf<A>
 
   public getInstance<A extends AnyAtomTemplate<{ Params: [] }>>(
     template: A
-  ): AtomInstanceType<A>
+  ): NodeOf<A>
 
   public getInstance<A extends AnyAtomTemplate>(
     template: ParamlessTemplate<A>
-  ): AtomInstanceType<A>
+  ): NodeOf<A>
 
   public getInstance<I extends AnyAtomInstance>(
     instance: I,
     params?: [],
-    edgeInfo?: GraphEdgeDetails // only here for AtomGetters type compatibility
+    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
   ): I
 
   /**
    * Returns an atom instance. Creates the atom instance if it doesn't exist
    * yet. Doesn't register any graph dependencies.
    *
-   * TODO: deprecate this in favor of `this.getNode`
+   * @deprecated in favor of `getNode`
    */
   public getInstance<A extends AnyAtomTemplate>(
     atom: A | AnyAtomInstance,
-    params?: AtomParamsType<A>
+    params?: ParamsOf<A>
   ) {
     return this.getNode(atom, params)
   }
@@ -479,16 +491,17 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   // TODO: Dedupe these overloads
   // atoms
   public getNode<G extends AtomGenerics = AnyAtomGenerics>(
-    templateOrInstance: AtomTemplateBase<G> | AtomInstance<G>,
-    params: G['Params']
+    templateOrNode: AtomTemplateBase<G> | GraphNode<G>,
+    params: G['Params'],
+    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
   ): G['Node']
 
   public getNode<G extends AtomGenerics = AnyAtomGenerics<{ Params: [] }>>(
-    templateOrInstance: AtomTemplateBase<G> | AtomInstance<G>
+    templateOrNode: AtomTemplateBase<G> | GraphNode<G>
   ): G['Node']
 
   public getNode<G extends AtomGenerics = AnyAtomGenerics>(
-    templateOrInstance: ParamlessTemplate<AtomTemplateBase<G> | AtomInstance<G>>
+    templateOrInstance: ParamlessTemplate<AtomTemplateBase<G> | GraphNode<G>>
   ): G['Node']
 
   public getNode<I extends AnyAtomInstance>(instance: I, params?: []): I
@@ -496,11 +509,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   // selectors
   public getNode<S extends Selectable>(
     selectable: S,
-    params: AtomParamsType<S>
+    params: ParamsOf<S>,
+    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
   ): S extends AtomSelectorOrConfig
     ? SelectorInstance<{
-        Params: AtomParamsType<S>
-        State: AtomStateType<S>
+        Params: ParamsOf<S>
+        State: StateOf<S>
         Template: S
       }>
     : S
@@ -509,8 +523,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     selectable: S
   ): S extends AtomSelectorOrConfig
     ? SelectorInstance<{
-        Params: AtomParamsType<S>
-        State: AtomStateType<S>
+        Params: ParamsOf<S>
+        State: StateOf<S>
         Template: S
       }>
     : S
@@ -519,13 +533,24 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     selectable: ParamlessTemplate<S>
   ): S extends AtomSelectorOrConfig
     ? SelectorInstance<{
-        Params: AtomParamsType<S>
-        State: AtomStateType<S>
+        Params: ParamsOf<S>
+        State: StateOf<S>
         Template: S
       }>
     : S
 
-  public getNode<I extends SelectorInstance>(instance: I, params?: []): I
+  public getNode<N extends GraphNode>(
+    node: N,
+    params?: [],
+    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
+  ): N
+
+  // catch-all
+  public getNode<G extends AtomGenerics>(
+    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+    params?: G['Params'],
+    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
+  ): G['Node']
 
   /**
    * Returns a graph node. The type is determined by the passed value.
@@ -542,21 +567,15 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Doesn't register any graph dependencies.
    */
   public getNode<G extends AtomGenerics>(
-    template:
-      | AtomTemplateBase<G>
-      | AtomInstance<G>
-      | AtomSelectorOrConfig<G>
-      | SelectorInstance<G>,
+    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
     params?: G['Params']
   ) {
     if ((template as GraphNode).izn) {
       // if the passed atom instance is Destroyed, get(/create) the
       // non-Destroyed instance
-      return (template as AtomInstance).l === 'Destroyed'
-        ? this.getNode(
-            (template as AtomInstance).t,
-            (template as AtomInstance).p
-          )
+      return (template as GraphNode).l === 'Destroyed' &&
+        (template as GraphNode).t
+        ? this.getNode((template as GraphNode).t, (template as GraphNode).p)
         : template
     }
 
@@ -774,8 +793,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    */
   public select<S extends Selectable>(
     selectable: S,
-    ...args: AtomParamsType<S>
-  ): AtomStateType<S> {
+    ...args: ParamsOf<S>
+  ): StateOf<S> {
     if (is(selectable, SelectorInstance)) {
       return (selectable as SelectorInstance).v
     }
@@ -794,6 +813,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         ecosystem: this,
         get: this.get.bind(this),
         getInstance: this.getInstance.bind(this),
+        getNode: this.getNode.bind(this),
         select: this.select.bind(this),
       },
       ...args
@@ -830,6 +850,22 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         instance.destroy(true)
       })
     })
+  }
+
+  public signal<State, MappedEvents extends EventMap = None>(
+    state: State,
+    config?: Pick<InjectSignalConfig<MappedEvents>, 'events'>
+  ) {
+    const id = this._idGenerator.generateId('@signal')
+
+    const signal = new Signal<{
+      Events: MapEvents<MappedEvents>
+      State: State
+    }>(this, id, state, config?.events)
+
+    this.n.set(id, signal)
+
+    return signal
   }
 
   /**
@@ -870,7 +906,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     return isSwappingRefs
       ? instance
-      : this.getNode(template, resolvedArgs as AtomParamsType<G['Template']>)
+      : this.getNode(template, resolvedArgs as ParamsOf<G['Template']>)
   }
 
   /**

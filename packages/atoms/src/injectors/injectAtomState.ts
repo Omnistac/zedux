@@ -3,11 +3,11 @@ import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import {
   AnyAtomGenerics,
   AnyAtomTemplate,
-  AtomExportsType,
-  AtomParamsType,
-  AtomStateType,
+  ExportsOf,
   ParamlessTemplate,
+  ParamsOf,
   StateHookTuple,
+  StateOf,
 } from '../types/index'
 import { injectAtomInstance } from './injectAtomInstance'
 
@@ -17,20 +17,20 @@ import { injectAtomInstance } from './injectAtomInstance'
 export const injectAtomState: {
   <A extends AnyAtomTemplate<{ Node: AtomInstance }>>(
     template: A,
-    params: AtomParamsType<A>
-  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
+    params: ParamsOf<A>
+  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
 
   <A extends AnyAtomTemplate<{ Node: AtomInstance; Params: [] }>>(
     template: A
-  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
+  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
 
   <A extends AnyAtomTemplate<{ Node: AtomInstance }>>(
     template: ParamlessTemplate<A>
-  ): StateHookTuple<AtomStateType<A>, AtomExportsType<A>>
+  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
 
   <I extends AtomInstance>(instance: I): StateHookTuple<
-    AtomStateType<I>,
-    AtomExportsType<I>
+    StateOf<I>,
+    ExportsOf<I>
   >
 } = <G extends AnyAtomGenerics<{ Node: AtomInstance }>>(
   atom: AtomTemplateBase<G>,

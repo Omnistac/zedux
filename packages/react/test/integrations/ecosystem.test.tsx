@@ -3,7 +3,7 @@ import {
   Ecosystem,
   createEcosystem,
   injectAtomValue,
-  injectStore,
+  injectSignal,
   injectWhy,
   useAtomState,
   useAtomValue,
@@ -30,7 +30,7 @@ describe('ecosystem', () => {
 
     const atom1 = atom('atom1', () => {
       evaluate1()
-      const store = injectStore('1')
+      const store = injectSignal('1')
 
       return store
     })
@@ -95,6 +95,7 @@ describe('ecosystem', () => {
       'atom5',
       'atom2',
       'atom1',
+      '@signal(atom1)-0',
       'atom4',
       'atom3-["1"]',
       'Child-:r0:',
@@ -114,7 +115,7 @@ describe('ecosystem', () => {
     expect(evaluations).toEqual([5, 2, 1, 4, 3])
 
     act(() => {
-      ecosystem.getInstance(atom1).setState('0')
+      ecosystem.getInstance(atom1).set('0')
     })
 
     await findByText('1 0 0 2 0 0 2 0')

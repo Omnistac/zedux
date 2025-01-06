@@ -1,12 +1,5 @@
-import {
-  api,
-  atom,
-  createStore,
-  injectAtomInstance,
-  injectAtomValue,
-  injectStore,
-  useAtomState,
-} from '@zedux/react'
+import { injectAtomInstance, injectAtomValue, useAtomState } from '@zedux/react'
+import { api, atom, createStore, injectStore } from '@zedux/stores'
 import React from 'react'
 
 const localStorageAtom = atom('localStorage', (key: string) => {

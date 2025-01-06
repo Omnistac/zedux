@@ -1,4 +1,4 @@
-import { RecursivePartial, Settable, Store } from '@zedux/atoms'
+import { RecursivePartial, Settable, Store } from '@zedux/core'
 import { MachineStateShape } from './types'
 
 /**

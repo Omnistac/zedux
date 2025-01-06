@@ -5,7 +5,7 @@ import {
   createEcosystem,
   injectAtomValue,
   injectEffect,
-  injectStore,
+  injectSignal,
   useAtomValue,
 } from '@zedux/react'
 import React, { useState } from 'react'
@@ -21,7 +21,7 @@ describe('ttl', () => {
 
     const atom1 = atom('atom1', () => {
       evaluations.push(1)
-      const store = injectStore('1')
+      const store = injectSignal('1')
 
       return store
     })

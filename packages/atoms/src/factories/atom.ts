@@ -1,15 +1,18 @@
-import { Store, StoreStateType } from '@zedux/core'
 import {
   AtomConfig,
   AtomApiPromise,
   AtomValueOrFactory,
   PromiseState,
+  StateOf,
+  EventsOf,
+  None,
 } from '../types/index'
 import {
   AtomTemplate,
   AtomTemplateRecursive,
 } from '../classes/templates/AtomTemplate'
 import { AtomApi } from '../classes/AtomApi'
+import { Signal } from '../classes/Signal'
 
 export const atom: {
   // Query Atoms
@@ -22,40 +25,40 @@ export const atom: {
     value: (...params: Params) => AtomApi<{
       Exports: Exports
       Promise: any
+      Signal: undefined
       State: Promise<State>
-      Store: undefined
     }>,
     config?: AtomConfig<State>
   ): AtomTemplateRecursive<{
     State: PromiseState<State>
     Params: Params
+    Events: None // TODO: give query atoms unique events
     Exports: Exports
-    Store: Store<PromiseState<State>>
     Promise: Promise<State>
   }>
 
-  // Custom Stores
+  // Signals
   <
-    StoreType extends Store<any> = Store<any>,
+    SignalType extends Signal<any> = Signal<any>,
     Params extends any[] = [],
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
     value: (...params: Params) =>
-      | StoreType
+      | SignalType
       | AtomApi<{
           Exports: Exports
           Promise: PromiseType
-          State: StoreStateType<Store>
-          Store: StoreType
+          Signal: SignalType
+          State: StateOf<SignalType>
         }>,
-    config?: AtomConfig<StoreStateType<StoreType>>
+    config?: AtomConfig<StateOf<SignalType>>
   ): AtomTemplateRecursive<{
-    State: StoreStateType<StoreType>
+    State: StateOf<SignalType>
     Params: Params
+    Events: EventsOf<SignalType>
     Exports: Exports
-    Store: StoreType
     Promise: PromiseType
   }>
 
@@ -64,7 +67,10 @@ export const atom: {
     State = any,
     Params extends any[] = [],
     Exports extends Record<string, any> = Record<string, never>,
-    StoreType extends Store<State> = Store<State>,
+    Events extends Record<string, any> = None,
+    SignalType extends
+      | Signal<{ State: State; Events: Events }>
+      | undefined = undefined,
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
@@ -72,22 +78,25 @@ export const atom: {
       Exports: Exports
       Params: Params
       Promise: PromiseType
+      Signal: SignalType
       State: State
-      Store: StoreType
     }>,
     config?: AtomConfig<State>
   ): AtomTemplateRecursive<{
+    Events: Events
     Exports: Exports
     Params: Params
     Promise: PromiseType
     State: State
-    Store: StoreType
   }>
 } = <
   State = any,
   Params extends any[] = [],
   Exports extends Record<string, any> = Record<string, never>,
-  StoreType extends Store<State> = Store<State>,
+  Events extends Record<string, any> = None,
+  SignalType extends
+    | Signal<{ State: State; Events: Events }>
+    | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(
   key: string,
@@ -95,8 +104,8 @@ export const atom: {
     Exports: Exports
     Params: Params
     Promise: PromiseType
+    Signal: SignalType
     State: State
-    Store: StoreType
   }>,
   config?: AtomConfig<State>
 ) => {
