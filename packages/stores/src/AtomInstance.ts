@@ -87,7 +87,7 @@ export class AtomInstance<
   public store: G['Store']
 
   /**
-   * @see GraphNode.c
+   * @see NewAtomInstance.c
    */
   public c?: Cleanup
   public _createdAt: number
@@ -107,19 +107,19 @@ export class AtomInstance<
 
   constructor(
     /**
-     * @see GraphNode.e
+     * @see NewAtomInstance.e
      */
     public readonly e: Ecosystem,
     /**
-     * @see GraphNode.t
+     * @see NewAtomInstance.t
      */
     public readonly t: G['Template'],
     /**
-     * @see GraphNode.id
+     * @see NewAtomInstance.id
      */
     public readonly id: string,
     /**
-     * @see GraphNode.p
+     * @see NewAtomInstance.p
      */
     public readonly p: G['Params']
   ) {
@@ -128,7 +128,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see GraphNode.destroy
+   * @see NewAtomInstance.destroy
    */
   public destroy(force?: boolean) {
     if (!zi.b(this, force)) return
@@ -166,7 +166,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see GraphNode.get
+   * @see NewAtomInstance.get
    *
    * An alias for `instance.store.getState()`.
    */
@@ -216,7 +216,7 @@ export class AtomInstance<
   ): G['State'] => this.store.setStateDeep(settable, meta)
 
   /**
-   * @see GraphNode.j
+   * @see NewAtomInstance.j
    */
   public j() {
     const { n, s } = zi.g()
@@ -316,7 +316,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see GraphNode.r
+   * @see NewAtomInstance.r
    */
   public r(reason: InternalEvaluationReason, shouldSetTimeout?: boolean) {
     // TODO: Any calls in this case probably indicate a memory leak on the
