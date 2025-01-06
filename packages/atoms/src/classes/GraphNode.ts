@@ -420,14 +420,15 @@ export abstract class GraphNode<
       ) || excludeFlags.some(flag => t.flags?.includes(flag))
 
     return (
-      (!isExcluded && !include.length && !includeFlags.length) ||
-      include.some(templateOrKey =>
-        typeof templateOrKey === 'string'
-          ? lowerCaseId.includes(templateOrKey.toLowerCase())
-          : (templateOrKey as AtomTemplateBase)?.key === t?.key ||
-            templateOrKey === t
-      ) ||
-      includeFlags.some(flag => t.flags?.includes(flag))
+      !isExcluded &&
+      ((!include.length && !includeFlags.length) ||
+        include.some(templateOrKey =>
+          typeof templateOrKey === 'string'
+            ? lowerCaseId.includes(templateOrKey.toLowerCase())
+            : (templateOrKey as AtomTemplateBase)?.key === t?.key ||
+              templateOrKey === t
+        ) ||
+        includeFlags.some(flag => t.flags?.includes(flag)))
     )
   }
 
