@@ -1,5 +1,5 @@
 import { Store } from '@zedux/atoms'
-import produce, { Draft } from 'immer'
+import { Draft, produce } from 'immer'
 
 export class ImmerStore<State> extends Store<State> {
   public constructor(initialState?: State) {

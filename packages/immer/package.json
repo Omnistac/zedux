@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@zedux/atoms": "^2.0.0-alpha.1",
-    "immer": "^9.0.21"
+    "immer": "^10.1.1"
   },
   "exports": {
     ".": {
