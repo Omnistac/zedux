@@ -1,11 +1,6 @@
 import { createStore, zeduxTypes, Store } from '@zedux/core'
-import { createInjector } from '@zedux/atoms/factories/createInjector'
-import {
-  InjectStoreConfig,
-  PartialAtomInstance,
-} from '@zedux/atoms/types/index'
-import { prefix } from '@zedux/atoms/utils/general'
-import type { InjectorDescriptor } from '@zedux/atoms/utils/types'
+import { InjectStoreConfig, PartialAtomInstance, zi } from '@zedux/atoms'
+import { InjectorDescriptor, prefix } from './atoms-port'
 
 export const doSubscribe = <State>(
   instance: PartialAtomInstance,
@@ -91,7 +86,7 @@ export const injectStore: {
     config?: InjectStoreConfig
   ): Store<State>
   <State = undefined>(): Store<State>
-} = createInjector(
+} = zi.c(
   'injectStore',
   <State = any>(
     instance: PartialAtomInstance,

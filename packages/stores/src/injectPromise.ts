@@ -1,18 +1,19 @@
-import { injectEffect, injectMemo, injectRef } from '@zedux/atoms'
+import {
+  injectEffect,
+  injectMemo,
+  InjectorDeps,
+  InjectPromiseConfig,
+  injectRef,
+  InjectStoreConfig,
+  injectWhy,
+  PromiseState,
+} from '@zedux/atoms'
 import { detailedTypeof, RecursivePartial, Store } from '@zedux/core'
 import {
   getErrorPromiseState,
   getInitialPromiseState,
   getSuccessPromiseState,
-} from '@zedux/atoms/utils/promiseUtils'
-import {
-  InjectorDeps,
-  InjectPromiseConfig,
-  InjectStoreConfig,
-  PromiseState,
-} from '@zedux/atoms/types/index'
-import { Invalidate } from '@zedux/atoms/utils/general'
-import { readInstance } from '@zedux/atoms/utils/evaluationContext'
+} from './atoms-port'
 import { AtomApi } from './AtomApi'
 import { api } from './api'
 import { injectStore } from './injectStore'
@@ -109,7 +110,7 @@ export const injectPromise: {
   if (
     runOnInvalidate &&
     // injectWhy is an unrestricted injector - using it conditionally is fine:
-    readInstance().w.some(reason => reason.t === Invalidate)
+    injectWhy().some(reason => reason.type === 'cache invalidated')
   ) {
     refs.current.counter++
   }

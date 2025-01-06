@@ -3,5 +3,5 @@
   "compilerOptions": {
     "lib": ["DOM", "ESNext"]
   },
-  "include": ["../stores", "./src", "./test", "../../global.d.ts"]
+  "include": ["./src", "./test", "../../global.d.ts"]
 }

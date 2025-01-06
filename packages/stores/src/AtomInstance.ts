@@ -15,41 +15,28 @@ import {
   AnyAtomGenerics,
 } from './types'
 import {
+  AtomInstance as NewAtomInstance,
   Cleanup,
+  Ecosystem,
   ExportsInfusedSetter,
   PromiseState,
   PromiseStatus,
-  DehydrationFilter,
-  NodeFilter,
-  DehydrationOptions,
   InternalEvaluationReason,
   ExplicitEvents,
   Transaction,
-} from '@zedux/atoms/types/index'
-import { Invalidate, prefix, PromiseChange } from '@zedux/atoms/utils/general'
-import { pluginActions } from '@zedux/atoms/utils/plugin-actions'
+  ZeduxPlugin,
+  zi,
+} from '@zedux/atoms'
+import { AtomApi } from './AtomApi'
 import {
+  Invalidate,
+  prefix,
+  PromiseChange,
   getErrorPromiseState,
   getInitialPromiseState,
   getSuccessPromiseState,
-} from '@zedux/atoms/utils/promiseUtils'
-import { InjectorDescriptor } from '@zedux/atoms/utils/types'
-import { Ecosystem } from '@zedux/atoms/classes/Ecosystem'
-import { AtomApi } from './AtomApi'
-import { AtomInstance as NewAtomInstance } from '@zedux/atoms/classes/instances/AtomInstance'
-import { AtomTemplateBase } from '@zedux/atoms/classes/templates/AtomTemplateBase'
-import {
-  destroyNodeFinish,
-  destroyNodeStart,
-  normalizeNodeFilter,
-  scheduleDependents,
-} from '@zedux/atoms/classes/GraphNode'
-import {
-  destroyBuffer,
-  flushBuffer,
-  getEvaluationContext,
-  startBuffer,
-} from '@zedux/atoms/utils/evaluationContext'
+  InjectorDescriptor,
+} from './atoms-port'
 import { AtomTemplate } from './AtomTemplate'
 
 const StoreState = 1
@@ -144,7 +131,7 @@ export class AtomInstance<
    * @see GraphNode.destroy
    */
   public destroy(force?: boolean) {
-    if (!destroyNodeStart(this, force)) return
+    if (!zi.b(this, force)) return
 
     // Clean up effect injectors first, then everything else
     const nonEffectInjectors: InjectorDescriptor[] = []
@@ -160,7 +147,7 @@ export class AtomInstance<
     })
     this._subscription?.unsubscribe()
 
-    destroyNodeFinish(this)
+    zi.e(this)
   }
 
   /**
@@ -229,75 +216,10 @@ export class AtomInstance<
   ): G['State'] => this.store.setStateDeep(settable, meta)
 
   /**
-   * @see GraphNode.d
-   */
-  public d(options?: DehydrationFilter) {
-    if (!this.f(options)) return
-
-    const { t } = this
-    const state = this.get()
-    const transform =
-      (typeof options === 'object' &&
-        !is(options, AtomTemplateBase) &&
-        (options as DehydrationOptions).transform) ??
-      true
-
-    return transform && t.dehydrate ? t.dehydrate(state) : state
-  }
-
-  /**
-   * @see GraphNode.f
-   */
-  public f(options?: NodeFilter) {
-    const { id, t } = this
-    const lowerCaseId = id.toLowerCase()
-    const {
-      exclude = [],
-      excludeFlags = [],
-      include = [],
-      includeFlags = [],
-    } = normalizeNodeFilter(options)
-
-    if (
-      exclude.some(templateOrKey =>
-        typeof templateOrKey === 'string'
-          ? lowerCaseId.includes(templateOrKey.toLowerCase())
-          : is(templateOrKey, AtomTemplateBase) &&
-            t.key === (templateOrKey as AtomTemplateBase).key
-      ) ||
-      excludeFlags.some(flag => t.flags?.includes(flag))
-    ) {
-      return false
-    }
-
-    if (
-      (!include.length && !includeFlags.length) ||
-      include.some(templateOrKey =>
-        typeof templateOrKey === 'string'
-          ? lowerCaseId.includes(templateOrKey.toLowerCase())
-          : is(templateOrKey, AtomTemplateBase) &&
-            t.key === (templateOrKey as AtomTemplateBase).key
-      ) ||
-      includeFlags.some(flag => t.flags?.includes(flag))
-    ) {
-      return true
-    }
-
-    return false
-  }
-
-  /**
-   * @see GraphNode.h
-   */
-  public h(val: any) {
-    this.setState(this.t.hydrate ? this.t.hydrate(val) : val)
-  }
-
-  /**
    * @see GraphNode.j
    */
   public j() {
-    const { n, s } = getEvaluationContext()
+    const { n, s } = zi.g()
     this._nextInjectors = []
     this._isEvaluating = true
 
@@ -308,7 +230,7 @@ export class AtomInstance<
     // real ideal is to move off stores completely in favor of signals.
     Store._scheduler = this.e._scheduler
 
-    startBuffer(this)
+    zi.s(this)
 
     try {
       const newFactoryResult = this._eval()
@@ -361,7 +283,7 @@ export class AtomInstance<
         injector.cleanup?.()
       })
 
-      destroyBuffer(n, s)
+      zi.d(n, s)
 
       throw err
     } finally {
@@ -389,7 +311,7 @@ export class AtomInstance<
 
     if (this.l !== 'Initializing') {
       // let this.i flush updates after status is set to Active
-      flushBuffer(n, s)
+      zi.f(n, s)
     }
   }
 
@@ -472,11 +394,11 @@ export class AtomInstance<
     oldState: G['State'] | undefined,
     action: ActionChain
   ) {
-    scheduleDependents({ p: oldState, r: this.w, s: this }, false)
+    zi.u({ p: oldState, r: this.w, s: this }, false)
 
     if (this.e._mods.stateChanged) {
       this.e.modBus.dispatch(
-        pluginActions.stateChanged({
+        ZeduxPlugin.actions.stateChanged({
           action,
           node: this,
           newState,
@@ -527,7 +449,7 @@ export class AtomInstance<
     const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
     this._promiseStatus = state.status
 
-    scheduleDependents({ s: this, t: PromiseChange }, true, true)
+    zi.u({ s: this, t: PromiseChange }, true, true)
 
     return state as unknown as G['State']
   }

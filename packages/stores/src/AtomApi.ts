@@ -1,6 +1,6 @@
+import { AtomInstanceTtl, Prettify } from '@zedux/atoms'
 import { is, Store } from '@zedux/core'
-import { AtomInstanceTtl, Prettify } from '@zedux/atoms/types/index'
-import { prefix } from '@zedux/atoms/utils/general'
+import { prefix } from './atoms-port'
 import { AtomApiGenerics } from './types'
 
 export class AtomApi<G extends AtomApiGenerics> {

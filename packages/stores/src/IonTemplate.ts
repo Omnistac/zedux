@@ -1,5 +1,4 @@
-import { injectAtomGetters } from '@zedux/atoms/injectors/injectAtomGetters'
-import { AtomConfig } from '@zedux/atoms/types/index'
+import { AtomConfig, injectAtomGetters } from '@zedux/atoms'
 import { AtomInstance } from './AtomInstance'
 import { AtomTemplate } from './AtomTemplate'
 import { ion } from './ion'

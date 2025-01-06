@@ -3,10 +3,7 @@
   "compilerOptions": {
     "lib": ["DOM", "ESNext"],
     "outDir": "./dist/esm",
-    "paths": {
-      "@zedux/atoms": ["./packages/atoms/src"],
-      "@zedux/atoms/*": ["./packages/atoms/src/*"]
-    }
+    "paths": {}
   },
   "include": ["./src", "../../global.d.ts"]
 }

@@ -1,5 +1,5 @@
-import { Store, StoreStateType } from '@zedux/core'
 import { AtomConfig, AtomApiPromise, PromiseState } from '@zedux/atoms'
+import { Store, StoreStateType } from '@zedux/core'
 import { AtomApi } from './AtomApi'
 import { AtomTemplate, AtomTemplateRecursive } from './AtomTemplate'
 import { AtomValueOrFactory } from './types'
