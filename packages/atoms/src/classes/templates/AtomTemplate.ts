@@ -7,7 +7,7 @@ import {
 import { AtomInstance } from '../instances/AtomInstance'
 import { Ecosystem } from '../Ecosystem'
 import { AtomTemplateBase } from './AtomTemplateBase'
-import { SignalInstance } from '../SignalInstance'
+import { Signal } from '../Signal'
 
 export type AtomInstanceRecursive<
   G extends Omit<AtomGenerics, 'Node' | 'Template'>
@@ -60,9 +60,7 @@ export class AtomTemplate<
   public override(
     newValue: AtomValueOrFactory<
       G & {
-        Signal:
-          | SignalInstance<{ State: G['State']; Events: G['Events'] }>
-          | undefined
+        Signal: Signal<{ State: G['State']; Events: G['Events'] }> | undefined
       }
     >
   ): AtomTemplate<G> {

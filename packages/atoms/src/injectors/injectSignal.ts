@@ -1,4 +1,4 @@
-import { SignalInstance } from '../classes/SignalInstance'
+import { Signal } from '../classes/Signal'
 import { EventMap, InjectSignalConfig, MapEvents, None } from '../types/index'
 import { readInstance } from '../utils/evaluationContext'
 import { Static } from '../utils/general'
@@ -20,7 +20,7 @@ export const As = <T>() => 0 as T
 
 /**
  * The main API for creating signals in Zedux. Returns a stable instance of the
- * SignalInstance class.
+ * Signal class.
  *
  * By default, this makes the current atom react to state updates in the
  * injected signal. Pass `{ reactive: false }` as the second argument to disable
@@ -35,7 +35,7 @@ export const injectSignal = <State, MappedEvents extends EventMap = None>(
   const signal = injectMemo(() => {
     const id = instance.e._idGenerator.generateId(`@signal(${instance.id})`)
 
-    const signal = new SignalInstance<{
+    const signal = new Signal<{
       Events: MapEvents<MappedEvents>
       State: State
     }>(

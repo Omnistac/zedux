@@ -42,7 +42,7 @@ import {
   getEvaluationContext,
   startBuffer,
 } from '@zedux/atoms/utils/evaluationContext'
-import { SignalInstance } from '../SignalInstance'
+import { Signal } from '../Signal'
 
 /**
  * A standard atom's value can be one of:
@@ -66,13 +66,10 @@ const evaluate = <G extends Omit<AtomGenerics, 'Node'>>(
     const val = (
       _value as (
         ...params: G['Params']
-      ) =>
-        | SignalInstance<G>
-        | G['State']
-        | AtomApi<AtomGenericsToAtomApiGenerics<G>>
+      ) => Signal<G> | G['State'] | AtomApi<AtomGenericsToAtomApiGenerics<G>>
     )(...instance.p)
 
-    if (!is(val, AtomApi)) return val as SignalInstance<G> | G['State']
+    if (!is(val, AtomApi)) return val as Signal<G> | G['State']
 
     const api = (instance.api = val as AtomApi<
       AtomGenericsToAtomApiGenerics<G>
@@ -90,7 +87,7 @@ const evaluate = <G extends Omit<AtomGenerics, 'Node'>>(
       setPromise(instance, api.promise)
     }
 
-    return api.value as SignalInstance<G> | G['State']
+    return api.value as Signal<G> | G['State']
   } catch (err) {
     console.error(
       `Zedux: Error while evaluating atom "${instance.t.key}" with params:`,
@@ -148,11 +145,11 @@ export class AtomInstance<
   } = AnyAtomGenerics<{
     Node: any
   }>
-> extends SignalInstance<G> {
+> extends Signal<G> {
   public static $$typeof = Symbol.for(`${prefix}/AtomInstance`)
 
   /**
-   * @see SignalInstance.l
+   * @see Signal.l
    */
   public l: LifecycleStatus = 'Initializing'
 
@@ -175,10 +172,10 @@ export class AtomInstance<
    * undefined, no signal was returned, and this atom itself becomes the signal.
    * If this is defined, this atom becomes a thin wrapper around this signal.
    */
-  public S?: SignalInstance<G>
+  public S?: Signal<G>
 
   /**
-   * @see SignalInstance.c
+   * @see Signal.c
    */
   public c?: Cleanup
   public _createdAt: number
@@ -190,19 +187,19 @@ export class AtomInstance<
 
   constructor(
     /**
-     * @see SignalInstance.e
+     * @see Signal.e
      */
     public readonly e: Ecosystem,
     /**
-     * @see SignalInstance.t
+     * @see Signal.t
      */
     public readonly t: G['Template'],
     /**
-     * @see SignalInstance.id
+     * @see Signal.id
      */
     public readonly id: string,
     /**
-     * @see SignalInstance.p
+     * @see Signal.p
      */
     public readonly p: G['Params']
   ) {
@@ -211,7 +208,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see SignalInstance.destroy
+   * @see Signal.destroy
    */
   public destroy(force?: boolean) {
     if (!destroyNodeStart(this, force)) return
@@ -235,7 +232,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see SignalInstance.get
+   * @see Signal.get
    *
    * If this atom is wrapping an internal signal, returns the current value of
    * that signal. Otherwise, this atom _is_ the signal, and this returns its
@@ -258,7 +255,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see SignalInstance.mutate
+   * @see Signal.mutate
    *
    * If this atom is wrapping an internal signal, calls `mutate` on the wrapped
    * signal. Otherwise, this atom _is_ the signal, and the mutation is applied
@@ -274,7 +271,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see SignalInstance.send atoms don't have events themselves, but they
+   * @see Signal.send atoms don't have events themselves, but they
    * inherit them from any signal returned from the state factory.
    *
    * This is a noop if no signal was returned (the atom's types reflect this).
@@ -287,7 +284,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see SignalInstance.set
+   * @see Signal.set
    *
    * If this atom is wrapping an internal signal, calls `set` on the wrapped
    * signal. Otherwise, this atom _is_ the signal, and the state change is
@@ -301,7 +298,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see SignalInstance.d
+   * @see Signal.d
    */
   public d(options?: DehydrationFilter) {
     if (!this.f(options)) return
@@ -318,7 +315,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see SignalInstance.h
+   * @see Signal.h
    */
   public h(val: any) {
     this.set(this.t.hydrate ? this.t.hydrate(val) : val)
@@ -346,7 +343,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see SignalInstance.j
+   * @see Signal.j
    */
   public j() {
     const { n, s } = getEvaluationContext()
@@ -358,9 +355,9 @@ export class AtomInstance<
       const newFactoryResult = evaluate(this)
 
       if (this.l === 'Initializing') {
-        if ((newFactoryResult as SignalInstance)?.izn) {
+        if ((newFactoryResult as Signal)?.izn) {
           this.S = newFactoryResult
-          this.v = (newFactoryResult as SignalInstance).v
+          this.v = (newFactoryResult as Signal).v
         } else {
           this.v = newFactoryResult
         }
@@ -369,7 +366,7 @@ export class AtomInstance<
           DEV &&
           (this.S
             ? newFactoryResult !== this.S
-            : (newFactoryResult as SignalInstance)?.izn)
+            : (newFactoryResult as Signal)?.izn)
         ) {
           throw new Error(
             `Zedux: state factories must either return the same signal or a non-signal value every evaluation. Check the implementation of atom "${this.id}".`
@@ -412,7 +409,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see SignalInstance.m
+   * @see Signal.m
    */
   public m() {
     const ttl = this._getTtl()
@@ -468,7 +465,7 @@ export class AtomInstance<
   }
 
   /**
-   * @see SignalInstance.r
+   * @see Signal.r
    */
   public r(reason: InternalEvaluationReason, defer?: boolean) {
     if (reason.t === EventSent) {

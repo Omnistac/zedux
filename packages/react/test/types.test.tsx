@@ -1,4 +1,4 @@
-import { SignalInstance } from '@zedux/atoms/classes/SignalInstance'
+import { Signal } from '@zedux/atoms/classes/Signal'
 import {
   AnyAtomGenerics,
   AnyAtomInstance,
@@ -640,7 +640,7 @@ describe('react types', () => {
         Exports: Record<string, any>
         Promise: Promise<number>
         State: PromiseState<number>
-        Signal: SignalInstance<{ Events: None; State: PromiseState<number> }>
+        Signal: Signal<{ Events: None; State: PromiseState<number> }>
       }>
     }>()
   })

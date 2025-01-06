@@ -4,7 +4,7 @@ import { AtomApi } from '../classes/AtomApi'
 import { GraphNode } from '../classes/GraphNode'
 import { AnyNonNullishValue, AtomSelectorOrConfig, Prettify } from './index'
 import { SelectorInstance } from '../classes/SelectorInstance'
-import { SignalInstance } from '../classes/SignalInstance'
+import { Signal } from '../classes/Signal'
 import { MappedSignal } from '../classes/MappedSignal'
 
 export type AtomApiGenericsPartial<G extends Partial<AtomApiGenerics>> = Omit<
@@ -40,13 +40,13 @@ export type AtomApiGenerics = Pick<
   AtomGenerics,
   'Exports' | 'Promise' | 'State'
 > & {
-  Signal: SignalInstance | undefined
+  Signal: Signal | undefined
 }
 
 export type AtomGenericsToAtomApiGenerics<
   G extends Pick<AtomGenerics, 'Events' | 'Exports' | 'Promise' | 'State'>
 > = Pick<G, 'Exports' | 'Promise' | 'State'> & {
-  Signal: SignalInstance<Pick<G, 'Events' | 'State'>> | undefined
+  Signal: Signal<Pick<G, 'Events' | 'State'>> | undefined
 }
 
 export interface AtomGenerics {
@@ -66,12 +66,12 @@ export type EventsOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
     ? G['Events']
     : A extends GraphNode<infer G>
     ? G['Events']
-    : A extends SignalInstance<infer G>
+    : A extends Signal<infer G>
     ? G['Events']
     : A extends MappedSignal<infer G>
     ? G['Events']
     : A extends AtomApi<infer G>
-    ? G['Signal'] extends SignalInstance
+    ? G['Signal'] extends Signal
       ? EventsOf<G['Signal']>
       : never
     : A extends AtomSelectorOrConfig<infer Events>
@@ -138,7 +138,7 @@ export type StateOf<
   ? G['State']
   : A extends GraphNode<infer G>
   ? G['State']
-  : A extends SignalInstance<infer G>
+  : A extends Signal<infer G>
   ? G['State']
   : A extends MappedSignal<infer G>
   ? G['State']

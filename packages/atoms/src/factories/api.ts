@@ -1,6 +1,6 @@
 import { AtomApi } from '../classes/AtomApi'
 import { AtomApiPromise, StateOf } from '../types/index'
-import { SignalInstance } from '../classes/SignalInstance'
+import { Signal } from '../classes/Signal'
 
 /**
  * Create an AtomApi
@@ -19,7 +19,7 @@ import { SignalInstance } from '../classes/SignalInstance'
 export const api: {
   // Signals (AtomApi cloning)
   <
-    SignalType extends SignalInstance<any> = SignalInstance<any>,
+    SignalType extends Signal<any> = Signal<any>,
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
@@ -37,9 +37,7 @@ export const api: {
   }>
 
   // Signals (normal)
-  <SignalType extends SignalInstance<any> = SignalInstance<any>>(
-    value: SignalType
-  ): AtomApi<{
+  <SignalType extends Signal<any> = Signal<any>>(value: SignalType): AtomApi<{
     Exports: Record<string, never>
     Promise: undefined
     Signal: SignalType
@@ -90,7 +88,7 @@ export const api: {
     State = undefined,
     Exports extends Record<string, any> = Record<string, never>,
     SignalType extends
-      | SignalInstance<{ Events: any; State: State }>
+      | Signal<{ Events: any; State: State }>
       | undefined = undefined
   >(
     value: State
@@ -104,7 +102,7 @@ export const api: {
   State = undefined,
   Exports extends Record<string, any> = Record<string, never>,
   SignalType extends
-    | SignalInstance<{ Events: any; State: State }>
+    | Signal<{ Events: any; State: State }>
     | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(

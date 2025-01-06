@@ -3,7 +3,7 @@
 exports[`react types signals 1`] = `
 {
   "@signal-0": {
-    "className": "SignalInstance",
+    "className": "Signal",
     "observers": {
       "no-1": {
         "createdAt": 123456789,

@@ -14,10 +14,10 @@ import {
   startBuffer,
 } from '../utils/evaluationContext'
 import { Ecosystem } from './Ecosystem'
-import { SignalInstance } from './SignalInstance'
+import { Signal } from './Signal'
 import { recursivelyMutate, recursivelyProxy } from './proxies'
 
-export type SignalMap = Record<string, SignalInstance>
+export type SignalMap = Record<string, Signal>
 
 export class MappedSignal<
   G extends Pick<AtomGenerics, 'Events' | 'State'> & {
@@ -27,7 +27,7 @@ export class MappedSignal<
     Events: any
     State: any
   }
-> extends SignalInstance<G> {
+> extends Signal<G> {
   /**
    * `I`dsToKeys - maps wrapped signal ids to the keys they control in this
    * wrapper signal's state.
@@ -43,12 +43,12 @@ export class MappedSignal<
 
   constructor(
     /**
-     * @see SignalInstance.e
+     * @see Signal.e
      */
     public readonly e: Ecosystem,
 
     /**
-     * @see SignalInstance.id
+     * @see Signal.id
      */
     public readonly id: string,
 
@@ -150,7 +150,7 @@ export class MappedSignal<
   // ): void
 
   /**
-   * @see SignalInstance.send
+   * @see Signal.send
    *
    * like atoms, mapped signals don't have events themselves, but they inherit
    * them from the signals they wrap.
@@ -188,7 +188,7 @@ export class MappedSignal<
   }
 
   /**
-   * @see SignalInstance.j
+   * @see Signal.j
    */
   public j() {
     // Wrapped signal(s) changed. Propagate the change(s) to this wrapper
@@ -199,7 +199,7 @@ export class MappedSignal<
   }
 
   /**
-   * @see SignalInstance.r
+   * @see Signal.r
    */
   public r(reason: InternalEvaluationReason, defer?: boolean) {
     if (this.w.push(reason) === 1) {

@@ -4,7 +4,7 @@ import { Ecosystem } from '../classes/Ecosystem'
 import { GraphNode } from '../classes/GraphNode'
 import { SelectorInstance } from '../classes/SelectorInstance'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
-import { SignalInstance } from '../classes/SignalInstance'
+import { Signal } from '../classes/Signal'
 import { InternalEvaluationType } from '../utils/general'
 import {
   AnyAtomGenerics,
@@ -221,7 +221,7 @@ export type AtomSelectorOrConfig<State = any, Params extends any[] = any> =
 
 export type AtomStateFactory<
   G extends Pick<AtomGenerics, 'Exports' | 'Params' | 'Promise' | 'State'> & {
-    Signal: SignalInstance | undefined
+    Signal: Signal | undefined
   }
 > = (
   ...params: G['Params']
@@ -234,7 +234,7 @@ export type AtomTuple<A extends AnyAtomTemplate> = [A, ParamsOf<A>]
 
 export type AtomValueOrFactory<
   G extends Pick<AtomGenerics, 'Exports' | 'Params' | 'Promise' | 'State'> & {
-    Signal: SignalInstance | undefined
+    Signal: Signal | undefined
   }
 > = AtomStateFactory<G> | G['State']
 
@@ -403,10 +403,7 @@ export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
   (
     getters: AtomGetters,
     ...params: G['Params']
-  ) =>
-    | AtomApi<AtomGenericsToAtomApiGenerics<G>>
-    | SignalInstance<G>
-    | G['State']
+  ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | Signal<G> | G['State']
 
 export type LifecycleStatus = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
 

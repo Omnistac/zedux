@@ -50,7 +50,7 @@ import {
 } from './SelectorInstance'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 import { AtomInstance } from './instances/AtomInstance'
-import { SignalInstance } from './SignalInstance'
+import { Signal } from './Signal'
 
 const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
   map[mod as Mod] = 0
@@ -858,7 +858,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   ) {
     const id = this._idGenerator.generateId('@signal')
 
-    const signal = new SignalInstance<{
+    const signal = new Signal<{
       Events: MapEvents<MappedEvents>
       State: State
     }>(this, id, state, config?.events)

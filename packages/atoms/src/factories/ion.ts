@@ -13,7 +13,7 @@ import {
   EventsOf,
   None,
 } from '../types/index'
-import { SignalInstance } from '../classes/SignalInstance'
+import { Signal } from '../classes/Signal'
 
 export const ion: {
   // Query Atoms
@@ -43,7 +43,7 @@ export const ion: {
 
   // Signals
   <
-    SignalType extends SignalInstance<any> = SignalInstance<any>,
+    SignalType extends Signal<any> = Signal<any>,
     Params extends any[] = [],
     Exports extends Record<string, any> = None,
     PromiseType extends AtomApiPromise = undefined

@@ -12,7 +12,7 @@ import {
   AtomTemplateRecursive,
 } from '../classes/templates/AtomTemplate'
 import { AtomApi } from '../classes/AtomApi'
-import { SignalInstance } from '../classes/SignalInstance'
+import { Signal } from '../classes/Signal'
 
 export const atom: {
   // Query Atoms
@@ -39,7 +39,7 @@ export const atom: {
 
   // Signals
   <
-    SignalType extends SignalInstance<any> = SignalInstance<any>,
+    SignalType extends Signal<any> = Signal<any>,
     Params extends any[] = [],
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
@@ -68,8 +68,8 @@ export const atom: {
     Params extends any[] = [],
     Exports extends Record<string, any> = Record<string, never>,
     Events extends Record<string, any> = None,
-    Signal extends
-      | SignalInstance<{ State: State; Events: Events }>
+    SignalType extends
+      | Signal<{ State: State; Events: Events }>
       | undefined = undefined,
     PromiseType extends AtomApiPromise = undefined
   >(
@@ -78,7 +78,7 @@ export const atom: {
       Exports: Exports
       Params: Params
       Promise: PromiseType
-      Signal: Signal
+      Signal: SignalType
       State: State
     }>,
     config?: AtomConfig<State>
@@ -94,8 +94,8 @@ export const atom: {
   Params extends any[] = [],
   Exports extends Record<string, any> = Record<string, never>,
   Events extends Record<string, any> = None,
-  Signal extends
-    | SignalInstance<{ State: State; Events: Events }>
+  SignalType extends
+    | Signal<{ State: State; Events: Events }>
     | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(
@@ -104,7 +104,7 @@ export const atom: {
     Exports: Exports
     Params: Params
     Promise: PromiseType
-    Signal: Signal
+    Signal: SignalType
     State: State
   }>,
   config?: AtomConfig<State>

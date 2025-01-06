@@ -21,7 +21,7 @@ import { injectRef } from './injectRef'
 import { AtomApi } from '../classes/AtomApi'
 import { Invalidate } from '../utils/general'
 import { readInstance } from '../utils/evaluationContext'
-import { SignalInstance } from '../classes/SignalInstance'
+import { Signal } from '../classes/Signal'
 
 /**
  * Create a memoized promise reference. Kicks off the promise immediately
@@ -77,7 +77,7 @@ export const injectPromise: {
   ): AtomApi<{
     Exports: Record<string, any>
     Promise: Promise<Data>
-    Signal: SignalInstance<{ Events: MapEvents<MappedEvents>; State: Data }>
+    Signal: Signal<{ Events: MapEvents<MappedEvents>; State: Data }>
     State: Data
   }>
 
@@ -88,7 +88,7 @@ export const injectPromise: {
   ): AtomApi<{
     Exports: Record<string, any>
     Promise: Promise<Data>
-    Signal: SignalInstance<{
+    Signal: Signal<{
       Events: MapEvents<MappedEvents>
       State: PromiseState<Data>
     }>

@@ -19,7 +19,7 @@ import {
 } from './GraphNode'
 import { recursivelyMutate, recursivelyProxy } from './proxies'
 
-export class SignalInstance<
+export class Signal<
   G extends Pick<AtomGenerics, 'Events' | 'State'> & {
     Params?: any
     Template?: any

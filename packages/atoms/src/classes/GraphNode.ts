@@ -294,9 +294,9 @@ export abstract class GraphNode<
    * Internally, this manually adds a graph edge between this node and a new
    * external pseudo node.
    *
-   * TODO: probably move this to the SignalInstance class and remove the Events
-   * generic from GraphNodes (events don't apply to selectors, effect nodes, or
-   * probably lots of other future node types).
+   * TODO: probably move this to the Signal class and remove the Events generic
+   * from GraphNodes (events don't apply to selectors, effect nodes, or probably
+   * lots of other future node types).
    */
   public on<E extends keyof ListenableEvents<G>>(
     eventNameOrCallback: E | ((eventMap: Partial<ListenableEvents<G>>) => void),
@@ -398,8 +398,7 @@ export abstract class GraphNode<
    * typically called by `node.d`ehydrate to perform its filtering logic.
    *
    * This is made to be universally compatible with all Zedux's built-in node
-   * classes. Custom nodes (e.g. that extend `SignalInstance`) may need to
-   * override it
+   * classes. Custom nodes (e.g. that extend `Signal`) may need to override it
    */
   public f(options?: NodeFilter): boolean | undefined | void {
     const { id, t } = this
