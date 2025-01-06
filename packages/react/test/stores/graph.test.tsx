@@ -61,7 +61,6 @@ describe('graph', () => {
     expect(div).toHaveTextContent('3')
 
     const expectedEdges = {
-      createdAt: expect.any(Number),
       flags: 0,
       operation: 'get',
     }

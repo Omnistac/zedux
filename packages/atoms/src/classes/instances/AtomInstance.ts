@@ -178,7 +178,6 @@ export class AtomInstance<
    * @see Signal.c
    */
   public c?: Cleanup
-  public _createdAt: number
   public _injectors?: InjectorDescriptor[]
   public _isEvaluating?: boolean
   public _nextInjectors?: InjectorDescriptor[]
@@ -204,7 +203,6 @@ export class AtomInstance<
     public readonly p: G['Params']
   ) {
     super(e, id, undefined) // TODO NOW: fix this undefined
-    this._createdAt = e._idGenerator.now()
   }
 
   /**

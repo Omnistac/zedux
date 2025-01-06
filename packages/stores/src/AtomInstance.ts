@@ -90,7 +90,6 @@ export class AtomInstance<
    * @see NewAtomInstance.c
    */
   public c?: Cleanup
-  public _createdAt: number
   public _injectors?: InjectorDescriptor[]
   public _isEvaluating?: boolean
   public _nextInjectors?: InjectorDescriptor[]
@@ -124,7 +123,6 @@ export class AtomInstance<
     public readonly p: G['Params']
   ) {
     super(e, t, id, p)
-    this._createdAt = e._idGenerator.now()
   }
 
   /**

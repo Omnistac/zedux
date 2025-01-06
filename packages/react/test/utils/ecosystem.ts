@@ -37,14 +37,7 @@ export const getSelectorNodes = () =>
     )
   )
 
-const now = 123456789
-
-export const nowMock = jest.fn((highRes?: boolean) =>
-  highRes ? performance.now() : now
-)
-
 ecosystem._idGenerator.generateId = generateIdMock
-ecosystem._idGenerator.now = nowMock
 
 afterAll(() => ecosystem.destroy())
 

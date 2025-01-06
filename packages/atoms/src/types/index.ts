@@ -320,7 +320,6 @@ export interface GraphEdgeConfig {
 
 // TODO: optimize this internal object to use single-letter properties
 export interface GraphEdge {
-  createdAt: number
   flags: number // calculated from the EdgeFlags
   operation: string
 

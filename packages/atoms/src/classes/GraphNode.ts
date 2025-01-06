@@ -695,7 +695,6 @@ export class ExternalNode extends GraphNode {
     this.i = source
 
     addEdge(this, source, {
-      createdAt: this.e._idGenerator.now(),
       flags,
       operation: operation,
     })

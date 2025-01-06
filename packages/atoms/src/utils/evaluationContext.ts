@@ -33,6 +33,8 @@ export interface EvaluationContext {
  */
 let evaluationContext: EvaluationContext = {}
 
+const perf = typeof performance === 'undefined' ? Date : performance
+
 /**
  * In the current buffer, draw a new edge between the currently evaluating graph
  * node and the passed node. This is how automatic dependencies are created
@@ -47,14 +49,13 @@ export const bufferEdge = (
   operation: string,
   flags: number
 ) => {
-  const { e, s } = evaluationContext.n!
+  const { s } = evaluationContext.n!
   const existingEdge = s.get(source)
 
   if (existingEdge) {
     if (flags < (existingEdge.p || OutOfRange)) existingEdge.p = flags
   } else {
     s.set(source, {
-      createdAt: e._idGenerator.now(),
       flags: OutOfRange, // set to an out-of-range flag to indicate a new edge
       p: flags,
       operation,
@@ -86,12 +87,11 @@ export const destroyBuffer = (
 }
 
 const finishBuffer = (previousNode?: GraphNode, previousStartTime?: number) => {
-  const { _idGenerator, _mods, modBus } = evaluationContext.n!.e
+  const { _mods, modBus } = evaluationContext.n!.e
 
   if (_mods.evaluationFinished) {
-    const time = evaluationContext.s
-      ? _idGenerator.now(true) - evaluationContext.s
-      : 0
+    const time = evaluationContext.s ? perf.now() - evaluationContext.s : 0
+
     const action: ActionFactoryPayloadType<
       typeof pluginActions.evaluationFinished
     > = { node: evaluationContext.n!, time }
@@ -174,6 +174,6 @@ export const startBuffer = (node: GraphNode) => {
   evaluationContext.n = node
 
   if (node.e._mods.evaluationFinished) {
-    evaluationContext.s = node.e._idGenerator.now(true)
+    evaluationContext.s = perf.now()
   }
 }

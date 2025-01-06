@@ -22,10 +22,9 @@ export class IdGenerator {
    * Generate an id that is guaranteed to be unique in this ecosystem and
    * pretty-much-guaranteed to be unique globally.
    *
-   * This method and `IdGenerator#now()` are the only methods in Zedux that
-   * produce random values.
+   * This method is the only method in Zedux that produces random values.
    *
-   * Override these when testing to create reproducible graphs/dehydrations that
+   * Override this when testing to create reproducible graphs/dehydrations that
    * can be used easily in snapshot testing. See our setup in the Zedux repo at
    * `<repo root>/packages/react/test/utils/ecosystem.ts` for an example.
    */
@@ -67,22 +66,6 @@ export class IdGenerator {
           return result
         }, {} as Record<string, any>)
     })
-  }
-
-  /**
-   * Generate a timestamp. Pass true to make it a high res timestamp if possible
-   *
-   * This method and `IdGenerator#generateId()` are the only methods in Zedux
-   * that produce random values.
-   *
-   * Override these when testing to create reproducible graphs/dehydrations that
-   * can be used easily in snapshot testing. See our setup in the Zedux repo at
-   * `<repo root>/packages/react/test/utils/ecosystem.ts` for an example.
-   */
-  public now(highRes?: boolean) {
-    return highRes && typeof performance !== 'undefined'
-      ? performance.now()
-      : Date.now()
   }
 
   private cacheClass(instance: { new (): any }) {
