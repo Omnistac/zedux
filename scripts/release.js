@@ -283,7 +283,7 @@ const generateChangelog = async (type, tagName, includeChores) => {
 
   await Promise.all(promises)
 
-  if (hasBreakingChanges && !['major', 'premajor'].includes(type)) {
+  if (hasBreakingChanges && !['major', 'premajor', 'prerelease'].includes(type)) {
     await confirm(
       'Breaking changes detected. A major version or a premajor is recommended. Proceed anyway?',
       false
@@ -292,7 +292,7 @@ const generateChangelog = async (type, tagName, includeChores) => {
 
   if (
     features.length &&
-    !['major', 'minor', 'premajor', 'preminor'].includes(type)
+    !['major', 'minor', 'premajor', 'preminor', 'prerelease'].includes(type)
   ) {
     await confirm(
       'New features detected. A major, minor, premajor, or preminor is recommended. Proceed anyway?',
