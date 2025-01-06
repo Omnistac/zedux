@@ -41,7 +41,7 @@ export abstract class AtomTemplateBase<
           | undefined
       }
     >,
-    protected readonly _config?: AtomConfig<G['State']>
+    public readonly _config?: AtomConfig<G['State']>
   ) {
     Object.assign(this, _config)
 
