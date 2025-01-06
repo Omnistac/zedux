@@ -1,3 +1,14 @@
+## v2.0.0-beta.0 (Jan 6, 2025)
+
+### New Features:
+
+- **Breaking Change** `atoms`, `core`, `machines`, `react`, `stores`: implement proxies, signals, and mapped signals (#147)
+
+### Fixes:
+
+- `immer`: import named `produce` export from immer (#146)
+- `atoms`, `core`, `immer`, `machines`, `react`: remove package.json production exports (#137) (#142)
+
 ## v2.0.0-alpha.1 (Oct 13, 2024)
 
 ### Auxiliary Changes:
