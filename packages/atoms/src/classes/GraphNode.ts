@@ -414,7 +414,7 @@ export abstract class GraphNode<
       exclude.some(templateOrKey =>
         typeof templateOrKey === 'string'
           ? lowerCaseId.includes(templateOrKey.toLowerCase())
-          : (templateOrKey as AtomTemplateBase)?.key === t?.key ||
+          : (t?.key && (templateOrKey as AtomTemplateBase)?.key === t?.key) ||
             templateOrKey === t
       ) || excludeFlags.some(flag => t.flags?.includes(flag))
 
@@ -424,7 +424,7 @@ export abstract class GraphNode<
         include.some(templateOrKey =>
           typeof templateOrKey === 'string'
             ? lowerCaseId.includes(templateOrKey.toLowerCase())
-            : (templateOrKey as AtomTemplateBase)?.key === t?.key ||
+            : (t?.key && (templateOrKey as AtomTemplateBase)?.key === t?.key) ||
               templateOrKey === t
         ) ||
         includeFlags.some(flag => t.flags?.includes(flag)))

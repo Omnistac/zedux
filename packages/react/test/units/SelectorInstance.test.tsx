@@ -119,8 +119,7 @@ describe('the SelectorInstance class', () => {
     expect(ecosystem.find('selector2')).toBe(instance2)
   })
 
-  // TODO: address the problems in these two tests
-  test.skip('ecosystem.findAll() accepts selector refs or string ids', () => {
+  test('ecosystem.findAll() accepts selector refs or string ids', () => {
     const instance = ecosystem.getNode(selector3)
     const allNodes = ecosystem.findAll()
 
@@ -144,7 +143,7 @@ describe('the SelectorInstance class', () => {
     })
   })
 
-  test.skip("ecosystem.findAll() returns an empty object if the selector hasn't been cached", () => {
+  test("ecosystem.findAll() returns an empty object if the selector hasn't been cached", () => {
     ecosystem.getNode(selector2)
 
     expect(ecosystem.findAll(selector3)).toEqual({})
