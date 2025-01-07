@@ -6,7 +6,6 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "className": "SelectorInstance",
     "observers": {
       "@@selector-selector2-1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
@@ -14,7 +13,6 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     },
     "sources": {
       "1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -28,7 +26,6 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "className": "SelectorInstance",
     "observers": {
       "@@selector-selector3-0": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
@@ -36,7 +33,6 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     },
     "sources": {
       "@@selector-selector1-2": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,
@@ -51,7 +47,6 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "observers": {},
     "sources": {
       "@@selector-selector2-1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "select",
         "p": undefined,

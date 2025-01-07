@@ -6,7 +6,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "className": "AtomInstance",
     "observers": {
       "@@selector-unnamed-0": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -23,14 +22,12 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "className": "SelectorInstance",
     "observers": {
       "Test-:r0:": {
-        "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
     },
     "sources": {
       "1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -47,7 +44,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "observers": {},
     "sources": {
       "@@selector-unnamed-0": {
-        "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
@@ -65,7 +61,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "className": "AtomInstance",
     "observers": {
       "@@selector-unnamed-0": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -82,14 +77,12 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "className": "SelectorInstance",
     "observers": {
       "Test-:r0:": {
-        "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
     },
     "sources": {
       "1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -106,7 +99,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "observers": {},
     "sources": {
       "@@selector-unnamed-0": {
-        "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
@@ -124,7 +116,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "className": "AtomInstance",
     "observers": {
       "@@selector-unnamed-1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -141,14 +132,12 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "className": "SelectorInstance",
     "observers": {
       "Test-:r0:": {
-        "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
     },
     "sources": {
       "1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -165,7 +154,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "observers": {},
     "sources": {
       "@@selector-unnamed-1": {
-        "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
@@ -183,7 +171,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "className": "AtomInstance",
     "observers": {
       "@@selector-unnamed-1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -200,14 +187,12 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "className": "SelectorInstance",
     "observers": {
       "Test-:r0:": {
-        "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
     },
     "sources": {
       "1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -224,7 +209,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "observers": {},
     "sources": {
       "@@selector-unnamed-1": {
-        "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
@@ -242,14 +226,12 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
     "className": "SelectorInstance",
     "observers": {
       "Test-:r0:": {
-        "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
     },
     "sources": {
       "1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -268,14 +250,12 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
     "className": "SelectorInstance",
     "observers": {
       "Test-:r0:": {
-        "createdAt": 123456789,
         "flags": 2,
         "operation": "useAtomSelector",
       },
     },
     "sources": {
       "1": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,

@@ -6,7 +6,6 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
     "className": "AtomInstance",
     "observers": {
       "ion1": {
-        "createdAt": 123456789,
         "flags": 4,
         "operation": "getNode",
         "p": undefined,
@@ -21,7 +20,6 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
     "className": "AtomInstance",
     "observers": {
       "ion1": {
-        "createdAt": 123456789,
         "flags": 4,
         "operation": "getNode",
         "p": undefined,
@@ -37,13 +35,11 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
     "observers": {},
     "sources": {
       "atom1": {
-        "createdAt": 123456789,
         "flags": 4,
         "operation": "getNode",
         "p": undefined,
       },
       "atom2": {
-        "createdAt": 123456789,
         "flags": 4,
         "operation": "getNode",
         "p": undefined,
@@ -175,7 +171,6 @@ exports[`graph on reevaluation, get() updates the graph 1`] = `
     "className": "AtomInstance",
     "observers": {
       "d": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "injectAtomValue",
         "p": undefined,
@@ -190,7 +185,6 @@ exports[`graph on reevaluation, get() updates the graph 1`] = `
     "className": "AtomInstance",
     "observers": {
       "d": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -206,13 +200,11 @@ exports[`graph on reevaluation, get() updates the graph 1`] = `
     "observers": {},
     "sources": {
       "a": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "injectAtomValue",
         "p": undefined,
       },
       "b-["b"]": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -231,7 +223,6 @@ exports[`graph on reevaluation, get() updates the graph 2`] = `
     "className": "AtomInstance",
     "observers": {
       "d": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "injectAtomValue",
         "p": undefined,
@@ -254,7 +245,6 @@ exports[`graph on reevaluation, get() updates the graph 2`] = `
     "className": "AtomInstance",
     "observers": {
       "d": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,
@@ -270,13 +260,11 @@ exports[`graph on reevaluation, get() updates the graph 2`] = `
     "observers": {},
     "sources": {
       "a": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "injectAtomValue",
         "p": undefined,
       },
       "c": {
-        "createdAt": 123456789,
         "flags": 0,
         "operation": "get",
         "p": undefined,

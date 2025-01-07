@@ -6,17 +6,14 @@ exports[`react types signals 1`] = `
     "className": "Signal",
     "observers": {
       "no-1": {
-        "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
       "no-2": {
-        "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
       "no-3": {
-        "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
@@ -31,7 +28,6 @@ exports[`react types signals 1`] = `
     "observers": {},
     "sources": {
       "@signal-0": {
-        "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
@@ -45,7 +41,6 @@ exports[`react types signals 1`] = `
     "observers": {},
     "sources": {
       "@signal-0": {
-        "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
@@ -59,7 +54,6 @@ exports[`react types signals 1`] = `
     "observers": {},
     "sources": {
       "@signal-0": {
-        "createdAt": 123456789,
         "flags": 3,
         "operation": "on",
       },
