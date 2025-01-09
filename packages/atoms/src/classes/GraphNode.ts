@@ -12,7 +12,11 @@ import {
 } from '@zedux/atoms/types/index'
 import { is, Job } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
-import { EventSent, ExplicitExternal } from '../utils/general'
+import {
+  EventSent,
+  ExplicitExternal,
+  makeReasonReadable,
+} from '../utils/general'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 import {
   CatchAllListener,
@@ -151,7 +155,7 @@ export abstract class GraphNode<
           ? reason.e ?? {}
           : {
               ...reason.e,
-              change: { newState: this.v, oldState: reason.p },
+              change: makeReasonReadable(reason, observer),
             }
       ) as ListenableEvents<G>
 

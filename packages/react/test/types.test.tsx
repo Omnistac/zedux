@@ -793,14 +793,23 @@ describe('react types', () => {
 
     signal.set(state => state + 1, { a: 11 })
 
+    const expectedChangeEvent = {
+      newState: 2,
+      oldState: 1,
+      operation: 'on',
+      reasons: [],
+      source: signal,
+      type: 'state changed',
+    }
+
     expect(calls).toEqual([
-      ['a', 11, { a: 11, change: { newState: 2, oldState: 1 } }],
+      ['a', 11, { a: 11, change: expectedChangeEvent }],
       [
         'change',
         { newState: 2, oldState: 1 },
-        { a: 11, change: { newState: 2, oldState: 1 } },
+        { a: 11, change: expectedChangeEvent },
       ],
-      ['*', { a: 11, change: { newState: 2, oldState: 1 } }],
+      ['*', { a: 11, change: expectedChangeEvent }],
     ])
     calls.splice(0, 3)
 

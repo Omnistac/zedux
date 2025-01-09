@@ -58,15 +58,20 @@ const reasonTypeMap = {
   4: 'state changed',
 } as const
 
+export const makeReasonReadable = (
+  reason: InternalEvaluationReason,
+  node?: GraphNode
+) => ({
+  newState: reason.s?.v,
+  oldState: reason.p,
+  operation: node?.s.get(reason.s!)?.operation,
+  reasons: reason.r && makeReasonsReadable(reason.s, reason.r),
+  source: reason.s,
+  type: reasonTypeMap[reason.t ?? 4],
+})
+
 export const makeReasonsReadable = (
   node?: GraphNode,
   internalReasons: InternalEvaluationReason[] | undefined = node?.w
 ): EvaluationReason[] | undefined =>
-  internalReasons?.map(reason => ({
-    newState: reason.s?.v,
-    oldState: reason.p,
-    operation: node?.s.get(reason.s!)?.operation,
-    reasons: reason.r && makeReasonsReadable(reason.s, reason.r),
-    source: reason.s,
-    type: reasonTypeMap[reason.t ?? 4],
-  }))
+  internalReasons?.map(reason => makeReasonReadable(reason, node))

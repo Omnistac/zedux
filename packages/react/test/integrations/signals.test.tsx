@@ -112,8 +112,19 @@ describe('signals', () => {
       state.b = []
     })
 
+    const commonChangeProps = {
+      operation: 'on',
+      reasons: [],
+      source: instance1.exports.signal,
+      type: 'state changed',
+    }
+
     const expectedEvents = {
-      change: { newState: { a: 1, b: [] }, oldState: { a: 1, b: [{ c: 2 }] } },
+      change: {
+        newState: { a: 1, b: [] },
+        oldState: { a: 1, b: [{ c: 2 }] },
+        ...commonChangeProps,
+      },
       mutate: [
         { k: ['b', '0', 'c'], v: 3 },
         { k: 'b', v: [] },
@@ -129,7 +140,11 @@ describe('signals', () => {
     instance1.exports.signal.set(state => ({ ...state, a: state.a + 1 }))
 
     const expectedEvents2 = {
-      change: { newState: { a: 2, b: [] }, oldState: { a: 1, b: [] } },
+      change: {
+        newState: { a: 2, b: [] },
+        oldState: { a: 1, b: [] },
+        ...commonChangeProps,
+      },
     }
 
     expect(calls).toEqual([['change', expectedEvents2.change, expectedEvents2]])
