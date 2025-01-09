@@ -45,8 +45,9 @@ export const addEdge = (
 }
 
 export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
-  // If we're not force-destroying, don't destroy if there are dependents
-  if (node.l === 'Destroyed' || (!force && node.o.size)) return
+  // If we're not force-destroying, don't destroy if there are dependents. Also
+  // don't destroy of `node.K`eep is set
+  if (node.l === 'Destroyed' || node.K || (!force && node.o.size)) return
 
   node.c?.()
   node.c = undefined

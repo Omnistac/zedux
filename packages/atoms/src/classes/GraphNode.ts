@@ -51,6 +51,14 @@ export abstract class GraphNode<
   public izn = true
 
   /**
+   * `K`eep - whether to prevent this node from ever being destroyed. When
+   * creating signals/selectors/atom instances outside of reactive contexts, you
+   * almost never want the node to be destroyed. Set this to true to keep it
+   * around regardless of ref count.
+   */
+  public K = false
+
+  /**
    * @see Job.T
    */
   public T = 2 as const

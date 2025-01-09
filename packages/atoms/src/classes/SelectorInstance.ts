@@ -134,10 +134,12 @@ export class SelectorInstance<
      * @see GraphNode.e
      */
     public e: Ecosystem,
+
     /**
      * @see GraphNode.id
      */
     public id: string,
+
     /**
      * `t`emplate - the function or object reference of this selector or
      * selector config object
@@ -145,6 +147,7 @@ export class SelectorInstance<
      * @see GraphNode.t
      */
     public t: G['Template'],
+
     /**
      * @see GraphNode.p
      */
