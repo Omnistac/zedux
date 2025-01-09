@@ -277,13 +277,6 @@ export interface EvaluationReason<State = any> {
   type: EvaluationType
 }
 
-export type EvaluationSourceType =
-  | 'Atom'
-  | 'AtomSelector'
-  | 'External'
-  | 'Injector'
-  | 'Store'
-
 export type EvaluationType =
   | 'cache invalidated'
   | 'node destroyed'
@@ -451,7 +444,7 @@ export type ParamlessTemplate<
  */
 export type PartialAtomInstance = Omit<
   AnyAtomInstance,
-  'api' | 'exports' | 'promise' | 'store'
+  'api' | 'exports' | 'promise' | 'S'
 >
 
 // from Matt Pocock https://twitter.com/mattpocockuk/status/1622730173446557697

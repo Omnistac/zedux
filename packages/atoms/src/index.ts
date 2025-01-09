@@ -1,8 +1,3 @@
-import {
-  destroyNodeFinish,
-  destroyNodeStart,
-  scheduleDependents,
-} from './classes/GraphNode'
 import { createInjector } from './factories/createInjector'
 import {
   destroyBuffer,
@@ -10,6 +5,11 @@ import {
   getEvaluationContext,
   startBuffer,
 } from './utils/evaluationContext'
+import {
+  destroyNodeFinish,
+  destroyNodeStart,
+  scheduleDependents,
+} from './utils/graph'
 
 export * from '@zedux/core'
 export * from './classes/index'

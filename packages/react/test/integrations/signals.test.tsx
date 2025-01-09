@@ -134,6 +134,28 @@ describe('signals', () => {
 
     expect(calls).toEqual([['change', expectedEvents2.change, expectedEvents2]])
   })
+
+  test("a non-reactively-injected signal still updates the atom's value", () => {
+    const testAtom = atom('test', () => {
+      const signal = injectSignal(1, { reactive: false })
+
+      return api(signal).setExports({
+        increment: () => signal.set(state => state + 1),
+      })
+    })
+
+    const testInstance = ecosystem.getNode(testAtom)
+
+    expect(testInstance.v).toBe(1)
+    expect(testInstance.get()).toBe(1)
+    expect(testInstance.getOnce()).toBe(1)
+
+    testInstance.exports.increment()
+
+    expect(testInstance.v).toBe(2)
+    expect(testInstance.get()).toBe(2)
+    expect(testInstance.getOnce()).toBe(2)
+  })
 })
 
 describe('mapped signals', () => {

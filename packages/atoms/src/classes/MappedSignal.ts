@@ -208,7 +208,7 @@ export class MappedSignal<
       if (reason.s) this.N = { ...this.v }
     }
 
-    if (reason.s) this.N![this.I[reason.s.id]] = reason.s.get()
+    if (reason.s) this.N![this.I[reason.s.id]] = reason.s.v
 
     // forward events from wrapped signals to observers of this wrapper signal.
     // Use `super.send` for this 'cause `this.send` intercepts events and passes

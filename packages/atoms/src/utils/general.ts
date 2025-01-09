@@ -63,7 +63,7 @@ export const makeReasonsReadable = (
   internalReasons: InternalEvaluationReason[] | undefined = node?.w
 ): EvaluationReason[] | undefined =>
   internalReasons?.map(reason => ({
-    newState: reason.s?.get(),
+    newState: reason.s?.v,
     oldState: reason.p,
     operation: node?.s.get(reason.s!)?.operation,
     reasons: reason.r && makeReasonsReadable(reason.s, reason.r),

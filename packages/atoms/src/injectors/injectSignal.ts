@@ -2,7 +2,6 @@ import { Signal } from '../classes/Signal'
 import { EventMap, InjectSignalConfig, MapEvents, None } from '../types/index'
 import { readInstance } from '../utils/evaluationContext'
 import { Static } from '../utils/general'
-import { injectAtomGetters } from './injectAtomGetters'
 import { injectMemo } from './injectMemo'
 
 /**
@@ -51,7 +50,7 @@ export const injectSignal = <State, MappedEvents extends EventMap = None>(
   }, [])
 
   // create a graph edge between the current atom and the new signal
-  injectAtomGetters().getNode(signal, undefined, {
+  instance.e.live.getNode(signal, undefined, {
     f: config?.reactive === false ? Static : 0,
     op: 'injectSignal',
   })

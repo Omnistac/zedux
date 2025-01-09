@@ -30,9 +30,9 @@ describe('ecosystem', () => {
 
     const atom1 = atom('atom1', () => {
       evaluate1()
-      const store = injectSignal('1')
+      const signal = injectSignal('1')
 
-      return store
+      return signal
     })
 
     const atom2 = atom('atom2', () => {

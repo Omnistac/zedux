@@ -615,7 +615,7 @@ describe('react types', () => {
       const val6 = injectCallback(() => true, [])
       const val7 = injectPromise(() => Promise.resolve(1), [])
 
-      return api(injectSignal(instance.get())).setExports({
+      return api(injectSignal(instance.getOnce())).setExports({
         val1,
         val2,
         val3,
