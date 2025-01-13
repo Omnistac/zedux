@@ -254,7 +254,7 @@ export class AtomInstance<
    * Force this atom instance to reevaluate.
    */
   public invalidate() {
-    this.r({ t: Invalidate }, false)
+    this.r({ s: this, t: Invalidate }, false)
 
     // run the scheduler synchronously after invalidation
     this.e._scheduler.flush()

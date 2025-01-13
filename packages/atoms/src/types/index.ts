@@ -1,4 +1,4 @@
-import { ActionChain, Observable, Settable } from '@zedux/core'
+import { Observable, Settable } from '@zedux/core'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
 import { GraphNode } from '../classes/GraphNode'
@@ -10,8 +10,10 @@ import {
   AnyAtomGenerics,
   AnyAtomInstance,
   AnyAtomTemplate,
+  AnyNodeGenerics,
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
+  NodeGenerics,
   NodeOf,
   ParamsOf,
   StateOf,
@@ -238,6 +240,14 @@ export type AtomValueOrFactory<
   }
 > = AtomStateFactory<G> | G['State']
 
+export type ChangeEvent<G extends NodeGenerics = AnyNodeGenerics> = Prettify<
+  Omit<EvaluationReasonBase<G>, 'type'> & {
+    newState: G['State']
+    oldState: G['State']
+    type: 'change'
+  }
+>
+
 export type Cleanup = () => void
 
 export interface DehydrationOptions extends NodeFilterOptions {
@@ -267,21 +277,24 @@ export interface EcosystemConfig<
 
 export type EffectCallback = () => MaybeCleanup | Promise<any>
 
-export interface EvaluationReason<State = any> {
-  action?: ActionChain
-  newState?: State
-  oldState?: State
+export interface EvaluationReasonBase<
+  G extends NodeGenerics = AnyNodeGenerics
+> {
   operation?: string // e.g. a method like "injectValue"
-  source?: GraphNode
   reasons?: EvaluationReason[]
+  source?: GraphNode<G>
   type: EvaluationType
 }
 
+export type EvaluationReason<G extends NodeGenerics = AnyNodeGenerics> =
+  | ChangeEvent<G>
+  | EvaluationReasonBase<G>
+
 export type EvaluationType =
-  | 'cache invalidated'
-  | 'node destroyed'
-  | 'promise changed'
-  | 'state changed'
+  | 'invalidate'
+  | 'destroy'
+  | 'promiseChange'
+  | 'change'
 
 /**
  * A user-defined object mapping custom event names to unused placeholder

@@ -37,8 +37,6 @@ export type InternalEvaluationType =
   | typeof PromiseChange
   | typeof EventSent
 
-export const isZeduxNode = 'isZeduxNode'
-
 /**
  * Compare two arrays for shallow equality. Returns true if they're "equal".
  * Returns false if either array is undefined
@@ -52,16 +50,16 @@ export const compare = (nextDeps?: any[], prevDeps?: any[]) =>
 export const prefix = '@@zedux'
 
 const reasonTypeMap = {
-  [Destroy]: 'node destroyed',
-  [Invalidate]: 'cache invalidated',
-  [PromiseChange]: 'promise changed',
-  4: 'state changed',
+  [Destroy]: 'destroy',
+  [Invalidate]: 'invalidate',
+  [PromiseChange]: 'promiseChange',
+  4: 'change',
 } as const
 
 export const makeReasonReadable = (
   reason: InternalEvaluationReason,
   node?: GraphNode
-) => ({
+): EvaluationReason => ({
   newState: reason.s?.v,
   oldState: reason.p,
   operation: node?.s.get(reason.s!)?.operation,

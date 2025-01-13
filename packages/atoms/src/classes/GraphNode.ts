@@ -1,6 +1,6 @@
 import {
   AnyAtomTemplate,
-  AtomGenerics,
+  AnyNodeGenerics,
   Cleanup,
   DehydrationFilter,
   GraphEdge,
@@ -9,6 +9,7 @@ import {
   LifecycleStatus,
   NodeFilter,
   NodeFilterOptions,
+  NodeGenerics,
 } from '@zedux/atoms/types/index'
 import { is, Job } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
@@ -27,14 +28,8 @@ import {
 import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
 import { addEdge, removeEdge, setNodeStatus } from '../utils/graph'
 
-export abstract class GraphNode<
-  G extends Pick<AtomGenerics, 'Events' | 'Params' | 'State' | 'Template'> = {
-    Events: any
-    Params: any
-    State: any
-    Template: any
-  }
-> implements Job, EventEmitter<G>
+export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
+  implements Job, EventEmitter<G>
 {
   /**
    * TS drops the entire `G`enerics type unless it's used somewhere in this

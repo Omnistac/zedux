@@ -32,6 +32,8 @@ import {
   As,
   None,
   Transaction,
+  ChangeEvent,
+  AnyNodeGenerics,
 } from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 import { ecosystem, snapshotNodes } from './utils/ecosystem'
@@ -763,10 +765,7 @@ describe('react types', () => {
       b: undefined
       batch: boolean
       mutate: Transaction[]
-      change: {
-        newState: number
-        oldState: number
-      }
+      change: ChangeEvent<AnyNodeGenerics<{ State: number }>>
     }>
 
     const calls: any[] = []
@@ -799,7 +798,7 @@ describe('react types', () => {
       operation: 'on',
       reasons: [],
       source: signal,
-      type: 'state changed',
+      type: 'change',
     }
 
     expect(calls).toEqual([

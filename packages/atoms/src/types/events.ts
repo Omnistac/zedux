@@ -1,5 +1,13 @@
 import { RecursivePartial } from '@zedux/core'
-import { AtomGenerics, Cleanup, GraphEdgeConfig, Prettify } from './index'
+import {
+  AnyNodeGenerics,
+  AtomGenerics,
+  ChangeEvent,
+  Cleanup,
+  GraphEdgeConfig,
+  NodeGenerics,
+  Prettify,
+} from './index'
 
 /**
  * Events that can be dispatched manually. This is not the full list of events
@@ -26,12 +34,11 @@ export interface ExplicitEvents {
   mutate: Transaction[]
 }
 
-export type CatchAllListener<G extends Pick<AtomGenerics, 'Events' | 'State'>> =
-  (eventMap: Partial<ListenableEvents<G>>) => void
+export type CatchAllListener<G extends NodeGenerics> = (
+  eventMap: Partial<ListenableEvents<G>>
+) => void
 
-export interface EventEmitter<
-  G extends Pick<AtomGenerics, 'Events' | 'State'> = { Events: any; State: any }
-> {
+export interface EventEmitter<G extends NodeGenerics = AnyNodeGenerics> {
   // TODO: add a `passive` option for listeners that don't prevent destruction
   on<E extends keyof G['Events']>(
     eventName: E,
@@ -42,12 +49,13 @@ export interface EventEmitter<
   on(callback: CatchAllListener<G>, edgeDetails?: GraphEdgeConfig): Cleanup
 }
 
-export interface ImplicitEvents<State = any> {
-  change: { newState: State; oldState: State }
+export interface ImplicitEvents<G extends NodeGenerics = AnyNodeGenerics> {
+  change: ChangeEvent<G>
 }
 
-export type ListenableEvents<G extends Pick<AtomGenerics, 'Events' | 'State'>> =
-  Prettify<G['Events'] & ExplicitEvents & ImplicitEvents<G['State']>>
+export type ListenableEvents<G extends NodeGenerics> = Prettify<
+  G['Events'] & ExplicitEvents & ImplicitEvents<G>
+>
 
 export type Mutatable<State> =
   | RecursivePartial<State>
@@ -60,7 +68,7 @@ export type SendableEvents<G extends Pick<AtomGenerics, 'Events'>> = Prettify<
 >
 
 export type SingleEventListener<
-  G extends Pick<AtomGenerics, 'Events' | 'State'>,
+  G extends NodeGenerics,
   E extends keyof G['Events']
 > = (
   payload: ListenableEvents<G>[E],

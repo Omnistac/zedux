@@ -47,7 +47,7 @@ export const addEdge = (
 export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
   // If we're not force-destroying, don't destroy if there are dependents. Also
   // don't destroy of `node.K`eep is set
-  if (node.l === 'Destroyed' || node.K || (!force && node.o.size)) return
+  if (node.l === 'Destroyed' || (!force && node.o.size)) return
 
   node.c?.()
   node.c = undefined
@@ -189,7 +189,7 @@ export const scheduleDependents = (
  * When a node's refCount hits 0, schedule destruction of that node.
  */
 export const scheduleNodeDestruction = (node: GraphNode) =>
-  node.o.size || node.l !== 'Active' || node.m()
+  node.o.size || node.l !== 'Active' || node.K || node.m()
 
 export const setNodeStatus = (node: GraphNode, newStatus: LifecycleStatus) => {
   const oldStatus = node.l

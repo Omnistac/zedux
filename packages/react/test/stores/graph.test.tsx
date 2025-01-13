@@ -256,7 +256,7 @@ describe('graph', () => {
         operation: 'get',
         reasons: [],
         source: expect.any(Object),
-        type: 'state changed',
+        type: 'change',
       },
       {
         newState: 'aab',
@@ -269,11 +269,11 @@ describe('graph', () => {
             operation: 'get',
             reasons: [],
             source: expect.any(Object),
-            type: 'state changed',
+            type: 'change',
           },
         ],
         source: expect.any(Object),
-        type: 'state changed',
+        type: 'change',
       },
     ])
   })

@@ -268,7 +268,7 @@ describe('injectors', () => {
           operation: 'injectSignal',
           reasons: [],
           source: ecosystem.find('@signal(1)'),
-          type: 'state changed',
+          type: 'change',
         },
       ],
       [
@@ -278,7 +278,7 @@ describe('injectors', () => {
           operation: 'injectSignal',
           reasons: [],
           source: ecosystem.find('@signal(1)'),
-          type: 'state changed',
+          type: 'change',
         },
       ],
     ])

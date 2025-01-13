@@ -110,7 +110,7 @@ export const injectPromise: {
   if (
     runOnInvalidate &&
     // injectWhy is an unrestricted injector - using it conditionally is fine:
-    injectWhy().some(reason => reason.type === 'cache invalidated')
+    injectWhy().some(reason => reason.type === 'invalidate')
   ) {
     refs.current.counter++
   }

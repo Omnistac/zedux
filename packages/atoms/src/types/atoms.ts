@@ -36,6 +36,12 @@ export type AnyAtomTemplate<G extends Partial<AtomGenerics> | 'any' = 'any'> =
       : any
   >
 
+export type AnyNodeGenerics<
+  G extends Partial<NodeGenerics> = { [K in keyof NodeGenerics]: any }
+> = {
+  [K in keyof NodeGenerics]: keyof G extends K ? G[K] : any
+}
+
 export type AtomApiGenerics = Pick<
   AtomGenerics,
   'Exports' | 'Promise' | 'State'
@@ -88,6 +94,11 @@ export type ExportsOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
     : A extends AtomApi<infer G>
     ? G['Exports']
     : never
+
+export type NodeGenerics = Pick<
+  AtomGenerics,
+  'Events' | 'Params' | 'State' | 'Template'
+>
 
 export type NodeOf<A extends AnyAtomTemplate | AtomSelectorOrConfig> =
   A extends AtomTemplateBase<infer G>
