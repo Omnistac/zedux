@@ -22,9 +22,14 @@ const validTypes = [
   'prepatch',
   'prerelease',
 ]
+
+const distTagOverrideFlag = '--dist-tag='
+const includeChoresFlag = '--chores'
+
+const validDistTags = ['canary', 'latest', 'lts', 'next']
+const validFlags = [distTagOverrideFlag, includeChoresFlag]
 const validPreIds = ['alpha', 'beta', 'rc']
 
-const includeChoresFlag = '--chores'
 const isNextBranch = branch => /^next\/v\d+\.(\d+\.)?x$/.test(branch)
 const isSupportBranch = branch => /^v\d+\.x$/.test(branch)
 
@@ -105,7 +110,7 @@ const assertTokenIsValid = async (email, token) => {
 /**
  * Validate script arguments
  */
-const assertValidArgs = (type, preId) => {
+const assertValidArgs = (type, preId, flags) => {
   console.info('Validating arguments')
 
   if (!validTypes.includes(type)) {
@@ -115,9 +120,35 @@ const assertValidArgs = (type, preId) => {
     process.exit(1)
   }
 
-  if (type.startsWith('pre') && !validPreIds.includes(preId)) {
+  if (
+    type.startsWith('pre') &&
+    type !== 'prerelease' &&
+    !validPreIds.includes(preId)
+  ) {
     console.error(
       `Expected second argument to be one of "${validPreIds.join('", "')}"`
+    )
+    process.exit(1)
+  }
+
+  const invalidFlag = flags.find(
+    flag => !validFlags.some(validFlag => flag.startsWith(validFlag))
+  )
+
+  if (invalidFlag) {
+    console.error(`Invalid flag "${invalidFlag}" found`)
+    process.exit(1)
+  }
+
+  const distTagOverride = flags
+    .find(flag => flag.startsWith(distTagOverrideFlag))
+    ?.slice(distTagOverrideFlag.length)
+
+  if (distTagOverride && !validDistTags.includes(distTagOverride)) {
+    console.error(
+      `Expected dist-tag override to be one of "${validDistTags.join(
+        '", "'
+      )}". Received: "${distTagOverride}"`
     )
     process.exit(1)
   }
@@ -275,7 +306,9 @@ const generateChangelog = async (type, tagName, includeChores) => {
         features.push(item)
       } else if (/^fix[(!:]/.test(message)) {
         fixes.push(item)
-      } else if ((includeChores ? /^chore[(!:]/ : /^chore(\(.+?\))?!:/).test(message)) {
+      } else if (
+        (includeChores ? /^chore[(!:]/ : /^chore(\(.+?\))?!:/).test(message)
+      ) {
         // only include breaking chores if !includeChores
         chores.push(item)
       }
@@ -283,7 +316,10 @@ const generateChangelog = async (type, tagName, includeChores) => {
 
   await Promise.all(promises)
 
-  if (hasBreakingChanges && !['major', 'premajor', 'prerelease'].includes(type)) {
+  if (
+    hasBreakingChanges &&
+    !['major', 'premajor', 'prerelease'].includes(type)
+  ) {
     await confirm(
       'Breaking changes detected. A major version or a premajor is recommended. Proceed anyway?',
       false
@@ -539,17 +575,22 @@ const makePullRequest = async (email, token, branch, tagName) => {
  * Publish each package to npm. Report any failures and wait for them to be
  * fixed manually before proceeding with the release.
  */
-const npmPublish = async (branch, packages, isPrerelease) => {
+const npmPublish = async (branch, packages, isPrerelease, distTagOverride) => {
   let proceed = true
-  const tagStr = isNextBranch(branch)
-    ? ` --tag canary`
-    : isSupportBranch(branch)
-    ? ` --tag lts`
-    : isPrerelease
-    ? ' --tag next'
-    : ''
 
-  console.info('Publishing packages with npm dist-tag:', tagStr.slice(7))
+  const distTag =
+    distTagOverride ||
+    (isNextBranch(branch)
+      ? 'canary'
+      : isSupportBranch(branch)
+      ? 'lts'
+      : isPrerelease
+      ? 'next'
+      : '')
+
+  console.info('Publishing packages with npm dist-tag:', distTag)
+
+  const tagStr = distTag ? ` --tag ${distTag}` : ''
 
   // publish packages one-by-one (there seemed to be some Nx race condition)
   for (const dir of packages) {
@@ -633,7 +674,7 @@ const returnToBranch = async (branch, tagName) => {
  * 'rc'
  */
 const run = async ([type, preId], flags) => {
-  assertValidArgs(type, preId)
+  assertValidArgs(type, preId, flags)
 
   const isPrerelease = type.startsWith('pre')
 
@@ -659,7 +700,11 @@ const run = async ([type, preId], flags) => {
 
   // start modifying things
   const tagName = await incrementVersion(packages, type, preId)
-  const changelogBody = await generateChangelog(type, tagName, flags.includes(includeChoresFlag))
+  const changelogBody = await generateChangelog(
+    type,
+    tagName,
+    flags.includes(includeChoresFlag)
+  )
 
   await commitChanges(tagName)
 
@@ -668,17 +713,27 @@ const run = async ([type, preId], flags) => {
   await makePullRequest(email, token, branch, tagName)
   await returnToBranch(branch, tagName)
 
-  await npmPublish(branch, packages, isPrerelease)
+  await npmPublish(
+    branch,
+    packages,
+    isPrerelease,
+    flags
+      .find(flag => flag.startsWith(distTagOverrideFlag))
+      ?.slice(distTagOverrideFlag.length)
+  )
   await createRelease(email, token, tagName, changelogBody, isPrerelease)
 
   logPackageLinks(packages)
 }
 
-const { args, flags } = process.argv.slice(2).reduce((buckets, argOrFlag) => {
-  const bucket = argOrFlag.startsWith('-') ? buckets.flags : buckets.args
-  bucket.push(argOrFlag)
+const { args, flags } = process.argv.slice(2).reduce(
+  (buckets, argOrFlag) => {
+    const bucket = argOrFlag.startsWith('-') ? buckets.flags : buckets.args
+    bucket.push(argOrFlag)
 
-  return buckets
-}, { args: [], flags: [] })
+    return buckets
+  },
+  { args: [], flags: [] }
+)
 
 run(args, flags)
