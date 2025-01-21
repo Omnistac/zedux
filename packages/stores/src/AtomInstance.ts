@@ -157,7 +157,8 @@ export class AtomInstance<
    * An alias for `instance.store.getState()`. Returns the current state of this
    * atom instance's store.
    *
-   * @deprecated - use `.get()` instead @see AtomInstance.get
+   * @deprecated - use `.getOnce()` instead @see NewAtomInstance.getOnce. Also
+   * see `.get()` for automatic reactivity.
    */
   public getState(): G['State'] {
     return this.store.getState()
@@ -169,6 +170,8 @@ export class AtomInstance<
    * An alias for `instance.store.getState()`.
    */
   public get() {
+    super.get() // register graph edge
+
     return this.store.getState()
   }
 
@@ -176,7 +179,7 @@ export class AtomInstance<
    * Force this atom instance to reevaluate.
    */
   public invalidate() {
-    this.r({ t: Invalidate }, false)
+    this.r({ s: this, t: Invalidate }, false)
 
     // run the scheduler synchronously after invalidation
     this.e._scheduler.flush()
@@ -248,6 +251,8 @@ export class AtomInstance<
             this._handleStateChange(newState, oldState, action)
           }
         )
+
+        this.v = this.store.getState()
       } else {
         const newStateType = getStateType(newFactoryResult)
 
@@ -392,6 +397,7 @@ export class AtomInstance<
     oldState: G['State'] | undefined,
     action: ActionChain
   ) {
+    this.v = newState
     zi.u({ p: oldState, r: this.w, s: this }, false)
 
     if (this.e._mods.stateChanged) {

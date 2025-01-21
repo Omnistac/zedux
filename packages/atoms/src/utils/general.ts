@@ -37,8 +37,6 @@ export type InternalEvaluationType =
   | typeof PromiseChange
   | typeof EventSent
 
-export const isZeduxNode = 'isZeduxNode'
-
 /**
  * Compare two arrays for shallow equality. Returns true if they're "equal".
  * Returns false if either array is undefined
@@ -52,21 +50,26 @@ export const compare = (nextDeps?: any[], prevDeps?: any[]) =>
 export const prefix = '@@zedux'
 
 const reasonTypeMap = {
-  [Destroy]: 'node destroyed',
-  [Invalidate]: 'cache invalidated',
-  [PromiseChange]: 'promise changed',
-  4: 'state changed',
+  [Destroy]: 'destroy',
+  [Invalidate]: 'invalidate',
+  [PromiseChange]: 'promiseChange',
+  4: 'change',
 } as const
+
+export const makeReasonReadable = (
+  reason: InternalEvaluationReason,
+  node?: GraphNode
+): EvaluationReason => ({
+  newState: reason.s?.v,
+  oldState: reason.p,
+  operation: node?.s.get(reason.s!)?.operation,
+  reasons: reason.r && makeReasonsReadable(reason.s, reason.r),
+  source: reason.s,
+  type: reasonTypeMap[reason.t ?? 4],
+})
 
 export const makeReasonsReadable = (
   node?: GraphNode,
   internalReasons: InternalEvaluationReason[] | undefined = node?.w
 ): EvaluationReason[] | undefined =>
-  internalReasons?.map(reason => ({
-    newState: reason.s?.get(),
-    oldState: reason.p,
-    operation: node?.s.get(reason.s!)?.operation,
-    reasons: reason.r && makeReasonsReadable(reason.s, reason.r),
-    source: reason.s,
-    type: reasonTypeMap[reason.t ?? 4],
-  }))
+  internalReasons?.map(reason => makeReasonReadable(reason, node))

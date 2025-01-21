@@ -2,8 +2,11 @@ import {
   api,
   As,
   atom,
-  injectMappedSignal,
+  ChangeEvent,
+  GraphNode,
   injectSignal,
+  ion,
+  Signal,
   StateOf,
   Transaction,
 } from '@zedux/atoms'
@@ -98,11 +101,17 @@ describe('signals', () => {
       calls.push(['mutate', transactions, eventMap])
     })
 
+    type GenericsOf<T extends GraphNode> = T extends Signal<infer G> ? G : never
+
+    type ExpectedChangeEvent = ChangeEvent<
+      GenericsOf<typeof instance1.exports.signal> & {
+        Params: undefined
+        Template: undefined
+      }
+    >
+
     instance1.exports.signal.on('change', (change, eventMap) => {
-      expectTypeOf(change).toEqualTypeOf<{
-        newState: StateOf<typeof instance1>
-        oldState: StateOf<typeof atom1>
-      }>()
+      expectTypeOf(change).toEqualTypeOf<ExpectedChangeEvent>()
 
       calls.push(['change', change, eventMap])
     })
@@ -112,8 +121,19 @@ describe('signals', () => {
       state.b = []
     })
 
+    const commonChangeProps = {
+      operation: 'on',
+      reasons: [],
+      source: instance1.exports.signal,
+      type: 'change',
+    }
+
     const expectedEvents = {
-      change: { newState: { a: 1, b: [] }, oldState: { a: 1, b: [{ c: 2 }] } },
+      change: {
+        newState: { a: 1, b: [] },
+        oldState: { a: 1, b: [{ c: 2 }] },
+        ...commonChangeProps,
+      },
       mutate: [
         { k: ['b', '0', 'c'], v: 3 },
         { k: 'b', v: [] },
@@ -129,66 +149,86 @@ describe('signals', () => {
     instance1.exports.signal.set(state => ({ ...state, a: state.a + 1 }))
 
     const expectedEvents2 = {
-      change: { newState: { a: 2, b: [] }, oldState: { a: 1, b: [] } },
+      change: {
+        newState: { a: 2, b: [] },
+        oldState: { a: 1, b: [] },
+        ...commonChangeProps,
+      },
     }
 
     expect(calls).toEqual([['change', expectedEvents2.change, expectedEvents2]])
   })
-})
 
-describe('mapped signals', () => {
-  test('mapped signals forward state updates to inner signals', () => {
-    const values: string[] = []
+  test("a non-reactively-injected signal still updates the atom's value", () => {
+    const testAtom = atom('test', () => {
+      const signal = injectSignal(1, { reactive: false })
 
-    const atom1 = atom('1', () => {
-      const a = injectSignal('a')
-      const b = injectSignal('b')
-
-      values.push(a.get(), b.get())
-
-      const mappedSignal = injectMappedSignal({ a, b })
-
-      return mappedSignal
+      return api(signal).setExports({
+        increment: () => signal.set(state => state + 1),
+      })
     })
 
-    expectTypeOf<StateOf<typeof atom1>>().toEqualTypeOf<{
-      a: string
-      b: string
-    }>()
+    const testInstance = ecosystem.getNode(testAtom)
 
-    const instance1 = ecosystem.getNode(atom1)
+    expect(testInstance.v).toBe(1)
+    expect(testInstance.get()).toBe(1)
+    expect(testInstance.getOnce()).toBe(1)
 
-    expect(instance1.get()).toEqual({ a: 'a', b: 'b' })
-    expect(values).toEqual(['a', 'b'])
+    testInstance.exports.increment()
 
-    instance1.set(state => ({ ...state, a: 'aa' }))
+    expect(testInstance.v).toBe(2)
+    expect(testInstance.get()).toBe(2)
+    expect(testInstance.getOnce()).toBe(2)
+  })
 
-    expect(instance1.get()).toEqual({ a: 'aa', b: 'b' })
-    expect(values).toEqual(['a', 'b', 'aa', 'b'])
+  test('calling `.get()` in a reactive context registers graph edges', () => {
+    const atom1 = atom('1', 'a')
 
-    instance1.mutate(state => {
-      state.b = 'bb'
+    const atom2 = ion('2', ({ getNode }) => {
+      const node1 = getNode(atom1)
+
+      const signal = injectSignal('')
+      signal.set(node1.get() + 'b')
+
+      return signal
     })
 
-    expect(instance1.get()).toEqual({ a: 'aa', b: 'bb' })
-    expect(values).toEqual(['a', 'b', 'aa', 'b', 'aa', 'bb'])
+    const node1 = ecosystem.getNode(atom1)
+    const node2 = ecosystem.getNode(atom2)
+
+    expect(node2.get()).toBe('ab')
+
+    node1.set('aa')
+
+    expect(node2.get()).toBe('aab')
+
+    node2.set('c') // essentially a no-op; node2's state is always derived
+
+    expect(node2.get()).toBe('aab')
+
+    node1.set('aaa')
+
+    expect(node2.get()).toBe('aaab')
+  })
+
+  test('calling `.getOnce()` in a reactive context does not register graph edges', () => {
+    const atom1 = atom('1', 'a')
+
+    const atom2 = ion('2', ({ getNode }) => {
+      const node1 = getNode(atom1)
+
+      const signal = injectSignal('')
+      signal.set(node1.getOnce() + 'b')
+
+      return signal
+    })
+
+    const node2 = ecosystem.getNode(atom2)
+
+    expect(node2.get()).toBe('ab')
+
+    ecosystem.getNode(atom1).set('aa')
+
+    expect(node2.get()).toBe('ab')
   })
 })
-
-// const signalA = injectSignal('a', {
-//   events: { eventA: As<string>, eventC: As<boolean> },
-// })
-// const signalB = injectSignal('b', {
-//   events: { eventA: As<number>, eventB: As<1 | 2> },
-// })
-
-// const result = injectMappedSignal({
-//   a: signalA,
-//   b: signalB,
-// })
-
-// type TEvents = EventsOf<typeof result>
-// type Tuple = UnionToTuple<keyof EventsOf<typeof result>>
-// type TEvents4 = TupleToEvents<TEvents, Tuple>
-
-// result.on('eventB', (test, map) => 2)

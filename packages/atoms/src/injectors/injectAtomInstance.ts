@@ -59,7 +59,7 @@ export const injectAtomInstance: {
     params?: ParamsOf<A>,
     config?: InjectAtomInstanceConfig
   ) => {
-    const injectedInstance = instance.e.live.getInstance(
+    const injectedInstance = instance.e.live.getNode(
       atom as A,
       params as ParamsOf<A>,
       {
@@ -81,7 +81,7 @@ export const injectAtomInstance: {
     config?: InjectAtomInstanceConfig
   ) => {
     // make sure the dependency gets registered for this evaluation
-    const injectedInstance = instance.e.live.getInstance(
+    const injectedInstance = instance.e.live.getNode(
       atom as A,
       params as ParamsOf<A>,
       {

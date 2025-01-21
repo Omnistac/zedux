@@ -13,15 +13,15 @@ import {
   startBuffer,
 } from '../utils/evaluationContext'
 import { prefix } from '../utils/general'
-import { pluginActions } from '../utils/plugin-actions'
-import { Ecosystem } from './Ecosystem'
 import {
   destroyNodeFinish,
   destroyNodeStart,
-  GraphNode,
   scheduleDependents,
   setNodeStatus,
-} from './GraphNode'
+} from '../utils/graph'
+import { pluginActions } from '../utils/plugin-actions'
+import { Ecosystem } from './Ecosystem'
+import { GraphNode } from './GraphNode'
 
 const defaultResultsComparator = (a: any, b: any) => a === b
 
@@ -129,20 +129,17 @@ export class SelectorInstance<
 > extends GraphNode<G & { Events: any }> {
   public static $$typeof = Symbol.for(`${prefix}/SelectorInstance`)
 
-  /**
-   * `v`alue - the current cached selector result
-   */
-  public v?: G['State']
-
   constructor(
     /**
      * @see GraphNode.e
      */
     public e: Ecosystem,
+
     /**
      * @see GraphNode.id
      */
     public id: string,
+
     /**
      * `t`emplate - the function or object reference of this selector or
      * selector config object
@@ -150,12 +147,14 @@ export class SelectorInstance<
      * @see GraphNode.t
      */
     public t: G['Template'],
+
     /**
      * @see GraphNode.p
      */
     public p: G['Params']
   ) {
     super()
+    runSelector(this, true)
   }
 
   /**
@@ -170,17 +169,10 @@ export class SelectorInstance<
   }
 
   /**
-   * @see GraphNode.get
-   */
-  public get() {
-    return this.v as G['State']
-  }
-
-  /**
    * @see GraphNode.d
    */
   public d(options?: DehydrationFilter) {
-    if (this.f(options)) return this.get()
+    if (this.f(options)) return this.v
   }
 
   /**

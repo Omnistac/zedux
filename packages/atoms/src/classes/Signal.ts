@@ -9,14 +9,14 @@ import {
   UndefinedEvents,
 } from '../types/index'
 import { EventSent } from '../utils/general'
-import { Ecosystem } from './Ecosystem'
 import {
   destroyNodeFinish,
   destroyNodeStart,
-  GraphNode,
   handleStateChange,
   scheduleDependents,
-} from './GraphNode'
+} from '../utils/graph'
+import { Ecosystem } from './Ecosystem'
+import { GraphNode } from './GraphNode'
 import { recursivelyMutate, recursivelyProxy } from './proxies'
 
 export class Signal<
@@ -59,7 +59,7 @@ export class Signal<
     public readonly id: string,
 
     /**
-     * `v`alue - the current state of this signal.
+     * @see GraphNode.v
      */
     public v: G['State'],
 
@@ -78,13 +78,6 @@ export class Signal<
    */
   public destroy(force?: boolean) {
     destroyNodeStart(this, force) && destroyNodeFinish(this)
-  }
-
-  /**
-   * @see GraphNode.get
-   */
-  public get() {
-    return this.v
   }
 
   /**

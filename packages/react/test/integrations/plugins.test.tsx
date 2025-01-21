@@ -214,7 +214,7 @@ describe('plugins', () => {
                 >
               ).payload
 
-              const state = node.get()
+              const state = node.getOnce()
               updates.push(state)
             }
           },

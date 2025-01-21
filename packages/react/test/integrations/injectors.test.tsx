@@ -84,6 +84,9 @@ describe('injectors', () => {
 
     instance.set('b')
 
+    // all those `get` calls shouldn't add any edges besides the one already
+    // added by `injectSignal`:
+    expect(instance.s.size).toBe(1)
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b'])
     expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb'])
     expect(effects).toEqual(['b'])
@@ -165,7 +168,7 @@ describe('injectors', () => {
       const signal = injectSignal('a', { reactive: isReactive })
       const instance2 = injectAtomInstance(atom2)
 
-      vals.push([signal.get(), isReactive, instance2.get()])
+      vals.push([signal.get(), isReactive, instance2.getOnce()])
 
       return api(signal).setExports({
         invalidate,
@@ -265,7 +268,7 @@ describe('injectors', () => {
           operation: 'injectSignal',
           reasons: [],
           source: ecosystem.find('@signal(1)'),
-          type: 'state changed',
+          type: 'change',
         },
       ],
       [
@@ -275,7 +278,7 @@ describe('injectors', () => {
           operation: 'injectSignal',
           reasons: [],
           source: ecosystem.find('@signal(1)'),
-          type: 'state changed',
+          type: 'change',
         },
       ],
     ])

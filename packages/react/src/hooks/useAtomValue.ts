@@ -61,4 +61,4 @@ export const useAtomValue: {
   useAtomInstance(atom, params, {
     ...config,
     subscribe: true,
-  }).get()
+  }).v

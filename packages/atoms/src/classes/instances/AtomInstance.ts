@@ -19,6 +19,7 @@ import {
   Invalidate,
   prefix,
   PromiseChange,
+  Static,
 } from '@zedux/atoms/utils/general'
 import { pluginActions } from '@zedux/atoms/utils/plugin-actions'
 import {
@@ -35,8 +36,9 @@ import {
   destroyNodeStart,
   handleStateChange,
   scheduleDependents,
-} from '../GraphNode'
+} from '../../utils/graph'
 import {
+  bufferEdge,
   destroyBuffer,
   flushBuffer,
   getEvaluationContext,
@@ -104,7 +106,7 @@ const setPromise = <G extends Omit<AtomGenerics, 'Node'>>(
   promise: Promise<any>,
   isStateUpdater?: boolean
 ) => {
-  const currentState = instance.get()
+  const currentState = instance.v
   if (promise === instance.promise) return currentState
 
   instance.promise = promise as G['Promise']
@@ -161,6 +163,12 @@ export class AtomInstance<
 
   // @ts-expect-error same as exports
   public promise: G['Promise']
+
+  /**
+   * `a`lteredEdge - tracks whether we've altered the edge between this atom and
+   * its wrapped signal (if any).
+   */
+  public a: boolean | undefined = undefined
 
   /**
    * `b`ufferedEvents - when the wrapped signal emits events, we
@@ -237,16 +245,16 @@ export class AtomInstance<
    * value.
    */
   public get() {
-    const { S, v } = this
-
-    return S ? S.get() : v
+    // defer to `Signal#get` to auto-track usages of this signal in the current
+    // reactive context (if any)
+    return this.S ? this.S.get() : super.get()
   }
 
   /**
    * Force this atom instance to reevaluate.
    */
   public invalidate() {
-    this.r({ t: Invalidate }, false)
+    this.r({ s: this, t: Invalidate }, false)
 
     // run the scheduler synchronously after invalidation
     this.e._scheduler.flush()
@@ -301,15 +309,14 @@ export class AtomInstance<
   public d(options?: DehydrationFilter) {
     if (!this.f(options)) return
 
-    const { t } = this
-    const state = this.get()
+    const { t, v } = this
     const transform =
       (typeof options === 'object' &&
         !is(options, AtomTemplateBase) &&
         (options as DehydrationOptions).transform) ??
       true
 
-    return transform && t.dehydrate ? t.dehydrate(state) : state
+    return transform && t.dehydrate ? t.dehydrate(v) : v
   }
 
   /**
@@ -321,7 +328,7 @@ export class AtomInstance<
 
   /**
    * `i`nit - Perform the initial run of this atom's state factory. Create the
-   * store, promise, exports, and hydrate (all optional except the store).
+   * `S`ignal (if any), promise, exports, and hydrate (all optional).
    */
   public i() {
     const { n, s } = getEvaluationContext()
@@ -345,6 +352,19 @@ export class AtomInstance<
    */
   public j() {
     const { n, s } = getEvaluationContext()
+
+    if (this.a && this.w.length === 1 && this.w[0].s === this.S) {
+      // if we altered the edge between this atom and its wrapped signal, the
+      // wrapped signal should not trigger an evaluation of this atom. Skip
+      // evaluation - just capture the state update and forward to this atom's
+      // observers.
+      const oldState = this.v
+      this.v = this.S!.v // `this.S`ignal must exist if `this.a`lteredEdge is true
+      handleStateChange(this, oldState, this.b)
+
+      return
+    }
+
     this._nextInjectors = []
     this._isEvaluating = true
     startBuffer(this)
@@ -376,6 +396,21 @@ export class AtomInstance<
 
         this.v === oldState || handleStateChange(this, oldState, this.b)
       }
+
+      if (this.S) {
+        const edge = this.s.get(newFactoryResult)
+
+        if (edge) {
+          // the edge between this atom and its wrapped signal needs to be
+          // reactive. Track whether we altered the `p`endingFlags added by
+          // `injectSignal`/similar. If we did, the edge was static and should
+          // not trigger a reevaluation of this atom.
+          this.a = !!(edge.p! & Static) // `.p!` - doesn't matter if undefined
+          edge.p = 0
+        } else {
+          bufferEdge(newFactoryResult, 'implicit', 0)
+        }
+      }
     } catch (err) {
       this._nextInjectors.forEach(injector => {
         injector.cleanup?.()
@@ -387,7 +422,7 @@ export class AtomInstance<
     } finally {
       this._isEvaluating = false
 
-      // even if evaluation errored, we need to update dependents if the store's
+      // even if evaluation errored, we need to update dependents if the `S`ignal's
       // state changed
       if (this.S && this.S.v !== this.v) {
         const oldState = this.v
@@ -482,16 +517,18 @@ export class AtomInstance<
     // status is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
     if (this.l !== 'Destroyed' && this.w.push(reason) === 1) {
+      if (reason.s && reason.s === this.S) {
+        // when `this.S`ignal gives us events along with a state update, we need
+        // to buffer those and emit them together after this atom evaluates
+        if (reason.e) {
+          this.b = this.b
+            ? { ...this.b, ...(reason.e as typeof this.b) }
+            : (reason.e as unknown as typeof this.b)
+        }
+      }
+
       // refCount just hit 1; we haven't scheduled a job for this node yet
       this.e._scheduler.schedule(this, defer)
-
-      // when `this.S`ignal gives us events along with a state update, we need
-      // to buffer those and emit them together after this atom evaluates
-      if (reason.s === this.S && reason.e) {
-        this.b = this.b
-          ? { ...this.b, ...(reason.e as typeof this.b) }
-          : (reason.e as unknown as typeof this.b)
-      }
     }
   }
 

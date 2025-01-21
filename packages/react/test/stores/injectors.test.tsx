@@ -262,7 +262,7 @@ describe('injectors', () => {
           operation: undefined,
           reasons: undefined,
           source: undefined,
-          type: 'state changed',
+          type: 'change',
         },
       ],
       [
@@ -272,7 +272,7 @@ describe('injectors', () => {
           operation: undefined,
           reasons: undefined,
           source: undefined,
-          type: 'state changed',
+          type: 'change',
         },
       ],
     ])

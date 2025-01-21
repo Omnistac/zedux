@@ -137,19 +137,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const get: AtomGetters['get'] = <G extends AtomGenerics>(
       atom: AtomTemplateBase<G>,
       params?: G['Params']
-    ) => {
-      const instance = this.getNode(atom, params as G['Params'])
-      const node = getEvaluationContext().n
-
-      // If get is called in a reactive context, track the required atom
-      // instances so we can add graph edges for them. When called outside a
-      // reactive context, get() is just an alias for ecosystem.get()
-      if (node) {
-        bufferEdge(instance, 'get', 0)
-      }
-
-      return instance.get()
-    }
+    ) => this.getNode(atom, params as G['Params']).get()
 
     const getInstance: AtomGetters['getInstance'] = <G extends AtomGenerics>(
       atom: AtomTemplateBase<G>,
@@ -444,7 +432,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     params?: ParamsOf<A>
   ) {
     if ((atom as GraphNode).izn) {
-      return (atom as GraphNode).get()
+      return (atom as GraphNode).v
     }
 
     const instance = this.getInstance(
@@ -452,7 +440,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       params as ParamsOf<A>
     ) as AnyAtomInstance
 
-    return instance.get()
+    return instance.v
   }
 
   public getInstance<A extends AnyAtomTemplate>(
@@ -633,7 +621,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       instance = new SelectorInstance(this, id, selectorOrConfig, params || [])
 
       this.n.set(id, instance)
-      runSelector(instance, true)
 
       return instance
     }

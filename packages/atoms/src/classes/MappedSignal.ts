@@ -1,5 +1,6 @@
 import { Settable } from '@zedux/core'
 import {
+  AnyNodeGenerics,
   AtomGenerics,
   ExplicitEvents,
   InternalEvaluationReason,
@@ -17,7 +18,7 @@ import { Ecosystem } from './Ecosystem'
 import { Signal } from './Signal'
 import { recursivelyMutate, recursivelyProxy } from './proxies'
 
-export type SignalMap = Record<string, Signal>
+export type SignalMap = Record<string, Signal<AnyNodeGenerics>>
 
 export class MappedSignal<
   G extends Pick<AtomGenerics, 'Events' | 'State'> & {
@@ -208,7 +209,7 @@ export class MappedSignal<
       if (reason.s) this.N = { ...this.v }
     }
 
-    if (reason.s) this.N![this.I[reason.s.id]] = reason.s.get()
+    if (reason.s) this.N![this.I[reason.s.id]] = reason.s.v
 
     // forward events from wrapped signals to observers of this wrapper signal.
     // Use `super.send` for this 'cause `this.send` intercepts events and passes

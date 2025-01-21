@@ -32,6 +32,8 @@ import {
   As,
   None,
   Transaction,
+  ChangeEvent,
+  AnyNodeGenerics,
 } from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 import { ecosystem, snapshotNodes } from './utils/ecosystem'
@@ -615,7 +617,7 @@ describe('react types', () => {
       const val6 = injectCallback(() => true, [])
       const val7 = injectPromise(() => Promise.resolve(1), [])
 
-      return api(injectSignal(instance.get())).setExports({
+      return api(injectSignal(instance.getOnce())).setExports({
         val1,
         val2,
         val3,
@@ -763,10 +765,7 @@ describe('react types', () => {
       b: undefined
       batch: boolean
       mutate: Transaction[]
-      change: {
-        newState: number
-        oldState: number
-      }
+      change: ChangeEvent<AnyNodeGenerics<{ State: number }>>
     }>
 
     const calls: any[] = []
@@ -793,14 +792,23 @@ describe('react types', () => {
 
     signal.set(state => state + 1, { a: 11 })
 
+    const expectedChangeEvent = {
+      newState: 2,
+      oldState: 1,
+      operation: 'on',
+      reasons: [],
+      source: signal,
+      type: 'change',
+    }
+
     expect(calls).toEqual([
-      ['a', 11, { a: 11, change: { newState: 2, oldState: 1 } }],
+      ['a', 11, { a: 11, change: expectedChangeEvent }],
       [
         'change',
         { newState: 2, oldState: 1 },
-        { a: 11, change: { newState: 2, oldState: 1 } },
+        { a: 11, change: expectedChangeEvent },
       ],
-      ['*', { a: 11, change: { newState: 2, oldState: 1 } }],
+      ['*', { a: 11, change: expectedChangeEvent }],
     ])
     calls.splice(0, 3)
 

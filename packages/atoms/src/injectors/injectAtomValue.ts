@@ -24,4 +24,4 @@ export const injectAtomValue: {
   injectAtomInstance(atom, params, {
     operation: 'injectAtomValue',
     subscribe: true,
-  }).get()
+  }).v

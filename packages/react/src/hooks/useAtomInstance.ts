@@ -82,7 +82,7 @@ export const useAtomInstance: {
   // It should be fine for this to run every render. It's possible to change
   // approaches if it is too heavy sometimes. But don't memoize this call:
   const instance: AtomInstance = ecosystem.getNode(atom, params)
-  const renderedValue = instance.get()
+  const renderedValue = instance.v
 
   let node =
     (ecosystem.n.get(observerId) as ExternalNode) ??
@@ -110,7 +110,7 @@ export const useAtomInstance: {
     // an unmounting component's effect cleanup can update or force-destroy the
     // atom instance before this component is mounted. If that happened, trigger
     // a rerender to recreate the atom instance and/or get its new state
-    if (instance.get() !== renderedValue || instance.l === 'Destroyed') {
+    if (instance.v !== renderedValue || instance.l === 'Destroyed') {
       render({})
     }
 

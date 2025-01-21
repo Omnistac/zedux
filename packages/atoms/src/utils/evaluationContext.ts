@@ -1,14 +1,10 @@
 import { ActionFactoryPayloadType, is } from '@zedux/core'
 import { AnyAtomInstance } from '../types/index'
-import { ExplicitExternal, OutOfRange } from '../utils/general'
-import { pluginActions } from '../utils/plugin-actions'
-import {
-  addEdge,
-  GraphNode,
-  removeEdge,
-  scheduleNodeDestruction,
-} from '../classes/GraphNode'
+import { type GraphNode } from '../classes/GraphNode'
 import { AtomInstance } from '../classes/instances/AtomInstance'
+import { ExplicitExternal, OutOfRange } from './general'
+import { addEdge, removeEdge, scheduleNodeDestruction } from './graph'
+import { pluginActions } from './plugin-actions'
 
 export interface EvaluationContext {
   /**
