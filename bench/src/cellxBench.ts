@@ -1,5 +1,5 @@
 // The following is an implementation of the cellx benchmark https://github.com/Riim/cellx/blob/master/perf/perf.html
-import { logPerfResult } from './util/perfLogging'
+import { assert, logPerfResult } from './util/perfLogging'
 import { Computed, ReactiveFramework } from './util/reactiveFramework'
 
 const cellx = (framework: ReactiveFramework, layers: number) => {
@@ -125,12 +125,12 @@ export const cellxbench = (framework: ReactiveFramework) => {
     const [before, after] = results[layers]
     const [expectedBefore, expectedAfter] = expected[layers]
 
-    console.assert(
+    assert(
       arraysEqual(before, expectedBefore),
       `Expected first layer ${expectedBefore}, found first layer ${before}`
     )
 
-    console.assert(
+    assert(
       arraysEqual(after, expectedAfter),
       `Expected last layer ${expectedAfter}, found last layer ${after}`
     )

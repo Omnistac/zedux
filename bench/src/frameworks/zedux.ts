@@ -1,35 +1,48 @@
-import { Ecosystem, atom, createEcosystem } from '@zedux/atoms'
+import {
+  Ecosystem,
+  SelectorInstance,
+  Signal,
+  createEcosystem,
+} from '../../../packages/atoms' // '@zedux/atoms'
 import { Computed, ReactiveFramework } from '../util/reactiveFramework'
 
 let ecosystem: Ecosystem
 let counter = 0
 
+class CustomSelector extends SelectorInstance {
+  /**
+   * Zedux cleans up graph nodes when it detects they're no longer in use. These
+   * benchmarks don't expect that behavior. Making `node.m`aybeDestroy a noop is
+   * all that's needed to prevent automatic destruction, while still allowing
+   * manual destruction via `node.destroy()`.
+   */
+  m() {}
+}
+
 export const zeduxFramework: ReactiveFramework = {
   name: 'Zedux',
   signal: initialValue => {
-    const instance = ecosystem.getInstance(
-      atom((counter++).toString(), initialValue)
-    )
+    const s = new Signal(ecosystem, (counter++).toString(), initialValue)
 
     return {
-      write: v => instance.set(v),
-      read: () => ecosystem.live.get(instance),
+      read: () => s.get(),
+      write: v => s.set(v),
     }
   },
   computed: <T>(fn: () => T): Computed<T> => {
-    const instance = ecosystem.getNode(fn)
+    const s = new CustomSelector(ecosystem, (counter++).toString(), fn, [])
 
     return {
-      read: () => ecosystem.live.select(instance),
+      read: () => s.get(),
     }
   },
   effect: fn => ecosystem.getNode(fn),
   withBatch: fn => ecosystem.batch(fn),
   withBuild: fn => {
-    if (ecosystem) {
-      ecosystem.reset()
-    }
+    if (ecosystem) ecosystem.reset()
+
     ecosystem = createEcosystem()
+    globalThis.ecosystem = ecosystem
     return fn()
   },
 }

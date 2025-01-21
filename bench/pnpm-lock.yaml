@@ -16,6 +16,9 @@ importers:
       '@angular/core':
         specifier: 16.0.0-next.0
         version: 16.0.0-next.0(patch_hash=imgmwdc5iuzp5vrjy7dqeeid6i)(rxjs@7.8.1)(zone.js@0.12.0)
+      '@legendapp/state':
+        specifier: ^3.0.0-beta.23
+        version: 3.0.0-beta.23(react@19.0.0)
       '@preact/signals':
         specifier: ^1.1.3
         version: 1.1.3(preact@10.13.2)
@@ -28,12 +31,15 @@ importers:
       '@vue/reactivity':
         specifier: ^3.2.47
         version: 3.2.47
+      alien-signals:
+        specifier: ^0.4.12
+        version: 0.4.12
       compostate:
         specifier: ^0.5.1
         version: 0.5.1
       jotai:
         specifier: ^2.9.1
-        version: 2.9.1
+        version: 2.9.1(react@19.0.0)
       kairo:
         specifier: 0.6.0-rc.0
         version: 0.6.0-rc.0
@@ -369,6 +375,9 @@ packages:
   '@jridgewell/sourcemap-codec@1.4.15':
     resolution: {integrity: sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==}
 
+  '@legendapp/state@3.0.0-beta.23':
+    resolution: {integrity: sha512-oodfIE5REhhmqhihg683Onz11MwHVb+XNizssKyZldyjV/EY5KZPSAFS/JFb79KBp93iBZ0/kRY5gQSLH+Z1cA==}
+
   '@preact/signals-core@1.3.0':
     resolution: {integrity: sha512-M+M3ZOtd1dtV/uasyk4SZu1vbfEJ4NeENv0F7F12nijZYedB5wSgbtZcuACyssnTznhF4ctUyrR0dZHuHfyWKA==}
 
@@ -421,6 +430,9 @@ packages:
     resolution: {integrity: sha512-xjIYgE8HBrkpd/sJqOGNspf8uHG+NOHGOw6a/Urj8taM2EXfdNAH2oFcPeIFfsv3+kz/mJrS5VuMqbNLjCa2vw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  alien-signals@0.4.12:
+    resolution: {integrity: sha512-Og0PgAihxlp1R22bsoBsyhhMG4+qhU+fkkLPoGBQkYVc3qt9rYnrwYTf+M6kqUqUZpf3rXDnpL90iKa0QcSVVg==}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -602,6 +614,10 @@ packages:
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
+  react@19.0.0:
+    resolution: {integrity: sha512-V8AVnmPIICiWpGfm6GLzCR/W5FXLchHop40W4nXBmdlEceh16rCN8O8LNWm5bh5XUX91fh7KpA+W0TgMKmgTpQ==}
+    engines: {node: '>=0.10.0'}
+
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
 
@@ -677,6 +693,11 @@ packages:
 
   ufo@1.1.2:
     resolution: {integrity: sha512-TrY6DsjTQQgyS3E3dBaOXf0TpPD8u9FVrVYmKVegJuFw51n/YB9XPt+U6ydzFG5ZIN7+DIjPbNmXoBj9esYhgQ==}
+
+  use-sync-external-store@1.4.0:
+    resolution: {integrity: sha512-9WXSPC5fMv61vaupRkCKCxsPxBocVnwakBEkMIHHpkTTg6icbJtg6jzgtLDm4bl3cSHAca52rYWih0k4K3PfHw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   usignal@0.9.0:
     resolution: {integrity: sha512-/6/dn+4qKE9MN3k5W76VzMDr5cMPNLswvOR6lHFttTADvf6TB/uhGmSOQpFAxcugTzSwG4vX5NiNEqkiFfzDlg==}
@@ -913,6 +934,12 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.4.15': {}
 
+  '@legendapp/state@3.0.0-beta.23(react@19.0.0)':
+    dependencies:
+      use-sync-external-store: 1.4.0(react@19.0.0)
+    transitivePeerDependencies:
+      - react
+
   '@preact/signals-core@1.3.0': {}
 
   '@preact/signals@1.1.3(preact@10.13.2)':
@@ -970,6 +997,8 @@ snapshots:
   acorn-walk@8.2.0: {}
 
   acorn@8.8.2: {}
+
+  alien-signals@0.4.12: {}
 
   ansi-regex@5.0.1: {}
 
@@ -1088,7 +1117,9 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
-  jotai@2.9.1: {}
+  jotai@2.9.1(react@19.0.0):
+    optionalDependencies:
+      react: 19.0.0
 
   js-string-escape@1.0.1: {}
 
@@ -1165,6 +1196,8 @@ snapshots:
 
   react-is@17.0.2: {}
 
+  react@19.0.0: {}
+
   resolve-pkg-maps@1.0.0: {}
 
   rollup@3.21.6:
@@ -1222,6 +1255,10 @@ snapshots:
   type-detect@4.0.8: {}
 
   ufo@1.1.2: {}
+
+  use-sync-external-store@1.4.0(react@19.0.0):
+    dependencies:
+      react: 19.0.0
 
   usignal@0.9.0: {}
 

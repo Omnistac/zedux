@@ -1,9 +1,11 @@
 import { TestConfig, FrameworkInfo } from './util/frameworkTypes'
 
+import { alienFramework } from './frameworks/alienSignals'
 import { angularFramework } from './frameworks/angularSignals'
 import { compostateFramework } from './frameworks/compostate'
 import { jotaiFramework } from './frameworks/jotai'
 import { kairoFramework } from './frameworks/kairo'
+import { legendFramework } from './frameworks/legend'
 import { mobxFramework } from './frameworks/mobx'
 import { molWireFramework } from './frameworks/molWire'
 import { obyFramework } from './frameworks/oby'
@@ -17,10 +19,12 @@ import { xReactivityFramework } from './frameworks/xReactivity'
 import { zeduxFramework } from './frameworks/zedux'
 
 export const frameworkInfo: FrameworkInfo[] = [
+  // { framework: alienFramework, testPullCounts: true },
   // { framework: angularFramework, testPullCounts: true },
   // { framework: compostateFramework, testPullCounts: true },
   // { framework: jotaiFramework, testPullCounts: true },
   // { framework: kairoFramework, testPullCounts: true },
+  // { framework: legendFramework, testPullCounts: true },
   // { framework: mobxFramework, testPullCounts: true },
   // { framework: molWireFramework, testPullCounts: true },
   // { framework: obyFramework, testPullCounts: true },
