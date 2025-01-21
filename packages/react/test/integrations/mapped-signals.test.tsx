@@ -3,6 +3,7 @@ import {
   atom,
   injectMappedSignal,
   injectSignal,
+  ion,
   StateOf,
 } from '@zedux/atoms'
 import { ecosystem } from '../utils/ecosystem'
@@ -95,6 +96,30 @@ describe('mapped signals', () => {
         type: 'change',
       },
     ])
+  })
+
+  test('atoms can be used as inner signals', () => {
+    const atom1 = atom('1', 'a')
+
+    const atom2 = ion('2', ({ getNode }) => {
+      const node1 = getNode(atom1)
+      const signalB = injectSignal('b')
+
+      const signal = injectMappedSignal({
+        a: node1,
+        b: signalB,
+      })
+
+      return signal
+    })
+
+    const node1 = ecosystem.getNode(atom2)
+
+    expect(node1.get()).toEqual({ a: 'a', b: 'b' })
+
+    ecosystem.getNode(atom1).set('aa')
+
+    expect(node1.get()).toEqual({ a: 'aa', b: 'b' })
   })
 })
 

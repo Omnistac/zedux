@@ -5,6 +5,7 @@ import {
   ChangeEvent,
   GraphNode,
   injectSignal,
+  ion,
   Signal,
   StateOf,
   Transaction,
@@ -178,5 +179,56 @@ describe('signals', () => {
     expect(testInstance.v).toBe(2)
     expect(testInstance.get()).toBe(2)
     expect(testInstance.getOnce()).toBe(2)
+  })
+
+  test('calling `.get()` in a reactive context registers graph edges', () => {
+    const atom1 = atom('1', 'a')
+
+    const atom2 = ion('2', ({ getNode }) => {
+      const node1 = getNode(atom1)
+
+      const signal = injectSignal('')
+      signal.set(node1.get() + 'b')
+
+      return signal
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+    const node2 = ecosystem.getNode(atom2)
+
+    expect(node2.get()).toBe('ab')
+
+    node1.set('aa')
+
+    expect(node2.get()).toBe('aab')
+
+    node2.set('c') // essentially a no-op; node2's state is always derived
+
+    expect(node2.get()).toBe('aab')
+
+    node1.set('aaa')
+
+    expect(node2.get()).toBe('aaab')
+  })
+
+  test('calling `.getOnce()` in a reactive context does not register graph edges', () => {
+    const atom1 = atom('1', 'a')
+
+    const atom2 = ion('2', ({ getNode }) => {
+      const node1 = getNode(atom1)
+
+      const signal = injectSignal('')
+      signal.set(node1.getOnce() + 'b')
+
+      return signal
+    })
+
+    const node2 = ecosystem.getNode(atom2)
+
+    expect(node2.get()).toBe('ab')
+
+    ecosystem.getNode(atom1).set('aa')
+
+    expect(node2.get()).toBe('ab')
   })
 })
