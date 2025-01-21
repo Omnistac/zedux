@@ -498,7 +498,7 @@ const incrementVersion = async (packages, type, preId) => {
       Object.keys(packageJson[key] || {}).forEach(dep => {
         if (!dep.startsWith('@zedux/')) return
 
-        packageJson[key][dep] = `^${version}`
+        packageJson[key][dep] = version
       })
     }
 
