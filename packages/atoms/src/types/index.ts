@@ -174,8 +174,11 @@ export type DependentCallback = (
 export interface DependentEdge {
   callback?: DependentCallback
   createdAt: number
+  dependentKey?: string
   flags: number // calculated from the EdgeFlags
+  isMaterialized?: boolean
   operation: string
+  prevEdge?: WeakRef<DependentEdge>
   task?: () => void // for external edges - so they can unschedule jobs
 }
 

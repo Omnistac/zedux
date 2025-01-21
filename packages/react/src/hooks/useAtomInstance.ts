@@ -3,6 +3,7 @@ import {
   AnyAtomTemplate,
   AtomInstanceType,
   AtomParamsType,
+  DependentEdge,
   ParamlessTemplate,
 } from '@zedux/atoms'
 import { useEffect, useState } from 'react'
@@ -75,12 +76,14 @@ export const useAtomInstance: {
 
   // It should be fine for this to run every render. It's possible to change
   // approaches if it is too heavy sometimes. But don't memoize this call:
-  const instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
+  let instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
   const renderedState = instance.getState()
+
+  let edge: DependentEdge | undefined
 
   const addEdge = () => {
     if (!ecosystem._graph.nodes[instance.id]?.dependents.get(dependentKey)) {
-      ecosystem._graph.addEdge(
+      edge = ecosystem._graph.addEdge(
         dependentKey,
         instance.id,
         operation,
@@ -89,6 +92,15 @@ export const useAtomInstance: {
           if ((render as any).mounted) render({})
         }
       )
+
+      if (edge) {
+        edge.dependentKey = dependentKey
+
+        if (instance._lastEdge) {
+          edge.prevEdge = instance._lastEdge
+        }
+        instance._lastEdge = new WeakRef(edge)
+      }
     }
   }
 
@@ -99,6 +111,21 @@ export const useAtomInstance: {
   // Only remove the graph edge when the instance id changes or on component
   // destruction.
   useEffect(() => {
+    // re-get the instance in case StrictMode destroys it
+    instance = ecosystem.getInstance(atom as A, params as AtomParamsType<A>)
+
+    if (edge) {
+      let prevEdge = edge.prevEdge?.deref()
+
+      // clear out any junk edges added by StrictMode
+      while (prevEdge && !prevEdge.isMaterialized) {
+        ecosystem._graph.removeEdge(prevEdge.dependentKey!, instance.id)
+        prevEdge = prevEdge.prevEdge?.deref()
+      }
+
+      edge.isMaterialized = true
+    }
+
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
     // this effect's cleanup unnecessarily)
     addEdge()

@@ -443,8 +443,11 @@ describe('useAtomSelector', () => {
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
         "@@selector-unnamed-1": SelectorCache {
+          "_lastEdge": WeakRef {},
+          "_prevCache": WeakRef {},
           "args": [],
           "id": "@@selector-unnamed-1",
+          "isMaterialized": true,
           "nextReasons": [],
           "prevReasons": [],
           "result": 1,
@@ -464,8 +467,11 @@ describe('useAtomSelector', () => {
     expect(ecosystem.selectors.findAll()).toMatchInlineSnapshot(`
       {
         "@@selector-unnamed-1": SelectorCache {
+          "_lastEdge": WeakRef {},
+          "_prevCache": WeakRef {},
           "args": [],
           "id": "@@selector-unnamed-1",
+          "isMaterialized": true,
           "nextReasons": [],
           "prevReasons": [],
           "result": 1,

@@ -4,6 +4,7 @@ import {
   AtomSelectorOrConfig,
   Cleanup,
   DependentCallback,
+  DependentEdge,
   EvaluationReason,
   Selectable,
 } from '../types/index'
@@ -16,10 +17,13 @@ const defaultResultsComparator = (a: any, b: any) => a === b
 export class SelectorCache<T = any, Args extends any[] = any[]> {
   public static $$typeof = Symbol.for(`${prefix}/SelectorCache`)
   public isDestroyed?: boolean
+  public isMaterialized?: boolean
   public nextReasons: EvaluationReason[] = []
   public prevReasons?: EvaluationReason[]
   public result?: T
   public task?: () => void
+  public _lastEdge?: WeakRef<DependentEdge>
+  public _prevCache?: WeakRef<SelectorCache>
 
   constructor(
     public id: string,
@@ -40,6 +44,11 @@ export class Selectors {
    * Map selectorKey + params id strings to the SelectorCache for the selector
    */
   public _items: Record<string, SelectorCache<any, any>> = {}
+
+  /**
+   * A workaround for React StrictMode
+   */
+  public _lastCache?: WeakRef<SelectorCache<any, any>>
 
   /**
    * Map selectors (or selector config objects) to a base selectorKey that can

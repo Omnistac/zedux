@@ -14,6 +14,7 @@ import {
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
   Cleanup,
+  DependentEdge,
   EvaluationReason,
   EvaluationSourceType,
   ExportsInfusedSetter,
@@ -87,6 +88,7 @@ export class AtomInstance<
   public _createdAt: number
   public _injectors?: InjectorDescriptor[]
   public _isEvaluating?: boolean
+  public _lastEdge?: WeakRef<DependentEdge>
   public _nextInjectors?: InjectorDescriptor[]
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
