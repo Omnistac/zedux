@@ -189,7 +189,7 @@ export const scheduleDependents = (
  * When a node's refCount hits 0, schedule destruction of that node.
  */
 export const scheduleNodeDestruction = (node: GraphNode) =>
-  node.o.size || node.l !== 'Active' || node.K || node.m()
+  node.o.size || node.l !== 'Active' || node.m()
 
 export const setNodeStatus = (node: GraphNode, newStatus: LifecycleStatus) => {
   const oldStatus = node.l
