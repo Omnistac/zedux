@@ -22,6 +22,12 @@ const validTypes = [
   'prepatch',
   'prerelease',
 ]
+
+const distTagOverrideFlag = '--dist-tag='
+const includeChoresFlag = '--chores'
+
+const validDistTags = ['canary', 'latest', 'lts', 'next']
+const validFlags = [distTagOverrideFlag, includeChoresFlag]
 const validPreIds = ['alpha', 'beta', 'rc']
 
 const isNextBranch = branch => /^next\/v\d+\.(\d+\.)?x$/.test(branch)
@@ -104,7 +110,7 @@ const assertTokenIsValid = async (email, token) => {
 /**
  * Validate script arguments
  */
-const assertValidArgs = (type, preId) => {
+const assertValidArgs = (type, preId, flags) => {
   console.info('Validating arguments')
 
   if (!validTypes.includes(type)) {
@@ -114,9 +120,35 @@ const assertValidArgs = (type, preId) => {
     process.exit(1)
   }
 
-  if (type.startsWith('pre') && !validPreIds.includes(preId)) {
+  if (
+    type.startsWith('pre') &&
+    type !== 'prerelease' &&
+    !validPreIds.includes(preId)
+  ) {
     console.error(
       `Expected second argument to be one of "${validPreIds.join('", "')}"`
+    )
+    process.exit(1)
+  }
+
+  const invalidFlag = flags.find(
+    flag => !validFlags.some(validFlag => flag.startsWith(validFlag))
+  )
+
+  if (invalidFlag) {
+    console.error(`Invalid flag "${invalidFlag}" found`)
+    process.exit(1)
+  }
+
+  const distTagOverride = flags
+    .find(flag => flag.startsWith(distTagOverrideFlag))
+    ?.slice(distTagOverrideFlag.length)
+
+  if (distTagOverride && !validDistTags.includes(distTagOverride)) {
+    console.error(
+      `Expected dist-tag override to be one of "${validDistTags.join(
+        '", "'
+      )}". Received: "${distTagOverride}"`
     )
     process.exit(1)
   }
@@ -236,7 +268,7 @@ const formatList = (header, list) => {
  *
  * Output markdown at the beginning of the CHANGELOG.md file
  */
-const generateChangelog = async (type, tagName) => {
+const generateChangelog = async (type, tagName, includeChores) => {
   const [day, month, year] = new Date().toUTCString().split(' ').slice(1, 4)
   const date = `${month} ${day.replace(/^0/, '')}, ${year}`
   const file = 'CHANGELOG.md'
@@ -274,16 +306,20 @@ const generateChangelog = async (type, tagName) => {
         features.push(item)
       } else if (/^fix[(!:]/.test(message)) {
         fixes.push(item)
-      } else if (/^chore(\(.+?\))?!:/.test(message)) {
-        // only include breaking chores
-        item.message = `Chore: ${shortMessage}`
+      } else if (
+        (includeChores ? /^chore[(!:]/ : /^chore(\(.+?\))?!:/).test(message)
+      ) {
+        // only include breaking chores if !includeChores
         chores.push(item)
       }
     })
 
   await Promise.all(promises)
 
-  if (hasBreakingChanges && !['major', 'premajor'].includes(type)) {
+  if (
+    hasBreakingChanges &&
+    !['major', 'premajor', 'prerelease'].includes(type)
+  ) {
     await confirm(
       'Breaking changes detected. A major version or a premajor is recommended. Proceed anyway?',
       false
@@ -292,7 +328,7 @@ const generateChangelog = async (type, tagName) => {
 
   if (
     features.length &&
-    !['major', 'minor', 'premajor', 'preminor'].includes(type)
+    !['major', 'minor', 'premajor', 'preminor', 'prerelease'].includes(type)
   ) {
     await confirm(
       'New features detected. A major, minor, premajor, or preminor is recommended. Proceed anyway?',
@@ -314,7 +350,7 @@ const generateChangelog = async (type, tagName) => {
 
   if (!notes.trim() && !chores.length && !features.length && !fixes.length) {
     console.error(
-      '\nNo fixes, features, or chores since last release and no notes given. Exiting.\n'
+      `\nNo fixes, features, or chores since last release and no notes given. Maybe you meant to include the "${includeChoresFlag}" flag. Exiting.\n`
     )
     process.exit(1)
   }
@@ -462,7 +498,7 @@ const incrementVersion = async (packages, type, preId) => {
       Object.keys(packageJson[key] || {}).forEach(dep => {
         if (!dep.startsWith('@zedux/')) return
 
-        packageJson[key][dep] = `^${version}`
+        packageJson[key][dep] = version
       })
     }
 
@@ -539,17 +575,22 @@ const makePullRequest = async (email, token, branch, tagName) => {
  * Publish each package to npm. Report any failures and wait for them to be
  * fixed manually before proceeding with the release.
  */
-const npmPublish = async (branch, packages, isPrerelease) => {
+const npmPublish = async (branch, packages, isPrerelease, distTagOverride) => {
   let proceed = true
-  const tagStr = isNextBranch(branch)
-    ? ` --tag canary`
-    : isSupportBranch(branch)
-    ? ` --tag lts`
-    : isPrerelease
-    ? ' --tag next'
-    : ''
 
-  console.info('Publishing packages with npm dist-tag:', tagStr.slice(7))
+  const distTag =
+    distTagOverride ||
+    (isNextBranch(branch)
+      ? 'canary'
+      : isSupportBranch(branch)
+      ? 'lts'
+      : isPrerelease
+      ? 'next'
+      : '')
+
+  console.info('Publishing packages with npm dist-tag:', distTag)
+
+  const tagStr = distTag ? ` --tag ${distTag}` : ''
 
   // publish packages one-by-one (there seemed to be some Nx race condition)
   for (const dir of packages) {
@@ -632,8 +673,8 @@ const returnToBranch = async (branch, tagName) => {
  * If type is 'pre<major|minor|patch>', also pass a preId of 'alpha', 'beta', or
  * 'rc'
  */
-const run = async (type, preId) => {
-  assertValidArgs(type, preId)
+const run = async ([type, preId], flags) => {
+  assertValidArgs(type, preId, flags)
 
   const isPrerelease = type.startsWith('pre')
 
@@ -659,7 +700,11 @@ const run = async (type, preId) => {
 
   // start modifying things
   const tagName = await incrementVersion(packages, type, preId)
-  const changelogBody = await generateChangelog(type, tagName)
+  const changelogBody = await generateChangelog(
+    type,
+    tagName,
+    flags.includes(includeChoresFlag)
+  )
 
   await commitChanges(tagName)
 
@@ -668,10 +713,27 @@ const run = async (type, preId) => {
   await makePullRequest(email, token, branch, tagName)
   await returnToBranch(branch, tagName)
 
-  await npmPublish(branch, packages, isPrerelease)
+  await npmPublish(
+    branch,
+    packages,
+    isPrerelease,
+    flags
+      .find(flag => flag.startsWith(distTagOverrideFlag))
+      ?.slice(distTagOverrideFlag.length)
+  )
   await createRelease(email, token, tagName, changelogBody, isPrerelease)
 
   logPackageLinks(packages)
 }
 
-run(...process.argv.slice(2))
+const { args, flags } = process.argv.slice(2).reduce(
+  (buckets, argOrFlag) => {
+    const bucket = argOrFlag.startsWith('-') ? buckets.flags : buckets.args
+    bucket.push(argOrFlag)
+
+    return buckets
+  },
+  { args: [], flags: [] }
+)
+
+run(args, flags)
