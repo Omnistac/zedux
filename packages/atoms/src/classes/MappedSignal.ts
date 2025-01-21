@@ -1,5 +1,6 @@
 import { Settable } from '@zedux/core'
 import {
+  AnyNodeGenerics,
   AtomGenerics,
   ExplicitEvents,
   InternalEvaluationReason,
@@ -17,7 +18,7 @@ import { Ecosystem } from './Ecosystem'
 import { Signal } from './Signal'
 import { recursivelyMutate, recursivelyProxy } from './proxies'
 
-export type SignalMap = Record<string, Signal>
+export type SignalMap = Record<string, Signal<AnyNodeGenerics>>
 
 export class MappedSignal<
   G extends Pick<AtomGenerics, 'Events' | 'State'> & {
