@@ -24,7 +24,9 @@ exports[`useAtomSelector inline selector that returns a different object referen
       "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
+        "dependentKey": "Test-:r0:",
         "flags": 2,
+        "isMaterialized": true,
         "operation": "useAtomSelector",
       },
     },
@@ -59,7 +61,9 @@ exports[`useAtomSelector inline selector that returns a different object referen
       "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
+        "dependentKey": "Test-:r0:",
         "flags": 2,
+        "isMaterialized": true,
         "operation": "useAtomSelector",
         "task": undefined,
       },
@@ -95,6 +99,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
       "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
+        "dependentKey": "Test-:r0:",
         "flags": 2,
         "operation": "useAtomSelector",
       },
@@ -130,6 +135,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
       "Test-:r0:" => {
         "callback": [Function],
         "createdAt": 123456789,
+        "dependentKey": "Test-:r0:",
         "flags": 2,
         "operation": "useAtomSelector",
         "task": undefined,

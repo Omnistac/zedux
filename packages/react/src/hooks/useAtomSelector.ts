@@ -1,6 +1,7 @@
 import {
   AtomSelectorConfig,
   AtomSelectorOrConfig,
+  DependentEdge,
   haveDepsChanged,
   SelectorCache,
 } from '@zedux/atoms'
@@ -71,15 +72,32 @@ export const useAtomSelector = <T, Args extends any[]>(
     ;(render as any).mounted = true
   }
 
-  const cache = isSwappingRefs
+  let cache = isSwappingRefs
     ? (existingCache as SelectorCache<T, Args>)
     : selectors.getCache(selectorOrConfig, resolvedArgs)
 
+  let edge: DependentEdge | undefined
+
   const addEdge = () => {
     if (!_graph.nodes[cache.id]?.dependents.get(dependentKey)) {
-      _graph.addEdge(dependentKey, cache.id, OPERATION, External, () => {
+      edge = _graph.addEdge(dependentKey, cache.id, OPERATION, External, () => {
         if ((render as any).mounted) render({})
       })
+
+      if (edge) {
+        edge.dependentKey = dependentKey
+
+        if (cache._lastEdge) {
+          edge.prevEdge = cache._lastEdge
+        }
+        cache._lastEdge = new WeakRef(edge)
+      }
+
+      if (selectors._lastCache && selectors._lastCache.deref() !== cache) {
+        cache._prevCache = selectors._lastCache
+      }
+
+      selectors._lastCache = new WeakRef(cache)
     }
   }
 
@@ -90,6 +108,32 @@ export const useAtomSelector = <T, Args extends any[]>(
   ;(render as any).cache = cache as SelectorCache<any, any[]>
 
   useEffect(() => {
+    cache = isSwappingRefs
+      ? (existingCache as SelectorCache<T, Args>)
+      : selectors.getCache(selectorOrConfig, resolvedArgs)
+
+    if (edge) {
+      let prevEdge = edge.prevEdge?.deref()
+
+      // clear out any junk edges added by StrictMode
+      while (prevEdge && !prevEdge.isMaterialized) {
+        ecosystem._graph.removeEdge(prevEdge.dependentKey!, cache.id)
+        prevEdge = prevEdge.prevEdge?.deref()
+      }
+
+      edge.isMaterialized = true
+    }
+
+    let prevCache = cache._prevCache?.deref()
+
+    // clear out any junk caches created by StrictMode
+    while (prevCache && !prevCache.isMaterialized) {
+      selectors.destroyCache(prevCache, [], true)
+      prevCache = prevCache._prevCache?.deref()
+    }
+
+    cache.isMaterialized = true
+
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
     // this effect's cleanup unnecessarily)
     addEdge()
