@@ -1,3 +1,10 @@
+## v2.0.0-beta.1 (Jan 21, 2025)
+
+### New Features:
+
+- **Breaking Change** `atoms`: remove `createdAt` timestamp tracking (#150)
+- **Breaking Change** `atoms`, `react`, `stores`: make `signal.get` reactive and add `signal.getOnce` (#151)
+
 ## v2.0.0-beta.0 (Jan 6, 2025)
 
 ### New Features:
