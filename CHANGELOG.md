@@ -1,3 +1,10 @@
+## v1.3.1 (Jan 22, 2025)
+
+### Fixes:
+
+- `immer`: import named `produce` export from immer (#148)
+- `atoms`, `react`: use singly-linked WeakRefs to clean up React 18 StrictMode trash (#154)
+
 ## v1.3.0 (Dec 11, 2024)
 
 Since React 19 is officially released, we can finally release v1.3.0 officially. In addition to the selector changes from this version's release candidates, this version removes Zedux's package.json `production` exports, which were previously unused except by some rogue build pipelines. Credit to [@marbemac](https://github.com/marbemac) :tada:.
