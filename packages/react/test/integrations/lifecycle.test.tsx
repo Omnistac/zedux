@@ -171,7 +171,7 @@ describe('ttl', () => {
 
     expect(instance1.l).toBe('Active')
 
-    instance1.on(() => {})() // add dependent and immediately clean it up
+    instance1.on(() => {}, { active: true })() // add dependent and immediately clean it up
 
     expect(instance1.l).toBe('Stale')
 
@@ -197,12 +197,12 @@ describe('ttl', () => {
 
     expect(instance1.l).toBe('Active')
 
-    instance1.on(() => {})() // add dependent and immediately clean it up
+    instance1.on(() => {}, { active: true })() // add dependent and immediately clean it up
 
     expect(instance1.l).toBe('Stale')
 
     jest.runAllTimers()
-    const cleanup = instance1.on(() => {})
+    const cleanup = instance1.on(() => {}, { active: true })
 
     expect(instance1.l).toBe('Active')
 
@@ -231,7 +231,7 @@ describe('ttl', () => {
 
     expect(instance1.l).toBe('Active')
 
-    instance1.on(() => {})() // add dependent and immediately clean it up
+    instance1.on(() => {}, { active: true })() // add dependent and immediately clean it up
 
     expect(instance1.l).toBe('Stale')
 
@@ -249,12 +249,12 @@ describe('ttl', () => {
 
     expect(instance1.l).toBe('Active')
 
-    instance1.on(() => {})() // add dependent and immediately clean it up
+    instance1.on(() => {}, { active: true })() // add dependent and immediately clean it up
 
     expect(instance1.l).toBe('Stale')
 
     jest.advanceTimersByTime(1)
-    const cleanup = instance1.on(() => {})
+    const cleanup = instance1.on(() => {}, { active: true })
 
     expect(instance1.l).toBe('Active')
 
@@ -272,7 +272,7 @@ describe('ttl', () => {
     const atom1 = atom('1', () => 'a')
 
     const instance1 = testEcosystem.getInstance(atom1)
-    const cleanup = instance1.on(() => {})
+    const cleanup = instance1.on(() => {}, { active: true })
     const keys = [...testEcosystem.n.keys()]
 
     expect(keys).toHaveLength(2)

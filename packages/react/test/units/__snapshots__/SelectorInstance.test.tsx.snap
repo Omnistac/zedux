@@ -6,14 +6,14 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "className": "SelectorInstance",
     "observers": {
       "@@selector-selector2-1": {
-        "flags": 0,
+        "flags": 1,
         "operation": "select",
         "p": undefined,
       },
     },
     "sources": {
       "1": {
-        "flags": 0,
+        "flags": 1,
         "operation": "get",
         "p": undefined,
       },
@@ -26,14 +26,14 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "className": "SelectorInstance",
     "observers": {
       "@@selector-selector3-0": {
-        "flags": 0,
+        "flags": 1,
         "operation": "select",
         "p": undefined,
       },
     },
     "sources": {
       "@@selector-selector1-2": {
-        "flags": 0,
+        "flags": 1,
         "operation": "select",
         "p": undefined,
       },
@@ -47,7 +47,7 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "observers": {},
     "sources": {
       "@@selector-selector2-1": {
-        "flags": 0,
+        "flags": 1,
         "operation": "select",
         "p": undefined,
       },

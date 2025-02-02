@@ -1,15 +1,20 @@
 import { MappedSignal, SignalMap } from '../classes/MappedSignal'
+import { Signal } from '../classes/Signal'
 import {
   AnyNonNullishValue,
   EventsOf,
   InjectSignalConfig,
+  None,
   Prettify,
   StateOf,
 } from '../types/index'
 import { readInstance } from '../utils/evaluationContext'
-import { Static } from '../utils/general'
-import { injectAtomGetters } from './injectAtomGetters'
+import { Eventless, EventlessStatic } from '../utils/general'
 import { injectMemo } from './injectMemo'
+
+type MapAll<M extends SignalMap> = MapEventsToPayloads<{
+  [K in keyof M]: M[K] extends Signal<any> ? EventsOf<M[K]> : None
+}>
 
 type MapEventsToPayloads<Events extends Record<string, any>> = TupleToEvents<
   Events,
@@ -37,19 +42,42 @@ type UnionToTuple<T> = UnionToIntersection<
   ? [...UnionToTuple<Exclude<T, W>>, W]
   : []
 
+/**
+ * Creates a special "mapped" signal that wraps other signals. The state of
+ * mapped signals is always a normal JS object.
+ *
+ * Automatically keeps the inner signal references up-to-date on every
+ * evaluation and re-creates any that are force-destroyed.
+ *
+ * Also accepts non-signal values. These are set as-is in the mapped signal's
+ * state on initial evaluation and ignored on subsequent evaluations.
+ *
+ * Does not support deeply-nested objects. Use multiple `injectMappedSignal`
+ * calls for that.
+ *
+ * ```ts
+ * const otherSignal = injectSignal('other state')
+ * const nestedSignal = injectAtomInstance(otherAtom) // atoms are signals
+ *
+ * const signal = injectMappedSignal({
+ *   other: otherSignal, // ref kept in sync
+ *   nonSignal: 'any value here', // sets only the initial state of this field
+ *   nestedMappedSignal: injectMappedSignal({
+ *     nested: nestedSignal // ref kept in sync
+ *   })
+ * })
+ * ```
+ */
 export const injectMappedSignal = <M extends SignalMap>(
   map: M,
-  config?: Pick<
-    InjectSignalConfig<MapEventsToPayloads<{ [K in keyof M]: EventsOf<M[K]> }>>,
-    'reactive'
-  >
+  config?: Pick<InjectSignalConfig<MapAll<M>>, 'reactive'>
 ) => {
   const instance = readInstance()
 
   const signal = injectMemo(() => {
     return new MappedSignal<{
-      Events: Prettify<MapEventsToPayloads<{ [K in keyof M]: EventsOf<M[K]> }>>
-      State: { [K in keyof M]: StateOf<M[K]> }
+      Events: Prettify<MapAll<M>>
+      State: { [K in keyof M]: M[K] extends Signal<any> ? StateOf<M[K]> : M[K] }
     }>(
       instance.e,
       instance.e._idGenerator.generateId(`@signal(${instance.id})`),
@@ -58,10 +86,14 @@ export const injectMappedSignal = <M extends SignalMap>(
   }, [])
 
   // create a graph edge between the current atom and the new signal
-  injectAtomGetters().getNode(signal, undefined, {
-    f: config?.reactive === false ? Static : 0,
+  signal.get({
+    f: config?.reactive === false ? EventlessStatic : Eventless,
     op: 'injectMappedSignal',
   })
+
+  // iterate over the passed object on every evaluation. Check for any changed
+  // inner signal references and swap them out if needed.
+  signal.u(map)
 
   return signal
 }

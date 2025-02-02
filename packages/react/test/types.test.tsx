@@ -33,7 +33,9 @@ import {
   None,
   Transaction,
   ChangeEvent,
-  AnyNodeGenerics,
+  CycleEvent,
+  InvalidateEvent,
+  PromiseChangeEvent,
 } from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 import { ecosystem, snapshotNodes } from './utils/ecosystem'
@@ -760,12 +762,21 @@ describe('react types', () => {
       },
     })
 
+    type Generics = {
+      Events: EventsOf<typeof signal>
+      State: StateOf<typeof signal>
+      Params: undefined
+      Template: undefined
+    }
+
     type TestListenableEvents = Partial<{
       a: number
       b: undefined
-      batch: boolean
       mutate: Transaction[]
-      change: ChangeEvent<AnyNodeGenerics<{ State: number }>>
+      change: ChangeEvent<Generics>
+      cycle: CycleEvent<Generics>
+      invalidate: InvalidateEvent<Generics>
+      promiseChange: PromiseChangeEvent<Generics>
     }>
 
     const calls: any[] = []

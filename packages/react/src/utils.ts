@@ -8,10 +8,14 @@ export const ecosystemContext = createContext('@@global')
  *
  * IMPORTANT: keep these in-sync with the ones in the atoms package
  */
-export const Explicit = 1
-export const External = 2
-export const Static = 4
-// export const Deferred = 8
+export const TopPrio = 0
+export const Eventless = 1
+export const Explicit = 2
+export const External = 4
+export const Static = 8
+export const OutOfRange = 16 // not a flag; use a value bigger than any flag
+export const ExplicitExternal = Explicit | External
+export const EventlessStatic = Eventless | Static
 
 export const destroyed = Symbol.for(`@@zedux/destroyed`)
 

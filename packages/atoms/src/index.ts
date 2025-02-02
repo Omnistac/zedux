@@ -9,6 +9,7 @@ import {
   destroyNodeFinish,
   destroyNodeStart,
   scheduleDependents,
+  scheduleStaticDependents,
 } from './utils/graph'
 
 export * from '@zedux/core'
@@ -20,6 +21,7 @@ export * from './types/index'
 
 // These are very obfuscated on purpose. Don't use! They're for Zedux packages.
 export const zi = {
+  a: scheduleStaticDependents,
   b: destroyNodeStart,
   c: createInjector,
   d: destroyBuffer,

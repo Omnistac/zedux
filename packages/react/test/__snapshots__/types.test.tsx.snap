@@ -6,61 +6,27 @@ exports[`react types signals 1`] = `
     "className": "Signal",
     "observers": {
       "no-1": {
-        "flags": 3,
-        "operation": "on",
-      },
-      "no-2": {
-        "flags": 3,
-        "operation": "on",
-      },
-      "no-3": {
-        "flags": 3,
+        "flags": 6,
         "operation": "on",
       },
     },
     "sources": {},
     "state": 1,
-    "status": "Initializing",
+    "status": "Active",
     "weight": 1,
   },
   "no-1": {
-    "className": "ExternalNode",
+    "className": "Listener",
     "observers": {},
     "sources": {
       "@signal-0": {
-        "flags": 3,
+        "flags": 6,
         "operation": "on",
       },
     },
     "state": undefined,
     "status": "Active",
-    "weight": 3,
-  },
-  "no-2": {
-    "className": "ExternalNode",
-    "observers": {},
-    "sources": {
-      "@signal-0": {
-        "flags": 3,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 4,
-  },
-  "no-3": {
-    "className": "ExternalNode",
-    "observers": {},
-    "sources": {
-      "@signal-0": {
-        "flags": 3,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 5,
+    "weight": 2,
   },
 }
 `;

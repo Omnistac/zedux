@@ -386,7 +386,7 @@ describe('useAtomSelector', () => {
     }
 
     const instance = ecosystem.getNode(selector2)
-    instance.on(() => {})
+    instance.on(() => {}, { active: true })
 
     const { findByTestId } = renderInEcosystem(<Test />)
 

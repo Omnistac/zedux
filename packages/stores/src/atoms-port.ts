@@ -23,7 +23,7 @@ export const prefix = '@@zedux'
  * IMPORTANT! Keep these in sync with `@zedux/atoms/utils/general.ts`
  */
 export const Invalidate = 1
-export const Destroy = 2
+export const Cycle = 2
 export const PromiseChange = 3
 export const EventSent = 4
 

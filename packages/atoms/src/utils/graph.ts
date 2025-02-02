@@ -5,9 +5,9 @@ import {
   LifecycleStatus,
 } from '@zedux/atoms/types/index'
 import { type GraphNode } from '../classes/GraphNode'
-import { ExplicitEvents } from '../types/events'
+import { SendableEvents } from '../types/events'
 import { pluginActions } from './plugin-actions'
-import { Destroy, Static } from './general'
+import { Cycle, Eventless, Static } from './general'
 
 /**
  * Actually add an edge to the graph. When we buffer graph updates, we're
@@ -20,13 +20,12 @@ export const addEdge = (
 ) => {
   const { _mods, modBus } = dependency.e
 
-  // draw the edge in both nodes. Dependent may not exist if it's an external
-  // pseudo-node
-  dependent && dependent.s.set(dependency, newEdge)
+  // draw the edge in both nodes
+  dependent.s.set(dependency, newEdge)
   dependency.o.set(dependent, newEdge)
   dependency.c?.()
 
-  // static dependencies don't change a node's weight
+  // Static sources don't change a node's weight
   if (!(newEdge.flags & Static)) {
     recalculateNodeWeight(dependency.W, dependent)
   }
@@ -47,12 +46,12 @@ export const addEdge = (
 export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
   // If we're not force-destroying, don't destroy if there are dependents. Also
   // don't destroy of `node.K`eep is set
-  if (node.l === 'Destroyed' || (!force && node.o.size)) return
+  if (node.l === 'Destroyed' || (!force && node.o.size - (node.L ? 1 : 0))) {
+    return
+  }
 
   node.c?.()
   node.c = undefined
-
-  setNodeStatus(node, 'Destroyed')
 
   if (node.w.length) node.e._scheduler.unschedule(node)
 
@@ -65,18 +64,6 @@ export const destroyNodeFinish = (node: GraphNode) => {
   for (const dependency of node.s.keys()) {
     removeEdge(node, dependency)
   }
-
-  // if an atom instance is force-destroyed, it could still have dependents.
-  // Inform them of the destruction
-  scheduleDependents(
-    {
-      r: node.w,
-      s: node,
-      t: Destroy,
-    },
-    true,
-    true
-  )
 
   // now remove all edges between this node and its dependents
   for (const [observer, edge] of node.o) {
@@ -93,6 +80,8 @@ export const destroyNodeFinish = (node: GraphNode) => {
   }
 
   node.e.n.delete(node.id)
+
+  setNodeStatus(node, 'Destroyed')
 }
 
 export const handleStateChange = <
@@ -100,9 +89,10 @@ export const handleStateChange = <
 >(
   node: GraphNode<G & { Params: any; Template: any }>,
   oldState: G['State'],
-  events?: Partial<G['Events'] & ExplicitEvents>
+  events?: Partial<SendableEvents<G>>
 ) => {
-  scheduleDependents({ e: events, p: oldState, r: node.w, s: node }, false)
+  const pre = node.e._scheduler.pre()
+  scheduleDependents({ e: events, n: node.v, o: oldState, r: node.w, s: node })
 
   if (node.e._mods.stateChanged) {
     node.e.modBus.dispatch(
@@ -116,12 +106,10 @@ export const handleStateChange = <
   }
 
   // run the scheduler synchronously after any node state update
-  events?.batch || node.e._scheduler.flush()
+  node.e._scheduler.post(pre)
 }
 
-const recalculateNodeWeight = (weightDiff: number, node?: GraphNode) => {
-  if (!node) return // happens when node is external
-
+const recalculateNodeWeight = (weightDiff: number, node: GraphNode) => {
   node.W += weightDiff
 
   for (const observer of node.o.keys()) {
@@ -139,7 +127,7 @@ const recalculateNodeWeight = (weightDiff: number, node?: GraphNode) => {
  */
 export const removeEdge = (dependent: GraphNode, dependency: GraphNode) => {
   // erase graph edge between dependent and dependency
-  dependent && dependent.s.delete(dependency)
+  dependent.s.delete(dependency)
 
   // hmm could maybe happen when a dependency was force-destroyed if a child
   // tries to destroy its edge before recreating it (I don't think we ever do
@@ -168,28 +156,70 @@ export const removeEdge = (dependent: GraphNode, dependency: GraphNode) => {
     )
   }
 
-  scheduleNodeDestruction(dependency)
+  if (dependent === dependency.L) {
+    dependency.L = undefined
+  } else {
+    scheduleNodeDestruction(dependency)
+  }
 }
 
+/**
+ * Schedule all a node's dynamic, normal observers to run immediately.
+ *
+ * This should always be followed up by an `ecosystem._scheduler.flush()` call
+ * unless we know for sure the scheduler is already running (e.g. when
+ * `runSelector` is called and isn't initializing).
+ */
 export const scheduleDependents = (
   reason: Omit<InternalEvaluationReason, 's'> & {
     s: NonNullable<InternalEvaluationReason['s']>
-  },
-  defer?: boolean,
-  scheduleStaticDeps?: boolean
+  }
 ) => {
   for (const [observer, edge] of reason.s.o) {
-    // Static deps don't update on state change, only on promise change or node
-    // force-destruction
-    if (scheduleStaticDeps || !(edge.flags & Static)) observer.r(reason, defer)
+    edge.flags & Static || observer.r(reason, false)
   }
+}
+
+/**
+ * Schedule jobs to notify a node's event-aware observers of one or more events.
+ * Event-aware observers include those added via `node.on()` and atom instances
+ * that forward their `S`ignal's events.
+ *
+ * This should always be followed up by an `ecosystem._scheduler.flush()` call
+ * unless we know for sure the scheduler is already running (e.g. when
+ * `runSelector` is called and isn't initializing).
+ */
+export const scheduleEventListeners = (
+  reason: Omit<InternalEvaluationReason, 's'> & {
+    s: NonNullable<InternalEvaluationReason['s']>
+  }
+) => {
+  for (const [observer, edge] of reason.s.o) {
+    edge.flags & Eventless || observer.r(reason, false)
+  }
+}
+
+/**
+ * Static deps don't update on state change, only on promise change or node
+ * force-destruction. This currently flushes the scheduler immediately.
+ */
+export const scheduleStaticDependents = (
+  reason: Omit<InternalEvaluationReason, 's'> & {
+    s: NonNullable<InternalEvaluationReason['s']>
+  }
+) => {
+  for (const observer of reason.s.o.keys()) {
+    observer.r(reason, false)
+  }
+
+  reason.s.e._scheduler.flush()
 }
 
 /**
  * When a node's refCount hits 0, schedule destruction of that node.
  */
 export const scheduleNodeDestruction = (node: GraphNode) =>
-  node.o.size || node.l !== 'Active' || node.m()
+  node.o.size - (node.L ? 1 : 0) || node.l !== 'Active' || node.m()
 
 export const setNodeStatus = (node: GraphNode, newStatus: LifecycleStatus) => {
   const oldStatus = node.l
@@ -203,5 +233,31 @@ export const setNodeStatus = (node: GraphNode, newStatus: LifecycleStatus) => {
         oldStatus,
       })
     )
+  }
+
+  if (newStatus === 'Destroyed') {
+    // Event observers don't prevent destruction so may still need cleaning up.
+    // Schedule them so they can do so. Also if a node is force-destroyed, it
+    // could still have observers. Inform them of the destruction so they can
+    // recreate their source node.
+    scheduleStaticDependents({
+      n: newStatus,
+      o: oldStatus,
+      r: node.w,
+      s: node,
+      t: Cycle,
+    })
+  } else if (oldStatus !== 'Initializing') {
+    scheduleEventListeners({
+      n: newStatus,
+      o: oldStatus,
+      r: node.w,
+      s: node,
+      t: Cycle,
+    })
+
+    // flushing here should be fine - `setNodeStatus` is only called during
+    // React component renders when `oldStatus` is Initializing
+    node.e._scheduler.flush()
   }
 }

@@ -21,6 +21,7 @@ export const injectMemo: <Value = any>(
     ({
       type: `${prefix}/memo`,
       deps,
+      // TODO: wrap all injector callback calls in `ecosystem.untrack`
       result: valueFactory(),
     } as MemoInjectorDescriptor<Value>),
   <Value = any>(

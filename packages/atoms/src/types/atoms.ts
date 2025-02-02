@@ -95,6 +95,10 @@ export type ExportsOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
     ? G['Exports']
     : never
 
+export type GenericsOf<A extends GraphNode> = A extends GraphNode<infer G>
+  ? G
+  : never
+
 export type NodeGenerics = Pick<
   AtomGenerics,
   'Events' | 'Params' | 'State' | 'Template'

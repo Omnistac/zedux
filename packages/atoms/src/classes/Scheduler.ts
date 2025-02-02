@@ -6,8 +6,8 @@ export class Scheduler implements SchedulerInterface {
    * We set this to true internally when the scheduler starts flushing. We also
    * set it to true when batching updates, to prevent anything from flushing.
    */
-  public _isRunning?: boolean
-  public _isRunningNows?: boolean
+  public _isRunning = false
+  public _isRunningNows = false
 
   // private _runStartTime?: number
 
@@ -47,6 +47,47 @@ export class Scheduler implements SchedulerInterface {
     }
 
     this.runJobs()
+  }
+
+  /**
+   * Call after any operation that may have nested flush attempts. This in
+   * itself _is_ a flush attempt so whatever calls may also need wrapping in
+   * pre+post.
+   *
+   * This is the counterpart to `scheduler.pre()`. Call with the value returned
+   * from `.pre()`
+   */
+  public post(prevIsRunning: boolean) {
+    this._isRunning = prevIsRunning
+    this.flush()
+  }
+
+  /**
+   * Call before any operation that may have nested flush attempts. When
+   * combined with `scheduler.post`, this is essentially an `ecosystem.batch()`
+   * call but more performant since it doesn't involve creating a closure.
+   *
+   * This ensures that many of Zedux's recursive call stacks don't flush
+   * multiple times - only the top-level call finally flushes when everything is
+   * scheduled.
+   *
+   * Returns a value that should be passed to `scheduler.post()` after the
+   * potentially-nested flush operation. Always combine with
+   * `scheduler.post(preReturnValue)`
+   *
+   * Example:
+   *
+   * ```ts
+   * const pre = scheduler.pre()
+   * setAtomStateOrSendSignalEventsEtc()
+   * scheduler.post(pre)
+   * ```
+   */
+  public pre() {
+    const prevIsRunning = this._isRunning
+    this._isRunning = true
+
+    return prevIsRunning
   }
 
   /**

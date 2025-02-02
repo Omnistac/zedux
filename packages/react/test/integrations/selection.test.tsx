@@ -274,7 +274,7 @@ describe('selection', () => {
     Object.defineProperty(selector2, 'name', { value: NAME })
 
     const instance1 = ecosystem.getInstance(atom1)
-    const cleanup1 = instance1.on(() => {})
+    const cleanup1 = instance1.on(() => {}, { active: true })
 
     snapshotNodes()
     expect(instance1.get()).toBe(3)
@@ -284,13 +284,13 @@ describe('selection', () => {
     expect(ecosystem.n).toEqual(new Map())
 
     const instance2 = ecosystem.getInstance(atom2)
-    const cleanup2 = instance2.on(() => {})
+    const cleanup2 = instance2.on(() => {}, { active: true })
 
     snapshotNodes()
     expect(instance2.get()).toBe(4)
 
     const instance3 = ecosystem.getInstance(atom1)
-    const cleanup3 = instance3.on(() => {})
+    const cleanup3 = instance3.on(() => {}, { active: true })
 
     snapshotNodes()
     expect(instance1.get()).toBe(3)

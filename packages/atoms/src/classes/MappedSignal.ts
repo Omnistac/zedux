@@ -2,11 +2,11 @@ import { Settable } from '@zedux/core'
 import {
   AnyNodeGenerics,
   AtomGenerics,
-  ExplicitEvents,
   InternalEvaluationReason,
   Mutatable,
   SendableEvents,
   Transaction,
+  UndefinedEvents,
 } from '../types/index'
 import {
   destroyBuffer,
@@ -15,10 +15,10 @@ import {
   startBuffer,
 } from '../utils/evaluationContext'
 import { Ecosystem } from './Ecosystem'
-import { Signal } from './Signal'
-import { recursivelyMutate, recursivelyProxy } from './proxies'
+import { doMutate, Signal } from './Signal'
+import { EventSent, TopPrio } from '../utils/general'
 
-export type SignalMap = Record<string, Signal<AnyNodeGenerics>>
+export type SignalMap = Record<string, Signal<AnyNodeGenerics> | unknown>
 
 export class MappedSignal<
   G extends Pick<AtomGenerics, 'Events' | 'State'> & {
@@ -29,6 +29,21 @@ export class MappedSignal<
     State: any
   }
 > extends Signal<G> {
+  /**
+   * `C`hangeEvents - any events passed to `this.set`. We propagate these
+   * directly to observers rather than re-inferring them all from inner signals
+   * after passing the `set` changes along to them.
+   */
+  public C?: Partial<SendableEvents<G>>
+
+  /**
+   * `b`ufferedTransactions - when propagating mutate events from inner signals
+   * that did _not_ originate from this wrapper signal, we attach the inner
+   * signal's key path to each transaction and send those modified transactions
+   * along with the change event when this wrapper signal's job runs.
+   */
+  public b?: Transaction[]
+
   /**
    * `I`dsToKeys - maps wrapped signal ids to the keys they control in this
    * wrapper signal's state.
@@ -46,109 +61,45 @@ export class MappedSignal<
     /**
      * @see Signal.e
      */
-    public readonly e: Ecosystem,
+    e: Ecosystem,
 
     /**
      * @see Signal.id
      */
-    public readonly id: string,
+    id: string,
 
     /**
      * The map of state properties to signals that control them
      */
     public M: SignalMap
   ) {
-    const entries = Object.entries(M)
-    const flattenedEvents = {} as {
-      [K in keyof G['Events']]: () => G['Events'][K]
-    }
+    super(
+      e,
+      id,
+      undefined,
+      {} as {
+        [K in keyof G['Events']]: () => G['Events'][K]
+      }
+    )
 
-    super(e, id, null, flattenedEvents)
-
-    // `get` every signal and auto-add each one as a source of the mapped signal
-    const { n, s } = getEvaluationContext()
-    startBuffer(this)
-
-    try {
-      this.v = Object.fromEntries(
-        entries.map(([key, val]) => {
-          // flatten all events from all inner signals into the mapped signal's
-          // events list
-          Object.assign(flattenedEvents, val.E)
-          this.I[val.id] = key
-
-          return [key, e.live.get(val)]
-        })
-      )
-    } catch (e) {
-      destroyBuffer(n, s)
-
-      throw e
-    } finally {
-      flushBuffer(n, s)
-    }
+    this.v = this.u(M, true)
   }
 
   public mutate(
     mutatable: Mutatable<G['State']>,
-    events?: Partial<G['Events'] & ExplicitEvents>
+    events?: Partial<SendableEvents<G>>
   ) {
-    const oldState = this.v
-
-    if (
-      DEV &&
-      (typeof oldState !== 'object' || !oldState) &&
-      !Array.isArray(oldState) &&
-      !((oldState as any) instanceof Set)
-    ) {
-      throw new TypeError(
-        'Zedux: signal.mutate only supports native JS objects, arrays, and sets'
-      )
-    }
-
-    const transactions: Transaction[] = []
-    let newState = oldState
-
-    const parentProxy = {
-      t: transactions,
-      u: (val: G['State']) => (newState = val),
-    }
-
-    const proxyWrapper = recursivelyProxy(oldState, parentProxy)
-
-    if (typeof mutatable === 'function') {
-      const result = (mutatable as (state: G['State']) => any)(proxyWrapper.p)
-
-      // if the callback function doesn't return void, assume it's a partial
-      // state object that represents a set of mutations Zedux needs to apply to
-      // the signal's state.
-      if (result) recursivelyMutate(proxyWrapper.p, result)
-    } else {
-      recursivelyMutate(proxyWrapper.p, mutatable)
-    }
-
-    newState === oldState ||
-      this.set(newState, {
-        ...events,
-        // TODO: put this whole function in a job so scheduler is already
-        // running here rather than adding a `batch` event here
-        batch: true,
-        // TODO: instead of calling `this.set`, loop over object entries here
-        // and pass each signal only the transactions that apply to it, with the
-        // first path key removed (and the array flattened to a string if
-        // there's only one key left)
-        mutate: transactions,
-      } as Partial<G['Events']> & ExplicitEvents)
-
-    return [newState, transactions] as const
+    return doMutate(this, true, mutatable, events)
   }
 
-  // public send<E extends UndefinedEvents<G['Events']>>(eventName: E): void
+  public send<E extends UndefinedEvents<G['Events']>>(eventName: E): void
 
-  // public send<E extends keyof G['Events']>(
-  //   eventName: E,
-  //   payload: G['Events'][E]
-  // ): void
+  public send<E extends keyof G['Events']>(
+    eventName: E,
+    payload: G['Events'][E]
+  ): void
+
+  public send<E extends Partial<G['Events']>>(events: E): void
 
   /**
    * @see Signal.send
@@ -162,58 +113,176 @@ export class MappedSignal<
     eventName: E,
     payload?: G['Events'][E]
   ) {
+    const pre = this.e._scheduler.pre()
+
     for (const signal of Object.values(this.M)) {
-      signal.E?.[eventName] && signal.send(eventName, payload, true)
+      if ((signal as Signal | undefined)?.izn) {
+        ;(signal as Signal).E?.[eventName] &&
+          (signal as Signal).send(eventName, payload)
+      }
     }
 
-    // flush once now that all nodes are scheduled
-    this.e._scheduler.flush()
+    this.e._scheduler.post(pre)
   }
 
   public set(
     settable: Settable<G['State']>,
-    events?: Partial<G['Events'] & ExplicitEvents>
+    events?: Partial<SendableEvents<G>>
   ) {
     const newState =
       typeof settable === 'function'
         ? (settable as (state: G['State']) => G['State'])(this.v)
         : settable
 
+    if (newState === this.v) return
+
+    this.C = events
+
+    const pre = this.e._scheduler.pre()
+
     for (const [key, value] of Object.entries(newState)) {
       if (value !== this.v[key]) {
-        // TODO: filter out events that aren't either ExplicitEvents or
-        // specified in this inner signal:
-        this.M[key].set(value, events)
+        const signal = this.M[key]
+
+        if (!(signal as Signal | undefined)?.izn) {
+          if (!this.N) this.N = { ...this.v }
+
+          this.N![key] = value
+          continue
+        }
+
+        const relevantEvents =
+          (signal as Signal).E &&
+          events &&
+          Object.fromEntries(
+            Object.entries(events).filter(
+              // we don't pass mutate events to inner signals - they weren't
+              // mutated, the outer signal was. This is to optimize
+              // performance for the most common case - usually you won't
+              // subscribe to individual inner signals; you subscribe to the
+              // full, outer signal or the atom itself.
+              ([eventName]) =>
+                eventName !== 'mutate' && eventName in (signal as Signal).E!
+            )
+          )
+
+        ;(signal as Signal).set(value, relevantEvents)
       }
     }
+
+    // if this wrapper signal hasn't been scheduled at this point, no inner
+    // signals were updated. Either `set` was called with a different object
+    // reference (making `this.N` undefined and this whole call a noop) or
+    // `this.N` will contain one or more updates for non-signal inner values.
+    // No need to involve the scheduler. Update own state now.
+    if (!this.w.length && this.N) this.j()
+
+    this.e._scheduler.post(pre)
   }
 
   /**
    * @see Signal.j
    */
   public j() {
-    // Wrapped signal(s) changed. Propagate the change(s) to this wrapper
-    // signal. Use `super.set` for this 'cause `this.set` intercepts set calls
-    // and forwards them the other way - to the inner signals
-    super.set(this.N)
+    // Inner signal(s) or values changed. Propagate the change(s) to this
+    // wrapper signal and its observers. Use `super.set` for this 'cause
+    // `this.set` intercepts set calls and forwards them the other way - to the
+    // inner signals
+    super.set(
+      this.N,
+      this.C ?? (this.b && ({ mutate: this.b } as Partial<SendableEvents<G>>))
+    )
     this.w = []
+    this.C = undefined
+    this.N = undefined
+    this.b = undefined
   }
 
   /**
    * @see Signal.r
    */
   public r(reason: InternalEvaluationReason, defer?: boolean) {
-    if (this.w.push(reason) === 1) {
-      this.e._scheduler.schedule(this, defer)
+    if (reason.t !== EventSent) {
+      if (this.w.push(reason) === 1) {
+        this.e._scheduler.schedule(this, defer)
+      }
 
-      if (reason.s) this.N = { ...this.v }
+      if (reason.s) {
+        this.N ??= { ...this.v }
+
+        this.N![this.I[reason.s.id]] = reason.s.v
+
+        // handle the `mutate` event specifically - add the inner node's key to
+        // all transaction `k`ey paths
+        if (!this.C && reason.e?.mutate) {
+          this.b ??= []
+
+          const key = this.I[reason.s.id]
+
+          this.b.push(
+            ...(reason.e.mutate as Transaction[]).map(transaction => ({
+              ...transaction,
+              k: Array.isArray(transaction.k)
+                ? [key, ...transaction.k]
+                : [key, transaction.k],
+            }))
+          )
+        }
+      }
     }
-
-    if (reason.s) this.N![this.I[reason.s.id]] = reason.s.v
 
     // forward events from wrapped signals to observers of this wrapper signal.
     // Use `super.send` for this 'cause `this.send` intercepts events and passes
     // them the other way (up to wrapped signals)
-    reason.e && super.send(reason.e as SendableEvents<G>)
+    if (reason.e && (!reason.e.mutate || Object.keys(reason.e).length > 1)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { mutate, ...events } = reason.e
+
+      super.send(events as Partial<G['Events']>)
+    }
+  }
+
+  public u(map: SignalMap, isInitializing?: boolean) {
+    const entries = Object.entries(map)
+
+    // `get` every signal and auto-add each one as a source of the mapped signal
+    const { n, s } = getEvaluationContext()
+    startBuffer(this)
+
+    try {
+      const edgeConfig = { f: TopPrio }
+
+      if (isInitializing) {
+        return Object.fromEntries(
+          entries.map(([key, val]) => {
+            if (!(val as Signal | undefined)?.izn) return [key, val as any]
+
+            // flatten all events from all inner signals into the mapped signal's
+            // events list
+            Object.assign(this.E!, (val as Signal).E)
+            this.I[(val as Signal).id] = key
+
+            return [key, (val as Signal).get(edgeConfig)]
+          })
+        )
+      }
+
+      for (const [key, val] of entries) {
+        if ((val as Signal).izn) {
+          // make sure the edge is re-created
+          ;(val as Signal).get(edgeConfig)
+
+          // update the (forward) map and reverse map
+          this.M[key] = val as Signal
+          this.I[(val as Signal).id] = key
+        }
+      }
+    } catch (e) {
+      destroyBuffer(n, s)
+
+      throw e
+    } finally {
+      flushBuffer(n, s)
+    }
   }
 }

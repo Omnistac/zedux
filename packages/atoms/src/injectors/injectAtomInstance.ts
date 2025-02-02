@@ -1,5 +1,5 @@
 import { createInjector } from '../factories/createInjector'
-import { prefix, Static } from '../utils/general'
+import { Eventless, EventlessStatic, prefix } from '../utils/general'
 import type { InjectorDescriptor } from '../utils/types'
 import {
   AnyAtomInstance,
@@ -63,7 +63,7 @@ export const injectAtomInstance: {
       atom as A,
       params as ParamsOf<A>,
       {
-        f: config?.subscribe ? 0 : Static,
+        f: config?.subscribe ? Eventless : EventlessStatic,
         op: config?.operation || defaultOperation,
       }
     )
@@ -85,7 +85,7 @@ export const injectAtomInstance: {
       atom as A,
       params as ParamsOf<A>,
       {
-        f: config?.subscribe ? 0 : Static,
+        f: config?.subscribe ? Eventless : EventlessStatic,
         op: config?.operation || defaultOperation,
       }
     )

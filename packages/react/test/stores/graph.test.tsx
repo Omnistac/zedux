@@ -15,6 +15,7 @@ import { api, atom, AtomInstanceType, injectStore, ion } from '@zedux/stores'
 import React from 'react'
 import { ecosystem, getNodes, snapshotNodes } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
+import { Eventless } from '@zedux/react/utils'
 
 const atom1 = atom('atom1', () => 1)
 const atom2 = atom('atom2', () => 2)
@@ -61,7 +62,7 @@ describe('graph', () => {
     expect(div).toHaveTextContent('3')
 
     const expectedEdges = {
-      flags: 0,
+      flags: Eventless,
       operation: 'get',
     }
 
