@@ -1,5 +1,5 @@
-import { Signal } from '../classes'
 import { MappedSignal, SignalMap } from '../classes/MappedSignal'
+import { Signal } from '../classes/Signal'
 import {
   AnyNonNullishValue,
   EventsOf,

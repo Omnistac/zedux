@@ -772,7 +772,6 @@ describe('react types', () => {
     type TestListenableEvents = Partial<{
       a: number
       b: undefined
-      batch: boolean
       mutate: Transaction[]
       change: ChangeEvent<Generics>
       cycle: CycleEvent<Generics>

@@ -57,18 +57,13 @@ export interface EventReceivedEvent<G extends NodeGenerics = AnyNodeGenerics>
 }
 
 /**
- * Events that can be sent manually. This is not the full list of events
- * that can be listened to on Zedux event emitters - for example, all stateful
- * nodes emit `change` and (via the ecosystem) `cycle` events and atoms emit
- * `promiseChange` events.
+ * Events that can be sent manually. This is not the full list of events that
+ * can be listened to on Zedux event emitters.
+ *
+ * @see ListenableEvents
+ * @see SendableEvents
  */
 export interface ExplicitEvents {
-  /**
-   * Dispatch a `batch` event alongside any `.set` or `.mutate` update to defer
-   * notifying dependents. This event does nothing when sent by itself.
-   */
-  batch: boolean
-
   /**
    * `mutate` events can be sent manually alongside a `.set` call to
    * bypass Zedux's automatic proxy-based mutation tracking. This may be desired
@@ -82,6 +77,13 @@ export interface ExplicitEvents {
   mutate: Transaction[]
 }
 
+/**
+ * Events that Zedux creates internally and sends to listeners. You cannot
+ * `.send()` these events manually.
+ *
+ * Not all of these apply to every node type. For example, only atoms will ever
+ * send `promiseChange` events.
+ */
 export interface ImplicitEvents<G extends NodeGenerics = AnyNodeGenerics> {
   /**
    * Zedux sends this event whenever a GraphNode's value changes.

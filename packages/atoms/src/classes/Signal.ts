@@ -184,9 +184,6 @@ export class Signal<
    * Manually notify this signal's event listeners of an event. Accepts an
    * object to send multiple events at once.
    *
-   * The optional third `defer` param is mostly for internal use. We pass
-   * `false` and manually flush the scheduler to batch multiple sends.
-   *
    * ```ts
    * signal.send({ eventA: 'payload for a', eventB: 'payload for b' })
    * ```

@@ -342,9 +342,8 @@ export interface InjectStoreConfig {
 export interface InternalEvaluationReason<State = any> {
   /**
    * `e`ventMap - any events sent along with the update that should notify this
-   * node's listeners and/or trigger special functionality in Zedux (e.g. via
-   * the `batch` event). These are always either custom events or
-   * ExplicitEvents, never ImplicitEvents
+   * node's listeners and/or trigger special functionality in Zedux. These are
+   * always either custom events or ExplicitEvents, never ImplicitEvents
    */
   e?: Record<string, any>
 
