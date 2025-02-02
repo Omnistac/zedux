@@ -6,11 +6,9 @@ import {
   StateOf,
 } from '@zedux/atoms'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { External } from '../utils'
+import { Eventless, External } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
-
-const OPERATION = 'useAtomSelector'
 
 /**
  * Get the result of running a selector in the current ecosystem.
@@ -38,7 +36,7 @@ export const useAtomSelector = <S extends Selectable>(
     }
   ]
 
-  const instance: SelectorInstance = render.i
+  let instance: SelectorInstance = render.i
     ? ecosystem.u(render.i, template, args, render)
     : ecosystem.getNode(template, args)
 
@@ -52,13 +50,17 @@ export const useAtomSelector = <S extends Selectable>(
   const addEdge = () => {
     node.l === 'Destroyed' &&
       (node = new ExternalNode(ecosystem, observerId, render))
-    node.i === instance || node.u(instance, OPERATION, External)
+    node.i === instance ||
+      node.u(instance, 'useAtomSelector', Eventless | External)
   }
 
   // Yes, subscribe during render. This operation is idempotent.
   addEdge()
 
   useEffect(() => {
+    instance = ecosystem.getNode(template, args)
+    render.i = instance
+
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
     // this effect's cleanup unnecessarily)
     addEdge()

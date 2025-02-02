@@ -1,28 +1,76 @@
 import { RecursivePartial } from '@zedux/core'
+import { GraphNode } from '../classes/GraphNode'
 import {
   AnyNodeGenerics,
   AtomGenerics,
-  ChangeEvent,
   Cleanup,
-  GraphEdgeConfig,
+  LifecycleStatus,
+  ListenerConfig,
   NodeGenerics,
   Prettify,
 } from './index'
 
+export type CatchAllListener<G extends NodeGenerics> = (
+  eventMap: Partial<ListenableEvents<G>>
+) => void
+
+export interface ChangeEvent<G extends NodeGenerics = AnyNodeGenerics>
+  extends EventBase {
+  newState: G['State']
+  oldState: G['State']
+  type: 'change'
+}
+
+export interface CycleEvent<G extends NodeGenerics = AnyNodeGenerics>
+  extends EventBase<G> {
+  oldStatus: LifecycleStatus
+  newStatus: LifecycleStatus
+  type: 'cycle'
+}
+
+export type EvaluationReason<G extends NodeGenerics = AnyNodeGenerics> =
+  | ChangeEvent<G>
+  | CycleEvent<G>
+  | EventReceivedEvent<G>
+  | InvalidateEvent<G>
+  | PromiseChangeEvent<G>
+
+export interface EventBase<G extends NodeGenerics = AnyNodeGenerics> {
+  operation?: string // e.g. a method like "injectValue"
+  reasons?: EvaluationReason[]
+  source?: GraphNode<G>
+}
+
+export interface EventEmitter<G extends NodeGenerics = AnyNodeGenerics> {
+  on<E extends keyof G['Events']>(
+    eventName: E,
+    callback: SingleEventListener<G, E>,
+    config?: ListenerConfig
+  ): Cleanup
+
+  on(callback: CatchAllListener<G>, config?: ListenerConfig): Cleanup
+}
+
+export interface EventReceivedEvent<G extends NodeGenerics = AnyNodeGenerics>
+  extends EventBase<G> {
+  type: 'event'
+}
+
 /**
- * Events that can be dispatched manually. This is not the full list of events
+ * Events that can be sent manually. This is not the full list of events
  * that can be listened to on Zedux event emitters - for example, all stateful
  * nodes emit `change` and (via the ecosystem) `cycle` events and atoms emit
- * `promisechange` events.
+ * `promiseChange` events.
  */
 export interface ExplicitEvents {
   /**
-   * Dispatch a `batch` event alongside any `.set` or `.mutate` update to defer notifying dependents
+   * Dispatch a `batch` event alongside any `.set` or `.mutate` update to defer
+   * notifying dependents. This event does nothing when sent by itself.
    */
   batch: boolean
 
   /**
-   * `mutate` events can be dispatched manually alongside a `.set` call to
+   * `mutate` events can be sent manually alongside a `.set` call to
    * bypass Zedux's automatic proxy-based mutation tracking. This may be desired
    * for better performance or when using data types that Zedux doesn't natively
    * proxy.
@@ -34,34 +82,64 @@ export interface ExplicitEvents {
   mutate: Transaction[]
 }
 
-export type CatchAllListener<G extends NodeGenerics> = (
-  eventMap: Partial<ListenableEvents<G>>
-) => void
-
-export interface EventEmitter<G extends NodeGenerics = AnyNodeGenerics> {
-  // TODO: add a `passive` option for listeners that don't prevent destruction
-  on<E extends keyof G['Events']>(
-    eventName: E,
-    callback: SingleEventListener<G, E>,
-    edgeDetails?: GraphEdgeConfig
-  ): Cleanup
-
-  on(callback: CatchAllListener<G>, edgeDetails?: GraphEdgeConfig): Cleanup
-}
-
 export interface ImplicitEvents<G extends NodeGenerics = AnyNodeGenerics> {
+  /**
+   * Zedux sends this event whenever a GraphNode's value changes.
+   */
   change: ChangeEvent<G>
+
+  /**
+   * When listening to a GraphNode, Zedux sends this event for the following
+   * lifecycle status changes:
+   *
+   * - Active -> Stale
+   * - Active -> Destroyed
+   * - Stale -> Active
+   * - Stale -> Destroyed
+   *
+   * When listening to the Ecosystem, Zedux also sends this event for:
+   *
+   * - Initializing -> Active
+   *
+   * (It isn't possible to attach an event listener to a GraphNode before it's
+   * Active)
+   */
+  cycle: CycleEvent<G>
+
+  /**
+   * Zedux sends this event whenever `atomInstance.invalidate()` is called. Some
+   * Zedux APIs hook into this event like `injectPromise`'s `runOnInvalidate`
+   * option.
+   */
+  invalidate: InvalidateEvent<G>
+
+  /**
+   * Zedux sends this event when an atom instance's `.promise` reference changed
+   * on a reevaluation. This essentially makes an atom's `.promise` another
+   * piece of its state - all Zedux's injectors, atom getters, and React hooks
+   * will cause a reevaluation/rerender when this event fires.
+   */
+  promiseChange: PromiseChangeEvent<G>
 }
 
-export type ListenableEvents<G extends NodeGenerics> = Prettify<
-  G['Events'] & ExplicitEvents & ImplicitEvents<G>
->
+export interface InvalidateEvent<G extends NodeGenerics = AnyNodeGenerics>
+  extends EventBase<G> {
+  type: 'invalidate'
+}
+
+export type ListenableEvents<G extends NodeGenerics = AnyNodeGenerics> =
+  Prettify<G['Events'] & ExplicitEvents & ImplicitEvents<G>>
 
 export type Mutatable<State> =
   | RecursivePartial<State>
   | ((state: State) => void)
 
 export type MutatableTypes = any[] | Record<string, any> | Set<any>
+
+export interface PromiseChangeEvent<G extends NodeGenerics = AnyNodeGenerics>
+  extends EventBase<G> {
+  type: 'promiseChange'
+}
 
 export type SendableEvents<G extends Pick<AtomGenerics, 'Events'>> = Prettify<
   G['Events'] & ExplicitEvents

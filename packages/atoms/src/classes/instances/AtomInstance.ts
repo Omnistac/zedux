@@ -1,5 +1,9 @@
 import { is, Observable, Settable } from '@zedux/core'
-import { Mutatable, SendableEvents } from '@zedux/atoms/types/events'
+import {
+  Mutatable,
+  SendableEvents,
+  UndefinedEvents,
+} from '@zedux/atoms/types/events'
 import {
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
@@ -12,7 +16,6 @@ import {
   DehydrationOptions,
   AnyAtomGenerics,
   InternalEvaluationReason,
-  ExplicitEvents,
 } from '@zedux/atoms/types/index'
 import {
   EventSent,
@@ -20,8 +23,8 @@ import {
   prefix,
   PromiseChange,
   Static,
+  TopPrio,
 } from '@zedux/atoms/utils/general'
-import { pluginActions } from '@zedux/atoms/utils/plugin-actions'
 import {
   getErrorPromiseState,
   getInitialPromiseState,
@@ -35,7 +38,9 @@ import {
   destroyNodeFinish,
   destroyNodeStart,
   handleStateChange,
-  scheduleDependents,
+  scheduleEventListeners,
+  scheduleStaticDependents,
+  setNodeStatus,
 } from '../../utils/graph'
 import {
   bufferEdge,
@@ -136,7 +141,7 @@ const setPromise = <G extends Omit<AtomGenerics, 'Node'>>(
   const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
   instance._promiseStatus = state.status
 
-  scheduleDependents({ s: instance, t: PromiseChange }, true, true)
+  scheduleStaticDependents({ r: instance.w, s: instance, t: PromiseChange })
 
   return state as unknown as G['State']
 }
@@ -169,11 +174,6 @@ export class AtomInstance<
    * its wrapped signal (if any).
    */
   public a: boolean | undefined = undefined
-
-  /**
-   * `b`ufferedEvents - when the wrapped signal emits events, we
-   */
-  public b?: Partial<G['Events'] & ExplicitEvents>
 
   /**
    * `S`ignal - the signal returned from this atom's state factory. If this is
@@ -210,7 +210,7 @@ export class AtomInstance<
      */
     public readonly p: G['Params']
   ) {
-    super(e, id, undefined) // TODO NOW: fix this undefined
+    super(e, id, undefined, undefined, true)
   }
 
   /**
@@ -254,7 +254,10 @@ export class AtomInstance<
    * Force this atom instance to reevaluate.
    */
   public invalidate() {
-    this.r({ s: this, t: Invalidate }, false)
+    const reason = { s: this, t: Invalidate } as const
+    this.r(reason, false)
+
+    scheduleEventListeners(reason)
 
     // run the scheduler synchronously after invalidation
     this.e._scheduler.flush()
@@ -269,12 +272,21 @@ export class AtomInstance<
    */
   public mutate(
     mutatable: Mutatable<G['State']>,
-    events?: Partial<G['Events'] & ExplicitEvents>
+    events?: Partial<SendableEvents<G>>
   ) {
     return this.S
       ? this.S.mutate(mutatable, events)
       : super.mutate(mutatable, events)
   }
+
+  public send<E extends UndefinedEvents<G['Events']>>(eventName: E): void
+
+  public send<E extends keyof G['Events']>(
+    eventName: E,
+    payload: G['Events'][E]
+  ): void
+
+  public send<E extends Partial<G['Events']>>(events: E): void
 
   /**
    * @see Signal.send atoms don't have events themselves, but they
@@ -298,7 +310,7 @@ export class AtomInstance<
    */
   public set(
     settable: Settable<G['State']>,
-    events?: Partial<G['Events'] & ExplicitEvents>
+    events?: Partial<SendableEvents<G>>
   ) {
     return this.S ? this.S.set(settable, events) : super.set(settable, events)
   }
@@ -334,7 +346,7 @@ export class AtomInstance<
     const { n, s } = getEvaluationContext()
     this.j()
 
-    this._setStatus('Active')
+    setNodeStatus(this, 'Active')
     flushBuffer(n, s)
 
     // hydrate if possible
@@ -359,8 +371,8 @@ export class AtomInstance<
       // evaluation - just capture the state update and forward to this atom's
       // observers.
       const oldState = this.v
-      this.v = this.S!.v // `this.S`ignal must exist if `this.a`lteredEdge is true
-      handleStateChange(this, oldState, this.b)
+      this.v = this.S!.v // `this.S`ignal must exist if `this.a`lteredEdge does
+      handleStateChange(this, oldState)
 
       return
     }
@@ -375,7 +387,8 @@ export class AtomInstance<
       if (this.l === 'Initializing') {
         if ((newFactoryResult as Signal)?.izn) {
           this.S = newFactoryResult
-          this.v = (newFactoryResult as Signal).v
+          this.v = (newFactoryResult as Signal<G>).v
+          this.E = (newFactoryResult as Signal<G>).E
         } else {
           this.v = newFactoryResult
         }
@@ -394,7 +407,7 @@ export class AtomInstance<
         const oldState = this.v
         this.v = this.S ? newFactoryResult.v : newFactoryResult
 
-        this.v === oldState || handleStateChange(this, oldState, this.b)
+        this.v === oldState || handleStateChange(this, oldState)
       }
 
       if (this.S) {
@@ -402,13 +415,13 @@ export class AtomInstance<
 
         if (edge) {
           // the edge between this atom and its wrapped signal needs to be
-          // reactive. Track whether we altered the `p`endingFlags added by
-          // `injectSignal`/similar. If we did, the edge was static and should
-          // not trigger a reevaluation of this atom.
+          // reactive. Track whether we made the `p`endingFlags added by
+          // `injectSignal`/similar non-Static. If we did, we need to make the
+          // edge not reevaluate this atom.
           this.a = !!(edge.p! & Static) // `.p!` - doesn't matter if undefined
-          edge.p = 0
+          edge.p = TopPrio
         } else {
-          bufferEdge(newFactoryResult, 'implicit', 0)
+          bufferEdge(newFactoryResult, 'implicit', TopPrio)
         }
       }
     } catch (err) {
@@ -428,10 +441,9 @@ export class AtomInstance<
         const oldState = this.v
         this.v = this.S.v
 
-        handleStateChange(this, oldState, this.b)
+        handleStateChange(this, oldState)
       }
 
-      this.b = undefined
       this.w = []
     }
 
@@ -448,7 +460,7 @@ export class AtomInstance<
     const ttl = this._getTtl()
     if (ttl === 0) return this.destroy()
 
-    this._setStatus('Stale')
+    setNodeStatus(this, 'Stale')
     if (ttl == null || ttl === -1) return
 
     if (typeof ttl === 'number') {
@@ -458,9 +470,8 @@ export class AtomInstance<
         this.destroy()
       }, ttl)
 
-      // TODO: dispatch an action over stateStore for these mutations
       this.c = () => {
-        this._setStatus('Active')
+        setNodeStatus(this, 'Active')
         this.c = undefined
         clearTimeout(timeoutId)
       }
@@ -476,7 +487,7 @@ export class AtomInstance<
       })
 
       this.c = () => {
-        this._setStatus('Active')
+        setNodeStatus(this, 'Active')
         this.c = undefined
         isCanceled = true
       }
@@ -491,7 +502,7 @@ export class AtomInstance<
     })
 
     this.c = () => {
-      this._setStatus('Active')
+      setNodeStatus(this, 'Active')
       this.c = undefined
       subscription.unsubscribe()
     }
@@ -517,18 +528,20 @@ export class AtomInstance<
     // status is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
     if (this.l !== 'Destroyed' && this.w.push(reason) === 1) {
-      if (reason.s && reason.s === this.S) {
-        // when `this.S`ignal gives us events along with a state update, we need
-        // to buffer those and emit them together after this atom evaluates
-        if (reason.e) {
-          this.b = this.b
-            ? { ...this.b, ...(reason.e as typeof this.b) }
-            : (reason.e as unknown as typeof this.b)
-        }
-      }
-
       // refCount just hit 1; we haven't scheduled a job for this node yet
       this.e._scheduler.schedule(this, defer)
+    }
+
+    if (reason.s && reason.s === this.S && reason.e) {
+      // when `this.S`ignal gives us events along with a state update, subsume
+      // it as this atom's own state update. This atom will reevaluate before
+      // any scheduled dependents, giving the state factory an opportunity to
+      // change the signal's state again, resulting in an additional event.
+      const oldState = this.v
+      this.v = reason.s.v
+
+      this.v === oldState ||
+        handleStateChange(this, oldState, reason.e as Partial<G['Events']>)
     }
   }
 
@@ -550,20 +563,5 @@ export class AtomInstance<
     const { ttl } = this.api
 
     return typeof ttl === 'function' ? ttl() : ttl
-  }
-
-  private _setStatus(newStatus: LifecycleStatus) {
-    const oldStatus = this.l
-    this.l = newStatus
-
-    if (this.e._mods.statusChanged) {
-      this.e.modBus.dispatch(
-        pluginActions.statusChanged({
-          newStatus,
-          node: this,
-          oldStatus,
-        })
-      )
-    }
   }
 }

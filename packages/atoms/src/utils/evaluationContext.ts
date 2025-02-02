@@ -113,8 +113,10 @@ export const flushBuffer = (
   for (const [source, sourceEdge] of evaluationContext.n!.s) {
     // remove the edge if it wasn't recreated while buffering. Don't remove
     // anything but implicit-internal edges (those are the only kind we
-    // auto-create during evaluation - other types may have been added
-    // manually by the user and we don't want to touch them here)
+    // auto-create during evaluation - other types may have been added manually
+    // by the user and we don't want to touch them here). TODO: this check may
+    // be unnecessary - users only manually add observers (e.g. via
+    // `GraphNode#on`), not sources. Possibly remove
     if (sourceEdge.flags & ExplicitExternal) continue
 
     if (sourceEdge.p == null) {

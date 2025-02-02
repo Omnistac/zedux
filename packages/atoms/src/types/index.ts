@@ -10,10 +10,8 @@ import {
   AnyAtomGenerics,
   AnyAtomInstance,
   AnyAtomTemplate,
-  AnyNodeGenerics,
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
-  NodeGenerics,
   NodeOf,
   ParamsOf,
   StateOf,
@@ -240,14 +238,6 @@ export type AtomValueOrFactory<
   }
 > = AtomStateFactory<G> | G['State']
 
-export type ChangeEvent<G extends NodeGenerics = AnyNodeGenerics> = Prettify<
-  Omit<EvaluationReasonBase<G>, 'type'> & {
-    newState: G['State']
-    oldState: G['State']
-    type: 'change'
-  }
->
-
 export type Cleanup = () => void
 
 export interface DehydrationOptions extends NodeFilterOptions {
@@ -277,25 +267,6 @@ export interface EcosystemConfig<
 
 export type EffectCallback = () => MaybeCleanup | Promise<any>
 
-export interface EvaluationReasonBase<
-  G extends NodeGenerics = AnyNodeGenerics
-> {
-  operation?: string // e.g. a method like "injectValue"
-  reasons?: EvaluationReason[]
-  source?: GraphNode<G>
-  type: EvaluationType
-}
-
-export type EvaluationReason<G extends NodeGenerics = AnyNodeGenerics> =
-  | ChangeEvent<G>
-  | EvaluationReasonBase<G>
-
-export type EvaluationType =
-  | 'invalidate'
-  | 'destroy'
-  | 'promiseChange'
-  | 'change'
-
 /**
  * A user-defined object mapping custom event names to unused placeholder
  * functions whose return types are used to infer expected event payloads.
@@ -315,7 +286,7 @@ export interface GraphEdgeConfig {
   /**
    * `f`lags - the binary EdgeFlags of this edge
    */
-  f: number
+  f?: number
 
   /**
    * `op`eration - an optional user-friendly string describing the operation
@@ -378,9 +349,26 @@ export interface InternalEvaluationReason<State = any> {
   e?: Record<string, any>
 
   /**
-   * `p`revState - the old state of the source node
+   * `f`ullEventMap - when an evaluation reason reaches an event observer, that
+   * observer creates the full map of ImplicitEvents that the reason should
+   * trigger. These ImplicitEvents are merged into the existing `e`ventMap of
+   * custom events and ExplicitEvents.
+   *
+   * This is what ultimately gets passed to `GraphNode#on` event listeners.
    */
-  p?: State
+  f?: Record<string, any>
+
+  /**
+   * `n`ewStateOrStatus - depending on `t`ype, this is either the new state or
+   * new lifecycle status of the `s`ource node.
+   */
+  n?: LifecycleStatus | State
+
+  /**
+   * `o`ldStateOrStatus - depending on `t`ype, this is either the previous state
+   * or previous lifecycle status of the `s`ource node.
+   */
+  o?: LifecycleStatus | State
 
   /**
    * `s`ource - the node that caused its observer to update
@@ -411,6 +399,10 @@ export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
   ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | Signal<G> | G['State']
 
 export type LifecycleStatus = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
+
+export interface ListenerConfig {
+  active?: boolean
+}
 
 export type MapEvents<T extends EventMap> = Prettify<{
   [K in keyof T]: ReturnType<T[K]>

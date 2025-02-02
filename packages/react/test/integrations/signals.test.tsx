@@ -91,14 +91,14 @@ describe('signals', () => {
     expect(transactionsList).toEqual([[{ k: ['b', '0', 'c'], v: 3 }]])
   })
 
-  test('mixed mutations and sets all notify subscribers', () => {
+  test('mutations and sets on an injected signal notify direct and transitive observers', () => {
     const instance1 = ecosystem.getNode(atom1)
     const calls: any[][] = []
 
     instance1.exports.signal.on('mutate', (transactions, eventMap) => {
       expectTypeOf(transactions).toEqualTypeOf<Transaction[]>()
 
-      calls.push(['mutate', transactions, eventMap])
+      calls.push(['direct mutate', transactions, eventMap])
     })
 
     type GenericsOf<T extends GraphNode> = T extends Signal<infer G> ? G : never
@@ -113,7 +113,11 @@ describe('signals', () => {
     instance1.exports.signal.on('change', (change, eventMap) => {
       expectTypeOf(change).toEqualTypeOf<ExpectedChangeEvent>()
 
-      calls.push(['change', change, eventMap])
+      calls.push(['direct change', change, eventMap])
+    })
+
+    instance1.on('change', (change, eventMap) => {
+      calls.push(['transitive change', change, eventMap])
     })
 
     instance1.exports.signal.mutate(state => {
@@ -140,11 +144,30 @@ describe('signals', () => {
       ],
     }
 
+    const expectedTransitiveEvents = {
+      ...expectedEvents,
+      change: {
+        ...expectedEvents.change,
+        reasons: [
+          {
+            ...expectedEvents.change,
+            operation: 'injectSignal',
+          },
+        ],
+        source: instance1,
+      },
+    }
+
     expect(calls).toEqual([
-      ['mutate', expectedEvents.mutate, expectedEvents],
-      ['change', expectedEvents.change, expectedEvents],
+      ['direct mutate', expectedEvents.mutate, expectedEvents],
+      ['direct change', expectedEvents.change, expectedEvents],
+      [
+        'transitive change',
+        expectedTransitiveEvents.change,
+        expectedTransitiveEvents,
+      ],
     ])
-    calls.splice(0, 2)
+    calls.splice(0, 3)
 
     instance1.exports.signal.set(state => ({ ...state, a: state.a + 1 }))
 
@@ -156,7 +179,27 @@ describe('signals', () => {
       },
     }
 
-    expect(calls).toEqual([['change', expectedEvents2.change, expectedEvents2]])
+    const expectedTransitiveEvents2 = {
+      change: {
+        ...expectedEvents2.change,
+        reasons: [
+          {
+            ...expectedEvents2.change,
+            operation: 'injectSignal',
+          },
+        ],
+        source: instance1,
+      },
+    }
+
+    expect(calls).toEqual([
+      ['direct change', expectedEvents2.change, expectedEvents2],
+      [
+        'transitive change',
+        expectedTransitiveEvents2.change,
+        expectedTransitiveEvents2,
+      ],
+    ])
   })
 
   test("a non-reactively-injected signal still updates the atom's value", () => {

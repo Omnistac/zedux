@@ -31,8 +31,9 @@ import {
 import {
   External,
   compare,
-  Static,
   makeReasonsReadable,
+  Eventless,
+  EventlessStatic,
 } from '../utils/general'
 import { pluginActions } from '../utils/plugin-actions'
 import { IdGenerator } from './IdGenerator'
@@ -44,7 +45,6 @@ import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
 import {
   getSelectorKey,
   getSelectorName,
-  runSelector,
   SelectorInstance,
   swapSelectorRefs,
 } from './SelectorInstance'
@@ -151,19 +151,16 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       edgeConfig?: GraphEdgeConfig
     ) => {
       const instance = this.getNode(template, params as G['Params'])
-      const node = getEvaluationContext().n
 
-      // If getInstance is called in a reactive context, track the required atom
+      // If getNode is called in a reactive context, track the required atom
       // instances so we can add graph edges for them. When called outside a
-      // reactive context, getInstance() is just an alias for
-      // ecosystem.getInstance()
-      if (node) {
+      // reactive context, getNode() is just an alias for ecosystem.getNode()
+      getEvaluationContext().n &&
         bufferEdge(
           instance,
           edgeConfig?.op || 'getNode',
-          edgeConfig?.f ?? Static
+          edgeConfig?.f ?? EventlessStatic
         )
-      }
 
       return instance
     }
@@ -179,7 +176,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (!node) return this.select(selectable, ...args)
 
       const instance = this.getNode(selectable, args)
-      bufferEdge(instance, 'select', 0)
+      bufferEdge(instance, 'select', Eventless)
 
       return instance.v
     }
@@ -224,12 +221,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public batch<T = any>(callback: () => T) {
     const scheduler = this._scheduler
 
-    const prevIsRunning = scheduler._isRunning
-    scheduler._isRunning = true
+    const pre = scheduler.pre()
     const result = callback()
-    scheduler._isRunning = prevIsRunning
-
-    scheduler.flush()
+    scheduler.post(pre)
 
     return result
   }
@@ -880,7 +874,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const isSwappingRefs =
       instance.t !== template &&
       paramsUnchanged &&
-      this.n.get(instance.id)?.o.size === 1 &&
+      instance.o.size === 1 &&
       !this.b.has(template) &&
       getSelectorName(instance.t) === getSelectorName(template)
 
@@ -1031,6 +1025,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     // call cleanup function first so it can configure the ecosystem for cleanup
     this.cleanup?.()
 
+    // prevent node destruction from flushing the scheduler
+    _scheduler._isRunning = true
+
     // TODO: Delete nodes in an optimal order, starting with nodes with no
     // internal dependents. This is different from highest-weighted nodes since
     // static dependents don't affect weight. This should make sure no internal
@@ -1040,6 +1037,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       node.destroy(true)
     })
 
+    _scheduler._isRunning = false
     this.b = new WeakMap() // TODO: is this necessary?
     this.hydration = undefined
 

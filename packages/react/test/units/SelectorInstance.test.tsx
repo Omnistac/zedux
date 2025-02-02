@@ -41,7 +41,7 @@ describe('the SelectorInstance class', () => {
 
     const instance2b = ecosystem.getNode(selector2)
     const instance1b = ecosystem.getNode(selector1)
-    const cleanup = instance1b.on(() => {})
+    const cleanup = instance1b.on(() => {}, { active: true })
 
     instance2b.destroy() // destroys only selector2
 

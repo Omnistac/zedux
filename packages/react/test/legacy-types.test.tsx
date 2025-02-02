@@ -464,9 +464,6 @@ describe('react types', () => {
     const outerAtom = atom(
       'outer',
       (instance: AtomInstance<AnyAtomGenerics<{ State: string }>>) => {
-        // TODO: this may just start working when switching all the long private
-        // member vars of the non-legacy AtomInstance class to smaller
-        // identifiers. Follow up.
         const val = injectAtomValue(instance) // subscribe to updates
 
         return val.toUpperCase()

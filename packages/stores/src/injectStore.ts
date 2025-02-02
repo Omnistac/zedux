@@ -6,18 +6,16 @@ export const doSubscribe = <State>(
   instance: PartialAtomInstance,
   store: Store<State>
 ) =>
-  store.subscribe((newState, p, action) => {
+  store.subscribe((n, o, action) => {
     // Nothing to do if the state hasn't changed. Also, ignore state updates
-    // during evaluation. TODO: Create an ecosystem-level flag to turn on
-    // warning logging for state-updates-during-evaluation, since this may be
-    // considered an anti-pattern.
+    // during evaluation.
     if (instance._isEvaluating || action.meta === zeduxTypes.ignore) {
       return
     }
 
     const isBatch = action?.meta === zeduxTypes.batch
 
-    instance.r({ p }, isBatch)
+    instance.r({ n, o }, isBatch)
 
     // run the scheduler synchronously after every store update unless batching
     if (!isBatch) {

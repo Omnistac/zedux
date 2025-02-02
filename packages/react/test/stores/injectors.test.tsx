@@ -257,7 +257,7 @@ describe('injectors', () => {
       [],
       [
         {
-          newState: undefined, // TODO: this will be defined again when atoms use signals
+          newState: 'b',
           oldState: 'a',
           operation: undefined,
           reasons: undefined,
@@ -267,7 +267,7 @@ describe('injectors', () => {
       ],
       [
         {
-          newState: undefined, // TODO: this will be defined again when atoms use signals
+          newState: 'b',
           oldState: 'a',
           operation: undefined,
           reasons: undefined,

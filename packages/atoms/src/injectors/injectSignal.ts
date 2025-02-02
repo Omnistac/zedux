@@ -1,7 +1,7 @@
 import { Signal } from '../classes/Signal'
 import { EventMap, InjectSignalConfig, MapEvents, None } from '../types/index'
 import { readInstance } from '../utils/evaluationContext'
-import { Static } from '../utils/general'
+import { Eventless, EventlessStatic } from '../utils/general'
 import { injectMemo } from './injectMemo'
 
 /**
@@ -15,7 +15,7 @@ import { injectMemo } from './injectMemo'
  * })
  * ```
  */
-export const As = <T>() => 0 as T
+export const As = <T>() => 0 as unknown as T
 
 /**
  * The main API for creating signals in Zedux. Returns a stable instance of the
@@ -50,8 +50,8 @@ export const injectSignal = <State, MappedEvents extends EventMap = None>(
   }, [])
 
   // create a graph edge between the current atom and the new signal
-  instance.e.live.getNode(signal, undefined, {
-    f: config?.reactive === false ? Static : 0,
+  signal.get({
+    f: config?.reactive === false ? EventlessStatic : Eventless,
     op: 'injectSignal',
   })
 

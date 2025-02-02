@@ -22,10 +22,10 @@ import {
   PromiseState,
   PromiseStatus,
   InternalEvaluationReason,
-  ExplicitEvents,
   Transaction,
   ZeduxPlugin,
   zi,
+  SendableEvents,
 } from '@zedux/atoms'
 import { AtomApi } from './AtomApi'
 import {
@@ -197,7 +197,7 @@ export class AtomInstance<
 
   public set(
     settable: Settable<G['State']>,
-    events?: Partial<G['Events'] & ExplicitEvents>
+    events?: Partial<SendableEvents<G>>
   ) {
     return this.setState(settable, events && Object.keys(events)[0])
   }
@@ -398,7 +398,7 @@ export class AtomInstance<
     action: ActionChain
   ) {
     this.v = newState
-    zi.u({ p: oldState, r: this.w, s: this }, false)
+    zi.u({ n: this.v, o: oldState, r: this.w, s: this })
 
     if (this.e._mods.stateChanged) {
       this.e.modBus.dispatch(
@@ -453,7 +453,7 @@ export class AtomInstance<
     const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
     this._promiseStatus = state.status
 
-    zi.u({ s: this, t: PromiseChange }, true, true)
+    zi.a({ s: this, t: PromiseChange })
 
     return state as unknown as G['State']
   }

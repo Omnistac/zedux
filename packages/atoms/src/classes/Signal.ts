@@ -1,9 +1,9 @@
 import { Settable } from '@zedux/core'
 import {
   AtomGenerics,
-  ExplicitEvents,
   InternalEvaluationReason,
   Mutatable,
+  NodeGenerics,
   SendableEvents,
   Transaction,
   UndefinedEvents,
@@ -13,11 +13,71 @@ import {
   destroyNodeFinish,
   destroyNodeStart,
   handleStateChange,
-  scheduleDependents,
+  scheduleEventListeners,
+  setNodeStatus,
 } from '../utils/graph'
 import { Ecosystem } from './Ecosystem'
 import { GraphNode } from './GraphNode'
 import { recursivelyMutate, recursivelyProxy } from './proxies'
+
+export const doMutate = <G extends NodeGenerics>(
+  node: Signal<G>,
+  isWrapperSignal: boolean,
+  mutatable: Mutatable<G['State']>,
+  events?: Partial<SendableEvents<G>>
+) => {
+  const oldState = node.v
+
+  if (
+    DEV &&
+    (typeof oldState !== 'object' || !oldState) &&
+    !Array.isArray(oldState) &&
+    !((oldState as any) instanceof Set)
+  ) {
+    throw new TypeError(
+      'Zedux: signal.mutate only supports native JS objects, arrays, and sets'
+    )
+  }
+
+  const transactions: Transaction[] = []
+  let newState = oldState
+
+  const parentProxy = {
+    t: transactions,
+    u: (val: G['State']) => (newState = val),
+  }
+
+  const proxyWrapper = recursivelyProxy(oldState, parentProxy)
+
+  if (typeof mutatable === 'function') {
+    const result = (mutatable as (state: G['State']) => any)(proxyWrapper.p)
+
+    // if the callback function doesn't return void, assume it's a partial
+    // state object that represents a set of mutations Zedux needs to apply to
+    // the signal's state.
+    if (result) recursivelyMutate(proxyWrapper.p, result)
+  } else {
+    recursivelyMutate(proxyWrapper.p, mutatable)
+  }
+
+  if (newState !== oldState) {
+    if (isWrapperSignal) {
+      node.set(newState, {
+        ...events,
+        mutate: transactions,
+      } as Partial<SendableEvents<G>>)
+    } else {
+      node.v = newState
+
+      handleStateChange(node, oldState, {
+        ...events,
+        mutate: transactions,
+      } as Partial<SendableEvents<G>>)
+    }
+  }
+
+  return [newState, transactions] as const
+}
 
 export class Signal<
   G extends Pick<AtomGenerics, 'Events' | 'State'> & {
@@ -68,9 +128,13 @@ export class Signal<
      * unused functions with typed return types. We use ReturnType on these to
      * infer the expected payload type of each custom event.
      */
-    public E?: { [K in keyof G['Events']]: () => G['Events'][K] }
+    public E?: { [K in keyof G['Events']]: () => G['Events'][K] },
+
+    deferActiveStatus?: boolean
   ) {
     super()
+
+    deferActiveStatus || setNodeStatus(this, 'Active')
   }
 
   /**
@@ -102,60 +166,19 @@ export class Signal<
    */
   public mutate(
     mutatable: Mutatable<G['State']>,
-    events?: Partial<G['Events'] & ExplicitEvents>
+    events?: Partial<SendableEvents<G>>
   ) {
-    const oldState = this.v
-
-    if (
-      DEV &&
-      (typeof oldState !== 'object' || !oldState) &&
-      !Array.isArray(oldState) &&
-      !((oldState as any) instanceof Set)
-    ) {
-      throw new TypeError(
-        'Zedux: signal.mutate only supports native JS objects, arrays, and sets'
-      )
-    }
-
-    const transactions: Transaction[] = []
-    let newState = oldState
-
-    const parentProxy = {
-      t: transactions,
-      u: (val: G['State']) => (newState = this.v = val),
-    }
-
-    const proxyWrapper = recursivelyProxy(oldState, parentProxy)
-
-    if (typeof mutatable === 'function') {
-      const result = (mutatable as (state: G['State']) => any)(proxyWrapper.p)
-
-      // if the callback function doesn't return void, assume it's a partial
-      // state object that represents a set of mutations Zedux needs to apply to
-      // the signal's state.
-      if (result) recursivelyMutate(proxyWrapper.p, result)
-    } else {
-      recursivelyMutate(proxyWrapper.p, mutatable)
-    }
-
-    newState === oldState ||
-      handleStateChange(this, oldState, {
-        ...events,
-        mutate: transactions,
-      } as Partial<G['Events']> & ExplicitEvents)
-
-    return [newState, transactions] as const
+    return doMutate(this, false, mutatable, events)
   }
 
-  public send<E extends UndefinedEvents<SendableEvents<G>>>(eventName: E): void
+  public send<E extends UndefinedEvents<G['Events']>>(eventName: E): void
 
-  public send<E extends keyof SendableEvents<G>>(
+  public send<E extends keyof G['Events']>(
     eventName: E,
-    payload: SendableEvents<G>[E],
-    defer?: boolean
+    payload: G['Events'][E]
   ): void
 
-  public send<E extends Partial<SendableEvents<G>>>(events: E): void
+  public send<E extends Partial<G['Events']>>(events: E): void
 
   /**
    * Manually notify this signal's event listeners of an event. Accepts an
@@ -168,10 +191,9 @@ export class Signal<
    * signal.send({ eventA: 'payload for a', eventB: 'payload for b' })
    * ```
    */
-  public send<E extends keyof SendableEvents<G>>(
-    eventNameOrMap: E | Partial<SendableEvents<G>>,
-    payload?: SendableEvents<G>[E],
-    defer?: boolean
+  public send<E extends keyof G['Events']>(
+    eventNameOrMap: E | Partial<G['Events']>,
+    payload?: G['Events'][E]
   ) {
     // TODO: maybe safeguard against users sending unrecognized events here
     // (especially `send`ing an ImplicitEvent would break everything)
@@ -180,9 +202,9 @@ export class Signal<
         ? eventNameOrMap
         : { [eventNameOrMap]: payload }
 
-    scheduleDependents({ e: events, s: this, t: EventSent })
-
-    defer || this.e._scheduler.flush()
+    const pre = this.e._scheduler.pre()
+    scheduleEventListeners({ e: events, s: this, t: EventSent })
+    this.e._scheduler.post(pre)
   }
 
   /**
@@ -197,7 +219,7 @@ export class Signal<
    */
   public set(
     settable: Settable<G['State']>,
-    events?: Partial<G['Events'] & ExplicitEvents>
+    events?: Partial<SendableEvents<G>>
   ) {
     const oldState = this.v
     const newState = (this.v =
@@ -221,6 +243,7 @@ export class Signal<
   /**
    * @see GraphNode.h
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public h(val: any) {}
 
   /**
@@ -239,5 +262,6 @@ export class Signal<
   /**
    * @see GraphNode.r a noop - signals have nothing to evaluate
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public r(reason: InternalEvaluationReason, defer?: boolean) {}
 }

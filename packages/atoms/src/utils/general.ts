@@ -5,37 +5,43 @@ import { EvaluationReason, InternalEvaluationReason } from '../types/index'
  * The EdgeFlags. These are used as bitwise flags.
  *
  * The flag score determines job priority in the scheduler. Scores range from
- * 0-7. Lower score = higher prio. Examples:
+ * 0-8. Lower score = higher prio. Examples:
  *
- * 0 = implicit-internal-dynamic
- * 3 = explicit-external-dynamic
- * 7 = explicit-external-static
+ * - 0 = eventAware-implicit-internal-dynamic (aka TopPrio)
+ * - 3 = eventless-explicit-internal-dynamic
+ * - 15 = eventless-explicit-external-static
+ *
+ * Event edges are (currently) never paired with other flags and are unique in
+ * that they don't prevent node destruction.
  *
  * IMPORTANT: Keep these in-sync with the copies in the react package -
  * packages/react/src/utils.ts
  */
-export const Explicit = 1
-export const External = 2
+export const TopPrio = 0
+export const Eventless = 1
+export const Explicit = 2
+export const External = 4
+export const Static = 8
+export const OutOfRange = 16 // not a flag; use a value bigger than any flag
 export const ExplicitExternal = Explicit | External
-export const Static = 4
-export const OutOfRange = 8 // not a flag; use a value bigger than any flag
+export const EventlessStatic = Eventless | Static
 
 /**
  * The InternalEvaluationTypes. These get translated to user-friendly
- * EvaluationTypes by `ecosytem.why`.
+ * strings by `ecosytem.why`.
  *
  * IMPORTANT! Keep these in sync with `@zedux/stores/atoms-port.ts`
  */
 export const Invalidate = 1
-export const Destroy = 2
+export const Cycle = 2 // only causes evaluations when status becomes Destroyed
 export const PromiseChange = 3
 export const EventSent = 4
 
 export type InternalEvaluationType =
-  | typeof Destroy
+  | typeof Cycle
+  | typeof EventSent
   | typeof Invalidate
   | typeof PromiseChange
-  | typeof EventSent
 
 /**
  * Compare two arrays for shallow equality. Returns true if they're "equal".
@@ -49,24 +55,45 @@ export const compare = (nextDeps?: any[], prevDeps?: any[]) =>
 
 export const prefix = '@@zedux'
 
-const reasonTypeMap = {
-  [Destroy]: 'destroy',
-  [Invalidate]: 'invalidate',
-  [PromiseChange]: 'promiseChange',
-  4: 'change',
-} as const
-
 export const makeReasonReadable = (
   reason: InternalEvaluationReason,
   node?: GraphNode
-): EvaluationReason => ({
-  newState: reason.s?.v,
-  oldState: reason.p,
-  operation: node?.s.get(reason.s!)?.operation,
-  reasons: reason.r && makeReasonsReadable(reason.s, reason.r),
-  source: reason.s,
-  type: reasonTypeMap[reason.t ?? 4],
-})
+): EvaluationReason => {
+  const base = {
+    operation: node?.s.get(reason.s!)?.operation,
+    reasons: reason.r && makeReasonsReadable(reason.s, reason.r),
+    source: reason.s,
+  }
+
+  return reason.t === Cycle
+    ? {
+        ...base,
+        oldStatus: reason.o,
+        newStatus: reason.n,
+        type: 'cycle',
+      }
+    : reason.t === Invalidate
+    ? {
+        ...base,
+        type: 'invalidate',
+      }
+    : reason.t === PromiseChange
+    ? {
+        ...base,
+        type: 'promiseChange',
+      }
+    : reason.t === EventSent
+    ? {
+        ...base,
+        type: 'event',
+      }
+    : {
+        ...base,
+        newState: reason.n,
+        oldState: reason.o,
+        type: 'change',
+      }
+}
 
 export const makeReasonsReadable = (
   node?: GraphNode,

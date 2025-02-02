@@ -94,6 +94,7 @@ export abstract class ProxyWrapper<State extends MutatableTypes>
    * should be the only data type to override this. Everything else should let
    * this error throw.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public d(state: State, key: PropertyKey) {
     throw new Error(unsupportedOperator)
   }
@@ -128,6 +129,7 @@ export abstract class ProxyWrapper<State extends MutatableTypes>
    * `s`etImpl - handle the `=` assignment operator. Only native JS objects and
    * arrays should override this.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public s(state: State, key: PropertyKey, val: any) {
     throw new Error(unsupportedOperator)
   }

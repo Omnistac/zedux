@@ -290,33 +290,21 @@ describe('plugins', () => {
       'edgeCreated', // edge "moved"
     ])
 
+    events.splice(0, 7)
+
     instance2.destroy()
 
     expect(events).toEqual([
-      'subscribe',
-      'statusChanged',
-      'statusChanged',
-      'edgeCreated',
-      'statusChanged',
-      'statusChanged',
-      'edgeCreated',
-      'statusChanged', // instance2 destroyed
       'edgeRemoved',
+      'statusChanged', // instance2 destroyed
       'statusChanged', // instance1 becomes Stale 'cause it has no dependents
     ])
 
     testEcosystem.unregisterPlugin(plugin)
 
     expect(events).toEqual([
-      'subscribe',
-      'statusChanged',
-      'statusChanged',
-      'edgeCreated',
-      'statusChanged',
-      'statusChanged',
-      'edgeCreated',
-      'statusChanged',
       'edgeRemoved',
+      'statusChanged',
       'statusChanged',
       'unsubscribe',
     ])
@@ -324,15 +312,8 @@ describe('plugins', () => {
     testEcosystem.destroy()
 
     expect(events).toEqual([
-      'subscribe',
-      'statusChanged',
-      'statusChanged',
-      'edgeCreated',
-      'statusChanged',
-      'statusChanged',
-      'edgeCreated',
-      'statusChanged',
       'edgeRemoved',
+      'statusChanged',
       'statusChanged',
       'unsubscribe',
     ])

@@ -75,7 +75,7 @@ export const runSelector = <G extends SelectorGenerics>(
     if (isInitializing) {
       setNodeStatus(node, 'Active')
     } else if (!resultsComparator(result, oldState)) {
-      if (!suppressNotify) scheduleDependents({ p: oldState, s: node })
+      suppressNotify || scheduleDependents({ n: node.v, o: oldState, s: node })
 
       if (_mods.stateChanged) {
         modBus.dispatch(

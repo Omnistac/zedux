@@ -9,11 +9,9 @@ import {
 } from '@zedux/atoms'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { ZeduxHookConfig } from '../types'
-import { External, Static } from '../utils'
+import { Eventless, EventlessStatic, External } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
-
-const OPERATION = 'useAtomInstance'
 
 /**
  * Creates an atom instance for the passed atom template based on the passed
@@ -65,9 +63,7 @@ export const useAtomInstance: {
 } = <A extends AnyAtomTemplate>(
   atom: A | AnyAtomInstance,
   params?: ParamsOf<A>,
-  { operation = OPERATION, subscribe, suspend }: ZeduxHookConfig = {
-    operation: OPERATION,
-  }
+  { operation = 'useAtomInstance', subscribe, suspend }: ZeduxHookConfig = {}
 ) => {
   const ecosystem = useEcosystem()
   const observerId = useReactComponentId()
@@ -81,7 +77,7 @@ export const useAtomInstance: {
 
   // It should be fine for this to run every render. It's possible to change
   // approaches if it is too heavy sometimes. But don't memoize this call:
-  const instance: AtomInstance = ecosystem.getNode(atom, params)
+  let instance: AtomInstance = ecosystem.getNode(atom, params)
   const renderedValue = instance.v
 
   let node =
@@ -92,7 +88,11 @@ export const useAtomInstance: {
     node.l === 'Destroyed' &&
       (node = new ExternalNode(ecosystem, observerId, render))
     node.i === instance ||
-      node.u(instance, operation, External | (subscribe ? 0 : Static))
+      node.u(
+        instance,
+        operation,
+        External | (subscribe ? Eventless : EventlessStatic)
+      )
   }
 
   // Yes, subscribe during render. This operation is idempotent and we handle
@@ -102,6 +102,8 @@ export const useAtomInstance: {
   // Only remove the graph edge when the instance id changes or on component
   // destruction.
   useEffect(() => {
+    instance = ecosystem.getNode(atom, params)
+
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
     // this effect's cleanup unnecessarily)
     addEdge()

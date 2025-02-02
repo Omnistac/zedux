@@ -7,6 +7,7 @@ import {
   GraphEdgeConfig,
   InternalEvaluationReason,
   LifecycleStatus,
+  ListenerConfig,
   NodeFilter,
   NodeFilterOptions,
   NodeGenerics,
@@ -14,6 +15,7 @@ import {
 import { is, Job } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
 import {
+  Eventless,
   EventSent,
   ExplicitExternal,
   makeReasonReadable,
@@ -24,6 +26,7 @@ import {
   EventEmitter,
   SingleEventListener,
   ListenableEvents,
+  EvaluationReason,
 } from '../types/events'
 import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
 import { addEdge, removeEdge, setNodeStatus } from '../utils/graph'
@@ -45,6 +48,8 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    */
   public izn = true
 
+  public L: undefined | Listener = undefined
+
   /**
    * @see Job.T
    */
@@ -56,18 +61,12 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
   public W = 1
 
   /**
-   * `v`alue - the current state of this signal.
-   */
-  // @ts-expect-error only some node types have state. They will need to make
-  // sure they set this. This should be undefined for nodes that don't.
-  public v: G['State']
-
-  /**
    * Detach this node from the ecosystem and clean up all graph edges and other
    * subscriptions/effects created by this node.
    *
-   * Destruction will bail out if this node still has dependents (`node.o.size
-   * !== 0`). Pass `true` to force-destroy the node anyway.
+   * Destruction will bail out if this node still has non-passive observers
+   * (`node.o.size - node.P !== 0`). Pass `true` to force-destroy the node
+   * anyway.
    *
    * When force-destroying a node that still has dependents, the node will be
    * immediately recreated and all dependents notified of the destruction.
@@ -85,11 +84,12 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    *
    * To retrieve the node's value non-reactively, use `.getOnce()` instead.
    */
-  public get() {
+  public get(config?: GraphEdgeConfig) {
     // If get is called in a reactive context, track the required atom
     // instances so we can add graph edges for them. When called outside a
     // reactive context, get() is just an alias for ecosystem.get()
-    getEvaluationContext().n && bufferEdge(this, 'get', 0)
+    getEvaluationContext().n &&
+      bufferEdge(this, config?.op ?? 'get', config?.f ?? Eventless)
 
     return this.v
   }
@@ -111,25 +111,30 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
   on<E extends keyof ListenableEvents<G>>(
     eventName: E,
     callback: SingleEventListener<G, E>,
-    edgeDetails?: GraphEdgeConfig
+    listenerConfig?: ListenerConfig
   ): Cleanup
 
-  on(callback: CatchAllListener<G>, edgeDetails?: GraphEdgeConfig): Cleanup
+  on(callback: CatchAllListener<G>, listenerConfig?: ListenerConfig): Cleanup
 
   /**
    * Register a listener that will be called on this emitter's events.
    *
-   * Internally, this manually adds a graph edge between this node and a new
-   * external pseudo node.
+   * Event listeners are "passive" by default - they don't prevent the node
+   * they're listening to from becoming Stale or Destroyed.
    *
-   * TODO: probably move this to the Signal class and remove the Events generic
-   * from GraphNodes (events don't apply to selectors, effect nodes, or probably
-   * lots of other future node types).
+   * Pass `{ active: true }` to change this, making the listener create its own
+   * graph node that observes the current node. Like all normal observers, this
+   * will prevent lifecycle changes.
+   *
+   * Internally, this adds a special "passive" observer to the node the first
+   * time `.on` is called. Subsequent `.on` calls add listeners to that passive
+   * observer's callback list and make it respond to more events. If a catch-all
+   * listener is registered, the passive observer will react to all events.
    */
   public on<E extends keyof ListenableEvents<G>>(
     eventNameOrCallback: E | ((eventMap: Partial<ListenableEvents<G>>) => void),
-    callbackOrConfig?: SingleEventListener<G, E> | GraphEdgeConfig,
-    maybeConfig?: GraphEdgeConfig
+    callbackOrConfig?: SingleEventListener<G, E> | ListenerConfig,
+    maybeConfig?: ListenerConfig
   ): Cleanup {
     const isSingleListener = typeof eventNameOrCallback === 'string'
     const eventName = isSingleListener ? eventNameOrCallback : ''
@@ -138,21 +143,13 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
       ? (callbackOrConfig as SingleEventListener<G, E>)
       : (eventNameOrCallback as CatchAllListener<G>)
 
-    const { f, op } = ((isSingleListener ? maybeConfig : callbackOrConfig) ||
-      {}) as GraphEdgeConfig
-
-    const operation = op || 'on'
+    const { active } = ((isSingleListener ? maybeConfig : callbackOrConfig) ||
+      {}) as ListenerConfig
 
     const notify = (reason: InternalEvaluationReason) => {
-      // if `reason.t`ype doesn't exist, it's a change event
-      const eventMap = (
-        reason.t
-          ? reason.e ?? {}
-          : {
-              ...reason.e,
-              change: makeReasonReadable(reason, observer),
-            }
-      ) as ListenableEvents<G>
+      const eventMap = (reason.f || reason.e || {}) as Partial<
+        ListenableEvents<G>
+      >
 
       // if it's a single event listener and the event isn't in the map, ignore
       eventName in eventMap
@@ -160,19 +157,24 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
         : isSingleListener || (callback as CatchAllListener<G>)(eventMap)
     }
 
-    // External nodes can be disabled by setting this `m`ounted property to false
-    notify.m = true
+    // active listeners create their own Listener node
+    if (this.L && !active) {
+      this.L.I(eventName, notify)
 
-    const observer = new ExternalNode(
-      this.e,
-      this.e._idGenerator.generateNodeId(),
-      notify,
-      true
-    )
+      return () => this.L?.D(eventName, notify)
+    } else {
+      const observer = new Listener<G>(
+        this.e,
+        this.e._idGenerator.generateNodeId()
+      )
 
-    observer.u(this, operation, f ?? ExplicitExternal)
+      observer.u(this, 'on', ExplicitExternal)
+      observer.I(eventName, notify)
 
-    return () => observer.k(this)
+      if (!active) this.L = observer
+
+      return () => observer.D(eventName, notify)
+    }
   }
 
   /**
@@ -344,24 +346,26 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
   public abstract t: G['Template']
 
   /**
+   * `v`alue - the current state of this signal.
+   */
+  // @ts-expect-error only some node types have state. They will need to make
+  // sure they set this. This should be undefined for nodes that don't.
+  public v: G['State']
+
+  /**
    * `w`hy - the list of reasons explaining why this graph node updated or is
    * going to update.
    */
   public w: InternalEvaluationReason[] = []
 }
 
-export class ExternalNode extends GraphNode {
+export class ExternalNode<
+  G extends NodeGenerics = AnyNodeGenerics
+> extends GraphNode<G> {
   /**
    * @see GraphNode.T
    */
   public T = 3 as 2 // temporary until we sort out new graph algo
-
-  /**
-   * `b`ufferedEvents - the list of buffered events that will be batched
-   * together when this node's `j`ob runs. Only applies if
-   * `this.I`sEventListener
-   */
-  public b?: Record<string, any>
 
   /**
    * `i`nstance - the single source node this external node is observing
@@ -394,28 +398,9 @@ export class ExternalNode extends GraphNode {
      */
     public readonly n: ((reason: InternalEvaluationReason) => void) & {
       m?: boolean
-    },
-
-    /**
-     * `I`sEventListener - currently there are only two "types" of ExternalNodes
-     *
-     * - nodes that listen to state/promise/lifecycle updates
-     * - nodes that listen to events
-     *
-     * Each has slightly different functionality. We could use another subclass
-     * for this, but for now, just use a boolean to track which type this
-     * ExternalNode is.
-     */
-    public I?: boolean
+    }
   ) {
     super()
-
-    // This is the simplest way to ensure that observers run in the order they
-    // were added in. The idCounter was always just incremented to create this
-    // node's id. ExternalNodes always run after all internal jobs are fully
-    // flushed, so tracking graph node "weight" in `this.W`eight is useless.
-    // Track listener added order instead.
-    this.W = e._idGenerator.idCounter
     e.n.set(id, this)
     setNodeStatus(this, 'Active')
   }
@@ -501,18 +486,9 @@ export class ExternalNode extends GraphNode {
    * @see GraphNode.r
    */
   public r(reason: InternalEvaluationReason, defer?: boolean) {
-    // always update if `I`sEventListener. Ignore `EventSent` reasons otherwise.
-    if (this.I || (!this.I && reason.t !== EventSent)) {
-      if (this.I) {
-        this.b = this.b ? { ...this.b, ...reason.e } : reason.e
-      }
-
-      // We can optimize this for event listeners by telling ExternalNode the
-      // event it's listening to and short-circuiting here, before scheduling a
-      // useless job, if the event isn't present (and isn't an ImplicitEvent
-      // that won't be present on `reason.e`). TODO: investigate.
-      this.w.push(reason) === 1 && this.e._scheduler.schedule(this, defer)
-    }
+    // ignore `EventSent` reasons
+    reason.t === EventSent ||
+      (this.w.push(reason) === 1 && this.e._scheduler.schedule(this, defer))
   }
 
   /**
@@ -528,5 +504,130 @@ export class ExternalNode extends GraphNode {
       flags,
       operation: operation,
     })
+  }
+}
+
+const noop = () => {}
+
+export class Listener<
+  G extends NodeGenerics = AnyNodeGenerics
+> extends ExternalNode<G> {
+  /**
+   * catch`A`llCount - counts how many catch-all notifiers are registered
+   */
+  public A = 0
+
+  /**
+   * event`C`ounts - counts notifiers for each event type (except catch-all)
+   */
+  public C: Record<string, number> = {}
+
+  /**
+   * `N`otifiers - passed notify functions
+   */
+  public N: ((reason: InternalEvaluationReason) => void)[] = []
+
+  constructor(
+    /**
+     * @see ExternalNode.e
+     */
+    e: Ecosystem,
+
+    /**
+     * @see ExternalNode.id
+     */
+    id: string
+  ) {
+    super(e, id, noop)
+
+    // This is the simplest way to ensure that event observers run in the order
+    // they were added in. The idCounter was always just incremented to create
+    // this node's id. Listeners always run after all internal jobs are fully
+    // flushed, so tracking graph node "weight" in `this.W`eight is useless.
+    // Track listener added order instead.
+    // this.W = e._idGenerator.idCounter
+  }
+
+  /**
+   * `D`ecrementNotifiers - remove a notifier function from this listener's list
+   */
+  public D(
+    eventName: string,
+    notify: (reason: InternalEvaluationReason) => void
+  ) {
+    const { C, N } = this
+    const index = N?.indexOf(notify)
+
+    if (~index) {
+      N.splice(index, 1)
+
+      if (eventName) {
+        C[eventName]--
+      } else {
+        this.A--
+      }
+
+      N.length || this.m()
+    }
+  }
+
+  public I(
+    eventName: string,
+    notify: (reason: InternalEvaluationReason) => void
+  ) {
+    this.N.push(notify)
+
+    if (eventName) {
+      this.C[eventName] = (this.C[eventName] ?? 0) + 1
+    } else {
+      this.A++
+    }
+  }
+
+  /**
+   * @see ExternalNode.j
+   */
+  public j() {
+    if (this.N.length) {
+      for (const notify of this.N) {
+        for (const reason of this.w) {
+          notify(reason)
+        }
+      }
+    }
+    this.w = []
+
+    // listeners auto-detach and destroy themselves when the node they listen to
+    // is destroyed (after telling `this.N`otifiers about it)
+    if (this.i?.l === 'Destroyed') {
+      this.k(this.i)
+    }
+  }
+
+  /**
+   * @see ExternalNode.r
+   */
+  public r(reason: InternalEvaluationReason, defer?: boolean) {
+    const { e, w } = this
+    let newImplicitEvent: EvaluationReason | undefined
+
+    // if this wasn't an explicit EventSent reason, it has an implicit event we
+    // need to create. Attach it to the reason so we only do this once.
+    if (!reason.f && reason.t !== EventSent) {
+      newImplicitEvent = makeReasonReadable(reason, this)
+
+      reason.f = { ...reason.e, [newImplicitEvent.type]: newImplicitEvent }
+    }
+
+    const shouldSchedule =
+      this.A ||
+      (reason.e && Object.keys(reason.e).some(key => this.C[key])) ||
+      (newImplicitEvent && this.C[newImplicitEvent.type])
+
+    // schedule the job if needed. If not scheduling, kill this listener now if
+    // its source is destroyed.
+    shouldSchedule
+      ? w.push(reason) === 1 && e._scheduler.schedule(this, defer)
+      : this.i?.l === 'Destroyed' && this.k(this.i)
   }
 }
