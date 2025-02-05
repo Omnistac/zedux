@@ -1,3 +1,9 @@
+## v1.3.2 (Feb 5, 2025)
+
+### Fixes:
+
+- `react`: guard against circular `prevCache` refs in `useAtomSelector` (#161)
+
 ## v1.3.1 (Jan 22, 2025)
 
 ### Fixes:
