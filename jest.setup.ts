@@ -1,15 +1,13 @@
 import '@testing-library/jest-dom/extend-expect'
 
 let callstacks: Record<string, string> = {}
-let id = 0
 let prevIds: string[] = []
-let useIdMode: 'overridden' | 'react19' | 'react18' = 'overridden'
+let useIdMode: 'react19' | 'react18' = 'react19'
 
 afterEach(() => {
   callstacks = {}
-  id = 0
   prevIds = []
-  useIdMode = 'overridden'
+  useIdMode = 'react19'
 })
 
 const react = jest.requireActual('react')
@@ -17,23 +15,14 @@ const react = jest.requireActual('react')
 const generateId = () => {
   if (useIdMode === 'react19') return react.useId()
 
-  if (useIdMode === 'react18') {
-    const id1 = react.useId()
-    const id2 = react.useId()
+  const id1 = react.useId()
+  const id2 = react.useId()
 
-    if (prevIds.includes(id1)) return id2
+  if (prevIds.includes(id1)) return id2
 
-    prevIds.push(id1)
+  prevIds.push(id1)
 
-    return id1
-  }
-
-  const stack =
-    (new Error().stack || '')
-      .split('\n')
-      .find(line => /\.test\.tsx:/.test(line)) || ''
-
-  return (callstacks[stack] ||= `:r${id++}:`)
+  return id1
 }
 
 jest.mock('react', () => ({
@@ -52,9 +41,6 @@ jest.mock('react', () => ({
   if (key) {
     delete callstacks[key]
   }
-}
-;(globalThis as any).useReact19UseId = () => {
-  useIdMode = 'react19'
 }
 ;(globalThis as any).useReact18UseId = () => {
   useIdMode = 'react18'

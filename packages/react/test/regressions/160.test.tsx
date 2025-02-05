@@ -12,8 +12,6 @@ import { renderInEcosystem } from '../utils/renderInEcosystem'
 
 describe('issue #160', () => {
   test('repro', async () => {
-    ;(globalThis as any).useReact19UseId()
-
     const configAtom = atom('config', {
       controls: [
         {
