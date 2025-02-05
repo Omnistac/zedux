@@ -21,10 +21,10 @@ exports[`useAtomSelector inline selector that returns a different object referen
       "1" => true,
     },
     "dependents": Map {
-      "Test-:r0:" => {
+      "Test-:ra:" => {
         "callback": [Function],
         "createdAt": 123456789,
-        "dependentKey": "Test-:r0:",
+        "dependentKey": "Test-:ra:",
         "flags": 2,
         "isMaterialized": true,
         "operation": "useAtomSelector",
@@ -58,10 +58,10 @@ exports[`useAtomSelector inline selector that returns a different object referen
       "1" => true,
     },
     "dependents": Map {
-      "Test-:r0:" => {
+      "Test-:ra:" => {
         "callback": [Function],
         "createdAt": 123456789,
-        "dependentKey": "Test-:r0:",
+        "dependentKey": "Test-:ra:",
         "flags": 2,
         "isMaterialized": true,
         "operation": "useAtomSelector",
@@ -96,10 +96,10 @@ exports[`useAtomSelector inline selector that returns a different object referen
       "1" => true,
     },
     "dependents": Map {
-      "Test-:r0:" => {
+      "Test-:rb:" => {
         "callback": [Function],
         "createdAt": 123456789,
-        "dependentKey": "Test-:r0:",
+        "dependentKey": "Test-:rb:",
         "flags": 2,
         "operation": "useAtomSelector",
       },
@@ -132,10 +132,10 @@ exports[`useAtomSelector inline selector that returns a different object referen
       "1" => true,
     },
     "dependents": Map {
-      "Test-:r0:" => {
+      "Test-:rb:" => {
         "callback": [Function],
         "createdAt": 123456789,
-        "dependentKey": "Test-:r0:",
+        "dependentKey": "Test-:rb:",
         "flags": 2,
         "operation": "useAtomSelector",
         "task": undefined,
