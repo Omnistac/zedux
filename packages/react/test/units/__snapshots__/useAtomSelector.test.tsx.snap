@@ -21,7 +21,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "@@selector-unnamed-0": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:r0:": {
+      "Test-:ra:": {
         "flags": 5,
         "operation": "useAtomSelector",
       },
@@ -39,7 +39,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "status": "Active",
     "weight": 2,
   },
-  "Test-:r0:": {
+  "Test-:ra:": {
     "className": "ExternalNode",
     "observers": {},
     "sources": {
@@ -76,7 +76,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "@@selector-unnamed-0": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:r0:": {
+      "Test-:ra:": {
         "flags": 5,
         "operation": "useAtomSelector",
       },
@@ -94,7 +94,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "status": "Active",
     "weight": 2,
   },
-  "Test-:r0:": {
+  "Test-:ra:": {
     "className": "ExternalNode",
     "observers": {},
     "sources": {
@@ -131,7 +131,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "@@selector-unnamed-0": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:r0:": {
+      "Test-:rb:": {
         "flags": 5,
         "operation": "useAtomSelector",
       },
@@ -149,7 +149,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "status": "Active",
     "weight": 2,
   },
-  "Test-:r0:": {
+  "Test-:rb:": {
     "className": "ExternalNode",
     "observers": {},
     "sources": {
@@ -186,7 +186,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "@@selector-unnamed-0": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:r0:": {
+      "Test-:rb:": {
         "flags": 5,
         "operation": "useAtomSelector",
       },
@@ -204,7 +204,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "status": "Active",
     "weight": 2,
   },
-  "Test-:r0:": {
+  "Test-:rb:": {
     "className": "ExternalNode",
     "observers": {},
     "sources": {
@@ -225,7 +225,7 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
   "@@selector-unnamed-0": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:r0:": {
+      "Test-:r9:": {
         "flags": 5,
         "operation": "useAtomSelector",
       },
@@ -249,7 +249,7 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
   "@@selector-unnamed-0": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:r0:": {
+      "Test-:r9:": {
         "flags": 5,
         "operation": "useAtomSelector",
       },
