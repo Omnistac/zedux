@@ -643,15 +643,20 @@ const returnToBranch = async (branch, tagName) => {
     )
   }
 
-  const lastCommitOutput = await cmd('git show --pretty="%s" -s')
+  const lastCommitCmd = 'git show --pretty="%s" -s'
+  let lastCommitOutput = await cmd(lastCommitCmd)
 
   // the merge commit should have the PR # appended to it, so only check if
   // startsWith:
-  if (!lastCommitOutput.stdout.trim().startsWith(tagName)) {
+  while (!lastCommitOutput.stdout.trim().startsWith(tagName)) {
     console.error('Last commit on target branch does not match the pushed tag')
+
     await confirm(
       "\nInvestigate the problem. Perhaps the PR didn't merge successfully. Is it resolved?"
     )
+
+    await cmd('git pull')
+    lastCommitOutput = await cmd(lastCommitCmd)
   }
 
   console.info('Tagging release commit')
