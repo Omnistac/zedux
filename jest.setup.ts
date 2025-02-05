@@ -1,24 +1,32 @@
 import '@testing-library/jest-dom/extend-expect'
 
 let callstacks: Record<string, string> = {}
-let id = 0
+let prevIds: string[] = []
+let useIdMode: 'react19' | 'react18' = 'react19'
 
 afterEach(() => {
   callstacks = {}
-  id = 0
+  prevIds = []
+  useIdMode = 'react19'
 })
 
-const generateId = () => {
-  const stack =
-    (new Error().stack || '')
-      .split('\n')
-      .find(line => /\.test\.tsx:/.test(line)) || ''
+const react = jest.requireActual('react')
 
-  return (callstacks[stack] ||= `:r${id++}:`)
+const generateId = () => {
+  if (useIdMode === 'react19') return react.useId()
+
+  const id1 = react.useId()
+  const id2 = react.useId()
+
+  if (prevIds.includes(id1)) return id2
+
+  prevIds.push(id1)
+
+  return id1
 }
 
 jest.mock('react', () => ({
-  ...jest.requireActual('react'),
+  ...react,
   useId: generateId,
 }))
 
@@ -33,4 +41,7 @@ jest.mock('react', () => ({
   if (key) {
     delete callstacks[key]
   }
+}
+;(globalThis as any).useReact18UseId = () => {
+  useIdMode = 'react18'
 }

@@ -238,19 +238,6 @@ export class AtomInstance<
   }
 
   /**
-   * @see Signal.get
-   *
-   * If this atom is wrapping an internal signal, returns the current value of
-   * that signal. Otherwise, this atom _is_ the signal, and this returns its
-   * value.
-   */
-  public get() {
-    // defer to `Signal#get` to auto-track usages of this signal in the current
-    // reactive context (if any)
-    return this.S ? this.S.get() : super.get()
-  }
-
-  /**
    * Force this atom instance to reevaluate.
    */
   public invalidate() {
