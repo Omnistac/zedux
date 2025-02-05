@@ -117,13 +117,17 @@ export const useAtomInstance: {
     if (edge) {
       let prevEdge = edge.prevEdge?.deref()
 
+      edge.isMaterialized = true
+
       // clear out any junk edges added by StrictMode
       while (prevEdge && !prevEdge.isMaterialized) {
         ecosystem._graph.removeEdge(prevEdge.dependentKey!, instance.id)
+
+        // mark in case of circular references (shouldn't happen, but just for
+        // consistency with the prevCache algorithm)
+        prevEdge.isMaterialized = true
         prevEdge = prevEdge.prevEdge?.deref()
       }
-
-      edge.isMaterialized = true
     }
 
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
