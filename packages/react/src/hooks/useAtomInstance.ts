@@ -81,7 +81,7 @@ export const useAtomInstance: {
 
   let edge: DependentEdge | undefined
 
-  const addEdge = () => {
+  const addEdge = (isMaterialized?: boolean) => {
     if (!ecosystem._graph.nodes[instance.id]?.dependents.get(dependentKey)) {
       edge = ecosystem._graph.addEdge(
         dependentKey,
@@ -94,6 +94,7 @@ export const useAtomInstance: {
       )
 
       if (edge) {
+        edge.isMaterialized = isMaterialized
         edge.dependentKey = dependentKey
 
         if (instance._lastEdge) {
@@ -131,8 +132,10 @@ export const useAtomInstance: {
     }
 
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
-    // this effect's cleanup unnecessarily)
-    addEdge()
+    // this effect's cleanup unnecessarily OR other effects in child components
+    // cleaned up this component's edges before it could materialize them.
+    // That's fine, just recreate them with `isMaterialized: true` now)
+    addEdge(true)
 
     // use the referentially stable render function as a ref :O
     ;(render as any).mounted = true
