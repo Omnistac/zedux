@@ -1,321 +1,451 @@
 import {
-  Action,
-  ActionFactoryActionType,
+  api,
   atom,
   AtomGetters,
+  AtomInstance,
+  ChangeEvent,
   createEcosystem,
+  GraphNode,
+  injectMappedSignal,
   ion,
-  ZeduxPlugin,
 } from '@zedux/react'
+import { ecosystem } from '../utils/ecosystem'
+import { expectTypeOf } from 'expect-type'
+import { mockConsole } from '../utils/console'
+
+const atom1 = atom('1', () => ({ a: 1 }))
+const atom1Override = atom('1', () => 'b')
+const atom2 = ion('2', ({ getNode }) =>
+  injectMappedSignal({ a: getNode(atom1), b: 2 })
+)
+
+afterEach(() => {
+  ecosystem.C = Object.fromEntries(
+    Object.keys(ecosystem.C).map(key => [key, 0])
+  ) as typeof ecosystem.C
+  ecosystem.L = []
+})
 
 describe('plugins', () => {
-  test('a plugin turns mods on and off dynamically', () => {
-    const atom1 = atom('1', () => 'a')
-    const atom1Override = atom('1', () => 'b')
-    const actionList: [string | undefined, string][] = []
-
-    const plugin = new ZeduxPlugin({
-      initialMods: ['statusChanged', 'edgeCreated'],
-      registerEcosystem: ecosystem => {
-        ecosystem.modBus.subscribe({
-          effects: ({ action }) => {
-            actionList.push([action.type, action.payload])
-          },
-        })
-      },
-    })
-
-    const testEcosystem = createEcosystem()
-    testEcosystem.registerPlugin(plugin)
-
-    const instance1 = testEcosystem.getInstance(atom1)
-    instance1.set('b')
-
-    expect(actionList).toEqual([
-      [
-        'statusChanged',
-        { newStatus: 'Active', node: instance1, oldStatus: 'Initializing' },
-      ],
-    ])
-    expect(testEcosystem._mods).toMatchInlineSnapshot(`
-      {
-        "ecosystemWiped": 0,
-        "edgeCreated": 1,
-        "edgeRemoved": 0,
-        "evaluationFinished": 0,
-        "instanceReused": 0,
-        "stateChanged": 0,
-        "statusChanged": 1,
-      }
-    `)
-
-    plugin.modStore.setState(['instanceReused', 'statusChanged'])
-
-    const instance2 = testEcosystem.getInstance(atom1Override)
-
-    testEcosystem.destroy()
-
-    expect(actionList).toEqual([
-      [
-        'statusChanged',
-        { newStatus: 'Active', node: instance1, oldStatus: 'Initializing' },
-      ],
-      ['instanceReused', { instance: instance1, template: atom1Override }],
-      [
-        'statusChanged',
-        { newStatus: 'Destroyed', node: instance1, oldStatus: 'Active' },
-      ],
-    ])
-    expect(testEcosystem._mods).toMatchInlineSnapshot(`
-      {
-        "ecosystemWiped": 0,
-        "edgeCreated": 0,
-        "edgeRemoved": 0,
-        "evaluationFinished": 0,
-        "instanceReused": 1,
-        "stateChanged": 0,
-        "statusChanged": 1,
-      }
-    `)
-    expect(instance2).toBe(instance1)
-  })
-
-  test('ecosystemWiped mod triggers after all destructions', () => {
-    const atom1 = atom('1', (id: string) => id)
-
-    const payloads: any[] = []
-
-    const plugin = new ZeduxPlugin({
-      initialMods: ['ecosystemWiped'],
-
-      registerEcosystem: ecosystem => {
-        const subscription = ecosystem.modBus.subscribe({
-          effects: ({ action }) => {
-            payloads.push(action.payload)
-          },
-        })
-
-        return () => subscription.unsubscribe()
-      },
-    })
-
-    const testEcosystem = createEcosystem()
-    testEcosystem.registerPlugin(plugin)
-
-    const instance1 = testEcosystem.getInstance(atom1, ['a'])
-    const instance2 = testEcosystem.getInstance(atom1, ['b'])
-
-    plugin.modStore.setState(state => [...state, 'statusChanged'])
-
-    expect(payloads).toEqual([])
-
-    testEcosystem.destroy()
-
-    expect(payloads).toEqual([
-      {
-        newStatus: 'Destroyed',
-        node: instance1,
-        oldStatus: 'Active',
-      },
-      {
-        newStatus: 'Destroyed',
-        node: instance2,
-        oldStatus: 'Active',
-      },
-      {
-        ecosystem: testEcosystem,
-      },
-    ])
-  })
-
-  test('evaluationFinished mod turns on evaluation time reporting', () => {
-    const atom1 = atom('1', () => {
-      const start = performance.now()
-      let num = 0
-
-      // doesn't matter, just make it take _some_ tiny amount of time for fun:
-      while (performance.now() - start < 1) {
-        num++
-      }
-
-      return num
-    })
-
-    const selector1 = ({ get }: AtomGetters) => get(atom1)
-
-    const times: number[] = []
-
-    const plugin = new ZeduxPlugin({
-      registerEcosystem: ecosystem => {
-        const subscription = ecosystem.modBus.subscribe({
-          effects: ({ action }) => {
-            if (action.type !== ZeduxPlugin.actions.evaluationFinished.type) {
-              return
-            }
-
-            times.push(
-              (
-                action as ActionFactoryActionType<
-                  typeof ZeduxPlugin.actions.evaluationFinished
-                >
-              ).payload.time
-            )
-          },
-        })
-
-        return () => subscription.unsubscribe()
-      },
-    })
-
-    plugin.modStore.setState(['evaluationFinished'])
-
-    const testEcosystem = createEcosystem()
-    testEcosystem.registerPlugin(plugin)
-
-    const instance1 = testEcosystem.getInstance(atom1)
-    instance1.destroy()
-    testEcosystem.getNode(selector1)
-
-    testEcosystem.destroy()
-
-    expect(times).toHaveLength(3)
-    expect(times[0]).toBeGreaterThan(1)
-    expect(times[1]).toBeGreaterThan(1)
-    expect(times[2]).toBeGreaterThan(1)
-  })
-
-  test('stateChanged and statusChanged mods receive events for atoms and selectors', () => {
-    const atom1 = atom('1', 'a')
-    const selector1 = ({ get }: AtomGetters) => get(atom1) + 'b'
-
-    const updates: string[] = []
-
-    const plugin = new ZeduxPlugin({
-      initialMods: ['stateChanged', 'statusChanged'],
-
-      registerEcosystem: ecosystem => {
-        const subscription = ecosystem.modBus.subscribe({
-          effects: ({ action }) => {
-            if (action.type === ZeduxPlugin.actions.stateChanged.type) {
-              updates.push(action.payload.newState)
-            }
-
-            if (
-              action.type === ZeduxPlugin.actions.statusChanged.type &&
-              (
-                action as ActionFactoryActionType<
-                  typeof ZeduxPlugin.actions.statusChanged
-                >
-              ).payload.newStatus === 'Active'
-            ) {
-              const { node } = (
-                action as ActionFactoryActionType<
-                  typeof ZeduxPlugin.actions.statusChanged
-                >
-              ).payload
-
-              const state = node.getOnce()
-              updates.push(state)
-            }
-          },
-        })
-
-        return () => subscription.unsubscribe()
-      },
-    })
-
-    const testEcosystem = createEcosystem()
-
-    testEcosystem.registerPlugin(plugin)
-
-    testEcosystem.getNode(selector1)
-    const instance = testEcosystem.getInstance(atom1)
-    instance.set('aa')
-
-    testEcosystem.destroy()
-
-    expect(updates).toEqual(['a', 'ab', 'aa', 'aab'])
-  })
-
-  test('unregistering plugins cleans up mods and modBus subscriptions', () => {
+  test('ecosystem events fire only when there are ecosystem event listeners', () => {
     jest.useFakeTimers()
-    const atom1 = atom('1', 'a')
-    const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
+    const ecosystemJobFn = jest.spyOn(ecosystem, 'j')
+    const node1 = ecosystem.getNode(atom1)
+    const calls: any[] = []
 
-    const events: string[] = []
+    expect(ecosystemJobFn).not.toHaveBeenCalled()
 
-    const plugin = new ZeduxPlugin({
-      initialMods: ['edgeCreated', 'edgeRemoved', 'statusChanged'],
-
-      registerEcosystem: ecosystem => {
-        events.push('subscribe')
-        const subscription = ecosystem.modBus.subscribe({
-          effects: ({ action }) => {
-            events.push((action as Action).type)
-          },
-        })
-
-        return () => {
-          events.push('unsubscribe')
-          subscription.unsubscribe()
-        }
-      },
+    const cleanup = ecosystem.on(eventMap => {
+      calls.push(Object.keys(eventMap))
     })
 
-    const testEcosystem = createEcosystem()
-    testEcosystem.registerPlugin(plugin)
+    node1.set({ a: 11 })
 
-    expect(events).toEqual(['subscribe'])
+    expect(ecosystemJobFn).toHaveBeenCalledTimes(1)
+    expect(calls).toEqual([['change']])
 
-    const instance1 = testEcosystem.getInstance(atom1)
-    const instance2 = testEcosystem.getInstance(atom2)
+    node1.mutate(state => {
+      state.a = 111
+    })
 
-    expect(events).toEqual([
-      'subscribe',
-      'statusChanged', // instance1 created
-      'statusChanged', // instance2 created
-      'edgeCreated',
-    ])
+    expect(ecosystemJobFn).toHaveBeenCalledTimes(2)
+    expect(calls).toEqual([['change'], ['mutate', 'change']])
 
-    instance1.destroy(true)
+    cleanup()
+
+    node1.set({ a: 1 })
+
+    expect(ecosystemJobFn).toHaveBeenCalledTimes(2)
+  })
+
+  test('overrides fire cycle events', () => {
+    jest.useFakeTimers()
+    const calls: any[] = []
+
+    const cleanup = ecosystem.on('cycle', event => {
+      calls.push(['cycle', event.source?.id, event.oldStatus, event.newStatus])
+    })
+
+    ecosystem.getNode(atom1)
     jest.runAllTimers()
 
-    expect(events).toEqual([
-      'subscribe',
-      'statusChanged',
-      'statusChanged',
-      'edgeCreated',
-      'statusChanged', // instance1 force-destroyed
-      'statusChanged', // instance1 recreated by instance2 (its dependent)
-      'edgeCreated', // edge "moved"
+    expect(calls).toEqual([['cycle', '1', 'Initializing', 'Active']])
+    calls.splice(0, 1)
+
+    ecosystem.setOverrides([atom1Override])
+    jest.runAllTimers()
+
+    expect(calls).toEqual([['cycle', '1', 'Active', 'Destroyed']])
+    calls.splice(0, 1)
+
+    cleanup()
+
+    ecosystem.on(eventMap => {
+      if (eventMap.cycle) {
+        calls.push([
+          'cycle',
+          eventMap.cycle.source?.id,
+          eventMap.cycle.oldStatus,
+          eventMap.cycle.newStatus,
+        ])
+      }
+    })
+
+    ecosystem.getNode(atom1)
+    jest.runAllTimers()
+
+    expect(calls).toEqual([['cycle', '1', 'Initializing', 'Active']])
+    calls.splice(0, 1)
+
+    ecosystem.removeOverrides([atom1Override])
+
+    expect(calls).toEqual([['cycle', '1', 'Active', 'Destroyed']])
+  })
+
+  test('change event', () => {
+    const selector1 = ({ get }: AtomGetters) => get(atom1).a * 2
+    const node2 = ecosystem.getNode(atom2)
+    const selectorNode1 = ecosystem.getNode(selector1)
+    const calls: any[] = []
+
+    expect(selectorNode1.v).toBe(2)
+
+    const cleanup = ecosystem.on('change', event => {
+      expectTypeOf(event).toEqualTypeOf<ChangeEvent>()
+      calls.push([event.source?.id, event.newState])
+    })
+
+    node2.set(state => ({ ...state, a: { ...state.a, a: 11 } }))
+
+    expect(selectorNode1.v).toBe(22)
+
+    expect(calls).toEqual([
+      ['1', { a: 11 }],
+      // TODO: decide between @ and @@
+      ['@@selector-selector1-1', 22],
+      ['@signal(2)-0', { a: { a: 11 }, b: 2 }],
+      ['2', { a: { a: 11 }, b: 2 }],
     ])
+    calls.splice(0, calls.length)
 
-    events.splice(0, 7)
+    cleanup()
 
-    instance2.destroy()
+    node2.mutate({ b: 22 })
 
-    expect(events).toEqual([
-      'edgeRemoved',
-      'statusChanged', // instance2 destroyed
-      'statusChanged', // instance1 becomes Stale 'cause it has no dependents
+    expect(calls).toEqual([])
+
+    ecosystem.on(eventMap => {
+      if (eventMap.change) {
+        calls.push([eventMap.change.source?.id, eventMap.change.newState])
+      }
+    })
+
+    node2.mutate({ b: 222 })
+
+    expect(calls).toEqual([
+      ['@signal(2)-0', { a: { a: 11 }, b: 222 }],
+      ['2', { a: { a: 11 }, b: 222 }],
     ])
+  })
 
-    testEcosystem.unregisterPlugin(plugin)
+  test('edge event', () => {
+    jest.useFakeTimers()
+    const calls: any[] = []
 
-    expect(events).toEqual([
-      'edgeRemoved',
-      'statusChanged',
-      'statusChanged',
-      'unsubscribe',
+    const cleanup = ecosystem.on('edge', event => {
+      calls.push([event.action, event.observer.id, event.source.id])
+    })
+
+    const node2 = ecosystem.getNode(atom2)
+    jest.runAllTimers()
+
+    expect(calls).toEqual([
+      ['add', '@signal(2)-0', '1'],
+      ['add', '2', '1'],
+      ['add', '2', '@signal(2)-0'],
     ])
+    calls.splice(0, calls.length)
 
+    cleanup()
+
+    node2.destroy()
+
+    expect(calls).toEqual([])
+
+    let isDynamic = true
+    const changingAtom = ion('changing', ({ get, getNode }) => {
+      return isDynamic ? get(atom1) : getNode(atom1).getOnce()
+    })
+
+    ecosystem.on(eventMap => {
+      if (eventMap.edge) {
+        calls.push([
+          eventMap.edge.action,
+          eventMap.edge.observer.id,
+          eventMap.edge.source.id,
+        ])
+      }
+
+      if (eventMap.invalidate) {
+        calls.push(['invalidate', eventMap.invalidate.source?.id])
+      }
+    })
+
+    const changingNode = ecosystem.getNode(changingAtom)
+    jest.runAllTimers()
+
+    expect(calls).toEqual([['add', 'changing', '1']])
+    calls.splice(0, calls.length)
+
+    isDynamic = false
+    changingNode.invalidate()
+
+    expect(calls).toEqual([
+      ['invalidate', 'changing'],
+      ['update', 'changing', '1'],
+    ])
+    calls.splice(0, calls.length)
+
+    changingNode.destroy()
+
+    expect(calls).toEqual([['remove', 'changing', '1']])
+  })
+
+  test('error event', async () => {
+    jest.useFakeTimers()
+
+    const errorAtom = atom('errorAtom', () => {
+      throw new Error('error')
+    })
+
+    const mappedSignal = ion('mappedSignal', ({ get }) =>
+      injectMappedSignal({
+        error: get(errorAtom),
+      })
+    )
+
+    const errorSelector = () => {
+      throw 'not an error'
+    }
+
+    const errorPromise = atom('errorPromise', () => {
+      return api(Promise.reject('reject'))
+    })
+
+    const calls: any[] = []
+    const consoleSpy = mockConsole('error')
+
+    const cleanup = ecosystem.on('error', event => {
+      calls.push([event.source.id, event.error.message])
+    })
+
+    expect(() => ecosystem.getNode(errorAtom)).toThrowError('error')
+    expect(() => ecosystem.getNode(mappedSignal)).toThrowError('error')
+    expect(() => ecosystem.getNode(errorSelector)).toThrowError('not an error')
+    const promiseNode = ecosystem.getNode(errorPromise)
+    jest.runAllTimers()
+    await Promise.resolve().then()
+
+    const expectedCalls = [
+      ['errorAtom', 'error'],
+      ['errorAtom', 'error'],
+      ['mappedSignal', 'error'],
+      ['@@selector-errorSelector-0', 'not an error'],
+      ['errorPromise', 'reject'],
+    ]
+
+    expect(calls).toEqual(expectedCalls)
+    calls.splice(0, calls.length)
+
+    expect(consoleSpy).toHaveBeenCalledTimes(4)
+
+    cleanup()
+    promiseNode.destroy()
+
+    ecosystem.on(eventMap => {
+      if (eventMap.error) {
+        calls.push([eventMap.error.source.id, eventMap.error.error.message])
+      }
+    })
+
+    expect(() => ecosystem.getNode(errorAtom)).toThrowError('error')
+    expect(() => ecosystem.getNode(mappedSignal)).toThrowError('error')
+    expect(() => ecosystem.getNode(errorSelector)).toThrowError('not an error')
+    ecosystem.getNode(errorPromise)
+    jest.runAllTimers()
+    await Promise.resolve().then()
+
+    expect(calls).toEqual(expectedCalls)
+
+    expect(consoleSpy).toHaveBeenCalledTimes(8)
+  })
+
+  test('promiseChange event', () => {
+    jest.useFakeTimers()
+    const calls: any[] = []
+    const promiseA = Promise.resolve('a')
+    const promiseB = Promise.resolve('b')
+    let useA = true
+
+    const promiseAtom = atom('promiseAtom', () =>
+      api(useA ? promiseA : promiseB)
+    )
+
+    const cleanup = ecosystem.on('promiseChange', event => {
+      calls.push([event.source?.id, (event.source as AtomInstance)?.promise])
+    })
+
+    const promiseNode = ecosystem.getNode(promiseAtom)
+    jest.runAllTimers()
+
+    expect(calls).toEqual([['promiseAtom', promiseA]])
+    calls.splice(0, calls.length)
+
+    cleanup()
+
+    ecosystem.on(eventMap => {
+      if (eventMap.promiseChange) {
+        calls.push([
+          eventMap.promiseChange.source?.id,
+          (eventMap.promiseChange.source as AtomInstance)?.promise,
+        ])
+      }
+
+      if (eventMap.invalidate) {
+        calls.push(['invalidate', eventMap.invalidate.source?.id])
+      }
+    })
+
+    useA = false
+    promiseNode.invalidate()
+    jest.runAllTimers()
+
+    expect(calls).toEqual([
+      ['invalidate', 'promiseAtom'],
+      ['promiseAtom', promiseB],
+    ])
+  })
+
+  test('resetStart and resetEnd events', () => {
+    const calls: any[] = []
+    const testEcosystem = createEcosystem({ id: 'reset-event-test' })
+    testEcosystem.getNode(atom1)
+
+    const cleanup = testEcosystem.on(eventMap => {
+      calls.push(Object.keys(eventMap))
+    })
+
+    testEcosystem.reset()
+
+    expect(calls).toEqual([['resetStart'], ['cycle'], ['resetEnd']])
+    calls.splice(0, calls.length)
+
+    testEcosystem.reset()
+
+    expect(calls).toEqual([['resetStart'], ['resetEnd']])
+    calls.splice(0, calls.length)
+
+    testEcosystem.getNode(atom1)
+    testEcosystem.reset()
+
+    expect(calls).toEqual([
+      ['runStart'],
+      ['cycle'],
+      ['runEnd'],
+      ['resetStart'],
+      ['cycle'],
+      ['resetEnd'],
+    ])
+    calls.splice(0, calls.length)
+
+    cleanup()
+
+    testEcosystem.on('resetStart', event => {
+      expectTypeOf(event).toEqualTypeOf<{
+        isDestroy: boolean
+        type: 'resetStart'
+      }>()
+      calls.push(event)
+    })
+
+    testEcosystem.on('resetEnd', event => {
+      expectTypeOf(event).toEqualTypeOf<{
+        isDestroy: boolean
+        type: 'resetEnd'
+      }>()
+      calls.push(event)
+    })
+
+    testEcosystem.getNode(atom1)
+    testEcosystem.reset()
+
+    expect(calls).toEqual([
+      { isDestroy: false, type: 'resetStart' },
+      { isDestroy: false, type: 'resetEnd' },
+    ])
+    calls.splice(0, calls.length)
+
+    testEcosystem.getNode(atom1)
     testEcosystem.destroy()
 
-    expect(events).toEqual([
-      'edgeRemoved',
-      'statusChanged',
-      'statusChanged',
-      'unsubscribe',
+    expect(calls).toEqual([
+      { isDestroy: true, type: 'resetStart' },
+      { isDestroy: true, type: 'resetEnd' },
     ])
+    calls.splice(0, calls.length)
+  })
+
+  test('runStart and runEnd events', () => {
+    const node1 = ecosystem.getNode(atom1)
+    const node2 = ecosystem.getNode(atom2)
+    const calls: any[] = []
+
+    const cleanup = ecosystem.on(eventMap => {
+      if (eventMap.runStart || eventMap.runEnd) {
+        calls.push([
+          (eventMap.runStart || eventMap.runEnd)?.source.id,
+          (eventMap.runStart || eventMap.runEnd)?.type,
+        ])
+      }
+    })
+
+    node1.set({ a: 11 })
+
+    const expectedCalls = [
+      ['2', 'runStart'],
+      ['@signal(2)-0', 'runStart'],
+      ['@signal(2)-0', 'runEnd'],
+      ['2', 'runEnd'],
+    ]
+
+    expect(calls).toEqual(expectedCalls)
+    calls.splice(0, calls.length)
+
+    cleanup()
+
+    ecosystem.on('runStart', event => {
+      expectTypeOf(event).toEqualTypeOf<{
+        source: GraphNode
+        type: 'runStart'
+      }>()
+
+      calls.push([event.source.id, event.type])
+    })
+
+    ecosystem.on('runEnd', event => {
+      expectTypeOf(event).toEqualTypeOf<{
+        source: GraphNode
+        type: 'runEnd'
+      }>()
+
+      calls.push([event.source.id, event.type])
+    })
+
+    node2.mutate(state => {
+      state.a.a = 111
+      state.b = 22
+    })
+
+    expect(calls).toEqual(expectedCalls)
   })
 })

@@ -9,17 +9,16 @@ import {
 import {
   destroyBuffer,
   flushBuffer,
-  getEvaluationContext,
   startBuffer,
 } from '../utils/evaluationContext'
-import { prefix } from '../utils/general'
+import { isListeningTo, sendEcosystemErrorEvent } from '../utils/events'
+import { ERROR, prefix } from '../utils/general'
 import {
   destroyNodeFinish,
   destroyNodeStart,
-  scheduleDependents,
+  handleStateChange,
   setNodeStatus,
 } from '../utils/graph'
-import { pluginActions } from '../utils/plugin-actions'
 import { Ecosystem } from './Ecosystem'
 import { GraphNode } from './GraphNode'
 
@@ -55,8 +54,6 @@ export const runSelector = <G extends SelectorGenerics>(
   isInitializing?: boolean,
   suppressNotify?: boolean
 ) => {
-  const { _mods, modBus } = node.e
-
   const selector =
     typeof node.t === 'function' ? (node.t as AtomSelector) : node.t.selector
 
@@ -64,8 +61,7 @@ export const runSelector = <G extends SelectorGenerics>(
     (typeof node.t !== 'function' && node.t.resultsComparator) ||
     defaultResultsComparator
 
-  const { n, s } = getEvaluationContext()
-  startBuffer(node)
+  const prevNode = startBuffer(node)
 
   try {
     const result = selector(node.e.live, ...node.p)
@@ -74,33 +70,23 @@ export const runSelector = <G extends SelectorGenerics>(
 
     if (isInitializing) {
       setNodeStatus(node, 'Active')
-    } else if (!resultsComparator(result, oldState)) {
-      suppressNotify || scheduleDependents({ n: node.v, o: oldState, s: node })
-
-      if (_mods.stateChanged) {
-        modBus.dispatch(
-          pluginActions.stateChanged({
-            newState: result,
-            node,
-            oldState,
-            reasons: node.w,
-          })
-        )
-      }
+    } else if (!suppressNotify && !resultsComparator(result, oldState)) {
+      handleStateChange(node, oldState)
     }
   } catch (err) {
-    destroyBuffer(n, s)
-    console.error(
-      `Zedux encountered an error while running selector with id "${node.id}":`,
-      err
-    )
+    destroyBuffer(prevNode)
+    console.error(`Zedux: Error while running selector "${node.id}":`, err)
+
+    if (isListeningTo(node.e, ERROR)) {
+      sendEcosystemErrorEvent(node, err)
+    }
 
     throw err
   } finally {
     node.w = []
   }
 
-  flushBuffer(n, s)
+  flushBuffer(prevNode)
 }
 
 export const swapSelectorRefs = <G extends SelectorGenerics>(

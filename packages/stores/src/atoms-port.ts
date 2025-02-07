@@ -3,7 +3,7 @@
 // type compatibility with the external `@zedux/atoms` package. That breakage
 // happens when we give TS a `@zedux/atoms` `paths` alias and let it pull in
 // duplicated classes e.g. in `dist/esm/atoms/classes/...`
-import { PromiseState } from '@zedux/atoms'
+import type { PromiseState } from '@zedux/atoms'
 
 export type InjectorDescriptor<T = any> = T extends undefined
   ? {

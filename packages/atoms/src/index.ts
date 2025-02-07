@@ -2,9 +2,9 @@ import { createInjector } from './factories/createInjector'
 import {
   destroyBuffer,
   flushBuffer,
-  getEvaluationContext,
   startBuffer,
 } from './utils/evaluationContext'
+import { sendImplicitEcosystemEvent } from './utils/events'
 import {
   destroyNodeFinish,
   destroyNodeStart,
@@ -26,8 +26,8 @@ export const zi = {
   c: createInjector,
   d: destroyBuffer,
   e: destroyNodeFinish,
+  i: sendImplicitEcosystemEvent,
   f: flushBuffer,
-  g: getEvaluationContext,
   s: startBuffer,
   u: scheduleDependents,
 }

@@ -806,7 +806,7 @@ describe('react types', () => {
     const expectedChangeEvent = {
       newState: 2,
       oldState: 1,
-      operation: 'on',
+      operation: undefined,
       reasons: [],
       source: signal,
       type: 'change',

@@ -28,6 +28,32 @@ export interface CycleEvent<G extends NodeGenerics = AnyNodeGenerics>
   type: 'cycle'
 }
 
+export type EcosystemEvent = EcosystemEvents[keyof EcosystemEvents]
+
+export interface EcosystemEvents extends ImplicitEvents {
+  edge: EdgeEvent
+  error: ErrorEvent
+  resetEnd: ResetEndEvent
+  resetStart: ResetStartEvent
+  runEnd: RunEndEvent
+  runStart: RunStartEvent
+}
+
+export interface EcosystemEventBase {
+  source: GraphNode
+}
+
+export interface EdgeEvent extends EcosystemEventBase {
+  action: 'add' | 'remove' | 'update'
+  observer: GraphNode
+  type: 'edge'
+}
+
+export interface ErrorEvent extends EcosystemEventBase {
+  error: Error
+  type: 'error'
+}
+
 export type EvaluationReason<G extends NodeGenerics = AnyNodeGenerics> =
   | ChangeEvent<G>
   | CycleEvent<G>
@@ -134,13 +160,31 @@ export type ListenableEvents<G extends NodeGenerics = AnyNodeGenerics> =
 
 export type Mutatable<State> =
   | RecursivePartial<State>
-  | ((state: State) => void)
+  | ((state: State) => void | RecursivePartial<State>)
 
 export type MutatableTypes = any[] | Record<string, any> | Set<any>
 
 export interface PromiseChangeEvent<G extends NodeGenerics = AnyNodeGenerics>
   extends EventBase<G> {
   type: 'promiseChange'
+}
+
+export interface ResetEndEvent {
+  isDestroy: boolean
+  type: 'resetEnd'
+}
+
+export interface ResetStartEvent {
+  isDestroy: boolean
+  type: 'resetStart'
+}
+
+export interface RunEndEvent extends EcosystemEventBase {
+  type: 'runEnd'
+}
+
+export interface RunStartEvent extends EcosystemEventBase {
+  type: 'runStart'
 }
 
 export type SendableEvents<G extends Pick<AtomGenerics, 'Events'>> = Prettify<
@@ -161,9 +205,8 @@ export type SingleEventListener<
  */
 export interface Transaction {
   /**
-   * `k`ey - either a top-level object key or an indefinitely-nested array of
-   * keys detailing the "path" through a nested state object to the field that
-   * updated.
+   * `k`ey - either a top-level object key or an array of keys detailing the
+   * "path" through a nested state object to the field that updated.
    */
   k: PropertyKey | PropertyKey[]
 

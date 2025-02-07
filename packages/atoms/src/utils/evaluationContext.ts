@@ -1,22 +1,22 @@
-import { ActionFactoryPayloadType, is } from '@zedux/core'
+import { is } from '@zedux/core'
 import { AnyAtomInstance } from '../types/index'
 import { type GraphNode } from '../classes/GraphNode'
 import { AtomInstance } from '../classes/instances/AtomInstance'
-import { ExplicitExternal, OutOfRange } from './general'
+import {
+  EDGE,
+  ExplicitExternal,
+  OutOfRange,
+  RUN_END,
+  RUN_START,
+} from './general'
 import { addEdge, removeEdge, scheduleNodeDestruction } from './graph'
-import { pluginActions } from './plugin-actions'
+import { isListeningTo, sendEcosystemEvent } from './events'
 
 export interface EvaluationContext {
   /**
    * `n`ode - the node that's currently evaluating
    */
   n?: GraphNode
-
-  /**
-   * `s`tartTime - The high-def timestamp of when the node was "pushed" onto the
-   * stack
-   */
-  s?: number
 }
 
 /**
@@ -28,8 +28,6 @@ export interface EvaluationContext {
  * any ecosystem context. That's how injectors work.
  */
 let evaluationContext: EvaluationContext = {}
-
-const perf = typeof performance === 'undefined' ? Date : performance
 
 /**
  * In the current buffer, draw a new edge between the currently evaluating graph
@@ -66,10 +64,7 @@ export const bufferEdge = (
  * Always pass the previously captured node/startTime (undefined if this is the
  * last item in the stack)
  */
-export const destroyBuffer = (
-  previousNode: GraphNode | undefined,
-  previousStartTime: number | undefined
-) => {
+export const destroyBuffer = (previousNode: GraphNode | undefined) => {
   for (const [source, sourceEdge] of evaluationContext.n!.s) {
     // the edge wasn't created during the evaluation that errored; keep it
     if (sourceEdge.flags === OutOfRange) {
@@ -79,24 +74,18 @@ export const destroyBuffer = (
     sourceEdge.p = undefined
   }
 
-  finishBuffer(previousNode, previousStartTime)
+  finishBuffer(previousNode)
 }
 
-const finishBuffer = (previousNode?: GraphNode, previousStartTime?: number) => {
-  const { _mods, modBus } = evaluationContext.n!.e
-
-  if (_mods.evaluationFinished) {
-    const time = evaluationContext.s ? perf.now() - evaluationContext.s : 0
-
-    const action: ActionFactoryPayloadType<
-      typeof pluginActions.evaluationFinished
-    > = { node: evaluationContext.n!, time }
-
-    modBus.dispatch(pluginActions.evaluationFinished(action))
+const finishBuffer = (previousNode?: GraphNode) => {
+  if (isListeningTo(evaluationContext.n!.e, RUN_END)) {
+    sendEcosystemEvent(evaluationContext.n!.e, {
+      source: evaluationContext.n!,
+      type: RUN_END,
+    })
   }
 
   evaluationContext.n = previousNode
-  evaluationContext.s = previousStartTime
 }
 
 /**
@@ -106,10 +95,7 @@ const finishBuffer = (previousNode?: GraphNode, previousStartTime?: number) => {
  * Always pass the previously captured node/startTime (undefined if this is the
  * last item in the stack)
  */
-export const flushBuffer = (
-  previousNode: GraphNode | undefined,
-  previousStartTime: number | undefined
-) => {
+export const flushBuffer = (previousNode: GraphNode | undefined) => {
   for (const [source, sourceEdge] of evaluationContext.n!.s) {
     // remove the edge if it wasn't recreated while buffering. Don't remove
     // anything but implicit-internal edges (those are the only kind we
@@ -125,6 +111,15 @@ export const flushBuffer = (
       if (sourceEdge.flags === OutOfRange) {
         // add new edges that we tracked while buffering
         addEdge(evaluationContext.n!, source, sourceEdge)
+      } else if (sourceEdge.flags !== sourceEdge.p) {
+        if (isListeningTo(evaluationContext.n!.e, EDGE)) {
+          sendEcosystemEvent(evaluationContext.n!.e, {
+            action: 'update',
+            observer: evaluationContext.n!,
+            source,
+            type: EDGE,
+          })
+        }
       }
 
       sourceEdge.flags = sourceEdge.p
@@ -133,7 +128,7 @@ export const flushBuffer = (
     sourceEdge.p = undefined
   }
 
-  finishBuffer(previousNode, previousStartTime)
+  finishBuffer(previousNode)
 }
 
 export const getEvaluationContext = () => evaluationContext
@@ -166,12 +161,13 @@ export const setEvaluationContext = (newContext: EvaluationContext) =>
  * ```
  */
 export const startBuffer = (node: GraphNode) => {
-  // TODO: when `evaluationFinished` is replaced with `runStart`/`runEnd`, make
-  // this function return the previous `evaluationContext.n` value so all
-  // callers don't have to `getEvaluationContext()` first
+  const prevNode = evaluationContext.n
+
   evaluationContext.n = node
 
-  if (node.e._mods.evaluationFinished) {
-    evaluationContext.s = perf.now()
+  if (isListeningTo(node.e, RUN_START)) {
+    sendEcosystemEvent(node.e, { source: node, type: RUN_START })
   }
+
+  return prevNode
 }

@@ -167,7 +167,7 @@ describe('the SelectorInstance class', () => {
 
     expect(mock).toHaveBeenCalledTimes(1)
     expect(mock).toHaveBeenCalledWith(
-      expect.stringContaining('encountered an error while running selector'),
+      expect.stringContaining('Error while running selector'),
       expect.any(TypeError)
     )
   })

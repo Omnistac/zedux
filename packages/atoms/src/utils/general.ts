@@ -37,6 +37,21 @@ export const Cycle = 2 // only causes evaluations when status becomes Destroyed
 export const PromiseChange = 3
 export const EventSent = 4
 
+/**
+ * Event names
+ */
+export const CHANGE = 'change'
+export const CYCLE = 'cycle'
+export const EDGE = 'edge'
+export const ERROR = 'error'
+export const INVALIDATE = 'invalidate'
+export const MUTATE = 'mutate'
+export const PROMISE_CHANGE = 'promiseChange'
+export const RESET_END = 'resetEnd'
+export const RESET_START = 'resetStart'
+export const RUN_END = 'runEnd'
+export const RUN_START = 'runStart'
+
 export type InternalEvaluationType =
   | typeof Cycle
   | typeof EventSent
@@ -57,46 +72,60 @@ export const prefix = '@@zedux'
 
 export const makeReasonReadable = (
   reason: InternalEvaluationReason,
-  node?: GraphNode
+  node?: GraphNode,
+  includeOperation = false
 ): EvaluationReason => {
   const base = {
-    operation: node?.s.get(reason.s!)?.operation,
-    reasons: reason.r && makeReasonsReadable(reason.s, reason.r),
+    operation: includeOperation ? node?.s.get(reason.s!)?.operation : undefined,
+    reasons:
+      reason.r && makeReasonsReadable(reason.s, reason.r, includeOperation),
     source: reason.s,
   }
 
-  return reason.t === Cycle
-    ? {
-        ...base,
-        oldStatus: reason.o,
-        newStatus: reason.n,
-        type: 'cycle',
-      }
-    : reason.t === Invalidate
-    ? {
-        ...base,
-        type: 'invalidate',
-      }
-    : reason.t === PromiseChange
-    ? {
-        ...base,
-        type: 'promiseChange',
-      }
-    : reason.t === EventSent
-    ? {
-        ...base,
-        type: 'event',
-      }
-    : {
-        ...base,
-        newState: reason.n,
-        oldState: reason.o,
-        type: 'change',
-      }
+  const readableReason =
+    reason.t === Cycle
+      ? ({
+          ...base,
+          oldStatus: reason.o,
+          newStatus: reason.n,
+          type: CYCLE,
+        } as const)
+      : reason.t === Invalidate
+      ? ({
+          ...base,
+          type: INVALIDATE,
+        } as const)
+      : reason.t === PromiseChange
+      ? ({
+          ...base,
+          type: PROMISE_CHANGE,
+        } as const)
+      : reason.t === EventSent
+      ? ({
+          ...base,
+          type: 'event',
+        } as const)
+      : ({
+          ...base,
+          newState: reason.n,
+          oldState: reason.o,
+          type: CHANGE,
+        } as const)
+
+  // only mutate this when not including `operation` - that requires different
+  // reason objects for each observer, depending on its operation
+  if (!reason.f && !includeOperation) {
+    reason.f = { ...reason.e, [readableReason.type]: readableReason }
+  }
+
+  return readableReason
 }
 
 export const makeReasonsReadable = (
   node?: GraphNode,
-  internalReasons: InternalEvaluationReason[] | undefined = node?.w
+  internalReasons: InternalEvaluationReason[] | undefined = node?.w,
+  includeOperation = true
 ): EvaluationReason[] | undefined =>
-  internalReasons?.map(reason => makeReasonReadable(reason, node))
+  internalReasons?.map(reason =>
+    makeReasonReadable(reason, node, includeOperation)
+  )

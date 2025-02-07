@@ -8,15 +8,11 @@ import {
   Transaction,
   UndefinedEvents,
 } from '../types/index'
-import {
-  destroyBuffer,
-  flushBuffer,
-  getEvaluationContext,
-  startBuffer,
-} from '../utils/evaluationContext'
+import { flushBuffer, startBuffer } from '../utils/evaluationContext'
 import { Ecosystem } from './Ecosystem'
 import { doMutate, Signal } from './Signal'
 import { EventSent, TopPrio } from '../utils/general'
+import { setNodeStatus } from '../utils/graph'
 
 export type SignalMap = Record<string, Signal<AnyNodeGenerics> | unknown>
 
@@ -79,12 +75,14 @@ export class MappedSignal<
       undefined,
       {} as {
         [K in keyof G['Events']]: () => G['Events'][K]
-      }
+      },
+      true
     )
-
-    this.v = this.u(M, true)
   }
 
+  /**
+   * @see Signal.send
+   */
   public mutate(
     mutatable: Mutatable<G['State']>,
     events?: Partial<SendableEvents<G>>
@@ -242,31 +240,32 @@ export class MappedSignal<
     }
   }
 
-  public u(map: SignalMap, isInitializing?: boolean) {
+  public u(map: SignalMap) {
     const entries = Object.entries(map)
 
+    const prevNode = startBuffer(this)
+
     // `get` every signal and auto-add each one as a source of the mapped signal
-    const { n, s } = getEvaluationContext()
-    startBuffer(this)
+    const edgeConfig = { f: TopPrio }
 
-    try {
-      const edgeConfig = { f: TopPrio }
+    // we shouldn't need try..catch here - no user code can run when getting
+    // these already-defined nodes
+    if (this.l === 'Initializing') {
+      this.v = Object.fromEntries(
+        entries.map(([key, val]) => {
+          if (!(val as Signal | undefined)?.izn) return [key, val as any]
 
-      if (isInitializing) {
-        return Object.fromEntries(
-          entries.map(([key, val]) => {
-            if (!(val as Signal | undefined)?.izn) return [key, val as any]
+          // flatten all events from all inner signals into the mapped signal's
+          // events list
+          Object.assign(this.E!, (val as Signal).E)
+          this.I[(val as Signal).id] = key
 
-            // flatten all events from all inner signals into the mapped signal's
-            // events list
-            Object.assign(this.E!, (val as Signal).E)
-            this.I[(val as Signal).id] = key
+          return [key, (val as Signal).get(edgeConfig)]
+        })
+      )
 
-            return [key, (val as Signal).get(edgeConfig)]
-          })
-        )
-      }
-
+      setNodeStatus(this, 'Active')
+    } else {
       for (const [key, val] of entries) {
         if ((val as Signal).izn) {
           // make sure the edge is re-created
@@ -277,12 +276,8 @@ export class MappedSignal<
           this.I[(val as Signal).id] = key
         }
       }
-    } catch (e) {
-      destroyBuffer(n, s)
-
-      throw e
-    } finally {
-      flushBuffer(n, s)
     }
+
+    flushBuffer(prevNode)
   }
 }

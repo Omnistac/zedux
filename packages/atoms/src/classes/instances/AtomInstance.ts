@@ -18,9 +18,12 @@ import {
   InternalEvaluationReason,
 } from '@zedux/atoms/types/index'
 import {
+  ERROR,
   EventSent,
+  INVALIDATE,
   Invalidate,
   prefix,
+  PROMISE_CHANGE,
   PromiseChange,
   Static,
   TopPrio,
@@ -50,6 +53,12 @@ import {
   startBuffer,
 } from '@zedux/atoms/utils/evaluationContext'
 import { Signal } from '../Signal'
+import {
+  isListeningTo,
+  sendEcosystemErrorEvent,
+  sendEcosystemEvent,
+  sendImplicitEcosystemEvent,
+} from '@zedux/atoms/utils/events'
 
 /**
  * A standard atom's value can be one of:
@@ -96,11 +105,15 @@ const evaluate = <G extends Omit<AtomGenerics, 'Node'>>(
 
     return api.value as Signal<G> | G['State']
   } catch (err) {
-    console.error(
-      `Zedux: Error while evaluating atom "${instance.t.key}" with params:`,
-      instance.p,
-      err
-    )
+    console.error(`Zedux: Error while evaluating atom "${instance.t.id}":`, err)
+
+    if (isListeningTo(instance.e, ERROR)) {
+      sendEcosystemErrorEvent(instance, err)
+    }
+
+    // TODO: can we get rid of the `AtomInstance.i`nit setup now? Would remove
+    // the need for this:
+    if (instance.l === 'Initializing') instance.e.n.delete(instance.id)
 
     throw err
   }
@@ -131,6 +144,10 @@ const setPromise = <G extends Omit<AtomGenerics, 'Node'>>(
     .catch(error => {
       if (instance.promise !== promise) return
 
+      if (isListeningTo(instance.e, ERROR)) {
+        sendEcosystemErrorEvent(instance, error)
+      }
+
       instance._promiseStatus = 'error'
       instance._promiseError = error
       if (!isStateUpdater) return
@@ -141,7 +158,13 @@ const setPromise = <G extends Omit<AtomGenerics, 'Node'>>(
   const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
   instance._promiseStatus = state.status
 
-  scheduleStaticDependents({ r: instance.w, s: instance, t: PromiseChange })
+  const reason = { r: instance.w, s: instance, t: PromiseChange } as const
+
+  if (isListeningTo(instance.e, PROMISE_CHANGE)) {
+    sendImplicitEcosystemEvent(instance.e, reason)
+  }
+
+  scheduleStaticDependents(reason)
 
   return state as unknown as G['State']
 }
@@ -244,10 +267,11 @@ export class AtomInstance<
     const reason = { s: this, t: Invalidate } as const
     this.r(reason, false)
 
-    scheduleEventListeners(reason)
+    if (isListeningTo(this.e, INVALIDATE)) {
+      sendEcosystemEvent(this.e, { source: this, type: INVALIDATE })
+    }
 
-    // run the scheduler synchronously after invalidation
-    this.e._scheduler.flush()
+    scheduleEventListeners(reason)
   }
 
   /**
@@ -330,11 +354,11 @@ export class AtomInstance<
    * `S`ignal (if any), promise, exports, and hydrate (all optional).
    */
   public i() {
-    const { n, s } = getEvaluationContext()
+    const { n } = getEvaluationContext()
     this.j()
 
     setNodeStatus(this, 'Active')
-    flushBuffer(n, s)
+    flushBuffer(n)
 
     // hydrate if possible
     const hydration = this.e._consumeHydration(this)
@@ -350,8 +374,6 @@ export class AtomInstance<
    * @see Signal.j
    */
   public j() {
-    const { n, s } = getEvaluationContext()
-
     if (this.a && this.w.length === 1 && this.w[0].s === this.S) {
       // if we altered the edge between this atom and its wrapped signal, the
       // wrapped signal should not trigger an evaluation of this atom. Skip
@@ -366,7 +388,7 @@ export class AtomInstance<
 
     this._nextInjectors = []
     this._isEvaluating = true
-    startBuffer(this)
+    const prevNode = startBuffer(this)
 
     try {
       const newFactoryResult = evaluate(this)
@@ -416,7 +438,7 @@ export class AtomInstance<
         injector.cleanup?.()
       })
 
-      destroyBuffer(n, s)
+      destroyBuffer(prevNode)
 
       throw err
     } finally {
@@ -437,7 +459,7 @@ export class AtomInstance<
     this._injectors = this._nextInjectors
 
     // let this.i flush updates after status is set to Active
-    this.l === 'Initializing' || flushBuffer(n, s)
+    this.l === 'Initializing' || flushBuffer(prevNode)
   }
 
   /**

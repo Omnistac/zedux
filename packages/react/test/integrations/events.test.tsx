@@ -44,7 +44,7 @@ describe('events', () => {
     const expectedStaleEvent: CycleEvent = {
       oldStatus: 'Active',
       newStatus: 'Stale',
-      operation: 'on',
+      operation: undefined,
       reasons: [],
       source: node1,
       type: 'cycle',
@@ -150,7 +150,7 @@ describe('events', () => {
     expect(node1.get()).toBe(1)
 
     const expectedInvalidateEvent: InvalidateEvent = {
-      operation: 'on',
+      operation: undefined,
       reasons: undefined,
       source: node1,
       type: 'invalidate',
@@ -159,7 +159,7 @@ describe('events', () => {
     const expectedChangeEvent: ChangeEvent = {
       newState: 1,
       oldState: 0,
-      operation: 'on',
+      operation: undefined,
       reasons: [
         {
           ...expectedInvalidateEvent,
@@ -201,14 +201,14 @@ describe('events', () => {
     node1.invalidate()
 
     const expectedInvalidateEvent: InvalidateEvent = {
-      operation: 'on',
+      operation: undefined,
       reasons: undefined,
       source: node1,
       type: 'invalidate',
     }
 
     const expectedPromiseChangeEvent: PromiseChangeEvent = {
-      operation: 'on',
+      operation: undefined,
       reasons: [
         {
           ...expectedInvalidateEvent,
@@ -232,7 +232,7 @@ describe('events', () => {
     const expectedChangeEvent: ChangeEvent = {
       newState: expectedState,
       oldState: expectedState,
-      operation: 'on',
+      operation: undefined,
       reasons: [
         {
           ...expectedInvalidateEvent,

@@ -199,9 +199,7 @@ export class Signal<
         ? eventNameOrMap
         : { [eventNameOrMap]: payload }
 
-    const pre = this.e._scheduler.pre()
     scheduleEventListeners({ e: events, s: this, t: EventSent })
-    this.e._scheduler.post(pre)
   }
 
   /**
