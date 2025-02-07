@@ -2,7 +2,13 @@ import { is } from '@zedux/core'
 import { AnyAtomInstance } from '../types/index'
 import { type GraphNode } from '../classes/GraphNode'
 import { AtomInstance } from '../classes/instances/AtomInstance'
-import { EDGE, ExplicitExternal, OutOfRange, RUN } from './general'
+import {
+  EDGE,
+  ExplicitExternal,
+  OutOfRange,
+  RUN_END,
+  RUN_START,
+} from './general'
 import { addEdge, removeEdge, scheduleNodeDestruction } from './graph'
 import { isListeningTo, sendEcosystemEvent } from './events'
 
@@ -72,11 +78,10 @@ export const destroyBuffer = (previousNode: GraphNode | undefined) => {
 }
 
 const finishBuffer = (previousNode?: GraphNode) => {
-  if (isListeningTo(evaluationContext.n!.e, RUN)) {
+  if (isListeningTo(evaluationContext.n!.e, RUN_END)) {
     sendEcosystemEvent(evaluationContext.n!.e, {
-      action: 'finish',
       source: evaluationContext.n!,
-      type: RUN,
+      type: RUN_END,
     })
   }
 
@@ -160,8 +165,8 @@ export const startBuffer = (node: GraphNode) => {
 
   evaluationContext.n = node
 
-  if (isListeningTo(node.e, RUN)) {
-    sendEcosystemEvent(node.e, { action: 'start', source: node, type: RUN })
+  if (isListeningTo(node.e, RUN_START)) {
+    sendEcosystemEvent(node.e, { source: node, type: RUN_START })
   }
 
   return prevNode

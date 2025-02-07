@@ -41,7 +41,6 @@ import {
   makeReasonsReadable,
   Eventless,
   EventlessStatic,
-  RESET,
   CHANGE,
   CYCLE,
   EDGE,
@@ -49,7 +48,10 @@ import {
   INVALIDATE,
   MUTATE,
   PROMISE_CHANGE,
-  RUN,
+  RESET_END,
+  RUN_START,
+  RESET_START,
+  RUN_END,
 } from '../utils/general'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'
@@ -101,8 +103,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     [INVALIDATE]: 0,
     [MUTATE]: 0,
     [PROMISE_CHANGE]: 0,
-    [RESET]: 0,
-    [RUN]: 0,
+    [RESET_END]: 0,
+    [RESET_START]: 0,
+    [RUN_END]: 0,
+    [RUN_START]: 0,
   }
 
   /**
@@ -343,6 +347,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
       return newState
     })
+
+    if (isListeningTo(this, RESET_END)) {
+      const pre = this._scheduler.pre()
+      sendEcosystemEvent(this, { isDestroy: true, type: RESET_END })
+      this._scheduler.post(pre)
+    }
 
     // we shouldn't have to unset this.L or reset this.C - those will be
     // garbage collected if the ecosystem goes out of scope
@@ -818,6 +828,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     if (typeof newContext !== 'undefined') this.context = newContext
 
     this.cleanup = this.onReady?.(this, prevContext)
+
+    if (isListeningTo(this, RESET_END)) {
+      const pre = this._scheduler.pre()
+      sendEcosystemEvent(this, { isDestroy: false, type: RESET_END })
+      this._scheduler.post(pre)
+    }
   }
 
   /**
@@ -1020,8 +1036,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * - preloading atoms, registering plugins, configuring context, etc
    */
   public wipe(isDestroy = false) {
-    if (isListeningTo(this, RESET)) {
-      sendEcosystemEvent(this, { isDestroy, type: RESET })
+    if (isListeningTo(this, RESET_START)) {
+      sendEcosystemEvent(this, { isDestroy, type: RESET_START })
     }
 
     const { n, _scheduler } = this

@@ -47,8 +47,10 @@ export const ERROR = 'error'
 export const INVALIDATE = 'invalidate'
 export const MUTATE = 'mutate'
 export const PROMISE_CHANGE = 'promiseChange'
-export const RESET = 'reset'
-export const RUN = 'run'
+export const RESET_END = 'resetEnd'
+export const RESET_START = 'resetStart'
+export const RUN_END = 'runEnd'
+export const RUN_START = 'runStart'
 
 export type InternalEvaluationType =
   | typeof Cycle

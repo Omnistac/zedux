@@ -28,6 +28,32 @@ export interface CycleEvent<G extends NodeGenerics = AnyNodeGenerics>
   type: 'cycle'
 }
 
+export type EcosystemEvent = EcosystemEvents[keyof EcosystemEvents]
+
+export interface EcosystemEvents extends ImplicitEvents {
+  edge: EdgeEvent
+  error: ErrorEvent
+  resetEnd: ResetEndEvent
+  resetStart: ResetStartEvent
+  runEnd: RunEndEvent
+  runStart: RunStartEvent
+}
+
+export interface EcosystemEventBase {
+  source: GraphNode
+}
+
+export interface EdgeEvent extends EcosystemEventBase {
+  action: 'add' | 'remove' | 'update'
+  observer: GraphNode
+  type: 'edge'
+}
+
+export interface ErrorEvent extends EcosystemEventBase {
+  error: Error
+  type: 'error'
+}
+
 export type EvaluationReason<G extends NodeGenerics = AnyNodeGenerics> =
   | ChangeEvent<G>
   | CycleEvent<G>
@@ -54,30 +80,6 @@ export interface EventEmitter<G extends NodeGenerics = AnyNodeGenerics> {
 export interface EventReceivedEvent<G extends NodeGenerics = AnyNodeGenerics>
   extends EventBase<G> {
   type: 'event'
-}
-
-export type EcosystemEvent = EcosystemEvents[keyof EcosystemEvents]
-
-export interface EcosystemEvents extends ImplicitEvents {
-  edge: EdgeEvent
-  error: ErrorEvent
-  reset: ResetEvent
-  run: RunEvent
-}
-
-export interface EcosystemEventBase {
-  source: GraphNode
-}
-
-export interface EdgeEvent extends EcosystemEventBase {
-  action: 'add' | 'remove' | 'update'
-  observer: GraphNode
-  type: 'edge'
-}
-
-export interface ErrorEvent extends EcosystemEventBase {
-  error: Error
-  type: 'error'
 }
 
 /**
@@ -167,14 +169,22 @@ export interface PromiseChangeEvent<G extends NodeGenerics = AnyNodeGenerics>
   type: 'promiseChange'
 }
 
-export interface ResetEvent {
+export interface ResetEndEvent {
   isDestroy: boolean
-  type: 'reset'
+  type: 'resetEnd'
 }
 
-export interface RunEvent extends EcosystemEventBase {
-  action: 'finish' | 'start'
-  type: 'run'
+export interface ResetStartEvent {
+  isDestroy: boolean
+  type: 'resetStart'
+}
+
+export interface RunEndEvent extends EcosystemEventBase {
+  type: 'runEnd'
+}
+
+export interface RunStartEvent extends EcosystemEventBase {
+  type: 'runStart'
 }
 
 export type SendableEvents<G extends Pick<AtomGenerics, 'Events'>> = Prettify<

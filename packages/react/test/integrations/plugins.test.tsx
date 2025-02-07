@@ -326,7 +326,7 @@ describe('plugins', () => {
     ])
   })
 
-  test('reset event', () => {
+  test('resetStart and resetEnd events', () => {
     const calls: any[] = []
     const testEcosystem = createEcosystem({ id: 'reset-event-test' })
     testEcosystem.getNode(atom1)
@@ -337,58 +337,85 @@ describe('plugins', () => {
 
     testEcosystem.reset()
 
-    expect(calls).toEqual([['reset'], ['cycle']])
+    expect(calls).toEqual([['resetStart'], ['cycle'], ['resetEnd']])
     calls.splice(0, calls.length)
 
     testEcosystem.reset()
 
-    expect(calls).toEqual([['reset']])
+    expect(calls).toEqual([['resetStart'], ['resetEnd']])
     calls.splice(0, calls.length)
 
     testEcosystem.getNode(atom1)
     testEcosystem.reset()
 
-    expect(calls).toEqual([['run'], ['cycle'], ['run'], ['reset'], ['cycle']])
+    expect(calls).toEqual([
+      ['runStart'],
+      ['cycle'],
+      ['runEnd'],
+      ['resetStart'],
+      ['cycle'],
+      ['resetEnd'],
+    ])
     calls.splice(0, calls.length)
 
     cleanup()
 
-    testEcosystem.on('reset', event => {
-      expectTypeOf(event).toEqualTypeOf<{ isDestroy: boolean; type: 'reset' }>()
+    testEcosystem.on('resetStart', event => {
+      expectTypeOf(event).toEqualTypeOf<{
+        isDestroy: boolean
+        type: 'resetStart'
+      }>()
+      calls.push(event)
+    })
+
+    testEcosystem.on('resetEnd', event => {
+      expectTypeOf(event).toEqualTypeOf<{
+        isDestroy: boolean
+        type: 'resetEnd'
+      }>()
       calls.push(event)
     })
 
     testEcosystem.getNode(atom1)
     testEcosystem.reset()
 
-    expect(calls).toEqual([{ isDestroy: false, type: 'reset' }])
+    expect(calls).toEqual([
+      { isDestroy: false, type: 'resetStart' },
+      { isDestroy: false, type: 'resetEnd' },
+    ])
     calls.splice(0, calls.length)
 
     testEcosystem.getNode(atom1)
     testEcosystem.destroy()
 
-    expect(calls).toEqual([{ isDestroy: true, type: 'reset' }])
+    expect(calls).toEqual([
+      { isDestroy: true, type: 'resetStart' },
+      { isDestroy: true, type: 'resetEnd' },
+    ])
     calls.splice(0, calls.length)
   })
 
-  test('run event', () => {
+  test('runStart and runEnd events', () => {
     const node1 = ecosystem.getNode(atom1)
     const node2 = ecosystem.getNode(atom2)
     const calls: any[] = []
 
     const cleanup = ecosystem.on(eventMap => {
-      if (eventMap.run) {
-        calls.push([eventMap.run.source.id, eventMap.run.action])
+      if (eventMap.runStart || eventMap.runEnd) {
+        calls.push([
+          (eventMap.runStart || eventMap.runEnd)?.source.id,
+          (eventMap.runStart || eventMap.runEnd)?.type,
+        ])
       }
     })
 
     node1.set({ a: 11 })
 
     const expectedCalls = [
-      ['2', 'start'],
-      ['@signal(2)-0', 'start'],
-      ['@signal(2)-0', 'finish'],
-      ['2', 'finish'],
+      ['2', 'runStart'],
+      ['@signal(2)-0', 'runStart'],
+      ['@signal(2)-0', 'runEnd'],
+      ['2', 'runEnd'],
     ]
 
     expect(calls).toEqual(expectedCalls)
@@ -396,14 +423,22 @@ describe('plugins', () => {
 
     cleanup()
 
-    ecosystem.on('run', event => {
+    ecosystem.on('runStart', event => {
       expectTypeOf(event).toEqualTypeOf<{
-        action: 'finish' | 'start'
         source: GraphNode
-        type: 'run'
+        type: 'runStart'
       }>()
 
-      calls.push([event.source.id, event.action])
+      calls.push([event.source.id, event.type])
+    })
+
+    ecosystem.on('runEnd', event => {
+      expectTypeOf(event).toEqualTypeOf<{
+        source: GraphNode
+        type: 'runEnd'
+      }>()
+
+      calls.push([event.source.id, event.type])
     })
 
     node2.mutate(state => {
