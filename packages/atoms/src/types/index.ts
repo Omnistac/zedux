@@ -1,4 +1,5 @@
 import { Observable, Settable } from '@zedux/core'
+import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
 import { GraphNode } from '../classes/GraphNode'
@@ -15,7 +16,6 @@ import {
   StateOf,
 } from './atoms'
 import { ExplicitEvents, ImplicitEvents } from './events'
-import { AtomTemplateBase } from '../classes'
 
 export * from './atoms'
 export * from './events'

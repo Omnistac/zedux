@@ -7,7 +7,7 @@ import {
 } from '@zedux/atoms/types/index'
 import { AtomInstance } from '../instances/AtomInstance'
 import { AtomTemplate } from './AtomTemplate'
-import { injectEcosystem } from '@zedux/atoms/injectors'
+import { injectEcosystem } from '@zedux/atoms/injectors/injectEcosystem'
 
 export type IonInstanceRecursive<
   G extends Omit<AtomGenerics, 'Node' | 'Template'>

@@ -1,4 +1,4 @@
-import type { Ecosystem } from '../classes'
+import type { Ecosystem } from '../classes/Ecosystem'
 import { readInstance } from '../utils/evaluationContext'
 
 /**

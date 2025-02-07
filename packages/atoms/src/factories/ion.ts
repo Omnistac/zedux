@@ -1,8 +1,10 @@
-import { AtomApi } from '../classes/AtomApi'
 import {
   IonTemplate,
   IonTemplateRecursive,
 } from '../classes/templates/IonTemplate'
+import { AtomApi } from '../classes/AtomApi'
+import { Ecosystem } from '../classes/Ecosystem'
+import { Signal } from '../classes/Signal'
 import {
   AtomConfig,
   AtomApiPromise,
@@ -12,8 +14,6 @@ import {
   EventsOf,
   None,
 } from '../types/index'
-import { Signal } from '../classes/Signal'
-import { Ecosystem } from '../classes'
 
 export const ion: {
   // Query Atoms
