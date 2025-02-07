@@ -4,6 +4,7 @@ import {
   AtomGetters,
   AtomTuple,
   createEcosystem,
+  Ecosystem,
   injectAtomInstance,
   injectAtomState,
   injectAtomValue,
@@ -750,8 +751,8 @@ describe('react types', () => {
     >()
 
     const instanceE = ecosystem.getInstance(
-      ecosystem.live.getInstance(
-        ecosystem.getInstance(ecosystem.live.getInstance(exampleAtom, ['a']))
+      ecosystem.getInstance(
+        ecosystem.getInstance(ecosystem.getInstance(exampleAtom, ['a']))
       )
     )
 
@@ -761,7 +762,7 @@ describe('react types', () => {
 
     const selectorInstance = ecosystem.getNode(
       ecosystem.getNode(
-        ecosystem.getNode((_: AtomGetters, a?: string) => a, ['a'])
+        ecosystem.getNode((_: Ecosystem, a?: string) => a, ['a'])
       )
     )
 
@@ -772,7 +773,7 @@ describe('react types', () => {
       [a?: string]
     >()
     expectTypeOf<AtomTemplateType<typeof selectorInstance>>().toEqualTypeOf<
-      (_: AtomGetters, a?: string) => string | undefined
+      (_: Ecosystem, a?: string) => string | undefined
     >()
 
     const selectorInstance2 = ecosystem.getNode(

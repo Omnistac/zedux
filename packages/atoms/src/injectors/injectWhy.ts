@@ -6,7 +6,7 @@ import { makeReasonsReadable } from '../utils/general'
  * An alias for:
  *
  * ```ts
- * const { ecosystem } = injectAtomGetters()
+ * const ecosystem = injectEcosystem()
  * const reasons = ecosystem.why()
  * ```
  */

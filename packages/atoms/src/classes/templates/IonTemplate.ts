@@ -1,5 +1,4 @@
 import { ion } from '@zedux/atoms/factories/ion'
-import { injectAtomGetters } from '@zedux/atoms/injectors/injectAtomGetters'
 import {
   AtomConfig,
   IonStateFactory,
@@ -8,6 +7,7 @@ import {
 } from '@zedux/atoms/types/index'
 import { AtomInstance } from '../instances/AtomInstance'
 import { AtomTemplate } from './AtomTemplate'
+import { injectEcosystem } from '@zedux/atoms/injectors'
 
 export type IonInstanceRecursive<
   G extends Omit<AtomGenerics, 'Node' | 'Template'>
@@ -42,7 +42,7 @@ export class IonTemplate<
   ) {
     super(
       key,
-      (...params: G['Params']) => stateFactory(injectAtomGetters(), ...params),
+      (...params: G['Params']) => stateFactory(injectEcosystem(), ...params),
       _config
     )
 

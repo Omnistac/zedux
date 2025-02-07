@@ -2,7 +2,12 @@ import { AtomInstance } from '../classes/instances/AtomInstance'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomApi } from '../classes/AtomApi'
 import { GraphNode } from '../classes/GraphNode'
-import { AnyNonNullishValue, AtomSelectorOrConfig, Prettify } from './index'
+import {
+  AnyNonNullishValue,
+  AtomSelectorOrConfig,
+  Prettify,
+  Selectable,
+} from './index'
 import { SelectorInstance } from '../classes/SelectorInstance'
 import { Signal } from '../classes/Signal'
 import { MappedSignal } from '../classes/MappedSignal'
@@ -104,14 +109,14 @@ export type NodeGenerics = Pick<
   'Events' | 'Params' | 'State' | 'Template'
 >
 
-export type NodeOf<A extends AnyAtomTemplate | AtomSelectorOrConfig> =
+export type NodeOf<A extends AnyAtomTemplate | Selectable<any, any>> =
   A extends AtomTemplateBase<infer G>
     ? // this allows the Node generic to be extracted from functions that don't
       // even accept it but were passed one:
       G extends { Node: infer Node }
       ? Node
       : GraphNode<G>
-    : A extends AtomSelectorOrConfig<infer State, infer Params>
+    : A extends Selectable<infer State, infer Params>
     ? SelectorInstance<{
         Params: Params
         State: State

@@ -236,6 +236,11 @@ describe('injectors', () => {
         dependents: [],
         weight: 1,
       },
+      '@@selector-selector1-0': {
+        dependencies: [],
+        dependents: [],
+        weight: 1,
+      },
     })
   })
 

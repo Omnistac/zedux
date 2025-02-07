@@ -5,7 +5,6 @@ import {
 } from '../classes/templates/IonTemplate'
 import {
   AtomConfig,
-  AtomGetters,
   AtomApiPromise,
   IonStateFactory,
   PromiseState,
@@ -14,6 +13,7 @@ import {
   None,
 } from '../types/index'
 import { Signal } from '../classes/Signal'
+import { Ecosystem } from '../classes'
 
 export const ion: {
   // Query Atoms
@@ -24,7 +24,7 @@ export const ion: {
   >(
     key: string,
     value: (
-      getters: AtomGetters,
+      ecosystem: Ecosystem,
       ...params: Params
     ) => AtomApi<{
       Exports: Exports
@@ -50,7 +50,7 @@ export const ion: {
   >(
     key: string,
     value: (
-      getters: AtomGetters,
+      ecosystem: Ecosystem,
       ...params: Params
     ) =>
       | SignalType
@@ -78,7 +78,7 @@ export const ion: {
   >(
     key: string,
     value: (
-      getters: AtomGetters,
+      ecosystem: Ecosystem,
       ...params: Params
     ) =>
       | AtomApi<{

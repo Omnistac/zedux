@@ -19,6 +19,13 @@ import { useReactComponentId } from './useReactComponentId'
  *
  * Register a dynamic graph dependency between this React component (as a new
  * external node) and the selector.
+ *
+ * @deprecated use `useAtomValue` instead:
+ *
+ * ```ts
+ * useAtomSelector(mySelector, arg1, arg2) // before
+ * useAtomValue(mySelector, [arg1, arg2]) // after
+ * ```
  */
 export const useAtomSelector = <S extends Selectable>(
   template: S,
@@ -26,6 +33,7 @@ export const useAtomSelector = <S extends Selectable>(
 ): StateOf<S> => {
   const ecosystem = useEcosystem()
   const observerId = useReactComponentId()
+
   // use this referentially stable setState function as a ref. We lazily add
   // `i`nstance and `m`ounted properties
   const [, render] = useState<undefined | object>() as [

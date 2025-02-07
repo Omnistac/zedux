@@ -5,6 +5,7 @@ import {
   AtomTemplateBase,
   ParamlessTemplate,
   ParamsOf,
+  Selectable,
   StateOf,
 } from '@zedux/atoms'
 import { ZeduxHookConfig } from '../types'
@@ -53,6 +54,16 @@ export const useAtomValue: {
     params?: [],
     config?: Omit<ZeduxHookConfig, 'subscribe'>
   ): StateOf<I>
+
+  <S extends Selectable>(
+    template: S,
+    params: ParamsOf<S>,
+    config?: Omit<ZeduxHookConfig, 'subscribe'>
+  ): StateOf<S>
+
+  <S extends Selectable<any, []>>(template: S): StateOf<S>
+
+  <S extends Selectable>(template: ParamlessTemplate<S>): StateOf<S>
 } = <G extends AnyAtomGenerics>(
   atom: AtomTemplateBase<G>,
   params?: G['Params'],

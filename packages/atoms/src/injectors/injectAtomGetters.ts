@@ -1,3 +1,4 @@
+import type { Ecosystem } from '../classes/Ecosystem'
 import { readInstance } from '../utils/evaluationContext'
 
 /**
@@ -22,6 +23,12 @@ import { readInstance } from '../utils/evaluationContext'
  * })
  * ```
  *
- * @see AtomGetters
+ * @deprecated "atom getters" are now functions on the Ecosystem (namely `.get`
+ * and `.getNode` for reactivity, and `.getOnce` and `.getNodeOnce` to get
+ * values statically).
+ *
+ * Use `injectEcosystem()` instead.
+ *
+ * @see Ecosystem
  */
-export const injectAtomGetters = () => readInstance().e.live
+export const injectAtomGetters = (): Ecosystem => readInstance().e

@@ -1,5 +1,5 @@
 import { InjectorDeps } from '../types/index'
-import { injectAtomGetters } from './injectAtomGetters'
+import { injectEcosystem } from './injectEcosystem'
 import { injectMemo } from './injectMemo'
 
 /**
@@ -15,7 +15,7 @@ export const injectCallback = <Args extends any[] = [], Ret = any>(
   callback: (...args: Args) => Ret,
   deps?: InjectorDeps
 ) => {
-  const { ecosystem } = injectAtomGetters()
+  const ecosystem = injectEcosystem()
 
   return injectMemo(
     () =>

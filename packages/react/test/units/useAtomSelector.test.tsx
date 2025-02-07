@@ -1,4 +1,4 @@
-import { AtomGetters, atom, useAtomSelector } from '@zedux/react'
+import { AtomGetters, atom, useAtomSelector, useAtomValue } from '@zedux/react'
 import React, { useState } from 'react'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 import {
@@ -85,7 +85,7 @@ describe('useAtomSelector', () => {
 
     function Test() {
       const [state, setState] = useState(0)
-      const val = useAtomSelector(selector1, state)
+      const val = useAtomValue(selector1, [state])
 
       return (
         <>
@@ -421,7 +421,7 @@ describe('useAtomSelector', () => {
 
     function Test() {
       const [state, setState] = useState(0)
-      const val = useAtomSelector(({ get }) => get(atom1).val)
+      const val = useAtomValue(({ get }) => get(atom1).val)
 
       return (
         <>
@@ -498,7 +498,7 @@ describe('useAtomSelector', () => {
 
     function Test() {
       renders++
-      const { val } = useAtomSelector(({ get }) => ({ val: get(atom1).val }))
+      const { val } = useAtomValue(({ get }) => ({ val: get(atom1).val }))
 
       return (
         <>
@@ -533,7 +533,7 @@ describe('useAtomSelector', () => {
     const selector = ({ get }: AtomGetters) => get(atom1)
 
     function Test() {
-      const { val } = useAtomSelector({
+      const { val } = useAtomValue({
         resultsComparator: (a, b) => a.val === b.val,
         selector,
       })
@@ -582,7 +582,7 @@ describe('useAtomSelector', () => {
 
     function Test() {
       const a = useAtomSelector(selector1, 'a')
-      const b = useAtomSelector(selector1, 'b')
+      const b = useAtomValue(selector1, ['b'])
       const c = useAtomSelector(selector1, 'c')
 
       return (

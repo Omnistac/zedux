@@ -13,7 +13,26 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "sources": {
       "@@selector-common-name-0": {
         "flags": 1,
-        "operation": "select",
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+    },
+    "state": 3,
+    "status": "Active",
+    "weight": 3,
+  },
+  "3": {
+    "className": "AtomInstance",
+    "observers": {
+      "no-2": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "sources": {
+      "@@selector-common-name-0": {
+        "flags": 1,
+        "operation": "get",
         "p": undefined,
       },
     },
@@ -26,7 +45,12 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "observers": {
       "1": {
         "flags": 1,
-        "operation": "select",
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+      "3": {
+        "flags": 1,
+        "operation": "get",
         "p": undefined,
       },
     },
@@ -46,6 +70,19 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "observers": {},
     "sources": {
       "1": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "no-2": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "3": {
         "flags": 6,
         "operation": "on",
       },
@@ -76,15 +113,15 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "2": {
     "className": "AtomInstance",
     "observers": {
-      "no-3": {
+      "no-4": {
         "flags": 6,
         "operation": "on",
       },
     },
     "sources": {
-      "@@selector-common-name-2": {
+      "@@selector-common-name-3": {
         "flags": 1,
-        "operation": "select",
+        "operation": "get",
         "p": undefined,
       },
     },
@@ -92,12 +129,12 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 3,
   },
-  "@@selector-common-name-2": {
+  "@@selector-common-name-3": {
     "className": "SelectorInstance",
     "observers": {
       "2": {
         "flags": 1,
-        "operation": "select",
+        "operation": "get",
         "p": undefined,
       },
     },
@@ -112,7 +149,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 2,
   },
-  "no-3": {
+  "no-4": {
     "className": "Listener",
     "observers": {},
     "sources": {
@@ -128,7 +165,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "root": {
     "className": "AtomInstance",
     "observers": {
-      "@@selector-common-name-2": {
+      "@@selector-common-name-3": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -147,7 +184,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "1": {
     "className": "AtomInstance",
     "observers": {
-      "no-4": {
+      "no-5": {
         "flags": 6,
         "operation": "on",
       },
@@ -155,7 +192,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "sources": {
       "@@selector-common-name-0": {
         "flags": 1,
-        "operation": "select",
+        "operation": "injectAtomValue",
         "p": undefined,
       },
     },
@@ -166,19 +203,38 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "2": {
     "className": "AtomInstance",
     "observers": {
-      "no-3": {
+      "no-4": {
         "flags": 6,
         "operation": "on",
       },
     },
     "sources": {
-      "@@selector-common-name-2": {
+      "@@selector-common-name-3": {
         "flags": 1,
-        "operation": "select",
+        "operation": "get",
         "p": undefined,
       },
     },
     "state": 4,
+    "status": "Active",
+    "weight": 3,
+  },
+  "3": {
+    "className": "AtomInstance",
+    "observers": {
+      "no-6": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "sources": {
+      "@@selector-common-name-0": {
+        "flags": 1,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "state": 3,
     "status": "Active",
     "weight": 3,
   },
@@ -187,7 +243,12 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "observers": {
       "1": {
         "flags": 1,
-        "operation": "select",
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+      "3": {
+        "flags": 1,
+        "operation": "get",
         "p": undefined,
       },
     },
@@ -202,12 +263,12 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 2,
   },
-  "@@selector-common-name-2": {
+  "@@selector-common-name-3": {
     "className": "SelectorInstance",
     "observers": {
       "2": {
         "flags": 1,
-        "operation": "select",
+        "operation": "get",
         "p": undefined,
       },
     },
@@ -222,7 +283,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 2,
   },
-  "no-3": {
+  "no-4": {
     "className": "Listener",
     "observers": {},
     "sources": {
@@ -235,11 +296,24 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 4,
   },
-  "no-4": {
+  "no-5": {
     "className": "Listener",
     "observers": {},
     "sources": {
       "1": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "no-6": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "3": {
         "flags": 6,
         "operation": "on",
       },
@@ -256,7 +330,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
         "operation": "get",
         "p": undefined,
       },
-      "@@selector-common-name-2": {
+      "@@selector-common-name-3": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -275,7 +349,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "1": {
     "className": "AtomInstance",
     "observers": {
-      "no-4": {
+      "no-5": {
         "flags": 6,
         "operation": "on",
       },
@@ -283,7 +357,26 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "sources": {
       "@@selector-common-name-0": {
         "flags": 1,
-        "operation": "select",
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+    },
+    "state": 3,
+    "status": "Active",
+    "weight": 3,
+  },
+  "3": {
+    "className": "AtomInstance",
+    "observers": {
+      "no-6": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "sources": {
+      "@@selector-common-name-0": {
+        "flags": 1,
+        "operation": "get",
         "p": undefined,
       },
     },
@@ -296,7 +389,12 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "observers": {
       "1": {
         "flags": 1,
-        "operation": "select",
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+      "3": {
+        "flags": 1,
+        "operation": "get",
         "p": undefined,
       },
     },
@@ -311,11 +409,24 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 2,
   },
-  "no-4": {
+  "no-5": {
     "className": "Listener",
     "observers": {},
     "sources": {
       "1": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "no-6": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "3": {
         "flags": 6,
         "operation": "on",
       },

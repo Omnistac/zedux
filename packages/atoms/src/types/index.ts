@@ -3,7 +3,6 @@ import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
 import { GraphNode } from '../classes/GraphNode'
 import { SelectorInstance } from '../classes/SelectorInstance'
-import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { Signal } from '../classes/Signal'
 import { InternalEvaluationType } from '../utils/general'
 import {
@@ -12,11 +11,11 @@ import {
   AnyAtomTemplate,
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
-  NodeOf,
   ParamsOf,
   StateOf,
 } from './atoms'
 import { ExplicitEvents, ImplicitEvents } from './events'
+import { AtomTemplateBase } from '../classes'
 
 export * from './atoms'
 export * from './events'
@@ -30,138 +29,6 @@ export interface AtomConfig<State = any> {
   hydrate?: (dehydratedState: unknown) => State
   manualHydration?: boolean
   ttl?: number
-}
-
-/**
- * The AtomGettersBase interface. You probably won't want to use this directly.
- * Use AtomGetters instead.
- */
-export interface AtomGettersBase {
-  /**
-   * Registers a dynamic graph edge on the resolved atom instance when called
-   * synchronously during atom or AtomSelector evaluation. When called
-   * asynchronously, is just an alias for `ecosystem.get`
-   */
-  get<A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>): StateOf<A>
-
-  get<A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateOf<A>
-
-  get<A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateOf<A>
-
-  get<N extends GraphNode>(node: N): StateOf<N>
-
-  /**
-   * Registers a static graph edge on the resolved atom instance when called
-   * synchronously during atom or AtomSelector evaluation. When called
-   * asynchronously, is just an alias for `ecosystem.getInstance`
-   *
-   * @deprecated in favor of `getNode`
-   */
-  getInstance<A extends AnyAtomTemplate>(
-    template: A,
-    params: ParamsOf<A>,
-    edgeInfo?: GraphEdgeConfig
-  ): NodeOf<A>
-
-  getInstance<A extends AnyAtomTemplate<{ Params: [] }>>(template: A): NodeOf<A>
-
-  getInstance<A extends AnyAtomTemplate>(
-    template: ParamlessTemplate<A>
-  ): NodeOf<A>
-
-  getInstance<I extends AnyAtomInstance>(
-    instance: I,
-    params?: [],
-    edgeInfo?: GraphEdgeConfig
-  ): I
-
-  // TODO: Dedupe these overloads
-  // atoms
-  getNode<G extends AtomGenerics = AnyAtomGenerics>(
-    templateOrNode: AtomTemplateBase<G> | GraphNode<G>,
-    params: G['Params'],
-    edgeConfig?: GraphEdgeConfig
-  ): G['Node']
-
-  getNode<G extends AtomGenerics = AnyAtomGenerics<{ Params: [] }>>(
-    templateOrNode: AtomTemplateBase<G> | GraphNode<G>
-  ): G['Node']
-
-  getNode<G extends AtomGenerics = AnyAtomGenerics>(
-    templateOrInstance: ParamlessTemplate<AtomTemplateBase<G> | GraphNode<G>>
-  ): G['Node']
-
-  getNode<I extends AnyAtomInstance>(instance: I, params?: []): I
-
-  // selectors
-  getNode<S extends Selectable>(
-    selectable: S,
-    params: ParamsOf<S>,
-    edgeConfig?: GraphEdgeConfig
-  ): S extends AtomSelectorOrConfig
-    ? SelectorInstance<{
-        Params: ParamsOf<S>
-        State: StateOf<S>
-        Template: S
-      }>
-    : S
-
-  getNode<S extends Selectable<any, []>>(
-    selectable: S
-  ): S extends AtomSelectorOrConfig
-    ? SelectorInstance<{
-        Params: ParamsOf<S>
-        State: StateOf<S>
-        Template: S
-      }>
-    : S
-
-  getNode<S extends Selectable>(
-    selectable: ParamlessTemplate<S>
-  ): S extends AtomSelectorOrConfig
-    ? SelectorInstance<{
-        Params: ParamsOf<S>
-        State: StateOf<S>
-        Template: S
-      }>
-    : S
-
-  getNode<N extends GraphNode>(
-    node: N,
-    params?: [],
-    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
-  ): N
-
-  // catch-all
-  getNode<G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
-    params?: G['Params'],
-    edgeConfig?: GraphEdgeConfig
-  ): G['Node']
-
-  /**
-   * Runs an AtomSelector which receives its own AtomGetters object and can use
-   * those to register its own dynamic and/or static graph edges (when called
-   * synchronously during the AtomSelector's evaluation)
-   *
-   * ```ts
-   * const mySelector = ion('mySelector', ({ select }) => {
-   *   // registers a dynamic dependency on myAtom:
-   *   const dynamicVal = select(({ get }) => get(myAtom))
-   *
-   *   injectEffect(() => {
-   *     // doesn't register anything:
-   *     const staticVal = select(({ get }) => get(myAtom))
-   *   }, []) // no need to pass select as a dep; it's a stable reference
-   * })
-   * ```
-   *
-   * @see AtomSelector
-   */
-  select<S extends Selectable>(
-    selectorOrConfigOrInstance: S,
-    ...args: ParamsOf<S>
-  ): StateOf<S>
 }
 
 /**
@@ -180,30 +47,21 @@ export interface AtomGettersBase {
  *   }, [])
  * })
  * ```
+ *
+ * @deprecated "atom getters" are now functions on the Ecosystem. Use the
+ * `Ecosystem` class instead
+ *
+ * ```ts
+ * mySelector = ({ get }: AtomGetters) => get(myAtom) // before
+ * mySelector = ({ get }: Ecosystem) => get(myAtom) // after
+ * ```
  */
-export interface AtomGetters extends AtomGettersBase {
-  /**
-   * A reference to the ecosystem of the current atom instance or AtomSelector.
-   *
-   * The ecosystem itself has `get`, `getInstance`, and `select` methods which
-   * can be used instead of the other AtomGetters to prevent graph dependencies
-   * from being registered.
-   *
-   * ```ts
-   * // the current component will NOT rerender when myAtom changes:
-   * const staticVal = useAtomSelector(({ ecosystem }) => ecosystem.get(myAtom))
-   *
-   * // the current component will rerender when myAtom changes:
-   * const dynamicVal = useAtomSelector(({ get }) => get(myAtom))
-   * ```
-   */
-  ecosystem: Ecosystem
-}
+export type AtomGetters = Ecosystem
 
 export type AtomInstanceTtl = number | Promise<any> | Observable<any>
 
 export type AtomSelector<State = any, Params extends any[] = any> = (
-  getters: AtomGetters,
+  ecosystem: Ecosystem,
   ...args: Params
 ) => State
 
@@ -280,6 +138,64 @@ export type EventMap = {
 
 export type ExportsInfusedSetter<State, Exports> = Exports & {
   (settable: Settable<State>, meta?: any): State
+}
+
+export interface GetNode {
+  // TODO: Dedupe these overloads
+  // atoms
+  <G extends AtomGenerics = AnyAtomGenerics>(
+    templateOrNode: AtomTemplateBase<G> | GraphNode<G>,
+    params: G['Params'],
+    edgeConfig?: GraphEdgeConfig
+  ): G['Node']
+
+  <G extends AnyAtomGenerics<{ Params: [] }> = AnyAtomGenerics<{ Params: [] }>>(
+    templateOrNode: AtomTemplateBase<G> | GraphNode<G>
+  ): G['Node']
+
+  <G extends AtomGenerics = AnyAtomGenerics>(
+    templateOrInstance: ParamlessTemplate<AtomTemplateBase<G> | GraphNode<G>>
+  ): G['Node']
+
+  // selectors
+  <S extends Selectable>(
+    template: S,
+    params: ParamsOf<S>,
+    edgeConfig?: GraphEdgeConfig
+  ): S extends AtomSelectorOrConfig
+    ? SelectorInstance<{
+        Params: ParamsOf<S>
+        State: StateOf<S>
+        Template: S
+      }>
+    : S
+
+  <S extends Selectable<any, []>>(template: S): S extends AtomSelectorOrConfig
+    ? SelectorInstance<{
+        Params: ParamsOf<S>
+        State: StateOf<S>
+        Template: S
+      }>
+    : S
+
+  <S extends Selectable>(
+    template: ParamlessTemplate<S>
+  ): S extends AtomSelectorOrConfig
+    ? SelectorInstance<{
+        Params: ParamsOf<S>
+        State: StateOf<S>
+        Template: S
+      }>
+    : S
+
+  <N extends GraphNode>(node: N, params?: [], edgeConfig?: GraphEdgeConfig): N
+
+  // catch-all
+  <G extends AtomGenerics>(
+    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+    params: G['Params'],
+    edgeConfig?: GraphEdgeConfig
+  ): G['Node']
 }
 
 export interface GraphEdgeConfig {
@@ -393,7 +309,7 @@ export interface InternalEvaluationReason<State = any> {
 
 export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
   (
-    getters: AtomGetters,
+    ecosystem: Ecosystem,
     ...params: G['Params']
   ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | Signal<G> | G['State']
 
