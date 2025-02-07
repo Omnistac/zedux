@@ -56,6 +56,30 @@ export interface EventReceivedEvent<G extends NodeGenerics = AnyNodeGenerics>
   type: 'event'
 }
 
+export type EcosystemEvent = EcosystemEvents[keyof EcosystemEvents]
+
+export interface EcosystemEvents extends ImplicitEvents {
+  edge: EdgeEvent
+  error: ErrorEvent
+  reset: ResetEvent
+  run: RunEvent
+}
+
+export interface EcosystemEventBase {
+  source: GraphNode
+}
+
+export interface EdgeEvent extends EcosystemEventBase {
+  action: 'add' | 'remove' | 'update'
+  observer: GraphNode
+  type: 'edge'
+}
+
+export interface ErrorEvent extends EcosystemEventBase {
+  error: Error
+  type: 'error'
+}
+
 /**
  * Events that can be sent manually. This is not the full list of events that
  * can be listened to on Zedux event emitters.
@@ -134,13 +158,23 @@ export type ListenableEvents<G extends NodeGenerics = AnyNodeGenerics> =
 
 export type Mutatable<State> =
   | RecursivePartial<State>
-  | ((state: State) => void)
+  | ((state: State) => void | RecursivePartial<State>)
 
 export type MutatableTypes = any[] | Record<string, any> | Set<any>
 
 export interface PromiseChangeEvent<G extends NodeGenerics = AnyNodeGenerics>
   extends EventBase<G> {
   type: 'promiseChange'
+}
+
+export interface ResetEvent {
+  isDestroy: boolean
+  type: 'reset'
+}
+
+export interface RunEvent extends EcosystemEventBase {
+  action: 'finish' | 'start'
+  type: 'run'
 }
 
 export type SendableEvents<G extends Pick<AtomGenerics, 'Events'>> = Prettify<
@@ -161,9 +195,8 @@ export type SingleEventListener<
  */
 export interface Transaction {
   /**
-   * `k`ey - either a top-level object key or an indefinitely-nested array of
-   * keys detailing the "path" through a nested state object to the field that
-   * updated.
+   * `k`ey - either a top-level object key or an array of keys detailing the
+   * "path" through a nested state object to the field that updated.
    */
   k: PropertyKey | PropertyKey[]
 

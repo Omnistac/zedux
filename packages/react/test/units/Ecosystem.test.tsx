@@ -1,4 +1,4 @@
-import { ZeduxPlugin, atom, createEcosystem } from '@zedux/react'
+import { atom, createEcosystem } from '@zedux/react'
 import { ecosystem } from '../utils/ecosystem'
 import { mockConsole } from '../utils/console'
 
@@ -153,22 +153,6 @@ describe('Ecosystem', () => {
     )
   })
 
-  test("registerPlugin() ignores the plugin if it's already registered", () => {
-    const plugin = new ZeduxPlugin()
-
-    const testEcosystem = createEcosystem()
-    testEcosystem.registerPlugin(plugin)
-
-    expect(testEcosystem['plugins']).toHaveLength(1)
-    expect(testEcosystem['plugins'][0].plugin).toBe(plugin)
-
-    testEcosystem.registerPlugin(plugin)
-
-    expect(testEcosystem['plugins']).toHaveLength(1)
-
-    testEcosystem.destroy()
-  })
-
   test('removeOverrides() accepts atom templates and string keys', () => {
     const atom1 = atom('1', 'a')
     const atom1Override = atom1.override('aa')
@@ -214,20 +198,6 @@ describe('Ecosystem', () => {
     expect(result1).toBe(a)
     expect(result2).toBe(a)
     expect(selectorConfig.resultsComparator).not.toHaveBeenCalled()
-  })
-
-  test("unregisterPlugin() does nothing if the plugin isn't registered", () => {
-    const plugin1 = new ZeduxPlugin()
-    const plugin2 = new ZeduxPlugin()
-
-    const testEcosystem = createEcosystem()
-    testEcosystem.registerPlugin(plugin1)
-    testEcosystem.unregisterPlugin(plugin2)
-
-    expect(testEcosystem['plugins']).toHaveLength(1)
-    expect(testEcosystem['plugins'][0].plugin).toBe(plugin1)
-
-    testEcosystem.destroy()
   })
 
   test('why() returns undefined if called outside atom or selector evaluation', () => {

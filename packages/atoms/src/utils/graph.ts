@@ -6,38 +6,39 @@ import {
 } from '@zedux/atoms/types/index'
 import { type GraphNode } from '../classes/GraphNode'
 import { SendableEvents } from '../types/events'
-import { pluginActions } from './plugin-actions'
-import { Cycle, Eventless, Static } from './general'
+import { CHANGE, CYCLE, Cycle, EDGE, Eventless, Static } from './general'
+import {
+  isListeningTo,
+  sendEcosystemEvent,
+  sendImplicitEcosystemEvent,
+} from './events'
 
 /**
  * Actually add an edge to the graph. When we buffer graph updates, we're
  * really just deferring the calling of this method.
  */
 export const addEdge = (
-  dependent: GraphNode,
-  dependency: GraphNode,
+  observer: GraphNode,
+  source: GraphNode,
   newEdge: GraphEdge
 ) => {
-  const { _mods, modBus } = dependency.e
-
   // draw the edge in both nodes
-  dependent.s.set(dependency, newEdge)
-  dependency.o.set(dependent, newEdge)
-  dependency.c?.()
+  observer.s.set(source, newEdge)
+  source.o.set(observer, newEdge)
+  source.c?.()
 
   // Static sources don't change a node's weight
   if (!(newEdge.flags & Static)) {
-    recalculateNodeWeight(dependency.W, dependent)
+    recalculateNodeWeight(source.W, observer)
   }
 
-  if (_mods.edgeCreated) {
-    modBus.dispatch(
-      pluginActions.edgeCreated({
-        dependency,
-        dependent: dependent, // unfortunate but not changing for now
-        edge: newEdge,
-      })
-    )
+  if (isListeningTo(source.e, EDGE)) {
+    sendEcosystemEvent(source.e, {
+      action: 'add',
+      observer,
+      source,
+      type: EDGE,
+    })
   }
 
   return newEdge
@@ -92,18 +93,13 @@ export const handleStateChange = <
   events?: Partial<SendableEvents<G>>
 ) => {
   const pre = node.e._scheduler.pre()
-  scheduleDependents({ e: events, n: node.v, o: oldState, r: node.w, s: node })
+  const reason = { e: events, n: node.v, o: oldState, r: node.w, s: node }
 
-  if (node.e._mods.stateChanged) {
-    node.e.modBus.dispatch(
-      pluginActions.stateChanged({
-        node,
-        newState: node.v,
-        oldState,
-        reasons: node.w,
-      })
-    )
+  if (isListeningTo(node.e, CHANGE)) {
+    sendImplicitEcosystemEvent(node.e, reason)
   }
+
+  scheduleDependents(reason)
 
   // run the scheduler synchronously after any node state update
   node.e._scheduler.post(pre)
@@ -118,48 +114,46 @@ const recalculateNodeWeight = (weightDiff: number, node: GraphNode) => {
 }
 
 /**
- * Remove the graph edge between two nodes. The dependent may not exist as a
- * node in the graph if it's external, e.g. a React component
+ * Remove the graph edge between two nodes.
  *
  * For some reason in React 18+, React destroys parents before children. This
  * means a parent EcosystemProvider may have already unmounted and wiped the
  * whole graph; this edge may already be destroyed.
  */
-export const removeEdge = (dependent: GraphNode, dependency: GraphNode) => {
-  // erase graph edge between dependent and dependency
-  dependent.s.delete(dependency)
+export const removeEdge = (observer: GraphNode, source: GraphNode) => {
+  // erase graph edge between observer and source
+  observer.s.delete(source)
 
-  // hmm could maybe happen when a dependency was force-destroyed if a child
+  // hmm could maybe happen when a source was force-destroyed if a child
   // tries to destroy its edge before recreating it (I don't think we ever do
   // that though)
-  if (!dependency) return
+  if (!source) return
 
-  const edge = dependency.o.get(dependent)
+  const edge = source.o.get(observer)
 
   // happens in React 18+ (see this method's jsdoc above)
   if (!edge) return
 
-  dependency.o.delete(dependent)
+  source.o.delete(observer)
 
   // static dependencies don't change a node's weight
   if (!(edge.flags & Static)) {
-    recalculateNodeWeight(-dependency.W, dependent)
+    recalculateNodeWeight(-source.W, observer)
   }
 
-  if (dependency.e._mods.edgeRemoved) {
-    dependency.e.modBus.dispatch(
-      pluginActions.edgeRemoved({
-        dependency,
-        dependent: dependent,
-        edge: edge,
-      })
-    )
+  if (isListeningTo(source.e, EDGE)) {
+    sendEcosystemEvent(source.e, {
+      action: 'remove',
+      observer,
+      source,
+      type: EDGE,
+    })
   }
 
-  if (dependent === dependency.L) {
-    dependency.L = undefined
+  if (observer === source.L) {
+    source.L = undefined
   } else {
-    scheduleNodeDestruction(dependency)
+    scheduleNodeDestruction(source)
   }
 }
 
@@ -184,19 +178,19 @@ export const scheduleDependents = (
  * Schedule jobs to notify a node's event-aware observers of one or more events.
  * Event-aware observers include those added via `node.on()` and atom instances
  * that forward their `S`ignal's events.
- *
- * This should always be followed up by an `ecosystem._scheduler.flush()` call
- * unless we know for sure the scheduler is already running (e.g. when
- * `runSelector` is called and isn't initializing).
  */
 export const scheduleEventListeners = (
   reason: Omit<InternalEvaluationReason, 's'> & {
     s: NonNullable<InternalEvaluationReason['s']>
   }
 ) => {
+  const pre = reason.s.e._scheduler.pre()
+
   for (const [observer, edge] of reason.s.o) {
     edge.flags & Eventless || observer.r(reason, false)
   }
+
+  reason.s.e._scheduler.post(pre)
 }
 
 /**
@@ -208,11 +202,13 @@ export const scheduleStaticDependents = (
     s: NonNullable<InternalEvaluationReason['s']>
   }
 ) => {
+  const pre = reason.s.e._scheduler.pre()
+
   for (const observer of reason.s.o.keys()) {
     observer.r(reason, false)
   }
 
-  reason.s.e._scheduler.flush()
+  reason.s.e._scheduler.post(pre)
 }
 
 /**
@@ -225,39 +221,33 @@ export const setNodeStatus = (node: GraphNode, newStatus: LifecycleStatus) => {
   const oldStatus = node.l
   node.l = newStatus
 
-  if (node.e._mods.statusChanged) {
-    node.e.modBus.dispatch(
-      pluginActions.statusChanged({
-        newStatus,
-        node,
-        oldStatus,
-      })
-    )
-  }
+  const isListeningToCycle = isListeningTo(node.e, CYCLE)
 
-  if (newStatus === 'Destroyed') {
-    // Event observers don't prevent destruction so may still need cleaning up.
-    // Schedule them so they can do so. Also if a node is force-destroyed, it
-    // could still have observers. Inform them of the destruction so they can
-    // recreate their source node.
-    scheduleStaticDependents({
+  if (
+    newStatus === 'Destroyed' ||
+    oldStatus !== 'Initializing' ||
+    isListeningToCycle
+  ) {
+    const reason = {
       n: newStatus,
       o: oldStatus,
       r: node.w,
       s: node,
       t: Cycle,
-    })
-  } else if (oldStatus !== 'Initializing') {
-    scheduleEventListeners({
-      n: newStatus,
-      o: oldStatus,
-      r: node.w,
-      s: node,
-      t: Cycle,
-    })
+    } as const
 
-    // flushing here should be fine - `setNodeStatus` is only called during
-    // React component renders when `oldStatus` is Initializing
-    node.e._scheduler.flush()
+    if (isListeningTo(node.e, CYCLE)) {
+      sendImplicitEcosystemEvent(node.e, reason)
+    }
+
+    if (newStatus === 'Destroyed') {
+      // Event observers don't prevent destruction so may still need cleaning up.
+      // Schedule them so they can do so. Also if a node is force-destroyed, it
+      // could still have observers. Inform them of the destruction so they can
+      // recreate their source node.
+      scheduleStaticDependents(reason)
+    } else if (oldStatus !== 'Initializing') {
+      scheduleEventListeners(reason)
+    }
   }
 }

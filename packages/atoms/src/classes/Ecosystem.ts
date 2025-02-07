@@ -1,4 +1,4 @@
-import { createStore, detailedTypeof, is, isPlainObject } from '@zedux/core'
+import { detailedTypeof, is, isPlainObject, Job } from '@zedux/core'
 import { internalStore } from '../store/index'
 import {
   AnyAtomGenerics,
@@ -27,6 +27,13 @@ import {
   None,
   InjectSignalConfig,
   MapEvents,
+  SingleEventListener,
+  CatchAllListener,
+  EventEmitter,
+  AnyNodeGenerics,
+  ListenerConfig,
+  EcosystemEvents,
+  InternalEvaluationReason,
 } from '../types/index'
 import {
   External,
@@ -34,11 +41,18 @@ import {
   makeReasonsReadable,
   Eventless,
   EventlessStatic,
+  RESET,
+  CHANGE,
+  CYCLE,
+  EDGE,
+  ERROR,
+  INVALIDATE,
+  MUTATE,
+  PROMISE_CHANGE,
+  RUN,
 } from '../utils/general'
-import { pluginActions } from '../utils/plugin-actions'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'
-import { Mod, ZeduxPlugin } from './ZeduxPlugin'
 import { AtomTemplate } from './templates/AtomTemplate'
 import { GraphNode } from './GraphNode'
 import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
@@ -51,11 +65,7 @@ import {
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 import { AtomInstance } from './instances/AtomInstance'
 import { Signal } from './Signal'
-
-const defaultMods = Object.keys(pluginActions).reduce((map, mod) => {
-  map[mod as Mod] = 0
-  return map
-}, {} as Record<Mod, number>)
+import { isListeningTo, parseOnArgs, sendEcosystemEvent } from '../utils/events'
 
 const mapOverrides = (overrides: AnyAtomTemplate[]) =>
   overrides.reduce((map, atom) => {
@@ -64,7 +74,7 @@ const mapOverrides = (overrides: AnyAtomTemplate[]) =>
   }, {} as Record<string, AnyAtomTemplate>)
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
-  implements AtomGettersBase
+  implements AtomGettersBase, EventEmitter, Job
 {
   public atomDefaults?: EcosystemConfig['atomDefaults']
   public complexParams?: boolean
@@ -74,11 +84,36 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public hydration?: Record<string, any>
   public id: string
   public live: AtomGetters
-  public modBus = createStore() // use an empty store as a message bus
   public onReady: EcosystemConfig<Context>['onReady']
   public overrides: Record<string, AnyAtomTemplate> = {}
   public ssr?: boolean
   public _idGenerator = new IdGenerator()
+
+  /**
+   * event`C`ounts - counts notifiers for each event type
+   */
+  public C = {
+    '': 0, // TIL this is possible. This is the catch-all listener
+    [CHANGE]: 0,
+    [CYCLE]: 0,
+    [EDGE]: 0,
+    [ERROR]: 0,
+    [INVALIDATE]: 0,
+    [MUTATE]: 0,
+    [PROMISE_CHANGE]: 0,
+    [RESET]: 0,
+    [RUN]: 0,
+  }
+
+  /**
+   * event`L`isteners - the list of event listeners added via `ecosystem.on`
+   */
+  public L: ((reason: InternalEvaluationReason) => void)[] = []
+
+  /**
+   * @see Job.T
+   */
+  public T = 3 as const
 
   /**
    * `b`aseKeys - map selectors (or selector config objects) to a base
@@ -92,7 +127,13 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * keyed by id.
    */
   public n = new Map<string, GraphNode>()
-  public _mods: Record<Mod, number> = { ...defaultMods }
+
+  /**
+   * `w`hy - the list of events this ecosystem is passing to event listeners
+   * next job run. The ecosystem only cares about the `.f`ullEventMap property.
+   */
+  public w: InternalEvaluationReason[] = []
+
   public _refCount = 0
   public _scheduler: Scheduler = new Scheduler(this)
 
@@ -105,7 +146,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   private cleanup?: MaybeCleanup
   private isInitialized = false
-  private plugins: { plugin: ZeduxPlugin; cleanup: Cleanup }[] = []
 
   constructor(config: EcosystemConfig<Context>) {
     if (DEV) {
@@ -291,14 +331,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public destroy(force?: boolean) {
     if (!force && this._refCount > 0) return
 
-    this.wipe()
+    this.wipe(true)
 
     // Check if this ecosystem has been destroyed already
     const ecosystem = internalStore.getState()[this.id]
     if (!ecosystem) return
-
-    this.plugins.forEach(({ cleanup }) => cleanup())
-    this.plugins = []
 
     internalStore.setState(state => {
       const newState = { ...state }
@@ -306,6 +343,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
       return newState
     })
+
+    // we shouldn't have to unset this.L or reset this.C - those will be
+    // garbage collected if the ecosystem goes out of scope
   }
 
   /**
@@ -576,19 +616,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
       // try to find an existing instance
       const instance = this.n.get(id) as AtomInstance
-
-      if (instance) {
-        if (this._mods.instanceReused) {
-          this.modBus.dispatch(
-            pluginActions.instanceReused({
-              instance: instance as AtomInstance,
-              template: template as AtomTemplate,
-            })
-          )
-        }
-
-        return instance
-      }
+      if (instance) return instance
 
       // create a new instance
       const newInstance = this.resolveAtom(
@@ -691,34 +719,60 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     })
   }
 
-  /**
-   * Add a ZeduxPlugin to this ecosystem. This ecosystem will subscribe to the
-   * plugin's modStore, whose state can be changed to reactively update the mods
-   * of this ecosystem.
-   *
-   * This method will also call the passed plugin's `.registerEcosystem` method,
-   * allowing the plugin to subscribe to this ecosystem's modBus
-   *
-   * The plugin will remain part of this ecosystem until it is unregistered or
-   * this ecosystem is destroyed. `.wipe()` and `.reset()` don't remove plugins.
-   * However, a plugin _can_ set the `ecosystemWiped` mod and react to those
-   * events.
-   */
-  public registerPlugin(plugin: ZeduxPlugin) {
-    if (this.plugins.some(descriptor => descriptor.plugin === plugin)) return
+  public on<E extends keyof EcosystemEvents>(
+    eventName: E,
+    callback: SingleEventListener<
+      AnyNodeGenerics<{ Events: EcosystemEvents }>,
+      E
+    >,
+    config?: ListenerConfig
+  ): Cleanup
 
-    const subscription = plugin.modStore.subscribe((newState, oldState) => {
-      this.recalculateMods(newState, oldState)
-    })
+  public on(
+    callback: CatchAllListener<AnyNodeGenerics<{ Events: EcosystemEvents }>>,
+    config?: ListenerConfig // unused in `ecosystem.on` - only here for interface compatibility
+  ): Cleanup
 
-    const cleanupRegistration = plugin.registerEcosystem(this)
-    const cleanup = () => {
-      subscription.unsubscribe()
-      if (cleanupRegistration) cleanupRegistration()
+  public on<E extends keyof EcosystemEvents>(
+    eventNameOrCallback: E | ((eventMap: Partial<EcosystemEvents>) => void),
+    callbackOrConfig?:
+      | SingleEventListener<AnyNodeGenerics<{ Events: EcosystemEvents }>, E>
+      | ListenerConfig,
+    maybeConfig?: ListenerConfig // unused in `ecosystem.on` - only here for interface compatibility
+  ): Cleanup
+
+  public on<E extends keyof EcosystemEvents>(
+    eventNameOrCallback: E | ((eventMap: Partial<EcosystemEvents>) => void),
+    callbackOrConfig?:
+      | SingleEventListener<AnyNodeGenerics<{ Events: EcosystemEvents }>, E>
+      | ListenerConfig,
+    maybeConfig?: ListenerConfig
+  ): Cleanup {
+    const [, eventName, notify] = parseOnArgs(
+      eventNameOrCallback,
+      callbackOrConfig,
+      maybeConfig
+    )
+
+    if (!(eventName in this.C)) {
+      throw new Error(
+        `Zedux: invalid event name "${eventName}". Expected one of ${Object.keys(
+          this.C
+        )}`
+      )
     }
 
-    this.plugins.push({ cleanup, plugin })
-    this.recalculateMods(plugin.modStore.getState())
+    this.L.push(notify)
+    this.C[eventName as keyof typeof this.C]++
+
+    return () => {
+      const index = this.L.indexOf(notify)
+
+      if (~index) {
+        this.L.splice(index, 1)
+        this.C[eventName as keyof typeof this.C]--
+      }
+    }
   }
 
   /**
@@ -752,9 +806,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * returned from `onReady` (if any), and calls `onReady` again to reinitialize
    * the ecosystem.
    *
-   * Note that this doesn't remove overrides or plugins but _does_ remove
-   * hydrations. This is because you can remove overrides/plugins yourself if
-   * needed, but there isn't currently a way to remove hydrations.
+   * Note that this doesn't remove overrides or ecosystem event listeners but
+   * _does_ remove hydrations. This is because you can remove overrides and
+   * ecosystem event listeners yourself if needed, but there isn't currently a
+   * way to remove hydrations.
    */
   public reset(newContext?: Context) {
     this.wipe()
@@ -847,61 +902,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.n.set(id, signal)
 
     return signal
-  }
-
-  /**
-   * `u`pdateSelectorRef - swaps out the `t`emplate of a selector instance if
-   * needed. Bails out if args have changed or the selector template ref hasn't
-   * changed.
-   *
-   * This is used for "inline" selectors e.g. passed to `useAtomSelector`
-   */
-  public u<G extends SelectorGenerics>(
-    instance: SelectorInstance<G>,
-    template: G['Template'],
-    params: G['Params'],
-    ref: { m?: boolean }
-  ) {
-    const paramsUnchanged = (
-      (template as AtomSelectorConfig).argsComparator || compare
-    )(params, instance.p || ([] as unknown as G['Params']))
-
-    const resolvedArgs = paramsUnchanged ? instance.p : params
-
-    // if the refs/args don't match, instance has refCount: 1, there is no
-    // cache yet for the new ref, and the new ref has the same name, assume it's
-    // an inline selector and can be swapped
-    const isSwappingRefs =
-      instance.t !== template &&
-      paramsUnchanged &&
-      instance.o.size === 1 &&
-      !this.b.has(template) &&
-      getSelectorName(instance.t) === getSelectorName(template)
-
-    if (isSwappingRefs) {
-      // switch `m`ounted to false temporarily to prevent circular rerenders
-      ref.m = false
-      swapSelectorRefs(this, instance, template, resolvedArgs)
-      ref.m = true
-    }
-
-    return isSwappingRefs
-      ? instance
-      : this.getNode(template, resolvedArgs as ParamsOf<G['Template']>)
-  }
-
-  /**
-   * Unregister a plugin registered in this ecosystem via `.registerPlugin()`
-   */
-  public unregisterPlugin(plugin: ZeduxPlugin) {
-    const index = this.plugins.findIndex(
-      descriptor => descriptor.plugin === plugin
-    )
-    if (index === -1) return
-
-    this.plugins[index].cleanup()
-    this.plugins.splice(index, 1)
-    this.recalculateMods(undefined, plugin.modStore.getState())
   }
 
   public viewGraph(view: 'bottom-up'): GraphViewRecursive
@@ -1019,8 +1019,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * after wiping the ecosystem, allowing onReady to re-initialize the ecosystem
    * - preloading atoms, registering plugins, configuring context, etc
    */
-  public wipe() {
-    const { n, _mods, _scheduler, modBus } = this
+  public wipe(isDestroy = false) {
+    if (isListeningTo(this, RESET)) {
+      sendEcosystemEvent(this, { isDestroy, type: RESET })
+    }
+
+    const { n, _scheduler } = this
 
     // call cleanup function first so it can configure the ecosystem for cleanup
     this.cleanup?.()
@@ -1043,10 +1047,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     _scheduler.wipe()
     _scheduler.flush()
-
-    if (_mods.ecosystemWiped) {
-      modBus.dispatch(pluginActions.ecosystemWiped({ ecosystem: this }))
-    }
   }
 
   /**
@@ -1082,18 +1082,58 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this._refCount++
   }
 
-  private recalculateMods(newState?: Mod[], oldState?: Mod[]) {
-    if (oldState) {
-      oldState.forEach(key => {
-        this._mods[key as Mod]-- // fun fact, undefined-- is fine
-      })
+  /**
+   * @see Job.j
+   */
+  public j() {
+    for (const reason of this.w) {
+      for (const listener of this.L) {
+        listener(reason)
+      }
     }
 
-    if (newState) {
-      newState.forEach(key => {
-        this._mods[key as Mod]++
-      })
+    this.w = []
+  }
+
+  /**
+   * `u`pdateSelectorRef - swaps out the `t`emplate of a selector instance if
+   * needed. Bails out if args have changed or the selector template ref hasn't
+   * changed.
+   *
+   * This is used for "inline" selectors e.g. passed to `useAtomSelector`
+   */
+  public u<G extends SelectorGenerics>(
+    instance: SelectorInstance<G>,
+    template: G['Template'],
+    params: G['Params'],
+    ref: { m?: boolean }
+  ) {
+    const paramsUnchanged = (
+      (template as AtomSelectorConfig).argsComparator || compare
+    )(params, instance.p || ([] as unknown as G['Params']))
+
+    const resolvedArgs = paramsUnchanged ? instance.p : params
+
+    // if the refs/args don't match, instance has refCount: 1, there is no
+    // cache yet for the new ref, and the new ref has the same name, assume it's
+    // an inline selector and can be swapped
+    const isSwappingRefs =
+      instance.t !== template &&
+      paramsUnchanged &&
+      instance.o.size === 1 &&
+      !this.b.has(template) &&
+      getSelectorName(instance.t) === getSelectorName(template)
+
+    if (isSwappingRefs) {
+      // switch `m`ounted to false temporarily to prevent circular rerenders
+      ref.m = false
+      swapSelectorRefs(this, instance, template, resolvedArgs)
+      ref.m = true
     }
+
+    return isSwappingRefs
+      ? instance
+      : this.getNode(template, resolvedArgs as ParamsOf<G['Template']>)
   }
 
   private resolveAtom<A extends AnyAtomTemplate>(template: A) {

@@ -126,7 +126,7 @@ describe('signals', () => {
     })
 
     const commonChangeProps = {
-      operation: 'on',
+      operation: undefined,
       reasons: [],
       source: instance1.exports.signal,
       type: 'change',
@@ -148,12 +148,7 @@ describe('signals', () => {
       ...expectedEvents,
       change: {
         ...expectedEvents.change,
-        reasons: [
-          {
-            ...expectedEvents.change,
-            operation: 'injectSignal',
-          },
-        ],
+        reasons: [expectedEvents.change],
         source: instance1,
       },
     }
@@ -182,12 +177,7 @@ describe('signals', () => {
     const expectedTransitiveEvents2 = {
       change: {
         ...expectedEvents2.change,
-        reasons: [
-          {
-            ...expectedEvents2.change,
-            operation: 'injectSignal',
-          },
-        ],
+        reasons: [expectedEvents2.change],
         source: instance1,
       },
     }

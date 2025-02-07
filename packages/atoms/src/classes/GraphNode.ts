@@ -14,22 +14,17 @@ import {
 } from '@zedux/atoms/types/index'
 import { is, Job } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
-import {
-  Eventless,
-  EventSent,
-  ExplicitExternal,
-  makeReasonReadable,
-} from '../utils/general'
+import { Eventless, EventSent, ExplicitExternal } from '../utils/general'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 import {
   CatchAllListener,
   EventEmitter,
   SingleEventListener,
   ListenableEvents,
-  EvaluationReason,
 } from '../types/events'
 import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
 import { addEdge, removeEdge, setNodeStatus } from '../utils/graph'
+import { parseOnArgs, shouldScheduleImplicit } from '../utils/events'
 
 export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
   implements Job, EventEmitter<G>
@@ -48,6 +43,9 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    */
   public izn = true
 
+  /**
+   * `L`istenerNode - the single event listener node of this graph node.
+   */
   public L: undefined | Listener = undefined
 
   /**
@@ -108,13 +106,22 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    */
   public abstract id: string
 
-  on<E extends keyof ListenableEvents<G>>(
+  public on<E extends keyof ListenableEvents<G>>(
     eventName: E,
     callback: SingleEventListener<G, E>,
     listenerConfig?: ListenerConfig
   ): Cleanup
 
-  on(callback: CatchAllListener<G>, listenerConfig?: ListenerConfig): Cleanup
+  public on(
+    callback: CatchAllListener<G>,
+    listenerConfig?: ListenerConfig
+  ): Cleanup
+
+  public on<E extends keyof ListenableEvents<G>>(
+    eventNameOrCallback: E | ((eventMap: Partial<ListenableEvents<G>>) => void),
+    callbackOrConfig?: SingleEventListener<G, E> | ListenerConfig,
+    maybeConfig?: ListenerConfig
+  ): Cleanup
 
   /**
    * Register a listener that will be called on this emitter's events.
@@ -136,26 +143,11 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
     callbackOrConfig?: SingleEventListener<G, E> | ListenerConfig,
     maybeConfig?: ListenerConfig
   ): Cleanup {
-    const isSingleListener = typeof eventNameOrCallback === 'string'
-    const eventName = isSingleListener ? eventNameOrCallback : ''
-
-    const callback = isSingleListener
-      ? (callbackOrConfig as SingleEventListener<G, E>)
-      : (eventNameOrCallback as CatchAllListener<G>)
-
-    const { active } = ((isSingleListener ? maybeConfig : callbackOrConfig) ||
-      {}) as ListenerConfig
-
-    const notify = (reason: InternalEvaluationReason) => {
-      const eventMap = (reason.f || reason.e || {}) as Partial<
-        ListenableEvents<G>
-      >
-
-      // if it's a single event listener and the event isn't in the map, ignore
-      eventName in eventMap
-        ? callback(eventMap[eventName] as any, eventMap)
-        : isSingleListener || (callback as CatchAllListener<G>)(eventMap)
-    }
+    const [active, eventName, notify] = parseOnArgs(
+      eventNameOrCallback,
+      callbackOrConfig,
+      maybeConfig
+    )
 
     // active listeners create their own Listener node
     if (this.L && !active) {
@@ -513,11 +505,6 @@ export class Listener<
   G extends NodeGenerics = AnyNodeGenerics
 > extends ExternalNode<G> {
   /**
-   * catch`A`llCount - counts how many catch-all notifiers are registered
-   */
-  public A = 0
-
-  /**
    * event`C`ounts - counts notifiers for each event type (except catch-all)
    */
   public C: Record<string, number> = {}
@@ -560,12 +547,7 @@ export class Listener<
 
     if (~index) {
       N.splice(index, 1)
-
-      if (eventName) {
-        C[eventName]--
-      } else {
-        this.A--
-      }
+      C[eventName]--
 
       N.length || this.m()
     }
@@ -576,12 +558,7 @@ export class Listener<
     notify: (reason: InternalEvaluationReason) => void
   ) {
     this.N.push(notify)
-
-    if (eventName) {
-      this.C[eventName] = (this.C[eventName] ?? 0) + 1
-    } else {
-      this.A++
-    }
+    this.C[eventName] = (this.C[eventName] ?? 0) + 1
   }
 
   /**
@@ -609,20 +586,7 @@ export class Listener<
    */
   public r(reason: InternalEvaluationReason, defer?: boolean) {
     const { e, w } = this
-    let newImplicitEvent: EvaluationReason | undefined
-
-    // if this wasn't an explicit EventSent reason, it has an implicit event we
-    // need to create. Attach it to the reason so we only do this once.
-    if (!reason.f && reason.t !== EventSent) {
-      newImplicitEvent = makeReasonReadable(reason, this)
-
-      reason.f = { ...reason.e, [newImplicitEvent.type]: newImplicitEvent }
-    }
-
-    const shouldSchedule =
-      this.A ||
-      (reason.e && Object.keys(reason.e).some(key => this.C[key])) ||
-      (newImplicitEvent && this.C[newImplicitEvent.type])
+    const shouldSchedule = shouldScheduleImplicit(this, reason)
 
     // schedule the job if needed. If not scheduling, kill this listener now if
     // its source is destroyed.

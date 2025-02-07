@@ -58,7 +58,6 @@ On top of this, `@zedux/atoms` exports the following APIs and many helper types 
 - [`MappedSignal`](https://omnistac.github.io/zedux/docs/api/classes/MappedSignal)
 - [`SelectorInstance`](https://omnistac.github.io/zedux/docs/api/classes/SelectorInstance)
 - [`Signal`](https://omnistac.github.io/zedux/docs/api/classes/Signal)
-- [`ZeduxPlugin`](https://omnistac.github.io/zedux/docs/api/classes/ZeduxPlugin)
 
 ### Factories
 

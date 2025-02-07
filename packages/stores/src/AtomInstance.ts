@@ -23,13 +23,11 @@ import {
   PromiseStatus,
   InternalEvaluationReason,
   Transaction,
-  ZeduxPlugin,
   zi,
   SendableEvents,
 } from '@zedux/atoms'
 import { AtomApi } from './AtomApi'
 import {
-  Invalidate,
   prefix,
   PromiseChange,
   getErrorPromiseState,
@@ -176,16 +174,6 @@ export class AtomInstance<
   }
 
   /**
-   * Force this atom instance to reevaluate.
-   */
-  public invalidate() {
-    this.r({ s: this, t: Invalidate }, false)
-
-    // run the scheduler synchronously after invalidation
-    this.e._scheduler.flush()
-  }
-
-  /**
    * `.mutate()` is not supported in legacy, store-based atoms. Upgrade to the
    * new `atom()` factory.
    */
@@ -220,7 +208,6 @@ export class AtomInstance<
    * @see NewAtomInstance.j
    */
   public j() {
-    const { n, s } = zi.g()
     this._nextInjectors = []
     this._isEvaluating = true
 
@@ -231,7 +218,7 @@ export class AtomInstance<
     // real ideal is to move off stores completely in favor of signals.
     Store._scheduler = this.e._scheduler
 
-    zi.s(this)
+    const prevNode = zi.s(this)
 
     try {
       const newFactoryResult = this._eval()
@@ -286,7 +273,7 @@ export class AtomInstance<
         injector.cleanup?.()
       })
 
-      zi.d(n, s)
+      zi.d(prevNode)
 
       throw err
     } finally {
@@ -294,7 +281,7 @@ export class AtomInstance<
 
       // if we just popped the last thing off the stack, restore the default
       // scheduler
-      if (!n) Store._scheduler = undefined
+      if (!prevNode) Store._scheduler = undefined
 
       // even if evaluation errored, we need to update dependents if the store's
       // state changed
@@ -314,7 +301,7 @@ export class AtomInstance<
 
     if (this.l !== 'Initializing') {
       // let this.i flush updates after status is set to Active
-      zi.f(n, s)
+      zi.f(prevNode)
     }
   }
 
@@ -397,20 +384,11 @@ export class AtomInstance<
     oldState: G['State'] | undefined,
     action: ActionChain
   ) {
+    const reason = { n: newState, o: oldState, r: this.w, s: this }
     this.v = newState
-    zi.u({ n: this.v, o: oldState, r: this.w, s: this })
+    zi.u(reason)
 
-    if (this.e._mods.stateChanged) {
-      this.e.modBus.dispatch(
-        ZeduxPlugin.actions.stateChanged({
-          action,
-          node: this,
-          newState,
-          oldState,
-          reasons: this.w,
-        })
-      )
-    }
+    if (this.e.C.change) zi.i(this.e, reason)
 
     // run the scheduler synchronously after any atom instance state update
     if (action.meta !== zeduxTypes.batch) {
