@@ -78,13 +78,14 @@ export const useAtomSelector = <T, Args extends any[]>(
 
   let edge: DependentEdge | undefined
 
-  const addEdge = () => {
+  const addEdge = (isMaterialized?: boolean) => {
     if (!_graph.nodes[cache.id]?.dependents.get(dependentKey)) {
       edge = _graph.addEdge(dependentKey, cache.id, OPERATION, External, () => {
         if ((render as any).mounted) render({})
       })
 
       if (edge) {
+        edge.isMaterialized = isMaterialized
         edge.dependentKey = dependentKey
 
         if (cache._lastEdge) {
@@ -143,8 +144,10 @@ export const useAtomSelector = <T, Args extends any[]>(
     }
 
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
-    // this effect's cleanup unnecessarily)
-    addEdge()
+    // this effect's cleanup unnecessarily OR other effects in child components
+    // cleaned up this component's edges before it could materialize them.
+    // That's fine, just recreate them with `isMaterialized: true` now)
+    addEdge(true)
 
     // use the referentially stable render function as a ref :O
     ;(render as any).mounted = true
