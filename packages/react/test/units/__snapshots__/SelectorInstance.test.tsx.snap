@@ -7,7 +7,7 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "observers": {
       "@@selector-selector2-1": {
         "flags": 1,
-        "operation": "select",
+        "operation": "get",
         "p": undefined,
       },
     },
@@ -27,14 +27,14 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "observers": {
       "@@selector-selector3-0": {
         "flags": 1,
-        "operation": "select",
+        "operation": "get",
         "p": undefined,
       },
     },
     "sources": {
       "@@selector-selector1-2": {
         "flags": 1,
-        "operation": "select",
+        "operation": "get",
         "p": undefined,
       },
     },
@@ -48,7 +48,7 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "sources": {
       "@@selector-selector2-1": {
         "flags": 1,
-        "operation": "select",
+        "operation": "get",
         "p": undefined,
       },
     },

@@ -2,7 +2,10 @@ import { act, fireEvent } from '@testing-library/react'
 import {
   atom,
   AtomGetters,
+  Ecosystem,
+  injectAtomInstance,
   injectAtomSelector,
+  injectAtomValue,
   ion,
   useAtomInstance,
   useAtomSelector,
@@ -21,8 +24,8 @@ describe('selection', () => {
       return get(testAtom, [key])
     })
 
-    const selector2 = jest.fn(({ select }: AtomGetters) => {
-      const val = select(selector1, 'a')
+    const selector2 = jest.fn(({ get }: AtomGetters) => {
+      const val = get(selector1, ['a'])
       return val
     })
 
@@ -44,7 +47,7 @@ describe('selection', () => {
 
     expect(selector1).toHaveBeenCalledTimes(1)
     expect(selector2).toHaveBeenCalledTimes(1)
-    expect((await findByTestId('text')).innerHTML).toBe('a')
+    expect(await findByTestId('text')).toHaveTextContent('a')
 
     act(() => {
       fireEvent.click(button)
@@ -61,7 +64,7 @@ describe('selection', () => {
 
     expect(selector1).toHaveBeenCalledTimes(2)
     expect(selector2).toHaveBeenCalledTimes(2)
-    expect((await findByTestId('text')).innerHTML).toBe('b')
+    expect(await findByTestId('text')).toHaveTextContent('b')
   })
 
   test("a state change from an unmounting component's effect cleanup triggers rerenders in newly-created components that use the updated atom or its dependents", async () => {
@@ -265,44 +268,72 @@ describe('selection', () => {
   test('same-name selectors share the namespace when destroyed and recreated at different times', () => {
     const rootAtom = atom('root', () => 1, { ttl: 0 })
     const selector1 = ({ get }: AtomGetters) => get(rootAtom) + 2
-    const selector2 = ({ get }: AtomGetters) => get(rootAtom) + 3
-    const atom1 = atom('1', () => injectAtomSelector(selector1), { ttl: 0 })
-    const atom2 = ion('2', ({ select }) => select(selector2), { ttl: 0 })
+    const selector2 = ({ get }: Ecosystem) => get(rootAtom) + 3
+    const atom1 = atom('1', () => injectAtomValue(selector1), { ttl: 0 })
+    const atom2 = ion('2', ({ get }) => get(selector2), { ttl: 0 })
+    const atom3 = atom('3', () => injectAtomSelector(selector1), { ttl: 0 })
     const NAME = 'common-name'
 
     Object.defineProperty(selector1, 'name', { value: NAME })
     Object.defineProperty(selector2, 'name', { value: NAME })
 
-    const instance1 = ecosystem.getInstance(atom1)
-    const cleanup1 = instance1.on(() => {}, { active: true })
+    let instance1 = ecosystem.getInstance(atom1)
+    let instance3 = ecosystem.getInstance(atom3)
+    let cleanup1 = instance1.on(() => {}, { active: true })
+    let cleanup3 = instance3.on(() => {}, { active: true })
 
     snapshotNodes()
     expect(instance1.get()).toBe(3)
+    expect(instance3.get()).toBe(3)
 
     cleanup1()
+    cleanup3()
 
     expect(ecosystem.n).toEqual(new Map())
 
-    const instance2 = ecosystem.getInstance(atom2)
+    const instance2 = ecosystem.getNode(atom2)
     const cleanup2 = instance2.on(() => {}, { active: true })
 
     snapshotNodes()
     expect(instance2.get()).toBe(4)
 
-    const instance3 = ecosystem.getInstance(atom1)
-    const cleanup3 = instance3.on(() => {}, { active: true })
+    instance1 = ecosystem.getInstance(atom1)
+    instance3 = ecosystem.getInstance(atom3)
+    cleanup1 = instance1.on(() => {}, { active: true })
+    cleanup3 = instance3.on(() => {}, { active: true })
 
     snapshotNodes()
     expect(instance1.get()).toBe(3)
     expect(instance2.get()).toBe(4)
+    expect(instance3.get()).toBe(3)
 
     cleanup2()
 
     snapshotNodes()
     expect(instance1.get()).toBe(3)
+    expect(instance3.get()).toBe(3)
 
+    cleanup1()
     cleanup3()
 
     expect(ecosystem.n).toEqual(new Map())
+  })
+
+  test('injectAtomInstance accepts selectors', () => {
+    const atom1 = atom('1', () => 'a')
+    const selector1 = ({ get }: Ecosystem, param: string) => get(atom1) + param
+    const atom2 = atom('2', () => {
+      const instance = injectAtomInstance(selector1, ['b'])
+
+      return instance.get()
+    })
+
+    const node2 = ecosystem.getNode(atom2)
+
+    expect(node2.get()).toBe('ab')
+
+    ecosystem.getNode(atom1).set('aa')
+
+    expect(node2.get()).toBe('aab')
   })
 })

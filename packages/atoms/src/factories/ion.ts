@@ -1,11 +1,12 @@
-import { AtomApi } from '../classes/AtomApi'
 import {
   IonTemplate,
   IonTemplateRecursive,
 } from '../classes/templates/IonTemplate'
+import { AtomApi } from '../classes/AtomApi'
+import { Ecosystem } from '../classes/Ecosystem'
+import { Signal } from '../classes/Signal'
 import {
   AtomConfig,
-  AtomGetters,
   AtomApiPromise,
   IonStateFactory,
   PromiseState,
@@ -13,7 +14,6 @@ import {
   EventsOf,
   None,
 } from '../types/index'
-import { Signal } from '../classes/Signal'
 
 export const ion: {
   // Query Atoms
@@ -24,7 +24,7 @@ export const ion: {
   >(
     key: string,
     value: (
-      getters: AtomGetters,
+      ecosystem: Ecosystem,
       ...params: Params
     ) => AtomApi<{
       Exports: Exports
@@ -50,7 +50,7 @@ export const ion: {
   >(
     key: string,
     value: (
-      getters: AtomGetters,
+      ecosystem: Ecosystem,
       ...params: Params
     ) =>
       | SignalType
@@ -78,7 +78,7 @@ export const ion: {
   >(
     key: string,
     value: (
-      getters: AtomGetters,
+      ecosystem: Ecosystem,
       ...params: Params
     ) =>
       | AtomApi<{

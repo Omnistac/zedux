@@ -74,6 +74,7 @@ On top of this, `@zedux/atoms` exports the following APIs and many helper types 
 - [`injectAtomState()`](https://omnistac.github.io/zedux/docs/api/injectors/injectAtomState)
 - [`injectAtomValue()`](https://omnistac.github.io/zedux/docs/api/injectors/injectAtomValue)
 - [`injectCallback()`](https://omnistac.github.io/zedux/docs/api/injectors/injectCallback)
+- [`injectEcosystem()`](https://omnistac.github.io/zedux/docs/api/injectors/injectEcosystem)
 - [`injectEffect()`](https://omnistac.github.io/zedux/docs/api/injectors/injectEffect)
 - [`injectInvalidate()`](https://omnistac.github.io/zedux/docs/api/injectors/injectInvalidate)
 - [`injectMappedSignal()`](https://omnistac.github.io/zedux/docs/api/injectors/injectMappedSignal)

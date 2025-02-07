@@ -3,9 +3,12 @@ import {
   AnyAtomTemplate,
   AtomInstance,
   ExternalNode,
+  is,
   NodeOf,
   ParamlessTemplate,
   ParamsOf,
+  Selectable,
+  SelectorInstance,
 } from '@zedux/atoms'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { ZeduxHookConfig } from '../types'
@@ -37,7 +40,7 @@ import { useReactComponentId } from './useReactComponentId'
  * Note that if the params are large, serializing them every render can cause
  * some overhead.
  *
- * @param atom The atom template to instantiate or reuse an instantiation of OR
+ * @param template The atom template to instantiate or reuse an instantiation of OR
  * an atom instance itself.
  * @param params The params for generating the instance's key. Required if an
  * atom template is passed that requires params.
@@ -60,8 +63,18 @@ export const useAtomInstance: {
     params?: [],
     config?: ZeduxHookConfig
   ): I
+
+  <S extends Selectable>(
+    template: S,
+    params: ParamsOf<S>,
+    config?: Omit<ZeduxHookConfig, 'subscribe'>
+  ): NodeOf<S>
+
+  <S extends Selectable<any, []>>(template: S): NodeOf<S>
+
+  <S extends Selectable>(template: ParamlessTemplate<S>): NodeOf<S>
 } = <A extends AnyAtomTemplate>(
-  atom: A | AnyAtomInstance,
+  template: A | AnyAtomInstance,
   params?: ParamsOf<A>,
   { operation = 'useAtomInstance', subscribe, suspend }: ZeduxHookConfig = {}
 ) => {
@@ -72,13 +85,22 @@ export const useAtomInstance: {
   // a `m`ounted property
   const [, render] = useState<undefined | object>() as [
     any,
-    Dispatch<SetStateAction<object | undefined>> & { m: boolean }
+    Dispatch<SetStateAction<object | undefined>> & {
+      m: boolean
+      i?: SelectorInstance
+    }
   ]
 
   // It should be fine for this to run every render. It's possible to change
   // approaches if it is too heavy sometimes. But don't memoize this call:
-  let instance: AtomInstance = ecosystem.getNode(atom, params)
+  let instance: AtomInstance | SelectorInstance = render.i
+    ? ecosystem.u(render.i, template, params ?? [], render)
+    : ecosystem.getNode(template, params)
+
   const renderedValue = instance.v
+  const isSelector = is(instance, SelectorInstance)
+
+  if (isSelector) render.i = instance as SelectorInstance
 
   let node =
     (ecosystem.n.get(observerId) as ExternalNode) ??
@@ -102,7 +124,8 @@ export const useAtomInstance: {
   // Only remove the graph edge when the instance id changes or on component
   // destruction.
   useEffect(() => {
-    instance = ecosystem.getNode(atom, params)
+    instance = ecosystem.getNode(template, params)
+    if (isSelector) render.i = instance as SelectorInstance
 
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
     // this effect's cleanup unnecessarily)
@@ -127,12 +150,12 @@ export const useAtomInstance: {
   }, [instance.id])
 
   if (suspend !== false) {
-    const status = instance._promiseStatus
+    const status = (instance as AtomInstance)._promiseStatus
 
     if (status === 'loading') {
-      throw instance.promise
+      throw (instance as AtomInstance).promise
     } else if (status === 'error') {
-      throw instance._promiseError
+      throw (instance as AtomInstance)._promiseError
     }
   }
 

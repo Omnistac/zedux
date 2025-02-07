@@ -6,6 +6,7 @@ import {
   injectAtomState,
   injectAtomValue,
   injectCallback,
+  injectEcosystem,
   injectEffect,
   injectInvalidate,
   injectMemo,
@@ -226,6 +227,42 @@ describe('injectors', () => {
     expect(selectValue).toBe(1)
     expect(ecosystem.viewGraph()).toEqual({
       1: {
+        dependencies: [],
+        dependents: [],
+        weight: 1,
+      },
+      '@@selector-selector1-0': {
+        dependencies: [],
+        dependents: [],
+        weight: 1,
+      },
+    })
+  })
+
+  test('injectEcosystem() methods do nothing after evaluation is over', () => {
+    const atom1 = atom('1', () => {
+      const { get, getNode } = injectEcosystem()
+
+      return api('a').setExports({ get, getNode })
+    })
+
+    const selector1 = () => 1
+
+    const instance = ecosystem.getNode(atom1)
+    const getValue = instance.exports.get(atom1)
+    const getNodeValue = instance.exports.getNode(atom1).getState()
+    const selectValue = instance.exports.get(selector1)
+
+    expect(getValue).toBe('a')
+    expect(getNodeValue).toBe('a')
+    expect(selectValue).toBe(1)
+    expect(ecosystem.viewGraph()).toEqual({
+      1: {
+        dependencies: [],
+        dependents: [],
+        weight: 1,
+      },
+      '@@selector-selector1-0': {
         dependencies: [],
         dependents: [],
         weight: 1,

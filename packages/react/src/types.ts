@@ -1,5 +1,5 @@
 export interface ZeduxHookConfig {
   operation?: string
-  subscribe?: boolean
+  subscribe?: boolean // TODO: rename to `reactive`
   suspend?: boolean
 }

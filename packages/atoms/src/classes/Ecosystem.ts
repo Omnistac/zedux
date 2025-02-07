@@ -1,12 +1,9 @@
 import { detailedTypeof, is, isPlainObject, Job } from '@zedux/core'
 import { internalStore } from '../store/index'
 import {
-  AnyAtomGenerics,
   AnyAtomInstance,
   AnyAtomTemplate,
   AtomGenerics,
-  AtomGetters,
-  AtomGettersBase,
   NodeOf,
   ParamsOf,
   AtomSelectorConfig,
@@ -34,12 +31,12 @@ import {
   ListenerConfig,
   EcosystemEvents,
   InternalEvaluationReason,
+  GetNode,
 } from '../types/index'
 import {
   External,
   compare,
   makeReasonsReadable,
-  Eventless,
   EventlessStatic,
   CHANGE,
   CYCLE,
@@ -69,6 +66,100 @@ import { AtomInstance } from './instances/AtomInstance'
 import { Signal } from './Signal'
 import { isListeningTo, parseOnArgs, sendEcosystemEvent } from '../utils/events'
 
+const getNode = <G extends AtomGenerics>(
+  ecosystem: Ecosystem,
+  template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+  params?: G['Params']
+): GraphNode => {
+  if ((template as GraphNode).izn) {
+    // if the passed atom instance is Destroyed, get(/create) the
+    // non-Destroyed instance
+    return (template as GraphNode).l === 'Destroyed' &&
+      (template as GraphNode).t
+      ? ecosystem.getNode((template as GraphNode).t, (template as GraphNode).p)
+      : template
+  }
+
+  if (DEV) {
+    if (typeof params !== 'undefined' && !Array.isArray(params)) {
+      throw new TypeError(
+        `Zedux: Expected atom params to be an array. Received ${detailedTypeof(
+          params
+        )}`
+      )
+    }
+  }
+
+  if (is(template, AtomTemplateBase)) {
+    const id = (template as AtomTemplate).getInstanceId(ecosystem, params)
+
+    // try to find an existing instance
+    const instance = ecosystem.n.get(id) as AtomInstance
+    if (instance) return instance
+
+    // create a new instance
+    const newInstance = resolveAtom(
+      ecosystem,
+      template as AtomTemplate
+    )._createInstance(ecosystem, id, (params || []) as G['Params'])
+
+    ecosystem.n.set(id, newInstance)
+    newInstance.i()
+
+    return newInstance
+  }
+
+  if (
+    typeof template === 'function' ||
+    (template && (template as AtomSelectorConfig).selector)
+  ) {
+    const selectorOrConfig = template as AtomSelectorOrConfig<G>
+    const id = ecosystem.hash(selectorOrConfig, params)
+    let instance = ecosystem.n.get(id) as SelectorInstance<G>
+
+    if (instance) return instance
+
+    // create the instance; it doesn't exist yet
+    instance = new SelectorInstance(
+      ecosystem,
+      id,
+      selectorOrConfig,
+      params || []
+    )
+
+    ecosystem.n.set(id, instance)
+
+    return instance
+  }
+
+  throw new TypeError(
+    `Zedux: Expected a template or node. Received ${detailedTypeof(template)}`
+  )
+}
+
+const resolveAtom = <A extends AnyAtomTemplate>(
+  { flags, overrides }: Ecosystem,
+  template: A
+) => {
+  const override = overrides[template.key]
+  const maybeOverriddenAtom = (override || template) as A
+
+  // to turn off flag checking, just don't pass a `flags` prop
+  if (flags) {
+    const badFlag = maybeOverriddenAtom.flags?.find(
+      flag => !flags.includes(flag)
+    )
+
+    if (DEV && badFlag) {
+      console.error(
+        `Zedux: encountered unsafe atom template "${template.key}" with flag "${badFlag}". This should be overridden in the current environment.`
+      )
+    }
+  }
+
+  return maybeOverriddenAtom
+}
+
 const mapOverrides = (overrides: AnyAtomTemplate[]) =>
   overrides.reduce((map, atom) => {
     map[atom.key] = atom
@@ -76,16 +167,33 @@ const mapOverrides = (overrides: AnyAtomTemplate[]) =>
   }, {} as Record<string, AnyAtomTemplate>)
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
-  implements AtomGettersBase, EventEmitter, Job
+  implements EventEmitter, Job
 {
   public atomDefaults?: EcosystemConfig['atomDefaults']
   public complexParams?: boolean
   public context: Context
   public destroyOnUnmount?: boolean
+
+  /**
+   * @deprecated this is only here for compatibility with the old atom getters
+   * pre-v2. The ecosystem's `.get` and `.getNode` now register reactive
+   * dependencies and `.getOnce` and `.getNodeOnce` replace the old static
+   * behavior of `.get` and `.getInstance`.
+   *
+   * The ecosystem itself is now passed everywhere we used to pass atom getters.
+   * As such, you can delete usages of this property and use the ecosystem
+   * directly:
+   *
+   * ```ts
+   * mySelector = ({ ecosystem }: AtomGetters) => ... // before
+   * mySelector = (ecosystem: Ecosystem) => ... // after
+   * ```
+   */
+  public ecosystem = this
+
   public flags?: string[]
   public hydration?: Record<string, any>
   public id: string
-  public live: AtomGetters
   public onReady: EcosystemConfig<Context>['onReady']
   public overrides: Record<string, AnyAtomTemplate> = {}
   public ssr?: boolean
@@ -177,61 +285,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.context = (this as any).context
     this.isInitialized = true
     this.cleanup = config.onReady?.(this)
-
-    const get: AtomGetters['get'] = <G extends AtomGenerics>(
-      atom: AtomTemplateBase<G>,
-      params?: G['Params']
-    ) => this.getNode(atom, params as G['Params']).get()
-
-    const getInstance: AtomGetters['getInstance'] = <G extends AtomGenerics>(
-      atom: AtomTemplateBase<G>,
-      params?: G['Params'],
-      edgeConfig?: GraphEdgeConfig
-    ) => getNode(atom, params, edgeConfig)
-
-    const getNode: AtomGetters['getNode'] = <G extends AtomGenerics>(
-      template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
-      params?: G['Params'],
-      edgeConfig?: GraphEdgeConfig
-    ) => {
-      const instance = this.getNode(template, params as G['Params'])
-
-      // If getNode is called in a reactive context, track the required atom
-      // instances so we can add graph edges for them. When called outside a
-      // reactive context, getNode() is just an alias for ecosystem.getNode()
-      getEvaluationContext().n &&
-        bufferEdge(
-          instance,
-          edgeConfig?.op || 'getNode',
-          edgeConfig?.f ?? EventlessStatic
-        )
-
-      return instance
-    }
-
-    const select: AtomGetters['select'] = <S extends Selectable>(
-      selectable: S,
-      ...args: ParamsOf<S>
-    ): StateOf<S> => {
-      const node = getEvaluationContext().n
-
-      // when called outside a reactive context, select() is just an alias for
-      // ecosystem.select()
-      if (!node) return this.select(selectable, ...args)
-
-      const instance = this.getNode(selectable, args)
-      bufferEdge(instance, 'select', Eventless)
-
-      return instance.v
-    }
-
-    this.live = {
-      ecosystem: this,
-      get,
-      getInstance,
-      getNode,
-      select,
-    }
   }
 
   /**
@@ -452,219 +505,125 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     return hash
   }
 
-  public get<A extends AnyAtomTemplate>(
-    template: A,
-    params: ParamsOf<A>
-  ): StateOf<A>
-
-  public get<A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateOf<A>
-
-  public get<A extends AnyAtomTemplate>(
-    template: ParamlessTemplate<A>
-  ): StateOf<A>
-
-  // public get<G extends AtomGenerics>(template: AnyAtomTemplate<G>): G['State']
-
-  public get<N extends GraphNode>(node: N): StateOf<N>
-
   /**
-   * Returns an atom instance's value. Creates the atom instance if it doesn't
-   * exist yet. Doesn't register any graph dependencies.
+   * Resolves the instance of a passed atom template or selector function or
+   * config object. Returns the value of the resolved instance. Creates the atom
+   * or selector instance if it doesn't exist yet.
+   *
+   * This is reactive! When called in reactive contexts, it will register a
+   * dynamic graph edge on the node resolved by this call.
+   *
+   * Also accepts an existing atom, selector, or signal instance. In this case,
+   * this is functionally equivalent to calling `.get()` directly on the passed
+   * instance.
    */
-  public get<A extends AnyAtomTemplate>(
+  public get: {
+    <A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>): StateOf<A>
+    <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateOf<A>
+    <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateOf<A>
+
+    <N extends GraphNode>(node: N): StateOf<N>
+
+    <S extends Selectable>(template: S, params: ParamsOf<S>): StateOf<S>
+    <S extends Selectable<any, []>>(template: S): StateOf<S>
+    <S extends Selectable>(template: ParamlessTemplate<S>): StateOf<S>
+  } = <A extends AnyAtomTemplate>(
     atom: A | AnyAtomInstance,
     params?: ParamsOf<A>
-  ) {
-    if ((atom as GraphNode).izn) {
-      return (atom as GraphNode).v
-    }
-
-    const instance = this.getInstance(
-      atom as A,
-      params as ParamsOf<A>
-    ) as AnyAtomInstance
-
-    return instance.v
-  }
-
-  public getInstance<A extends AnyAtomTemplate>(
-    template: A,
-    params: ParamsOf<A>,
-    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
-  ): NodeOf<A>
-
-  public getInstance<A extends AnyAtomTemplate<{ Params: [] }>>(
-    template: A
-  ): NodeOf<A>
-
-  public getInstance<A extends AnyAtomTemplate>(
-    template: ParamlessTemplate<A>
-  ): NodeOf<A>
-
-  public getInstance<I extends AnyAtomInstance>(
-    instance: I,
-    params?: [],
-    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
-  ): I
+  ) => getNode(this, atom, params as ParamsOf<A>).get()
 
   /**
    * Returns an atom instance. Creates the atom instance if it doesn't exist
-   * yet. Doesn't register any graph dependencies.
+   * yet.
    *
-   * @deprecated in favor of `getNode`
+   * This is reactive! When called in reactive contexts, it will register a
+   * static graph edge on the node resolved by this call.
+   *
+   * @deprecated use `getNode` instead. @see Ecosystem.getNode
    */
-  public getInstance<A extends AnyAtomTemplate>(
-    atom: A | AnyAtomInstance,
-    params?: ParamsOf<A>
-  ) {
-    return this.getNode(atom, params)
-  }
+  public getInstance: {
+    <A extends AnyAtomTemplate>(
+      template: A,
+      params: ParamsOf<A>,
+      edgeConfig?: GraphEdgeConfig
+    ): NodeOf<A>
 
-  // TODO: Dedupe these overloads
-  // atoms
-  public getNode<G extends AtomGenerics = AnyAtomGenerics>(
-    templateOrNode: AtomTemplateBase<G> | GraphNode<G>,
-    params: G['Params'],
-    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
-  ): G['Node']
+    <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): NodeOf<A>
 
-  public getNode<G extends AtomGenerics = AnyAtomGenerics<{ Params: [] }>>(
-    templateOrNode: AtomTemplateBase<G> | GraphNode<G>
-  ): G['Node']
+    <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): NodeOf<A>
 
-  public getNode<G extends AtomGenerics = AnyAtomGenerics>(
-    templateOrInstance: ParamlessTemplate<AtomTemplateBase<G> | GraphNode<G>>
-  ): G['Node']
-
-  public getNode<I extends AnyAtomInstance>(instance: I, params?: []): I
-
-  // selectors
-  public getNode<S extends Selectable>(
-    selectable: S,
-    params: ParamsOf<S>,
-    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
-  ): S extends AtomSelectorOrConfig
-    ? SelectorInstance<{
-        Params: ParamsOf<S>
-        State: StateOf<S>
-        Template: S
-      }>
-    : S
-
-  public getNode<S extends Selectable<any, []>>(
-    selectable: S
-  ): S extends AtomSelectorOrConfig
-    ? SelectorInstance<{
-        Params: ParamsOf<S>
-        State: StateOf<S>
-        Template: S
-      }>
-    : S
-
-  public getNode<S extends Selectable>(
-    selectable: ParamlessTemplate<S>
-  ): S extends AtomSelectorOrConfig
-    ? SelectorInstance<{
-        Params: ParamsOf<S>
-        State: StateOf<S>
-        Template: S
-      }>
-    : S
-
-  public getNode<N extends GraphNode>(
-    node: N,
-    params?: [],
-    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
-  ): N
-
-  // catch-all
-  public getNode<G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+    <I extends AnyAtomInstance>(
+      instance: I,
+      params?: [],
+      edgeConfig?: GraphEdgeConfig
+    ): I
+  } = <G extends AtomGenerics>(
+    atom: AtomTemplateBase<G>,
     params?: G['Params'],
-    edgeConfig?: GraphEdgeConfig // only here for AtomGetters type compatibility
-  ): G['Node']
+    edgeConfig?: GraphEdgeConfig
+  ) => this.getNode(atom, params, edgeConfig)
 
   /**
    * Returns a graph node. The type is determined by the passed value.
    *
    * - An atom template returns an atom instance
-   * - A signal template returns a signal instance
-   * - A selector returns a selector instance
+   * - A selector function or selector config object returns a selector instance
    * - A custom template returns its configured instance
+   * - An atom/selector/signal instance returns itself unless it's destroyed, in
+   *   which case Zedux recreates a new node from the template and
+   *   caches/returns that.
    *
    * If the template requires params, the second `params` argument is required.
    * It will be used to create the node if it doesn't exist yet or to find the
    * exact id of a cached node.
    *
-   * Doesn't register any graph dependencies.
+   * This is reactive! When called in reactive contexts, it will register a
+   * static graph edge on the node resolved by this call. To get a graph node
+   * without registering dependencies, @see Ecosystem.getNodeOnce
    */
-  public getNode<G extends AtomGenerics>(
+  public getNode: GetNode = <G extends AtomGenerics>(
+    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+    params?: G['Params'],
+    edgeConfig?: GraphEdgeConfig
+  ) => {
+    const instance = getNode(this, template, params as G['Params'])
+
+    // If getNode is called in a reactive context, track the required atom
+    // instances so we can add graph edges for them. When called outside a
+    // reactive context, getNode() is just an alias for ecosystem.getNode()
+    getEvaluationContext().n &&
+      bufferEdge(
+        instance,
+        edgeConfig?.op || 'getNode',
+        edgeConfig?.f ?? EventlessStatic
+      )
+
+    return instance
+  }
+
+  /**
+   * Returns a graph node. The type is determined by the passed value. @see
+   * Ecosystem.getNode
+   *
+   * Unlike `.getNode`, this is static - it doesn't register graph dependencies
+   * even when called in reactive contexts.
+   */
+  public getNodeOnce: GetNode = <G extends AtomGenerics>(
     template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
     params?: G['Params']
-  ) {
-    if ((template as GraphNode).izn) {
-      // if the passed atom instance is Destroyed, get(/create) the
-      // non-Destroyed instance
-      return (template as GraphNode).l === 'Destroyed' &&
-        (template as GraphNode).t
-        ? this.getNode((template as GraphNode).t, (template as GraphNode).p)
-        : template
-    }
+  ) => getNode(this, template, params)
 
-    if (DEV) {
-      if (typeof params !== 'undefined' && !Array.isArray(params)) {
-        throw new TypeError(
-          `Zedux: Expected atom params to be an array. Received ${detailedTypeof(
-            params
-          )}`
-        )
-      }
-    }
-
-    if (is(template, AtomTemplateBase)) {
-      const id = (template as AtomTemplate).getInstanceId(this, params)
-
-      // try to find an existing instance
-      const instance = this.n.get(id) as AtomInstance
-      if (instance) return instance
-
-      // create a new instance
-      const newInstance = this.resolveAtom(
-        template as AtomTemplate
-      )._createInstance(this, id, (params || []) as G['Params'])
-
-      this.n.set(id, newInstance)
-      newInstance.i()
-
-      return newInstance
-    }
-
-    if (
-      typeof template === 'function' ||
-      (template && (template as AtomSelectorConfig).selector)
-    ) {
-      const selectorOrConfig = template as AtomSelectorOrConfig<G>
-      const id = this.hash(selectorOrConfig, params)
-      let instance = this.n.get(id) as SelectorInstance<G>
-
-      if (instance) return instance
-
-      // create the instance; it doesn't exist yet
-      instance = new SelectorInstance(this, id, selectorOrConfig, params || [])
-
-      this.n.set(id, instance)
-
-      return instance
-    }
-
-    if (DEV) {
-      throw new TypeError(
-        `Zedux: Expected a template or node. Received ${detailedTypeof(
-          template
-        )}`
-      )
-    }
-  }
+  /**
+   * Returns a graph node. The type is determined by the passed value. @see
+   * Ecosystem.getNode
+   *
+   * Unlike `.getNode`, this is static - it doesn't register graph dependencies
+   * even when called in reactive contexts.
+   */
+  public getOnce: GetNode = <G extends AtomGenerics>(
+    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+    params?: G['Params']
+  ) => getNode(this, template, params).getOnce()
 
   /**
    * Get the fully qualified id for the given selector+params combo.
@@ -837,40 +796,19 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   /**
-   * Runs an AtomSelector statically - without registering any dependencies or
-   * updating any caches. If we've already cached this exact selector + args
-   * combo, returns the cached value without running the selector again
+   * Gets the cached value of an AtomSelector. If the passed selector + args
+   * combo has never been cached, this runs the selector and caches/returns the
+   * result.
    *
-   * TODO: Deprecate this, replace with `ecosystem.get()` and `ecosystem.run()`
+   * This is reactive! When called in reactive contexts, it will register a
+   * dynamic graph edge on the node resolved by this call.
+   *
+   * @deprecated use `get` instead. @see Ecosystem.get
    */
-  public select<S extends Selectable>(
+  public select = <S extends Selectable>(
     selectable: S,
     ...args: ParamsOf<S>
-  ): StateOf<S> {
-    if (is(selectable, SelectorInstance)) {
-      return (selectable as SelectorInstance).v
-    }
-
-    const atomSelector = selectable as AtomSelectorOrConfig
-    const hash = this.hash(atomSelector, args)
-    const instance = this.n.get(hash)
-
-    if (instance) return (instance as SelectorInstance).v
-
-    const resolvedSelector =
-      typeof atomSelector === 'function' ? atomSelector : atomSelector.selector
-
-    return resolvedSelector(
-      {
-        ecosystem: this,
-        get: this.get.bind(this),
-        getInstance: this.getInstance.bind(this),
-        getNode: this.getNode.bind(this),
-        select: this.select.bind(this),
-      },
-      ...args
-    )
-  }
+  ): StateOf<S> => this.get(selectable, args)
 
   /**
    * Completely replace this ecosystem's current list of atom overrides with a
@@ -1150,26 +1088,5 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     return isSwappingRefs
       ? instance
       : this.getNode(template, resolvedArgs as ParamsOf<G['Template']>)
-  }
-
-  private resolveAtom<A extends AnyAtomTemplate>(template: A) {
-    const { flags, overrides } = this
-    const override = overrides[template.key]
-    const maybeOverriddenAtom = (override || template) as A
-
-    // to turn off flag checking, just don't pass a `flags` prop
-    if (flags) {
-      const badFlag = maybeOverriddenAtom.flags?.find(
-        flag => !flags.includes(flag)
-      )
-
-      if (DEV && badFlag) {
-        console.error(
-          `Zedux: encountered unsafe atom template "${template.key}" with flag "${badFlag}". This atom template should be overridden in the current environment.`
-        )
-      }
-    }
-
-    return maybeOverriddenAtom
   }
 }

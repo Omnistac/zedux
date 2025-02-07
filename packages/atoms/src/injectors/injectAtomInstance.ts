@@ -1,6 +1,4 @@
-import { createInjector } from '../factories/createInjector'
-import { Eventless, EventlessStatic, prefix } from '../utils/general'
-import type { InjectorDescriptor } from '../utils/types'
+import { Eventless, EventlessStatic } from '../utils/general'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
@@ -8,8 +6,9 @@ import {
   NodeOf,
   ParamlessTemplate,
   ParamsOf,
-  PartialAtomInstance,
+  Selectable,
 } from '../types/index'
+import { readInstance } from '../utils/evaluationContext'
 
 const defaultOperation = 'injectAtomInstance'
 
@@ -51,47 +50,22 @@ export const injectAtomInstance: {
     params?: [],
     config?: InjectAtomInstanceConfig
   ): I
-} = createInjector(
-  defaultOperation,
-  <A extends AnyAtomTemplate>(
-    instance: PartialAtomInstance,
-    atom: A | AnyAtomInstance,
-    params?: ParamsOf<A>,
+
+  <S extends Selectable>(
+    template: S,
+    params: ParamsOf<S>,
     config?: InjectAtomInstanceConfig
-  ) => {
-    const injectedInstance = instance.e.live.getNode(
-      atom as A,
-      params as ParamsOf<A>,
-      {
-        f: config?.subscribe ? Eventless : EventlessStatic,
-        op: config?.operation || defaultOperation,
-      }
-    )
+  ): NodeOf<S>
 
-    return {
-      result: injectedInstance as NodeOf<A>,
-      type: `${prefix}/atom`,
-    } as InjectorDescriptor<NodeOf<A>>
-  },
-  <A extends AnyAtomTemplate>(
-    prevDescriptor: InjectorDescriptor<NodeOf<A>>,
-    instance: PartialAtomInstance,
-    atom: A | AnyAtomInstance,
-    params?: ParamsOf<A>,
-    config?: InjectAtomInstanceConfig
-  ) => {
-    // make sure the dependency gets registered for this evaluation
-    const injectedInstance = instance.e.live.getNode(
-      atom as A,
-      params as ParamsOf<A>,
-      {
-        f: config?.subscribe ? Eventless : EventlessStatic,
-        op: config?.operation || defaultOperation,
-      }
-    )
+  <S extends Selectable<any, []>>(template: S): NodeOf<S>
 
-    prevDescriptor.result = injectedInstance as NodeOf<A>
-
-    return prevDescriptor
-  }
-)
+  <S extends Selectable>(template: ParamlessTemplate<S>): NodeOf<S>
+} = <A extends AnyAtomInstance>(
+  template: A,
+  params?: ParamsOf<A>,
+  config?: InjectAtomInstanceConfig
+) =>
+  readInstance().e.getNode(template, params, {
+    f: config?.subscribe ? Eventless : EventlessStatic,
+    op: config?.operation || defaultOperation,
+  })

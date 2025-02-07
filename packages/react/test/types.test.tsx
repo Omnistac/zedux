@@ -36,6 +36,7 @@ import {
   CycleEvent,
   InvalidateEvent,
   PromiseChangeEvent,
+  Ecosystem,
 } from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 import { ecosystem, snapshotNodes } from './utils/ecosystem'
@@ -705,8 +706,8 @@ describe('react types', () => {
     expectTypeOf<ParamsOf<typeof instanceD.t>>().toEqualTypeOf<[p: string]>()
 
     const instanceE = ecosystem.getInstance(
-      ecosystem.live.getInstance(
-        ecosystem.getInstance(ecosystem.live.getInstance(exampleAtom, ['a']))
+      ecosystem.getInstance(
+        ecosystem.getInstance(ecosystem.getInstance(exampleAtom, ['a']))
       )
     )
 
@@ -733,7 +734,7 @@ describe('react types', () => {
         ecosystem.getNode(
           {
             resultsComparator: () => true,
-            selector: (_: AtomGetters, a?: string) => a,
+            selector: (_: Ecosystem, a?: string) => a,
             argsComparator: () => true,
           },
           ['a']
@@ -749,7 +750,7 @@ describe('react types', () => {
     >()
     expectTypeOf<TemplateOf<typeof selectorInstance2>>().toEqualTypeOf<{
       resultsComparator: () => boolean
-      selector: (_: AtomGetters, a?: string) => string | undefined
+      selector: (_: Ecosystem, a?: string) => string | undefined
       argsComparator: () => boolean
     }>()
   })

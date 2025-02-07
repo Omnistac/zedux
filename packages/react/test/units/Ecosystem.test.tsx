@@ -3,14 +3,17 @@ import { ecosystem } from '../utils/ecosystem'
 import { mockConsole } from '../utils/console'
 
 describe('Ecosystem', () => {
-  test('passing a SelectorInstance to .select() returns the result of the passed instance', () => {
+  test('passing a SelectorInstance to .select() and .get() returns the result of the passed instance', () => {
     const selector1 = () => ({ a: 1 })
 
     const instance = ecosystem.getNode(selector1)
-    const value = ecosystem.select(instance)
+    const selectValue = ecosystem.select(instance)
+    const getValue = ecosystem.get(instance, [])
 
-    expect(value).toEqual({ a: 1 })
-    expect(instance.v).toBe(value)
+    expect(selectValue).toEqual({ a: 1 })
+    expect(getValue).toEqual({ a: 1 })
+    expect(instance.v).toBe(selectValue)
+    expect(instance.v).toBe(getValue)
   })
 
   test('flags must be an array', () => {
@@ -81,12 +84,12 @@ describe('Ecosystem', () => {
 
     ecosystem.getInstance(atom1, ['a'])
     ecosystem.getInstance(atom1)
-    ecosystem.getInstance(atom1, ['b'])
+    ecosystem.getNode(atom1, ['b'])
     ecosystem.getInstance(atom2)
     ecosystem.getInstance(atom3)
     ecosystem.getInstance(atom4)
 
-    expect(ecosystem.find('1')).toBe(ecosystem.getInstance(atom1))
+    expect(ecosystem.find('1')).toBe(ecosystem.getNode(atom1))
     expect(ecosystem.find('someLongKey11')).toBe(ecosystem.getInstance(atom3))
 
     // if no exact match, `.find()` does a fuzzy search
@@ -108,12 +111,12 @@ describe('Ecosystem', () => {
     const atom3 = atom('someLongKey11', 1)
     const atom4 = atom('someLongKey111', 1)
 
-    ecosystem.getInstance(atom1, ['a'])
+    ecosystem.getNode(atom1, ['a'])
     ecosystem.getInstance(atom1)
     ecosystem.getInstance(atom1, ['b'])
     ecosystem.getInstance(atom2)
-    ecosystem.getInstance(atom3)
-    ecosystem.getInstance(atom4)
+    ecosystem.getNode(atom3)
+    ecosystem.getNode(atom4)
 
     expect(ecosystem.find('someLongKey', [])).toBeUndefined()
     expect(ecosystem.find(atom1, ['b'])?.get()).toBe('b')
@@ -149,6 +152,25 @@ describe('Ecosystem', () => {
 
     // @ts-expect-error second param must be an array or undefined
     expect(() => ecosystem.getInstance(atom1, 'a')).toThrowError(
+      /Expected atom params to be an array. Received string/i
+    )
+  })
+
+  test('getNode() throws an error if bad values are passed', () => {
+    const atom1 = atom('1', (param: string) => param)
+
+    // @ts-expect-error first param must be an atom template or instance
+    expect(() => ecosystem.getNode({})).toThrowError(
+      /Expected a template or node. Received object/i
+    )
+
+    // @ts-expect-error first param must be an atom template or instance
+    expect(() => ecosystem.getNode()).toThrowError(
+      "Cannot read properties of undefined (reading 'izn')"
+    )
+
+    // @ts-expect-error second param must be an array or undefined
+    expect(() => ecosystem.getNode(atom1, 'a')).toThrowError(
       /Expected atom params to be an array. Received string/i
     )
   })

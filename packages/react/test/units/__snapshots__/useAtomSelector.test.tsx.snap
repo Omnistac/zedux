@@ -133,7 +133,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "observers": {
       "Test-:rb:": {
         "flags": 5,
-        "operation": "useAtomSelector",
+        "operation": "useAtomValue",
       },
     },
     "sources": {
@@ -155,7 +155,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "sources": {
       "@@selector-unnamed-0": {
         "flags": 5,
-        "operation": "useAtomSelector",
+        "operation": "useAtomValue",
       },
     },
     "state": undefined,
@@ -188,7 +188,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "observers": {
       "Test-:rb:": {
         "flags": 5,
-        "operation": "useAtomSelector",
+        "operation": "useAtomValue",
       },
     },
     "sources": {
@@ -210,7 +210,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "sources": {
       "@@selector-unnamed-0": {
         "flags": 5,
-        "operation": "useAtomSelector",
+        "operation": "useAtomValue",
       },
     },
     "state": undefined,
@@ -227,7 +227,7 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
     "observers": {
       "Test-:r9:": {
         "flags": 5,
-        "operation": "useAtomSelector",
+        "operation": "useAtomValue",
       },
     },
     "sources": {
@@ -251,7 +251,7 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
     "observers": {
       "Test-:r9:": {
         "flags": 5,
-        "operation": "useAtomSelector",
+        "operation": "useAtomValue",
       },
     },
     "sources": {

@@ -64,7 +64,7 @@ export const runSelector = <G extends SelectorGenerics>(
   const prevNode = startBuffer(node)
 
   try {
-    const result = selector(node.e.live, ...node.p)
+    const result = selector(node.e, ...node.p)
     const oldState = node.v
     node.v = result
 
