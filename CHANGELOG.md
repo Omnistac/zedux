@@ -1,3 +1,9 @@
+## v1.3.3 (Feb 7, 2025)
+
+### Fixes:
+
+- `react`: ensure edges are materialized when React runs effects (#166)
+
 ## v1.3.2 (Feb 5, 2025)
 
 ### Fixes:
