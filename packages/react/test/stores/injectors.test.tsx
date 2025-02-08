@@ -8,7 +8,6 @@ import {
   injectCallback,
   injectEcosystem,
   injectEffect,
-  injectInvalidate,
   injectMemo,
   injectPromise,
   injectRef,
@@ -28,7 +27,6 @@ describe('injectors', () => {
       injectAtomValue,
       injectCallback,
       injectEffect,
-      injectInvalidate,
       injectMemo,
       injectPromise,
       injectRef,
@@ -84,16 +82,16 @@ describe('injectors', () => {
 
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b'])
     expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb'])
-    expect(effects).toEqual(['b'])
-    expect(cleanups).toEqual([])
+    expect(effects).toEqual(['a', 'b'])
+    expect(cleanups).toEqual(['b'])
     expect(refs).toEqual([ref, ref])
 
     instance.setState('c')
 
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b', 'c', 'a', 'c'])
     expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb', 'bb', 'aa', 'bb'])
-    expect(effects).toEqual(['b', 'c'])
-    expect(cleanups).toEqual(['c'])
+    expect(effects).toEqual(['a', 'b', 'c'])
+    expect(cleanups).toEqual(['b', 'c'])
     expect(refs).toEqual([ref, ref, ref])
   })
 
@@ -110,7 +108,7 @@ describe('injectors', () => {
     })
 
     const atom3 = atom('3', () => {
-      const invalidate = injectInvalidate()
+      const self = injectSelf()
       const store = injectStore('a')
       const one = injectAtomValue(atom1)
       const [two, setTwo] = injectAtomState(atom2)
@@ -118,7 +116,11 @@ describe('injectors', () => {
 
       vals.push([store.getState(), one, two])
 
-      return api(store).setExports({ invalidate, set2, setTwo })
+      return api(store).setExports({
+        invalidate: () => self.invalidate(),
+        set2,
+        setTwo,
+      })
     })
 
     const instance = ecosystem.getInstance(atom3)
@@ -157,7 +159,7 @@ describe('injectors', () => {
     const atom2 = atom('2', () => 2)
 
     const atom3 = atom('3', () => {
-      const invalidate = injectInvalidate()
+      const self = injectSelf()
       const instance1 = injectAtomInstance(atom1)
       const [subscribe, setSubscribe] = injectAtomState(instance1)
       const store = injectStore('a', { subscribe })
@@ -166,7 +168,7 @@ describe('injectors', () => {
       vals.push([store.getState(), subscribe, instance2.getState()])
 
       return api(store).setExports({
-        invalidate,
+        invalidate: () => self.invalidate(),
         setSubscribe,
         setTwo: instance2.setState,
       })

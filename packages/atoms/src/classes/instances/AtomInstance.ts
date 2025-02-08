@@ -9,7 +9,6 @@ import {
   AtomGenericsToAtomApiGenerics,
   Cleanup,
   ExportsInfusedSetter,
-  LifecycleStatus,
   PromiseState,
   PromiseStatus,
   DehydrationFilter,
@@ -33,7 +32,6 @@ import {
   getInitialPromiseState,
   getSuccessPromiseState,
 } from '@zedux/atoms/utils/promiseUtils'
-import { InjectorDescriptor } from '@zedux/atoms/utils/types'
 import { Ecosystem } from '../Ecosystem'
 import { AtomApi } from '../AtomApi'
 import { AtomTemplateBase } from '../templates/AtomTemplateBase'
@@ -59,6 +57,33 @@ import {
   sendEcosystemEvent,
   sendImplicitEcosystemEvent,
 } from '@zedux/atoms/utils/events'
+
+export type InjectorDescriptor<T = any> = {
+  /**
+   * `c`leanup - tracks cleanup functions, e.g. those returned from
+   * `injectEffect` callbacks.
+   */
+  c: (() => void) | undefined
+
+  /**
+   * `i`nit - a callback that we need to call immediately after evaluation. This
+   * is how `injectEffect` works (without `synchronous: true`).
+   */
+  i: (() => void) | undefined
+
+  /**
+   * `t`ype - a unique injector name string. This is how we ensure the user
+   * didn't add, remove, or reorder injector calls in the state factory.
+   */
+  t: string
+
+  /**
+   * `v`alue - can be anything. For `injectRef`, this is the ref object. For
+   * `injectMemo` and `injectEffect`, this keeps track of the memoized value
+   * and/or dependency arrays.
+   */
+  v: T
+}
 
 /**
  * A standard atom's value can be one of:
@@ -178,11 +203,6 @@ export class AtomInstance<
 > extends Signal<G> {
   public static $$typeof = Symbol.for(`${prefix}/AtomInstance`)
 
-  /**
-   * @see Signal.l
-   */
-  public l: LifecycleStatus = 'Initializing'
-
   public api?: AtomApi<AtomGenericsToAtomApiGenerics<G>>
 
   // @ts-expect-error this is set in `this.i`nit, right after instantiation, so
@@ -199,19 +219,29 @@ export class AtomInstance<
   public a: boolean | undefined = undefined
 
   /**
+   * @see Signal.c
+   */
+  public c?: Cleanup
+
+  /**
+   * `I`njectors - tracks injector calls from the last time the state factory
+   * ran. Initialized on-demand
+   */
+  public I: InjectorDescriptor[] | undefined = undefined
+
+  /**
+   * `N`extInjectors - tracks injector calls as they're made during evaluation
+   */
+  public N: InjectorDescriptor[] | undefined = undefined
+
+  /**
    * `S`ignal - the signal returned from this atom's state factory. If this is
    * undefined, no signal was returned, and this atom itself becomes the signal.
    * If this is defined, this atom becomes a thin wrapper around this signal.
    */
   public S?: Signal<G>
 
-  /**
-   * @see Signal.c
-   */
-  public c?: Cleanup
-  public _injectors?: InjectorDescriptor[]
   public _isEvaluating?: boolean
-  public _nextInjectors?: InjectorDescriptor[]
   public _promiseError?: Error
   public _promiseStatus?: PromiseStatus
 
@@ -242,20 +272,11 @@ export class AtomInstance<
   public destroy(force?: boolean) {
     if (!destroyNodeStart(this, force)) return
 
-    // Clean up effect injectors first, then everything else
-    const nonEffectInjectors: InjectorDescriptor[] = []
-
-    this._injectors?.forEach(injector => {
-      if (injector.type !== '@@zedux/effect') {
-        nonEffectInjectors.push(injector)
-        return
+    if (this.I) {
+      for (const injector of this.I) {
+        injector.c?.()
       }
-      injector.cleanup?.()
-    })
-
-    nonEffectInjectors.forEach(injector => {
-      injector.cleanup?.()
-    })
+    }
 
     destroyNodeFinish(this)
   }
@@ -386,7 +407,6 @@ export class AtomInstance<
       return
     }
 
-    this._nextInjectors = []
     this._isEvaluating = true
     const prevNode = startBuffer(this)
 
@@ -434,10 +454,13 @@ export class AtomInstance<
         }
       }
     } catch (err) {
-      this._nextInjectors.forEach(injector => {
-        injector.cleanup?.()
-      })
+      if (this.N) {
+        for (const injector of this.N) {
+          injector.c?.()
+        }
+      }
 
+      this.N = undefined
       destroyBuffer(prevNode)
 
       throw err
@@ -456,7 +479,17 @@ export class AtomInstance<
       this.w = []
     }
 
-    this._injectors = this._nextInjectors
+    // kick off side effects and store the new injectors
+    if (this.N) {
+      if (!this.e.ssr) {
+        for (const injector of this.N) {
+          injector.i?.()
+        }
+      }
+
+      this.I = this.N
+      this.N = undefined
+    }
 
     // let this.i flush updates after status is set to Active
     this.l === 'Initializing' || flushBuffer(prevNode)

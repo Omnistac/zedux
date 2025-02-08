@@ -1,27 +1,10 @@
-import { createInjector } from '../factories/createInjector'
+import type { InjectorDescriptor } from '../classes/instances/AtomInstance'
 import { EffectCallback, InjectorDeps } from '../types/index'
-import { compare, prefix } from '../utils/general'
-import type { InjectorDescriptor } from '../utils/types'
+import { untrack } from '../utils/evaluationContext'
+import { compare } from '../utils/general'
+import { injectPrevDescriptor, setNextInjector } from './injectPrevDescriptor'
 
-interface EffectInjectorDescriptor extends InjectorDescriptor<undefined> {
-  deps: InjectorDeps
-}
-
-const getTask = (
-  effect: EffectCallback,
-  descriptor: EffectInjectorDescriptor
-) => {
-  const task = () => {
-    const cleanup = effect()
-
-    // now that the task has run, there's no need for the scheduler cleanup
-    // function; replace it with the cleanup logic returned from the effect
-    // (if any). If a promise was returned, ignore it.
-    descriptor.cleanup = typeof cleanup === 'function' ? cleanup : undefined
-  }
-
-  return task
-}
+const TYPE = 'injectEffect'
 
 /**
  * Runs a deferred side effect. This is just like React's `useEffect`. When
@@ -36,74 +19,35 @@ const getTask = (
  * don't have anything to cleanup, as you'll be unable to clean up resources if
  * you return a promise.
  */
-export const injectEffect = createInjector(
-  'injectEffect',
-  (
-    instance,
-    effect: EffectCallback,
-    deps?: InjectorDeps,
-    config?: { synchronous?: boolean }
-  ) => {
-    const descriptor: EffectInjectorDescriptor = {
-      deps,
-      type: `${prefix}/effect`,
-    }
+export const injectEffect = (
+  effect: EffectCallback,
+  deps?: InjectorDeps,
+  config?: { synchronous?: boolean }
+) => {
+  const prevDescriptor = injectPrevDescriptor<InjectorDeps>(TYPE)
+  const depsUnchanged = compare(deps, prevDescriptor?.v)
 
-    if (!instance.e.ssr) {
-      const job = {
-        j: getTask(effect, descriptor),
-        T: 4 as const, // RunEffect (4)
-      }
+  if (depsUnchanged) {
+    setNextInjector(prevDescriptor!)
 
-      descriptor.cleanup = () => {
-        instance.e._scheduler.unschedule(job)
-        descriptor.cleanup = undefined
-      }
-
-      if (config?.synchronous) {
-        job.j()
-      } else {
-        instance.e._scheduler.schedule(job)
-      }
-    }
-
-    return descriptor
-  },
-  (
-    prevDescriptor,
-    instance,
-    effect: EffectCallback,
-    deps?: InjectorDeps,
-    config?: { synchronous?: boolean }
-  ) => {
-    if (instance.e.ssr) return prevDescriptor
-
-    const depsUnchanged = compare(prevDescriptor?.deps, deps)
-
-    if (depsUnchanged) return prevDescriptor
-
-    prevDescriptor.cleanup?.()
-
-    const job = {
-      j: getTask(effect, prevDescriptor),
-      T: 4 as const, // RunEffect (4)
-    }
-
-    // this cleanup should be unnecessary since effects run immediately every
-    // time except init. Leave this though in case we add a way to update an
-    // atom instance without flushing the scheduler
-    prevDescriptor.cleanup = () => {
-      instance.e._scheduler.unschedule(job)
-      prevDescriptor.cleanup = undefined
-    }
-    prevDescriptor.deps = deps
-
-    if (config?.synchronous) {
-      job.j()
-    } else {
-      instance.e._scheduler.schedule(job)
-    }
-
-    return prevDescriptor
+    return
   }
-)
+
+  const nextDescriptor: InjectorDescriptor<InjectorDeps> = {
+    c: undefined,
+    i: () => {
+      prevDescriptor?.c?.()
+      nextDescriptor.i = undefined // allow this closure to be garbage collected
+
+      const cleanup = untrack(effect) // let this throw
+
+      if (typeof cleanup === 'function') nextDescriptor.c = cleanup
+    },
+    t: TYPE,
+    v: deps,
+  }
+
+  if (config?.synchronous) nextDescriptor.i!()
+
+  setNextInjector(nextDescriptor)
+}

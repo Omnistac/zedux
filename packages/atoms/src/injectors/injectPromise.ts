@@ -20,8 +20,8 @@ import { injectSignal } from './injectSignal'
 import { injectRef } from './injectRef'
 import { AtomApi } from '../classes/AtomApi'
 import { Invalidate } from '../utils/general'
-import { readInstance } from '../utils/evaluationContext'
 import { Signal } from '../classes/Signal'
+import { injectSelf } from './injectSelf'
 
 /**
  * Create a memoized promise reference. Kicks off the promise immediately
@@ -118,7 +118,7 @@ export const injectPromise: {
   if (
     runOnInvalidate &&
     // injectWhy is an unrestricted injector - using it conditionally is fine:
-    readInstance().w.some(reason => reason.t === Invalidate)
+    injectSelf().w.some(reason => reason.t === Invalidate)
   ) {
     refs.current.counter++
   }

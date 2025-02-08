@@ -1,42 +1,42 @@
-import { createInjector } from '../factories/createInjector'
-import { InjectorDeps, PartialAtomInstance } from '../types/index'
-import { compare, prefix } from '../utils/general'
+import { InjectorDeps } from '../types/index'
+import { untrack } from '../utils/evaluationContext'
+import { compare } from '../utils/general'
+import { injectPrevDescriptor, setNextInjector } from './injectPrevDescriptor'
 
-type MemoInjectorDescriptor<T> = {
-  deps: InjectorDeps
-  result: T
-  type: string
+interface MemoValue<T> {
+  /**
+   * `d`eps - the cached `injectMemo` deps array
+   */
+  d: InjectorDeps
+
+  /**
+   * `v`alue - the cached `injectMemo` result
+   */
+  v: T
 }
 
-export const injectMemo: <Value = any>(
-  valueFactory: () => Value,
+const TYPE = 'injectMemo'
+
+/**
+ * The injector equivalent of React's `useMemo` hook. Memoizes a value. Only
+ * calls the valueFactory to produce a new value when deps change on subsequent
+ * evaluations.
+ */
+export const injectMemo = <T = any>(
+  valueFactory: () => T,
   deps?: InjectorDeps
-) => Value = createInjector(
-  'injectMemo',
-  <Value = any>(
-    instance: PartialAtomInstance,
-    valueFactory: () => Value,
-    deps?: InjectorDeps
-  ) =>
-    ({
-      type: `${prefix}/memo`,
-      deps,
-      // TODO: wrap all injector callback calls in `ecosystem.untrack`
-      result: valueFactory(),
-    } as MemoInjectorDescriptor<Value>),
-  <Value = any>(
-    prevDescriptor: MemoInjectorDescriptor<Value>,
-    instance: PartialAtomInstance,
-    valueFactory: () => Value,
-    deps?: InjectorDeps
-  ) => {
-    const depsUnchanged = compare(prevDescriptor.deps, deps)
+): T => {
+  const prevDescriptor = injectPrevDescriptor<MemoValue<T>>(TYPE)
 
-    const result = depsUnchanged ? prevDescriptor.result : valueFactory()
-
-    prevDescriptor.deps = deps
-    prevDescriptor.result = result
-
-    return prevDescriptor
-  }
-)
+  return setNextInjector({
+    c: undefined,
+    i: undefined,
+    t: TYPE,
+    v: {
+      d: deps,
+      v: compare(prevDescriptor?.v.d, deps)
+        ? prevDescriptor!.v.v
+        : untrack(valueFactory),
+    },
+  }).v.v
+}

@@ -1,5 +1,5 @@
 import type { Ecosystem } from '../classes/Ecosystem'
-import { readInstance } from '../utils/evaluationContext'
+import { injectSelf } from './injectSelf'
 
 /**
  * injectEcosystem
@@ -29,4 +29,4 @@ import { readInstance } from '../utils/evaluationContext'
  *
  * @see Ecosystem
  */
-export const injectEcosystem = (): Ecosystem => readInstance().e
+export const injectEcosystem = (): Ecosystem => injectSelf().e
