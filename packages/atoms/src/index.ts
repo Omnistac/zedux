@@ -1,4 +1,3 @@
-import { createInjector } from './factories/createInjector'
 import {
   destroyBuffer,
   flushBuffer,
@@ -18,12 +17,12 @@ export * from './factories/index'
 export * from './injectors/index'
 export { getEcosystem, getInternals, setInternals, wipe } from './store/index'
 export * from './types/index'
+export { untrack } from './utils/evaluationContext'
 
 // These are very obfuscated on purpose. Don't use! They're for Zedux packages.
 export const zi = {
   a: scheduleStaticDependents,
   b: destroyNodeStart,
-  c: createInjector,
   d: destroyBuffer,
   e: destroyNodeFinish,
   i: sendImplicitEcosystemEvent,

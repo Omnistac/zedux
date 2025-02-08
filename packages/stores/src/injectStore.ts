@@ -1,6 +1,11 @@
 import { createStore, zeduxTypes, Store } from '@zedux/core'
-import { InjectStoreConfig, PartialAtomInstance, zi } from '@zedux/atoms'
-import { InjectorDescriptor, prefix } from './atoms-port'
+import {
+  injectEffect,
+  injectRef,
+  injectSelf,
+  InjectStoreConfig,
+  PartialAtomInstance,
+} from '@zedux/atoms'
 
 export const doSubscribe = <State>(
   instance: PartialAtomInstance,
@@ -84,55 +89,33 @@ export const injectStore: {
     config?: InjectStoreConfig
   ): Store<State>
   <State = undefined>(): Store<State>
-} = zi.c(
-  'injectStore',
-  <State = any>(
-    instance: PartialAtomInstance,
-    storeFactory?: State | ((hydration?: State) => Store<State>),
-    config?: InjectStoreConfig
-  ) => {
-    const subscribe = config?.subscribe ?? true
+} = <State>(
+  storeFactory?: State | ((hydration?: State) => Store<State>),
+  config?: InjectStoreConfig
+) => {
+  const instance = injectSelf()
+  const subscribe = config?.subscribe ?? true
+
+  const ref = injectRef<Store<State>>()
+
+  if (!ref.current) {
     const getStore =
       typeof storeFactory === 'function'
         ? (storeFactory as () => Store<State>)
         : (hydration?: State) =>
             createStore<State>(null, hydration ?? storeFactory)
 
-    const store = getStore(
+    ref.current = getStore(
       config?.hydrate ? instance.e.hydration?.[instance.id] : undefined
     )
-
-    const subscription = subscribe && doSubscribe(instance, store)
-
-    return {
-      cleanup: subscription ? () => subscription.unsubscribe() : undefined,
-      result: store,
-      type: `${prefix}/store`,
-    } as InjectorDescriptor<Store<State>>
-  },
-  <State = any>(
-    prevDescriptor: InjectorDescriptor<Store<State>>,
-    instance: PartialAtomInstance,
-    storeFactory?: State | ((hydration?: State) => Store<State>),
-    config?: InjectStoreConfig
-  ) => {
-    const subscribe = config?.subscribe ?? true
-    const prevsubscribe = !!prevDescriptor.cleanup
-
-    if (prevsubscribe === subscribe) return prevDescriptor
-
-    // we were subscribed, now we're not
-    if (!subscribe) {
-      // cleanup must be defined here. This cast is fine:
-      ;(prevDescriptor.cleanup as () => void)()
-      prevDescriptor.cleanup = undefined
-      return prevDescriptor
-    }
-
-    // we weren't subscribed, now we are
-    const subscription = doSubscribe(instance, prevDescriptor.result)
-    prevDescriptor.cleanup = () => subscription.unsubscribe()
-
-    return prevDescriptor
   }
-)
+
+  injectEffect(
+    () =>
+      subscribe ? doSubscribe(instance, ref.current!).unsubscribe : undefined,
+    [subscribe],
+    { synchronous: true }
+  )
+
+  return ref.current!
+}

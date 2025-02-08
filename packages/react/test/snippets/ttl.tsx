@@ -4,7 +4,7 @@ import {
   injectAtomGetters,
   injectAtomValue,
   injectEffect,
-  injectInvalidate,
+  injectSelf,
   useAtomValue,
 } from '@zedux/react'
 import { atom, injectStore } from '@zedux/stores'
@@ -51,14 +51,14 @@ const atom4 = atom(
     const roll = Math.random() > 0.5
     console.log('evaluating atom4', { roll })
     const { get } = injectAtomGetters()
-    const invalidate = injectInvalidate()
+    const self = injectSelf()
     const atom3val = get(atom3, ['1'])
     const otherVal = roll ? get(atom1) : get(atom2)
 
     injectEffect(() => {
       console.log('setting interval for atom4!')
       const intervalId = setInterval(() => {
-        invalidate()
+        self.invalidate()
       }, 5000)
 
       return () => {

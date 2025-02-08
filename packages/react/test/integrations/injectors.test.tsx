@@ -10,7 +10,6 @@ import {
   injectAtomValue,
   injectCallback,
   injectEffect,
-  injectInvalidate,
   injectMemo,
   injectPromise,
   injectRef,
@@ -30,7 +29,6 @@ describe('injectors', () => {
       injectAtomValue,
       injectCallback,
       injectEffect,
-      injectInvalidate,
       injectMemo,
       injectPromise,
       injectRef,
@@ -89,16 +87,16 @@ describe('injectors', () => {
     expect(instance.s.size).toBe(1)
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b'])
     expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb'])
-    expect(effects).toEqual(['b'])
-    expect(cleanups).toEqual([])
+    expect(effects).toEqual(['a', 'b'])
+    expect(cleanups).toEqual(['b'])
     expect(refs).toEqual([ref, ref])
 
     instance.set('c')
 
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b', 'c', 'a', 'c'])
     expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb', 'bb', 'aa', 'bb'])
-    expect(effects).toEqual(['b', 'c'])
-    expect(cleanups).toEqual(['c'])
+    expect(effects).toEqual(['a', 'b', 'c'])
+    expect(cleanups).toEqual(['b', 'c'])
     expect(refs).toEqual([ref, ref, ref])
   })
 
@@ -115,7 +113,7 @@ describe('injectors', () => {
     })
 
     const atom3 = atom('3', () => {
-      const invalidate = injectInvalidate()
+      const self = injectSelf()
       const signal = injectSignal('a')
       const one = injectAtomValue(atom1)
       const [two, setTwo] = injectAtomState(atom2)
@@ -123,7 +121,11 @@ describe('injectors', () => {
 
       vals.push([signal.get(), one, two])
 
-      return api(signal).setExports({ invalidate, set2, setTwo })
+      return api(signal).setExports({
+        invalidate: () => self.invalidate(),
+        set2,
+        setTwo,
+      })
     })
 
     const instance = ecosystem.getInstance(atom3)
@@ -162,7 +164,7 @@ describe('injectors', () => {
     const atom2 = atom('2', () => 2)
 
     const atom3 = atom('3', () => {
-      const invalidate = injectInvalidate()
+      const self = injectSelf()
       const instance1 = injectAtomInstance(atom1)
       const [isReactive, setIsReactive] = injectAtomState(instance1)
       const signal = injectSignal('a', { reactive: isReactive })
@@ -171,7 +173,7 @@ describe('injectors', () => {
       vals.push([signal.get(), isReactive, instance2.getOnce()])
 
       return api(signal).setExports({
-        invalidate,
+        invalidate: () => self.invalidate(),
         setIsReactive,
         setTwo: (val: StateOf<typeof instance2>) => instance2.set(val),
       })
@@ -288,5 +290,45 @@ describe('injectors', () => {
       ],
     ])
     expect(whys[2]).toEqual(whys[3])
+  })
+
+  test('injectMemo() callback does not track signal usages', () => {
+    const signal = ecosystem.signal(0)
+
+    const atom1 = atom('1', () => {
+      return injectMemo(() => signal.get(), [signal.getOnce()])
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+
+    expect(node1.get()).toBe(0)
+
+    signal.set(1)
+
+    expect(node1.get()).toBe(0)
+  })
+
+  test('injectEffect() callback does not track signal usages', () => {
+    const signal = ecosystem.signal(0)
+
+    const atom1 = atom('1', () => {
+      injectEffect(
+        () => {
+          signal.get()
+        },
+        [signal.getOnce()],
+        { synchronous: true }
+      )
+
+      return signal.getOnce()
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+
+    expect(node1.get()).toBe(0)
+
+    signal.set(1)
+
+    expect(node1.get()).toBe(0)
   })
 })

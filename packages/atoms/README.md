@@ -76,7 +76,6 @@ On top of this, `@zedux/atoms` exports the following APIs and many helper types 
 - [`injectCallback()`](https://omnistac.github.io/zedux/docs/api/injectors/injectCallback)
 - [`injectEcosystem()`](https://omnistac.github.io/zedux/docs/api/injectors/injectEcosystem)
 - [`injectEffect()`](https://omnistac.github.io/zedux/docs/api/injectors/injectEffect)
-- [`injectInvalidate()`](https://omnistac.github.io/zedux/docs/api/injectors/injectInvalidate)
 - [`injectMappedSignal()`](https://omnistac.github.io/zedux/docs/api/injectors/injectMappedSignal)
 - [`injectMemo()`](https://omnistac.github.io/zedux/docs/api/injectors/injectMemo)
 - [`injectPromise()`](https://omnistac.github.io/zedux/docs/api/injectors/injectPromise)
@@ -90,6 +89,7 @@ On top of this, `@zedux/atoms` exports the following APIs and many helper types 
 - [`getEcosystem()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#getecosystem)
 - [`getInternals()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#getinternals)
 - [`setInternals()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#setinternals)
+- [`untrack()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#untrack)
 - [`wipe()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#wipe)
 
 ## For Authors

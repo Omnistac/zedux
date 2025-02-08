@@ -8,7 +8,7 @@ import {
   ParamsOf,
   Selectable,
 } from '../types/index'
-import { readInstance } from '../utils/evaluationContext'
+import { injectSelf } from './injectSelf'
 
 const defaultOperation = 'injectAtomInstance'
 
@@ -65,7 +65,7 @@ export const injectAtomInstance: {
   params?: ParamsOf<A>,
   config?: InjectAtomInstanceConfig
 ) =>
-  readInstance().e.getNode(template, params, {
+  injectSelf().e.getNode(template, params, {
     f: config?.subscribe ? Eventless : EventlessStatic,
     op: config?.operation || defaultOperation,
   })

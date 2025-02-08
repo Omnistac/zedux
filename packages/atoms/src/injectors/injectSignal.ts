@@ -1,8 +1,9 @@
 import { Signal } from '../classes/Signal'
 import { EventMap, InjectSignalConfig, MapEvents, None } from '../types/index'
-import { readInstance } from '../utils/evaluationContext'
+import { untrack } from '../utils/evaluationContext'
 import { Eventless, EventlessStatic } from '../utils/general'
 import { injectMemo } from './injectMemo'
+import { injectSelf } from './injectSelf'
 
 /**
  * A TS utility for typing custom events.
@@ -29,7 +30,7 @@ export const injectSignal = <State, MappedEvents extends EventMap = None>(
   state: (() => State) | State,
   config?: InjectSignalConfig<MappedEvents>
 ) => {
-  const instance = readInstance()
+  const instance = injectSelf()
 
   const signal = injectMemo(() => {
     const id = instance.e._idGenerator.generateId(`@signal(${instance.id})`)
@@ -40,7 +41,7 @@ export const injectSignal = <State, MappedEvents extends EventMap = None>(
     }>(
       instance.e,
       id,
-      typeof state === 'function' ? (state as () => State)() : state, // TODO: should hydration be passed to the `state()` factory?
+      typeof state === 'function' ? untrack(state as () => State) : state, // TODO: should hydration be passed to the `state()` factory?
       config?.events
     )
 

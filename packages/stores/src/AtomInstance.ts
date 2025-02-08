@@ -16,11 +16,9 @@ import {
 } from './types'
 import {
   AtomInstance as NewAtomInstance,
-  Cleanup,
   Ecosystem,
   ExportsInfusedSetter,
   PromiseState,
-  PromiseStatus,
   InternalEvaluationReason,
   Transaction,
   zi,
@@ -84,15 +82,6 @@ export class AtomInstance<
   // @ts-expect-error same as exports
   public store: G['Store']
 
-  /**
-   * @see NewAtomInstance.c
-   */
-  public c?: Cleanup
-  public _injectors?: InjectorDescriptor[]
-  public _isEvaluating?: boolean
-  public _nextInjectors?: InjectorDescriptor[]
-  public _promiseError?: Error
-  public _promiseStatus?: PromiseStatus
   public _stateType?: typeof StoreState | typeof RawState
 
   private _bufferedUpdate?: {
@@ -131,15 +120,15 @@ export class AtomInstance<
 
     // Clean up effect injectors first, then everything else
     const nonEffectInjectors: InjectorDescriptor[] = []
-    this._injectors?.forEach(injector => {
-      if (injector.type !== '@@zedux/effect') {
+    this.I?.forEach(injector => {
+      if (injector.t !== 'injectEffect') {
         nonEffectInjectors.push(injector)
         return
       }
-      injector.cleanup?.()
+      injector.c?.()
     })
     nonEffectInjectors.forEach(injector => {
-      injector.cleanup?.()
+      injector.c?.()
     })
     this._subscription?.unsubscribe()
 
@@ -208,7 +197,7 @@ export class AtomInstance<
    * @see NewAtomInstance.j
    */
   public j() {
-    this._nextInjectors = []
+    this.N = []
     this._isEvaluating = true
 
     // all stores created during evaluation automatically belong to the
@@ -269,8 +258,8 @@ export class AtomInstance<
         }
       }
     } catch (err) {
-      this._nextInjectors.forEach(injector => {
-        injector.cleanup?.()
+      this.N.forEach(injector => {
+        injector.c?.()
       })
 
       zi.d(prevNode)
@@ -297,7 +286,17 @@ export class AtomInstance<
       this.w = []
     }
 
-    this._injectors = this._nextInjectors
+    // kick off side effects and store the new injectors
+    if (this.N) {
+      if (!this.e.ssr) {
+        for (const injector of this.N) {
+          injector.i?.()
+        }
+      }
+
+      this.I = this.N
+      this.N = undefined
+    }
 
     if (this.l !== 'Initializing') {
       // let this.i flush updates after status is set to Active

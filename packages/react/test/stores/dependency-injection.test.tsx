@@ -47,16 +47,20 @@ const composedStoresAtom = atom('composedStores', () => {
 
 describe('using atoms in components', () => {
   describe('useAtomValue()', () => {
-    test('returns current state of the atom', () => {
+    test('returns current state of the atom', async () => {
+      let val: number | undefined
+
       const Test: FC = () => {
-        const val = useAtomValue(normalAtom)
+        val = useAtomValue(normalAtom)
 
-        expect(val).toBe(0)
-
-        return null
+        return <div data-testid="a">{val}</div>
       }
 
-      renderInEcosystem(<Test />)
+      const { findByTestId } = renderInEcosystem(<Test />)
+
+      expect(await findByTestId('a')).toHaveTextContent('0')
+
+      expect(val).toBe(0)
     })
 
     test('creates a dynamic graph dependency that renders component when atom state changes', async () => {

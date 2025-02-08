@@ -1,7 +1,4 @@
-import { is } from '@zedux/core'
-import { AnyAtomInstance } from '../types/index'
 import { type GraphNode } from '../classes/GraphNode'
-import { AtomInstance } from '../classes/instances/AtomInstance'
 import {
   EDGE,
   ExplicitExternal,
@@ -133,32 +130,17 @@ export const flushBuffer = (previousNode: GraphNode | undefined) => {
 
 export const getEvaluationContext = () => evaluationContext
 
-export const readInstance = () => {
-  const node = evaluationContext.n
-
-  if (DEV && !is(node, AtomInstance)) {
-    throw new Error('Zedux: Injectors can only be used in atom state factories')
-  }
-
-  return node as AnyAtomInstance
-}
-
 export const setEvaluationContext = (newContext: EvaluationContext) =>
   (evaluationContext = newContext)
 
 /**
  * Prevent new graph edges from being added immediately. Instead, buffer them so
- * we can prevent duplicates or unnecessary edges. Call `flushBuffer()` to
- * finish buffering.
+ * we can prevent duplicates or unnecessary edges. Call `flushBuffer(prevNode)`
+ * (or `destroyBuffer(prevNode)` on error) with the value returned from
+ * `startBuffer()` to finish buffering.
  *
- * This is used during atom and AtomSelector evaluation to make the graph as
+ * This is used during atom and selector evaluation to make the graph as
  * efficient as possible.
- *
- * Capture the current top of the "stack" before calling this. Example:
- *
- * ```ts
- * const { n, s } = getEvaluationContext()
- * ```
  */
 export const startBuffer = (node: GraphNode) => {
   const prevNode = evaluationContext.n
@@ -170,4 +152,22 @@ export const startBuffer = (node: GraphNode) => {
   }
 
   return prevNode
+}
+
+/**
+ * Runs the callback with no reactive tracking and returns its value.
+ *
+ * This is a common utility of reactive libraries. It prevents any reactive
+ * function calls (like `ecosystem.get`, `ecosystem.getNode`, and `signal.get`)
+ * from registering graph dependencies while the passed callback runs.
+ */
+export const untrack = <T>(callback: () => T) => {
+  const { n } = evaluationContext
+  evaluationContext.n = undefined
+
+  try {
+    return callback()
+  } finally {
+    evaluationContext.n = n
+  }
 }

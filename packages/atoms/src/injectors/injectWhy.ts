@@ -1,5 +1,5 @@
-import { readInstance } from '../utils/evaluationContext'
 import { makeReasonsReadable } from '../utils/general'
+import { injectSelf } from './injectSelf'
 
 /**
  * An "unrestricted" injector (can actually be used in loops and if statements).
@@ -10,4 +10,4 @@ import { makeReasonsReadable } from '../utils/general'
  * const reasons = ecosystem.why()
  * ```
  */
-export const injectWhy = () => makeReasonsReadable(readInstance())!
+export const injectWhy = () => makeReasonsReadable(injectSelf())!

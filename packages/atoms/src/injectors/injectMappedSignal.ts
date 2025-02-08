@@ -8,9 +8,9 @@ import {
   Prettify,
   StateOf,
 } from '../types/index'
-import { readInstance } from '../utils/evaluationContext'
 import { Eventless, EventlessStatic } from '../utils/general'
 import { injectMemo } from './injectMemo'
+import { injectSelf } from './injectSelf'
 
 type MapAll<M extends SignalMap> = MapEventsToPayloads<{
   [K in keyof M]: M[K] extends Signal<any> ? EventsOf<M[K]> : None
@@ -72,7 +72,7 @@ export const injectMappedSignal = <M extends SignalMap>(
   map: M,
   config?: Pick<InjectSignalConfig<MapAll<M>>, 'reactive'>
 ) => {
-  const instance = readInstance()
+  const instance = injectSelf()
 
   const signal = injectMemo(() => {
     return new MappedSignal<{

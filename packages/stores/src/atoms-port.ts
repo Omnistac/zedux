@@ -5,17 +5,32 @@
 // duplicated classes e.g. in `dist/esm/atoms/classes/...`
 import type { PromiseState } from '@zedux/atoms'
 
-export type InjectorDescriptor<T = any> = T extends undefined
-  ? {
-      cleanup?: () => void
-      result?: T
-      type: string
-    }
-  : {
-      cleanup?: () => void
-      result: T
-      type: string
-    }
+export type InjectorDescriptor<T = any> = {
+  /**
+   * `c`leanup - tracks cleanup functions, e.g. those returned from
+   * `injectEffect` callbacks.
+   */
+  c: (() => void) | undefined
+
+  /**
+   * `i`nit - a callback that we need to call immediately after evaluation. This
+   * is how `injectEffect` works (without `synchronous: true`).
+   */
+  i: (() => void) | undefined
+
+  /**
+   * `t`ype - a unique injector name string. This is how we ensure the user
+   * didn't add, remove, or reorder injector calls in the state factory.
+   */
+  t: string
+
+  /**
+   * `v`alue - can be anything. For `injectRef`, this is the ref object. For
+   * `injectMemo` and `injectEffect`, this keeps track of the memoized value
+   * and/or dependency arrays.
+   */
+  v: T
+}
 
 export const prefix = '@@zedux'
 
