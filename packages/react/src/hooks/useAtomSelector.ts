@@ -6,7 +6,7 @@ import {
   StateOf,
 } from '@zedux/atoms'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { Eventless, External } from '../utils'
+import { Eventless, External, reactContextScope } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
 
@@ -32,6 +32,7 @@ export const useAtomSelector = <S extends Selectable>(
   ...args: ParamsOf<S>
 ): StateOf<S> => {
   const ecosystem = useEcosystem()
+  ecosystem.S = reactContextScope
   const observerId = useReactComponentId()
 
   // use this referentially stable setState function as a ref. We lazily add
@@ -44,9 +45,17 @@ export const useAtomSelector = <S extends Selectable>(
     }
   ]
 
-  let instance: SelectorInstance = render.i
-    ? ecosystem.u(render.i, template, args, render)
-    : ecosystem.getNode(template, args)
+  let instance: SelectorInstance
+
+  try {
+    instance = render.i
+      ? ecosystem.u(render.i, template, args, render)
+      : ecosystem.getNode(template, args)
+  } finally {
+    // we shouldn't need to capture/restore previous `S`cope. There should be no
+    // way for React to be rendering while another scope was active
+    ecosystem.S = undefined
+  }
 
   const renderedValue = instance.v
   render.i = instance
@@ -66,7 +75,12 @@ export const useAtomSelector = <S extends Selectable>(
   addEdge()
 
   useEffect(() => {
-    instance = ecosystem.getNode(template, args)
+    instance = instance.V
+      ? ecosystem.withScope(instance.V!, () =>
+          ecosystem.getNode(template, args)
+        )
+      : ecosystem.getNode(template, args)
+
     render.i = instance
 
     // Try adding the edge again (will be a no-op unless React's StrictMode ran

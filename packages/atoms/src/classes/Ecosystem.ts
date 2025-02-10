@@ -1,4 +1,4 @@
-import { detailedTypeof, is, isPlainObject, Job } from '@zedux/core'
+import { is, isPlainObject, Job } from '@zedux/core'
 import { internalStore } from '../store/index'
 import {
   AnyAtomInstance,
@@ -52,7 +52,6 @@ import {
 } from '../utils/general'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'
-import { AtomTemplate } from './templates/AtomTemplate'
 import { GraphNode } from './GraphNode'
 import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
 import {
@@ -65,106 +64,7 @@ import { AtomTemplateBase } from './templates/AtomTemplateBase'
 import { AtomInstance } from './instances/AtomInstance'
 import { Signal } from './Signal'
 import { isListeningTo, parseOnArgs, sendEcosystemEvent } from '../utils/events'
-
-const getNode = <G extends AtomGenerics>(
-  ecosystem: Ecosystem,
-  template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
-  params?: G['Params']
-): GraphNode => {
-  if ((template as GraphNode).izn) {
-    // if the passed atom instance is Destroyed, get(/create) the
-    // non-Destroyed instance
-    return (template as GraphNode).l === 'Destroyed' &&
-      (template as GraphNode).t
-      ? ecosystem.getNode((template as GraphNode).t, (template as GraphNode).p)
-      : template
-  }
-
-  if (DEV) {
-    if (typeof params !== 'undefined' && !Array.isArray(params)) {
-      throw new TypeError(
-        `Zedux: Expected atom params to be an array. Received ${detailedTypeof(
-          params
-        )}`
-      )
-    }
-  }
-
-  if (is(template, AtomTemplateBase)) {
-    const id = (template as AtomTemplate).getInstanceId(ecosystem, params)
-
-    // try to find an existing instance
-    const instance = ecosystem.n.get(id) as AtomInstance
-    if (instance) return instance
-
-    // create a new instance
-    const newInstance = resolveAtom(
-      ecosystem,
-      template as AtomTemplate
-    )._createInstance(ecosystem, id, (params || []) as G['Params'])
-
-    ecosystem.n.set(id, newInstance)
-    newInstance.i()
-
-    return newInstance
-  }
-
-  if (
-    typeof template === 'function' ||
-    (template && (template as AtomSelectorConfig).selector)
-  ) {
-    const selectorOrConfig = template as AtomSelectorOrConfig<G>
-    const id = ecosystem.hash(selectorOrConfig, params)
-    let instance = ecosystem.n.get(id) as SelectorInstance<G>
-
-    if (instance) return instance
-
-    // create the instance; it doesn't exist yet
-    instance = new SelectorInstance(
-      ecosystem,
-      id,
-      selectorOrConfig,
-      params || []
-    )
-
-    ecosystem.n.set(id, instance)
-
-    return instance
-  }
-
-  throw new TypeError(
-    `Zedux: Expected a template or node. Received ${detailedTypeof(template)}`
-  )
-}
-
-const resolveAtom = <A extends AnyAtomTemplate>(
-  { flags, overrides }: Ecosystem,
-  template: A
-) => {
-  const override = overrides[template.key]
-  const maybeOverriddenAtom = (override || template) as A
-
-  // to turn off flag checking, just don't pass a `flags` prop
-  if (flags) {
-    const badFlag = maybeOverriddenAtom.flags?.find(
-      flag => !flags.includes(flag)
-    )
-
-    if (DEV && badFlag) {
-      console.error(
-        `Zedux: encountered unsafe atom template "${template.key}" with flag "${badFlag}". This should be overridden in the current environment.`
-      )
-    }
-  }
-
-  return maybeOverriddenAtom
-}
-
-const mapOverrides = (overrides: AnyAtomTemplate[]) =>
-  overrides.reduce((map, atom) => {
-    map[atom.key] = atom
-    return map
-  }, {} as Record<string, AnyAtomTemplate>)
+import { getNode, mapOverrides } from '../utils/ecosystem'
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements EventEmitter, Job
@@ -223,6 +123,17 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public L: ((reason: InternalEvaluationReason) => void)[] = []
 
   /**
+   * get`S`copeValue - a function atoms can call (via the `inject` utility) to
+   * retrieve provided values. If this is defined, we are currently in a scoped
+   * context.
+   *
+   * E.g. in React, this is a thin wrapper around React's `use` utility.
+   */
+  public S:
+    | ((ecosystem: Ecosystem, context: Record<string, any>) => any)
+    | undefined = undefined
+
+  /**
    * @see Job.T
    */
   public T = 3 as const
@@ -239,6 +150,17 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * keyed by id.
    */
   public n = new Map<string, GraphNode>()
+
+  /**
+   * `s`copesByAtom - tracks the "scope" (set of contexts) used by instances of
+   * an atom, mapped by its template key. This is set the first time a scoped
+   * atom instance of that template evaluates.
+   *
+   * This stores the context objects (e.g. React contexts or atom templates)
+   * themselves, not any provided values of those contexts. Those have to be
+   * looked up via these context object references in a scoped context.
+   */
+  public s: Record<string, Record<string, any>[]> | undefined = undefined
 
   /**
    * `w`hy - the list of events this ecosystem is passing to event listeners
@@ -725,7 +647,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     if (!(eventName in this.C)) {
       throw new Error(
-        `Zedux: invalid event name "${eventName}". Expected one of ${Object.keys(
+        `Zedux: Invalid event name "${eventName}". Expected one of ${Object.keys(
           this.C
         )}`
       )
@@ -997,10 +919,78 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     _scheduler._isRunning = false
     this.b = new WeakMap() // TODO: is this necessary?
+    this.s = undefined
     this.hydration = undefined
 
     _scheduler.wipe()
     _scheduler.flush()
+  }
+
+  /**
+   * Run ecosystem operations in a scoped context. React components always
+   * render in a scoped context, so you usually don't have to think about this.
+   * Use this to retrieve scoped atoms outside React - scoped atoms (atoms with
+   * `inject` calls) must run in a scoped context in order to be created or
+   * indirectly retrieved.
+   *
+   * A "scope" is a group of contextual values. A "context" means two completely
+   * different things:
+   *
+   * - a function's execution (this is what "scoped context" is referring to)
+   * - a stable object reference, e.g. a React "context" object or an atom
+   *   template returned from the `atom()` factory. When mapped to provided
+   *   values, contexts create a scope.
+   *
+   * ```ts
+   * const myScope = new Map([
+   *   [myReactContext, myProvidedValue],
+   *   [myAtom, ecosystem.getNode(myAtom)]
+   * ])
+   *
+   * const myScopedNode = ecosystem.withScope(
+   *   myScope,
+   *   () => ecosystem.getNode(myScopedAtom)
+   * )
+   * ```
+   *
+   * Pass a scope and a callback function to run in that scope. The scope can be
+   * either an array of atom instances or a JS Map mapping context objects (e.g.
+   * React contexts or atom templates) to the provided values. The latter format
+   * is required when providing React context.
+   *
+   * The values of the map can be WeakRefs. They'll be automatically deref'd.
+   *
+   * Scopes are recursive - nested `withScope` calls will recursively look for
+   * context values in inner -> outer scopes.
+   *
+   * Returns the passed callback's result.
+   */
+  public withScope<T>(
+    scope: AtomInstance[] | Map<Record<string, any>, any>,
+    scopedCallback: () => T
+  ) {
+    const prev = this.S
+    const map = Array.isArray(scope)
+      ? new Map(scope.map(val => [val.t, val]))
+      : scope
+
+    this.S = (ecosystem, context) => {
+      const value = map.get(context)
+      const resolvedValue =
+        value?.constructor?.name === WeakRef.name ? value.deref() : value
+
+      return typeof resolvedValue === 'undefined'
+        ? prev?.(ecosystem, context)
+        : resolvedValue
+    }
+
+    try {
+      const result = scopedCallback()
+
+      return result
+    } finally {
+      this.S = prev
+    }
   }
 
   /**

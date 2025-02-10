@@ -1,4 +1,4 @@
-import { atom, createEcosystem } from '@zedux/react'
+import { atom, createEcosystem, ion } from '@zedux/react'
 import { ecosystem } from '../utils/ecosystem'
 import { mockConsole } from '../utils/console'
 
@@ -172,6 +172,55 @@ describe('Ecosystem', () => {
     // @ts-expect-error second param must be an array or undefined
     expect(() => ecosystem.getNode(atom1, 'a')).toThrowError(
       /Expected atom params to be an array. Received string/i
+    )
+  })
+
+  test('getNodeOnce() does not register graph edges in reactive contexts', () => {
+    const atom1 = atom('1', () => 1)
+    const atom2 = ion('2', ({ getNode, getNodeOnce }, isReactive: boolean) =>
+      (isReactive ? getNode(atom1) : getNodeOnce(atom1)).getOnce()
+    )
+
+    const node1 = ecosystem.getNode(atom1)
+    node1.set(11)
+
+    const reactiveNode2 = ecosystem.getNode(atom2, [true])
+    const staticNode2 = ecosystem.getNode(atom2, [false])
+
+    expect(reactiveNode2.get()).toBe(11)
+    expect(staticNode2.get()).toBe(11)
+
+    node1.destroy(true)
+
+    expect(reactiveNode2.get()).toBe(1) // re-ran on source node force-destroy
+    expect(staticNode2.get()).toBe(11)
+  })
+
+  test('getOnce() does not register graph edges in reactive contexts', () => {
+    const atom1 = atom('1', () => 1)
+    const atom2 = ion('2', ({ get, getOnce }, isReactive: boolean) =>
+      isReactive ? get(atom1) : getOnce(atom1)
+    )
+
+    const node1 = ecosystem.getNode(atom1)
+    node1.set(11)
+
+    const reactiveNode2 = ecosystem.getNode(atom2, [true])
+    const staticNode2 = ecosystem.getNode(atom2, [false])
+
+    expect(reactiveNode2.get()).toBe(11)
+    expect(staticNode2.get()).toBe(11)
+
+    node1.destroy(true)
+
+    expect(reactiveNode2.get()).toBe(1) // re-ran on source node force-destroy
+    expect(staticNode2.get()).toBe(11)
+  })
+
+  test('on() throws an error when passed an invalid ecosystem event name', () => {
+    // @ts-expect-error invalid event name
+    expect(() => ecosystem.on('nothing', () => {})).toThrowError(
+      /Invalid event name "nothing"/
     )
   })
 

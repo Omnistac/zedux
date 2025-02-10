@@ -32,6 +32,17 @@ export const addEdge = (
     recalculateNodeWeight(source.W, observer)
   }
 
+  // scoped atoms propagate their scope to all observers. Any node that uses a
+  // scoped atom was run in a scoped context and needs to remember the used
+  // scope so it can find its scoped atoms when it reevaluates.
+  if (source.V) {
+    observer.V ??= new Map()
+
+    for (const [key, val] of source.V) {
+      observer.V.set(key, val)
+    }
+  }
+
   if (isListeningTo(source.e, EDGE)) {
     sendEcosystemEvent(source.e, {
       action: 'add',
@@ -140,6 +151,9 @@ export const removeEdge = (observer: GraphNode, source: GraphNode) => {
   if (!(edge.flags & Static)) {
     recalculateNodeWeight(-source.W, observer)
   }
+
+  // Note: We don't remove scope added by the edge here. Once scope is added to
+  // a graph node, it keeps that scope forever.
 
   if (isListeningTo(source.e, EDGE)) {
     sendEcosystemEvent(source.e, {
