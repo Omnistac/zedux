@@ -34,7 +34,7 @@ const changeScopedNodeId = (
 
     return is(resolvedVal, AtomInstance)
       ? (resolvedVal as AtomInstance).id
-      : ecosystem._idGenerator.hashParams(resolvedVal)
+      : ecosystem._idGenerator.hashParams(resolvedVal, true)
   })
 
   const scopedId = `${nonContextualizedId}-@scope(${contextValueStrings.join(
@@ -69,7 +69,7 @@ const getContextualizedId = (
 
     return is(resolvedVal, AtomInstance)
       ? (resolvedVal as AtomInstance).id
-      : ecosystem._idGenerator.hashParams(resolvedVal)
+      : ecosystem._idGenerator.hashParams(resolvedVal, true)
   })
 
   return allResolved && `${id}-@scope(${contextValueStrings.join(',')})`
