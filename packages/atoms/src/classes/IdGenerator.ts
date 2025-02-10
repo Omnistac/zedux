@@ -52,9 +52,7 @@ export class IdGenerator {
       if (!isPlainObject(param)) {
         if (!acceptComplexParams || Array.isArray(param)) return param
         if (typeof param === 'function') return this.cacheFn(param)
-        if (typeof param?.constructor === 'function') {
-          return this.cacheClass(param)
-        }
+        if (typeof param === 'object') return this.cacheClass(param)
 
         return param // let engine try to resolve it or throw the error
       }
