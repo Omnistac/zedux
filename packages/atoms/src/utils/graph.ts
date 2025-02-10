@@ -15,7 +15,7 @@ import {
 
 /**
  * Actually add an edge to the graph. When we buffer graph updates, we're
- * really just deferring the calling of this method.
+ * really just deferring the calling of this function.
  */
 export const addEdge = (
   observer: GraphNode,
@@ -46,7 +46,7 @@ export const addEdge = (
 
 export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
   // If we're not force-destroying, don't destroy if there are dependents. Also
-  // don't destroy of `node.K`eep is set
+  // don't destroy if `node.K`eep is set
   if (node.l === 'Destroyed' || (!force && node.o.size - (node.L ? 1 : 0))) {
     return
   }

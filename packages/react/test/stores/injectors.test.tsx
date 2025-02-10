@@ -80,16 +80,16 @@ describe('injectors', () => {
 
     instance.setState('b')
 
-    expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b'])
-    expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb'])
+    expect(vals).toEqual(['a', 'a', 'a', 'a', 'a', 'b'])
+    expect(cbs).toEqual(['aa', 'aa', 'aa', 'aa', 'aa', 'bb'])
     expect(effects).toEqual(['a', 'b'])
     expect(cleanups).toEqual(['b'])
     expect(refs).toEqual([ref, ref])
 
     instance.setState('c')
 
-    expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b', 'c', 'a', 'c'])
-    expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb', 'bb', 'aa', 'bb'])
+    expect(vals).toEqual(['a', 'a', 'a', 'a', 'a', 'b', 'a', 'a', 'c'])
+    expect(cbs).toEqual(['aa', 'aa', 'aa', 'aa', 'aa', 'bb', 'aa', 'aa', 'bb'])
     expect(effects).toEqual(['a', 'b', 'c'])
     expect(cleanups).toEqual(['b', 'c'])
     expect(refs).toEqual([ref, ref, ref])

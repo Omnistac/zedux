@@ -97,7 +97,10 @@ export const swapSelectorRefs = <G extends SelectorGenerics>(
 ) => {
   const baseKey = ecosystem.b.get(oldInstance.t)
 
-  if (!baseKey) return // TODO: remove
+  // TODO: remove. This is currently needed for selectors created outside the
+  // ecosystem (e.g. via `new SelectorInstance`). Only the ecosystem `getNode*`
+  // methods add the selector ref to `ecosystem.b`aseKeys. Change that.
+  if (!baseKey) return
 
   ecosystem.b.set(newRef, baseKey)
   ecosystem.b.delete(oldInstance.t)

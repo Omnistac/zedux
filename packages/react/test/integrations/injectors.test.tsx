@@ -54,6 +54,9 @@ describe('injectors', () => {
 
     const atom1 = atom('1', () => {
       const signal = injectSignal('a')
+
+      // no deps is the exception - this does not mimic React, it turns the
+      // callback into a new reactive context that auto-tracks signal usages
       const val1 = injectMemo(() => signal.get())
       const val2 = injectMemo(() => signal.get(), [])
       const val3 = injectMemo(() => signal.get(), [signal.get()])
@@ -62,6 +65,11 @@ describe('injectors', () => {
       const injectedRef = injectRef(ref)
       refs.push(injectedRef.current)
 
+      // no deps is the exception - this does not mimic React, it turns the
+      // callback into a new reactive context that auto-tracks signal usages.
+      // This is an example of a bad `injectCallback` usage - when using
+      // reactive mode, you can't change the callback function body like this.
+      // You also can't access any non-reactive, closed-over values:
       const cb1 = injectCallback(signal.get() === 'a' ? cbA : cbB)
       const cb2 = injectCallback(signal.get() === 'a' ? cbA : cbB, [])
       const cb3 = injectCallback(signal.get() === 'a' ? cbA : cbB, [
@@ -83,10 +91,11 @@ describe('injectors', () => {
     instance.set('b')
 
     // all those `get` calls shouldn't add any edges besides the one already
-    // added by `injectSignal`:
-    expect(instance.s.size).toBe(1)
+    // added by `injectSignal`. The single `injectMemo` and `injectCallback`
+    // calls with no deps will also each add one source:
+    expect(instance.s.size).toBe(3)
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b'])
-    expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb'])
+    expect(cbs).toEqual(['aa', 'aa', 'aa', 'aa', 'aa', 'bb'])
     expect(effects).toEqual(['a', 'b'])
     expect(cleanups).toEqual(['b'])
     expect(refs).toEqual([ref, ref])
@@ -94,7 +103,7 @@ describe('injectors', () => {
     instance.set('c')
 
     expect(vals).toEqual(['a', 'a', 'a', 'b', 'a', 'b', 'c', 'a', 'c'])
-    expect(cbs).toEqual(['aa', 'aa', 'aa', 'bb', 'aa', 'bb', 'bb', 'aa', 'bb'])
+    expect(cbs).toEqual(['aa', 'aa', 'aa', 'aa', 'aa', 'bb', 'aa', 'aa', 'bb'])
     expect(effects).toEqual(['a', 'b', 'c'])
     expect(cleanups).toEqual(['b', 'c'])
     expect(refs).toEqual([ref, ref, ref])
@@ -306,6 +315,40 @@ describe('injectors', () => {
     signal.set(1)
 
     expect(node1.get()).toBe(0)
+  })
+
+  test('when called with no deps, injectMemo() tracks used signals', () => {
+    const signal1 = ecosystem.signal(1)
+    const signal2 = ecosystem.signal(2)
+    const calls: any[] = []
+
+    const atom1 = atom('1', () => {
+      const val2 = signal2.get()
+
+      const memoVal = injectMemo(() => {
+        const val = signal1.get()
+        calls.push(val)
+
+        return val
+      })
+
+      return val2 + memoVal
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+
+    expect(node1.get()).toBe(3)
+    expect(calls).toEqual([1])
+
+    signal1.set(11)
+
+    expect(node1.get()).toBe(13)
+    expect(calls).toEqual([1, 11])
+
+    signal2.set(22)
+
+    expect(node1.get()).toBe(33)
+    expect(calls).toEqual([1, 11])
   })
 
   test('injectEffect() callback does not track signal usages', () => {
