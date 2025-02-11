@@ -12,6 +12,7 @@ import {
   sendEcosystemEvent,
   sendImplicitEcosystemEvent,
 } from './events'
+import { changeScopedNodeId } from './ecosystem'
 
 /**
  * Actually add an edge to the graph. When we buffer graph updates, we're
@@ -231,9 +232,18 @@ export const scheduleStaticDependents = (
 export const scheduleNodeDestruction = (node: GraphNode) =>
   node.o.size - (node.L ? 1 : 0) || node.l !== 'Active' || node.m()
 
-export const setNodeStatus = (node: GraphNode, newStatus: LifecycleStatus) => {
+export const setNodeStatus = (
+  node: GraphNode,
+  newStatus: LifecycleStatus,
+  templateKey?: string
+) => {
   const oldStatus = node.l
   node.l = newStatus
+
+  if (node.V && oldStatus === 'Initializing' && node.t) {
+    // scoped nodes change their id after initial evaluation
+    changeScopedNodeId(node.e, templateKey ?? node.t.key, node)
+  }
 
   const isListeningToCycle = isListeningTo(node.e, CYCLE)
 

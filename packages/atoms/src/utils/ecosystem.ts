@@ -14,19 +14,18 @@ import { GraphNode } from '../classes/GraphNode'
 import { getSelectorKey, SelectorInstance } from '../classes/SelectorInstance'
 import { getEvaluationContext } from './evaluationContext'
 
-const changeScopedNodeId = (
+export const changeScopedNodeId = (
   ecosystem: Ecosystem,
   templateKey: string,
-  newInstance: GraphNode,
-  nonContextualizedId: string
+  newNode: GraphNode
 ) => {
   // if this is the first scoped node of its template to evaluate, record the
   // scope all future instances of the template will need to be provided
   ecosystem.s ??= {}
-  ecosystem.s[templateKey] ??= [...newInstance.V!.keys()]
+  ecosystem.s[templateKey] ??= [...newNode.V!.keys()]
 
   // give the new scoped node a `@scope()`-suffixed id
-  const contextValueStrings = [...newInstance.V!.values()].map(val => {
+  const contextValueStrings = [...newNode.V!.values()].map(val => {
     const resolvedVal =
       val?.constructor?.name === WeakRef.name
         ? (val as WeakRef<any>).deref()
@@ -37,11 +36,9 @@ const changeScopedNodeId = (
       : ecosystem._idGenerator.hashParams(resolvedVal, true)
   })
 
-  const scopedId = `${nonContextualizedId}-@scope(${contextValueStrings.join(
-    ','
-  )})`
+  const scopedId = `${newNode.id}-@scope(${contextValueStrings.join(',')})`
 
-  newInstance.id = scopedId
+  newNode.id = scopedId
 }
 
 const getContextualizedId = (
@@ -136,17 +133,6 @@ export const getNode = <G extends AtomGenerics>(
     ) as AnyAtomInstance
 
     newInstance.i() // TODO: remove. Run this in AtomInstance constructor
-
-    // scoped atoms change their id after initial evaluation
-    if (newInstance.V) {
-      changeScopedNodeId(
-        ecosystem,
-        (template as AtomTemplateBase).key,
-        newInstance,
-        id
-      )
-    }
-
     ecosystem.n.set(newInstance.id, newInstance)
 
     return newInstance
@@ -189,11 +175,6 @@ export const getNode = <G extends AtomGenerics>(
       selectorOrConfig,
       params || []
     )
-
-    // scoped selectors change their id after initial evaluation
-    if (instance.V) {
-      changeScopedNodeId(ecosystem, selectorKey, instance, id)
-    }
 
     ecosystem.n.set(instance.id, instance)
 

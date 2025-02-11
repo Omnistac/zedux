@@ -372,17 +372,15 @@ export class AtomInstance<
     const { n } = getEvaluationContext()
     this.j()
 
-    setNodeStatus(this, 'Active')
-    flushBuffer(n)
-
     // hydrate if possible
     const hydration = this.e._consumeHydration(this)
 
-    if (this.t.manualHydration || typeof hydration === 'undefined') {
-      return
+    if (!this.t.manualHydration && typeof hydration !== 'undefined') {
+      this.set(hydration)
     }
 
-    this.set(hydration)
+    flushBuffer(n)
+    setNodeStatus(this, 'Active')
   }
 
   /**

@@ -527,12 +527,12 @@ describe('scoped atoms', () => {
       const node1 = ecosystem.getNode(scoped1)
 
       const result2 = ecosystem.withScope(scope2, () => {
-        const node1 = ecosystem.getNode(scoped1)
+        const node1 = ecosystem.getNode(scoped1) // looks in outer scope
         const node2 = ecosystem.getNode(scoped2)
 
         const result3 = ecosystem.withScope(scope3, () => {
-          const node1 = ecosystem.getNode(scoped1)
-          const node2 = ecosystem.getNode(scoped2)
+          const node1 = ecosystem.getNode(scoped1) // looks in outer outer scope
+          const node2 = ecosystem.getNode(scoped2) // looks in outer scope
           const node3 = ecosystem.getNode(scoped3)
 
           return node1.get() + node2.get() + node3.get()
@@ -545,5 +545,63 @@ describe('scoped atoms', () => {
     })
 
     expect(result1).toBe('a ab abc')
+  })
+
+  test('scoped atoms are not hydrated', () => {
+    const calls: any[] = []
+    const context1 = atom('context1', () => 'a')
+    const scope1 = [ecosystem.getNode(context1)]
+
+    const scoped1 = atom('scoped1', () => {
+      const val = inject(context1).get()
+
+      calls.push(val)
+
+      return val
+    })
+
+    const expectedId = 'scoped1-@scope(context1)'
+    const hydration = { [expectedId]: 'b' }
+
+    ecosystem.hydrate(hydration)
+
+    const scopedNode1 = ecosystem.withScope(scope1, () =>
+      ecosystem.getNode(scoped1)
+    )
+
+    expect(scopedNode1.get()).toBe('a')
+    expect(ecosystem.hydration).toEqual(hydration)
+    expect(scopedNode1.id).toBe(expectedId)
+    expect(calls).toEqual(['a'])
+  })
+
+  test('ecosystem cycle event listeners receive the fully-scoped id when the node becomes Active', () => {
+    jest.useFakeTimers()
+    const calls: any[] = []
+    const context1 = atom('context1', () => 'a')
+    const scope1 = [ecosystem.getNode(context1)]
+
+    const scoped1 = atom('scoped1', () => {
+      const val = inject(context1).get()
+
+      calls.push(val)
+
+      return val
+    })
+
+    const expectedId = 'scoped1-@scope(context1)'
+
+    ecosystem.on('cycle', event => {
+      calls.push([event.source?.id, event.newStatus])
+    })
+
+    const scopedNode1 = ecosystem.withScope(scope1, () =>
+      ecosystem.getNode(scoped1)
+    )
+
+    jest.runAllTimers()
+
+    expect(scopedNode1.get()).toBe('a')
+    expect(calls).toEqual(['a', [expectedId, 'Active']])
   })
 })
