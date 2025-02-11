@@ -7,7 +7,6 @@ import {
 import {
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
-  Cleanup,
   ExportsInfusedSetter,
   PromiseState,
   PromiseStatus,
@@ -130,7 +129,7 @@ const evaluate = <G extends Omit<AtomGenerics, 'Node'>>(
 
     return api.value as Signal<G> | G['State']
   } catch (err) {
-    console.error(`Zedux: Error while evaluating atom "${instance.t.id}":`, err)
+    console.error(`Zedux: Error while evaluating atom "${instance.id}":`, err)
 
     if (isListeningTo(instance.e, ERROR)) {
       sendEcosystemErrorEvent(instance, err)
@@ -203,7 +202,7 @@ export class AtomInstance<
 > extends Signal<G> {
   public static $$typeof = Symbol.for(`${prefix}/AtomInstance`)
 
-  public api?: AtomApi<AtomGenericsToAtomApiGenerics<G>>
+  public api: AtomApi<AtomGenericsToAtomApiGenerics<G>> | undefined = undefined
 
   // @ts-expect-error this is set in `this.i`nit, right after instantiation, so
   // it technically isn't set during construction. It's fine.
@@ -217,11 +216,6 @@ export class AtomInstance<
    * its wrapped signal (if any).
    */
   public a: boolean | undefined = undefined
-
-  /**
-   * @see Signal.c
-   */
-  public c?: Cleanup
 
   /**
    * `I`njectors - tracks injector calls from the last time the state factory
@@ -239,17 +233,17 @@ export class AtomInstance<
    * undefined, no signal was returned, and this atom itself becomes the signal.
    * If this is defined, this atom becomes a thin wrapper around this signal.
    */
-  public S?: Signal<G>
+  public S: Signal<G> | undefined = undefined
 
-  public _isEvaluating?: boolean
-  public _promiseError?: Error
-  public _promiseStatus?: PromiseStatus
+  public _isEvaluating = false
+  public _promiseError: Error | undefined = undefined
+  public _promiseStatus: PromiseStatus | undefined = undefined
 
   constructor(
     /**
      * @see Signal.e
      */
-    public readonly e: Ecosystem,
+    e: Ecosystem,
     /**
      * @see Signal.t
      */
@@ -257,7 +251,7 @@ export class AtomInstance<
     /**
      * @see Signal.id
      */
-    public readonly id: string,
+    id: string,
     /**
      * @see Signal.p
      */
@@ -378,17 +372,15 @@ export class AtomInstance<
     const { n } = getEvaluationContext()
     this.j()
 
-    setNodeStatus(this, 'Active')
-    flushBuffer(n)
-
     // hydrate if possible
     const hydration = this.e._consumeHydration(this)
 
-    if (this.t.manualHydration || typeof hydration === 'undefined') {
-      return
+    if (!this.t.manualHydration && typeof hydration !== 'undefined') {
+      this.set(hydration)
     }
 
-    this.set(hydration)
+    flushBuffer(n)
+    setNodeStatus(this, 'Active')
   }
 
   /**
@@ -467,8 +459,8 @@ export class AtomInstance<
     } finally {
       this._isEvaluating = false
 
-      // even if evaluation errored, we need to update dependents if the `S`ignal's
-      // state changed
+      // even if evaluation errored, we need to update dependents if the
+      // `S`ignal's state changed. TODO: move this to `catch` block
       if (this.S && this.S.v !== this.v) {
         const oldState = this.v
         this.v = this.S.v

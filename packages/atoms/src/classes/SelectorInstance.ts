@@ -68,9 +68,11 @@ export const runSelector = <G extends SelectorGenerics>(
     const oldState = node.v
     node.v = result
 
-    if (isInitializing) {
-      setNodeStatus(node, 'Active')
-    } else if (!suppressNotify && !resultsComparator(result, oldState)) {
+    if (
+      !isInitializing &&
+      !suppressNotify &&
+      !resultsComparator(result, oldState)
+    ) {
       handleStateChange(node, oldState)
     }
   } catch (err) {
@@ -87,6 +89,10 @@ export const runSelector = <G extends SelectorGenerics>(
   }
 
   flushBuffer(prevNode)
+
+  if (isInitializing) {
+    setNodeStatus(node, 'Active', getSelectorKey(node.e, node.t))
+  }
 }
 
 export const swapSelectorRefs = <G extends SelectorGenerics>(

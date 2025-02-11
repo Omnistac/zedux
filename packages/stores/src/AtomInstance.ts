@@ -369,7 +369,7 @@ export class AtomInstance<
       return api.value as G['Store'] | G['State']
     } catch (err) {
       console.error(
-        `Zedux: Error while evaluating atom "${this.t.key}" with params:`,
+        `Zedux: Error while evaluating atom "${this.id}" with params:`,
         this.p,
         err
       )

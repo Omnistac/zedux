@@ -12,6 +12,7 @@ import {
   sendEcosystemEvent,
   sendImplicitEcosystemEvent,
 } from './events'
+import { changeScopedNodeId } from './ecosystem'
 
 /**
  * Actually add an edge to the graph. When we buffer graph updates, we're
@@ -30,6 +31,17 @@ export const addEdge = (
   // Static sources don't change a node's weight
   if (!(newEdge.flags & Static)) {
     recalculateNodeWeight(source.W, observer)
+  }
+
+  // scoped atoms propagate their scope to all observers. Any node that uses a
+  // scoped atom was run in a scoped context and needs to remember the used
+  // scope so it can find its scoped atoms when it reevaluates.
+  if (source.V) {
+    observer.V ??= new Map()
+
+    for (const [key, val] of source.V) {
+      observer.V.set(key, val)
+    }
   }
 
   if (isListeningTo(source.e, EDGE)) {
@@ -141,6 +153,9 @@ export const removeEdge = (observer: GraphNode, source: GraphNode) => {
     recalculateNodeWeight(-source.W, observer)
   }
 
+  // Note: We don't remove scope added by the edge here. Once scope is added to
+  // a graph node, it keeps that scope forever.
+
   if (isListeningTo(source.e, EDGE)) {
     sendEcosystemEvent(source.e, {
       action: 'remove',
@@ -217,9 +232,18 @@ export const scheduleStaticDependents = (
 export const scheduleNodeDestruction = (node: GraphNode) =>
   node.o.size - (node.L ? 1 : 0) || node.l !== 'Active' || node.m()
 
-export const setNodeStatus = (node: GraphNode, newStatus: LifecycleStatus) => {
+export const setNodeStatus = (
+  node: GraphNode,
+  newStatus: LifecycleStatus,
+  templateKey?: string
+) => {
   const oldStatus = node.l
   node.l = newStatus
+
+  if (node.V && oldStatus === 'Initializing' && node.t) {
+    // scoped nodes change their id after initial evaluation
+    changeScopedNodeId(node.e, templateKey ?? node.t.key, node)
+  }
 
   const isListeningToCycle = isListeningTo(node.e, CYCLE)
 

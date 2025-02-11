@@ -65,6 +65,10 @@ On top of these, `@zedux/react` exports the following APIs:
 - [`useAtomValue()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomValue)
 - [`useEcosystem()`](https://omnistac.github.io/zedux/docs/api/hooks/useEcosystem)
 
+### Utils
+
+- [`inject()`](https://omnistac.github.io/zedux/docs/api/utils/inject)
+
 ## For Authors
 
 The [Zedux documentation](https://omnistac.github.io/zedux) assumes you are using this package. Plugin and integration authors may want to depend directly on [`@zedux/core`](https://www.npmjs.com/package/@zedux/core) or [`@zedux/atoms`](https://www.npmjs.com/package/@zedux/atoms). However, if your package uses any of these React-specific APIs, it is recommended to only import this `@zedux/react` package.

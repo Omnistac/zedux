@@ -54,6 +54,31 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
   public T = 2 as const
 
   /**
+   * scope`V`alues - maps contexts (e.g. React context objects or atom
+   * templates) to their resolved, provided values. This is the "scope" of this
+   * graph node - these values need to be provided for this node and its entire
+   * tree of source nodes (a node's scope contains all provided context values
+   * used by it and any of its sources).
+   *
+   * When `inject` is called in a state factory, it makes the atom scoped - the
+   * atom evaluation will throw an error unless the value was provided either
+   * via React context in React or `ecosystem.withScope`.
+   *
+   * When the atom reevaluates normally, these cached values are retrieved.
+   *
+   * When the atom is retrieved from React or another scoped context (like
+   * `ecosystem.withScope`), Zedux makes sure the same values are still
+   * provided. If the values have changed, a new atom instance is created with
+   * the new scope.
+   */
+  public V:
+    | Map<
+        Record<string, any>,
+        WeakRef<any> | number | string | boolean | null | undefined
+      >
+    | undefined = undefined
+
+  /**
    * @see Job.W
    */
   public W = 1
@@ -201,7 +226,7 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    * refCount goes back up to 1, we call this to cancel the scheduled
    * destruction.
    */
-  public c?: Cleanup
+  public c: Cleanup | undefined = undefined
 
   /**
    * `d`ehydrate - a function called internally by `ecosystem.dehydrate()` to

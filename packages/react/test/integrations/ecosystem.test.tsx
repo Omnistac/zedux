@@ -92,12 +92,12 @@ describe('ecosystem', () => {
     const { findByText } = renderInEcosystem(<Child />)
 
     expect([...ecosystem.n.keys()]).toEqual([
-      'atom5',
-      'atom2',
-      'atom1',
       '@signal(atom1)-0',
-      'atom4',
+      'atom1',
+      'atom2',
       'atom3-["1"]',
+      'atom4',
+      'atom5',
       'Child-:r0:',
       'Child-:r1:',
       'Child-:r2:',

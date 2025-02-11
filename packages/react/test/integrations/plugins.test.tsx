@@ -350,8 +350,8 @@ describe('plugins', () => {
 
     expect(calls).toEqual([
       ['runStart'],
-      ['cycle'],
       ['runEnd'],
+      ['cycle'],
       ['resetStart'],
       ['cycle'],
       ['resetEnd'],

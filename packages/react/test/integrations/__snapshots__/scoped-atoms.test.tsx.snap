@@ -1,0 +1,101 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`scoped atoms scoped nodes propagate scope recursively to all observers 1`] = `
+[
+  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"a")",
+  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"b")",
+  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"a")",
+  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"b")",
+  "child-@scope(parent2-[2],parent1-[1],"a")",
+  "child-@scope(parent2-[2],parent1-[1],"b")",
+  "child-@scope(parent2-[200],parent1-[100],"a")",
+  "child-@scope(parent2-[200],parent1-[100],"b")",
+  "middleSource-@scope(parent2-[2],parent1-[1],"a")",
+  "middleSource-@scope(parent2-[2],parent1-[1],"b")",
+  "middleSource-@scope(parent2-[200],parent1-[100],"a")",
+  "middleSource-@scope(parent2-[200],parent1-[100],"b")",
+  "parent1-[1]",
+  "parent1-[100]",
+  "parent2-[2]",
+  "parent2-[200]",
+  "topSource-@scope(parent1-[1],"a")",
+  "topSource-@scope(parent1-[1],"b")",
+  "topSource-@scope(parent1-[100],"a")",
+  "topSource-@scope(parent1-[100],"b")",
+]
+`;
+
+exports[`scoped atoms scoped nodes propagate scope recursively to all observers 2`] = `
+[
+  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"aa")",
+  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"b")",
+  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"aa")",
+  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"b")",
+  "child-@scope(parent2-[2],parent1-[1],"aa")",
+  "child-@scope(parent2-[2],parent1-[1],"b")",
+  "child-@scope(parent2-[200],parent1-[100],"aa")",
+  "child-@scope(parent2-[200],parent1-[100],"b")",
+  "middleSource-@scope(parent2-[2],parent1-[1],"aa")",
+  "middleSource-@scope(parent2-[2],parent1-[1],"b")",
+  "middleSource-@scope(parent2-[200],parent1-[100],"aa")",
+  "middleSource-@scope(parent2-[200],parent1-[100],"b")",
+  "parent1-[1]",
+  "parent1-[100]",
+  "parent2-[2]",
+  "parent2-[200]",
+  "topSource-@scope(parent1-[1],"aa")",
+  "topSource-@scope(parent1-[1],"b")",
+  "topSource-@scope(parent1-[100],"aa")",
+  "topSource-@scope(parent1-[100],"b")",
+]
+`;
+
+exports[`scoped atoms scoped nodes propagate scope recursively to all observers 3`] = `
+[
+  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"aa")",
+  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"b")",
+  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"aa")",
+  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"b")",
+  "child-@scope(parent2-[2],parent1-[1],"aa")",
+  "child-@scope(parent2-[2],parent1-[1],"b")",
+  "child-@scope(parent2-[200],parent1-[100],"aa")",
+  "child-@scope(parent2-[200],parent1-[100],"b")",
+  "middleSource-@scope(parent2-[2],parent1-[1],"aa")",
+  "middleSource-@scope(parent2-[2],parent1-[1],"b")",
+  "middleSource-@scope(parent2-[200],parent1-[100],"aa")",
+  "middleSource-@scope(parent2-[200],parent1-[100],"b")",
+  "parent1-[1]",
+  "parent1-[100]",
+  "parent2-[2]",
+  "parent2-[200]",
+  "topSource-@scope(parent1-[1],"aa")",
+  "topSource-@scope(parent1-[1],"b")",
+  "topSource-@scope(parent1-[100],"aa")",
+  "topSource-@scope(parent1-[100],"b")",
+]
+`;
+
+exports[`scoped atoms scoped nodes propagate scope recursively to all observers 4`] = `
+[
+  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"aa")",
+  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"b")",
+  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"aa")",
+  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"b")",
+  "child-@scope(parent2-[2],parent1-[1],"aa")",
+  "child-@scope(parent2-[2],parent1-[1],"b")",
+  "child-@scope(parent2-[200],parent1-[100],"aa")",
+  "child-@scope(parent2-[200],parent1-[100],"b")",
+  "middleSource-@scope(parent2-[2],parent1-[1],"aa")",
+  "middleSource-@scope(parent2-[2],parent1-[1],"b")",
+  "middleSource-@scope(parent2-[200],parent1-[100],"aa")",
+  "middleSource-@scope(parent2-[200],parent1-[100],"b")",
+  "parent1-[1]",
+  "parent1-[100]",
+  "parent2-[2]",
+  "parent2-[200]",
+  "topSource-@scope(parent1-[1],"aa")",
+  "topSource-@scope(parent1-[1],"b")",
+  "topSource-@scope(parent1-[100],"aa")",
+  "topSource-@scope(parent1-[100],"b")",
+]
+`;

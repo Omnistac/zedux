@@ -42,8 +42,8 @@ export class IdGenerator {
    * acceptComplexParams is true, map class instances and functions to a
    * consistent id for the reference.
    *
-   * Note that recursive objects are not supported - they would add way too much
-   * overhead here and are really just unnecessary.
+   * Note that circular object references are not supported - they would add way
+   * too much overhead here and are really just unnecessary.
    */
   public hashParams(params: any[], acceptComplexParams?: boolean): string {
     return JSON.stringify(params, (_, param) => {
@@ -52,9 +52,7 @@ export class IdGenerator {
       if (!isPlainObject(param)) {
         if (!acceptComplexParams || Array.isArray(param)) return param
         if (typeof param === 'function') return this.cacheFn(param)
-        if (typeof param?.constructor === 'function') {
-          return this.cacheClass(param)
-        }
+        if (typeof param === 'object') return this.cacheClass(param)
 
         return param // let engine try to resolve it or throw the error
       }

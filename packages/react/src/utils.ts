@@ -1,5 +1,5 @@
-import { AnyAtomTemplate, Ecosystem } from '@zedux/atoms'
-import React, { createContext } from 'react'
+import { AnyAtomTemplate, AtomTemplateBase, Ecosystem, is } from '@zedux/atoms'
+import React, { Context, createContext, use } from 'react'
 
 export const ecosystemContext = createContext('@@global')
 
@@ -39,3 +39,13 @@ export const getReactContext = (
     undefined
   ) as React.Context<any>)
 }
+
+export const reactContextScope = (
+  ecosystem: Ecosystem,
+  context: Record<string, any>
+) =>
+  use(
+    is(context, AtomTemplateBase)
+      ? getReactContext(ecosystem, context as AtomTemplateBase)
+      : (context as Context<any>)
+  )
