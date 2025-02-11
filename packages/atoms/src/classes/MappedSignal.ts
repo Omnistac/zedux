@@ -11,7 +11,7 @@ import {
 import { flushBuffer, startBuffer } from '../utils/evaluationContext'
 import { Ecosystem } from './Ecosystem'
 import { doMutate, Signal } from './Signal'
-import { EventSent, TopPrio } from '../utils/general'
+import { ACTIVE, EventSent, INITIALIZING, TopPrio } from '../utils/general'
 import { setNodeStatus } from '../utils/graph'
 
 export type SignalMap = Record<string, Signal<AnyNodeGenerics> | unknown>
@@ -250,7 +250,7 @@ export class MappedSignal<
 
     // we shouldn't need try..catch here - no user code can run when getting
     // these already-defined nodes
-    if (this.l === 'Initializing') {
+    if (this.l === INITIALIZING) {
       this.v = Object.fromEntries(
         entries.map(([key, val]) => {
           if (!(val as Signal | undefined)?.izn) return [key, val as any]
@@ -264,7 +264,7 @@ export class MappedSignal<
         })
       )
 
-      setNodeStatus(this, 'Active')
+      setNodeStatus(this, ACTIVE)
     } else {
       for (const [key, val] of entries) {
         if ((val as Signal).izn) {

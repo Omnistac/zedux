@@ -16,13 +16,17 @@ import {
   InternalEvaluationReason,
 } from '@zedux/atoms/types/index'
 import {
+  ACTIVE,
+  DESTROYED,
   ERROR,
   EventSent,
+  INITIALIZING,
   INVALIDATE,
   Invalidate,
   prefix,
   PROMISE_CHANGE,
   PromiseChange,
+  STALE,
   Static,
   TopPrio,
 } from '@zedux/atoms/utils/general'
@@ -116,7 +120,7 @@ const evaluate = <G extends Omit<AtomGenerics, 'Node'>>(
     >)
 
     // Exports can only be set on initial evaluation
-    if (instance.l === 'Initializing' && api.exports) {
+    if (instance.l === INITIALIZING && api.exports) {
       instance.exports = api.exports
     }
 
@@ -137,7 +141,7 @@ const evaluate = <G extends Omit<AtomGenerics, 'Node'>>(
 
     // TODO: can we get rid of the `AtomInstance.i`nit setup now? Would remove
     // the need for this:
-    if (instance.l === 'Initializing') instance.e.n.delete(instance.id)
+    if (instance.l === INITIALIZING) instance.e.n.delete(instance.id)
 
     throw err
   }
@@ -380,7 +384,7 @@ export class AtomInstance<
     }
 
     flushBuffer(n)
-    setNodeStatus(this, 'Active')
+    setNodeStatus(this, ACTIVE)
   }
 
   /**
@@ -405,7 +409,7 @@ export class AtomInstance<
     try {
       const newFactoryResult = evaluate(this)
 
-      if (this.l === 'Initializing') {
+      if (this.l === INITIALIZING) {
         if ((newFactoryResult as Signal)?.izn) {
           this.S = newFactoryResult
           this.v = (newFactoryResult as Signal<G>).v
@@ -484,7 +488,7 @@ export class AtomInstance<
     }
 
     // let this.i flush updates after status is set to Active
-    this.l === 'Initializing' || flushBuffer(prevNode)
+    this.l === INITIALIZING || flushBuffer(prevNode)
   }
 
   /**
@@ -494,7 +498,7 @@ export class AtomInstance<
     const ttl = this._getTtl()
     if (ttl === 0) return this.destroy()
 
-    setNodeStatus(this, 'Stale')
+    setNodeStatus(this, STALE)
     if (ttl == null || ttl === -1) return
 
     if (typeof ttl === 'number') {
@@ -505,7 +509,7 @@ export class AtomInstance<
       }, ttl)
 
       this.c = () => {
-        setNodeStatus(this, 'Active')
+        setNodeStatus(this, ACTIVE)
         this.c = undefined
         clearTimeout(timeoutId)
       }
@@ -521,7 +525,7 @@ export class AtomInstance<
       })
 
       this.c = () => {
-        setNodeStatus(this, 'Active')
+        setNodeStatus(this, ACTIVE)
         this.c = undefined
         isCanceled = true
       }
@@ -536,7 +540,7 @@ export class AtomInstance<
     })
 
     this.c = () => {
-      setNodeStatus(this, 'Active')
+      setNodeStatus(this, ACTIVE)
       this.c = undefined
       subscription.unsubscribe()
     }
@@ -561,7 +565,7 @@ export class AtomInstance<
     // user's part. Notify them. TODO: Can we pause evaluations while
     // status is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
-    if (this.l !== 'Destroyed' && this.w.push(reason) === 1) {
+    if (this.l !== DESTROYED && this.w.push(reason) === 1) {
       // refCount just hit 1; we haven't scheduled a job for this node yet
       this.e._scheduler.schedule(this, defer)
     }

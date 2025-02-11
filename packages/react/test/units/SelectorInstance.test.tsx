@@ -70,7 +70,7 @@ describe('the SelectorInstance class', () => {
     const instance = ecosystem.getNode(selector3)
     instance.destroy()
 
-    expect(instance.l).toBe('Destroyed')
+    expect(instance.status).toBe('Destroyed')
     expect(ecosystem.viewGraph()).toEqual({})
 
     expect(() => instance.destroy()).not.toThrow()
@@ -86,8 +86,8 @@ describe('the SelectorInstance class', () => {
     ecosystem.getNode(selector1).destroy() // does nothing
     ecosystem.getNode(selector2).destroy() // does nothing
 
-    expect(instance1.l).toBe('Active')
-    expect(instance2.l).toBe('Active')
+    expect(instance1.status).toBe('Active')
+    expect(instance2.status).toBe('Active')
     expect(ecosystem.dehydrate('@@selector')).toEqual({
       '@@selector-selector1-2': 'ab',
       '@@selector-selector2-1': 'abc',
@@ -97,8 +97,8 @@ describe('the SelectorInstance class', () => {
     ecosystem.getNode(selector2, []).destroy(true) // destroys both 1 & 2
     jest.runAllTimers()
 
-    expect(instance1.l).toBe('Destroyed')
-    expect(instance2.l).toBe('Destroyed')
+    expect(instance1.status).toBe('Destroyed')
+    expect(instance2.status).toBe('Destroyed')
     expect(ecosystem.dehydrate('@@selector')).toEqual({
       // ids 2 & 1 - the refs are still cached in the Selector class's
       // `_refBaseKeys`

@@ -83,13 +83,13 @@ describe('events', () => {
 
     cleanup()
 
-    expect(node1.l).toBe('Active')
+    expect(node1.status).toBe('Active')
 
     const cleanup2 = node1.on('cycle', () => {}, { active: true })
 
     cleanup2()
 
-    expect(node1.l).toBe('Destroyed')
+    expect(node1.status).toBe('Destroyed')
   })
 
   test('cycle event', () => {

@@ -8,7 +8,7 @@ import {
   Transaction,
   UndefinedEvents,
 } from '../types/index'
-import { EventSent } from '../utils/general'
+import { ACTIVE, EventSent } from '../utils/general'
 import {
   destroyNodeFinish,
   destroyNodeStart,
@@ -134,7 +134,7 @@ export class Signal<
   ) {
     super()
 
-    deferActiveStatus || setNodeStatus(this, 'Active')
+    deferActiveStatus || setNodeStatus(this, ACTIVE)
   }
 
   /**

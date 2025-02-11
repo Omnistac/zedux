@@ -4,6 +4,7 @@ import {
   startBuffer,
 } from './utils/evaluationContext'
 import { sendImplicitEcosystemEvent } from './utils/events'
+import { DESTROYED, INITIALIZING } from './utils/general'
 import {
   destroyNodeFinish,
   destroyNodeStart,
@@ -23,8 +24,10 @@ export { untrack } from './utils/evaluationContext'
 export const zi = {
   a: scheduleStaticDependents,
   b: destroyNodeStart,
+  D: DESTROYED,
   d: destroyBuffer,
   e: destroyNodeFinish,
+  I: INITIALIZING,
   i: sendImplicitEcosystemEvent,
   f: flushBuffer,
   s: startBuffer,

@@ -1,6 +1,7 @@
 import { InjectorDescriptor } from '../classes/instances/AtomInstance'
 import { AnyAtomInstance } from '../types'
 import { getEvaluationContext } from '../utils/evaluationContext'
+import { INITIALIZING } from '../utils/general'
 import { injectSelf } from './injectSelf'
 
 /**
@@ -25,7 +26,7 @@ export const injectPrevDescriptor = <T>(
 
   const { I, id, l, N } = instance
 
-  if (l === 'Initializing') return
+  if (l === INITIALIZING) return
 
   const prevDescriptor = I?.[N.length]
 

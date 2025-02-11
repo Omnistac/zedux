@@ -4,6 +4,7 @@ import {
   Selectable,
   SelectorInstance,
   StateOf,
+  zi,
 } from '@zedux/atoms'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Eventless, External, reactContextScope } from '../utils'
@@ -65,8 +66,7 @@ export const useAtomSelector = <S extends Selectable>(
     new ExternalNode(ecosystem, observerId, render)
 
   const addEdge = () => {
-    node.l === 'Destroyed' &&
-      (node = new ExternalNode(ecosystem, observerId, render))
+    node.l === zi.D && (node = new ExternalNode(ecosystem, observerId, render))
     node.i === instance ||
       node.u(instance, 'useAtomSelector', Eventless | External)
   }
@@ -92,7 +92,7 @@ export const useAtomSelector = <S extends Selectable>(
     // or update the state of its dependencies (causing it to rerun) before we
     // set `render.m`ounted. If that happened, trigger a rerender to recreate
     // the selector and/or get its new state
-    if (instance.v !== renderedValue || instance.l === 'Destroyed') {
+    if (instance.v !== renderedValue || instance.l === zi.D) {
       render({})
     }
 

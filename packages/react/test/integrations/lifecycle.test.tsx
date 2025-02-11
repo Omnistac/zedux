@@ -169,11 +169,11 @@ describe('ttl', () => {
     const atom1 = atom('1', () => api().setTtl(promise))
     const instance1 = ecosystem.getInstance(atom1)
 
-    expect(instance1.l).toBe('Active')
+    expect(instance1.status).toBe('Active')
 
     instance1.on(() => {}, { active: true })() // add dependent and immediately clean it up
 
-    expect(instance1.l).toBe('Stale')
+    expect(instance1.status).toBe('Stale')
 
     jest.runAllTimers()
 
@@ -181,7 +181,7 @@ describe('ttl', () => {
     // chained `.then` inside `AtomInstance.ts`
     await promise.then(() => {})
 
-    expect(instance1.l).toBe('Destroyed')
+    expect(instance1.status).toBe('Destroyed')
   })
 
   test('a promise ttl cancels destruction if the instance is revived', async () => {
@@ -195,31 +195,31 @@ describe('ttl', () => {
     const atom1 = atom('1', () => api().setTtl(promise))
     const instance1 = ecosystem.getInstance(atom1)
 
-    expect(instance1.l).toBe('Active')
+    expect(instance1.status).toBe('Active')
 
     instance1.on(() => {}, { active: true })() // add dependent and immediately clean it up
 
-    expect(instance1.l).toBe('Stale')
+    expect(instance1.status).toBe('Stale')
 
     jest.runAllTimers()
     const cleanup = instance1.on(() => {}, { active: true })
 
-    expect(instance1.l).toBe('Active')
+    expect(instance1.status).toBe('Active')
 
     // this `.then()` creates a new promise that's guaranteed to run after the
     // chained `.then` inside `AtomInstance.ts`
     await promise.then(() => {})
 
-    expect(instance1.l).toBe('Active')
+    expect(instance1.status).toBe('Active')
 
     cleanup()
 
-    expect(instance1.l).toBe('Stale')
+    expect(instance1.status).toBe('Stale')
 
     jest.runAllTimers()
     await promise.then(() => {})
 
-    expect(instance1.l).toBe('Destroyed')
+    expect(instance1.status).toBe('Destroyed')
   })
 
   test('an observable ttl waits until the observable emits to destroy the instance', async () => {
@@ -229,15 +229,15 @@ describe('ttl', () => {
     const atom1 = atom('1', () => api().setTtl(observable))
     const instance1 = ecosystem.getInstance(atom1)
 
-    expect(instance1.l).toBe('Active')
+    expect(instance1.status).toBe('Active')
 
     instance1.on(() => {}, { active: true })() // add dependent and immediately clean it up
 
-    expect(instance1.l).toBe('Stale')
+    expect(instance1.status).toBe('Stale')
 
     jest.runAllTimers()
 
-    expect(instance1.l).toBe('Destroyed')
+    expect(instance1.status).toBe('Destroyed')
   })
 
   test('an observable ttl cancels destruction if the instance is revived', async () => {
@@ -247,24 +247,24 @@ describe('ttl', () => {
     const atom1 = atom('1', () => api().setTtl(observable))
     const instance1 = ecosystem.getInstance(atom1)
 
-    expect(instance1.l).toBe('Active')
+    expect(instance1.status).toBe('Active')
 
     instance1.on(() => {}, { active: true })() // add dependent and immediately clean it up
 
-    expect(instance1.l).toBe('Stale')
+    expect(instance1.status).toBe('Stale')
 
     jest.advanceTimersByTime(1)
     const cleanup = instance1.on(() => {}, { active: true })
 
-    expect(instance1.l).toBe('Active')
+    expect(instance1.status).toBe('Active')
 
     cleanup()
 
-    expect(instance1.l).toBe('Stale')
+    expect(instance1.status).toBe('Stale')
 
     jest.runAllTimers()
 
-    expect(instance1.l).toBe('Destroyed')
+    expect(instance1.status).toBe('Destroyed')
   })
 
   test('ecosystem `atomDefaults.ttl` is used as a default', () => {

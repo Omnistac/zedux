@@ -24,7 +24,7 @@ export const getNodes = () =>
         observers: getEdges(node.o),
         sources: getEdges(node.s),
         state: node.get(),
-        status: node.l,
+        status: node.status,
         weight: node.W,
       },
     ])

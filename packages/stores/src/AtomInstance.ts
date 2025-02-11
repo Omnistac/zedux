@@ -212,7 +212,7 @@ export class AtomInstance<
     try {
       const newFactoryResult = this._eval()
 
-      if (this.l === 'Initializing') {
+      if (this.l === zi.I) {
         ;[this._stateType, this.store] = getStateStore(newFactoryResult)
 
         this._subscription = this.store.subscribe(
@@ -298,7 +298,7 @@ export class AtomInstance<
       this.N = undefined
     }
 
-    if (this.l !== 'Initializing') {
+    if (this.l !== zi.I) {
       // let this.i flush updates after status is set to Active
       zi.f(prevNode)
     }
@@ -312,7 +312,7 @@ export class AtomInstance<
     // user's part. Notify them. TODO: Can we pause evaluations while
     // status is Stale (and should we just always evaluate once when
     // waking up a stale atom)?
-    if (this.l !== 'Destroyed' && this.w.push(reason) === 1) {
+    if (this.l !== zi.D && this.w.push(reason) === 1) {
       // refCount just hit 1; we haven't scheduled a job for this node yet
       this.e._scheduler.schedule(this, shouldSetTimeout)
     }
@@ -355,7 +355,7 @@ export class AtomInstance<
       const api = (this.api = val as AtomApi<AtomGenericsToAtomApiGenerics<G>>)
 
       // Exports can only be set on initial evaluation
-      if (this.l === 'Initializing' && api.exports) {
+      if (this.l === zi.I && api.exports) {
         this.exports = api.exports
       }
 
