@@ -2,11 +2,21 @@ import {
   AtomGenerics,
   GraphEdge,
   InternalEvaluationReason,
-  LifecycleStatus,
 } from '@zedux/atoms/types/index'
 import { type GraphNode } from '../classes/GraphNode'
 import { SendableEvents } from '../types/events'
-import { CHANGE, CYCLE, Cycle, EDGE, Eventless, Static } from './general'
+import {
+  ACTIVE,
+  CHANGE,
+  CYCLE,
+  Cycle,
+  DESTROYED,
+  EDGE,
+  Eventless,
+  INITIALIZING,
+  InternalLifecycleStatus,
+  Static,
+} from './general'
 import {
   isListeningTo,
   sendEcosystemEvent,
@@ -59,7 +69,7 @@ export const addEdge = (
 export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
   // If we're not force-destroying, don't destroy if there are dependents. Also
   // don't destroy if `node.K`eep is set
-  if (node.l === 'Destroyed' || (!force && node.o.size - (node.L ? 1 : 0))) {
+  if (node.l === DESTROYED || (!force && node.o.size - (node.L ? 1 : 0))) {
     return
   }
 
@@ -94,7 +104,7 @@ export const destroyNodeFinish = (node: GraphNode) => {
 
   node.e.n.delete(node.id)
 
-  setNodeStatus(node, 'Destroyed')
+  setNodeStatus(node, DESTROYED)
 }
 
 export const handleStateChange = <
@@ -230,17 +240,17 @@ export const scheduleStaticDependents = (
  * When a node's refCount hits 0, schedule destruction of that node.
  */
 export const scheduleNodeDestruction = (node: GraphNode) =>
-  node.o.size - (node.L ? 1 : 0) || node.l !== 'Active' || node.m()
+  node.o.size - (node.L ? 1 : 0) || node.l !== ACTIVE || node.m()
 
 export const setNodeStatus = (
   node: GraphNode,
-  newStatus: LifecycleStatus,
+  newStatus: InternalLifecycleStatus,
   templateKey?: string
 ) => {
   const oldStatus = node.l
   node.l = newStatus
 
-  if (node.V && oldStatus === 'Initializing' && node.t) {
+  if (node.V && oldStatus === INITIALIZING && node.t) {
     // scoped nodes change their id after initial evaluation
     changeScopedNodeId(node.e, templateKey ?? node.t.key, node)
   }
@@ -248,8 +258,8 @@ export const setNodeStatus = (
   const isListeningToCycle = isListeningTo(node.e, CYCLE)
 
   if (
-    newStatus === 'Destroyed' ||
-    oldStatus !== 'Initializing' ||
+    newStatus === DESTROYED ||
+    oldStatus !== INITIALIZING ||
     isListeningToCycle
   ) {
     const reason = {
@@ -264,13 +274,13 @@ export const setNodeStatus = (
       sendImplicitEcosystemEvent(node.e, reason)
     }
 
-    if (newStatus === 'Destroyed') {
+    if (newStatus === DESTROYED) {
       // Event observers don't prevent destruction so may still need cleaning up.
       // Schedule them so they can do so. Also if a node is force-destroyed, it
       // could still have observers. Inform them of the destruction so they can
       // recreate their source node.
       scheduleStaticDependents(reason)
-    } else if (oldStatus !== 'Initializing') {
+    } else if (oldStatus !== INITIALIZING) {
       scheduleEventListeners(reason)
     }
   }

@@ -12,7 +12,7 @@ import {
   startBuffer,
 } from '../utils/evaluationContext'
 import { isListeningTo, sendEcosystemErrorEvent } from '../utils/events'
-import { ERROR, prefix } from '../utils/general'
+import { ACTIVE, ERROR, prefix } from '../utils/general'
 import {
   destroyNodeFinish,
   destroyNodeStart,
@@ -91,7 +91,7 @@ export const runSelector = <G extends SelectorGenerics>(
   flushBuffer(prevNode)
 
   if (isInitializing) {
-    setNodeStatus(node, 'Active', getSelectorKey(node.e, node.t))
+    setNodeStatus(node, ACTIVE, getSelectorKey(node.e, node.t))
   }
 }
 

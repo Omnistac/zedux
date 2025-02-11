@@ -1,5 +1,9 @@
 import type { GraphNode } from '../classes/GraphNode'
-import { EvaluationReason, InternalEvaluationReason } from '../types/index'
+import {
+  EvaluationReason,
+  InternalEvaluationReason,
+  LifecycleStatus,
+} from '../types/index'
 
 /**
  * The EdgeFlags. These are used as bitwise flags.
@@ -36,6 +40,20 @@ export const Invalidate = 1
 export const Cycle = 2 // only causes evaluations when status becomes Destroyed
 export const PromiseChange = 3
 export const EventSent = 4
+
+/**
+ * Lifecycle statuses
+ */
+export const INITIALIZING = 1
+export const ACTIVE = 2
+export const STALE = 3
+export const DESTROYED = 4
+
+export type InternalLifecycleStatus =
+  | typeof ACTIVE
+  | typeof DESTROYED
+  | typeof INITIALIZING
+  | typeof STALE
 
 /**
  * Event names
@@ -86,8 +104,8 @@ export const makeReasonReadable = (
     reason.t === Cycle
       ? ({
           ...base,
-          oldStatus: reason.o,
-          newStatus: reason.n,
+          oldStatus: statusMap[reason.o as InternalLifecycleStatus],
+          newStatus: statusMap[reason.n as InternalLifecycleStatus],
           type: CYCLE,
         } as const)
       : reason.t === Invalidate
@@ -129,3 +147,10 @@ export const makeReasonsReadable = (
   internalReasons?.map(reason =>
     makeReasonReadable(reason, node, includeOperation)
   )
+
+export const statusMap: Record<InternalLifecycleStatus, LifecycleStatus> = {
+  [ACTIVE]: 'Active',
+  [DESTROYED]: 'Destroyed',
+  [INITIALIZING]: 'Initializing',
+  [STALE]: 'Stale',
+}

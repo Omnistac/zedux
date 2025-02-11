@@ -5,6 +5,7 @@ import {
   AtomTemplateBase,
   NodeOf,
   ParamsOf,
+  zi,
 } from '@zedux/atoms'
 import { is } from '@zedux/core'
 import { useContext } from 'react'
@@ -57,7 +58,7 @@ export const useAtomContext: {
   )
 
   if (!defaultParams || is(instance, AtomInstance)) {
-    if (DEV && instance?.l === 'Destroyed') {
+    if (DEV && instance?.l === zi.D) {
       console.error(
         `Zedux: useAtomContext - A destroyed atom instance was provided with key "${instance.id}". This is not recommended. Provide an active atom instance instead e.g. by calling \`useAtomInstance()\` in the providing component.`
       )

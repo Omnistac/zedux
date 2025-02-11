@@ -5,7 +5,10 @@ import { Ecosystem } from '../classes/Ecosystem'
 import { GraphNode } from '../classes/GraphNode'
 import { SelectorInstance } from '../classes/SelectorInstance'
 import { Signal } from '../classes/Signal'
-import { InternalEvaluationType } from '../utils/general'
+import {
+  InternalEvaluationType,
+  InternalLifecycleStatus,
+} from '../utils/general'
 import {
   AnyAtomGenerics,
   AnyAtomInstance,
@@ -277,13 +280,13 @@ export interface InternalEvaluationReason<State = any> {
    * `n`ewStateOrStatus - depending on `t`ype, this is either the new state or
    * new lifecycle status of the `s`ource node.
    */
-  n?: LifecycleStatus | State
+  n?: InternalLifecycleStatus | State
 
   /**
    * `o`ldStateOrStatus - depending on `t`ype, this is either the previous state
    * or previous lifecycle status of the `s`ource node.
    */
-  o?: LifecycleStatus | State
+  o?: InternalLifecycleStatus | State
 
   /**
    * `s`ource - the node that caused its observer to update

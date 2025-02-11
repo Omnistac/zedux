@@ -6,7 +6,6 @@ import {
   GraphEdge,
   GraphEdgeConfig,
   InternalEvaluationReason,
-  LifecycleStatus,
   ListenerConfig,
   NodeFilter,
   NodeFilterOptions,
@@ -14,7 +13,16 @@ import {
 } from '@zedux/atoms/types/index'
 import { is, Job } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
-import { Eventless, EventSent, ExplicitExternal } from '../utils/general'
+import {
+  ACTIVE,
+  DESTROYED,
+  Eventless,
+  EventSent,
+  ExplicitExternal,
+  INITIALIZING,
+  InternalLifecycleStatus,
+  statusMap,
+} from '../utils/general'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 import {
   CatchAllListener,
@@ -205,6 +213,10 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
     return this.p
   }
 
+  get status() {
+    return statusMap[this.l]
+  }
+
   /**
    * A user-friendly wrapper for getting this node's `t`emplate. Zedux uses the
    * obfuscated `t` property internally for efficiency, but end users should
@@ -303,7 +315,7 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    *
    * Initializing -> Active [<-> Stale] -> Destroyed
    */
-  public l: LifecycleStatus = 'Initializing'
+  public l: InternalLifecycleStatus = INITIALIZING
 
   /**
    * `m`aybeDestroy - destroys or schedules destruction of the node.
@@ -419,7 +431,7 @@ export class ExternalNode<
   ) {
     super()
     e.n.set(id, this)
-    setNodeStatus(this, 'Active')
+    setNodeStatus(this, ACTIVE)
   }
 
   /**
@@ -434,7 +446,7 @@ export class ExternalNode<
 
     this.i = undefined
     this.e.n.delete(this.id)
-    setNodeStatus(this, 'Destroyed')
+    setNodeStatus(this, DESTROYED)
 
     // notify the external observer of the destruction if needed (does nothing
     // if the external observer initiated the destruction)
@@ -601,7 +613,7 @@ export class Listener<
 
     // listeners auto-detach and destroy themselves when the node they listen to
     // is destroyed (after telling `this.N`otifiers about it)
-    if (this.i?.l === 'Destroyed') {
+    if (this.i?.l === DESTROYED) {
       this.k(this.i)
     }
   }
@@ -617,6 +629,6 @@ export class Listener<
     // its source is destroyed.
     shouldSchedule
       ? w.push(reason) === 1 && e._scheduler.schedule(this, defer)
-      : this.i?.l === 'Destroyed' && this.k(this.i)
+      : this.i?.l === DESTROYED && this.k(this.i)
   }
 }

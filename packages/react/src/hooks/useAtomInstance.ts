@@ -9,6 +9,7 @@ import {
   ParamsOf,
   Selectable,
   SelectorInstance,
+  zi,
 } from '@zedux/atoms'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { ZeduxHookConfig } from '../types'
@@ -121,8 +122,7 @@ export const useAtomInstance: {
     new ExternalNode(ecosystem, observerId, render)
 
   const addEdge = () => {
-    node.l === 'Destroyed' &&
-      (node = new ExternalNode(ecosystem, observerId, render))
+    node.l === zi.D && (node = new ExternalNode(ecosystem, observerId, render))
     node.i === instance ||
       node.u(
         instance,
@@ -154,7 +154,7 @@ export const useAtomInstance: {
     // an unmounting component's effect cleanup can update or force-destroy the
     // atom instance before this component is mounted. If that happened, trigger
     // a rerender to recreate the atom instance and/or get its new state
-    if (instance.v !== renderedValue || instance.l === 'Destroyed') {
+    if (instance.v !== renderedValue || instance.l === zi.D) {
       render({})
     }
 

@@ -13,6 +13,7 @@ import type { Ecosystem } from '../classes/Ecosystem'
 import { GraphNode } from '../classes/GraphNode'
 import { getSelectorKey, SelectorInstance } from '../classes/SelectorInstance'
 import { getEvaluationContext } from './evaluationContext'
+import { DESTROYED } from './general'
 
 export const changeScopedNodeId = (
   ecosystem: Ecosystem,
@@ -80,8 +81,7 @@ export const getNode = <G extends AtomGenerics>(
   if ((template as GraphNode).izn) {
     // if the passed atom instance is Destroyed, get(/create) the
     // non-Destroyed instance
-    return (template as GraphNode).l === 'Destroyed' &&
-      (template as GraphNode).t
+    return (template as GraphNode).l === DESTROYED && (template as GraphNode).t
       ? ecosystem.getNode((template as GraphNode).t, (template as GraphNode).p)
       : template
   }
