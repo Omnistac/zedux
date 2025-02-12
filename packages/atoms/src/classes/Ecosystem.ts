@@ -1030,6 +1030,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   /**
+   * `a`ddJob - add a job to the scheduler without scheduling. The scheduler
+   * should be already either running or scheduled when calling this.
+   */
+  public a(job: Job) {
+    this._scheduler.insertJob(job)
+  }
+
+  /**
    * @see Job.j
    */
   public j() {

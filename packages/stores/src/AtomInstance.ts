@@ -17,9 +17,7 @@ import {
 import {
   AtomInstance as NewAtomInstance,
   Ecosystem,
-  ExportsInfusedSetter,
   PromiseState,
-  InternalEvaluationReason,
   Transaction,
   zi,
   SendableEvents,
@@ -302,29 +300,6 @@ export class AtomInstance<
       // let this.i flush updates after status is set to Active
       zi.f(prevNode)
     }
-  }
-
-  /**
-   * @see NewAtomInstance.r
-   */
-  public r(reason: InternalEvaluationReason, shouldSetTimeout?: boolean) {
-    // TODO: Any calls in this case probably indicate a memory leak on the
-    // user's part. Notify them. TODO: Can we pause evaluations while
-    // status is Stale (and should we just always evaluate once when
-    // waking up a stale atom)?
-    if (this.l !== zi.D && this.w.push(reason) === 1) {
-      // refCount just hit 1; we haven't scheduled a job for this node yet
-      this.e._scheduler.schedule(this, shouldSetTimeout)
-    }
-  }
-
-  public _set?: ExportsInfusedSetter<G['State'], G['Exports']>
-  public get _infusedSetter() {
-    if (this._set) return this._set
-    const setState: any = (settable: any, meta?: any) =>
-      this.setState(settable, meta)
-
-    return (this._set = Object.assign(setState, this.exports))
   }
 
   /**

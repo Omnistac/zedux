@@ -208,11 +208,9 @@ export class MappedSignal<
   /**
    * @see Signal.r
    */
-  public r(reason: InternalEvaluationReason, defer?: boolean) {
+  public r(reason: InternalEvaluationReason) {
     if (reason.t !== EventSent) {
-      if (this.w.push(reason) === 1) {
-        this.e._scheduler.schedule(this, defer)
-      }
+      super.r(reason)
 
       if (reason.s) {
         this.N ??= { ...this.v }

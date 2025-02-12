@@ -24,7 +24,7 @@ const doSubscribe = <State>(
       return
     }
 
-    instance.r({ o: oldState }, false)
+    instance.r({ o: oldState })
 
     // run the scheduler synchronously after any store update
     if (action?.meta !== zeduxTypes.batch) {

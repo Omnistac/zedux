@@ -195,7 +195,7 @@ export const scheduleDependents = (
   }
 ) => {
   for (const [observer, edge] of reason.s.o) {
-    edge.flags & Static || observer.r(reason, false)
+    edge.flags & Static || observer.r(reason)
   }
 }
 
@@ -212,7 +212,7 @@ export const scheduleEventListeners = (
   const pre = reason.s.e._scheduler.pre()
 
   for (const [observer, edge] of reason.s.o) {
-    edge.flags & Eventless || observer.r(reason, false)
+    edge.flags & Eventless || observer.r(reason)
   }
 
   reason.s.e._scheduler.post(pre)
@@ -230,7 +230,7 @@ export const scheduleStaticDependents = (
   const pre = reason.s.e._scheduler.pre()
 
   for (const observer of reason.s.o.keys()) {
-    observer.r(reason, false)
+    observer.r(reason)
   }
 
   reason.s.e._scheduler.post(pre)

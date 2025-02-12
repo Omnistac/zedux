@@ -17,7 +17,6 @@ import {
 } from '@zedux/atoms/types/index'
 import {
   ACTIVE,
-  DESTROYED,
   ERROR,
   EventSent,
   INITIALIZING,
@@ -284,7 +283,7 @@ export class AtomInstance<
    */
   public invalidate() {
     const reason = { s: this, t: Invalidate } as const
-    this.r(reason, false)
+    this.r(reason)
 
     if (isListeningTo(this.e, INVALIDATE)) {
       sendEcosystemEvent(this.e, { source: this, type: INVALIDATE })
@@ -549,7 +548,7 @@ export class AtomInstance<
   /**
    * @see Signal.r
    */
-  public r(reason: InternalEvaluationReason, defer?: boolean) {
+  public r(reason: InternalEvaluationReason) {
     if (reason.t === EventSent) {
       // forward events from `this.S`ignal to observers of this atom instance.
       // Ignore events from other sources (shouldn't happen, but either way
@@ -561,14 +560,7 @@ export class AtomInstance<
       return
     }
 
-    // TODO: Any calls in this case probably indicate a memory leak on the
-    // user's part. Notify them. TODO: Can we pause evaluations while
-    // status is Stale (and should we just always evaluate once when
-    // waking up a stale atom)?
-    if (this.l !== DESTROYED && this.w.push(reason) === 1) {
-      // refCount just hit 1; we haven't scheduled a job for this node yet
-      this.e._scheduler.schedule(this, defer)
-    }
+    super.r(reason)
 
     if (reason.s && reason.s === this.S && reason.e) {
       // when `this.S`ignal gives us events along with a state update, subsume

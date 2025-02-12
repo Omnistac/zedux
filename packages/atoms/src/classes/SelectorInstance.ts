@@ -3,7 +3,6 @@ import {
   AtomSelectorConfig,
   AtomSelectorOrConfig,
   DehydrationFilter,
-  InternalEvaluationReason,
   SelectorGenerics,
 } from '../types/index'
 import {
@@ -190,12 +189,5 @@ export class SelectorInstance<
    */
   public m() {
     this.destroy()
-  }
-
-  /**
-   * @see GraphNode.r
-   */
-  public r(reason: InternalEvaluationReason, defer?: boolean) {
-    this.w.push(reason) === 1 && this.e._scheduler.schedule(this, defer)
   }
 }

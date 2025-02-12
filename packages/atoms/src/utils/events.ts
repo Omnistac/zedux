@@ -10,19 +10,6 @@ import {
 } from '../types'
 import { ERROR, EventSent, makeReasonReadable } from './general'
 
-export const shouldScheduleImplicit = (
-  node: { C: Record<string, number> },
-  reason: InternalEvaluationReason
-) => {
-  reason.f || (reason.t !== EventSent && makeReasonReadable(reason))
-
-  return (
-    // '' = the catch-all listener
-    node.C[''] ||
-    Object.keys(reason.f ?? reason.e ?? {}).some(key => node.C[key])
-  )
-}
-
 export const isListeningTo = (
   ecosystem: Ecosystem,
   eventName: keyof EcosystemEvents
@@ -62,6 +49,19 @@ export const sendImplicitEcosystemEvent = (
   shouldSchedule &&
     ecosystem.w.push(reason) === 1 &&
     ecosystem._scheduler.schedule(ecosystem)
+}
+
+export const shouldScheduleImplicit = (
+  node: { C: Record<string, number> },
+  reason: InternalEvaluationReason
+) => {
+  reason.f || (reason.t !== EventSent && makeReasonReadable(reason))
+
+  return (
+    // '' = the catch-all listener
+    node.C[''] ||
+    Object.keys(reason.f ?? reason.e ?? {}).some(key => node.C[key])
+  )
 }
 
 export const parseOnArgs = (

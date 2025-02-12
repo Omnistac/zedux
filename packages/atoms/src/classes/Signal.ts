@@ -1,7 +1,6 @@
 import { Settable } from '@zedux/core'
 import {
   AtomGenerics,
-  InternalEvaluationReason,
   Mutatable,
   NodeGenerics,
   SendableEvents,
@@ -263,10 +262,4 @@ export class Signal<
   public m() {
     this.destroy()
   }
-
-  /**
-   * @see GraphNode.r
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public r(reason: InternalEvaluationReason, defer?: boolean) {}
 }

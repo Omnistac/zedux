@@ -20,7 +20,10 @@ export const doSubscribe = <State>(
 
     const isBatch = action?.meta === zeduxTypes.batch
 
-    instance.r({ n, o }, isBatch)
+    instance.w.push({ n, o }) === 1 &&
+      (isBatch
+        ? instance.e._scheduler.schedule(instance)
+        : instance.e.a(instance))
 
     // run the scheduler synchronously after every store update unless batching
     if (!isBatch) {

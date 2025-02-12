@@ -352,12 +352,19 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
   public abstract p: G['Params']
 
   /**
-   * `r`un - evaluate the graph node. If its value "changes", this in turn runs
-   * this node's dependents, recursing down the graph tree.
-   *
-   * If `defer` is true, make the scheduler set a timeout to run the evaluation.
+   * `r`un - schedule an evaluation of the graph node. If its value "changes",
+   * this in turn schedules this node's observers, recursing down the graph
+   * tree.
    */
-  public abstract r(reason: InternalEvaluationReason, defer?: boolean): void
+  public r(reason: InternalEvaluationReason) {
+    // don't schedule if destroyed and ignore `EventSent` reasons TODO: Any
+    // calls when destroyed probably indicate a memory leak on the user's part.
+    // Notify them. TODO: Can we pause evaluations while status is Stale (and
+    // should we just always evaluate once when waking up a stale node)?
+    this.l === DESTROYED ||
+      reason.t === EventSent ||
+      (this.w.push(reason) === 1 && this.e.a(this))
+  }
 
   /**
    * `s`ources - a map of the edges drawn between this node and all of its
@@ -512,15 +519,6 @@ export class ExternalNode<
   }
 
   /**
-   * @see GraphNode.r
-   */
-  public r(reason: InternalEvaluationReason, defer?: boolean) {
-    // ignore `EventSent` reasons
-    reason.t === EventSent ||
-      (this.w.push(reason) === 1 && this.e._scheduler.schedule(this, defer))
-  }
-
-  /**
    * `u`pdateEdge - ExternalNodes maintain a single edge on a source node. But
    * the source can change. Call this to update it if needed.
    */
@@ -621,14 +619,14 @@ export class Listener<
   /**
    * @see ExternalNode.r
    */
-  public r(reason: InternalEvaluationReason, defer?: boolean) {
+  public r(reason: InternalEvaluationReason) {
     const { e, w } = this
     const shouldSchedule = shouldScheduleImplicit(this, reason)
 
     // schedule the job if needed. If not scheduling, kill this listener now if
     // its source is destroyed.
-    shouldSchedule
-      ? w.push(reason) === 1 && e._scheduler.schedule(this, defer)
+    shouldSchedule && this.l !== DESTROYED
+      ? w.push(reason) === 1 && e.a(this)
       : this.i?.l === DESTROYED && this.k(this.i)
   }
 }

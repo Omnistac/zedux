@@ -62,6 +62,28 @@ export class Scheduler implements SchedulerInterface {
   }
 
   /**
+   * Schedule an EvaluateGraphNode (2) or UpdateExternalDependent (3) job
+   */
+  public insertJob(newJob: Job) {
+    const weight = newJob.W ?? 0
+
+    const index = this.findIndex(job => {
+      if (job.T !== newJob.T) return +(newJob.T - job.T > 0) || -1 // 1 or -1
+
+      // EvaluateGraphNode (2) and UpdateExternalDependent (3) jobs use weight
+      // comparison. `W` will always be defined here. TODO: use discriminated
+      // union types to reflect this
+      return weight < job.W! ? -1 : +(weight > job.W!) // + = 0 or 1
+    })
+
+    if (index === -1) {
+      this.jobs.push(newJob)
+    } else {
+      this.jobs.splice(index, 0, newJob)
+    }
+  }
+
+  /**
    * Call after any operation that may have nested flush attempts. This in
    * itself _is_ a flush attempt so whatever calls may also need wrapping in
    * pre+post.
@@ -115,11 +137,11 @@ export class Scheduler implements SchedulerInterface {
    * IMPORTANT: Setting and clearing timeouts is expensive. We need to always
    * pass `shouldSetTimeout: false` when we're going to immediately flush
    */
-  public schedule(newJob: Job, shouldSetTimeout = true) {
+  public schedule(newJob: Job) {
     this.insertJob(newJob)
 
     // we just pushed the first job onto the queue
-    if (shouldSetTimeout && this.jobs.length === 1 && !this._isRunning) {
+    if (this.jobs.length === 1 && !this._isRunning) {
       this.setTimeout()
     }
   }
@@ -200,28 +222,6 @@ export class Scheduler implements SchedulerInterface {
     )
 
     return this.findIndex(cb, newIndex, iteration + 1)
-  }
-
-  /**
-   * Schedule an EvaluateGraphNode (2) or UpdateExternalDependent (3) job
-   */
-  private insertJob(newJob: Job) {
-    const weight = newJob.W ?? 0
-
-    const index = this.findIndex(job => {
-      if (job.T !== newJob.T) return +(newJob.T - job.T > 0) || -1 // 1 or -1
-
-      // EvaluateGraphNode (2) and UpdateExternalDependent (3) jobs use weight
-      // comparison. `W` will always be defined here. TODO: use discriminated
-      // union types to reflect this
-      return weight < job.W! ? -1 : +(weight > job.W!) // + = 0 or 1
-    })
-
-    if (index === -1) {
-      this.jobs.push(newJob)
-    } else {
-      this.jobs.splice(index, 0, newJob)
-    }
   }
 
   /**
