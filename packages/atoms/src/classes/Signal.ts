@@ -61,7 +61,9 @@ export const doMutate = <G extends NodeGenerics>(
     // if the callback function doesn't return void, assume it's a partial
     // state object that represents a set of mutations Zedux needs to apply to
     // the signal's state.
-    if (result) recursivelyMutate(proxyWrapper.p, result)
+    if (result && typeof result === 'object' && !transactions.length) {
+      recursivelyMutate(proxyWrapper.p, result)
+    }
   } else {
     recursivelyMutate(proxyWrapper.p, mutatable)
   }
