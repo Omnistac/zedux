@@ -32,20 +32,18 @@ const addTransaction = (
  * indices rather than calling `arr.sort()`.
  *
  * TODO: We can technically support these operations by expanding the
- * transactions API to include special array `sort`/`reverse` and set `clear`
+ * transactions API to include special array `sort`/`reverse` (also set `clear`)
  * types with unique properties, kind of like we do with the `i`nsert type -
  * @see Transaction
  */
-const notSupported = (operation: string) => () => {
+const notSupported = () => {
   throw new Error(
-    `${operation} this proxy is not supported. Use \`.set\` instead of \`.mutate\``
+    `This operation is not supported. Use \`.set\` instead of \`.mutate\``
   )
 }
 
 const withPath = (key: PropertyKey, path?: PropertyKey[]) =>
   path ? [...path, key] : key
-
-const unsupportedOperator = 'This data type does not support this operation'
 
 export abstract class ProxyWrapper<State extends MutatableTypes>
   implements ParentProxy<State>, ProxyHandler<State>
@@ -96,7 +94,7 @@ export abstract class ProxyWrapper<State extends MutatableTypes>
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public d(state: State, key: PropertyKey) {
-    throw new Error(unsupportedOperator)
+    notSupported()
   }
 
   public deleteProperty(state: State, key: PropertyKey) {
@@ -131,7 +129,7 @@ export abstract class ProxyWrapper<State extends MutatableTypes>
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public s(state: State, key: PropertyKey, val: any) {
-    throw new Error(unsupportedOperator)
+    notSupported()
   }
 
   public set(state: State, key: PropertyKey, val: any) {
@@ -177,13 +175,13 @@ export class ArrayProxy<State extends any[]> extends ProxyWrapper<State> {
 
         return state.push(...items)
       },
-      reverse: notSupported('Reversing'),
+      reverse: notSupported,
       shift: () => {
         this.r(0)
 
         return state.shift()
       },
-      sort: notSupported('Sorting'),
+      sort: notSupported,
       splice: (index: number, deleteCount: number, ...items: any[]) => {
         const splice = state.splice(index, deleteCount, ...items)
 
@@ -256,21 +254,34 @@ export class SetProxy<State extends Set<any>> extends ProxyWrapper<any> {
   }
 
   get(state: State, key: PropertyKey): any {
+    // TODO: we should probably add `.forEach` (and recursively proxy items) at
+    // least
     const methods = {
       add: (val: any) => {
         this.a(val)
         return state.add(val)
       },
-      clear: notSupported('Clearing'),
+      clear: () => {
+        // TODO: We could optimize this to be a unique `t: "c"` (type: clear)
+        // operation
+        state.forEach(item => this.r(item))
+        return state.clear()
+      },
       delete: (val: any) => {
-        this.r(val)
+        state.has(val) && this.r(val)
         return state.delete(val)
       },
     }
 
-    return (
-      methods[key as keyof typeof methods] ?? state[key as keyof typeof state]
-    )
+    const method = methods[key as keyof typeof methods]
+
+    if (method) return method
+
+    const property = state[key as keyof typeof state]
+
+    return typeof property === 'function'
+      ? (property as (...args: any[]) => any).bind(state)
+      : property
   }
 }
 
@@ -297,7 +308,12 @@ export const recursivelyMutate = <State extends Record<string, any>>(
 ) => {
   for (const [key, val] of Object.entries(update)) {
     if (val && typeof val === 'object') {
-      recursivelyMutate(state[key], val)
+      if (state[key] && typeof state[key] === 'object') {
+        recursivelyMutate(state[key], val)
+      } else {
+        ;(state as any)[key] = val
+      }
+
       continue
     }
 
