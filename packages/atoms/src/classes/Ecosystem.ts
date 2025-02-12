@@ -241,10 +241,13 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const scheduler = this._scheduler
 
     const pre = scheduler.pre()
-    const result = callback()
-    scheduler.post(pre)
 
-    return result
+    try {
+      const result = callback()
+      return result
+    } finally {
+      scheduler.post(pre)
+    }
   }
 
   /**

@@ -150,9 +150,8 @@ export interface Job {
    * 1 - InformSubscribers
    * 2 - EvaluateGraphNode
    * 3 - UpdateExternalDependent
-   * 4 - RunEffect
    */
-  T: 0 | 1 | 2 | 3 | 4
+  T: 0 | 1 | 2 | 3
 }
 
 /**

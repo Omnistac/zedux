@@ -132,7 +132,13 @@ export const getNode = <G extends AtomGenerics>(
       (params || []) as G['Params']
     ) as AnyAtomInstance
 
-    newInstance.i() // TODO: remove. Run this in AtomInstance constructor
+    const pre = ecosystem._scheduler.pre()
+    try {
+      newInstance.i() // TODO: remove. Run this in AtomInstance constructor
+    } finally {
+      ecosystem._scheduler.post(pre)
+    }
+
     ecosystem.n.set(newInstance.id, newInstance)
 
     return newInstance
@@ -169,16 +175,21 @@ export const getNode = <G extends AtomGenerics>(
     }
 
     // create the instance; it doesn't exist yet
-    instance = new SelectorInstance(
-      ecosystem,
-      id,
-      selectorOrConfig,
-      params || []
-    )
+    const pre = ecosystem._scheduler.pre()
+    try {
+      instance = new SelectorInstance(
+        ecosystem,
+        id,
+        selectorOrConfig,
+        params || []
+      )
 
-    ecosystem.n.set(instance.id, instance)
+      ecosystem.n.set(instance.id, instance)
 
-    return instance
+      return instance
+    } finally {
+      ecosystem._scheduler.post(pre)
+    }
   }
 
   throw new TypeError(

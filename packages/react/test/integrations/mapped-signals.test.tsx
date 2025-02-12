@@ -3,6 +3,7 @@ import {
   As,
   atom,
   EventsOf,
+  injectEcosystem,
   injectMappedSignal,
   injectSignal,
   ion,
@@ -457,6 +458,40 @@ describe('mapped signals', () => {
       ['nestedSignal change', 111],
       ['signal change', 111],
       ['atom2 change', 111],
+    ])
+  })
+
+  test("updating a mapped signal during atom evaluation doesn't tear and eventually resolves", () => {
+    const calls: any[] = []
+    const atom1 = atom('1', () => 'a')
+
+    const atom2 = atom('2', () => {
+      const { get } = injectEcosystem()
+
+      const a = get(atom1)
+      const b = injectSignal('b')
+
+      const mappedSignal = injectMappedSignal({ a, b })
+
+      calls.push([b.get(), mappedSignal.get().b]) // no tearing
+
+      if (mappedSignal.get().b.length % 2) {
+        mappedSignal.mutate({ b: b.get() + 'b' })
+      }
+
+      calls.push(mappedSignal.get())
+
+      return mappedSignal
+    })
+
+    const node2 = ecosystem.getNode(atom2)
+
+    expect(node2.get()).toEqual({ a: 'a', b: 'bb' })
+    expect(calls).toEqual([
+      ['b', 'b'],
+      { a: 'a', b: 'b' },
+      ['bb', 'bb'],
+      { a: 'a', b: 'bb' },
     ])
   })
 })

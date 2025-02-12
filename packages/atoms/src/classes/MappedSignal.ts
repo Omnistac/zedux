@@ -138,44 +138,46 @@ export class MappedSignal<
 
     const pre = this.e._scheduler.pre()
 
-    for (const [key, value] of Object.entries(newState)) {
-      if (value !== this.v[key]) {
-        const signal = this.M[key]
+    try {
+      for (const [key, value] of Object.entries(newState)) {
+        if (value !== this.v[key]) {
+          const signal = this.M[key]
 
-        if (!(signal as Signal | undefined)?.izn) {
-          if (!this.N) this.N = { ...this.v }
+          if (!(signal as Signal | undefined)?.izn) {
+            if (!this.N) this.N = { ...this.v }
 
-          this.N![key] = value
-          continue
-        }
+            this.N![key] = value
+            continue
+          }
 
-        const relevantEvents =
-          (signal as Signal).E &&
-          events &&
-          Object.fromEntries(
-            Object.entries(events).filter(
-              // we don't pass mutate events to inner signals - they weren't
-              // mutated, the outer signal was. This is to optimize
-              // performance for the most common case - usually you won't
-              // subscribe to individual inner signals; you subscribe to the
-              // full, outer signal or the atom itself.
-              ([eventName]) =>
-                eventName !== 'mutate' && eventName in (signal as Signal).E!
+          const relevantEvents =
+            (signal as Signal).E &&
+            events &&
+            Object.fromEntries(
+              Object.entries(events).filter(
+                // we don't pass mutate events to inner signals - they weren't
+                // mutated, the outer signal was. This is to optimize
+                // performance for the most common case - usually you won't
+                // subscribe to individual inner signals; you subscribe to the
+                // full, outer signal or the atom itself.
+                ([eventName]) =>
+                  eventName !== 'mutate' && eventName in (signal as Signal).E!
+              )
             )
-          )
 
-        ;(signal as Signal).set(value, relevantEvents)
+          ;(signal as Signal).set(value, relevantEvents)
+        }
       }
+
+      // if this wrapper signal hasn't been scheduled at this point, no inner
+      // signals were updated. Either `set` was called with a different object
+      // reference (making `this.N` undefined and this whole call a noop) or
+      // `this.N` will contain one or more updates for non-signal inner values.
+      // No need to involve the scheduler. Update own state now.
+      if (!this.w.length && this.N) this.j()
+    } finally {
+      this.e._scheduler.post(pre)
     }
-
-    // if this wrapper signal hasn't been scheduled at this point, no inner
-    // signals were updated. Either `set` was called with a different object
-    // reference (making `this.N` undefined and this whole call a noop) or
-    // `this.N` will contain one or more updates for non-signal inner values.
-    // No need to involve the scheduler. Update own state now.
-    if (!this.w.length && this.N) this.j()
-
-    this.e._scheduler.post(pre)
   }
 
   /**

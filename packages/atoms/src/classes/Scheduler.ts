@@ -16,7 +16,6 @@ export class Scheduler implements SchedulerInterface {
    *
    * - EvaluateGraphNode (2)
    * - UpdateExternalDependent (3)
-   * - RunEffect (4)
    */
   private jobs: Job[] = []
 
@@ -75,12 +74,18 @@ export class Scheduler implements SchedulerInterface {
    * potentially-nested flush operation. Always combine with
    * `scheduler.post(preReturnValue)`
    *
+   * IMPORTANT: If an error can possibly be thrown before calling
+   * `scheduler.post`, wrap the operation in `try..finally`
+   *
    * Example:
    *
    * ```ts
    * const pre = scheduler.pre()
-   * setAtomStateOrSendSignalEventsEtc()
-   * scheduler.post(pre)
+   * try {
+   *   setAtomStateOrSendSignalEventsEtc()
+   * } finally {
+   *   scheduler.post(pre)
+   * }
    * ```
    */
   public pre() {
@@ -98,15 +103,10 @@ export class Scheduler implements SchedulerInterface {
    * pass `shouldSetTimeout: false` when we're going to immediately flush
    */
   public schedule(newJob: Job, shouldSetTimeout = true) {
-    if (newJob.T === 4) {
-      // RunEffect (4) jobs run in any order, after everything else
-      this.jobs.push(newJob)
-    } else {
-      this.insertJob(newJob)
-    }
+    this.insertJob(newJob)
 
     // we just pushed the first job onto the queue
-    if (shouldSetTimeout && this.jobs.length === 1) {
+    if (shouldSetTimeout && this.jobs.length === 1 && !this._isRunning) {
       this.setTimeout()
     }
   }

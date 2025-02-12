@@ -19,6 +19,7 @@ import {
 import { Ecosystem } from './Ecosystem'
 import { GraphNode } from './GraphNode'
 import { recursivelyMutate, recursivelyProxy } from './proxies'
+import { getEvaluationContext } from '../utils/evaluationContext'
 
 export const doMutate = <G extends NodeGenerics>(
   node: Signal<G>,
@@ -26,6 +27,15 @@ export const doMutate = <G extends NodeGenerics>(
   mutatable: Mutatable<G['State']>,
   events?: Partial<SendableEvents<G>>
 ) => {
+  if (getEvaluationContext().n) {
+    node.e._scheduler.schedule(
+      { j: () => node.mutate(mutatable, events), T: 2 },
+      false
+    )
+
+    return
+  }
+
   const oldState = node.v
 
   if (
@@ -75,8 +85,6 @@ export const doMutate = <G extends NodeGenerics>(
       } as Partial<SendableEvents<G>>)
     }
   }
-
-  return [newState, transactions] as const
 }
 
 export class Signal<
@@ -216,6 +224,15 @@ export class Signal<
     settable: Settable<G['State']>,
     events?: Partial<SendableEvents<G>>
   ) {
+    if (getEvaluationContext().n) {
+      this.e._scheduler.schedule(
+        { j: () => this.set(settable, events), T: 2 },
+        false
+      )
+
+      return
+    }
+
     const oldState = this.v
     const newState = (this.v =
       typeof settable === 'function'
@@ -242,8 +259,7 @@ export class Signal<
   public h(val: any) {}
 
   /**
-   * @see GraphNode.j a noop - signals are never scheduled as jobs - they have
-   * no sources and nothing to evaluate
+   * @see GraphNode.j
    */
   public j() {}
 
@@ -255,7 +271,7 @@ export class Signal<
   }
 
   /**
-   * @see GraphNode.r a noop - signals have nothing to evaluate
+   * @see GraphNode.r
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public r(reason: InternalEvaluationReason, defer?: boolean) {}
