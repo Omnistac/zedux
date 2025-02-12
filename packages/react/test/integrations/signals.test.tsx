@@ -317,4 +317,45 @@ describe('signals', () => {
       [1, 1],
     ])
   })
+
+  test('multiple deferred state updates run in order', () => {
+    const calls: any[] = []
+    const atom1 = atom('1', 'a')
+
+    const atom2 = atom('2', () => {
+      const { getNode } = injectEcosystem()
+      const node1 = getNode(atom1)
+      const val1 = node1.get()
+      const signal = injectSignal({ str: val1 })
+
+      if (!calls.length) {
+        signal.set({ str: 'a' })
+        signal.set(state => ({ str: state.str + 'b' }))
+        node1.set(signal.get().str) // noop
+        signal.mutate(state => {
+          state.str += 'c'
+        })
+        signal.mutate(state => ({ str: state.str + 'd' }))
+      }
+
+      if (signal.get().str === 'abcd') {
+        node1.set(signal.get().str)
+      }
+
+      calls.push([val1, signal.get()])
+
+      return signal
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+    const node2 = ecosystem.getNode(atom2)
+
+    expect(node1.get()).toBe('abcd')
+    expect(node2.get()).toEqual({ str: 'abcd' })
+    expect(calls).toEqual([
+      ['a', { str: 'a' }],
+      ['a', { str: 'abcd' }],
+      ['abcd', { str: 'abcd' }],
+    ])
+  })
 })

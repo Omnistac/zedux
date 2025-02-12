@@ -28,10 +28,7 @@ export const doMutate = <G extends NodeGenerics>(
   events?: Partial<SendableEvents<G>>
 ) => {
   if (getEvaluationContext().n) {
-    node.e._scheduler.schedule(
-      { j: () => node.mutate(mutatable, events), T: 2 },
-      false
-    )
+    node.e._scheduler.i(() => node.mutate(mutatable, events))
 
     return
   }
@@ -225,10 +222,7 @@ export class Signal<
     events?: Partial<SendableEvents<G>>
   ) {
     if (getEvaluationContext().n) {
-      this.e._scheduler.schedule(
-        { j: () => this.set(settable, events), T: 2 },
-        false
-      )
+      this.e._scheduler.i(() => this.set(settable, events))
 
       return
     }

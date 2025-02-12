@@ -173,8 +173,15 @@ export class MappedSignal<
       // signals were updated. Either `set` was called with a different object
       // reference (making `this.N` undefined and this whole call a noop) or
       // `this.N` will contain one or more updates for non-signal inner values.
-      // No need to involve the scheduler. Update own state now.
-      if (!this.w.length && this.N) this.j()
+      if (!this.w.length && this.N) {
+        if (this.e._scheduler.I) {
+          // inner signals have updates, but they're deferred. Defer here too
+          this.e._scheduler.i(() => this.j())
+        } else {
+          // No need to involve the scheduler. Update own state now.
+          this.j()
+        }
+      }
     } finally {
       this.e._scheduler.post(pre)
     }
