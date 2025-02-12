@@ -1,3 +1,20 @@
+## v2.0.0-beta.2 (Feb 12, 2025)
+
+### New Features:
+
+- **Breaking Change** `atoms`: make `injectMemo` reactive when no deps are passed (#171)
+- **Breaking Change** `atoms`, `react`: replace atom getters with ecosystem function properties (#169)
+- **Breaking Change** `atoms`, `react`, `stores`: add `status` getter property to graph nodes (#173)
+- **Breaking Change** `atoms`, `react`, `stores`: implement `untrack` and rework injectors (#170)
+- **Breaking Change** `atoms`, `react`, `stores`: implement new plugins spec (#168)
+- **Breaking Change** `atoms`, `immer`, `machines`, `react`, `stores`: make listeners passive, implement all implicit events (#158)
+- `atoms`, `react`, `stores`: implement scoped atoms, `inject`, and `ecosystem.withScope` (#172)
+
+### Fixes:
+
+- `atoms`: add tests for proxies and fix several edge case bugs (#176)
+- `atoms`, `core`: defer state changes during node evaluation (#175)
+
 ## v2.0.0-beta.1 (Jan 21, 2025)
 
 ### New Features:
