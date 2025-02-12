@@ -3,6 +3,15 @@ import { Ecosystem } from './Ecosystem'
 
 export class Scheduler implements SchedulerInterface {
   /**
+   * `I`nterrupt - currently interrupt jobs only have one use - to defer `set`
+   * and `mutate` calls that happen during node evaluation. Those deferred jobs
+   * need to run in the order they were called in. The easiest way to do that is
+   * only add a single Interrupt job that tracks all the others. Attach it to
+   * this property and clean up when all interrupts are run.
+   */
+  public I: (() => void)[] | undefined = undefined
+
+  /**
    * We set this to true internally when the scheduler starts flushing. We also
    * set it to true when batching updates, to prevent anything from flushing.
    */
@@ -14,9 +23,12 @@ export class Scheduler implements SchedulerInterface {
   /**
    * The dynamic list of "full" jobs to run. Full jobs are:
    *
+   * - Interrupt (1) (yes, temporarily shares the same number as
+   *   InformSubscribers. These job types are added to different arrays, so
+   *   there's no conflict. This will be fixed when core package has its own
+   *   scheduler)
    * - EvaluateGraphNode (2)
    * - UpdateExternalDependent (3)
-   * - RunEffect (4)
    */
   private jobs: Job[] = []
 
@@ -27,8 +39,8 @@ export class Scheduler implements SchedulerInterface {
    * - InformSubscribers (1)
    */
   private nows: Job[] = []
-  private _handle?: ReturnType<typeof setTimeout>
-  private _runAfterNows?: boolean
+  private _handle: ReturnType<typeof setTimeout> | undefined = undefined
+  private _runAfterNows: boolean | undefined = undefined
 
   constructor(private readonly ecosystem: Ecosystem) {}
 
@@ -75,12 +87,18 @@ export class Scheduler implements SchedulerInterface {
    * potentially-nested flush operation. Always combine with
    * `scheduler.post(preReturnValue)`
    *
+   * IMPORTANT: If an error can possibly be thrown before calling
+   * `scheduler.post`, wrap the operation in `try..finally`
+   *
    * Example:
    *
    * ```ts
    * const pre = scheduler.pre()
-   * setAtomStateOrSendSignalEventsEtc()
-   * scheduler.post(pre)
+   * try {
+   *   setAtomStateOrSendSignalEventsEtc()
+   * } finally {
+   *   scheduler.post(pre)
+   * }
    * ```
    */
   public pre() {
@@ -98,15 +116,10 @@ export class Scheduler implements SchedulerInterface {
    * pass `shouldSetTimeout: false` when we're going to immediately flush
    */
   public schedule(newJob: Job, shouldSetTimeout = true) {
-    if (newJob.T === 4) {
-      // RunEffect (4) jobs run in any order, after everything else
-      this.jobs.push(newJob)
-    } else {
-      this.insertJob(newJob)
-    }
+    this.insertJob(newJob)
 
     // we just pushed the first job onto the queue
-    if (shouldSetTimeout && this.jobs.length === 1) {
+    if (shouldSetTimeout && this.jobs.length === 1 && !this._isRunning) {
       this.setTimeout()
     }
   }
@@ -136,6 +149,29 @@ export class Scheduler implements SchedulerInterface {
     this.jobs = this.jobs.filter(
       job => job.T === 3 // UpdateExternalDependent (3)
     )
+  }
+
+  /**
+   * `i`nterrupt - add an interrupt job at the front of the queue or add a task
+   * to the existing interrupt job if one is already scheduled
+   */
+  public i(task: () => void) {
+    if (this.I) return this.I.push(task)
+
+    const jobList = [task]
+
+    this.jobs.unshift({
+      j: () => {
+        for (const job of jobList) {
+          job()
+        }
+
+        this.I = undefined
+      },
+      T: 1,
+    })
+
+    this.I = jobList
   }
 
   // An O(log n) replacement for this.jobs.findIndex()
