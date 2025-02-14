@@ -174,7 +174,7 @@ export class Signal<
     mutatable: Mutatable<G['State']>,
     events?: Partial<SendableEvents<G>>
   ) {
-    return doMutate(this, false, mutatable, events)
+    doMutate(this, false, mutatable, events)
   }
 
   public send<E extends UndefinedEvents<G['Events']>>(eventName: E): void

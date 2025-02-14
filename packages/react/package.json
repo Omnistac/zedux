@@ -51,7 +51,7 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "react": ">=18.0.0"
+    "react": ">=19.0.0"
   },
   "repository": {
     "directory": "packages/react",

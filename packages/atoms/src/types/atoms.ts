@@ -9,7 +9,7 @@ import {
   Selectable,
 } from './index'
 import { SelectorInstance } from '../classes/SelectorInstance'
-import { Signal } from '../classes/Signal'
+import type { Signal } from '../classes/Signal'
 import { MappedSignal } from '../classes/MappedSignal'
 
 export type AtomApiGenericsPartial<G extends Partial<AtomApiGenerics>> = Omit<
@@ -100,9 +100,12 @@ export type ExportsOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
     ? G['Exports']
     : never
 
-export type GenericsOf<A extends GraphNode> = A extends GraphNode<infer G>
-  ? G
-  : never
+export type GenericsOf<A extends GraphNode | AtomTemplateBase> =
+  A extends GraphNode<infer G>
+    ? G
+    : A extends AtomTemplateBase<infer G>
+    ? G
+    : never
 
 export type NodeGenerics = Pick<
   AtomGenerics,

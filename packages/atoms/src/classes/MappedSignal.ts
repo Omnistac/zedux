@@ -87,7 +87,7 @@ export class MappedSignal<
     mutatable: Mutatable<G['State']>,
     events?: Partial<SendableEvents<G>>
   ) {
-    return doMutate(this, true, mutatable, events)
+    doMutate(this, true, mutatable, events)
   }
 
   public send<E extends UndefinedEvents<G['Events']>>(eventName: E): void

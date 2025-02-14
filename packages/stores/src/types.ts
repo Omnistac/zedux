@@ -10,12 +10,15 @@ import {
 import { Store } from '@zedux/core'
 import { AtomInstance } from './AtomInstance'
 import { AtomApi } from './AtomApi'
+import { AtomTemplate } from './AtomTemplate'
 
 export type AnyAtomApiGenerics = { [K in keyof AtomGenerics]: any }
 
 export type AnyAtomGenerics<
   G extends Partial<AtomGenerics> = AnyNonNullishValue
-> = Prettify<Omit<{ [K in keyof AtomGenerics]: any }, keyof G> & G>
+> = Prettify<
+  Omit<{ [K in keyof AtomGenerics]: any }, keyof G> & { [K in keyof G]-?: G[K] }
+>
 
 export type AnyAtomApi<G extends Partial<AtomApiGenerics> | 'any' = 'any'> =
   AtomApi<G extends Partial<AtomApiGenerics> ? AtomApiGenericsPartial<G> : any>
@@ -24,7 +27,9 @@ export type AnyStoreAtomInstance<
   G extends Partial<AtomGenerics> | 'any' = 'any'
 > = AtomInstance<
   G extends Partial<AtomGenerics>
-    ? { Template: AnyStoreAtomTemplate<G> } & AnyAtomGenerics<G>
+    ? { Template: any } & AnyAtomGenerics<
+        { Template: AnyStoreAtomTemplate<G> } & G
+      >
     : any
 >
 
@@ -32,8 +37,10 @@ export type AnyStoreAtomTemplate<
   G extends Partial<AtomGenerics> | 'any' = 'any'
 > = AtomTemplateBase<
   G extends Partial<AtomGenerics>
-    ? { Node: AnyStoreAtomInstance<G> } & AnyAtomGenerics<G>
-    : any
+    ? {
+        Node: AnyStoreAtomInstance<G>
+      } & AnyAtomGenerics<G & { Node: AnyStoreAtomInstance<G> }>
+    : AnyAtomGenerics
 >
 
 export type AtomApiGenerics = Pick<
@@ -48,19 +55,6 @@ export type AtomApiGenericsPartial<G extends Partial<AtomApiGenerics>> = Omit<
   keyof G
 > &
   G
-
-export type AtomGenericsToAtomApiGenerics<
-  G extends Pick<
-    AtomGenerics,
-    'Events' | 'Exports' | 'Promise' | 'State' | 'Store'
-  >
-> = Pick<G, 'Exports' | 'Promise' | 'State'> & {
-  Store: G['Store'] | undefined
-}
-
-export interface AtomGenerics extends NewAtomGenerics {
-  Store: Store<any>
-}
 
 export type AtomApiPromise = Promise<any> | undefined
 
@@ -85,6 +79,22 @@ export type AtomExportsType<
   : A extends AtomApi<infer G>
   ? G['Exports']
   : never
+
+export type AtomGenericsToAtomApiGenerics<
+  G extends Pick<
+    AtomGenerics,
+    'Events' | 'Exports' | 'Promise' | 'State' | 'Store'
+  >
+> = Pick<G, 'Exports' | 'Promise' | 'State'> & {
+  Store: G['Store'] | undefined
+}
+
+export interface AtomGenerics
+  extends Omit<NewAtomGenerics, 'Node' | 'Template'> {
+  Node: AtomInstance<any>
+  Store: Store<any>
+  Template: AtomTemplate<any>
+}
 
 export type AtomInstanceType<A extends AnyStoreAtomTemplate> =
   A extends AtomTemplateBase<infer G>

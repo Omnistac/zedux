@@ -102,5 +102,5 @@ export const atom: {
     throw new TypeError('Zedux: All atoms must have a key')
   }
 
-  return new AtomTemplate(key, value, config) as any
+  return new AtomTemplate(key, value, config)
 }
