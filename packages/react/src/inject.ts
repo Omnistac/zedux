@@ -1,6 +1,5 @@
-import { AtomTemplateBase, injectSelf, is, NodeOf } from '@zedux/atoms'
+import { AtomTemplateBase, injectSelf, NodeOf } from '@zedux/atoms'
 import { Context } from 'react'
-import { getReactContext } from './utils'
 
 export const inject = <T extends Context<any> | AtomTemplateBase>(
   context: T
@@ -25,7 +24,7 @@ export const inject = <T extends Context<any> | AtomTemplateBase>(
 
   if (!instance.e.S) {
     throw new Error(
-      `Scoped atom was initialized outside a scoped context. This atom needs to be initialized by a React component or inside \`ecosystem.withScope\``
+      `Scoped atom was used outside a scoped context. This atom needs to be used by a React component or inside \`ecosystem.withScope\``
     )
   }
 

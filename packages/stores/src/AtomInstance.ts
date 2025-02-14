@@ -154,7 +154,7 @@ export class AtomInstance<
    *
    * An alias for `instance.store.getState()`.
    */
-  public get() {
+  public get(): G['State'] {
     super.get() // register graph edge
 
     return this.store.getState()

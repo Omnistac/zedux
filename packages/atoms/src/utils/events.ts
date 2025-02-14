@@ -1,4 +1,5 @@
-import type { Ecosystem, GraphNode } from '../classes'
+import type { Ecosystem } from '../classes/Ecosystem'
+import type { GraphNode } from '../classes/GraphNode'
 import {
   CatchAllListener,
   EcosystemEvent,
@@ -7,7 +8,7 @@ import {
   ListenableEvents,
   ListenerConfig,
   SingleEventListener,
-} from '../types'
+} from '../types/index'
 import { ERROR, EventSent, makeReasonReadable } from './general'
 
 export const isListeningTo = (

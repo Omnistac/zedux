@@ -3,6 +3,7 @@ import {
   GraphEdge,
   InternalEvaluationReason,
 } from '@zedux/atoms/types/index'
+import { type Ecosystem } from '../classes/Ecosystem'
 import { type GraphNode } from '../classes/GraphNode'
 import { SendableEvents } from '../types/events'
 import {
@@ -22,7 +23,33 @@ import {
   sendEcosystemEvent,
   sendImplicitEcosystemEvent,
 } from './events'
-import { changeScopedNodeId } from './ecosystem'
+
+const changeScopedNodeId = (
+  ecosystem: Ecosystem,
+  templateKey: string,
+  newNode: GraphNode
+) => {
+  // if this is the first scoped node of its template to evaluate, record the
+  // scope all future instances of the template will need to be provided
+  ecosystem.s ??= {}
+  ecosystem.s[templateKey] ??= [...newNode.V!.keys()]
+
+  // give the new scoped node a `@scope()`-suffixed id
+  const contextValueStrings = [...newNode.V!.values()].map(val => {
+    const resolvedVal =
+      val?.constructor?.name === WeakRef.name
+        ? (val as WeakRef<any>).deref()
+        : val
+
+    return (resolvedVal as GraphNode)?.izn
+      ? (resolvedVal as GraphNode).id
+      : ecosystem._idGenerator.hashParams(resolvedVal, true)
+  })
+
+  const scopedId = `${newNode.id}-@scope(${contextValueStrings.join(',')})`
+
+  newNode.id = scopedId
+}
 
 /**
  * Actually add an edge to the graph. When we buffer graph updates, we're

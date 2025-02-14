@@ -132,4 +132,4 @@ export const ion: {
     Promise: PromiseType
   }>,
   config?: AtomConfig<State>
-) => new IonTemplate(key, get, config) as any
+) => new IonTemplate(key, get, config)

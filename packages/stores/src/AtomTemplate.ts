@@ -1,4 +1,4 @@
-import { AtomTemplateBase, Ecosystem } from '@zedux/atoms'
+import { AtomConfig, AtomTemplateBase, Ecosystem } from '@zedux/atoms'
 import { atom } from './atom'
 import { AtomInstance } from './AtomInstance'
 import { AnyAtomGenerics, AtomGenerics, AtomValueOrFactory } from './types'
@@ -27,6 +27,14 @@ export class AtomTemplate<
     Template: AtomTemplateRecursive<G>
   } = AnyAtomGenerics
 > extends AtomTemplateBase<G> {
+  constructor(
+    key: string,
+    _value: AtomValueOrFactory<G>,
+    _config?: AtomConfig<G['State']> | undefined
+  ) {
+    super(key, _value, _config)
+  }
+
   /**
    * This method should be overridden when creating custom atom classes that
    * create a custom atom instance class. Return a new instance of your atom

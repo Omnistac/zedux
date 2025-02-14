@@ -15,33 +15,6 @@ import { getSelectorKey, SelectorInstance } from '../classes/SelectorInstance'
 import { getEvaluationContext } from './evaluationContext'
 import { DESTROYED } from './general'
 
-export const changeScopedNodeId = (
-  ecosystem: Ecosystem,
-  templateKey: string,
-  newNode: GraphNode
-) => {
-  // if this is the first scoped node of its template to evaluate, record the
-  // scope all future instances of the template will need to be provided
-  ecosystem.s ??= {}
-  ecosystem.s[templateKey] ??= [...newNode.V!.keys()]
-
-  // give the new scoped node a `@scope()`-suffixed id
-  const contextValueStrings = [...newNode.V!.values()].map(val => {
-    const resolvedVal =
-      val?.constructor?.name === WeakRef.name
-        ? (val as WeakRef<any>).deref()
-        : val
-
-    return is(resolvedVal, AtomInstance)
-      ? (resolvedVal as AtomInstance).id
-      : ecosystem._idGenerator.hashParams(resolvedVal, true)
-  })
-
-  const scopedId = `${newNode.id}-@scope(${contextValueStrings.join(',')})`
-
-  newNode.id = scopedId
-}
-
 const getContextualizedId = (
   ecosystem: Ecosystem,
   scopeKeys: Record<string, any>[],
