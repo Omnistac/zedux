@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/extend-expect'
 import { act } from '@testing-library/react'
 import {
   createStore,
+  injectEcosystem,
   injectEffect,
   useAtomInstance,
   useAtomValue,
@@ -127,7 +128,9 @@ describe('using atoms in components', () => {
     const atom1 = atom('1', 'a')
     const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
     const atom1Override = atom1.override('aa')
-    const atom2Override = atom2.override(({ get }) => get(atom1) + 'bb')
+    const atom2Override = atom2.override(
+      () => injectEcosystem().get(atom1) + 'bb'
+    )
 
     function Test() {
       const two = useAtomValue(atom2)

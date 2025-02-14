@@ -505,7 +505,7 @@ describe('scoped atoms', () => {
     const childAtom = atom('child', () => inject(atom1))
 
     expect(() => ecosystem.getNode(childAtom)).toThrowError(
-      /Scoped atom was initialized outside a scoped context/
+      /Scoped atom was used outside a scoped context/
     )
     expect(consoleMock).toHaveBeenCalledTimes(1)
   })
