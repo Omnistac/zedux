@@ -392,7 +392,7 @@ export interface RefObject<T = any> {
   readonly current: T | null
 }
 
-export type Selectable<State = any, Params extends any[] = any[]> =
+export type Selectable<State = any, Params extends any[] = any> =
   | AtomSelectorOrConfig<State, Params>
   | SelectorInstance<{
       Params: Params
