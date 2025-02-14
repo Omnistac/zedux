@@ -1,3 +1,9 @@
+## v2.0.0-beta.3 (Feb 14, 2025)
+
+### Fixes:
+
+- **Breaking Change** `atoms`, `react`, `stores`: fix some types, return values, and relative imports (#178)
+
 ## v2.0.0-beta.2 (Feb 12, 2025)
 
 ### New Features:
