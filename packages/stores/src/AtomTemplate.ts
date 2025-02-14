@@ -22,10 +22,7 @@ export type AtomTemplateRecursive<
 >
 
 export class AtomTemplate<
-  G extends AtomGenerics & {
-    Node: AtomInstanceRecursive<G>
-    Template: AtomTemplateRecursive<G>
-  } = AnyAtomGenerics
+  G extends AtomGenerics = AnyAtomGenerics
 > extends AtomTemplateBase<G> {
   constructor(
     key: string,
