@@ -1,3 +1,9 @@
+## v2.0.0-beta.4 (Feb 14, 2025)
+
+### Fixes:
+
+- `atoms`, `stores`: fix some more v2 types (#180)
+
 ## v2.0.0-beta.3 (Feb 14, 2025)
 
 ### Fixes:
