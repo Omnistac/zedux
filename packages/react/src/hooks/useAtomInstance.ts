@@ -154,7 +154,7 @@ export const useAtomInstance: {
     // an unmounting component's effect cleanup can update or force-destroy the
     // atom instance before this component is mounted. If that happened, trigger
     // a rerender to recreate the atom instance and/or get its new state
-    if (instance.v !== renderedValue || instance.l === zi.D) {
+    if ((subscribe && instance.v !== renderedValue) || instance.l === zi.D) {
       render({})
     }
 
