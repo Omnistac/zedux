@@ -1,3 +1,9 @@
+## v1.3.4 (Feb 15, 2025)
+
+### Fixes:
+
+- `react`: only trigger rerender in `useAtomInstance` if `subscribe: true` (#183)
+
 ## v1.3.3 (Feb 7, 2025)
 
 ### Fixes:
