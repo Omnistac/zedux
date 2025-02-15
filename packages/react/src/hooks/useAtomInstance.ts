@@ -144,7 +144,7 @@ export const useAtomInstance: {
     // atom instance before this component is mounted. If that happened, trigger
     // a rerender to recreate the atom instance and/or get its new state
     if (
-      instance.getState() !== renderedState ||
+      (subscribe && instance.getState() !== renderedState) ||
       instance.status === 'Destroyed'
     ) {
       render({})
