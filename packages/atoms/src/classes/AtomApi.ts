@@ -3,8 +3,35 @@ import {
   AtomInstanceTtl,
   AtomApiGenerics,
   Prettify,
+  ExportsConfig,
 } from '@zedux/atoms/types/index'
-import { prefix } from '@zedux/atoms/utils/general'
+import { INITIALIZING, prefix } from '@zedux/atoms/utils/general'
+import { getEvaluationContext } from '../utils/evaluationContext'
+
+const wrapExports = <T extends Record<string, any>>(
+  exports: T,
+  config?: ExportsConfig
+): T => {
+  const instance = getEvaluationContext().n
+
+  // wrap normal arrow functions in `batch` and, if needed, `withScope` calls.
+  // Only do this when `api()` is called during initial atom evaluation.
+  return config?.wrap !== false && instance && instance.l === INITIALIZING
+    ? (Object.fromEntries(
+        Object.entries(exports).map(([key, val]) => [
+          key,
+          typeof val === 'function' && !val.prototype
+            ? (...args: any[]) =>
+                instance.e.batch(() =>
+                  instance.V
+                    ? instance.e.withScope(instance.V, () => val(...args))
+                    : val(...args)
+                )
+            : val,
+        ])
+      ) as T)
+    : exports
+}
 
 export class AtomApi<G extends AtomApiGenerics> {
   public static $$typeof = Symbol.for(`${prefix}/AtomApi`)
@@ -26,7 +53,8 @@ export class AtomApi<G extends AtomApiGenerics> {
   }
 
   public addExports<NewExports extends Record<string, any>>(
-    exports: NewExports
+    exports: NewExports,
+    config?: ExportsConfig
   ): AtomApi<
     Prettify<
       Omit<G, 'Exports'> & {
@@ -37,8 +65,10 @@ export class AtomApi<G extends AtomApiGenerics> {
       }
     >
   > {
-    if (!this.exports) this.exports = exports as any
-    else this.exports = { ...this.exports, ...exports }
+    const newExports = wrapExports(exports, config)
+
+    if (!this.exports) this.exports = newExports as any
+    else this.exports = { ...this.exports, ...newExports }
 
     return this as AtomApi<
       Omit<G, 'Exports'> & {
@@ -51,11 +81,12 @@ export class AtomApi<G extends AtomApiGenerics> {
   }
 
   public setExports<NewExports extends Record<string, any>>(
-    exports: NewExports
+    exports: NewExports,
+    config?: ExportsConfig
   ): AtomApi<Prettify<Omit<G, 'Exports'> & { Exports: NewExports }>> {
     ;(
       this as unknown as AtomApi<Omit<G, 'Exports'> & { Exports: NewExports }>
-    ).exports = exports
+    ).exports = wrapExports(exports, config)
 
     return this as unknown as AtomApi<
       Omit<G, 'Exports'> & { Exports: NewExports }

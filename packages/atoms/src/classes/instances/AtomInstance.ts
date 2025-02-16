@@ -458,18 +458,18 @@ export class AtomInstance<
       this.N = undefined
       destroyBuffer(prevNode)
 
-      throw err
-    } finally {
-      this._isEvaluating = false
-
-      // even if evaluation errored, we need to update dependents if the
-      // `S`ignal's state changed. TODO: move this to `catch` block
+      // even if evaluation errored, we need to keep this atom in sync with its
+      // signal (and update dependents if the `S`ignal's state changed).
       if (this.S && this.S.v !== this.v) {
         const oldState = this.v
         this.v = this.S.v
 
         handleStateChange(this, oldState)
       }
+
+      throw err
+    } finally {
+      this._isEvaluating = false
 
       this.w = []
     }

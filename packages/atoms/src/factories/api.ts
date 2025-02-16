@@ -12,7 +12,7 @@ import { Signal } from '../classes/Signal'
  * the atom.
  *
  *   - Any exports on the AtomApi are set as the atom instance's exports on
- *     initial evaluation and ignored forever after.
+ *     initial evaluation (and ignored on all subsequent evaluations).
  *   - If promise or state references change on subsequent evaluations, it
  *     triggers the appropriate updates in all the atom's dynamic dependents.
  */
