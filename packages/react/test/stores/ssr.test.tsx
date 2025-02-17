@@ -145,8 +145,8 @@ describe('ssr', () => {
     expect(ecosystem.dehydrate({ exclude: ['1', atom2] })).toEqual({})
   })
 
-  test('`ecosystem.dehydrate({ excludeFlags })` excludes atoms from dehydration', () => {
-    const atom1 = atom('1', 'a', { flags: ['exclude-me'] })
+  test('`ecosystem.dehydrate({ excludeTags })` excludes atoms from dehydration', () => {
+    const atom1 = atom('1', 'a', { tags: ['exclude-me'] })
     const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
 
     ecosystem.getInstance(atom2)
@@ -156,16 +156,14 @@ describe('ssr', () => {
       2: 'ab',
     })
 
-    expect(ecosystem.dehydrate({ excludeFlags: ['exclude-me'] })).toEqual({
+    expect(ecosystem.dehydrate({ excludeTags: ['exclude-me'] })).toEqual({
       2: 'ab',
     })
 
-    expect(ecosystem.dehydrate({ excludeFlags: ['nonexistent-flag'] })).toEqual(
-      {
-        1: 'a',
-        2: 'ab',
-      }
-    )
+    expect(ecosystem.dehydrate({ excludeTags: ['nonexistent-tag'] })).toEqual({
+      1: 'a',
+      2: 'ab',
+    })
   })
 
   test('`ecosystem.dehydrate({ include })` includes atoms in dehydration', () => {
@@ -201,8 +199,8 @@ describe('ssr', () => {
     })
   })
 
-  test('`ecosystem.dehydrate({ includeFlags })` includes atoms in dehydration', () => {
-    const atom1 = atom('1', 'a', { flags: ['include-me'] })
+  test('`ecosystem.dehydrate({ includeTags })` includes atoms in dehydration', () => {
+    const atom1 = atom('1', 'a', { tags: ['include-me'] })
     const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
 
     ecosystem.getInstance(atom2)
@@ -212,23 +210,23 @@ describe('ssr', () => {
       2: 'ab',
     })
 
-    expect(ecosystem.dehydrate({ includeFlags: ['include-me'] })).toEqual({
+    expect(ecosystem.dehydrate({ includeTags: ['include-me'] })).toEqual({
       1: 'a',
     })
 
-    expect(ecosystem.dehydrate({ includeFlags: ['nonexistent-flag'] })).toEqual(
+    expect(ecosystem.dehydrate({ includeTags: ['nonexistent-tag'] })).toEqual(
       {}
     )
   })
 
   test('excludes take precedence over includes', () => {
-    const atom1 = atom('1', 'a', { flags: ['include-me', 'exclude-me'] })
+    const atom1 = atom('1', 'a', { tags: ['include-me', 'exclude-me'] })
     const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
 
     ecosystem.getInstance(atom2)
 
     expect(
-      ecosystem.dehydrate({ excludeFlags: ['exclude-me'], include: [atom1] })
+      ecosystem.dehydrate({ excludeTags: ['exclude-me'], include: [atom1] })
     ).toEqual({})
 
     expect(ecosystem.dehydrate({ exclude: [atom2], include: [atom2] })).toEqual(
@@ -239,7 +237,7 @@ describe('ssr', () => {
       ecosystem.dehydrate({
         exclude: [atom2],
         include: [atom2],
-        includeFlags: ['include-me'],
+        includeTags: ['include-me'],
       })
     ).toEqual({
       1: 'a',
@@ -248,9 +246,9 @@ describe('ssr', () => {
     expect(
       ecosystem.dehydrate({
         exclude: [atom2],
-        excludeFlags: ['exclude-me'],
+        excludeTags: ['exclude-me'],
         include: [atom2],
-        includeFlags: ['include-me'],
+        includeTags: ['include-me'],
       })
     ).toEqual({})
   })

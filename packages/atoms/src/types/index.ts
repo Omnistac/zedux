@@ -28,7 +28,7 @@ export type AnyNonNullishValue = {}
 
 export interface AtomConfig<State = any> {
   dehydrate?: (state: State) => any
-  flags?: string[]
+  tags?: string[]
   hydrate?: (dehydratedState: unknown) => State
   manualHydration?: boolean
   ttl?: number
@@ -116,7 +116,7 @@ export interface EcosystemConfig<
   complexParams?: boolean
   context?: Context
   destroyOnUnmount?: boolean
-  flags?: string[]
+  tags?: string[]
   id?: string
   onReady?: (
     ecosystem: Ecosystem<Context>,
@@ -338,9 +338,9 @@ export interface MutableRefObject<T = any> {
 
 export interface NodeFilterOptions {
   exclude?: (AnyAtomTemplate | AtomSelectorOrConfig | string)[]
-  excludeFlags?: string[]
+  excludeTags?: string[]
   include?: (AnyAtomTemplate | AtomSelectorOrConfig | string)[]
-  includeFlags?: string[]
+  includeTags?: string[]
 }
 
 export type NodeFilter =

@@ -91,7 +91,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    */
   public ecosystem = this
 
-  public flags?: string[]
+  public tags?: string[]
   public hydration?: Record<string, any>
   public id: string
   public onReady: EcosystemConfig<Context>['onReady']
@@ -183,9 +183,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   constructor(config: EcosystemConfig<Context>) {
     if (DEV) {
-      if (config.flags && !Array.isArray(config.flags)) {
+      if (config.tags && !Array.isArray(config.tags)) {
         throw new TypeError(
-          "Zedux: The Ecosystem's `flags` property must be an array of strings"
+          "Zedux: The Ecosystem's `tags` property must be an array of strings"
         )
       }
 
@@ -258,12 +258,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * this.
    *
    * Atoms can be excluded from dehydration by passing `exclude` and/or
-   * `excludeFlags` options:
+   * `excludeTags` options:
    *
    * ```ts
    * myEcosystem.dehydrate({
    *   exclude: [myAtom, 'my-fuzzy-search-string'],
-   *   excludeFlags: ['no-ssr']
+   *   excludeTags: ['no-ssr']
    * })
    * ```
    *
@@ -272,12 +272,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * string (case-insensitive)
    *
    * You can dehydrate only a subset of all atoms by passing `include` and/or
-   * `includeFlags` options:
+   * `includeTags` options:
    *
    * ```ts
    * myEcosystem.dehydrate({
    *   include: [myAtom, 'my-fuzzy-search-string'],
-   *   includeFlags: ['ssr']
+   *   includeTags: ['ssr']
    * })
    * ```
    *

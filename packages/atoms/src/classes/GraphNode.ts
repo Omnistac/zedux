@@ -264,9 +264,9 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
     const lowerCaseId = id.toLowerCase()
     const {
       exclude = [],
-      excludeFlags = [],
+      excludeTags = [],
       include = [],
-      includeFlags = [],
+      includeTags = [],
     } = typeof options === 'object' && !is(options, AtomTemplateBase)
       ? (options as NodeFilterOptions)
       : { include: options ? [options as string | AnyAtomTemplate] : [] }
@@ -277,18 +277,18 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
           ? lowerCaseId.includes(templateOrKey.toLowerCase())
           : (t?.key && (templateOrKey as AtomTemplateBase)?.key === t?.key) ||
             templateOrKey === t
-      ) || excludeFlags.some(flag => t.flags?.includes(flag))
+      ) || excludeTags.some(tag => t.tags?.includes(tag))
 
     return (
       !isExcluded &&
-      ((!include.length && !includeFlags.length) ||
+      ((!include.length && !includeTags.length) ||
         include.some(templateOrKey =>
           typeof templateOrKey === 'string'
             ? lowerCaseId.includes(templateOrKey.toLowerCase())
             : (t?.key && (templateOrKey as AtomTemplateBase)?.key === t?.key) ||
               templateOrKey === t
         ) ||
-        includeFlags.some(flag => t.flags?.includes(flag)))
+        includeTags.some(tag => t.tags?.includes(tag)))
     )
   }
 
