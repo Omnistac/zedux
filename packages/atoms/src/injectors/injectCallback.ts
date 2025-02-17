@@ -1,26 +1,33 @@
 import { InjectorDeps } from '../types/index'
-import { injectEcosystem } from './injectEcosystem'
 import { injectMemo } from './injectMemo'
+import { injectSelf } from './injectSelf'
 
 /**
- * Memoizes a callback function and wraps it in an `ecosystem.batch()` call.
+ * Memoizes a callback function and wraps it in an `ecosystem.batch()` call and,
+ * if the injecting atom is scoped, an `ecosystem.withScope()` call.
  *
- * To memoize a callback without automatic batching, use `injectMemo` instead:
+ * To memoize a callback without automatic batching/scoping, use `injectMemo`
+ * instead:
  *
  * ```ts
- * injectMemo(() => myCallback, [])
+ * - injectCallback(myCallback, [])
+ * + injectMemo(() => myCallback, [])
  * ```
  */
 export const injectCallback = <Args extends any[] = [], Ret = any>(
   callback: (...args: Args) => Ret,
   deps?: InjectorDeps
 ) => {
-  const ecosystem = injectEcosystem()
+  const self = injectSelf()
 
   return injectMemo(
     () =>
       (...args: Args) =>
-        ecosystem.batch(() => callback(...args)),
+        self.e.batch(() =>
+          self.V
+            ? self.e.withScope(self.V, () => callback(...args))
+            : callback(...args)
+        ),
     deps
   )
 }

@@ -139,6 +139,10 @@ export type EventMap = {
   [K in keyof ExplicitEvents & ImplicitEvents]?: never
 } & Record<string, () => any>
 
+export interface ExportsConfig {
+  wrap?: boolean
+}
+
 export type ExportsInfusedSetter<State, Exports> = Exports & {
   (settable: Settable<State>, meta?: any): State
 }

@@ -1,9 +1,12 @@
 import {
+  api,
   atom,
   AtomProvider,
   Ecosystem,
   inject,
   injectAtomValue,
+  injectCallback,
+  injectEcosystem,
   NodeOf,
   useAtomInstance,
   useAtomValue,
@@ -603,5 +606,68 @@ describe('scoped atoms', () => {
 
     expect(scopedNode1.get()).toBe('a')
     expect(calls).toEqual(['a', [expectedId, 'Active']])
+  })
+
+  test('exports and injectCallback capture scope and wrap the passed function in it', () => {
+    const contextAtom = atom('context', () => 'a')
+    const scopedAtom = atom('scoped', () => inject(contextAtom))
+
+    const atom1 = atom('1', () => {
+      const ecosystem = injectEcosystem()
+      const val = ecosystem.get(scopedAtom)
+
+      const callback1 = injectCallback(() => ecosystem.get(scopedAtom))
+
+      return api(val).setExports({
+        callback1,
+        callback2: () => ecosystem.get(scopedAtom),
+      })
+    })
+
+    const node1 = ecosystem.withScope([ecosystem.getNode(contextAtom)], () =>
+      ecosystem.getNode(atom1)
+    )
+
+    expect(node1.get()).toBe('a')
+    expect(node1.exports.callback1()).toBe('a')
+    expect(node1.exports.callback2()).toBe('a')
+  })
+
+  test('scope is only captured if not `wrap: false`', () => {
+    const mock = mockConsole('error')
+    const contextAtom = atom('context', () => 'a')
+    const scopedAtom = atom('scoped', () => inject(contextAtom))
+
+    const atom1 = atom('1', () => {
+      const ecosystem = injectEcosystem()
+      const val = ecosystem.get(scopedAtom)
+
+      const callback1 = injectCallback(() => ecosystem.get(scopedAtom))
+
+      return api(val)
+        .setExports({
+          callback1,
+        })
+        .addExports(
+          {
+            callback2: () => ecosystem.get(scopedAtom),
+          },
+          { wrap: false }
+        )
+    })
+
+    const scope = [ecosystem.getNode(contextAtom)]
+
+    const node1 = ecosystem.withScope(scope, () => ecosystem.getNode(atom1))
+
+    expect(node1.get()).toBe('a')
+    expect(node1.exports.callback1()).toBe('a')
+    expect(() => node1.exports.callback2()).toThrow(
+      /Scoped atom was used outside a scoped context/
+    )
+    expect(ecosystem.withScope(scope, () => node1.exports.callback2())).toBe(
+      'a'
+    )
+    expect(mock).toHaveBeenCalledTimes(1)
   })
 })

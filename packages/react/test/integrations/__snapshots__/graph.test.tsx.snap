@@ -1,0 +1,360 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`graph ecosystem getters 1`] = `
+{
+  "@signal(atom4)-0": {
+    "dependencies": [],
+    "dependents": [
+      {
+        "key": "@signal(atom4)-2",
+        "operation": "get",
+      },
+      {
+        "key": "atom4",
+        "operation": "injectSignal",
+      },
+    ],
+    "weight": 1,
+  },
+  "@signal(atom4)-1": {
+    "dependencies": [],
+    "dependents": [
+      {
+        "key": "@signal(atom4)-2",
+        "operation": "get",
+      },
+      {
+        "key": "atom4",
+        "operation": "injectSignal",
+      },
+    ],
+    "weight": 1,
+  },
+  "Test-:r0:": {
+    "dependencies": [
+      {
+        "key": "atom4",
+        "operation": "useAtomValue",
+      },
+    ],
+    "dependents": [],
+    "weight": 9,
+  },
+  "Test-:r1:": {
+    "dependencies": [
+      {
+        "key": "atom4",
+        "operation": "useAtomInstance",
+      },
+    ],
+    "dependents": [],
+    "weight": 1,
+  },
+  "atom1": {
+    "dependencies": [],
+    "dependents": [
+      {
+        "key": "atom4",
+        "operation": "get",
+      },
+    ],
+    "weight": 1,
+  },
+  "atom2": {
+    "dependencies": [],
+    "dependents": [],
+    "weight": 1,
+  },
+  "atom3": {
+    "dependencies": [],
+    "dependents": [
+      {
+        "key": "atom4",
+        "operation": "get",
+      },
+    ],
+    "weight": 1,
+  },
+  "atom4": {
+    "dependencies": [
+      {
+        "key": "@signal(atom4)-0",
+        "operation": "injectSignal",
+      },
+      {
+        "key": "@signal(atom4)-1",
+        "operation": "injectSignal",
+      },
+      {
+        "key": "@signal(atom4)-2",
+        "operation": "injectMappedSignal",
+      },
+      {
+        "key": "atom1",
+        "operation": "get",
+      },
+      {
+        "key": "atom3",
+        "operation": "get",
+      },
+    ],
+    "dependents": [
+      {
+        "key": "Test-:r0:",
+        "operation": "useAtomValue",
+      },
+      {
+        "key": "Test-:r1:",
+        "operation": "useAtomInstance",
+      },
+    ],
+    "weight": 8,
+  },
+}
+`;
+
+exports[`graph ecosystem getters 2`] = `
+{
+  "Test-:r0:": {
+    "atom4": {
+      "@signal(atom4)-0": {},
+      "@signal(atom4)-1": {},
+      "@signal(atom4)-2": {
+        "@signal(atom4)-0": {},
+        "@signal(atom4)-1": {},
+      },
+      "atom1": {},
+      "atom3": {},
+    },
+  },
+  "Test-:r1:": {
+    "atom4": {
+      "@signal(atom4)-0": {},
+      "@signal(atom4)-1": {},
+      "@signal(atom4)-2": {
+        "@signal(atom4)-0": {},
+        "@signal(atom4)-1": {},
+      },
+      "atom1": {},
+      "atom3": {},
+    },
+  },
+  "atom2": {},
+  "atom4": {
+    "@signal(atom4)-0": {},
+    "@signal(atom4)-1": {},
+    "@signal(atom4)-2": {
+      "@signal(atom4)-0": {},
+      "@signal(atom4)-1": {},
+    },
+    "atom1": {},
+    "atom3": {},
+  },
+}
+`;
+
+exports[`graph ecosystem getters 3`] = `
+{
+  "@signal(atom4)-0": {
+    "@signal(atom4)-2": {
+      "atom4": {
+        "Test-:r0:": {},
+        "Test-:r1:": {},
+      },
+    },
+    "atom4": {
+      "Test-:r0:": {},
+      "Test-:r1:": {},
+    },
+  },
+  "@signal(atom4)-1": {
+    "@signal(atom4)-2": {
+      "atom4": {
+        "Test-:r0:": {},
+        "Test-:r1:": {},
+      },
+    },
+    "atom4": {
+      "Test-:r0:": {},
+      "Test-:r1:": {},
+    },
+  },
+  "atom1": {
+    "atom4": {
+      "Test-:r0:": {},
+      "Test-:r1:": {},
+    },
+  },
+  "atom2": {},
+  "atom3": {
+    "atom4": {
+      "Test-:r0:": {},
+      "Test-:r1:": {},
+    },
+  },
+}
+`;
+
+exports[`graph getNode(atom) returns the instance 1`] = `
+{
+  "atom1": {
+    "className": "AtomInstance",
+    "observers": {
+      "ion1": {
+        "flags": 9,
+        "operation": "getNode",
+        "p": undefined,
+      },
+    },
+    "sources": {},
+    "state": 1,
+    "status": "Active",
+    "weight": 1,
+  },
+  "atom2": {
+    "className": "AtomInstance",
+    "observers": {
+      "ion1": {
+        "flags": 9,
+        "operation": "getNode",
+        "p": undefined,
+      },
+    },
+    "sources": {},
+    "state": 2,
+    "status": "Active",
+    "weight": 1,
+  },
+  "ion1": {
+    "className": "AtomInstance",
+    "observers": {},
+    "sources": {
+      "atom1": {
+        "flags": 9,
+        "operation": "getNode",
+        "p": undefined,
+      },
+      "atom2": {
+        "flags": 9,
+        "operation": "getNode",
+        "p": undefined,
+      },
+    },
+    "state": 3,
+    "status": "Active",
+    "weight": 3,
+  },
+}
+`;
+
+exports[`graph on reevaluation, get() updates the graph 1`] = `
+{
+  "a": {
+    "className": "AtomInstance",
+    "observers": {
+      "d": {
+        "flags": 1,
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+    },
+    "sources": {},
+    "state": "a",
+    "status": "Active",
+    "weight": 1,
+  },
+  "b-["b"]": {
+    "className": "AtomInstance",
+    "observers": {
+      "d": {
+        "flags": 1,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "sources": {},
+    "state": "b",
+    "status": "Active",
+    "weight": 1,
+  },
+  "d": {
+    "className": "AtomInstance",
+    "observers": {},
+    "sources": {
+      "a": {
+        "flags": 1,
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+      "b-["b"]": {
+        "flags": 1,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "state": "ab",
+    "status": "Active",
+    "weight": 3,
+  },
+}
+`;
+
+exports[`graph on reevaluation, get() updates the graph 2`] = `
+{
+  "a": {
+    "className": "AtomInstance",
+    "observers": {
+      "d": {
+        "flags": 1,
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+    },
+    "sources": {},
+    "state": "a",
+    "status": "Active",
+    "weight": 1,
+  },
+  "b-["b"]": {
+    "className": "AtomInstance",
+    "observers": {},
+    "sources": {},
+    "state": "b",
+    "status": "Stale",
+    "weight": 1,
+  },
+  "c": {
+    "className": "AtomInstance",
+    "observers": {
+      "d": {
+        "flags": 1,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "sources": {},
+    "state": "c",
+    "status": "Active",
+    "weight": 1,
+  },
+  "d": {
+    "className": "AtomInstance",
+    "observers": {},
+    "sources": {
+      "a": {
+        "flags": 1,
+        "operation": "injectAtomValue",
+        "p": undefined,
+      },
+      "c": {
+        "flags": 1,
+        "operation": "get",
+        "p": undefined,
+      },
+    },
+    "state": "ac",
+    "status": "Active",
+    "weight": 3,
+  },
+}
+`;

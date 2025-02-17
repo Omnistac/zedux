@@ -249,16 +249,21 @@ export class Scheduler implements SchedulerInterface {
       : '_isRunning'
 
     const nows = this.nows
+    let errors: any[] | undefined
 
     this[runningKey] = true
-    try {
-      while (jobs.length) {
-        const job = (nows.length ? nows : jobs).shift() as Job
+    while (jobs.length) {
+      const job = (nows.length ? nows : jobs).shift() as Job
+      try {
         job.j()
+      } catch (err) {
+        errors ??= []
+        errors.push(err)
       }
-    } finally {
-      this[runningKey] = false
     }
+
+    this[runningKey] = false
+    if (errors) throw errors[0]
 
     if (this._runAfterNows) {
       this._runAfterNows = false
