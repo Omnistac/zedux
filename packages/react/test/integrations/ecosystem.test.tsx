@@ -298,12 +298,12 @@ describe('ecosystem', () => {
     ecosystem.destroy(true)
   })
 
-  test('flags', () => {
+  test('tags', () => {
     const mock = mockConsole('error')
-    const atomA = atom('a', () => 1, { flags: ['a'] })
+    const atomA = atom('a', () => 1, { tags: ['a'] })
     const atomB = atom('b', () => 2)
 
-    const ecosystem = createEcosystem({ flags: ['b'], id: 'flags' })
+    const ecosystem = createEcosystem({ tags: ['b'], id: 'tags' })
     ecosystem.getInstance(atomA)
 
     expect(mock).toHaveBeenCalledTimes(1)

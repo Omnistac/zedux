@@ -16,7 +16,7 @@ export abstract class AtomTemplateBase<
   public static $$typeof = Symbol.for(`${prefix}/AtomTemplateBase`)
 
   public readonly dehydrate?: AtomConfig<G['State']>['dehydrate']
-  public readonly flags?: string[]
+  public readonly tags?: string[]
   public readonly hydrate?: AtomConfig<G['State']>['hydrate']
   public readonly manualHydration?: boolean
   public readonly ttl?: number

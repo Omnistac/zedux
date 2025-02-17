@@ -16,9 +16,9 @@ describe('Ecosystem', () => {
     expect(instance.v).toBe(getValue)
   })
 
-  test('flags must be an array', () => {
-    // @ts-expect-error flags must be an array
-    expect(() => createEcosystem({ flags: { a: true } })).toThrowError(
+  test('tags must be an array', () => {
+    // @ts-expect-error tags must be an array
+    expect(() => createEcosystem({ tags: { a: true } })).toThrowError(
       /must be an array/i
     )
   })
@@ -30,13 +30,13 @@ describe('Ecosystem', () => {
     )
   })
 
-  test('atom override flags are also respected', () => {
+  test('atom override tags are also respected', () => {
     const mock = mockConsole('error')
-    const atom1 = atom('1', 'a', { flags: ['test-flag'] })
+    const atom1 = atom('1', 'a', { tags: ['test-tag'] })
     const atom1Override = atom1.override('aa')
 
     const testEcosystem = createEcosystem({
-      flags: [],
+      tags: [],
       overrides: [atom1Override],
     })
 

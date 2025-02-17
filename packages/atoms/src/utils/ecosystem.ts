@@ -171,21 +171,19 @@ export const getNode = <G extends AtomGenerics>(
 }
 
 const resolveAtom = <A extends AnyAtomTemplate>(
-  { flags, overrides }: Ecosystem,
+  { tags, overrides }: Ecosystem,
   template: A
 ) => {
   const override = overrides[template.key]
   const maybeOverriddenAtom = (override || template) as A
 
-  // to turn off flag checking, just don't pass a `flags` prop
-  if (flags) {
-    const badFlag = maybeOverriddenAtom.flags?.find(
-      flag => !flags.includes(flag)
-    )
+  // to turn off tag checking, just don't pass a `tags` prop
+  if (tags) {
+    const badTag = maybeOverriddenAtom.tags?.find(tag => !tags.includes(tag))
 
-    if (DEV && badFlag) {
+    if (DEV && badTag) {
       console.error(
-        `Zedux: encountered unsafe atom template "${template.key}" with flag "${badFlag}". This should be overridden in the current environment.`
+        `Zedux: encountered unsafe atom template "${template.key}" with tag "${badTag}". This should be overridden in the current environment.`
       )
     }
   }
