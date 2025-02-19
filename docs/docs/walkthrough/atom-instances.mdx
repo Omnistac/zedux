@@ -107,11 +107,13 @@ instance.setState(newState)
 
 Another primary use case is to get a reference to the atom instance that can be read synchronously anywhere. This can be necessary sometimes to prevent reading stale closed-over values in React callbacks. See [this discussion](https://github.com/Omnistac/zedux/discussions/189).
 
-:::tip Use `useAtomInstance` instead of `useAtomValue` to:
+:::tip
+
+Use `useAtomInstance` instead of `useAtomValue` to:
 
 - prevent rerenders
 - set state without reading
-- read the atom's current state without waiting for React to rerender
+- read the atom's current state in callbacks without waiting for React to rerender
 
 Use `useAtomValue` (or `useAtomState`) instead to:
 
