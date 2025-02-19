@@ -91,7 +91,7 @@ function App() {
 
 Click the buttons a few times and you'll see the `Dynamic` component update while the `Static` component stays ... static, even though both buttons are doing exactly the same thing.
 
-This example is contrived - you shouldn't ever _read_ an atom's state in a component like this. But one of the primary uses of `useAtomInstance` is to _set_ an atom's state without subscribing to state updates.
+This example is contrived - you shouldn't ever _read_ an atom's state during render like this (use `useAtomValue` for that). But one of the primary uses of `useAtomInstance` is to _set_ an atom's state without subscribing to state updates.
 
 ```ts
 // subscribes:
@@ -104,6 +104,21 @@ const instance = useAtomInstance(myAtom)
 ...
 instance.setState(newState)
 ```
+
+Another primary use case is to get a reference to the atom instance that can be read synchronously anywhere. This can be necessary sometimes to prevent reading stale closed-over values in React callbacks. See [this discussion](https://github.com/Omnistac/zedux/discussions/189).
+
+:::tip Use `useAtomInstance` instead of `useAtomValue` to:
+
+- prevent rerenders
+- set state without reading
+- read the atom's current state without waiting for React to rerender
+
+Use `useAtomValue` (or `useAtomState`) instead to:
+
+- trigger rerenders
+- update displayed UI values
+
+:::
 
 :::tip
 You'll find that Zedux gives you a _lot_ of control over React rerenders. This is one of the primary reasons we created it.
