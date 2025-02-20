@@ -23,7 +23,7 @@ import { ecosystemContext } from '../utils'
  */
 export const EcosystemProvider = ({
   children,
-  ecosystem: passedEcosystem,
+  ecosystem,
   ...ecosystemConfig
 }:
   | (Partial<{ [k in keyof EcosystemConfig]: undefined }> & {
@@ -34,24 +34,29 @@ export const EcosystemProvider = ({
       children?: ReactNode
       ecosystem?: undefined
     })) => {
-  const ecosystem = useMemo(
+  const resolvedEcosystem = useMemo(
     () =>
-      passedEcosystem ||
+      ecosystem ||
       createEcosystem({
         destroyOnUnmount: true,
         ...ecosystemConfig,
       }),
-    [ecosystemConfig.id, passedEcosystem]
-  ) // don't pass other vals; just get snapshot when these change
+    // don't pass other vals; just get snapshot when these change
+    [ecosystemConfig.id, ecosystem]
+  )
 
-  useEffect(() => {
-    ecosystem._incrementRefCount()
-
-    return () => ecosystem._decrementRefCount()
-  }, [ecosystem])
+  useEffect(
+    () => () => {
+      // if this provider created an ecosystem, reset it. We shouldn't need to
+      // reset hydration, listeners, or overrides - those will be garbage
+      // collected when the ecosystem goes out of scope.
+      ecosystem ?? resolvedEcosystem.reset()
+    },
+    [resolvedEcosystem]
+  )
 
   return (
-    <ecosystemContext.Provider value={ecosystem.id}>
+    <ecosystemContext.Provider value={resolvedEcosystem}>
       {children}
     </ecosystemContext.Provider>
   )

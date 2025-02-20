@@ -169,14 +169,33 @@ export interface PromiseChangeEvent<G extends NodeGenerics = AnyNodeGenerics>
   type: 'promiseChange'
 }
 
-export interface ResetEndEvent {
-  isDestroy: boolean
+export interface ResetEndEvent extends ResetEventBase {
   type: 'resetEnd'
 }
 
-export interface ResetStartEvent {
-  isDestroy: boolean
+export interface ResetStartEvent extends ResetEventBase {
   type: 'resetStart'
+}
+
+export interface ResetEventBase {
+  /**
+   * Whether `ecosystem.reset` was called with `hydration: true`, removing any
+   * previous hydrations set via `ecosystem.hydrate`
+   */
+  hydration?: boolean
+
+  /**
+   * Whether `ecosystem.reset` was called with `listeners: true`, removing
+   * ecosystem event listeners registered via `ecosystem.on`
+   */
+  listeners?: boolean
+
+  /**
+   * Whether `ecosystem.reset` was called with `overrides: true`, removing any
+   * overrides previously set via
+   * `ecosystem.setOverrides`/`ecosystem.addOverrides`
+   */
+  overrides?: boolean
 }
 
 export interface RunEndEvent extends EcosystemEventBase {

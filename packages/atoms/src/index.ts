@@ -1,6 +1,14 @@
+import type { Ecosystem } from './classes/Ecosystem'
+import {
+  getGlobalEcosystem,
+  setGlobalEcosystem,
+} from './factories/createEcosystem'
 import {
   destroyBuffer,
+  EvaluationContext,
   flushBuffer,
+  getEvaluationContext,
+  setEvaluationContext,
   startBuffer,
 } from './utils/evaluationContext'
 import { sendImplicitEcosystemEvent } from './utils/events'
@@ -16,9 +24,24 @@ export * from '@zedux/core'
 export * from './classes/index'
 export * from './factories/index'
 export * from './injectors/index'
-export { getEcosystem, getInternals, setInternals, wipe } from './store/index'
 export * from './types/index'
 export { untrack } from './utils/evaluationContext'
+
+type Internals = { c: EvaluationContext; g: Ecosystem }
+
+export const getInternals = () => ({
+  c: getEvaluationContext(),
+  g: getGlobalEcosystem(),
+})
+
+/**
+ * Used in child windows. Makes different instances of Zedux reuse the parent
+ * window's internal store and evaluation stack.
+ */
+export const setInternals = (internals: Internals) => {
+  setEvaluationContext(internals.c)
+  setGlobalEcosystem(internals.g)
+}
 
 // These are very obfuscated on purpose. Don't use! They're for Zedux packages.
 export const zi = {

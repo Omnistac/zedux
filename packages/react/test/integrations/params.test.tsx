@@ -62,7 +62,7 @@ describe('params', () => {
     // the selectors received the same function reference
     expect(selectorKey1.slice(28)).toBe(selectorKey2.slice(28))
 
-    complexEcosystem.destroy()
+    complexEcosystem.reset()
   })
 
   test('complexParams allows atom and selector params to be class instances', () => {
@@ -120,6 +120,6 @@ describe('params', () => {
     // the selectors received the same function reference
     expect(selectorKey1.slice(28)).toBe(selectorKey2.slice(28))
 
-    complexEcosystem.destroy()
+    complexEcosystem.reset()
   })
 })

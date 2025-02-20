@@ -39,14 +39,16 @@ export const getSelectorNodes = () =>
 
 ecosystem._idGenerator.generateId = generateIdMock
 
-afterAll(() => ecosystem.destroy())
-
 afterEach(() => {
   ecosystem._idGenerator.idCounter = 0
 
   act(() => {
-    ecosystem.reset()
-    ecosystem.setOverrides([])
+    ecosystem.reset({
+      context: null,
+      hydration: true,
+      listeners: true,
+      overrides: true,
+    })
   })
 })
 

@@ -362,7 +362,9 @@ describe('plugins', () => {
 
     testEcosystem.on('resetStart', event => {
       expectTypeOf(event).toEqualTypeOf<{
-        isDestroy: boolean
+        hydration?: boolean
+        listeners?: boolean
+        overrides?: boolean
         type: 'resetStart'
       }>()
       calls.push(event)
@@ -370,27 +372,49 @@ describe('plugins', () => {
 
     testEcosystem.on('resetEnd', event => {
       expectTypeOf(event).toEqualTypeOf<{
-        isDestroy: boolean
+        hydration?: boolean
+        listeners?: boolean
+        overrides?: boolean
         type: 'resetEnd'
       }>()
       calls.push(event)
     })
 
     testEcosystem.getNode(atom1)
-    testEcosystem.reset()
+    testEcosystem.reset({ overrides: true }) // just for fun
 
     expect(calls).toEqual([
-      { isDestroy: false, type: 'resetStart' },
-      { isDestroy: false, type: 'resetEnd' },
+      {
+        hydration: undefined,
+        listeners: undefined,
+        overrides: true,
+        type: 'resetStart',
+      },
+      {
+        hydration: undefined,
+        listeners: undefined,
+        overrides: true,
+        type: 'resetEnd',
+      },
     ])
     calls.splice(0, calls.length)
 
     testEcosystem.getNode(atom1)
-    testEcosystem.destroy()
+    testEcosystem.reset()
 
     expect(calls).toEqual([
-      { isDestroy: true, type: 'resetStart' },
-      { isDestroy: true, type: 'resetEnd' },
+      {
+        hydration: undefined,
+        listeners: undefined,
+        overrides: undefined,
+        type: 'resetStart',
+      },
+      {
+        hydration: undefined,
+        listeners: undefined,
+        overrides: undefined,
+        type: 'resetEnd',
+      },
     ])
     calls.splice(0, calls.length)
   })
