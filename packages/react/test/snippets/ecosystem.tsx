@@ -94,7 +94,7 @@ function Child() {
         Change One
       </button>
       <button onClick={() => console.log(testEcosystem)}>log ecosystem</button>
-      <button onClick={() => testEcosystem.wipe()}>wipe ecosystem</button>
+      <button onClick={() => testEcosystem.reset()}>reset ecosystem</button>
       <button
         onClick={() =>
           console.log(testEcosystem.dehydrate({ transform: false }))

@@ -8,9 +8,10 @@ import {
   useAtomState,
   useAtomValue,
   EcosystemProvider,
-  getEcosystem,
+  useEcosystem,
+  getDefaultEcosystem,
 } from '@zedux/react'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { act } from '@testing-library/react'
 import { ecosystem } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
@@ -156,7 +157,7 @@ describe('ecosystem', () => {
     expect(evaluations).toEqual(['1', '1'])
     expect([...ecosystem.n.keys()]).toEqual(['atom1'])
 
-    ecosystem.destroy(true)
+    ecosystem.reset({ listeners: true })
   })
 
   test('setting overrides kills all existing instances for previously- and newly-overridden atoms', () => {
@@ -228,7 +229,7 @@ describe('ecosystem', () => {
     expect(ecosystem.get(atomC)).toBe('cc')
     expect(ecosystem.get(atomD)).toBe('d')
 
-    ecosystem.destroy(true)
+    ecosystem.reset({ listeners: true })
   })
 
   test('find', () => {
@@ -245,7 +246,7 @@ describe('ecosystem', () => {
     expect(instance4).toBe(instance1)
     expect(instance5).toBeUndefined()
 
-    ecosystem.destroy()
+    ecosystem.reset()
   })
 
   test('.findAll()', () => {
@@ -266,7 +267,7 @@ describe('ecosystem', () => {
       'a-["aa"]': expect.objectContaining({ params: ['aa'] }),
     })
 
-    ecosystem.destroy(true)
+    ecosystem.reset({ listeners: true })
   })
 
   test('onReady', () => {
@@ -285,7 +286,7 @@ describe('ecosystem', () => {
 
     expect([...ecosystem.n.keys()]).toEqual(['a-["a"]', 'a-["aa"]'])
 
-    ecosystem.reset({ val: 'aa' })
+    ecosystem.reset({ context: { val: 'aa' } })
 
     expect([...ecosystem.n.keys()]).toEqual(['a-["aa"]', 'a-["aaa"]'])
 
@@ -295,7 +296,7 @@ describe('ecosystem', () => {
       { val: 'a' }
     )
 
-    ecosystem.destroy(true)
+    ecosystem.reset({ listeners: true })
   })
 
   test('tags', () => {
@@ -315,12 +316,30 @@ describe('ecosystem', () => {
 
     expect(mock).toHaveBeenCalledTimes(1)
 
-    ecosystem.destroy()
+    ecosystem.reset({ listeners: true })
   })
 
-  test('destroyOnUnmount destroys only when the last EcosystemProvider providing the ecosystem unmounts', async () => {
+  test('ecosystems created via EcosystemProvider are destroyed on unmount', async () => {
     jest.useFakeTimers()
-    const testEcosystem = createEcosystem({ destroyOnUnmount: true })
+    const calls: any[] = []
+
+    function Child() {
+      const ecosystem = useEcosystem()
+
+      useEffect(() => {
+        const cleanupStart = ecosystem.on('resetStart', event =>
+          calls.push(event)
+        )
+        const cleanupEnd = ecosystem.on('resetEnd', event => calls.push(event))
+
+        return () => {
+          cleanupStart()
+          cleanupEnd()
+        }
+      }, [ecosystem])
+
+      return null
+    }
 
     function Test() {
       const [count, setCount] = useState(0)
@@ -331,8 +350,16 @@ describe('ecosystem', () => {
             data-testid="button"
             onClick={() => setCount(state => state + 1)}
           />
-          {count < 1 && <EcosystemProvider ecosystem={testEcosystem} />}
-          {count < 2 && <EcosystemProvider ecosystem={testEcosystem} />}
+          {count < 1 && (
+            <EcosystemProvider>
+              <Child />
+            </EcosystemProvider>
+          )}
+          {count < 2 && (
+            <EcosystemProvider>
+              <Child />
+            </EcosystemProvider>
+          )}
         </>
       )
     }
@@ -346,13 +373,33 @@ describe('ecosystem', () => {
       jest.runAllTimers()
     })
 
-    expect(getEcosystem(testEcosystem.id)).toBe(testEcosystem)
+    expect(calls).toEqual([{ type: 'resetStart' }, { type: 'resetEnd' }])
+    calls.splice(0, calls.length)
 
     act(() => {
       fireEvent.click(button)
       jest.runAllTimers()
     })
 
-    expect(getEcosystem(testEcosystem.id)).toBeUndefined()
+    expect(calls).toEqual([{ type: 'resetStart' }, { type: 'resetEnd' }])
+    calls.splice(0, calls.length)
+  })
+
+  test('the default ecosystem is used if no ecosystem is provided', async () => {
+    const atom1 = atom('1', () => 'a')
+    let ecosystem: any
+
+    function Test() {
+      const val = useAtomValue(atom1)
+      ecosystem = useEcosystem()
+
+      return <div data-testid="test">{val}</div>
+    }
+
+    const { findByTestId } = render(<Test />)
+    const div = await findByTestId('test')
+
+    expect(div).toHaveTextContent('a')
+    expect(ecosystem).toBe(getDefaultEcosystem())
   })
 })

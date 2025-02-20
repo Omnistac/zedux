@@ -1,4 +1,4 @@
-import { createEcosystem, getEcosystem } from '@zedux/atoms'
+import { getDefaultEcosystem } from '@zedux/atoms'
 import { useContext } from 'react'
 import { ecosystemContext } from '../utils'
 
@@ -14,8 +14,5 @@ import { ecosystemContext } from '../utils'
  *
  * Returns an Ecosystem class instance.
  */
-export const useEcosystem = () => {
-  const id = useContext(ecosystemContext)
-
-  return getEcosystem(id) || createEcosystem({ id })
-}
+export const useEcosystem = () =>
+  useContext(ecosystemContext) ?? getDefaultEcosystem()

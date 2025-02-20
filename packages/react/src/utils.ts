@@ -1,7 +1,7 @@
 import { AnyAtomTemplate, AtomTemplateBase, Ecosystem, is } from '@zedux/atoms'
 import React, { Context, createContext, use } from 'react'
 
-export const ecosystemContext = createContext('@@global')
+export const ecosystemContext = createContext<undefined | Ecosystem>(undefined)
 
 /**
  * These are copied from packages/atoms/src/utils/general.ts

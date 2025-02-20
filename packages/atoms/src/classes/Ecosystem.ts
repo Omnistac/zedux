@@ -1,5 +1,4 @@
 import { is, isPlainObject, Job } from '@zedux/core'
-import { internalStore } from '../store/index'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
@@ -302,41 +301,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   /**
-   * Destroy this ecosystem - destroy all this ecosystem's atom instances,
-   * remove and clean up all plugins, and remove this ecosystem from the
-   * internal store.
-   *
-   * Destruction will bail out by default if this ecosystem is still being
-   * provided via an '<EcosystemProvider>'. Pass `true` as the first parameter
-   * to force destruction anyway.
-   */
-  public destroy(force?: boolean) {
-    if (!force && this._refCount > 0) return
-
-    this.wipe(true)
-
-    // Check if this ecosystem has been destroyed already
-    const ecosystem = internalStore.getState()[this.id]
-    if (!ecosystem) return
-
-    internalStore.setState(state => {
-      const newState = { ...state }
-      delete newState[this.id]
-
-      return newState
-    })
-
-    if (isListeningTo(this, RESET_END)) {
-      const pre = this._scheduler.pre()
-      sendEcosystemEvent(this, { isDestroy: true, type: RESET_END })
-      this._scheduler.post(pre)
-    }
-
-    // we shouldn't have to unset this.L or reset this.C - those will be
-    // garbage collected if the ecosystem goes out of scope
-  }
-
-  /**
    * Get an atom instance. Don't create the atom instance if it doesn't exist.
    * Don't register any graph dependencies.
    *
@@ -589,12 +553,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     dehydratedState: Record<string, any>,
     config?: { retroactive?: boolean }
   ) {
-    if (DEV) {
-      if (!isPlainObject(dehydratedState)) {
-        throw new TypeError(
-          'Zedux: ecosystem.hydrate() - first parameter must be a plain object'
-        )
-      }
+    if (DEV && !isPlainObject(dehydratedState)) {
+      throw new TypeError(
+        'Zedux: ecosystem.hydrate() - first parameter must be a plain object'
+      )
     }
 
     this.hydration = { ...this.hydration, ...dehydratedState }
@@ -700,23 +662,84 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * returned from `onReady` (if any), and calls `onReady` again to reinitialize
    * the ecosystem.
    *
-   * Note that this doesn't remove overrides or ecosystem event listeners but
-   * _does_ remove hydrations. This is because you can remove overrides and
-   * ecosystem event listeners yourself if needed, but there isn't currently a
-   * way to remove hydrations.
+   * Does not remove hydrations, ecosystem event listeners, or overrides by
+   * default. Pass the relevant option to also delete those:
+   *
+   * ```ts
+   * // to reset everything:
+   * ecosystem.reset({
+   *   context: newContextObject, // replace `ecosystem.context` with this
+   *   hydration: true, // remove all hydrations passed to `ecosystem.hydrate`
+   *   listeners: true, // remove all listeners registered via `ecosystem.on`
+   *   overrides: true, // remove all atom overrides
+   * })
+   * ```
+   *
+   * Fires the `resetStart` event before starting. Fires the `resetEnd` event
+   * after all reset operations are done. These can be used in tandem to capture
+   * and restore specific atoms/other nodes, overrides, hydrations, and/or event
+   * listeners.
    */
-  public reset(newContext?: Context) {
-    this.wipe()
+  public reset(
+    config: {
+      context?: Context
+      hydration?: boolean
+      listeners?: boolean
+      overrides?: boolean
+    } = {}
+  ) {
+    if (isListeningTo(this, RESET_START)) {
+      sendEcosystemEvent(this, {
+        ...config,
+        type: RESET_START,
+      })
+    }
+
+    const { n, _scheduler } = this
+
+    // call cleanup function first so it can configure the ecosystem for cleanup
+    this.cleanup?.()
+
+    // prevent node destruction from flushing the scheduler
+    const pre = _scheduler.pre()
+
+    // TODO: Delete nodes in an optimal order, starting with nodes with no
+    // internal dependents. This is different from highest-weighted nodes since
+    // static dependents don't affect weight. This should make sure no internal
+    // nodes schedule unnecessary reevaaluations to recreate force-destroyed
+    // nodes
+    ;[...n.values()].forEach(node => {
+      node.destroy(true)
+    })
+
+    this.b = new WeakMap() // TODO: is this necessary?
+    this.s = undefined
+
+    if (config?.hydration) this.hydration = undefined
+    if (config?.overrides) this.setOverrides([])
+
+    _scheduler.wipe()
+    _scheduler.post(pre)
 
     const prevContext = this.context
-    if (typeof newContext !== 'undefined') this.context = newContext
+    if (typeof config?.context !== 'undefined') this.context = config.context
 
     this.cleanup = this.onReady?.(this, prevContext)
 
     if (isListeningTo(this, RESET_END)) {
       const pre = this._scheduler.pre()
-      sendEcosystemEvent(this, { isDestroy: false, type: RESET_END })
+      sendEcosystemEvent(this, {
+        ...config,
+        type: RESET_END,
+      })
       this._scheduler.post(pre)
+    }
+
+    if (config?.listeners) {
+      this.L = []
+      this.C = Object.fromEntries(
+        Object.keys(this.C).map(key => [key, 0])
+      ) as Ecosystem['C']
     }
   }
 
@@ -886,50 +909,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   /**
-   * Destroy all atom instances in this ecosystem. Also run the cleanup function
-   * returned from the onReady callback (if any). Don't remove plugins or re-run
-   * the onReady callback.
-   *
-   * Also don't remove overrides. This may usually be wanted, but it's easy
-   * enough to add a `.setOverrides([])` call when you need it.
-   *
-   * Important! This method is mostly for internal use. You won't typically want
-   * to call this method. Prefer `.reset()` which re-runs the onReady callback
-   * after wiping the ecosystem, allowing onReady to re-initialize the ecosystem
-   * - preloading atoms, registering plugins, configuring context, etc
-   */
-  public wipe(isDestroy = false) {
-    if (isListeningTo(this, RESET_START)) {
-      sendEcosystemEvent(this, { isDestroy, type: RESET_START })
-    }
-
-    const { n, _scheduler } = this
-
-    // call cleanup function first so it can configure the ecosystem for cleanup
-    this.cleanup?.()
-
-    // prevent node destruction from flushing the scheduler
-    _scheduler._isRunning = true
-
-    // TODO: Delete nodes in an optimal order, starting with nodes with no
-    // internal dependents. This is different from highest-weighted nodes since
-    // static dependents don't affect weight. This should make sure no internal
-    // nodes schedule unnecessary reevaaluations to recreate force-destroyed
-    // nodes
-    ;[...n.values()].forEach(node => {
-      node.destroy(true)
-    })
-
-    _scheduler._isRunning = false
-    this.b = new WeakMap() // TODO: is this necessary?
-    this.s = undefined
-    this.hydration = undefined
-
-    _scheduler.wipe()
-    _scheduler.flush()
-  }
-
-  /**
    * Run ecosystem operations in a scoped context. React components always
    * render in a scoped context, so you usually don't have to think about this.
    * Use this to retrieve scoped atoms outside React - scoped atoms (atoms with
@@ -1010,23 +989,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     return instance.t.hydrate
       ? instance.t.hydrate(hydratedValue)
       : hydratedValue
-  }
-
-  /**
-   * Should only be used internally
-   */
-  public _decrementRefCount() {
-    this._refCount--
-    if (!this.destroyOnUnmount) return
-
-    this.destroy() // only destroys if _refCount === 0
-  }
-
-  /**
-   * Should only be used internally
-   */
-  public _incrementRefCount() {
-    this._refCount++
   }
 
   /**

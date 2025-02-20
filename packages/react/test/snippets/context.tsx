@@ -99,7 +99,7 @@ function Child() {
       {view ? <One /> : <Two />}
       <button onClick={() => setView(curr => !curr)}>Change Children</button>
       <button onClick={() => console.log(testEcosystem)}>log ecosystem</button>
-      <button onClick={() => testEcosystem.wipe()}>wipe ecosystem</button>
+      <button onClick={() => testEcosystem.reset()}>reset ecosystem</button>
     </>
   )
 }

@@ -48,10 +48,10 @@ describe('Ecosystem', () => {
       expect.stringContaining('encountered unsafe atom')
     )
 
-    testEcosystem.destroy()
+    testEcosystem.reset()
   })
 
-  test('onReady cleanup is called on ecosystem reset and destroy', () => {
+  test('onReady cleanup is called on ecosystem reset', () => {
     const cleanup = jest.fn()
     const onReady = jest.fn(() => cleanup)
     const a = { a: 1 }
@@ -63,16 +63,16 @@ describe('Ecosystem', () => {
     expect(onReady).toHaveBeenCalledWith(testEcosystem)
     expect(cleanup).not.toHaveBeenCalled()
 
-    testEcosystem.reset(b)
+    testEcosystem.reset({ context: b })
 
     expect(onReady).toHaveBeenCalledTimes(2)
     expect(onReady).toHaveBeenLastCalledWith(testEcosystem, a)
     expect(cleanup).toHaveBeenCalledTimes(1)
 
-    testEcosystem.destroy()
+    testEcosystem.reset()
 
-    expect(onReady).toHaveBeenCalledTimes(2)
-    expect(onReady).toHaveBeenLastCalledWith(testEcosystem, a)
+    expect(onReady).toHaveBeenCalledTimes(3)
+    expect(onReady).toHaveBeenLastCalledWith(testEcosystem, b)
     expect(cleanup).toHaveBeenCalledTimes(2)
   })
 
