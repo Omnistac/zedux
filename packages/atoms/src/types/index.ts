@@ -115,7 +115,6 @@ export interface EcosystemConfig<
   }
   complexParams?: boolean
   context?: Context
-  destroyOnUnmount?: boolean
   tags?: string[]
   id?: string
   onReady?: (

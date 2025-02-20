@@ -35,12 +35,7 @@ export const EcosystemProvider = ({
       ecosystem?: undefined
     })) => {
   const resolvedEcosystem = useMemo(
-    () =>
-      ecosystem ||
-      createEcosystem({
-        destroyOnUnmount: true,
-        ...ecosystemConfig,
-      }),
+    () => ecosystem || createEcosystem(ecosystemConfig),
     // don't pass other vals; just get snapshot when these change
     [ecosystemConfig.id, ecosystem]
   )

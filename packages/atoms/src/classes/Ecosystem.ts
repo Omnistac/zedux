@@ -71,7 +71,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public atomDefaults?: EcosystemConfig['atomDefaults']
   public complexParams?: boolean
   public context: Context
-  public destroyOnUnmount?: boolean
 
   /**
    * @deprecated this is only here for compatibility with the old atom getters
