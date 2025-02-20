@@ -10,9 +10,9 @@ export const createEcosystem = <
   config: EcosystemConfig<Context> = {}
 ) => new Ecosystem<Context>(config)
 
-export const getGlobalEcosystem = () =>
-  (globalEcosystem ??= createEcosystem({ id: `${prefix}/global` }))
+export const getDefaultEcosystem = () =>
+  (globalEcosystem ??= createEcosystem({ id: `${prefix}/default` }))
 
-export const setGlobalEcosystem = (ecosystem: Ecosystem) => {
+export const setDefaultEcosystem = (ecosystem: Ecosystem) => {
   globalEcosystem = ecosystem
 }

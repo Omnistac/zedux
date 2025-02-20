@@ -1,4 +1,4 @@
-import { getGlobalEcosystem } from '@zedux/atoms'
+import { getDefaultEcosystem } from '@zedux/atoms'
 import { useContext } from 'react'
 import { ecosystemContext } from '../utils'
 
@@ -15,4 +15,4 @@ import { ecosystemContext } from '../utils'
  * Returns an Ecosystem class instance.
  */
 export const useEcosystem = () =>
-  useContext(ecosystemContext) ?? getGlobalEcosystem()
+  useContext(ecosystemContext) ?? getDefaultEcosystem()

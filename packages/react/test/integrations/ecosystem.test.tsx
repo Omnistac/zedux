@@ -9,6 +9,7 @@ import {
   useAtomValue,
   EcosystemProvider,
   useEcosystem,
+  getDefaultEcosystem,
 } from '@zedux/react'
 import React, { useEffect, useState } from 'react'
 import { act } from '@testing-library/react'
@@ -382,5 +383,23 @@ describe('ecosystem', () => {
 
     expect(calls).toEqual([{ type: 'resetStart' }, { type: 'resetEnd' }])
     calls.splice(0, calls.length)
+  })
+
+  test('the default ecosystem is used if no ecosystem is provided', async () => {
+    const atom1 = atom('1', () => 'a')
+    let ecosystem: any
+
+    function Test() {
+      const val = useAtomValue(atom1)
+      ecosystem = useEcosystem()
+
+      return <div data-testid="test">{val}</div>
+    }
+
+    const { findByTestId } = render(<Test />)
+    const div = await findByTestId('test')
+
+    expect(div).toHaveTextContent('a')
+    expect(ecosystem).toBe(getDefaultEcosystem())
   })
 })

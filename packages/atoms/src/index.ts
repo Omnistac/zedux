@@ -1,7 +1,7 @@
 import type { Ecosystem } from './classes/Ecosystem'
 import {
-  getGlobalEcosystem,
-  setGlobalEcosystem,
+  getDefaultEcosystem,
+  setDefaultEcosystem,
 } from './factories/createEcosystem'
 import {
   destroyBuffer,
@@ -31,7 +31,7 @@ type Internals = { c: EvaluationContext; g: Ecosystem }
 
 export const getInternals = () => ({
   c: getEvaluationContext(),
-  g: getGlobalEcosystem(),
+  g: getDefaultEcosystem(),
 })
 
 /**
@@ -40,7 +40,7 @@ export const getInternals = () => ({
  */
 export const setInternals = (internals: Internals) => {
   setEvaluationContext(internals.c)
-  setGlobalEcosystem(internals.g)
+  setDefaultEcosystem(internals.g)
 }
 
 // These are very obfuscated on purpose. Don't use! They're for Zedux packages.
