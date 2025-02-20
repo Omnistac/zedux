@@ -32,7 +32,7 @@ module.exports = {
   title: 'Zedux',
   tagline: 'A Molecular State Engine for React',
   url: 'https://omnistac.github.io',
-  baseUrl: '/zedux/',
+  baseUrl: '/',
   favicon: 'img/favicon.ico',
   headTags: [
     {
