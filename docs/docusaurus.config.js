@@ -49,6 +49,10 @@ module.exports = {
     metadata: [
       { name: 'og:type', content: 'article' },
       { name: 'twitter:card', content: 'summary' },
+      {
+        name: 'google-site-verification',
+        content: '9irXW1ZPXKgsZaMNrF50Ist0P4BCu2x-XDp7cSYsZPA',
+      },
     ],
     navbar: {
       title: 'Home',
