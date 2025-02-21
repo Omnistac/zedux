@@ -2,6 +2,16 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Debug Docs",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "yarn",
+      "args": ["build"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceRoot}/docs",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Debug Tests",
       "type": "node",
       "request": "launch",

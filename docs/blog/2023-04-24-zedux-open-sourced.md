@@ -6,9 +6,9 @@ tags: [history, introductory]
 
 Zedux: A Molecular State Engine for React is officially open-sourced and version 1.0.0 has been released!
 
-Check it out on GitHub [here](https://github.com/Omnistac/zedux). Check out the docs [here](https://omnistac.github.io/zedux/). Check out the introduction [here](https://omnistac.github.io/zedux/docs/about/introduction). Check out the quick start [here](https://omnistac.github.io/zedux/docs/walkthrough/quick-start).
+Check it out on GitHub [here](https://github.com/Omnistac/zedux). Check out the docs [here](https://zedux.dev/). Check out the introduction [here](https://zedux.dev/docs/about/introduction). Check out the quick start [here](https://zedux.dev/docs/walkthrough/quick-start).
 
-This article will give a brief history of Zedux while trying to stay high-level. If you like your announcements detailed and mixed with a little controversy, check out the follow-up article, ["Zedux: Is this the one?"](https://omnistac.github.io/zedux/blog/zedux-is-this-the-one).
+This article will give a brief history of Zedux while trying to stay high-level. If you like your announcements detailed and mixed with a little controversy, check out the follow-up article, ["Zedux: Is this the one?"](https://zedux.dev/blog/zedux-is-this-the-one).
 
 <!-- truncate -->
 
@@ -64,6 +64,6 @@ As of today, April 24, 2023, Zedux is officially open-sourced and stable at vers
 
 Check out the project on GitHub [here](https://github.com/Omnistac/zedux). All feedback is very welcome. Tell us what you think! You can [open a discussion](https://github.com/Omnistac/zedux/discussions) on GitHub or [tag/DM me](https://twitter.com/josh_claunch) on twitter. Depending on interest, we may start a discord community too.
 
-If you were hoping this article would get down to the nitty-gritty details and throw some mud at other tools, you may be interested in the longer follow-up article, ["Zedux: Is this the one?"](https://omnistac.github.io/zedux/blog/zedux-is-this-the-one).
+If you were hoping this article would get down to the nitty-gritty details and throw some mud at other tools, you may be interested in the longer follow-up article, ["Zedux: Is this the one?"](https://zedux.dev/blog/zedux-is-this-the-one).
 
 If you read this history lesson all the way to the end, my hat is all the way off to you. It has been quite a journey so far, but it's really only just beginning. Here's to all the mind-blowing tools we'll build together 🥂

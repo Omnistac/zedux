@@ -523,6 +523,10 @@ export const keyframes = <Props extends Record<string, any>>(
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface DefaultTheme {}
 
+export const dehydrate = () => cachedManagers
+
+globalThis.dehydrateSsc = dehydrate
+
 export const ThemeProvider = ({
   children,
   id,

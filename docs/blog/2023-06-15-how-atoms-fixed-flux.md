@@ -263,7 +263,7 @@ const greetingAtom = atom('greeting', 'Hello, World!')
 
 I won't go into depth about Zedux's features here - as I said, this article won't focus on the differences between these atomic libraries.
 
-Suffice it to say that Zedux addresses all the above concerns. For example, it's the first atomic library to offer real Inversion of Control and the first to bring us full circle back to the Law of Demeter by offering [atom exports](https://omnistac.github.io/zedux/docs/walkthrough/atom-apis#exports) for hiding implementation details.
+Suffice it to say that Zedux addresses all the above concerns. For example, it's the first atomic library to offer real Inversion of Control and the first to bring us full circle back to the Law of Demeter by offering [atom exports](https://zedux.dev/docs/walkthrough/atom-apis#exports) for hiding implementation details.
 
 The last ideologies of Flux have finally been revived - not only revived but improved! - thanks to the atomic model.
 

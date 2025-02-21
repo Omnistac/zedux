@@ -225,10 +225,10 @@ Overall, by design, Zedux's scalability looks like this:
 Besides a clear bias and my own experience using Zedux in data-intensive applications, the reason why I draw Zedux's scalability so generously is because of the 5 Great Scalability Criteria:
 
 1. Performance (benchmarks [here](https://jsbench.me/zxlh0m1p0z), [here](https://jsbench.me/y6lh0mv9oc), [here](https://jsbench.me/xulh02zune), [here](https://jsbench.me/vllhus9i6t))
-2. [Debugging](https://omnistac.github.io/zedux/docs/api/injectors/injectWhy)
-3. [Boilerplate](https://omnistac.github.io/zedux/docs/walkthrough/quick-start)
-4. Simple but completely powerful [side effects model](https://omnistac.github.io/zedux/docs/api/injectors/injectEffect)
-5. [Cache control features](https://omnistac.github.io/zedux/docs/walkthrough/destruction)
+2. [Debugging](https://zedux.dev/docs/api/injectors/injectWhy)
+3. [Boilerplate](https://zedux.dev/docs/walkthrough/quick-start)
+4. Simple but completely powerful [side effects model](https://zedux.dev/docs/api/injectors/injectEffect)
+5. [Cache control features](https://zedux.dev/docs/walkthrough/destruction)
 
 There are many more reasons, but I'll limit it to these 5 for this article. Zedux was designed primarily to manage extremely volatile state in big fintech applications and to scale down _fairly_ well too. But that doesn't mean it does everything perfectly.
 

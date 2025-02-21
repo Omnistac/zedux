@@ -1,5 +1,4 @@
 import Layout from '@theme/Layout'
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
 import styled from '@site/src/ssc'
 import React, { useState } from 'react'
 import { BiRightArrow } from 'react-icons/bi'
@@ -100,7 +99,6 @@ export default function Examples() {
     Object.keys(examples)[0]
 
   const [id, setId] = useState(path)
-  const { siteConfig } = useDocusaurusContext()
 
   if (typeof location !== 'undefined') {
     if (!location.href.search) {
@@ -110,9 +108,9 @@ export default function Examples() {
 
   return (
     <Layout
-      description="Zedux is a molecular state engine for React"
+      description="A molecular state engine for React"
       noFooter
-      title={`${siteConfig.title} Examples`}
+      title="Examples"
     >
       <Wrapper>
         <Sidebar>

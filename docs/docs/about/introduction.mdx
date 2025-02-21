@@ -44,15 +44,25 @@ Knowledge gained from working with Zedux is transferrable. Zedux tries to stay c
 
 ### Simplicity
 
-Zero configuration and high-level APIs are standard across all features. 2 simple functions is all you need to learn to start using Zedux (see the above example).
+Zero configuration and high-level APIs are standard across all features. This is all you need to know to get started:
+
+```tsx
+const greetingAtom = atom('greeting', 'world')
+
+function Greeting() {
+  const [greeting, setGreeting] = useAtomState(greetingAtom)
+
+  return <div>Hello, {greeting}</div>
+}
+```
 
 ## Standardized Primitives
 
 React has always lacked a standard API for interfacing with plugin state. You can get pretty far with props and hooks of course, at the cost of tightly coupling business logic to React components.
 
-The Redux community introduced the Ducks pattern as an attempt to standardize global state sharing. It worked, but Redux's infamous boilerplate meant attaching a plugin's reducers and middleware was a little cumbersome, especially when code splitting is involved.
+The Redux community introduced the Ducks pattern as an attempt to standardize global state sharing. It worked, but Redux's infamous boilerplate made attaching a plugin's reducers and middleware cumbersome, especially when code splitting is involved.
 
-Zedux introduces not 1 but 3 standard APIs for interfacing with 3rd-party state:
+Zedux introduces three standard APIs for interfacing with 3rd-party state:
 
 - Composable stores. Zedux apps have many stores. Any module can simply expose one. The store can be composed together or simply subscribed to. Expose actions to dispatch to it and you're good to go.
 
@@ -64,7 +74,7 @@ These are all perfectly modular, composable, and autonomous. They're immediately
 
 ## Do I Need Zedux?
 
-An honest recommendation first: If you're using a combination of React Query, Zustand, Recoil, Jotai, and/or XState, and you haven't encountered any shortcomings with your setup, you probably don't need Zedux.
+If you're using a combination of React Query, Zustand, Recoil, Jotai, and/or XState, and you haven't encountered any shortcomings with your setup, you probably don't need Zedux.
 
 In particular, Zedux doesn't fully replace React Query. It may someday, but for now it's possible to dual-wield Zedux + React Query just like many people do with Zustand + React Query.
 
@@ -72,15 +82,15 @@ Humility aside, even with these amazing tools, Zedux might be able to make your 
 
 We accounted for many things with Zedux from the very beginning:
 
-- Minimal boilerplate (yes, even less than Redux Toolkit). Zero config. Plug and play.
+- Minimal boilerplate. Zero config. Plug and play.
 
 - Scalable performance.
 
 - Granular control over selector evaluation, memoization details, and component rerenders.
 
-- Total control over state Time To Live and destruction.
+- Full control over state Time To Live and destruction.
 
-- Full, easy control over side effects - especially good RxJS support.
+- Full control over when side effects run - especially good RxJS support.
 
 - Incrementally adoptable - we needed to dual-wield Redux and Zedux for a while before we finished migrating to Zedux.
 
@@ -100,17 +110,17 @@ We accounted for many things with Zedux from the very beginning:
 
 Zedux was designed to handle everything. There should be absolutely no app requirements that Zedux can't handle well. If smaller state management tools seem incomplete to you, Zedux may be a perfect fit for you.
 
-If your app is very small and simple, a smaller state management library like Jotai and Zustand might be good enough for you. Zedux is also a great choice for small apps with one big bonus: Zedux is designed to scale very well. If your app gets bigger and more complex over time, Zedux will be able to elegantly manage all of those complexities as they come up.
+If your app is small and simple, a smaller state management library like Jotai and Zustand might be good enough for you. Zedux is also a great choice for small apps with one big bonus: Zedux is designed to scale very well. If your app gets bigger and more complex over time, Zedux will be able to elegantly manage all of those complexities as they come up.
 
 If you're using Redux and your selectors are causing performance problems or your decoupled side effects are getting hard to manage and synchronize, Zedux was designed for you. That's what we encountered at Omnistac and is the primary reason Zedux exists.
 
 Zedux was designed specifically to manage highly volatile state in Omnistac's bond trading platform. If your app has extreme state management demands, especially involving web sockets and RxJS, Zedux might be exactly what you're looking for.
 
-Zedux's community is obviously very young (brand new!). There are no community plugins for it yet, but Zedux's [standardized primitives](#standardized-primitives) and extreme extensibility leave that door wide open. If you've been wanting to get involved in OSS and/or you want to help shape the community and tools of a powerful state management system, Zedux is a ripe opportunity.
+Zedux's community is very young. There are no community-made addons for it yet, but Zedux's [standardized primitives](#standardized-primitives) and extreme extensibility leave that door wide open. If you've been wanting to get involved in OSS and/or you want to help shape the community and tools of a powerful state management system, Zedux is a ripe opportunity.
 
 ## I Have Bundlephobia
 
-The production build of the `@zedux/react` package currently weighs in at 44kb minified, 14kb minified + gzipped - very similar to other libraries in the space like Redux Toolkit and React Query. Our package is also "tree-shakable", that means that most modern bundlers and minifiers will be able to remove unused parts of this library during dead-code elimination.
+The production build of the `@zedux/react` package currently weighs in at 33kb minified, 11kb minified + gzipped - very similar to other libraries in the space like Redux Toolkit and React Query. The package is also "tree-shakable" - most modern bundlers and minifiers will be able to remove unused APIs during dead-code elimination.
 
 ## Next Steps
 

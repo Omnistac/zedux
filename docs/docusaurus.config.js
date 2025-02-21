@@ -31,25 +31,9 @@ const PathsPlugin = (context, options) => {
 module.exports = {
   title: 'Zedux',
   tagline: 'A Molecular State Engine for React',
-  url: 'https://omnistac.github.io',
+  url: 'https://zedux.dev',
   baseUrl: '/',
   favicon: 'img/favicon.ico',
-  headTags: [
-    {
-      attributes: {
-        content: 'article',
-        property: 'og:type',
-      },
-      tagName: 'meta',
-    },
-    {
-      attributes: {
-        content: 'https://omnistac.github.io/zedux/img/logo.png',
-        property: 'og:image',
-      },
-      tagName: 'meta',
-    },
-  ],
   organizationName: 'Omnistac',
   projectName: 'zedux',
   deploymentBranch: 'gh-pages',
@@ -61,6 +45,11 @@ module.exports = {
   trailingSlash: false,
   /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
   themeConfig: {
+    image: 'img/zedux-icon-300x300.png',
+    metadata: [
+      { name: 'og:type', content: 'article' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
     navbar: {
       title: 'Home',
       logo: {

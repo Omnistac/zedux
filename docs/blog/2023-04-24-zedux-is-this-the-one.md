@@ -27,11 +27,11 @@ function Greeting() {
 }
 ```
 
-Zedux features a composable store model wrapped in a DI-driven atomic architecture. This article will break down why it exists and what problems it solves. If you don't care about all that and just want to learn Zedux, head to the [quick start](https://omnistac.github.io/zedux/docs/walkthrough/quick-start) or the [examples](https://omnistac.github.io/zedux/examples).
+Zedux features a composable store model wrapped in a DI-driven atomic architecture. This article will break down why it exists and what problems it solves. If you don't care about all that and just want to learn Zedux, head to the [quick start](https://zedux.dev/docs/walkthrough/quick-start) or the [examples](https://zedux.dev/examples).
 
 ## How Dare You Make Another One Of These Things??
 
-Chill. Zedux has a long history. Read some of it [here](https://omnistac.github.io/zedux/blog/zedux-open-sourced). It is only recently open-sourced in its current form.
+Chill. Zedux has a long history. Read some of it [here](https://zedux.dev/blog/zedux-open-sourced). It is only recently open-sourced in its current form.
 
 We made Zedux primarily to fix performance and maintenance problems in a socket-driven app that previously used - wait for iiiit - [Redux](https://redux.js.org/).
 
@@ -97,7 +97,7 @@ const ripeOrangesAtom = ion('ripeOranges', ({ select }) => {
 })
 ```
 
-Zedux's injectors are just like React hooks, but for atoms. Yep. There's an [`injectMemo()`](https://omnistac.github.io/zedux/docs/api/injectors/injectMemo), [`injectRef()`](https://omnistac.github.io/zedux/docs/api/injectors/injectRef), etc. [`injectEffect()`](https://omnistac.github.io/zedux/docs/api/injectors/injectEffect) behaves exactly like React's `useEffect()`. The entire debounce operation can be abstracted to a custom injector too, reducing the code to simply:
+Zedux's injectors are just like React hooks, but for atoms. Yep. There's an [`injectMemo()`](https://zedux.dev/docs/api/injectors/injectMemo), [`injectRef()`](https://zedux.dev/docs/api/injectors/injectRef), etc. [`injectEffect()`](https://zedux.dev/docs/api/injectors/injectEffect) behaves exactly like React's `useEffect()`. The entire debounce operation can be abstracted to a custom injector too, reducing the code to simply:
 
 ```ts
 const ripeOrangesAtom = ion('ripeOranges', ({ select }) =>
@@ -110,7 +110,7 @@ This example also demonstrated the efficiency of Zedux's side effects model. Com
 
 Colocating state and its side effects is the dream we've all had for a long time in the React world. Turns out `injectEffect()` just demonstrated exactly that. This was the 2nd most important feature for us coming from Redux Saga.
 
-The 3rd problem was Redux's infamous indirection. To trace an event, you have to globally-grep your codebase for string action types and explore the usages to find what you need. Zedux introduces [atom exports](https://omnistac.github.io/zedux/docs/walkthrough/atom-apis#exports) which give you automatic go-to-definition and find-all-references support in VS Code, not to mention you write less code, colocate callbacks with state, and get automatic TypeScript support.
+The 3rd problem was Redux's infamous indirection. To trace an event, you have to globally-grep your codebase for string action types and explore the usages to find what you need. Zedux introduces [atom exports](https://zedux.dev/docs/walkthrough/atom-apis#exports) which give you automatic go-to-definition and find-all-references support in VS Code, not to mention you write less code, colocate callbacks with state, and get automatic TypeScript support.
 
 ## Atoms
 
@@ -148,13 +148,13 @@ function Counter() {
 }
 ```
 
-The side effect kicks off as soon as a counter atom is instantiated from the `counterAtom` template. [`useAtomState()`](https://omnistac.github.io/zedux/docs/api/hooks/useAtomState) is similar to React's `useState()` hook. It subscribes to updates in the counter atom instance's store.
+The side effect kicks off as soon as a counter atom is instantiated from the `counterAtom` template. [`useAtomState()`](https://zedux.dev/docs/api/hooks/useAtomState) is similar to React's `useState()` hook. It subscribes to updates in the counter atom instance's store.
 
 This effect also cleans up after itself when the atom is destroyed. Besides the colocation, Zedux's side effects model also encourages decoupling side effects from React components - as most side effects should be.
 
 The atomic model of Zedux is inspired by Recoil and Jotai (the latter of which was in turn inspired by Zustand). We created it after trialing these other tools and determining they weren't stable or powerful enough for what we needed at Omnistac.
 
-Zedux is more powerful than its atomic predecessors and it isn't close. It boasts many new features like [atom exports](https://omnistac.github.io/zedux/docs/walkthrough/atom-apis#exports), [real DI](https://omnistac.github.io/zedux/docs/walkthrough/overrides), [query atoms](https://omnistac.github.io/zedux/docs/walkthrough/query-atoms), [evaluation tracing](https://omnistac.github.io/zedux/docs/walkthrough/side-effects#injectwhy), [React context control](https://omnistac.github.io/zedux/docs/walkthrough/react-context), [cache management](https://omnistac.github.io/zedux/docs/walkthrough/destruction), [recursive atoms](https://omnistac.github.io/zedux/docs/advanced/more-patterns#recursive-atoms), and stable [side effects](https://omnistac.github.io/zedux/docs/api/injectors/injectEffect) and [plugins](https://omnistac.github.io/zedux/docs/advanced/plugins) models, just to name a few (yes, there's a lot more).
+Zedux is more powerful than its atomic predecessors and it isn't close. It boasts many new features like [atom exports](https://zedux.dev/docs/walkthrough/atom-apis#exports), [real DI](https://zedux.dev/docs/walkthrough/overrides), [query atoms](https://zedux.dev/docs/walkthrough/query-atoms), [evaluation tracing](https://zedux.dev/docs/walkthrough/side-effects#injectwhy), [React context control](https://zedux.dev/docs/walkthrough/react-context), [cache management](https://zedux.dev/docs/walkthrough/destruction), [recursive atoms](https://zedux.dev/docs/advanced/more-patterns#recursive-atoms), and stable [side effects](https://zedux.dev/docs/api/injectors/injectEffect) and [plugins](https://zedux.dev/docs/advanced/plugins) models, just to name a few (yes, there's a lot more).
 
 The biggest differences conceptually are:
 
@@ -171,7 +171,7 @@ We loved [React Query](https://tanstack.com/query/latest/docs/react/overview). R
 
 We didn't need any of React Query's pagination/infinite scroll/etc helpers. But we loved React Query's cache management ideas. We gave atoms the capability of managing promise state, which gave us all the React Query-esque power we needed. Combined with injectors, this model has the potential to support everything React Query can do. Add to that Zedux's powerful DI and natural decoupling from components, and there is a _lot_ of potential for some powerful cache management. We may just make a `@zedux/query` package someday. But I digress.
 
-Zedux's [Ecosystems](https://omnistac.github.io/zedux/docs/walkthrough/ecosystems) are patterned after React Query's [QueryClient](https://tanstack.com/query/latest/docs/react/reference/QueryClient). These are isolated atom environments that are usable and testable completely outside React and easily plugged into React via an [`<EcosystemProvider>`](https://omnistac.github.io/zedux/docs/api/components/EcosystemProvider).
+Zedux's [Ecosystems](https://zedux.dev/docs/walkthrough/ecosystems) are patterned after React Query's [QueryClient](https://tanstack.com/query/latest/docs/react/reference/QueryClient). These are isolated atom environments that are usable and testable completely outside React and easily plugged into React via an [`<EcosystemProvider>`](https://zedux.dev/docs/api/components/EcosystemProvider).
 
 ```ts
 const ecosystem = createEcosystem({ id: 'root' })
@@ -183,7 +183,7 @@ instance.store.subscribe(newState => console.log('state changed:', newState))
 instance.setState(100)
 ```
 
-Zedux atoms can be given a [TTL](https://omnistac.github.io/zedux/docs/walkthrough/destruction#instance-destruction) (Time To Live), which is patterned after React Query's `cacheTime`. This applies to all atoms, not just query atoms, meaning you have this powerful cache management for your UI state too.
+Zedux atoms can be given a [TTL](https://zedux.dev/docs/walkthrough/destruction#instance-destruction) (Time To Live), which is patterned after React Query's `cacheTime`. This applies to all atoms, not just query atoms, meaning you have this powerful cache management for your UI state too.
 
 Zedux atoms can also be given params. These actually work _exactly_ like query params in React Query. Different sets of params create different atom instances of an atom template. Reusing the same params (according to a [deterministic hash](https://tanstack.com/query/latest/docs/react/guides/query-keys#query-keys-are-hashed-deterministically)) tells Zedux to reuse a cached atom instance.
 
@@ -209,7 +209,7 @@ function FetchTwoUsers() {
 
 When the `FetchTwoUsers` component unmounts (assuming it's the only place where the `fetcherAtom` template is used with these exact params), both of these atoms will become stale. If the component remounts within 1 minute, they'll be revived, otherwise they'll be destroyed 1 minute after the component unmounts.
 
-In Zedux, atoms go stale as soon as they're no longer in use. There are several ways to force invalidation, reevaluation, and destruction. Check out [the docs](https://omnistac.github.io/zedux/docs/walkthrough/query-atoms) for more info.
+In Zedux, atoms go stale as soon as they're no longer in use. There are several ways to force invalidation, reevaluation, and destruction. Check out [the docs](https://zedux.dev/docs/walkthrough/query-atoms) for more info.
 
 Zedux atoms excel at managing both UI data (like Zustand and Redux) and server data (like React Query). The automatic integration between both types of state is a huge plus. **However**, Zedux is not (currently) a full replacement for React Query - it doesn't provide any pagination/refetch/etc helpers out of the box. It is possible to dual-wield both tools like many people do with Zustand + React Query. So. Do you dare wield that much power?
 
@@ -223,7 +223,7 @@ Zedux is brand new to the open-source scene. No community plugins exist for it y
 
 ## Design Considerations
 
-All APIs in Zedux were created in TypeScript from the ground up. Zedux exports lots of [utility types](https://omnistac.github.io/zedux/docs/advanced/typescript-tips) for working with atoms and stores. The docs give several tips for TS users and the API docs include full type defs for the adventurous.
+All APIs in Zedux were created in TypeScript from the ground up. Zedux exports lots of [utility types](https://zedux.dev/docs/advanced/typescript-tips) for working with atoms and stores. The docs give several tips for TS users and the API docs include full type defs for the adventurous.
 
 On top of this, we accounted for many things with Zedux from the very beginning:
 
@@ -251,11 +251,11 @@ On top of this, we accounted for many things with Zedux from the very beginning:
 
 - Time travel debugging, including replayable actions and undo/redo.
 
-- Plugin compatible - there are many, many ways to extend Zedux's functionality - from extending its classes to creating custom injectors to creating a full-fledged ecosystem [plugin](https://omnistac.github.io/zedux/docs/advanced/plugins).
+- Plugin compatible - there are many, many ways to extend Zedux's functionality - from extending its classes to creating custom injectors to creating a full-fledged ecosystem [plugin](https://zedux.dev/docs/advanced/plugins).
 
 Plus many, many considerations with specific APIs - including consistent naming conventions, TS support, and keeping the learning curve as small as possible.
 
-Alright, if you want more wordy stuff, check out the [introduction](https://omnistac.github.io/zedux/docs/about/introduction). Or if you want to really learn Zedux, dig into the [quick start](https://omnistac.github.io/zedux/docs/advanced/more-patterns#recursive-atoms) or the [examples](https://omnistac.github.io/zedux/examples).
+Alright, if you want more wordy stuff, check out the [introduction](https://zedux.dev/docs/about/introduction). Or if you want to really learn Zedux, dig into the [quick start](https://zedux.dev/docs/advanced/more-patterns#recursive-atoms) or the [examples](https://zedux.dev/examples).
 
 ## Final thoughts
 
