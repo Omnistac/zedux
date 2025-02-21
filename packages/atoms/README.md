@@ -1,6 +1,6 @@
 # `@zedux/atoms`
 
-The core atomic model of Zedux. This is a standalone package, meaning it's the only package you need to install to use Zedux's atomic model. It includes the Zedux core store package as well as all APIs related to signals, atoms, and ecosystems.
+The core atomic model of Zedux. This is a standalone package, meaning it's the only package you need to install to use Zedux's atomic model. It includes all APIs related to signals, atoms, and ecosystems.
 
 This package is framework-independent, though many of its APIs are heavily inspired by React.
 
@@ -15,8 +15,6 @@ pnpm add @zedux/atoms # pnpm
 ```
 
 If you're using React, you probably want to install the [`@zedux/react` package](https://www.npmjs.com/package/@zedux/react) instead, which includes everything from this package and more.
-
-This package has a direct dependency on the [`@zedux/core` package](https://www.npmjs.com/package/@zedux/core). If you install that directly, ensure its version exactly matches your `@zedux/atoms` version to prevent installing duplicate packages.
 
 ## Usage
 
@@ -41,11 +39,7 @@ instance.destroy()
 
 ## Exports
 
-This package includes and re-exports everything from the following package:
-
-- [`@zedux/core`](https://www.npmjs.com/package/@zedux/core)
-
-On top of this, `@zedux/atoms` exports the following APIs and many helper types for working with them in TypeScript:
+`@zedux/atoms` exports the following APIs and many helper types for working with them in TypeScript:
 
 ### Classes
 
@@ -86,11 +80,10 @@ On top of this, `@zedux/atoms` exports the following APIs and many helper types 
 
 ### Utils
 
-- [`getEcosystem()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#getecosystem)
+- [`getDefaultEcosystem()`](https://omnistac.github.io/zedux/docs/api/utils/getDefaultEcosystem)
 - [`getInternals()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#getinternals)
 - [`setInternals()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#setinternals)
 - [`untrack()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#untrack)
-- [`wipe()`](https://omnistac.github.io/zedux/docs/api/utils/internal-utils#wipe)
 
 ## For Authors
 

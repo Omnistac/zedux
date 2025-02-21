@@ -15,11 +15,10 @@ import {
   Subscriber,
   SubscriberObject,
   Scheduler,
-  Job,
   KnownHierarchyDescriptor,
 } from '../types'
 import { STORE_IDENTIFIER } from '../utils/general'
-import { HierarchyNode } from '../utils/types'
+import { HierarchyNode, Job } from '../utils/types'
 import { detailedTypeof } from './detailedTypeof'
 import { isPlainObject } from './isPlainObject'
 import { removeAllMeta } from './meta'

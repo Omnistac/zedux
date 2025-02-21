@@ -1,4 +1,4 @@
-import { StoreEffect } from '@zedux/atoms'
+import { StoreEffect } from '@zedux/core'
 import { MachineStore } from './MachineStore'
 
 export type MachineHook<

@@ -142,7 +142,7 @@ describe('Ecosystem', () => {
 
     // @ts-expect-error first param must be an atom template or instance
     expect(() => ecosystem.getInstance({})).toThrowError(
-      /Expected a template or node. Received object/i
+      /Expected a template, selector, or graph node/i
     )
 
     // @ts-expect-error first param must be an atom template or instance
@@ -152,7 +152,7 @@ describe('Ecosystem', () => {
 
     // @ts-expect-error second param must be an array or undefined
     expect(() => ecosystem.getInstance(atom1, 'a')).toThrowError(
-      /Expected atom params to be an array. Received string/i
+      /Expected atom params to be an array/i
     )
   })
 
@@ -161,7 +161,7 @@ describe('Ecosystem', () => {
 
     // @ts-expect-error first param must be an atom template or instance
     expect(() => ecosystem.getNode({})).toThrowError(
-      /Expected a template or node. Received object/i
+      /Expected a template, selector, or graph node/i
     )
 
     // @ts-expect-error first param must be an atom template or instance
@@ -171,7 +171,7 @@ describe('Ecosystem', () => {
 
     // @ts-expect-error second param must be an array or undefined
     expect(() => ecosystem.getNode(atom1, 'a')).toThrowError(
-      /Expected atom params to be an array. Received string/i
+      /Expected atom params to be an array/i
     )
   })
 

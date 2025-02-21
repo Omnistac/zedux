@@ -30,6 +30,31 @@ export interface Hierarchy {
   [key: string]: HierarchyNode
 }
 
+export interface Job {
+  /**
+   * `W`eight - the weight of the node (for EvaluateGraphNode jobs).
+   * UpdateExternalDependent jobs also use this to track the order they were
+   * added as dependents, since that's the order they should evaluate in.
+   */
+  W?: number
+
+  /**
+   * `j`ob - the actual task to run.
+   */
+  j: () => void
+
+  /**
+   * `T`ype - the job type. Different types get different priorities in the
+   * scheduler.
+   *
+   * 0 - UpdateStore
+   * 1 - InformSubscribers
+   * 2 - EvaluateGraphNode
+   * 3 - UpdateExternalDependent
+   */
+  T: 0 | 1 | 2 | 3
+}
+
 export interface NullNode extends HierarchyNodeBase {
   reducer?: undefined
   type: NullNodeType

@@ -1,4 +1,3 @@
-import { Observable, Settable } from '@zedux/core'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
@@ -319,6 +318,31 @@ export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
     ...params: G['Params']
   ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | Signal<G> | G['State']
 
+export interface Job {
+  /**
+   * `W`eight - the weight of the node (for EvaluateGraphNode jobs).
+   * UpdateExternalDependent jobs also use this to track the order they were
+   * added as dependents, since that's the order they should evaluate in.
+   */
+  W?: number
+
+  /**
+   * `j`ob - the actual task to run.
+   */
+  j: () => void
+
+  /**
+   * `T`ype - the job type. Different types get different priorities in the
+   * scheduler.
+   *
+   * 0 - UpdateStore
+   * 1 - InformSubscribers
+   * 2 - EvaluateGraphNode
+   * 3 - UpdateExternalDependent
+   */
+  T: 0 | 1 | 2 | 3
+}
+
 export type LifecycleStatus = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
 
 export interface ListenerConfig {
@@ -333,6 +357,10 @@ export type MaybeCleanup = Cleanup | void
 
 export interface MutableRefObject<T = any> {
   current: T
+}
+
+export interface Observable<T = any> {
+  subscribe(subscriber: (value: T) => any): { unsubscribe: () => void }
 }
 
 export interface NodeFilterOptions {
@@ -389,6 +417,10 @@ export interface PromiseState<T> {
 
 export type PromiseStatus = 'error' | 'loading' | 'success'
 
+export type RecursivePartial<T> = T extends Record<string, any>
+  ? { [P in keyof T]?: RecursivePartial<T[P]> }
+  : T
+
 export type Ref<T = any> = MutableRefObject<T>
 
 export interface RefObject<T = any> {
@@ -402,6 +434,10 @@ export type Selectable<State = any, Params extends any[] = any> =
       State: State
       Template: AtomSelectorOrConfig<State, Params>
     }>
+
+export type Settable<State = any, StateIn = State> =
+  | ((state: StateIn) => State)
+  | State
 
 export type StateHookTuple<State, Exports> = [
   State,

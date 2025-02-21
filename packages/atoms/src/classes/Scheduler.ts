@@ -1,5 +1,10 @@
-import { Job, Scheduler as SchedulerInterface } from '@zedux/core'
+import { Job } from '@zedux/atoms/types/index'
 import { Ecosystem } from './Ecosystem'
+
+// temporarily copied from @zedux/core. TODO: remove
+interface SchedulerInterface {
+  scheduleNow(newJob: Job): void
+}
 
 export class Scheduler implements SchedulerInterface {
   /**

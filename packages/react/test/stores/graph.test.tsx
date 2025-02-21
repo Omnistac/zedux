@@ -1,7 +1,6 @@
 import { fireEvent } from '@testing-library/dom'
 import { act } from '@testing-library/react'
 import {
-  createStore,
   injectAtomGetters,
   injectAtomValue,
   useAtomInstance,
@@ -11,7 +10,14 @@ import {
   AtomGetters,
   EvaluationReason,
 } from '@zedux/react'
-import { api, atom, AtomInstanceType, injectStore, ion } from '@zedux/stores'
+import {
+  api,
+  atom,
+  AtomInstanceType,
+  createStore,
+  injectStore,
+  ion,
+} from '@zedux/stores'
 import React from 'react'
 import { ecosystem, getNodes, snapshotNodes } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'

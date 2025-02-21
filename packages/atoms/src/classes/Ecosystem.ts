@@ -1,4 +1,3 @@
-import { is, isPlainObject, Job } from '@zedux/core'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
@@ -31,6 +30,7 @@ import {
   EcosystemEvents,
   InternalEvaluationReason,
   GetNode,
+  Job,
 } from '../types/index'
 import {
   External,
@@ -48,6 +48,7 @@ import {
   RUN_START,
   RESET_START,
   RUN_END,
+  is,
 } from '../utils/general'
 import { IdGenerator } from './IdGenerator'
 import { Scheduler } from './Scheduler'
@@ -552,10 +553,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     dehydratedState: Record<string, any>,
     config?: { retroactive?: boolean }
   ) {
-    if (DEV && !isPlainObject(dehydratedState)) {
-      throw new TypeError(
-        'Zedux: ecosystem.hydrate() - first parameter must be a plain object'
-      )
+    if (DEV && (!dehydratedState || typeof dehydratedState !== 'object')) {
+      throw new TypeError('Zedux: Expected an object', {
+        cause: dehydratedState,
+      })
     }
 
     this.hydration = { ...this.hydration, ...dehydratedState }

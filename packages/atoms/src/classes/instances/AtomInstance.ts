@@ -1,4 +1,3 @@
-import { is, Observable, Settable } from '@zedux/core'
 import {
   Mutatable,
   SendableEvents,
@@ -14,6 +13,7 @@ import {
   DehydrationOptions,
   AnyAtomGenerics,
   InternalEvaluationReason,
+  Settable,
 } from '@zedux/atoms/types/index'
 import {
   ACTIVE,
@@ -22,6 +22,7 @@ import {
   INITIALIZING,
   INVALIDATE,
   Invalidate,
+  is,
   prefix,
   PROMISE_CHANGE,
   PromiseChange,
@@ -533,7 +534,9 @@ export class AtomInstance<
     }
 
     // ttl is an observable; destroy as soon as it emits
-    const subscription = (ttl as Observable).subscribe(() => {
+    const subscription = (
+      ttl as { subscribe: (cb: () => void) => { unsubscribe: () => void } }
+    ).subscribe(() => {
       this.c = undefined
       this.destroy()
     })
