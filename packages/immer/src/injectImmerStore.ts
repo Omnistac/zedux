@@ -3,10 +3,9 @@ import {
   injectMemo,
   injectSelf,
   InjectStoreConfig,
-  zeduxTypes,
   PartialAtomInstance,
-  Store,
 } from '@zedux/atoms'
+import { zeduxTypes, Store } from '@zedux/core'
 import { createImmerStore } from './createImmerStore'
 
 const doSubscribe = <State>(

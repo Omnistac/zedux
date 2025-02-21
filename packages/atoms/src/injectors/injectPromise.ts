@@ -1,4 +1,3 @@
-import { detailedTypeof, RecursivePartial } from '@zedux/core'
 import { api } from '../factories/api'
 import {
   getErrorPromiseState,
@@ -13,6 +12,7 @@ import {
   MapEvents,
   None,
   PromiseState,
+  RecursivePartial,
 } from '../types/index'
 import { injectEffect } from './injectEffect'
 import { injectMemo } from './injectMemo'
@@ -134,9 +134,8 @@ export const injectPromise: {
 
     if (DEV && typeof promise?.then !== 'function') {
       throw new TypeError(
-        `Zedux: injectPromise expected callback to return a promise. Received ${detailedTypeof(
-          promise
-        )}`
+        'Zedux: injectPromise expected callback to return a promise',
+        { cause: promise }
       )
     }
 

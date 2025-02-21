@@ -1,11 +1,10 @@
-import { is } from '@zedux/core'
 import {
   AtomInstanceTtl,
   AtomApiGenerics,
   Prettify,
   ExportsConfig,
 } from '@zedux/atoms/types/index'
-import { INITIALIZING, prefix } from '@zedux/atoms/utils/general'
+import { INITIALIZING, is, prefix } from '@zedux/atoms/utils/general'
 import { getEvaluationContext } from '../utils/evaluationContext'
 
 const wrapExports = <T extends Record<string, any>>(

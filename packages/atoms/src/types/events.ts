@@ -1,4 +1,3 @@
-import { RecursivePartial } from '@zedux/core'
 import { GraphNode } from '../classes/GraphNode'
 import {
   AnyNodeGenerics,
@@ -8,6 +7,7 @@ import {
   ListenerConfig,
   NodeGenerics,
   Prettify,
+  RecursivePartial,
 } from './index'
 
 export type CatchAllListener<G extends NodeGenerics> = (

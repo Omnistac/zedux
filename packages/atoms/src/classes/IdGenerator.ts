@@ -1,4 +1,3 @@
-import { isPlainObject } from '@zedux/core'
 import { GraphNode } from './GraphNode'
 
 /**
@@ -49,7 +48,9 @@ export class IdGenerator {
     return JSON.stringify(params, (_, param) => {
       if (!param) return param
       if (param.izn) return (param as GraphNode).id
-      if (!isPlainObject(param)) {
+
+      // if the prototype has no prototype, it's likely not a plain object:
+      if (Object.getPrototypeOf(param.constructor.prototype)) {
         if (!acceptComplexParams || Array.isArray(param)) return param
         if (typeof param === 'function') return this.cacheFn(param)
         if (typeof param === 'object') return this.cacheClass(param)

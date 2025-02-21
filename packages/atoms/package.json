@@ -9,9 +9,6 @@
   "bugs": {
     "url": "https://github.com/Omnistac/zedux/issues"
   },
-  "dependencies": {
-    "@zedux/core": "2.0.0-beta.4"
-  },
   "exports": {
     ".": {
       "import": "./dist/esm/index.js",

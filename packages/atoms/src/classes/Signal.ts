@@ -1,9 +1,9 @@
-import { Settable } from '@zedux/core'
 import {
   AtomGenerics,
   Mutatable,
   NodeGenerics,
   SendableEvents,
+  Settable,
   Transaction,
   UndefinedEvents,
 } from '../types/index'

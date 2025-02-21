@@ -4,8 +4,8 @@ import {
   injectRef,
   injectSelf,
   InjectStoreConfig,
-  zeduxTypes,
 } from '@zedux/atoms'
+import { zeduxTypes } from '@zedux/core'
 import { MachineStore } from './MachineStore'
 import { MachineHook, MachineStateShape } from './types'
 

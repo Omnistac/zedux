@@ -1,4 +1,3 @@
-import { detailedTypeof, is } from '@zedux/core'
 import {
   AnyAtomInstance,
   AnyAtomTemplate,
@@ -13,7 +12,7 @@ import type { Ecosystem } from '../classes/Ecosystem'
 import { GraphNode } from '../classes/GraphNode'
 import { getSelectorKey, SelectorInstance } from '../classes/SelectorInstance'
 import { getEvaluationContext } from './evaluationContext'
-import { DESTROYED } from './general'
+import { DESTROYED, is } from './general'
 
 const getContextualizedId = (
   ecosystem: Ecosystem,
@@ -61,11 +60,9 @@ export const getNode = <G extends AtomGenerics>(
 
   if (DEV) {
     if (typeof params !== 'undefined' && !Array.isArray(params)) {
-      throw new TypeError(
-        `Zedux: Expected atom params to be an array. Received ${detailedTypeof(
-          params
-        )}`
-      )
+      throw new TypeError('Zedux: Expected atom params to be an array', {
+        cause: params,
+      })
     }
   }
 
@@ -165,9 +162,9 @@ export const getNode = <G extends AtomGenerics>(
     }
   }
 
-  throw new TypeError(
-    `Zedux: Expected a template or node. Received ${detailedTypeof(template)}`
-  )
+  throw new TypeError('Zedux: Expected a template, selector, or graph node', {
+    cause: template,
+  })
 }
 
 const resolveAtom = <A extends AnyAtomTemplate>(

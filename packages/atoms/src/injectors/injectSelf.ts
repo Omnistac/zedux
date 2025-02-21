@@ -1,7 +1,7 @@
-import { is } from '@zedux/core'
 import { AnyAtomInstance, PartialAtomInstance } from '../types/index'
 import { getEvaluationContext } from '../utils/evaluationContext'
 import { AtomInstance } from '../classes/instances/AtomInstance'
+import { is } from '../utils/general'
 
 /**
  * An unrestricted injector (can actually be used in loops and if statements).

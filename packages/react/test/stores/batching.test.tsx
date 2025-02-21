@@ -1,10 +1,5 @@
-import {
-  injectAtomGetters,
-  injectCallback,
-  injectRef,
-  zeduxTypes,
-} from '@zedux/atoms'
-import { api, atom, injectStore } from '@zedux/stores'
+import { injectAtomGetters, injectCallback, injectRef } from '@zedux/atoms'
+import { api, atom, injectStore, zeduxTypes } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('batching', () => {

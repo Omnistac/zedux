@@ -20,12 +20,12 @@ import {
   scheduleStaticDependents,
 } from './utils/graph'
 
-export * from '@zedux/core'
 export * from './classes/index'
 export * from './factories/index'
 export * from './injectors/index'
 export * from './types/index'
 export { untrack } from './utils/evaluationContext'
+export { is } from './utils/general'
 
 type Internals = { c: EvaluationContext; g: Ecosystem }
 

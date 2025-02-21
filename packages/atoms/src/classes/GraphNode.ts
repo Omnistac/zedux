@@ -6,12 +6,12 @@ import {
   GraphEdge,
   GraphEdgeConfig,
   InternalEvaluationReason,
+  Job,
   ListenerConfig,
   NodeFilter,
   NodeFilterOptions,
   NodeGenerics,
 } from '@zedux/atoms/types/index'
-import { is, Job } from '@zedux/core'
 import { Ecosystem } from './Ecosystem'
 import {
   ACTIVE,
@@ -21,6 +21,7 @@ import {
   ExplicitExternal,
   INITIALIZING,
   InternalLifecycleStatus,
+  is,
   statusMap,
 } from '../utils/general'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'

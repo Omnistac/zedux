@@ -1,5 +1,4 @@
-import { RecursivePartial } from '@zedux/core'
-import { Transaction, MutatableTypes } from '../types/index'
+import { Transaction, MutatableTypes, RecursivePartial } from '../types/index'
 
 export type ParentProxy<State> = {
   t: Transaction[]

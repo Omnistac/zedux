@@ -1,10 +1,10 @@
-import { Settable } from '@zedux/core'
 import {
   AnyNodeGenerics,
   AtomGenerics,
   InternalEvaluationReason,
   Mutatable,
   SendableEvents,
+  Settable,
   Transaction,
   UndefinedEvents,
 } from '../types/index'

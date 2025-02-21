@@ -10,5 +10,6 @@ export default configureVite({
     },
   }),
   moduleName: 'ZeduxAtoms',
-  // don't add `@zedux/core` to globals - @zedux/atoms prod builds bundle it
+  // don't add `@zedux/core` to globals - if we go back to using the core
+  // package here, @zedux/atoms prod builds will bundle it
 })

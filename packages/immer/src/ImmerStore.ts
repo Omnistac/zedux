@@ -1,4 +1,4 @@
-import { Store } from '@zedux/atoms'
+import { Store } from '@zedux/core'
 import { Draft, produce } from 'immer'
 
 export class ImmerStore<State> extends Store<State> {
