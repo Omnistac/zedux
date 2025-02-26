@@ -297,7 +297,7 @@ export const setNodeStatus = (
       t: Cycle,
     } as const
 
-    if (isListeningTo(node.e, CYCLE)) {
+    if (isListeningToCycle) {
       sendImplicitEcosystemEvent(node.e, reason)
     }
 
