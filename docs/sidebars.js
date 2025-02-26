@@ -158,5 +158,6 @@ module.exports = {
         ],
       },
     ],
+    'Migration Guides': ['migrations/v2'],
   },
 }

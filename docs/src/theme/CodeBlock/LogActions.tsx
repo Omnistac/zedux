@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { useMemo } from 'react'
 import styled from '@site/src/ssc'
-import * as ReactZedux from '@zedux/react'
+import * as ReactZedux_v1 from '@zedux/react'
+import * as ReactZedux_v2 from '../../../../packages/react/dist/cjs/index'
 
 const options = {
   State: 'State',
@@ -96,8 +97,8 @@ export const LogActions = ({
   ecosystem,
   Zedux,
 }: {
-  ecosystem?: ReactZedux.Ecosystem
-  Zedux: typeof ReactZedux
+  ecosystem?: ReactZedux_v1.Ecosystem | ReactZedux_v2.Ecosystem
+  Zedux: typeof ReactZedux_v1 | typeof ReactZedux_v2
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [lastSelection, setLastSelection] = useState<keyof typeof options>()
@@ -111,14 +112,14 @@ export const LogActions = ({
           )
         }
         console.group('Current state:')
-        console.log('Atom Instances:')
+        // console.log('Atom Instances:')
         console.log(
           ecosystem.dehydrate({
             transform: false,
           })
         )
-        console.log('Selector Caches:')
-        console.log(ecosystem.selectors.dehydrate())
+        // console.log('Selector Caches:')
+        // console.log(ecosystem.selectors.dehydrate())
         console.groupEnd()
       },
       Ecosystem: () => {

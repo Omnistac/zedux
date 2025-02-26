@@ -21,9 +21,12 @@ import { Slate, withReact, ReactEditor, RenderLeafProps } from 'slate-react'
 import { JsxEmit, transpile } from 'typescript/lib/typescript'
 import * as RxJS from 'rxjs'
 import * as RxJSOperators from 'rxjs/operators'
-import * as ZeduxImmer from '@zedux/immer'
-import * as ZeduxMachines from '@zedux/machines'
-import * as ZeduxReact from '@zedux/react'
+import * as ZeduxImmer_v1 from '@zedux/immer'
+import * as ZeduxMachines_v1 from '@zedux/machines'
+import * as ZeduxReact_v1 from '@zedux/react'
+import * as ZeduxImmer_v2 from '../../../../packages/immer/dist/cjs/index'
+import * as ZeduxMachines_v2 from '../../../../packages/machines/dist/cjs/index'
+import * as ZeduxReact_v2 from '../../../../packages/react/dist/cjs/index'
 import { LogActions } from './LogActions'
 import { onKeyDown, scrollSelectionIntoView } from './editorUtils'
 import {
@@ -48,20 +51,25 @@ declare module 'slate' {
   }
 }
 
-const Zedux = { ...ZeduxReact, ...ZeduxImmer, ...ZeduxMachines } // resolves all the getters
+const Zedux_v1 = { ...ZeduxReact_v1, ...ZeduxImmer_v1, ...ZeduxMachines_v1 } // resolves all the getters
+const Zedux_v2 = { ...ZeduxReact_v2, ...ZeduxImmer_v2, ...ZeduxMachines_v2 } // resolves all the getters
 
-const scope = {
-  ...RxJS,
-  ...RxJSOperators,
-  ...Zedux,
-  ...React,
-  window:
-    typeof window === 'undefined'
-      ? { addEventListener() {}, removeEventListener() {} }
-      : window,
+const getScope = (version: string) => {
+  const scope = {
+    ...RxJS,
+    ...RxJSOperators,
+    ...(version === '1' ? Zedux_v1 : Zedux_v2),
+    ...React,
+    window:
+      typeof window === 'undefined'
+        ? { addEventListener() {}, removeEventListener() {} }
+        : window,
+  }
+  const scopeKeys = Object.keys(scope)
+  const scopeValues = scopeKeys.map(key => scope[key])
+
+  return { scopeKeys, scopeValues }
 }
-const scopeKeys = Object.keys(scope)
-const scopeValues = scopeKeys.map(key => scope[key])
 
 const decorateTokens = (
   path: Path,
@@ -117,10 +125,13 @@ const decorate = ([node, path]: NodeEntry) => {
 const evalCode = (
   code: string,
   resultVarName: string,
+  version: string,
   extraSandboxScope?: Record<string, any>,
   localStorage?: typeof window.localStorage,
   reload?: () => void
 ) => {
+  const { scopeKeys, scopeValues } = getScope(version)
+
   const extraScope = {
     ...extraSandboxScope,
     localStorage,
@@ -196,12 +207,14 @@ export const Sandbox = ({
   extraScope,
   noProvide,
   resultVar = 'Result',
+  version = '1',
 }: {
   children: string
   ecosystemId?: string
   extraScope?: string | Record<string, any>
   noProvide?: string
   resultVar?: string
+  version?: string
 }) => {
   const localStorage = useMemo(() => {
     const localStorageObj = {}
@@ -231,12 +244,12 @@ export const Sandbox = ({
   const isMountedRef = useRef(true)
   const isResettingRef = useRef(false)
 
+  const Zedux = version === '1' ? Zedux_v1 : Zedux_v2
+
   const [ecosystem] = useState(() =>
     noProvide
       ? undefined
-      : ZeduxReact.createEcosystem(
-          ecosystemId ? { id: ecosystemId } : undefined
-        )
+      : Zedux.createEcosystem(ecosystemId ? { id: ecosystemId } : undefined)
   )
 
   const reset = (rawVal: Descendant[], text = 'resetting') => {
@@ -263,15 +276,22 @@ export const Sandbox = ({
 
         if (!jsCode) return
 
-        // if (ecosystem?.n.size) {
-        if (ecosystem && Object.keys(ecosystem?._instances).length) {
-          ecosystem.wipe()
+        if (
+          version === '1'
+            ? ecosystem &&
+              Object.keys((ecosystem as ZeduxReact_v1.Ecosystem)._instances)
+                .length
+            : (ecosystem as ZeduxReact_v2.Ecosystem)?.n.size
+        ) {
+          // if (ecosystem && Object.keys(ecosystem?.n).length) {
+          ecosystem.reset()
           ecosystem.setOverrides([])
         }
 
         const evalResult = evalCode(
           jsCode,
           resultVar,
+          version,
           typeof extraScope === 'string' ? undefined : extraScope,
           localStorage,
           () => reset(rawVal, 'refreshing sandbox')
@@ -356,6 +376,13 @@ export const Sandbox = ({
   return noProvide ? (
     slate
   ) : (
-    <Zedux.EcosystemProvider id={ecosystemId}>{slate}</Zedux.EcosystemProvider>
+    <Zedux.EcosystemProvider ecosystem={ecosystem as never}>
+      {/*
+      @ts-expect-error We're loading multiple React versions for the different
+      Zedux versions. React's `children` (`ReactNode`) prop type isn't
+      compatible with itself across versions
+    */}
+      {slate as any}
+    </Zedux.EcosystemProvider>
   )
 }

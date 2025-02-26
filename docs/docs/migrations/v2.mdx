@@ -1,0 +1,573 @@
+---
+id: v2
+title: V2 Migration Guide
+---
+
+Zedux v2 introduces lots of new features and several breaking changes. This guide will give a basic introduction to each new feature and highlight some important breaking changes and migration tips. The full list of changes is at the end.
+
+If you know the gist of Zedux v2, you can [skip to the end](#full-list) for the full migration details.
+
+## Feature: Signals
+
+Stores no longer exist in the `@zedux/atoms` or `@zedux/react` package by default. They're replaced with signals.
+
+```tsx live version=2 ecosystemId=signals-1 resultVar=Form
+// const usernameAtom = atom('username', '')
+
+const formAtom = atom('form', () => {
+  // const usernameInstance = injectAtomInstance(usernameAtom)
+  const usernameSignal = injectSignal('')
+  const passwordSignal = injectSignal('')
+
+  const signal = injectMappedSignal({
+    // atom instances _are_ signals:
+    // username: usernameInstance,
+    username: usernameSignal,
+    password: passwordSignal,
+  })
+
+  return api(signal).setExports({ mutate: (...args) => signal.mutate(...args) })
+})
+
+function Form() {
+  const [{ username, password }, { mutate }] = useAtomState(formAtom)
+
+  return (
+    <form
+      onSubmit={event => {
+        event.preventDefault()
+        console.log('submitted!', { username, password })
+      }}
+    >
+      <input
+        onChange={event =>
+          mutate(state => {
+            state.username = event.target.value
+          })
+        }
+        placeholder="Username"
+        value={username}
+      />
+      <input
+        onChange={event =>
+          mutate(state => {
+            state.password = event.target.value
+          })
+        }
+        placeholder="Password"
+      />
+      <button>Submit</button>
+    </form>
+  )
+}
+```
+
+Atoms _are_ signals! Try swapping in the commented-out `usernameAtom` for the `usernameSignal`. Behavior is the same.
+
+Signals can be created anywhere via `ecosystem.signal`:
+
+```ts
+const signal = ecosystem.signal('some state')
+```
+
+### Events
+
+All graph nodes emit events. Signals have several built-in events:
+
+- `change` - fires on state change.
+- `cycle` - fires when the signal's lifecycle status changes (e.g. from `Initializing` to `Active` or `Active` to `Destroyed`).
+- `mutate` - fires when transactions are generated from a `signal.mutate` call.
+
+Atoms also have a few atom-specific built-in events:
+
+- `invalidate` - fires when `atomInstance.invalidate()` is called.
+- `promiseChange` - fires when the atom's promise reference changes.
+
+Signals can also be given custom, typed events. These types propagate to all mapped signals and atoms the signal is composed in.
+
+```tsx live version=2 ecosystemId=signals-2 resultVar=App
+const injectListener = (signal, event, callback) =>
+  injectEffect(() => signal.on(event, callback), [])
+
+const eventuallyUpdatingAtom = atom('eventuallyUpdating', () => {
+  const signal = injectSignal(0, {
+    events: {
+      // use `As<MyType>` to type events:
+      updateLater: As<number>,
+    },
+  })
+
+  injectListener(signal, 'updateLater', ms =>
+    setTimeout(() => signal.set(state => state + 1), ms)
+  )
+
+  injectEffect(() => {
+    const cleanup = signal.on('change', event => {
+      console.log('state changed')
+    })
+
+    return cleanup
+  }, [])
+
+  return signal // the atom inherits the returned signal's events
+})
+
+function App() {
+  const eventuallyUpdatingInstance = useAtomInstance(eventuallyUpdatingAtom)
+  const count = useAtomValue(eventuallyUpdatingInstance)
+
+  useEffect(() => {
+    // this is fully typed:
+    const cleanup = eventuallyUpdatingInstance.on('updateLater', ms => {
+      console.log('saw updateLater', ms)
+    })
+
+    return cleanup
+  }, [eventuallyUpdatingInstance])
+
+  return (
+    <div>
+      <span>Count: {count}</span>
+      <button
+        onClick={() => eventuallyUpdatingInstance.send('updateLater', 1000)}
+      >
+        Update Later
+      </button>
+    </div>
+  )
+}
+```
+
+### Mutations
+
+Signals have proxy-powered, transaction-translated mutations:
+
+```tsx live version=2 ecosystemId=signals-3 resultVar=state
+const ecosystem = createEcosystem()
+
+const signal = ecosystem.signal({
+  foo: 'bar',
+  baz: [{ whateverIsAfterBaz: 1 }],
+})
+
+signal.on('mutate', transactions => {
+  // uncomment this and open browser console:
+  // console.log('got transactions:', transactions)
+})
+
+signal.mutate(state => {
+  state.foo = 'bar none'
+})
+
+signal.mutate(state => {
+  state.baz[0].whateverIsAfterBaz++
+})
+
+const state = signal.get()
+```
+
+### Why Signals?
+
+Apart from these new features, the main reason we decided to switch to signals is that stores are so different from atoms. Storing state, reading state, and reacting to state updates are all different.
+
+Signals, on the other hand, use the same exact graph-based paradigm for reactivity. As a result, Zedux's API surface area is essentially halved.
+
+The switch naturally removes several edge cases with synchronizing stores and atoms. It also lets us remove so much code that all these new features are free, bundle-size-wise, and then some. The minified build of Zedux v2 is a few kb smaller than v1.
+
+For more info, see the original [signals spec](https://github.com/Omnistac/zedux/issues/115).
+
+## Feature: Ecosystem Events
+
+The old plugin system is gone, replaced with "ecosystem events". Simply call `ecosystem.on` to register a listener
+
+```tsx live version=2 ecosystemId=ecosystem-events-1 resultVar=App
+const childCountAtom = atom('childCount', 0, { ttl: 0 })
+const parentCountAtom = atom('parentCount', 0, { ttl: 0 })
+
+function Child() {
+  const [count, setCount] = useAtomState(childCountAtom)
+
+  return (
+    <div>
+      <span>Child Count: {count}</span>
+      <button onClick={() => setCount(state => state + 1)}>
+        Increment Child
+      </button>
+    </div>
+  )
+}
+
+function App() {
+  const ecosystem = useEcosystem()
+  const cleanupRef = useRef()
+
+  if (!cleanupRef.current) {
+    // uncomment this and open browser console:
+    // cleanupRef.current = ecosystem.on(event => console.log(event))
+  }
+
+  const [count, setCount] = useAtomState(parentCountAtom)
+
+  return (
+    <div>
+      <span>Parent Count: {count}</span>
+      <button onClick={() => setCount(state => state + 1)}>
+        Increment Parent
+      </button>
+      <Child />
+    </div>
+  )
+}
+```
+
+### Plugin Migration
+
+Full example of migrating a logging plugin to the new format:
+
+```tsx
+// before:
+const loggingPlugin = new ZeduxPlugin({
+  initialMods: ['stateChanged'],
+
+  registerEcosystem: ecosystem => {
+    const subscription = ecosystem.modBus.subscribe({
+      effects: ({ action }) => {
+        if (action.type === ZeduxPlugin.actions.stateChanged.type) {
+          console.log(
+            'node state updated',
+            action.oldState,
+            '->',
+            action.newState
+          )
+        }
+      },
+    })
+
+    return () => subscription.unsubscribe()
+  },
+})
+
+myEcosystem.registerPlugin(loggingPlugin) // register
+myEcosystem.unregisterPlugin(loggingPlugin) // unregister
+
+// after:
+const cleanup = myEcosystem.on('change', event => {
+  console.log('node state updated', event.oldState, '->', event.newState)
+})
+```
+
+## Feature: Scoped Atoms
+
+:::info
+This feature requires React 19
+:::
+
+The new `inject` util creates "scoped" atoms. Scoped atoms can only be initialized/retrieved in a scoped context:
+
+- in any React component
+- in an `ecosystem.withScope` callback
+
+`inject` retrieves provided atoms and React contexts.
+
+```tsx live version=2 ecosystemId=scoped-atoms-1 resultVar=App
+// it's recommended to default React contexts to `undefined` so Zedux can see if
+// they weren't provided.
+const reactContext = createContext<undefined | string>(undefined)
+
+const contextAtom = atom('context', (initialState: number) => initialState)
+
+const scopedAtom = atom(
+  'scoped',
+  () => {
+    const label = inject(reactContext)
+    const value = injectAtomValue(inject(contextAtom))
+
+    return `${label}: ${value}`
+  },
+  { ttl: 0 }
+) // it's highly recommended to set ttl for scoped atoms
+
+function Child() {
+  const text = useAtomValue(scopedAtom)
+  const contextInstance = useAtomContext(contextAtom)
+
+  return (
+    <div>
+      <span>{text}</span>
+      <button onClick={() => contextInstance.set(state => state + 1)}>
+        Increment context
+      </button>
+    </div>
+  )
+}
+
+function App() {
+  const contextInstance1 = useAtomInstance(contextAtom, [1])
+  const contextInstance2 = useAtomInstance(contextAtom, [100])
+
+  return (
+    <reactContext.Provider value="Value from React context">
+      <AtomProvider instance={contextInstance1}>
+        <Child />
+      </AtomProvider>
+      <AtomProvider instance={contextInstance2}>
+        <Child />
+      </AtomProvider>
+    </reactContext.Provider>
+  )
+}
+```
+
+## Other New Features
+
+- `untrack` - A new top-level export for bumping out of a reactive context.
+- `ecosystem.withScope` - Runs a callback in a scoped context with the passed scope.
+- `injectCallback` - Wraps the callback in `ecosystem.withScope` (in addition to `ecosystem.batch`) if the injecting atom is scoped.
+- Atom APIs wrap exports in `ecosystem.batch` and, if the atom that's evaluating when `api()` is called is scoped, `ecosystem.withScope`. Disable this by passing `{ wrap: false }` as the second parameter to `api.setExports` and `api.addExports`.
+
+## Breaking Changes
+
+### Atom Getters
+
+"Atom getters" are now just the function properties on the ecosystem. In v1, the ecosystem's `get` and `getInstance` function properties were used to specifically avoid registering graph dependencies. Now they do register graph dependencies when called in reactive contexts.
+
+To avoid registering graph dependencies, there are several new features:
+
+```ts
+import { Ecosystem, untrack } from '@zedux/react'
+
+function maybeCalledReactively() {
+  return rootEcoSystem.get(myAtom)
+}
+
+// the ecosystem itself is now the first argument to selectors/ions:
+function myExampleSelector((ecosystem: Ecosystem) => {
+  ecosystem.get(myAtom) // registers a dynamic dependency on myAtom
+  ecosystem.getNode(myAtom) // registers a static dependency on myAtom
+
+  ecosystem.getOnce(myAtom) // doesn't register anything
+  ecosystem.getNodeOnce(myAtom) // doesn't register anything
+
+  untrack(() => ecosystem.get(myAtom)) // doesn't register
+
+  let myAtomVal = maybeCalledReactively() // registers
+
+  myAtomVal = untrack(() => maybeCalledReactively()) // doesn't register
+})
+```
+
+While using the old `AtomGetters` type will still work for typing the first argument of atom selectors, it's deprecated. Prefer `Ecosystem` instead - we'll probably require it in v3.
+
+### Stores
+
+Stores now live in the `@zedux/stores` package. They are not deprecated, you can still use them. But it's recommended to use signals when possible 'cause they're better. And because of that, we may officially deprecate stores someday. That's a maybe, but keep it in mind.
+
+The types for store atoms do have a few breaking changes:
+
+- `AnyAtomInstance` is renamed to `AnyStoreAtomInstance`
+- `AnyAtomTemplate` is renamed to `AnyStoreAtomTemplate`
+
+Several other types in the stores package, like most of the `Atom*Type` helpers, are deprecated. See below for the [full list](#full-list).
+
+## Migrating to Signals
+
+To upgrade to v2 initially, you can simply replace most `@zedux/react` imports with `@zedux/stores`:
+
+```ts
+// before:
+import { api, atom, injectMemo, injectStore } from '@zedux/react'
+
+// after:
+import { injectMemo } from '@zedux/react'
+import { api, atom, injectStore } from '@zedux/stores'
+```
+
+For bigger apps, it's recommended to migrate incrementally to signals. For most store-based atoms it will be as simple as this:
+
+```ts
+// before:
+import { api, atom, injectStore } from '@zedux/stores'
+
+// after:
+import { api, atom, injectSignal } from '@zedux/react'
+
+// replace `injectStore` with `injectSignal`
+// replace `store.getState` with `signal.get`
+// replace `store.setState` with `signal.set`
+// replace `store.setStateDeep` with `signal.mutate`
+```
+
+Some apps may be able to easily move directly to signals, especially if no manual store subscriptions or composed stores are involved. Globally replacing `injectStore` with `injectSignal`, `getState` with `get`, and `setState` with `set` completely "just worked" in one of my example projects.
+
+Some more complex migration scenarios:
+
+- Composed stores
+
+```ts
+// before:
+const composedStore = injectStore(
+  hydration => createStore({ a: storeA, b: storeB }, hydration),
+  { hydrate: true }
+)
+
+composedStore.use({ a: storeA, b: storeB })
+
+// after:
+const composedSignal = injectMappedSignal({ a: signalA, b: signalB })
+```
+
+- Store effects
+
+```ts
+// before:
+const store = injectStore('my state')
+
+injectEffect(() => {
+  const subscription = store.subscribe({
+    effects: ({ action }) => {
+      console.log('got metadata', action.meta) // untyped :(
+    },
+  })
+
+  return () => subscription.unsubscribe()
+}, [])
+
+store.setState('new state', { someMetaData: 'for the effect' })
+
+// after:
+const signal = injectSignal('my state', {
+  events: {
+    sendMetaData: As<{ someMetaData: string }>,
+  },
+})
+
+injectEffect(() => {
+  return signal.on('sendMetaData', ({ someMetaData }) => {
+    console.log('got metadata', someMetaData) // typed! :)
+  })
+})
+
+signal.set('new state', { sendMetaData: { someMetaData: 'for the listener' } })
+```
+
+## Full List
+
+Enough talk. Let's fight.
+
+:::warning
+This section is a work in progress
+:::
+
+### Replace
+
+- `ecosystem.get` -> `ecosystem.getOnce`
+- `ecosystem.getInstance` -> `ecosystem.getNodeOnce`
+- `ecosystem.select` -> `ecosystem.getOnce`
+- `atomGetters.get` -> `ecosystem.get`
+- `atomGetters.getInstance` -> `ecosystem.getNode`
+- `atomGetters.select` -> `ecosystem.select` (but prefer `ecosystem.get`, see below deprecation note)
+- `ecosystem.registerPlugin` -> `ecosystem.on()` (see [above example](#plugin-migration))
+- `ecosystem.wipe` -> `ecosystem.reset`
+- `ecosystem.destroy` -> `ecosystem.reset`
+- `atomInstance._promiseStatus` -> `atomInstance.promiseStatus`
+- `atomInstance._promiseError` -> `atomInstance.promiseError`
+- `{ flags }` -> `{ tags }` (in atom config objects)
+- `{ includeFlags, excludeFlags }` -> `{ includeTags, excludeTags }` (in the object passed to `ecosystem.dehydrate`)
+
+Optionally replace deprecated APIs. May be needed for TS support in rare cases. These will be required in Zedux v3:
+
+- `atomGetters.select(selector, arg1, arg2)` -> `atomGetters.get(selector, [arg1, arg2])`
+- `useAtomSelector(selector, arg1, arg2)` -> `useAtomValue(selector, [arg1, arg2])`
+- `injectAtomSelector(selector, arg1, arg2)` -> `injectAtomValue(selector, [arg1, arg2])`
+- `ecosystem.getInstance` -> `ecosystem.getNode`
+- `injectAtomGetters` -> `injectEcosystem`
+
+And some deprecated types:
+
+- `AtomGetters` -> `Ecosystem`
+- `AtomExportsType` -> `ExportsOf`
+- `AtomInstanceType` -> `NodeOf`
+- `AtomParamsType` -> `ParamsOf`
+- `AtomPromiseType` -> `PromiseOf`
+- `AtomStateType` -> `StateOf`
+
+### Remove
+
+- `ZeduxPlugin` usages (use [ecosystem events](#feature-ecosystem-events) instead).
+- `instanceReused` mods (no replacement. We're working on build tool plugins to do what this mod was trying to do. Those will be released later).
+- reading `sourceType` field on evaluation reasons.
+- `internalStore` usages. Zedux no longer stores ecosystems in module-level state. Pass them around yourself as needed.
+- `wipe` usages (the top-level export). Zedux no longer has internal state to clear.
+
+### Keeping Stores
+
+If you're using stores extensively, especially with lots of advanced features, it may be easier to keep using stores for now and migrate incrementally to signals.
+
+To do this, replace any store-atom-related imports from `@zedux/atoms` or `@zedux/react` with imports from `@zedux/stores`. Refer to this diff for the full list:
+
+```ts
+import {
+  // APIs:
+  api,
+  atom,
+  AtomApi,
+  AtomInstance,
+  AtomInstanceRecursive,
+  AtomTemplate,
+  AtomTemplateRecursive,
+  injectPromise,
+  injectStore,
+  ion,
+  IonTemplate,
+
+  // types:
+  AnyAtomApiGenerics,
+  AnyAtomGenerics,
+  AnyAtomApi,
+-  AnyAtomInstance,
++  AnyStoreAtomInstance,
+-  AnyAtomTemplate,
++  AnyStoreAtomTemplate,
+  AtomApiGenerics,
+  AtomApiGenericsPartial,
+  AtomApiPromise,
+  AtomEventsType,
+  AtomExportsType,
+  AtomGenerics,
+  AtomGenericsToAtomApiGenerics,
+  AtomInstanceType,
+  AtomParamsType,
+  AtomPromiseType,
+  AtomStateFactory,
+  AtomStateType,
+  AtomStoreType,
+  AtomValueOrFactory,
+  AtomTemplateType,
+  IonInstanceRecursive,
+  IonStateFactory,
+  IonTemplateRecursive,
+  SelectorGenerics,
+- } from '@zedux/react' // or '@zedux/atoms'
++ } from '@zedux/stores'
+```
+
+### Replacing Stores
+
+When migrating (either incrementally or all at once) to signals, do the following:
+
+Replace:
+
+- `injectStore` -> `injectSignal` ([see above](#migrating-to-signals) for migrating composed stores and hydrations)
+- `atomInstance.getState` -> `atomInstance.getOnce` (but prefer `.get` for automatic reactivity)
+- `atomInstance.setState` -> `atomInstance.set`
+- `atomInstance.setStateDeep` -> `atomInstance.mutate`
+
+Remove:
+
+- `atomInstance.store`. Signal-based atoms don't expose the underlying signal. Use the atom instance itself; it forwards all state updates and sent events to wrapped signals
+  - `atomInstance.store.getState` -> `atomInstance.getOnce` (but prefer `.get` for automatic reactivity)
+  - `atomInstance.store.setState` -> `atomInstance.set`
+  - `atomInstance.store.setStateDeep` -> `atomInstance.mutate`
+  - `atomInstance.store.subscribe` -> `atomInstance.on` (see [signal events](#events) above)
+- `atomInstance.dispatch`. Can be replaced with `atomInstance.send` for custom events
+- Same goes for `atomInstance.store.dispatch`. Replace with `atomInstance.send` if possible
