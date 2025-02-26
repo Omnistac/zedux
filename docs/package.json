@@ -57,5 +57,6 @@
     "@types/prismjs": "^1.26.0",
     "@types/react": "^18.0.26",
     "@types/styled-components": "^5.1.9"
-  }
+  },
+  "packageManager": "pnpm@10.5.1"
 }
