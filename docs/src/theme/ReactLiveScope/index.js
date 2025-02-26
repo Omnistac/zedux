@@ -6,8 +6,8 @@
  */
 
 import React from 'react'
-// import * as Zedux from '@zedux/core'
-// import * as ReactZedux from '@zedux/react'
+// import * as Zedux from '@zedux.v1/core'
+// import * as ReactZedux from '@zedux.v1/react'
 
 // Add react-live imports you need here
 const ReactLiveScope = {

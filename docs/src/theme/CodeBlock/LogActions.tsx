@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useMemo } from 'react'
 import styled from '@site/src/ssc'
-import * as ReactZedux_v1 from '@zedux/react'
+import * as ReactZedux_v1 from '@zedux.v1/react'
 import * as ReactZedux_v2 from '@zedux.v2/react'
 
 const options = {

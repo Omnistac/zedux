@@ -8,7 +8,7 @@ import {
   injectStore,
   MutableRefObject,
   useAtomInstance,
-} from '@zedux/react'
+} from '@zedux.v1/react'
 
 interface Edge {
   from: [number, number]
