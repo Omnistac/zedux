@@ -3,13 +3,13 @@ import {
   injectMemo,
   injectSelf,
   InjectStoreConfig,
-  PartialAtomInstance,
 } from '@zedux/atoms'
 import { zeduxTypes, Store } from '@zedux/core'
+import { PartialStoreAtomInstance } from '@zedux/stores'
 import { createImmerStore } from './createImmerStore'
 
 const doSubscribe = <State>(
-  instance: PartialAtomInstance,
+  instance: PartialStoreAtomInstance,
   store: Store<State>
 ) =>
   store.subscribe((newState, oldState, action) => {
@@ -35,7 +35,7 @@ export const injectImmerStore: {
   <State = any>(state: State, config?: InjectStoreConfig): Store<State>
   <State = undefined>(): Store<State>
 } = <State = any>(state?: State, config?: InjectStoreConfig) => {
-  const instance = injectSelf()
+  const instance = injectSelf() as PartialStoreAtomInstance
   const subscribe = config?.subscribe ?? true
 
   const store = injectMemo(() => {

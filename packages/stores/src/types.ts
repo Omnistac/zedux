@@ -185,6 +185,16 @@ export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
     ...params: G['Params']
   ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | G['Store'] | G['State']
 
+/**
+ * Part of the atom instance can be accessed during initial evaluation. The only
+ * fields that are inaccessible are those that don't exist yet 'cause the
+ * initial evaluation is supposed to create them.
+ */
+export type PartialStoreAtomInstance = Omit<
+  AnyStoreAtomInstance,
+  'api' | 'exports' | 'promise' | 'S'
+>
+
 export type SelectorGenerics = Pick<AtomGenerics, 'State'> & {
   Params: any[]
   Template: AtomSelectorOrConfig

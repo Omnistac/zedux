@@ -80,6 +80,7 @@ export class AtomInstance<
   // @ts-expect-error same as exports
   public store: G['Store']
 
+  public _isEvaluating = false
   public _stateType?: typeof StoreState | typeof RawState
 
   private _bufferedUpdate?: {
@@ -383,7 +384,7 @@ export class AtomInstance<
       .then(data => {
         if (this.promise !== promise) return
 
-        this._promiseStatus = 'success'
+        this.promiseStatus = 'success'
         if (!isStateUpdater) return
 
         this.store.setState(
@@ -393,8 +394,8 @@ export class AtomInstance<
       .catch(error => {
         if (this.promise !== promise) return
 
-        this._promiseStatus = 'error'
-        this._promiseError = error
+        this.promiseStatus = 'error'
+        this.promiseError = error
         if (!isStateUpdater) return
 
         this.store.setState(
@@ -403,7 +404,7 @@ export class AtomInstance<
       })
 
     const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
-    this._promiseStatus = state.status
+    this.promiseStatus = state.status
 
     zi.a({ s: this, t: PromiseChange })
 

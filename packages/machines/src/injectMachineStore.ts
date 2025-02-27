@@ -8,6 +8,7 @@ import {
 import { zeduxTypes } from '@zedux/core'
 import { MachineStore } from './MachineStore'
 import { MachineHook, MachineStateShape } from './types'
+import { PartialStoreAtomInstance } from '@zedux/stores'
 
 type ArrToUnion<S extends string[]> = S extends [infer K, ...infer Rest]
   ? Rest extends string[]
@@ -168,7 +169,7 @@ export const injectMachineStore: <
   type EventNames = MapStatesToEvents<States, Context>
   type StateNames = MapStatesToStateNames<States, Context>
 
-  const instance = injectSelf()
+  const instance = injectSelf() as PartialStoreAtomInstance
 
   const { enterHooks, leaveHooks, store } = injectMemo(() => {
     const enterHooks: Record<

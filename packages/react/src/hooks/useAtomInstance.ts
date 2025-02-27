@@ -169,12 +169,12 @@ export const useAtomInstance: {
   }, [instance.id])
 
   if (suspend !== false) {
-    const status = (instance as AtomInstance)._promiseStatus
+    const status = (instance as AtomInstance).promiseStatus
 
     if (status === 'loading') {
       throw (instance as AtomInstance).promise
     } else if (status === 'error') {
-      throw (instance as AtomInstance)._promiseError
+      throw (instance as AtomInstance).promiseError
     }
   }
 
