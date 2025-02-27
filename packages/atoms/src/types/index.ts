@@ -29,7 +29,6 @@ export interface AtomConfig<State = any> {
   dehydrate?: (state: State) => any
   tags?: string[]
   hydrate?: (dehydratedState: unknown) => State
-  manualHydration?: boolean
   ttl?: number
 }
 

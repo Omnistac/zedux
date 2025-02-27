@@ -18,7 +18,6 @@ export abstract class AtomTemplateBase<
   public readonly dehydrate?: AtomConfig<G['State']>['dehydrate']
   public readonly tags?: string[]
   public readonly hydrate?: AtomConfig<G['State']>['hydrate']
-  public readonly manualHydration?: boolean
   public readonly ttl?: number
 
   /**

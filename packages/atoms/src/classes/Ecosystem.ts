@@ -15,7 +15,6 @@ import {
   MaybeCleanup,
   NodeFilter,
   ParamlessTemplate,
-  PartialAtomInstance,
   Selectable,
   SelectorGenerics,
   EventMap,
@@ -973,22 +972,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     } finally {
       this.S = prev
     }
-  }
-
-  /**
-   * Should only be used internally
-   */
-  public _consumeHydration(instance: PartialAtomInstance) {
-    const hydratedValue = this.hydration?.[instance.id]
-
-    if (typeof hydratedValue === 'undefined') return
-
-    // hydration must exist here. This cast is fine:
-    delete (this.hydration as Record<string, any>)[instance.id]
-
-    return instance.t.hydrate
-      ? instance.t.hydrate(hydratedValue)
-      : hydratedValue
   }
 
   /**

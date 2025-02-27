@@ -255,19 +255,15 @@ describe('ssr', () => {
   })
 
   test('all injectors receive the hydration', () => {
-    const atom1 = atom(
-      '1',
-      () => {
-        const a = injectStore('a', { hydrate: true })
-        const b = injectStore('b', { hydrate: true })
+    const atom1 = atom('1', () => {
+      const a = injectStore('a', { hydrate: true })
+      const b = injectStore('b', { hydrate: true })
 
-        const store = injectStore(() => createStore({ a, b }))
-        store.use({ a, b })
+      const store = injectStore(() => createStore({ a, b }))
+      store.use({ a, b })
 
-        return store
-      },
-      { manualHydration: true }
-    )
+      return store
+    })
 
     ecosystem.hydrate({ 1: 'ab' })
     const instance = ecosystem.getInstance(atom1)
