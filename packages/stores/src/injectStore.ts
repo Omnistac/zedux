@@ -5,7 +5,7 @@ import {
   injectSelf,
   InjectStoreConfig,
 } from '@zedux/atoms'
-import { PartialStoreAtomInstance } from '@zedux/stores'
+import { PartialStoreAtomInstance } from './types'
 
 export const doSubscribe = <State>(
   instance: PartialStoreAtomInstance,
