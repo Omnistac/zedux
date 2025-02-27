@@ -321,8 +321,6 @@ export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
 export interface Job {
   /**
    * `W`eight - the weight of the node (for EvaluateGraphNode jobs).
-   * UpdateExternalDependent jobs also use this to track the order they were
-   * added as dependents, since that's the order they should evaluate in.
    */
   W?: number
 

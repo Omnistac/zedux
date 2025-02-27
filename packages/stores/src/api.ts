@@ -14,7 +14,8 @@ import { AtomApi } from './AtomApi'
  *   - Any exports on the AtomApi are set as the atom instance's exports on
  *     initial evaluation and ignored forever after.
  *   - If promise or state references change on subsequent evaluations, it
- *     triggers the appropriate updates in all the atom's dynamic dependents.
+ *     triggers the appropriate updates in all the atom's dynamic observers.
+ *     Promise reference changes also notify static observers.
  */
 export const api: {
   // Custom Stores (AtomApi cloning)

@@ -229,13 +229,13 @@ describe('injectors', () => {
     expect(selectValue).toBe(1)
     expect(ecosystem.viewGraph()).toEqual({
       1: {
-        dependencies: [],
-        dependents: [],
+        observers: [],
+        sources: [],
         weight: 1,
       },
       '@@selector-selector1-0': {
-        dependencies: [],
-        dependents: [],
+        observers: [],
+        sources: [],
         weight: 1,
       },
     })
@@ -260,13 +260,13 @@ describe('injectors', () => {
     expect(selectValue).toBe(1)
     expect(ecosystem.viewGraph()).toEqual({
       1: {
-        dependencies: [],
-        dependents: [],
+        observers: [],
+        sources: [],
         weight: 1,
       },
       '@@selector-selector1-0': {
-        dependencies: [],
-        dependents: [],
+        observers: [],
+        sources: [],
         weight: 1,
       },
     })

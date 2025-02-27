@@ -55,62 +55,52 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
 exports[`graph injectAtomGetters 1`] = `
 {
   "Test-:r0:": {
-    "dependencies": [
+    "observers": [],
+    "sources": [
       {
         "key": "atom4",
         "operation": "useAtomValue",
       },
     ],
-    "dependents": [],
     "weight": 4,
   },
   "Test-:r1:": {
-    "dependencies": [
+    "observers": [],
+    "sources": [
       {
         "key": "atom4",
         "operation": "useAtomInstance",
       },
     ],
-    "dependents": [],
     "weight": 1,
   },
   "atom1": {
-    "dependencies": [],
-    "dependents": [
+    "observers": [
       {
         "key": "atom4",
         "operation": "get",
       },
     ],
+    "sources": [],
     "weight": 1,
   },
   "atom2": {
-    "dependencies": [],
-    "dependents": [],
+    "observers": [],
+    "sources": [],
     "weight": 1,
   },
   "atom3": {
-    "dependencies": [],
-    "dependents": [
+    "observers": [
       {
         "key": "atom4",
         "operation": "get",
       },
     ],
+    "sources": [],
     "weight": 1,
   },
   "atom4": {
-    "dependencies": [
-      {
-        "key": "atom1",
-        "operation": "get",
-      },
-      {
-        "key": "atom3",
-        "operation": "get",
-      },
-    ],
-    "dependents": [
+    "observers": [
       {
         "key": "Test-:r0:",
         "operation": "useAtomValue",
@@ -118,6 +108,16 @@ exports[`graph injectAtomGetters 1`] = `
       {
         "key": "Test-:r1:",
         "operation": "useAtomInstance",
+      },
+    ],
+    "sources": [
+      {
+        "key": "atom1",
+        "operation": "get",
+      },
+      {
+        "key": "atom3",
+        "operation": "get",
       },
     ],
     "weight": 3,

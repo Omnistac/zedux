@@ -92,16 +92,19 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    */
   public W = 1
 
+  public P = 1
+
   /**
    * Detach this node from the ecosystem and clean up all graph edges and other
    * subscriptions/effects created by this node.
    *
    * Destruction will bail out if this node still has non-passive observers
-   * (`node.o.size - node.P !== 0`). Pass `true` to force-destroy the node
+   * (`node.o.size - (node.L ? 1 : 0)`). Pass `true` to force-destroy the node
    * anyway.
    *
-   * When force-destroying a node that still has dependents, the node will be
-   * immediately recreated and all dependents notified of the destruction.
+   * When force-destroying a node that still has observers, the node will be
+   * immediately recreated and all observers will be notified of the
+   * destruction.
    */
   public abstract destroy(force?: boolean): void
 

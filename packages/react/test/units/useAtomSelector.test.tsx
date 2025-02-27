@@ -365,7 +365,7 @@ describe('useAtomSelector', () => {
     expect(renders).toBe(2)
   })
 
-  test('selector is not considered inline if it has multiple dependents', async () => {
+  test('selector is not considered inline if it has multiple observers', async () => {
     jest.useFakeTimers()
     const selector1 = jest.fn(() => 1)
     const selector2 = jest.fn(() => 2)

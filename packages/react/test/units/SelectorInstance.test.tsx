@@ -26,7 +26,7 @@ describe('the SelectorInstance class', () => {
     snapshotSelectorNodes()
   })
 
-  test('on() adds and removes dependents', () => {
+  test('on() adds and removes observers', () => {
     const instance2a = ecosystem.getNode(selector2)
 
     expect(getSelectorNodes()).toEqual({
@@ -77,7 +77,7 @@ describe('the SelectorInstance class', () => {
     expect(() => ecosystem.getNode(selector2).destroy()).not.toThrow()
   })
 
-  test('if the selector has dependents, `destroyCache()` bails out unless `force` is passed', () => {
+  test('if the selector has observers, `destroyCache()` bails out unless `force` is passed', () => {
     jest.useFakeTimers()
     ecosystem.getNode(selector3)
     const instance1 = ecosystem.getNode(selector1)

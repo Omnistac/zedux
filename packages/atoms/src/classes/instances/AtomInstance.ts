@@ -460,7 +460,7 @@ export class AtomInstance<
       destroyBuffer(prevNode)
 
       // even if evaluation errored, we need to keep this atom in sync with its
-      // signal (and update dependents if the `S`ignal's state changed).
+      // signal and update transitive observers if the `S`ignal's state changed.
       if (this.S && this.S.v !== this.v) {
         const oldState = this.v
         this.v = this.S.v
@@ -568,7 +568,7 @@ export class AtomInstance<
     if (reason.s && reason.s === this.S && reason.e) {
       // when `this.S`ignal gives us events along with a state update, subsume
       // it as this atom's own state update. This atom will reevaluate before
-      // any scheduled dependents, giving the state factory an opportunity to
+      // any scheduled observers, giving the state factory an opportunity to
       // change the signal's state again, resulting in an additional event.
       const oldState = this.v
       this.v = reason.s.v

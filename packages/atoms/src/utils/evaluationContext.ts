@@ -56,7 +56,7 @@ export const bufferEdge = (
 
 /**
  * If a node errors during evaluation, we need to destroy any nodes created
- * during that evaluation that now have no dependents.
+ * during that evaluation that now have no observers.
  *
  * Always pass the previously captured node/startTime (undefined if this is the
  * last item in the stack)
