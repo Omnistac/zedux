@@ -472,4 +472,19 @@ describe('plugins', () => {
 
     expect(calls).toEqual(expectedCalls)
   })
+
+  test('change listeners can detect `mutate` events', () => {
+    const calls: any[] = []
+    const signal = ecosystem.signal({ a: 1 })
+
+    ecosystem.on('change', (event, eventMap) => {
+      calls.push(eventMap.mutate)
+    })
+
+    signal.mutate(state => {
+      state.a = 2
+    })
+
+    expect(calls).toEqual([[{ k: 'a', v: 2 }]])
+  })
 })

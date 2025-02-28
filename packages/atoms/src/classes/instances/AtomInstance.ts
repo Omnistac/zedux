@@ -222,6 +222,12 @@ export class AtomInstance<
   public a: boolean | undefined = undefined
 
   /**
+   * injected`H`ydration - whether `injectHydration` was called in the atom
+   * state factory. If it was, we don't hydrate afterward.
+   */
+  public H = false
+
+  /**
    * `I`njectors - tracks injector calls from the last time the state factory
    * ran. Initialized on-demand
    */
@@ -377,10 +383,10 @@ export class AtomInstance<
     this.j()
 
     // hydrate if possible
-    const hydration = this.e._consumeHydration(this)
+    if (!this.H) {
+      const hydration = this.e.hydration?.[this.id]
 
-    if (!this.t.manualHydration && typeof hydration !== 'undefined') {
-      this.set(hydration)
+      if (typeof hydration !== 'undefined') this.h(hydration)
     }
 
     flushBuffer(n)

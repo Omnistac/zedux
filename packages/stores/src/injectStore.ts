@@ -1,6 +1,7 @@
 import { createStore, zeduxTypes, Store } from '@zedux/core'
 import {
   injectEffect,
+  injectHydration,
   injectRef,
   injectSelf,
   InjectStoreConfig,
@@ -108,9 +109,7 @@ export const injectStore: {
         : (hydration?: State) =>
             createStore<State>(null, hydration ?? storeFactory)
 
-    ref.current = getStore(
-      config?.hydrate ? instance.e.hydration?.[instance.id] : undefined
-    )
+    ref.current = getStore(config?.hydrate ? injectHydration() : undefined)
   }
 
   injectEffect(
