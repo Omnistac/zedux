@@ -1,3 +1,20 @@
+## v2.0.0-beta.5 (Feb 28, 2025)
+
+### New Features:
+
+- **Breaking Change** `atoms`: rename atom flags to tags (#188)
+- **Breaking Change** `atoms`: use consistent terminology for observers and sources (#197)
+- **Breaking Change** `atoms`, `stores`: implement `injectHydration`; remove `manualHydration` (#195)
+- **Breaking Change** `atoms`, `react`: rework ecosystem resets and internal module state (#190)
+- **Breaking Change** `atoms`, `immer`, `machines`, `react`, `stores`: de-underscore-prefix atom promise properties; move `_isEvaluating` to store atoms (#196)
+- **Breaking Change** `atoms`, `core`, `immer`, `machines`, `react`: remove atoms package's dependency on core package (#191)
+- `atoms`: wrap exports and `injectCallback` in current atom's scope (#187)
+- `react`: check for `React.use` before using; partially support React 18 (#198)
+
+### Fixes:
+
+- `react`: only rerender in `useAtomInstance` if subscribed (#185)
+
 ## v2.0.0-beta.4 (Feb 14, 2025)
 
 ### Fixes:
