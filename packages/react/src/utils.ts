@@ -1,5 +1,5 @@
 import { AnyAtomTemplate, AtomTemplateBase, Ecosystem, is } from '@zedux/atoms'
-import React, { Context, createContext, use } from 'react'
+import React, { Context, createContext } from 'react'
 
 export const ecosystemContext = createContext<undefined | Ecosystem>(undefined)
 
@@ -43,9 +43,16 @@ export const getReactContext = (
 export const reactContextScope = (
   ecosystem: Ecosystem,
   context: Record<string, any>
-) =>
-  use(
+) => {
+  if (!('use' in React)) {
+    throw new Error(
+      "Using scoped atoms from React requires React 19's new `use` util. Either upgrade React or use `ecosystem.withScope` manually"
+    )
+  }
+
+  return React.use(
     is(context, AtomTemplateBase)
       ? getReactContext(ecosystem, context as AtomTemplateBase)
       : (context as Context<any>)
   )
+}
