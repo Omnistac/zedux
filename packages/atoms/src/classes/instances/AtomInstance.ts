@@ -164,7 +164,7 @@ const setPromise = <G extends Omit<AtomGenerics, 'Node'>>(
     .then(data => {
       if (instance.promise !== promise) return
 
-      instance._promiseStatus = 'success'
+      instance.promiseStatus = 'success'
       if (!isStateUpdater) return
 
       instance.set(getSuccessPromiseState(data) as unknown as G['State'])
@@ -176,15 +176,15 @@ const setPromise = <G extends Omit<AtomGenerics, 'Node'>>(
         sendEcosystemErrorEvent(instance, error)
       }
 
-      instance._promiseStatus = 'error'
-      instance._promiseError = error
+      instance.promiseStatus = 'error'
+      instance.promiseError = error
       if (!isStateUpdater) return
 
       instance.set(getErrorPromiseState(error) as unknown as G['State'])
     })
 
   const state: PromiseState<any> = getInitialPromiseState(currentState?.data)
-  instance._promiseStatus = state.status
+  instance.promiseStatus = state.status
 
   const reason = { r: instance.w, s: instance, t: PromiseChange } as const
 
@@ -245,9 +245,8 @@ export class AtomInstance<
    */
   public S: Signal<G> | undefined = undefined
 
-  public _isEvaluating = false
-  public _promiseError: Error | undefined = undefined
-  public _promiseStatus: PromiseStatus | undefined = undefined
+  public promiseError: Error | undefined = undefined
+  public promiseStatus: PromiseStatus | undefined = undefined
 
   constructor(
     /**
@@ -409,7 +408,6 @@ export class AtomInstance<
       return
     }
 
-    this._isEvaluating = true
     const prevNode = startBuffer(this)
 
     try {
@@ -476,8 +474,6 @@ export class AtomInstance<
 
       throw err
     } finally {
-      this._isEvaluating = false
-
       this.w = []
     }
 

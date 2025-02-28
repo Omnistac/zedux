@@ -5,11 +5,11 @@ import {
   injectRef,
   injectSelf,
   InjectStoreConfig,
-  PartialAtomInstance,
 } from '@zedux/atoms'
+import { PartialStoreAtomInstance } from './types'
 
 export const doSubscribe = <State>(
-  instance: PartialAtomInstance,
+  instance: PartialStoreAtomInstance,
   store: Store<State>
 ) =>
   store.subscribe((n, o, action) => {
@@ -97,7 +97,7 @@ export const injectStore: {
   storeFactory?: State | ((hydration?: State) => Store<State>),
   config?: InjectStoreConfig
 ) => {
-  const instance = injectSelf()
+  const instance = injectSelf() as PartialStoreAtomInstance
   const subscribe = config?.subscribe ?? true
 
   const ref = injectRef<Store<State>>()
