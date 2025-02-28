@@ -3,73 +3,67 @@
 exports[`ecosystem big graph 1`] = `
 {
   "@signal(atom1)-0": {
-    "dependencies": [],
-    "dependents": [
+    "observers": [
       {
         "key": "atom1",
         "operation": "injectSignal",
       },
     ],
+    "sources": [],
     "weight": 1,
   },
   "Child-:r0:": {
-    "dependencies": [
+    "observers": [],
+    "sources": [
       {
         "key": "atom5",
         "operation": "useAtomValue",
       },
     ],
-    "dependents": [],
     "weight": 16,
   },
   "Child-:r1:": {
-    "dependencies": [
+    "observers": [],
+    "sources": [
       {
         "key": "atom4",
         "operation": "useAtomState",
       },
     ],
-    "dependents": [],
     "weight": 10,
   },
   "Child-:r2:": {
-    "dependencies": [
+    "observers": [],
+    "sources": [
       {
         "key": "atom3-["1"]",
         "operation": "useAtomValue",
       },
     ],
-    "dependents": [],
     "weight": 7,
   },
   "Child-:r3:": {
-    "dependencies": [
+    "observers": [],
+    "sources": [
       {
         "key": "atom2",
         "operation": "useAtomValue",
       },
     ],
-    "dependents": [],
     "weight": 4,
   },
   "Child-:r4:": {
-    "dependencies": [
+    "observers": [],
+    "sources": [
       {
         "key": "atom1",
         "operation": "useAtomValue",
       },
     ],
-    "dependents": [],
     "weight": 3,
   },
   "atom1": {
-    "dependencies": [
-      {
-        "key": "@signal(atom1)-0",
-        "operation": "injectSignal",
-      },
-    ],
-    "dependents": [
+    "observers": [
       {
         "key": "atom2",
         "operation": "injectAtomValue",
@@ -91,16 +85,16 @@ exports[`ecosystem big graph 1`] = `
         "operation": "useAtomValue",
       },
     ],
+    "sources": [
+      {
+        "key": "@signal(atom1)-0",
+        "operation": "injectSignal",
+      },
+    ],
     "weight": 2,
   },
   "atom2": {
-    "dependencies": [
-      {
-        "key": "atom1",
-        "operation": "injectAtomValue",
-      },
-    ],
-    "dependents": [
+    "observers": [
       {
         "key": "atom3-["1"]",
         "operation": "injectAtomValue",
@@ -114,20 +108,16 @@ exports[`ecosystem big graph 1`] = `
         "operation": "useAtomValue",
       },
     ],
-    "weight": 3,
-  },
-  "atom3-["1"]": {
-    "dependencies": [
+    "sources": [
       {
         "key": "atom1",
         "operation": "injectAtomValue",
       },
-      {
-        "key": "atom2",
-        "operation": "injectAtomValue",
-      },
     ],
-    "dependents": [
+    "weight": 3,
+  },
+  "atom3-["1"]": {
+    "observers": [
       {
         "key": "atom4",
         "operation": "injectAtomValue",
@@ -137,20 +127,20 @@ exports[`ecosystem big graph 1`] = `
         "operation": "useAtomValue",
       },
     ],
-    "weight": 6,
-  },
-  "atom4": {
-    "dependencies": [
-      {
-        "key": "atom3-["1"]",
-        "operation": "injectAtomValue",
-      },
+    "sources": [
       {
         "key": "atom1",
         "operation": "injectAtomValue",
       },
+      {
+        "key": "atom2",
+        "operation": "injectAtomValue",
+      },
     ],
-    "dependents": [
+    "weight": 6,
+  },
+  "atom4": {
+    "observers": [
       {
         "key": "atom5",
         "operation": "injectAtomValue",
@@ -160,10 +150,26 @@ exports[`ecosystem big graph 1`] = `
         "operation": "useAtomState",
       },
     ],
+    "sources": [
+      {
+        "key": "atom3-["1"]",
+        "operation": "injectAtomValue",
+      },
+      {
+        "key": "atom1",
+        "operation": "injectAtomValue",
+      },
+    ],
     "weight": 9,
   },
   "atom5": {
-    "dependencies": [
+    "observers": [
+      {
+        "key": "Child-:r0:",
+        "operation": "useAtomValue",
+      },
+    ],
+    "sources": [
       {
         "key": "atom2",
         "operation": "injectAtomValue",
@@ -175,12 +181,6 @@ exports[`ecosystem big graph 1`] = `
       {
         "key": "atom1",
         "operation": "injectAtomValue",
-      },
-    ],
-    "dependents": [
-      {
-        "key": "Child-:r0:",
-        "operation": "useAtomValue",
       },
     ],
     "weight": 15,

@@ -94,7 +94,7 @@ export const addEdge = (
 }
 
 export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
-  // If we're not force-destroying, don't destroy if there are dependents. Also
+  // If we're not force-destroying, don't destroy if there are observers. Also
   // don't destroy if `node.K`eep is set
   if (node.l === DESTROYED || (!force && node.o.size - (node.L ? 1 : 0))) {
     return
@@ -110,12 +110,12 @@ export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
 
 // TODO: merge this into destroyNodeStart. We should be able to
 export const destroyNodeFinish = (node: GraphNode) => {
-  // first remove all edges between this node and its dependencies
+  // first remove all edges between this node and its sources
   for (const dependency of node.s.keys()) {
     removeEdge(node, dependency)
   }
 
-  // now remove all edges between this node and its dependents
+  // now remove all edges between this node and its observers
   for (const [observer, edge] of node.o) {
     if (!(edge.flags & Static)) {
       recalculateNodeWeight(-node.W, observer)

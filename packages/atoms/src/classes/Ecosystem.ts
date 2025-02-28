@@ -635,7 +635,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * nothing for passed atoms that aren't currently in the overrides list.
    *
    * Force destroys all instances of all removed atoms. This forced destruction
-   * will cause dependents of those instances to recreate their dependency atom
+   * will cause observers of those instances to recreate their observed atom
    * instance without using an override.
    */
   public removeOverrides(overrides: (AnyAtomTemplate | string)[]) {
@@ -703,8 +703,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const pre = _scheduler.pre()
 
     // TODO: Delete nodes in an optimal order, starting with nodes with no
-    // internal dependents. This is different from highest-weighted nodes since
-    // static dependents don't affect weight. This should make sure no internal
+    // internal observers. This is different from highest-weighted nodes since
+    // static observers don't affect weight. This should make sure no internal
     // nodes schedule unnecessary reevaaluations to recreate force-destroyed
     // nodes
     ;[...n.values()].forEach(node => {
@@ -762,8 +762,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * new list.
    *
    * Force destroys all instances of all previously- and newly-overridden atoms.
-   * This forced destruction will cause dependents of those instances to
-   * recreate their dependency atom instance.
+   * This forced destruction will cause observers of those instances to recreate
+   * their observed atom instance.
    */
   public setOverrides(newOverrides: AnyAtomTemplate[]) {
     const oldOverrides = this.overrides
@@ -809,8 +809,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public viewGraph(view?: 'flat'): Record<
     string,
     {
-      dependencies: { key: string; operation: string }[]
-      dependents: { key: string; operation: string }[]
+      observers: { key: string; operation: string }[]
+      sources: { key: string; operation: string }[]
       weight: number
     }
   >
@@ -820,35 +820,35 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Get the current graph of this ecosystem. There are 3 views:
    *
    * Flat (default). Returns an object with all graph nodes on the top layer,
-   * each node pointing to its dependencies and dependents. No nesting.
+   * each node pointing to its sources and observers. No nesting.
    *
    * Bottom-Up. Returns an object containing all the leaf nodes of the graph
-   * (nodes that have no internal dependents), each node containing an object of
+   * (nodes that have no internal observers), each node containing an object of
    * its parent nodes, recursively.
    *
    * Top-Down. Returns an object containing all the root nodes of the graph
-   * (nodes that have no dependencies), each node containing an object of its
-   * child nodes, recursively.
+   * (nodes that have no sources), each node containing an object of its child
+   * nodes, recursively.
    */
   public viewGraph(view?: string) {
     if (view !== 'top-down' && view !== 'bottom-up') {
       const hash: Record<
         string,
         {
-          dependencies: { key: string; operation: string }[]
-          dependents: { key: string; operation: string }[]
+          sources: { key: string; operation: string }[]
+          observers: { key: string; operation: string }[]
           weight: number
         }
       > = {}
 
       for (const [id, node] of this.n) {
         hash[id] = {
-          dependencies: [...node.s].map(([source, edge]) => ({
-            key: source.id,
+          observers: [...node.o].map(([observer, edge]) => ({
+            key: observer.id,
             operation: edge.operation,
           })),
-          dependents: [...node.o].map(([observer, edge]) => ({
-            key: observer.id,
+          sources: [...node.s].map(([source, edge]) => ({
+            key: source.id,
             operation: edge.operation,
           })),
           weight: node.W,

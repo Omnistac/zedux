@@ -271,7 +271,7 @@ export class AtomInstance<
       // scheduler
       if (!prevNode) Store._scheduler = undefined
 
-      // even if evaluation errored, we need to update dependents if the store's
+      // even if evaluation errored, we need to update observers if the store's
       // state changed
       if (this._bufferedUpdate) {
         this._handleStateChange(

@@ -67,7 +67,7 @@ describe('selection', () => {
     expect(await findByTestId('text')).toHaveTextContent('b')
   })
 
-  test("a state change from an unmounting component's effect cleanup triggers rerenders in newly-created components that use the updated atom or its dependents", async () => {
+  test("a state change from an unmounting component's effect cleanup triggers rerenders in newly-created components that use the updated atom or its observers", async () => {
     jest.useFakeTimers()
     const selector = jest.fn(({ get }: AtomGetters) => get(testAtom, ['a']))
 
@@ -120,7 +120,7 @@ describe('selection', () => {
   test('selectors are recreated when necessary on component remount', async () => {
     jest.useFakeTimers()
     let b = 2
-    const selector1 = jest.fn(() => ({ a: 1 })) // two dependents; shouldn't rerun
+    const selector1 = jest.fn(() => ({ a: 1 })) // two observers; shouldn't rerun
     const selector2 = jest.fn(() => ({ b: b++ })) // one dependent; should rerun
     const selector3 = jest.fn((_: AtomGetters, arg: number) => 'c' + arg) // args change; should run with 2 different args
 

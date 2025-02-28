@@ -89,9 +89,9 @@ export const useAtomSelector = <S extends Selectable>(
     render.m = true
 
     // an unmounting component's effect cleanup can force-destroy the selector
-    // or update the state of its dependencies (causing it to rerun) before we
-    // set `render.m`ounted. If that happened, trigger a rerender to recreate
-    // the selector and/or get its new state
+    // or update the state of its sources (causing it to rerun) before we set
+    // `render.m`ounted. If that happened, trigger a rerender to recreate the
+    // selector and/or get its new state
     if (instance.v !== renderedValue || instance.l === zi.D) {
       render({})
     }
@@ -99,9 +99,9 @@ export const useAtomSelector = <S extends Selectable>(
     return () => {
       // remove the edge immediately - no need for a delay here. When StrictMode
       // double-invokes (invokes, then cleans up, then re-invokes) this effect,
-      // it's expected that selectors and `ttl: 0` atoms with no other
-      // dependents get destroyed and recreated - that's part of what StrictMode
-      // is ensuring
+      // it's expected that selectors and `ttl: 0` atoms with no other observers
+      // get destroyed and recreated - that's part of what StrictMode is
+      // ensuring
       node.k(instance)
       // don't set `render.m = false` here
     }
