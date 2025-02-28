@@ -7,6 +7,17 @@ Zedux v2 introduces lots of new features and several breaking changes. This guid
 
 If you know the gist of Zedux v2, you can [skip to the end](#full-list) for the full migration details.
 
+## React 19
+
+Zedux v2 works best with React 19. Scoped atoms require React 19's new `use` util for hooking into React context. And we removed some old code for working around React 18's [`useId` StrictMode bug](https://github.com/facebook/react/pull/25713).
+
+This means you can use Zedux v2 in React 18 if you
+
+- disable React StrictMode
+- don't use scoped atoms (or call `ecosystem.withScope` yourself, but that can be tedious)
+
+Upgrade React to v19 to get those features back.
+
 ## Feature: Signals
 
 Stores no longer exist in the `@zedux/atoms` or `@zedux/react` package by default. They're replaced with signals.
@@ -369,6 +380,101 @@ The types for store atoms do have a few breaking changes:
 
 Several other types in the stores package, like most of the `Atom*Type` helpers, are deprecated. See below for the [full list](#full-list).
 
+### `injectEffect` Order
+
+Zedux now runs effect callbacks passed to `injectEffect` immediately after the atom finishes evaluating, rather than setting a timeout and running later. This is a big improvement when working with atoms synchronously, as before you couldn't be sure if manual subscriptions were registered yet when using an atom. Now you can.
+
+However, this more "eager" effect running can lead to some subtle bugs when migrating. For example:
+
+```ts
+import { atom, injectStore, removeAllMeta, zeduxTypes } from '@zedux/stores'
+
+const childAtom = atom('child', () => {
+  const store = injectStore('child state')
+
+  injectEffect(() => {
+    // this subscription is now registered before the store can be composed in
+    // other atoms:
+    const subscription = store.subscribe({
+      effects: ({ action }) => {
+        // to fix, ignore the `prime` action:
+        if (removeAllMeta(action).type === zeduxTypes.prime) {
+          return
+        }
+      },
+    })
+
+    return () => subscription.unsubscribe()
+  })
+
+  return store
+})
+
+const parentAtom = atom('parent', () => {
+  const { store: childStore } = injectAtomInstance(childAtom)
+
+  // Zedux dispatches the special "prime" action when this composed store is
+  // first created. That action will now reach `childAtom`'s store's subscriber,
+  // whereas in v1 it wouldn't.
+  const store = injectStore(() => createStore({ child: childStore }))
+
+  return store
+})
+```
+
+To avoid this problem in the first place, it's a best practice to always check `action.type` inside store effects listeners.
+
+This ordering change may also break effects that were expecting other synchronous code to run between atom initialization and the deferred effect. For example, we had some test code awaiting an already-resolved promise right after initializing an atom. That microtask was expected to run before the effect and in v2 it doesn't. The fix is generally to make sure the effect explicitly awaits asynchronous operations it expects to run first.
+
+### Hydration
+
+Automatic hydration works almost the same in v2, with one key difference: Hydrations aren't "consumed". This means they're kept in memory (in `ecosystem.hydration`) and will be reused if the atom is destroyed and recreated.
+
+To prevent this, you can hook into the `cycle` ecosystem event and delete hydrations yourself.
+
+```ts
+const cleanup = ecosystem.on('cycle', event => {
+  // you can check specific ids or template keys (`event.source.template.key`):
+  if (event.source?.id && ecosystem.hydration[event.source.id]) {
+    // you are free to mutate this object:
+    delete ecosystem.hydration[event.source.id]
+    // you can call `cleanup` after all expected nodes have been hydrated
+  }
+})
+```
+
+Usually you won't need to do this. It's just an escape hatch if you have particularly heavy hydration data.
+
+For manual hydration, `injectHydration` is the new kid on the block.
+
+Previously, store hydration was tied to individual `injectStore` calls. This made hydration difficult when there are multiple hydration sources (e.g. localStorage, URL state, and server snapshot) or each store only controlled part of the atom's state.
+
+`injectHydration` gives you full control. It will be usable in combination with other hydrators so you can determine priority when manually hydrating, especially in "local-first" setups.
+
+```ts
+const multiSourcedAtom = atom('multiSourced', () => {
+  const fromServer = injectHydration<string>()
+
+  // two example third-party injectors:
+  const fromLocalStorage = injectLocalStorageHydration<string>()
+  const fromUrl = injectUrlHydration<string>()
+
+  const signal = injectSignal(
+    fromUrl ?? fromLocalStorage ?? fromServer ?? 'the default value'
+  )
+
+  return signal
+})
+```
+
+As always, these injectors can be consolidated into a single custom injector:
+
+```ts
+const signal = injectLocalFirstSignal('the default value')
+```
+
+Manual hydration is recommended in this case of having multiple third-party hydrators, as otherwise you have to rely on listener registration order to determine priority. With only one third-party hydrator, automatic hydration is fine, though it will result in three total initial evaluations.
+
 ## Migrating to Signals
 
 To upgrade to v2 initially, you can simply replace most `@zedux/react` imports with `@zedux/stores`:
@@ -405,6 +511,9 @@ Some more complex migration scenarios:
 
 ```ts
 // before:
+const storeA = injectStore('state a')
+const storeB = injectStore('state b')
+
 const composedStore = injectStore(
   hydration => createStore({ a: storeA, b: storeB }, hydration),
   { hydrate: true }
@@ -412,9 +521,41 @@ const composedStore = injectStore(
 
 composedStore.use({ a: storeA, b: storeB })
 
-// after:
+// after (simple, but will cause a reevaluation):
+const signalA = injectSignal('state a')
+const signalB = injectSignal('state b')
+const hydration = injectHydration()
+
+const composedSignal = injectMappedSignal({ a: signalA, b: signalB })
+
+composedSignal.set(hydration)
+
+// after (no reevaluation):
+const hydration = injectHydration()
+const signalA = injectSignal(hydration.a ?? 'state a')
+const signalB = injectSignal(hydration.b ?? 'state b')
+
 const composedSignal = injectMappedSignal({ a: signalA, b: signalB })
 ```
+
+Note that the "after" example that causes a reevaluation is functionally similar to not doing any manual hydration logic. Zedux automatically hydrates atoms immediately after initial evaluation:
+
+```ts
+// this atom behaves the same with or without these commented lines:
+const hydratingAtom = atom('hydrating', () => {
+  const signalA = injectSignal('state a')
+  const signalB = injectSignal('state b')
+  // const hydration = injectHydration()
+
+  const composedSignal = injectMappedSignal({ a: signalA, b: signalB })
+
+  // composedSignal.set(hydration)
+
+  return composedSignal
+})
+```
+
+To prevent the double-evaluation, always hydrate at the source; instead of hydrating derived atoms/signals (like this mapped signal), hydrate the atoms/signals they derive values from.
 
 - Store effects
 
@@ -466,13 +607,25 @@ This section is a work in progress
 - `atomGetters.get` -> `ecosystem.get`
 - `atomGetters.getInstance` -> `ecosystem.getNode`
 - `atomGetters.select` -> `ecosystem.select` (but prefer `ecosystem.get`, see below deprecation note)
-- `ecosystem.registerPlugin` -> `ecosystem.on()` (see [above example](#plugin-migration))
+- `ecosystem.registerPlugin` -> `ecosystem.on()` (see [above example](#plugin-migration). See below for the list of mod-equivalent ecosystem events)
 - `ecosystem.wipe` -> `ecosystem.reset`
 - `ecosystem.destroy` -> `ecosystem.reset`
+- `atomInstance.addDependent` -> `atomInstance.on`, passing `{ active: true }` as the last parameter (listeners are "passive" by default, meaning they don't impact node lifecycles).
 - `atomInstance._promiseStatus` -> `atomInstance.promiseStatus`
 - `atomInstance._promiseError` -> `atomInstance.promiseError`
 - `{ flags }` -> `{ tags }` (in atom config objects)
 - `{ includeFlags, excludeFlags }` -> `{ includeTags, excludeTags }` (in the object passed to `ecosystem.dehydrate`)
+
+For mods (previously added to `ZeduxPlugin`s, now "ecosystem events" registered with `ecosystem.on`), replace:
+
+- `ecosystemWiped` -> `resetEnd`. Use in combination with `resetStart` to capture/restore values.
+- `edgeCreated` -> `edge`. Use the `event.action` property to distinguish between edge `add`, `update`, and `remove`
+- `edgeRemoved` -> `edge` (same note)
+- `evaluationFinished` -> `runEnd`. Use in combination with `runEnd` to time atom/selector evaluation time yourself.
+- `stateChanged` -> `change`
+- `statusChanged` -> `cycle`
+
+Note that the `instanceReused` mod is removed with no equivalent (see below). Also note the new ecosystem events, `error`, `invalidate`, and `promiseChange`.
 
 Optionally replace deprecated APIs. May be needed for TS support in rare cases. These will be required in Zedux v3:
 
@@ -482,7 +635,7 @@ Optionally replace deprecated APIs. May be needed for TS support in rare cases. 
 - `ecosystem.getInstance` -> `ecosystem.getNode`
 - `injectAtomGetters` -> `injectEcosystem`
 
-And some deprecated types:
+Also optionally replace some deprecated and/or "legacy" types:
 
 - `AtomGetters` -> `Ecosystem`
 - `AtomExportsType` -> `ExportsOf`
@@ -493,8 +646,10 @@ And some deprecated types:
 
 ### Remove
 
-- `ZeduxPlugin` usages (use [ecosystem events](#feature-ecosystem-events) instead).
-- `instanceReused` mods (no replacement. We're working on build tool plugins to do what this mod was trying to do. Those will be released later).
+- `manualHydration` atom config option.
+- `AtomInstanceBase` usages. This was an unnecessary superclass. The `AtomInstance` class itself now handles everything this class did.
+- `ZeduxPlugin` usages. Use [ecosystem events](#feature-ecosystem-events) instead.
+- `instanceReused` mods. No replacement. We're working on build tool plugins to do what this mod was trying to do. Those will be released later.
 - reading `sourceType` field on evaluation reasons.
 - `internalStore` usages. Zedux no longer stores ecosystems in module-level state. Pass them around yourself as needed.
 - `wipe` usages (the top-level export). Zedux no longer has internal state to clear.
@@ -546,6 +701,8 @@ import {
   IonInstanceRecursive,
   IonStateFactory,
   IonTemplateRecursive,
+-  PartialAtomInstance,
++  PartialStoreAtomInstance,
   SelectorGenerics,
 - } from '@zedux/react' // or '@zedux/atoms'
 + } from '@zedux/stores'
@@ -558,12 +715,16 @@ When migrating (either incrementally or all at once) to signals, do the followin
 Replace:
 
 - `injectStore` -> `injectSignal` ([see above](#migrating-to-signals) for migrating composed stores and hydrations)
+  - use `injectHydration` and initialize/set signals yourself.
 - `atomInstance.getState` -> `atomInstance.getOnce` (but prefer `.get` for automatic reactivity)
 - `atomInstance.setState` -> `atomInstance.set`
 - `atomInstance.setStateDeep` -> `atomInstance.mutate`
+- (if you previously migrated to using the `@zedux/stores` package): `AnyStoreAtomInstance` -> back to `AnyAtomInstance`
+- (if you previously migrated to using the `@zedux/stores` package): `AnyStoreAtomTemplate` -> back to `AnyAtomTemplate`
 
 Remove:
 
+- `createStore`. Use mapped signals instead for composing state primitives. Use `ecosystem.signal` instead for creating state containers on the fly.
 - `atomInstance.store`. Signal-based atoms don't expose the underlying signal. Use the atom instance itself; it forwards all state updates and sent events to wrapped signals
   - `atomInstance.store.getState` -> `atomInstance.getOnce` (but prefer `.get` for automatic reactivity)
   - `atomInstance.store.setState` -> `atomInstance.set`
@@ -571,3 +732,11 @@ Remove:
   - `atomInstance.store.subscribe` -> `atomInstance.on` (see [signal events](#events) above)
 - `atomInstance.dispatch`. Can be replaced with `atomInstance.send` for custom events
 - Same goes for `atomInstance.store.dispatch`. Replace with `atomInstance.send` if possible
+- `atomInstance._isEvaluating`. This is only present on store atom instances. For signals-based atoms, you don't need it. Buffering store updates was its primary purpose. Signals, however, can always be set during atom/selector evaluation; the graph will always resolve. But if plugin authors do need it, they can use the purposefully obfuscated `getInternals().c.n` to see what's currently evaluating.
+
+### Internal Changes
+
+Some public-but-underscore-prefixed properties changed. Most apps shouldn't have been using these.
+
+- `ecosystem._consumeHydration`. Removed. The `cycle` ecosystem event can be used to delete `ecosystem.hydration` entries yourself when hydrated nodes become `Active`.
+- `_createdAt` (the property on atom and selector instances). Removed. Plugins can track time created themselves if needed.
