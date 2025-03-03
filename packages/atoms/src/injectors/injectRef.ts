@@ -1,7 +1,7 @@
 import type { MutableRefObject, RefObject } from '../types/index'
 import { injectPrevDescriptor, setNextInjector } from './injectPrevDescriptor'
 
-const TYPE = 'injectRef'
+const TYPE = 'ref'
 
 export const injectRef: {
   <T>(initialVal: T): MutableRefObject<T>
@@ -11,7 +11,6 @@ export const injectRef: {
   setNextInjector(
     injectPrevDescriptor<{ current: T }>(TYPE) || {
       c: undefined,
-      i: undefined,
       t: TYPE,
       v: { current: initialVal as T },
     }

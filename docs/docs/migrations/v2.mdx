@@ -332,6 +332,7 @@ function App() {
 ## Other New Features
 
 - `untrack` - A new top-level export for bumping out of a reactive context.
+- When called with no deps, `injectMemo` now automatically tracks any signal usages in the callback and reactively updates when they change, causing the injecting atom to reevaluate.
 - `ecosystem.withScope` - Runs a callback in a scoped context with the passed scope.
 - `injectCallback` - Wraps the callback in `ecosystem.withScope` (in addition to `ecosystem.batch`) if the injecting atom is scoped.
 - Atom APIs wrap exports in `ecosystem.batch` and, if the atom that's evaluating when `api()` is called is scoped, `ecosystem.withScope`. Disable this by passing `{ wrap: false }` as the second parameter to `api.setExports` and `api.addExports`.
@@ -382,49 +383,33 @@ Several other types in the stores package, like most of the `Atom*Type` helpers,
 
 ### `injectEffect` Order
 
-Zedux now runs effect callbacks passed to `injectEffect` immediately after the atom finishes evaluating, rather than setting a timeout and running later. This is a big improvement when working with atoms synchronously, as before you couldn't be sure if manual subscriptions were registered yet when using an atom. Now you can.
+In v1, `injectEffect` callbacks would always run in the next event loop cycle (via `setTimeout`) _unless_ another event, e.g. a state update, triggered a scheduler flush. This led to confusing event ordering in some cases, especially in tests.
 
-However, this more "eager" effect running can lead to some subtle bugs when migrating. For example:
+Zedux now runs effects as soon as it's "safe" to do so.
+
+- When atoms are initialized during a React component render, effects now _always_ run in a microtask.
+- When atoms are initialized or evaluate outside React, all queued effects run immediately before the top-level `ecosystem.get*` call returns.
+
+This is a big improvement when working with atoms outside React, especially in tests, as before you couldn't be sure if manual subscriptions were registered yet when using an atom. Now you can.
+
+This ordering change may break effects that were expecting other synchronous code to run between atom initialization and the deferred effect.
 
 ```ts
-import { atom, injectStore, removeAllMeta, zeduxTypes } from '@zedux/stores'
-
-const childAtom = atom('child', () => {
-  const store = injectStore('child state')
+const exampleAtom = atom('example', () => {
+  const store = injectStore(0)
 
   injectEffect(() => {
-    // this subscription is now registered before the store can be composed in
-    // other atoms:
-    const subscription = store.subscribe({
-      effects: ({ action }) => {
-        // to fix, ignore the `prime` action:
-        if (removeAllMeta(action).type === zeduxTypes.prime) {
-          return
-        }
-      },
-    })
-
-    return () => subscription.unsubscribe()
-  })
+    console.log(store.getState()) // "1" in v1, "0" in v2
+  }, []) // adding `store.getState()` as a dep would fix this in v2
 
   return store
 })
 
-const parentAtom = atom('parent', () => {
-  const { store: childStore } = injectAtomInstance(childAtom)
-
-  // Zedux dispatches the special "prime" action when this composed store is
-  // first created. That action will now reach `childAtom`'s store's subscriber,
-  // whereas in v1 it wouldn't.
-  const store = injectStore(() => createStore({ child: childStore }))
-
-  return store
-})
+const exampleInstance = ecosystem.getInstance(exampleAtom)
+exampleInstance.setState(1)
 ```
 
-To avoid this problem in the first place, it's a best practice to always check `action.type` inside store effects listeners.
-
-This ordering change may also break effects that were expecting other synchronous code to run between atom initialization and the deferred effect. For example, we had some test code awaiting an already-resolved promise right after initializing an atom. That microtask was expected to run before the effect and in v2 it doesn't. The fix is generally to make sure the effect explicitly awaits asynchronous operations it expects to run first.
+For example, we had some test code awaiting an already-resolved promise right after initializing an atom. That microtask was expected to run before the effect (which was scheduled with `setTimeout` in v1) but in v2 it doesn't. In this case, the effect needed to explicitly await the asynchronous operation.
 
 ### Hydration
 
@@ -706,6 +691,25 @@ import {
   SelectorGenerics,
 - } from '@zedux/react' // or '@zedux/atoms'
 + } from '@zedux/stores'
+```
+
+Additionally, if you're currently sharing Zedux internals across windows via `getInternals`/`setInternals`, you'll also need to use the store package's `getStoreInternals` and `setStoreInternals`:
+
+```ts
+// an example parent-child setup
+// parent window:
+import { getInternals } from '@zedux/react'
+import { getStoreInternals } from '@zedux/stores'
+
+window.zeduxInternals = getInternals()
+window.zeduxStoreInternals = getStoreInternals()
+
+// child window:
+import { setInternals } from '@zedux/react'
+import { setStoreInternals } from '@zedux/stores'
+
+setInternals(window.opener.zeduxInternals)
+setStoreInternals(window.opener.zeduxStoreInternals)
 ```
 
 ### Replacing Stores

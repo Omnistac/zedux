@@ -58,6 +58,7 @@ export type InternalLifecycleStatus =
 /**
  * Event names
  */
+export const CATCH_ALL = '' // TIL empty string can be an object key
 export const CHANGE = 'change'
 export const CYCLE = 'cycle'
 export const EDGE = 'edge'

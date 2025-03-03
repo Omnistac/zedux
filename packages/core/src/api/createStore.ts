@@ -14,25 +14,15 @@ import {
   Settable,
   Subscriber,
   SubscriberObject,
-  Scheduler,
   KnownHierarchyDescriptor,
 } from '../types'
 import { STORE_IDENTIFIER } from '../utils/general'
-import { HierarchyNode, Job } from '../utils/types'
+import { getScheduler } from '../utils/scheduler'
+import { HierarchyNode } from '../utils/types'
 import { detailedTypeof } from './detailedTypeof'
 import { isPlainObject } from './isPlainObject'
 import { removeAllMeta } from './meta'
 import { zeduxTypes } from './zeduxTypes'
-
-// When an action is dispatched to a parent store and delegated to a child
-// store, the child store needs to wait until the update propagates everywhere
-// and the parent store finishes its dispatch before notifying its subscribers.
-// A proper scheduler will allow all child stores of the currently-dispatching
-// parent store to wait to notify their subscribers until all stores in the
-// hierarchy are done dispatching.
-const defaultScheduler: Scheduler = {
-  scheduleNow: (job: Job) => job.j(),
-}
 
 const primeAction = { type: zeduxTypes.prime }
 
@@ -58,22 +48,16 @@ export const createStore: {
 
 export class Store<State = any> {
   static readonly $$typeof = STORE_IDENTIFIER
-
-  /**
-   * This is set by atom ecosystems to automaticallly tie stores created during
-   * atom evaluation to the ecosystem.
-   */
-  static _scheduler?: Scheduler
   private _state: State
   private _isDispatching?: boolean
 
   /**
-   * We can optimize some things if this store is never composed. Disable optimizations as soon as this store is used as a parent or child store.
+   * We can optimize some things if this store is never composed. Disable
+   * optimizations as soon as this store is used as a parent or child store.
    */
   private _isSolo = true
   private _parents?: EffectsSubscriber[]
   private _rootReducer?: Reducer<State>
-  private _scheduler: Scheduler
   private _subscribers: SubscriberObject[] = []
   private _tree?: HierarchyNode
 
@@ -82,7 +66,6 @@ export class Store<State = any> {
     initialState?: State
   ) {
     this._state = initialState as State
-    this._scheduler = Store._scheduler || defaultScheduler
 
     if (initialHierarchy) {
       this.use(initialHierarchy as KnownHierarchyDescriptor<State>)
@@ -137,7 +120,7 @@ export class Store<State = any> {
       return this._dispatch(action)
     }
 
-    this._scheduler.scheduleNow({
+    getScheduler().s({
       j: () => this._dispatch(action),
       T: 0, // UpdateStore (0)
     })
@@ -186,7 +169,7 @@ export class Store<State = any> {
       )
     }
 
-    this._scheduler.scheduleNow({
+    getScheduler().s({
       j: () =>
         this._setState(
           settable as Settable<RecursivePartial<State>, State>,
@@ -234,7 +217,7 @@ export class Store<State = any> {
       )
     }
 
-    this._scheduler.scheduleNow({
+    getScheduler().s({
       j: () =>
         this._setState(
           settable as Settable<RecursivePartial<State>, State>,
@@ -506,7 +489,7 @@ export class Store<State = any> {
     }
 
     // defer informing if a parent store is currently dispatching
-    this._scheduler.scheduleNow({
+    getScheduler().s({
       j: () => this._doNotify(effect),
       T: 1, // InformSubscribers (1)
     })

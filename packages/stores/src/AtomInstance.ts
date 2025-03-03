@@ -120,7 +120,7 @@ export class AtomInstance<
     // Clean up effect injectors first, then everything else
     const nonEffectInjectors: InjectorDescriptor[] = []
     this.I?.forEach(injector => {
-      if (injector.t !== 'injectEffect') {
+      if (injector.t !== 'effect') {
         nonEffectInjectors.push(injector)
         return
       }
@@ -198,14 +198,6 @@ export class AtomInstance<
   public j() {
     this.N = []
     this._isEvaluating = true
-
-    // all stores created during evaluation automatically belong to the
-    // ecosystem. This is brittle. It's the only piece of Zedux that isn't
-    // cross-window compatible. The store package would ideally have its own
-    // scheduler. Unfortunately, we're probably never focusing on that since the
-    // real ideal is to move off stores completely in favor of signals.
-    Store._scheduler = this.e._scheduler
-
     const prevNode = zi.s(this)
 
     try {
@@ -267,10 +259,6 @@ export class AtomInstance<
     } finally {
       this._isEvaluating = false
 
-      // if we just popped the last thing off the stack, restore the default
-      // scheduler
-      if (!prevNode) Store._scheduler = undefined
-
       // even if evaluation errored, we need to update observers if the store's
       // state changed
       if (this._bufferedUpdate) {
@@ -285,14 +273,8 @@ export class AtomInstance<
       this.w = []
     }
 
-    // kick off side effects and store the new injectors
+    // store the new injectors
     if (this.N) {
-      if (!this.e.ssr) {
-        for (const injector of this.N) {
-          injector.i?.()
-        }
-      }
-
       this.I = this.N
       this.N = undefined
     }
@@ -367,7 +349,7 @@ export class AtomInstance<
 
     // run the scheduler synchronously after any atom instance state update
     if (action.meta !== zeduxTypes.batch) {
-      this.e._scheduler.flush()
+      this.e.syncScheduler.flush()
     }
   }
 

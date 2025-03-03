@@ -9,24 +9,24 @@ import {
   ListenerConfig,
   SingleEventListener,
 } from '../types/index'
-import { ERROR, EventSent, makeReasonReadable } from './general'
+import { scheduleAsync } from './ecosystem'
+import { CATCH_ALL, ERROR, EventSent, makeReasonReadable } from './general'
 
 export const isListeningTo = (
   ecosystem: Ecosystem,
   eventName: keyof EcosystemEvents
-) => ecosystem.C[''] || ecosystem.C[eventName] // '' = the catch-all listener
+) => ecosystem.C[CATCH_ALL] || ecosystem.C[eventName]
 
 export const sendEcosystemEvent = (
   ecosystem: Ecosystem,
   event: EcosystemEvent
 ) => {
-  // '' = the catch-all listener
-  const shouldSchedule = ecosystem.C[''] || ecosystem.C[event.type]
+  const shouldSchedule = ecosystem.C[CATCH_ALL] || ecosystem.C[event.type]
 
   return (
     shouldSchedule &&
     ecosystem.w.push({ f: { [event.type]: event } }) === 1 &&
-    ecosystem._scheduler.schedule(ecosystem)
+    scheduleAsync(ecosystem, ecosystem)
   )
 }
 
@@ -49,7 +49,7 @@ export const sendImplicitEcosystemEvent = (
 
   shouldSchedule &&
     ecosystem.w.push(reason) === 1 &&
-    ecosystem._scheduler.schedule(ecosystem)
+    scheduleAsync(ecosystem, ecosystem)
 }
 
 export const shouldScheduleImplicit = (
@@ -59,8 +59,7 @@ export const shouldScheduleImplicit = (
   reason.f || (reason.t !== EventSent && makeReasonReadable(reason))
 
   return (
-    // '' = the catch-all listener
-    node.C[''] ||
+    node.C[CATCH_ALL] ||
     Object.keys(reason.f ?? reason.e ?? {}).some(key => node.C[key])
   )
 }

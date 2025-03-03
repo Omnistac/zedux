@@ -13,6 +13,7 @@ import { Ecosystem } from './Ecosystem'
 import { doMutate, Signal } from './Signal'
 import { ACTIVE, EventSent, INITIALIZING, TopPrio } from '../utils/general'
 import { setNodeStatus } from '../utils/graph'
+import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
 export type SignalMap = Record<string, Signal<AnyNodeGenerics> | unknown>
 
@@ -111,7 +112,7 @@ export class MappedSignal<
     eventName: E,
     payload?: G['Events'][E]
   ) {
-    const pre = this.e._scheduler.pre()
+    const pre = schedulerPre(this.e)
 
     for (const signal of Object.values(this.M)) {
       if ((signal as Signal | undefined)?.izn) {
@@ -120,7 +121,7 @@ export class MappedSignal<
       }
     }
 
-    this.e._scheduler.post(pre)
+    schedulerPost(this.e, pre)
   }
 
   public set(
@@ -136,7 +137,7 @@ export class MappedSignal<
 
     this.C = events
 
-    const pre = this.e._scheduler.pre()
+    const pre = schedulerPre(this.e)
 
     try {
       for (const [key, value] of Object.entries(newState)) {
@@ -174,16 +175,16 @@ export class MappedSignal<
       // reference (making `this.N` undefined and this whole call a noop) or
       // `this.N` will contain one or more updates for non-signal inner values.
       if (!this.w.length && this.N) {
-        if (this.e._scheduler.I) {
+        if (this.e.syncScheduler.I) {
           // inner signals have updates, but they're deferred. Defer here too
-          this.e._scheduler.i(() => this.j())
+          this.e.syncScheduler.i(() => this.j())
         } else {
           // No need to involve the scheduler. Update own state now.
           this.j()
         }
       }
     } finally {
-      this.e._scheduler.post(pre)
+      schedulerPost(this.e, pre)
     }
   }
 

@@ -4,15 +4,17 @@ import {
   AtomGenerics,
   AtomSelectorConfig,
   AtomSelectorOrConfig,
+  Job,
 } from '../types'
 import { AtomInstance } from '../classes/instances/AtomInstance'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomTemplate } from '../classes/templates/AtomTemplate'
 import type { Ecosystem } from '../classes/Ecosystem'
 import { GraphNode } from '../classes/GraphNode'
-import { getSelectorKey, SelectorInstance } from '../classes/SelectorInstance'
+import { SelectorInstance } from '../classes/SelectorInstance'
 import { getEvaluationContext } from './evaluationContext'
 import { DESTROYED, is } from './general'
+import { getSelectorKey } from './selectors'
 
 const getContextualizedId = (
   ecosystem: Ecosystem,
@@ -45,6 +47,31 @@ const getContextualizedId = (
   return allResolved && `${id}-@scope(${contextValueStrings.join(',')})`
 }
 
+const resolveAtom = <A extends AnyAtomTemplate>(
+  { tags, overrides }: Ecosystem,
+  template: A
+) => {
+  const override = overrides[template.key]
+  const maybeOverriddenAtom = (override || template) as A
+
+  // to turn off tag checking, just don't pass a `tags` prop
+  if (tags) {
+    const badTag = maybeOverriddenAtom.tags?.find(tag => !tags.includes(tag))
+
+    if (DEV && badTag) {
+      console.error(
+        `Zedux: encountered unsafe atom template "${template.key}" with tag "${badTag}". This should be overridden in the current environment.`
+      )
+    }
+  }
+
+  return maybeOverriddenAtom
+}
+
+/**
+ * The node gateway. This is the entry point for creating all graph nodes. This
+ * only creates nodes if they don't exist yet.
+ */
 export const getNode = <G extends AtomGenerics>(
   ecosystem: Ecosystem,
   template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
@@ -58,12 +85,10 @@ export const getNode = <G extends AtomGenerics>(
       : template
   }
 
-  if (DEV) {
-    if (typeof params !== 'undefined' && !Array.isArray(params)) {
-      throw new TypeError('Zedux: Expected atom params to be an array', {
-        cause: params,
-      })
-    }
+  if (DEV && typeof params !== 'undefined' && !Array.isArray(params)) {
+    throw new TypeError('Zedux: Expected atom params to be an array', {
+      cause: params,
+    })
   }
 
   if (is(template, AtomTemplateBase)) {
@@ -102,11 +127,11 @@ export const getNode = <G extends AtomGenerics>(
       (params || []) as G['Params']
     ) as AnyAtomInstance
 
-    const pre = ecosystem._scheduler.pre()
+    const pre = schedulerPre(ecosystem)
     try {
       newInstance.i() // TODO: remove. Run this in AtomInstance constructor
     } finally {
-      ecosystem._scheduler.post(pre)
+      schedulerPost(ecosystem, pre)
     }
 
     ecosystem.n.set(newInstance.id, newInstance)
@@ -145,7 +170,7 @@ export const getNode = <G extends AtomGenerics>(
     }
 
     // create the instance; it doesn't exist yet
-    const pre = ecosystem._scheduler.pre()
+    const pre = schedulerPre(ecosystem)
     try {
       instance = new SelectorInstance(
         ecosystem,
@@ -158,7 +183,7 @@ export const getNode = <G extends AtomGenerics>(
 
       return instance
     } finally {
-      ecosystem._scheduler.post(pre)
+      schedulerPost(ecosystem, pre)
     }
   }
 
@@ -167,29 +192,27 @@ export const getNode = <G extends AtomGenerics>(
   })
 }
 
-const resolveAtom = <A extends AnyAtomTemplate>(
-  { tags, overrides }: Ecosystem,
-  template: A
-) => {
-  const override = overrides[template.key]
-  const maybeOverriddenAtom = (override || template) as A
-
-  // to turn off tag checking, just don't pass a `tags` prop
-  if (tags) {
-    const badTag = maybeOverriddenAtom.tags?.find(tag => !tags.includes(tag))
-
-    if (DEV && badTag) {
-      console.error(
-        `Zedux: encountered unsafe atom template "${template.key}" with tag "${badTag}". This should be overridden in the current environment.`
-      )
-    }
-  }
-
-  return maybeOverriddenAtom
-}
-
 export const mapOverrides = (overrides: AnyAtomTemplate[]) =>
   overrides.reduce((map, atom) => {
     map[atom.key] = atom
     return map
   }, {} as Record<string, AnyAtomTemplate>)
+
+export const schedulerPre = (ecosystem: Ecosystem) =>
+  ecosystem.syncScheduler.pre()
+
+export const schedulerPost = (ecosystem: Ecosystem, pre: boolean) =>
+  ecosystem.syncScheduler.post(pre)
+
+/**
+ * Schedules an async job _if needed_. Otherwise schedules a sync job. Async
+ * jobs are upgraded to sync jobs when scheduled in "safe" contexts (outside
+ * React renders)
+ */
+export const scheduleAsync = (ecosystem: Ecosystem, job: Job) =>
+  ecosystem.S?.t === 'react'
+    ? ecosystem.asyncScheduler.schedule(job)
+    : ecosystem.syncScheduler.j.push(job)
+
+export const scheduleSync = (ecosystem: Ecosystem, job: Job) =>
+  ecosystem.syncScheduler.schedule(job)

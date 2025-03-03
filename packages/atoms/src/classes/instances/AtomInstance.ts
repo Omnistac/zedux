@@ -69,12 +69,6 @@ export type InjectorDescriptor<T = any> = {
   c: (() => void) | undefined
 
   /**
-   * `i`nit - a callback that we need to call immediately after evaluation. This
-   * is how `injectEffect` works (without `synchronous: true`).
-   */
-  i: (() => void) | undefined
-
-  /**
    * `t`ype - a unique injector name string. This is how we ensure the user
    * didn't add, remove, or reorder injector calls in the state factory.
    */
@@ -477,14 +471,8 @@ export class AtomInstance<
       this.w = []
     }
 
-    // kick off side effects and store the new injectors
+    // store the new injectors
     if (this.N) {
-      if (!this.e.ssr) {
-        for (const injector of this.N) {
-          injector.i?.()
-        }
-      }
-
       this.I = this.N
       this.N = undefined
     }

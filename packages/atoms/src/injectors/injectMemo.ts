@@ -22,12 +22,18 @@ interface MemoValue<T> {
   v: T
 }
 
-const TYPE = 'injectMemo'
+const TYPE = 'memo'
 
 /**
  * The injector equivalent of React's `useMemo` hook. Memoizes a value. Only
  * calls the valueFactory to produce a new value when deps change on subsequent
  * evaluations.
+ *
+ * Pass no deps to make the callback create a new reactive context that tracks
+ * all used dependencies and reruns itself when they update and triggers
+ * reevaluations when the result changes. When using this overload, make sure
+ * you only use reactive values in the callback - any other closed-over values
+ * can become stale.
  */
 export const injectMemo = <T = any>(
   valueFactory: () => T,
@@ -57,7 +63,6 @@ export const injectMemo = <T = any>(
 
   return setNextInjector({
     c: undefined,
-    i: undefined,
     t: TYPE,
     v: value,
   }).v.v

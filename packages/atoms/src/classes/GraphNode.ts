@@ -34,6 +34,7 @@ import {
 import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
 import { addEdge, removeEdge, setNodeStatus } from '../utils/graph'
 import { parseOnArgs, shouldScheduleImplicit } from '../utils/events'
+import { scheduleSync } from '../utils/ecosystem'
 
 export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
   implements Job, EventEmitter<G>
@@ -367,7 +368,7 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
     // should we just always evaluate once when waking up a stale node)?
     this.l === DESTROYED ||
       reason.t === EventSent ||
-      (this.w.push(reason) === 1 && this.e.a(this))
+      (this.w.push(reason) === 1 && scheduleSync(this.e, this))
   }
 
   /**
@@ -450,7 +451,7 @@ export class ExternalNode<
    */
   public destroy(skipUpdate?: boolean) {
     if (!this.i) return
-    if (this.w.length) this.e._scheduler.unschedule(this)
+    if (this.w.length) this.e.syncScheduler.unschedule(this)
 
     // external nodes only have one source, no observers
     removeEdge(this, this.i!)
@@ -630,7 +631,7 @@ export class Listener<
     // schedule the job if needed. If not scheduling, kill this listener now if
     // its source is destroyed.
     shouldSchedule && this.l !== DESTROYED
-      ? w.push(reason) === 1 && e.a(this)
+      ? w.push(reason) === 1 && scheduleSync(e, this)
       : this.i?.l === DESTROYED && this.k(this.i)
   }
 }

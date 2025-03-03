@@ -48,26 +48,39 @@ import {
   RESET_START,
   RUN_END,
   is,
+  CATCH_ALL,
 } from '../utils/general'
-import { IdGenerator } from './IdGenerator'
-import { Scheduler } from './Scheduler'
-import { GraphNode } from './GraphNode'
-import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
+import {
+  getNode,
+  mapOverrides,
+  schedulerPost,
+  schedulerPre,
+} from '../utils/ecosystem'
+import {
+  bufferEdge,
+  finishBuffer,
+  finishBufferWithEvent,
+  getEvaluationContext,
+} from '../utils/evaluationContext'
+import { isListeningTo, parseOnArgs, sendEcosystemEvent } from '../utils/events'
 import {
   getSelectorKey,
   getSelectorName,
-  SelectorInstance,
   swapSelectorRefs,
-} from './SelectorInstance'
-import { AtomTemplateBase } from './templates/AtomTemplateBase'
-import { AtomInstance } from './instances/AtomInstance'
+} from '../utils/selectors'
+import { GraphNode } from './GraphNode'
+import { IdGenerator } from './IdGenerator'
+import { SelectorInstance } from './SelectorInstance'
 import { Signal } from './Signal'
-import { isListeningTo, parseOnArgs, sendEcosystemEvent } from '../utils/events'
-import { getNode, mapOverrides } from '../utils/ecosystem'
+import { AtomInstance } from './instances/AtomInstance'
+import { AsyncScheduler } from './schedulers/AsyncScheduler'
+import { SyncScheduler } from './schedulers/SyncScheduler'
+import { AtomTemplateBase } from './templates/AtomTemplateBase'
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements EventEmitter, Job
 {
+  public asyncScheduler = new AsyncScheduler(this)
   public atomDefaults?: EcosystemConfig['atomDefaults']
   public complexParams?: boolean
   public context: Context
@@ -95,13 +108,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public onReady: EcosystemConfig<Context>['onReady']
   public overrides: Record<string, AnyAtomTemplate> = {}
   public ssr?: boolean
+  public syncScheduler = new SyncScheduler(this)
   public _idGenerator = new IdGenerator()
 
   /**
    * event`C`ounts - counts notifiers for each event type
    */
   public C = {
-    '': 0, // TIL this is possible. This is the catch-all listener
+    [CATCH_ALL]: 0,
     [CHANGE]: 0,
     [CYCLE]: 0,
     [EDGE]: 0,
@@ -128,7 +142,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * E.g. in React, this is a thin wrapper around React's `use` utility.
    */
   public S:
-    | ((ecosystem: Ecosystem, context: Record<string, any>) => any)
+    | (((ecosystem: Ecosystem, context: Record<string, any>) => any) & {
+        /**
+         * `t`ype - Scope providers can optionally specify this type. Zedux uses
+         * this to detect when atoms are evaluating during React component
+         * renders.
+         */
+        t?: string
+      })
     | undefined = undefined
 
   /**
@@ -142,6 +163,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * to look up the cached selector instance in `this.n`odes.
    */
   public b = new WeakMap<AtomSelectorOrConfig, string>()
+
+  /**
+   * `f`inishBuffer - the currently-used `finishBuffer` implementation. We swap
+   * this out for better perf when no `runEnd` listeners are registered
+   */
+  public f = finishBuffer
 
   /**
    * `n`odes - a flat map of every cached graph node (atom instance or selector)
@@ -167,7 +194,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public w: InternalEvaluationReason[] = []
 
   public _refCount = 0
-  public _scheduler: Scheduler = new Scheduler(this)
 
   /**
    * Only for use by internal addon packages - lets us attach anything we want
@@ -236,15 +262,19 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * batched when the scheduler is running.
    */
   public batch<T = any>(callback: () => T) {
-    const scheduler = this._scheduler
-
-    const pre = scheduler.pre()
+    const pre = schedulerPre(this)
 
     try {
       const result = callback()
+
+      schedulerPost(this, pre)
+
       return result
-    } finally {
-      scheduler.post(pre)
+    } catch (err) {
+      // this duplication is more performant than using `finally`
+      schedulerPost(this, pre)
+
+      throw err
     }
   }
 
@@ -596,6 +626,17 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     maybeConfig?: ListenerConfig // unused in `ecosystem.on` - only here for interface compatibility
   ): Cleanup
 
+  /**
+   * Register an ecosystem event listener. Pass an event name and a callback
+   * that will be invoked every time that event fires.
+   *
+   * Accepts a catch-all listener - just omit the first event name argument. The
+   * callback will receive the full event map every time any ecosystem event
+   * fires.
+   *
+   * The last `config` param does nothing here. It's only accepted for type
+   * compatibility with graph node `.on` methods.
+   */
   public on<E extends keyof EcosystemEvents>(
     eventNameOrCallback: E | ((eventMap: Partial<EcosystemEvents>) => void),
     callbackOrConfig?:
@@ -620,12 +661,22 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.L.push(notify)
     this.C[eventName as keyof typeof this.C]++
 
+    // deoptimize the `finishBuffer` operation
+    if (this.C[RUN_END] || this.C[CATCH_ALL]) {
+      this.f = finishBufferWithEvent
+    }
+
     return () => {
       const index = this.L.indexOf(notify)
 
       if (~index) {
         this.L.splice(index, 1)
         this.C[eventName as keyof typeof this.C]--
+      }
+
+      // reoptimize the `finishBuffer` operation
+      if (!this.C[RUN_END] && !this.C[CATCH_ALL]) {
+        this.f = finishBuffer
       }
     }
   }
@@ -694,13 +745,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       })
     }
 
-    const { n, _scheduler } = this
+    const { asyncScheduler, n, syncScheduler } = this
 
     // call cleanup function first so it can configure the ecosystem for cleanup
     this.cleanup?.()
 
     // prevent node destruction from flushing the scheduler
-    const pre = _scheduler.pre()
+    const syncPre = syncScheduler.pre()
+    const asyncPre = asyncScheduler.pre()
 
     // TODO: Delete nodes in an optimal order, starting with nodes with no
     // internal observers. This is different from highest-weighted nodes since
@@ -717,8 +769,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     if (config?.hydration) this.hydration = undefined
     if (config?.overrides) this.setOverrides([])
 
-    _scheduler.wipe()
-    _scheduler.post(pre)
+    syncScheduler.wipe()
+    asyncScheduler.wipe()
+
+    syncScheduler.post(syncPre)
+    asyncScheduler.post(asyncPre)
 
     const prevContext = this.context
     if (typeof config?.context !== 'undefined') this.context = config.context
@@ -726,12 +781,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.cleanup = this.onReady?.(this, prevContext)
 
     if (isListeningTo(this, RESET_END)) {
-      const pre = this._scheduler.pre()
+      // this job will be added to the syncScheduler. Flush it after
       sendEcosystemEvent(this, {
         ...config,
         type: RESET_END,
       })
-      this._scheduler.post(pre)
+      syncScheduler.flush()
     }
 
     if (config?.listeners) {
@@ -972,14 +1027,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     } finally {
       this.S = prev
     }
-  }
-
-  /**
-   * `a`ddJob - add a job to the scheduler without scheduling. The scheduler
-   * should be already either running or scheduled when calling this.
-   */
-  public a(job: Job) {
-    this._scheduler.insertJob(job)
   }
 
   /**

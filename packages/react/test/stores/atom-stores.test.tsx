@@ -85,22 +85,4 @@ describe('stores in atoms', () => {
     expect(instance1.getState()).toBe(3)
     expect(instance2.getState()).toBe(1)
   })
-
-  test('all atoms in the evaluation stack get the right store scheduler', () => {
-    const atom1 = atom('1', () => injectStore('a'))
-    const atom2 = atom('2', () => {
-      const child = injectStore('b')
-      const one = injectAtomInstance(atom1)
-
-      const store = injectStore(() => createStore({ child, one: one.store }))
-
-      return store
-    })
-
-    const instance2 = ecosystem.getInstance(atom2)
-    const instance1 = ecosystem.getInstance(atom1)
-
-    expect(instance1.store['_scheduler']).toBe(ecosystem._scheduler)
-    expect(instance2.store['_scheduler']).toBe(ecosystem._scheduler)
-  })
 })

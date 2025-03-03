@@ -71,16 +71,29 @@ export const destroyBuffer = (previousNode: GraphNode | undefined) => {
     sourceEdge.p = undefined
   }
 
-  finishBuffer(previousNode)
+  evaluationContext.n!.e.f(previousNode)
 }
 
-const finishBuffer = (previousNode?: GraphNode) => {
-  if (isListeningTo(evaluationContext.n!.e, RUN_END)) {
-    sendEcosystemEvent(evaluationContext.n!.e, {
-      source: evaluationContext.n!,
-      type: RUN_END,
-    })
-  }
+/**
+ * Finish buffering edges for a node, potentially relinquishing the evaluation
+ * context to an outer node.
+ *
+ * This is split from `finishBufferWithEvent` because this is the "hot path" of
+ * Zedux code execution - everything calls this. If no `runEnd` event listeners
+ * are registered, we optimize.
+ */
+export const finishBuffer = (previousNode?: GraphNode) => {
+  evaluationContext.n = previousNode
+}
+
+/**
+ * @see finishBuffer
+ */
+export const finishBufferWithEvent = (previousNode?: GraphNode) => {
+  sendEcosystemEvent(evaluationContext.n!.e, {
+    source: evaluationContext.n!,
+    type: RUN_END,
+  })
 
   evaluationContext.n = previousNode
 }
@@ -93,39 +106,43 @@ const finishBuffer = (previousNode?: GraphNode) => {
  * last item in the stack)
  */
 export const flushBuffer = (previousNode: GraphNode | undefined) => {
-  for (const [source, sourceEdge] of evaluationContext.n!.s) {
+  let source
+  const entries = evaluationContext.n!.s.entries()
+
+  // This is micro optimized since it's in Zedux's "hot path".
+  while ((source = entries.next().value)) {
     // remove the edge if it wasn't recreated while buffering. Don't remove
     // anything but implicit-internal edges (those are the only kind we
     // auto-create during evaluation - other types may have been added manually
     // by the user and we don't want to touch them here). TODO: this check may
     // be unnecessary - users only manually add observers (e.g. via
     // `GraphNode#on`), not sources. Possibly remove
-    if (sourceEdge.flags & ExplicitExternal) continue
+    if (source[1].flags & ExplicitExternal) continue
 
-    if (sourceEdge.p == null) {
-      removeEdge(evaluationContext.n!, source)
+    if (source[1].p == null) {
+      removeEdge(evaluationContext.n!, source[0])
     } else {
-      if (sourceEdge.flags === OutOfRange) {
+      if (source[1].flags === OutOfRange) {
         // add new edges that we tracked while buffering
-        addEdge(evaluationContext.n!, source, sourceEdge)
-      } else if (sourceEdge.flags !== sourceEdge.p) {
+        addEdge(evaluationContext.n!, source[0], source[1])
+      } else if (source[1].flags !== source[1].p) {
         if (isListeningTo(evaluationContext.n!.e, EDGE)) {
           sendEcosystemEvent(evaluationContext.n!.e, {
             action: 'update',
             observer: evaluationContext.n!,
-            source,
+            source: source[0],
             type: EDGE,
           })
         }
       }
 
-      sourceEdge.flags = sourceEdge.p
+      source[1].flags = source[1].p
     }
 
-    sourceEdge.p = undefined
+    source[1].p = undefined
   }
 
-  finishBuffer(previousNode)
+  evaluationContext.n!.e.f(previousNode)
 }
 
 export const getEvaluationContext = () => evaluationContext
