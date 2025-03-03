@@ -137,6 +137,7 @@ describe('batching', () => {
     expect(evaluations).toEqual([0, 2, 1, 2])
 
     jest.runAllTimers()
+    ecosystem.asyncScheduler.flush()
 
     expect(evaluations).toEqual([0, 2, 1, 2, 2])
   })
