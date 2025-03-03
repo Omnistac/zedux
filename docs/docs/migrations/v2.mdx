@@ -693,6 +693,25 @@ import {
 + } from '@zedux/stores'
 ```
 
+Additionally, if you're currently sharing Zedux internals across windows via `getInternals`/`setInternals`, you'll also need to use the store package's `getStoreInternals` and `setStoreInternals`:
+
+```ts
+// an example parent-child setup
+// parent window:
+import { getInternals } from '@zedux/react'
+import { getStoreInternals } from '@zedux/stores'
+
+window.zeduxInternals = getInternals()
+window.zeduxStoreInternals = getStoreInternals()
+
+// child window:
+import { setInternals } from '@zedux/react'
+import { setStoreInternals } from '@zedux/stores'
+
+setInternals(window.opener.zeduxInternals)
+setStoreInternals(window.opener.zeduxStoreInternals)
+```
+
 ### Replacing Stores
 
 When migrating (either incrementally or all at once) to signals, do the following:
