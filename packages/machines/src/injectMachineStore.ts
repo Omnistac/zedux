@@ -289,7 +289,7 @@ export const injectMachineStore: <
 
           // run the scheduler synchronously after any store update
           if (action?.meta !== zeduxTypes.batch) {
-            instance.e._scheduler.flush()
+            instance.e.syncScheduler.flush()
           }
         },
       })

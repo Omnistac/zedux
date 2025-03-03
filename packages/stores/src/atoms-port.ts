@@ -13,12 +13,6 @@ export type InjectorDescriptor<T = any> = {
   c: (() => void) | undefined
 
   /**
-   * `i`nit - a callback that we need to call immediately after evaluation. This
-   * is how `injectEffect` works (without `synchronous: true`).
-   */
-  i: (() => void) | undefined
-
-  /**
    * `t`ype - a unique injector name string. This is how we ensure the user
    * didn't add, remove, or reorder injector calls in the state factory.
    */

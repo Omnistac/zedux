@@ -22,13 +22,19 @@ export const doSubscribe = <State>(
     const isBatch = action?.meta === zeduxTypes.batch
 
     instance.w.push({ n, o }) === 1 &&
-      (isBatch
-        ? instance.e._scheduler.schedule(instance)
-        : instance.e.a(instance))
+      instance.e.syncScheduler.schedule(instance)
 
     // run the scheduler synchronously after every store update unless batching
-    if (!isBatch) {
-      instance.e._scheduler.flush()
+    if (isBatch) {
+      // make sure the sync-scheduled job will run eventually using the async
+      // scheduler. It's fine if the job is flushed before this - it'll be a
+      // noop.
+      instance.e.asyncScheduler.schedule({
+        j: () => instance.e.syncScheduler.flush(),
+        T: 2,
+      })
+    } else {
+      instance.e.syncScheduler.flush()
     }
   })
 

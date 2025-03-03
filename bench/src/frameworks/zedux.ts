@@ -3,7 +3,8 @@ import {
   SelectorInstance,
   Signal,
   createEcosystem,
-} from '../../../packages/atoms' // '@zedux/atoms'
+  // } from '../../../packages/atoms/dist/zedux-atoms.es.min'
+} from '../../../packages/atoms'
 import { Computed, ReactiveFramework } from '../util/reactiveFramework'
 
 let ecosystem: Ecosystem
@@ -36,7 +37,7 @@ export const zeduxFramework: ReactiveFramework = {
       read: () => s.get(),
     }
   },
-  effect: fn => ecosystem.getNode(fn),
+  effect: fn => new CustomSelector(ecosystem, (counter++).toString(), fn, []),
   withBatch: fn => ecosystem.batch(fn),
   withBuild: fn => {
     if (ecosystem) ecosystem.reset()

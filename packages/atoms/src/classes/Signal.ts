@@ -19,6 +19,7 @@ import { Ecosystem } from './Ecosystem'
 import { GraphNode } from './GraphNode'
 import { recursivelyMutate, recursivelyProxy } from './proxies'
 import { getEvaluationContext } from '../utils/evaluationContext'
+import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
 export const doMutate = <G extends NodeGenerics>(
   node: Signal<G>,
@@ -27,7 +28,7 @@ export const doMutate = <G extends NodeGenerics>(
   events?: Partial<SendableEvents<G>>
 ) => {
   if (getEvaluationContext().n) {
-    node.e._scheduler.i(() => node.mutate(mutatable, events))
+    node.e.syncScheduler.i(() => node.mutate(mutatable, events))
 
     return
   }
@@ -77,10 +78,12 @@ export const doMutate = <G extends NodeGenerics>(
     } else {
       node.v = newState
 
+      const pre = schedulerPre(node.e)
       handleStateChange(node, oldState, {
         ...events,
         mutate: transactions,
       } as Partial<SendableEvents<G>>)
+      schedulerPost(node.e, pre)
     }
   }
 }
@@ -223,7 +226,7 @@ export class Signal<
     events?: Partial<SendableEvents<G>>
   ) {
     if (getEvaluationContext().n) {
-      this.e._scheduler.i(() => this.set(settable, events))
+      this.e.syncScheduler.i(() => this.set(settable, events))
 
       return
     }
@@ -234,7 +237,11 @@ export class Signal<
         ? (settable as (state: G['State']) => G['State'])(oldState)
         : settable)
 
-    newState === oldState || handleStateChange(this, oldState, events)
+    if (newState !== oldState) {
+      const pre = schedulerPre(this.e)
+      handleStateChange(this, oldState, events)
+      schedulerPost(this.e, pre)
+    }
   }
 
   /**

@@ -56,3 +56,5 @@ export const reactContextScope = (
       : (context as Context<any>)
   )
 }
+
+reactContextScope.t = 'react'

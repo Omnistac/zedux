@@ -32,8 +32,8 @@ importers:
         specifier: ^3.2.47
         version: 3.2.47
       alien-signals:
-        specifier: ^0.4.12
-        version: 0.4.12
+        specifier: ^1.0.0
+        version: 1.0.4
       compostate:
         specifier: ^0.5.1
         version: 0.5.1
@@ -431,8 +431,8 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  alien-signals@0.4.12:
-    resolution: {integrity: sha512-Og0PgAihxlp1R22bsoBsyhhMG4+qhU+fkkLPoGBQkYVc3qt9rYnrwYTf+M6kqUqUZpf3rXDnpL90iKa0QcSVVg==}
+  alien-signals@1.0.4:
+    resolution: {integrity: sha512-DJqqQD3XcsaQcQ1s+iE2jDUZmmQpXwHiR6fCAim/w87luaW+vmLY8fMlrdkmRwzaFXhkxf3rqPCR59tKVv1MDw==}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -998,7 +998,7 @@ snapshots:
 
   acorn@8.8.2: {}
 
-  alien-signals@0.4.12: {}
+  alien-signals@1.0.4: {}
 
   ansi-regex@5.0.1: {}
 

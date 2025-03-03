@@ -23,6 +23,8 @@ import {
   sendEcosystemEvent,
   sendImplicitEcosystemEvent,
 } from './events'
+import { schedulerPost, schedulerPre } from './ecosystem'
+import { getSelectorKey } from './selectors'
 
 const changeScopedNodeId = (
   ecosystem: Ecosystem,
@@ -103,7 +105,7 @@ export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
   node.c?.()
   node.c = undefined
 
-  if (node.w.length) node.e._scheduler.unschedule(node)
+  if (node.w.length) node.e.syncScheduler.unschedule(node)
 
   return true
 }
@@ -141,7 +143,6 @@ export const handleStateChange = <
   oldState: G['State'],
   events?: Partial<SendableEvents<G>>
 ) => {
-  const pre = node.e._scheduler.pre()
   const reason = { e: events, n: node.v, o: oldState, r: node.w, s: node }
 
   if (isListeningTo(node.e, CHANGE)) {
@@ -149,15 +150,14 @@ export const handleStateChange = <
   }
 
   scheduleDependents(reason)
-
-  // run the scheduler synchronously after any node state update
-  node.e._scheduler.post(pre)
 }
 
 const recalculateNodeWeight = (weightDiff: number, node: GraphNode) => {
   node.W += weightDiff
+  const observers = node.o.keys()
+  let observer
 
-  for (const observer of node.o.keys()) {
+  while ((observer = observers.next().value)) {
     recalculateNodeWeight(weightDiff, observer)
   }
 }
@@ -212,8 +212,8 @@ export const removeEdge = (observer: GraphNode, source: GraphNode) => {
 /**
  * Schedule all a node's dynamic, normal observers to run immediately.
  *
- * This should always be followed up by an `ecosystem._scheduler.flush()` call
- * unless we know for sure the scheduler is already running (e.g. when
+ * This should always be followed up by an `ecosystem.syncScheduler.flush()`
+ * call unless we know for sure the scheduler is already running (e.g. when
  * `runSelector` is called and isn't initializing).
  */
 export const scheduleDependents = (
@@ -221,8 +221,11 @@ export const scheduleDependents = (
     s: NonNullable<InternalEvaluationReason['s']>
   }
 ) => {
-  for (const [observer, edge] of reason.s.o) {
-    edge.flags & Static || observer.r(reason)
+  const entries = reason.s.o.entries()
+  let observer
+
+  while ((observer = entries.next().value)) {
+    observer[1].flags & Static || observer[0].r(reason)
   }
 }
 
@@ -236,13 +239,13 @@ export const scheduleEventListeners = (
     s: NonNullable<InternalEvaluationReason['s']>
   }
 ) => {
-  const pre = reason.s.e._scheduler.pre()
+  const pre = schedulerPre(reason.s.e)
 
   for (const [observer, edge] of reason.s.o) {
     edge.flags & Eventless || observer.r(reason)
   }
 
-  reason.s.e._scheduler.post(pre)
+  schedulerPost(reason.s.e, pre)
 }
 
 /**
@@ -254,13 +257,13 @@ export const scheduleStaticDependents = (
     s: NonNullable<InternalEvaluationReason['s']>
   }
 ) => {
-  const pre = reason.s.e._scheduler.pre()
+  const pre = schedulerPre(reason.s.e)
 
   for (const observer of reason.s.o.keys()) {
     observer.r(reason)
   }
 
-  reason.s.e._scheduler.post(pre)
+  schedulerPost(reason.s.e, pre)
 }
 
 /**
@@ -271,15 +274,18 @@ export const scheduleNodeDestruction = (node: GraphNode) =>
 
 export const setNodeStatus = (
   node: GraphNode,
-  newStatus: InternalLifecycleStatus,
-  templateKey?: string
+  newStatus: InternalLifecycleStatus
 ) => {
   const oldStatus = node.l
   node.l = newStatus
 
   if (node.V && oldStatus === INITIALIZING && node.t) {
     // scoped nodes change their id after initial evaluation
-    changeScopedNodeId(node.e, templateKey ?? node.t.key, node)
+    changeScopedNodeId(
+      node.e,
+      'key' in node.t ? node.t.key : getSelectorKey(node.e, node.t),
+      node
+    )
   }
 
   const isListeningToCycle = isListeningTo(node.e, CYCLE)
