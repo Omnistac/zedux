@@ -126,8 +126,8 @@ export const makeReasonReadable = (
     reason.t === Cycle
       ? ({
           ...base,
-          oldStatus: statusMap[reason.o as InternalLifecycleStatus],
-          newStatus: statusMap[reason.n as InternalLifecycleStatus],
+          oldStatus: StatusMap[reason.o as InternalLifecycleStatus],
+          newStatus: StatusMap[reason.n as InternalLifecycleStatus],
           type: CYCLE,
         } as const)
       : reason.t === Invalidate
@@ -170,7 +170,7 @@ export const makeReasonsReadable = (
     makeReasonReadable(reason, node, includeOperation)
   )
 
-export const statusMap: Record<InternalLifecycleStatus, LifecycleStatus> = {
+export const StatusMap: Record<InternalLifecycleStatus, LifecycleStatus> = {
   [ACTIVE]: 'Active',
   [DESTROYED]: 'Destroyed',
   [INITIALIZING]: 'Initializing',

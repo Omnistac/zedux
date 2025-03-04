@@ -5,13 +5,13 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "1": {
     "className": "AtomInstance",
     "observers": {
-      "no-1": {
+      "@listener(1)-2": {
         "flags": 6,
         "operation": "on",
       },
     },
     "sources": {
-      "@@selector-common-name-0": {
+      "@selector(common-name)-1": {
         "flags": 1,
         "operation": "injectAtomValue",
         "p": undefined,
@@ -24,13 +24,13 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "3": {
     "className": "AtomInstance",
     "observers": {
-      "no-2": {
+      "@listener(3)-3": {
         "flags": 6,
         "operation": "on",
       },
     },
     "sources": {
-      "@@selector-common-name-0": {
+      "@selector(common-name)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -40,7 +40,33 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 3,
   },
-  "@@selector-common-name-0": {
+  "@listener(1)-2": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "1": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "@listener(3)-3": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "3": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "@selector(common-name)-1": {
     "className": "SelectorInstance",
     "observers": {
       "1": {
@@ -65,36 +91,10 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 2,
   },
-  "no-1": {
-    "className": "Listener",
-    "observers": {},
-    "sources": {
-      "1": {
-        "flags": 6,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 4,
-  },
-  "no-2": {
-    "className": "Listener",
-    "observers": {},
-    "sources": {
-      "3": {
-        "flags": 6,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 4,
-  },
   "root": {
     "className": "AtomInstance",
     "observers": {
-      "@@selector-common-name-0": {
+      "@selector(common-name)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -113,13 +113,13 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "2": {
     "className": "AtomInstance",
     "observers": {
-      "no-4": {
+      "@listener(2)-5": {
         "flags": 6,
         "operation": "on",
       },
     },
     "sources": {
-      "@@selector-common-name-3": {
+      "@selector(common-name)-4": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -129,7 +129,20 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 3,
   },
-  "@@selector-common-name-3": {
+  "@listener(2)-5": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "2": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "@selector(common-name)-4": {
     "className": "SelectorInstance",
     "observers": {
       "2": {
@@ -149,23 +162,10 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 2,
   },
-  "no-4": {
-    "className": "Listener",
-    "observers": {},
-    "sources": {
-      "2": {
-        "flags": 6,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 4,
-  },
   "root": {
     "className": "AtomInstance",
     "observers": {
-      "@@selector-common-name-3": {
+      "@selector(common-name)-4": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -184,13 +184,13 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "1": {
     "className": "AtomInstance",
     "observers": {
-      "no-5": {
+      "@listener(1)-6": {
         "flags": 6,
         "operation": "on",
       },
     },
     "sources": {
-      "@@selector-common-name-0": {
+      "@selector(common-name)-1": {
         "flags": 1,
         "operation": "injectAtomValue",
         "p": undefined,
@@ -203,13 +203,13 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "2": {
     "className": "AtomInstance",
     "observers": {
-      "no-4": {
+      "@listener(2)-5": {
         "flags": 6,
         "operation": "on",
       },
     },
     "sources": {
-      "@@selector-common-name-3": {
+      "@selector(common-name)-4": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -222,13 +222,13 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "3": {
     "className": "AtomInstance",
     "observers": {
-      "no-6": {
+      "@listener(3)-7": {
         "flags": 6,
         "operation": "on",
       },
     },
     "sources": {
-      "@@selector-common-name-0": {
+      "@selector(common-name)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -238,7 +238,46 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 3,
   },
-  "@@selector-common-name-0": {
+  "@listener(1)-6": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "1": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "@listener(2)-5": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "2": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "@listener(3)-7": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "3": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "@selector(common-name)-1": {
     "className": "SelectorInstance",
     "observers": {
       "1": {
@@ -263,7 +302,7 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 2,
   },
-  "@@selector-common-name-3": {
+  "@selector(common-name)-4": {
     "className": "SelectorInstance",
     "observers": {
       "2": {
@@ -283,54 +322,15 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 2,
   },
-  "no-4": {
-    "className": "Listener",
-    "observers": {},
-    "sources": {
-      "2": {
-        "flags": 6,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 4,
-  },
-  "no-5": {
-    "className": "Listener",
-    "observers": {},
-    "sources": {
-      "1": {
-        "flags": 6,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 4,
-  },
-  "no-6": {
-    "className": "Listener",
-    "observers": {},
-    "sources": {
-      "3": {
-        "flags": 6,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 4,
-  },
   "root": {
     "className": "AtomInstance",
     "observers": {
-      "@@selector-common-name-0": {
+      "@selector(common-name)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
       },
-      "@@selector-common-name-3": {
+      "@selector(common-name)-4": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -349,13 +349,13 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "1": {
     "className": "AtomInstance",
     "observers": {
-      "no-5": {
+      "@listener(1)-6": {
         "flags": 6,
         "operation": "on",
       },
     },
     "sources": {
-      "@@selector-common-name-0": {
+      "@selector(common-name)-1": {
         "flags": 1,
         "operation": "injectAtomValue",
         "p": undefined,
@@ -368,13 +368,13 @@ exports[`selection same-name selectors share the namespace when destroyed and re
   "3": {
     "className": "AtomInstance",
     "observers": {
-      "no-6": {
+      "@listener(3)-7": {
         "flags": 6,
         "operation": "on",
       },
     },
     "sources": {
-      "@@selector-common-name-0": {
+      "@selector(common-name)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -384,7 +384,33 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 3,
   },
-  "@@selector-common-name-0": {
+  "@listener(1)-6": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "1": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "@listener(3)-7": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "3": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 4,
+  },
+  "@selector(common-name)-1": {
     "className": "SelectorInstance",
     "observers": {
       "1": {
@@ -409,36 +435,10 @@ exports[`selection same-name selectors share the namespace when destroyed and re
     "status": "Active",
     "weight": 2,
   },
-  "no-5": {
-    "className": "Listener",
-    "observers": {},
-    "sources": {
-      "1": {
-        "flags": 6,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 4,
-  },
-  "no-6": {
-    "className": "Listener",
-    "observers": {},
-    "sources": {
-      "3": {
-        "flags": 6,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 4,
-  },
   "root": {
     "className": "AtomInstance",
     "observers": {
-      "@@selector-common-name-0": {
+      "@selector(common-name)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,

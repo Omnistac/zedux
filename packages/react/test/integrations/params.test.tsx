@@ -1,5 +1,5 @@
 import { AtomGetters, atom, createEcosystem } from '@zedux/react'
-import { ecosystem, generateIdMock } from '../utils/ecosystem'
+import { ecosystem } from '../utils/ecosystem'
 
 describe('params', () => {
   test('deeply nested params are stringified correctly', () => {
@@ -26,38 +26,43 @@ describe('params', () => {
       fn(get(atom1, [num => num.toString()]) + '2')
 
     const complexEcosystem = createEcosystem({ complexParams: true })
-    ecosystem._idGenerator.generateId = generateIdMock
 
     const reusedFn = (str: string) => Number(str)
     const value1 = complexEcosystem.getNode(selector1, [reusedFn])
 
     const nodes = [...complexEcosystem.n.keys()]
-    const [instanceKey] = nodes.filter(id => !id.startsWith('@@selector'))
-    const [selectorKey] = nodes.filter(id => id.startsWith('@@selector'))
+    const [instanceKey] = nodes.filter(id => !id.startsWith('@selector'))
+    const [selectorKey] = nodes.filter(id => id.startsWith('@selector'))
 
     expect(value1.v).toBe(1)
-    expect(instanceKey).toMatch(/^1-\["anonFn-/)
-    expect(selectorKey).toMatch(/^@@selector-selector1-.*?-\["reusedFn-/)
+    expect(instanceKey).toMatch(/^1-\["@ref\(unknown\)-/)
+    expect(selectorKey).toMatch(
+      /^@selector\(selector1\)-.*?-\["@ref\(reusedFn\)-/
+    )
 
     const value2 = complexEcosystem.getNode(selector2, [reusedFn])
 
     const nodes2 = [...complexEcosystem.n.keys()]
     const [instanceKey1, instanceKey2] = nodes2.filter(
-      id => !id.startsWith('@@selector')
+      id => !id.startsWith('@selector')
     )
     const [selectorKey1, selectorKey2] = nodes2.filter(id =>
-      id.startsWith('@@selector')
+      id.startsWith('@selector')
     )
 
     expect(value2.v).toBe(12)
-    expect(instanceKey1).toMatch(/^1-\["anonFn-/)
-    expect(instanceKey2).toMatch(/^1-\["anonFn-/)
+    expect(instanceKey1).toMatch(/^1-\["@ref\(unknown\)-/)
+    expect(instanceKey2).toMatch(/^1-\["@ref\(unknown\)-/)
 
     // the instances received different function references
     expect(instanceKey1).not.toBe(instanceKey2)
 
-    expect(selectorKey1).toMatch(/^@@selector-selector1-.*?-\["reusedFn-/)
-    expect(selectorKey2).toMatch(/^@@selector-selector2-.*?-\["reusedFn-/)
+    expect(selectorKey1).toMatch(
+      /^@selector\(selector1\)-.*?-\["@ref\(reusedFn\)-/
+    )
+    expect(selectorKey2).toMatch(
+      /^@selector\(selector2\)-.*?-\["@ref\(reusedFn\)-/
+    )
 
     // the selectors received the same function reference
     expect(selectorKey1.slice(28)).toBe(selectorKey2.slice(28))
@@ -84,38 +89,43 @@ describe('params', () => {
       converter.toNumber(get(atom1, [new (class extends Converter {})()]) + '2')
 
     const complexEcosystem = createEcosystem({ complexParams: true })
-    ecosystem._idGenerator.generateId = generateIdMock
 
     const reusedInstance = new Converter()
     const value1 = complexEcosystem.getNode(selector1, [reusedInstance])
 
     const nodes = [...complexEcosystem.n.keys()]
-    const [instanceKey] = nodes.filter(id => !id.startsWith('@@selector'))
-    const [selectorKey] = nodes.filter(id => id.startsWith('@@selector'))
+    const [instanceKey] = nodes.filter(id => !id.startsWith('@selector'))
+    const [selectorKey] = nodes.filter(id => id.startsWith('@selector'))
 
     expect(value1.v).toBe(1)
-    expect(instanceKey).toMatch(/^1-\["UnknownClass-/)
-    expect(selectorKey).toMatch(/^@@selector-selector1-.*?-\["Converter-/)
+    expect(instanceKey).toMatch(/^1-\["@ref\(unknown\)-/)
+    expect(selectorKey).toMatch(
+      /^@selector\(selector1\)-.*?-\["@ref\(Converter\)-/
+    )
 
     const value2 = complexEcosystem.getNode(selector2, [reusedInstance])
 
     const nodes2 = [...complexEcosystem.n.keys()]
     const [instanceKey1, instanceKey2] = nodes2.filter(
-      id => !id.startsWith('@@selector')
+      id => !id.startsWith('@selector')
     )
     const [selectorKey1, selectorKey2] = nodes2.filter(id =>
-      id.startsWith('@@selector')
+      id.startsWith('@selector')
     )
 
     expect(value2.v).toBe(12)
-    expect(instanceKey1).toMatch(/^1-\["UnknownClass-/)
-    expect(instanceKey2).toMatch(/^1-\["UnknownClass-/)
+    expect(instanceKey1).toMatch(/^1-\["@ref\(unknown\)-/)
+    expect(instanceKey2).toMatch(/^1-\["@ref\(unknown\)-/)
 
     // the instances received different function references
     expect(instanceKey1).not.toBe(instanceKey2)
 
-    expect(selectorKey1).toMatch(/^@@selector-selector1-.*?-\["Converter-/)
-    expect(selectorKey2).toMatch(/^@@selector-selector2-.*?-\["Converter-/)
+    expect(selectorKey1).toMatch(
+      /^@selector\(selector1\)-.*?-\["@ref\(Converter\)-/
+    )
+    expect(selectorKey2).toMatch(
+      /^@selector\(selector2\)-.*?-\["@ref\(Converter\)-/
+    )
 
     // the selectors received the same function reference
     expect(selectorKey1.slice(28)).toBe(selectorKey2.slice(28))

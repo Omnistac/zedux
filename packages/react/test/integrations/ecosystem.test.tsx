@@ -93,17 +93,17 @@ describe('ecosystem', () => {
     const { findByText } = renderInEcosystem(<Child />)
 
     expect([...ecosystem.n.keys()]).toEqual([
-      '@signal(atom1)-0',
+      '@signal(atom1)-1',
       'atom1',
       'atom2',
       'atom3-["1"]',
       'atom4',
       'atom5',
-      'Child-:r0:',
-      'Child-:r1:',
-      'Child-:r2:',
-      'Child-:r3:',
-      'Child-:r4:',
+      '@component(Child)-:r0:',
+      '@component(Child)-:r1:',
+      '@component(Child)-:r2:',
+      '@component(Child)-:r3:',
+      '@component(Child)-:r4:',
     ])
     expect(childRendered).toHaveBeenCalledTimes(1)
     expect(childRendered).toHaveBeenLastCalledWith(

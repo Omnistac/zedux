@@ -34,7 +34,7 @@ export const useAtomSelector = <S extends Selectable>(
 ): StateOf<S> => {
   const ecosystem = useEcosystem()
   ecosystem.S = reactContextScope
-  const observerId = useReactComponentId()
+  const observerId = useReactComponentId(ecosystem)
 
   // use this referentially stable setState function as a ref. We lazily add
   // `i`nstance and `m`ounted properties

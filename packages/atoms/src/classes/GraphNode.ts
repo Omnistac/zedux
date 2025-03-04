@@ -22,7 +22,7 @@ import {
   INITIALIZING,
   InternalLifecycleStatus,
   is,
-  statusMap,
+  StatusMap,
 } from '../utils/general'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 import {
@@ -193,10 +193,7 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
 
       return () => this.L?.D(eventName, notify)
     } else {
-      const observer = new Listener<G>(
-        this.e,
-        this.e._idGenerator.generateNodeId()
-      )
+      const observer = new Listener<G>(this.e, this.e.makeId('listener', this))
 
       observer.u(this, 'on', ExplicitExternal)
       observer.I(eventName, notify)
@@ -219,7 +216,7 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
   }
 
   get status() {
-    return statusMap[this.l]
+    return StatusMap[this.l]
   }
 
   /**
@@ -566,13 +563,6 @@ export class Listener<
     id: string
   ) {
     super(e, id, noop)
-
-    // This is the simplest way to ensure that event observers run in the order
-    // they were added in. The idCounter was always just incremented to create
-    // this node's id. Listeners always run after all internal jobs are fully
-    // flushed, so tracking graph node "weight" in `this.W`eight is useless.
-    // Track listener added order instead.
-    // this.W = e._idGenerator.idCounter
   }
 
   /**

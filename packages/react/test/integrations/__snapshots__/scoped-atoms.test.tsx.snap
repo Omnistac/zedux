@@ -2,10 +2,10 @@
 
 exports[`scoped atoms scoped nodes propagate scope recursively to all observers 1`] = `
 [
-  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"a")",
-  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"b")",
-  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"a")",
-  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"b")",
+  "@selector(bottomSource)-1-@scope(parent2-[2],parent1-[1],"a")",
+  "@selector(bottomSource)-1-@scope(parent2-[2],parent1-[1],"b")",
+  "@selector(bottomSource)-1-@scope(parent2-[200],parent1-[100],"a")",
+  "@selector(bottomSource)-1-@scope(parent2-[200],parent1-[100],"b")",
   "child-@scope(parent2-[2],parent1-[1],"a")",
   "child-@scope(parent2-[2],parent1-[1],"b")",
   "child-@scope(parent2-[200],parent1-[100],"a")",
@@ -27,10 +27,10 @@ exports[`scoped atoms scoped nodes propagate scope recursively to all observers 
 
 exports[`scoped atoms scoped nodes propagate scope recursively to all observers 2`] = `
 [
-  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"aa")",
-  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"b")",
-  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"aa")",
-  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"b")",
+  "@selector(bottomSource)-1-@scope(parent2-[2],parent1-[1],"aa")",
+  "@selector(bottomSource)-1-@scope(parent2-[2],parent1-[1],"b")",
+  "@selector(bottomSource)-1-@scope(parent2-[200],parent1-[100],"aa")",
+  "@selector(bottomSource)-1-@scope(parent2-[200],parent1-[100],"b")",
   "child-@scope(parent2-[2],parent1-[1],"aa")",
   "child-@scope(parent2-[2],parent1-[1],"b")",
   "child-@scope(parent2-[200],parent1-[100],"aa")",
@@ -52,10 +52,10 @@ exports[`scoped atoms scoped nodes propagate scope recursively to all observers 
 
 exports[`scoped atoms scoped nodes propagate scope recursively to all observers 3`] = `
 [
-  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"aa")",
-  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"b")",
-  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"aa")",
-  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"b")",
+  "@selector(bottomSource)-1-@scope(parent2-[2],parent1-[1],"aa")",
+  "@selector(bottomSource)-1-@scope(parent2-[2],parent1-[1],"b")",
+  "@selector(bottomSource)-1-@scope(parent2-[200],parent1-[100],"aa")",
+  "@selector(bottomSource)-1-@scope(parent2-[200],parent1-[100],"b")",
   "child-@scope(parent2-[2],parent1-[1],"aa")",
   "child-@scope(parent2-[2],parent1-[1],"b")",
   "child-@scope(parent2-[200],parent1-[100],"aa")",
@@ -77,10 +77,10 @@ exports[`scoped atoms scoped nodes propagate scope recursively to all observers 
 
 exports[`scoped atoms scoped nodes propagate scope recursively to all observers 4`] = `
 [
-  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"aa")",
-  "@@selector-bottomSource-0-@scope(parent2-[2],parent1-[1],"b")",
-  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"aa")",
-  "@@selector-bottomSource-0-@scope(parent2-[200],parent1-[100],"b")",
+  "@selector(bottomSource)-1-@scope(parent2-[2],parent1-[1],"aa")",
+  "@selector(bottomSource)-1-@scope(parent2-[2],parent1-[1],"b")",
+  "@selector(bottomSource)-1-@scope(parent2-[200],parent1-[100],"aa")",
+  "@selector(bottomSource)-1-@scope(parent2-[200],parent1-[100],"b")",
   "child-@scope(parent2-[2],parent1-[1],"aa")",
   "child-@scope(parent2-[2],parent1-[1],"b")",
   "child-@scope(parent2-[200],parent1-[100],"aa")",

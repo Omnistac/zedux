@@ -86,7 +86,7 @@ export const useAtomInstance: {
 ) => {
   const ecosystem = useEcosystem()
   ecosystem.S = reactContextScope
-  const observerId = useReactComponentId()
+  const observerId = useReactComponentId(ecosystem)
 
   // use this referentially stable setState function as a ref. We lazily add
   // a `m`ounted property

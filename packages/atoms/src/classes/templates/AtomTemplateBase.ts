@@ -48,16 +48,17 @@ export abstract class AtomTemplateBase<
     // console.log({ key: atom.key, map });
   }
 
-  // TODO: rename to `new`
   public abstract _createInstance(
     ecosystem: Ecosystem,
     id: string,
     params: G['Params']
   ): G['Node']
 
-  // TODO: rename to `hash`
-  public abstract getInstanceId(
-    ecosystem: Ecosystem,
-    params?: G['Params']
-  ): string
+  public getInstanceId(ecosystem: Ecosystem, params?: G['Params']) {
+    const base = ecosystem.makeId('atom', this.key, '')
+
+    if (!params?.length) return base
+
+    return `${base}-${ecosystem.hash(params)}`
+  }
 }

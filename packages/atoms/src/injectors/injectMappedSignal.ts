@@ -78,11 +78,7 @@ export const injectMappedSignal = <M extends SignalMap>(
     return new MappedSignal<{
       Events: Prettify<MapAll<M>>
       State: { [K in keyof M]: M[K] extends Signal<any> ? StateOf<M[K]> : M[K] }
-    }>(
-      instance.e,
-      instance.e._idGenerator.generateId(`@signal(${instance.id})`),
-      map
-    )
+    }>(instance.e, instance.e.makeId('signal', instance), map)
   }, [])
 
   // create a graph edge between the current atom and the new signal

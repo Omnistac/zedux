@@ -2,10 +2,23 @@
 
 exports[`react types signals 1`] = `
 {
-  "@signal-0": {
+  "@listener(@signal()-1)-2": {
+    "className": "Listener",
+    "observers": {},
+    "sources": {
+      "@signal()-1": {
+        "flags": 6,
+        "operation": "on",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 2,
+  },
+  "@signal()-1": {
     "className": "Signal",
     "observers": {
-      "no-1": {
+      "@listener(@signal()-1)-2": {
         "flags": 6,
         "operation": "on",
       },
@@ -14,19 +27,6 @@ exports[`react types signals 1`] = `
     "state": 1,
     "status": "Active",
     "weight": 1,
-  },
-  "no-1": {
-    "className": "Listener",
-    "observers": {},
-    "sources": {
-      "@signal-0": {
-        "flags": 6,
-        "operation": "on",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 2,
   },
 }
 `;
