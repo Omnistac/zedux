@@ -95,9 +95,9 @@ describe('graph', () => {
     expect(
       [...ecosystem.n.get('atom4')!.s.keys()].map(node => node.id)
     ).toEqual([
-      '@signal(atom4)-0',
       '@signal(atom4)-1',
       '@signal(atom4)-2',
+      '@signal(atom4)-3',
       'atom1',
       'atom2',
     ])
@@ -138,9 +138,9 @@ describe('graph', () => {
     expect(nodes2.atom4).toEqual(
       expect.objectContaining({
         sources: {
-          '@signal(atom4)-0': expect.any(Object),
           '@signal(atom4)-1': expect.any(Object),
           '@signal(atom4)-2': expect.any(Object),
+          '@signal(atom4)-3': expect.any(Object),
           atom1: expect.any(Object),
           atom3: expect.any(Object),
         },

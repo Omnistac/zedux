@@ -14,6 +14,19 @@ import type { SelectorInstance } from '../classes/SelectorInstance'
 
 const defaultResultsComparator = (a: any, b: any) => a === b
 
+/**
+ * Get the fully qualified id for the given selector+params combo.
+ */
+export const getInstanceId = (
+  ecosystem: Ecosystem,
+  selectorOrConfig: AtomSelectorOrConfig,
+  params?: any[]
+) => {
+  const baseKey = getSelectorKey(ecosystem, selectorOrConfig)
+
+  return params?.length ? `${baseKey}-${ecosystem.hash(params)}` : baseKey
+}
+
 export const getSelectorKey = (
   ecosystem: Ecosystem,
   template: AtomSelectorOrConfig
@@ -22,9 +35,7 @@ export const getSelectorKey = (
 
   if (existingKey) return existingKey
 
-  const key = ecosystem._idGenerator.generateId(
-    `@@selector-${getSelectorName(template)}`
-  )
+  const key = ecosystem.makeId('selector', getSelectorName(template))
 
   ecosystem.b.set(template, key)
 
@@ -32,7 +43,7 @@ export const getSelectorKey = (
 }
 
 export const getSelectorName = (template: AtomSelectorOrConfig) =>
-  template.name || (template as AtomSelectorConfig).selector?.name || 'unnamed'
+  template.name || (template as AtomSelectorConfig).selector?.name || 'unknown'
 
 /**
  * Run an AtomSelector and, depending on the selector's resultsComparator,

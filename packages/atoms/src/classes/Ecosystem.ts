@@ -32,27 +32,28 @@ import {
   Job,
 } from '../types/index'
 import {
-  External,
-  compare,
-  makeReasonsReadable,
-  EventlessStatic,
+  CATCH_ALL,
   CHANGE,
+  compare,
   CYCLE,
   EDGE,
   ERROR,
+  EventlessStatic,
+  External,
   INVALIDATE,
+  is,
+  makeReasonsReadable,
   MUTATE,
   PROMISE_CHANGE,
   RESET_END,
-  RUN_START,
   RESET_START,
   RUN_END,
-  is,
-  CATCH_ALL,
+  RUN_START,
 } from '../utils/general'
 import {
   getNode,
   mapOverrides,
+  mapRefToId,
   schedulerPost,
   schedulerPre,
 } from '../utils/ecosystem'
@@ -69,7 +70,6 @@ import {
   swapSelectorRefs,
 } from '../utils/selectors'
 import { GraphNode } from './GraphNode'
-import { IdGenerator } from './IdGenerator'
 import { SelectorInstance } from './SelectorInstance'
 import { Signal } from './Signal'
 import { AtomInstance } from './instances/AtomInstance'
@@ -81,8 +81,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements EventEmitter, Job
 {
   public asyncScheduler = new AsyncScheduler(this)
-  public atomDefaults?: EcosystemConfig['atomDefaults']
-  public complexParams?: boolean
+  public atomDefaults: EcosystemConfig['atomDefaults'] | undefined = undefined
+  public complexParams = false
+
+  // @ts-expect-error context can be specifically undefined, and that's its type
   public context: Context
 
   /**
@@ -102,14 +104,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    */
   public ecosystem = this
 
-  public tags?: string[]
   public hydration?: Record<string, any>
-  public id: string
+  public id: string | undefined = undefined
+  public idCounter = 0
   public onReady: EcosystemConfig<Context>['onReady']
   public overrides: Record<string, AnyAtomTemplate> = {}
-  public ssr?: boolean
+  public ssr = false
   public syncScheduler = new SyncScheduler(this)
-  public _idGenerator = new IdGenerator()
+  public tags: string[] | undefined = undefined
 
   /**
    * event`C`ounts - counts notifiers for each event type
@@ -203,7 +205,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public _storage: Record<string, any> = {}
 
   private cleanup?: MaybeCleanup
-  private isInitialized = false
 
   constructor(config: EcosystemConfig<Context>) {
     if (DEV) {
@@ -222,14 +223,10 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     Object.assign(this, config)
 
-    this.id ||= this._idGenerator.generateId('es')
-
     if (config.overrides) {
-      this.setOverrides(config.overrides)
+      this.setOverrides(config.overrides, false)
     }
 
-    this.context = (this as any).context
-    this.isInitialized = true
     this.cleanup = config.onReady?.(this)
   }
 
@@ -391,7 +388,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
               isTemplate
                 ? (template as AnyAtomTemplate).key
                 : getSelectorKey(this, template as AtomSelectorOrConfig)
-            }-${this._idGenerator.hashParams(params, this.complexParams)}`
+            }-${this.hash(params)}`
       )
     }
 
@@ -544,19 +541,38 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   ) => getNode(this, template, params).getOnce()
 
   /**
-   * Get the fully qualified id for the given selector+params combo.
+   * Turn an array of anything into a predictable string. If any item is an atom
+   * instance, it will be serialized as the instance's id. If
+   * `acceptComplexParams` is true, map class instances and functions to a
+   * consistent id for the reference.
    *
-   * TODO: convert this to handle hashing for all types, replacing
-   * `_idGenerator.hashParams`.
+   * Note that circular object references are not supported - they would add way
+   * too much overhead here and are really just unnecessary.
    */
-  public hash(selectorOrConfig: AtomSelectorOrConfig, args?: any[]) {
-    const paramsHash = args?.length
-      ? this._idGenerator.hashParams(args, this.complexParams)
-      : ''
+  public hash(params: any[], acceptComplexParams = this.complexParams) {
+    return JSON.stringify(params, (_, param) => {
+      if (!param) return param
+      if (param.izn) return (param as GraphNode).id
 
-    const baseKey = getSelectorKey(this, selectorOrConfig)
+      // if the prototype has no prototype, it's likely not a plain object:
+      if (Object.getPrototypeOf(param.constructor.prototype)) {
+        if (!acceptComplexParams || Array.isArray(param)) return param
+        if (typeof param === 'function') {
+          return mapRefToId(this, param, param.name)
+        }
+        if (typeof param === 'object')
+          return mapRefToId(this, param, param.constructor.name)
 
-    return paramsHash ? `${baseKey}-${paramsHash}` : baseKey
+        return param // let engine try to resolve it or throw the error
+      }
+
+      return Object.keys(param)
+        .sort()
+        .reduce((result, key) => {
+          result[key] = param[key]
+          return result
+        }, {} as Record<string, any>)
+    })
   }
 
   /**
@@ -602,6 +618,62 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       // we know hydration is defined at this point
       delete (this.hydration as Record<string, any>)[id]
     })
+  }
+
+  /**
+   * Generate a consistent id that is guaranteed to be unique in this ecosystem,
+   * but not at all guaranteed to be unique globally.
+   *
+   * You can override this! Mutate this directly on an existing ecosystem or
+   * pass the `makeId` option to `createEcosystem`. The default implementation
+   * is suitable for most use cases, including:
+   *
+   * - apps that use only one ecosystem (the most common).
+   * - snapshot testing the ecosystem graph and dehydrations.
+   *
+   * You may want to override this when using multiple ecosystems. Or to
+   * customize ids to your liking (for example, prefixing atoms with `@atom()`
+   * to match all other node types).
+   *
+   * Every node type but atoms has an `@` prefix. If a Zedux id is not
+   * `@`-prefixed, it's an atom instance. The full list of built-in prefixes is:
+   *
+   * - `@component()-` An external node created via a React hook call. Wraps the
+   *   component's name inside the `()`.
+   *
+   * - `@listener()-` A `GraphNode#on` call. Wraps the listened node's template
+   *   key inside the `()`.
+   *
+   * - `@memo()-` An atom selector created via an `injectMemo` call with no
+   *   deps. Wraps the containing atom's template key inside the `()`.
+   *
+   * - `@ref()-` A function or class instance reference tracked when the
+   *   ecosystem is configured with `complexParams: true`. Wraps the function or
+   *   class name inside the `()`.
+   *
+   * - `@selector()-` An atom selector. Wraps the selector's name inside the
+   *   `()`.
+   *
+   * - `@signal()-` A signal created via `ecosystem.signal` or `injectSignal` or
+   *   a mapped signal created via `injectMappedSignal`. Wraps the containing
+   *   atom's template key inside the `()` (empty if created via
+   *   `ecosystem.signal`)
+   */
+  public makeId(
+    nodeType:
+      | 'atom'
+      | 'component'
+      | 'listener'
+      | 'memo'
+      | 'ref'
+      | 'selector'
+      | 'signal',
+    context?: GraphNode | string,
+    suffix: number | string = `-${++this.idCounter}`
+  ) {
+    return nodeType === 'atom'
+      ? (context as string)
+      : `@${nodeType}(${(context as GraphNode)?.id ?? context ?? ''})${suffix}`
   }
 
   public on<E extends keyof EcosystemEvents>(
@@ -778,15 +850,16 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const prevContext = this.context
     if (typeof config?.context !== 'undefined') this.context = config.context
 
+    this.idCounter = 0
     this.cleanup = this.onReady?.(this, prevContext)
 
     if (isListeningTo(this, RESET_END)) {
-      // this job will be added to the syncScheduler. Flush it after
+      // this job will be added to the syncScheduler. Flush it after resetting
+      // listeners
       sendEcosystemEvent(this, {
         ...config,
         type: RESET_END,
       })
-      syncScheduler.flush()
     }
 
     if (config?.listeners) {
@@ -795,6 +868,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         Object.keys(this.C).map(key => [key, 0])
       ) as Ecosystem['C']
     }
+
+    // flush the resetEnd event last
+    syncScheduler.flush()
   }
 
   /**
@@ -820,12 +896,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * This forced destruction will cause observers of those instances to recreate
    * their observed atom instance.
    */
-  public setOverrides(newOverrides: AnyAtomTemplate[]) {
+  public setOverrides(newOverrides: AnyAtomTemplate[], retroactive = true) {
     const oldOverrides = this.overrides
 
     this.overrides = mapOverrides(newOverrides)
 
-    if (!this.isInitialized) return
+    if (!retroactive) return
 
     newOverrides.forEach(atom => {
       const instances = this.findAll(atom)
@@ -848,7 +924,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     state: State,
     config?: Pick<InjectSignalConfig<MappedEvents>, 'events'>
   ) {
-    const id = this._idGenerator.generateId('@signal')
+    const id = this.makeId('signal')
 
     const signal = new Signal<{
       Events: MapEvents<MappedEvents>

@@ -45,17 +45,6 @@ export class AtomTemplate<
     return new AtomInstance(ecosystem, this, id, params)
   }
 
-  public getInstanceId(ecosystem: Ecosystem, params?: G['Params']) {
-    const base = this.key
-
-    if (!params?.length) return base
-
-    return `${base}-${ecosystem._idGenerator.hashParams(
-      params,
-      ecosystem.complexParams
-    )}`
-  }
-
   public override(newValue: AtomValueOrFactory<G>): AtomTemplate<G> {
     const newAtom = atom(this.key, newValue, this._config)
     newAtom._isOverride = true

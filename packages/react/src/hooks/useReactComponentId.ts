@@ -1,3 +1,4 @@
+import { Ecosystem } from '@zedux/atoms'
 import React, { useId } from 'react'
 
 type MaybeComponent =
@@ -33,21 +34,22 @@ const serverKey = `__SERVER${react19KeyBase}` as const
 /**
  * Get a unique id for a Zedux hook call. This id is predictable - it should be
  * exactly the same every time a given component renders in the same place in
- * the component tree. This means it persists across component
+ * the component tree. This means it persists across SSR and component
  * destruction/recreation which happens a lot e.g. during suspense.
  *
  * This uses the forbidden React internals object. We only use it to get a
  * dev-friendly name for the React component's node in the atom graph. It's fine
- * if React changes their internals - we'll fall back to the string "rc" ("React
- * Component"). We have no need to "warn users they cannot upgrade" 'cause they
- * can at the cost of some DX.
+ * if React changes their internals - we'll fall back to the string "unknown".
+ * We have no need to "warn users they cannot upgrade" 'cause they can at the
+ * cost of some DX.
  */
-export const useReactComponentId = () => {
+export const useReactComponentId = (ecosystem: Ecosystem) => {
   const component: MaybeComponent = (
     (React as React19)[clientKey] || (React as React19)[serverKey]
   )?.A?.getOwner?.()?.type
 
-  const name = component?.displayName || component?.name || 'rc'
+  const name = component?.displayName || component?.name
+  const id = useId()
 
-  return `${name}-${useId()}`
+  return ecosystem.makeId('component', name || 'unknown', `-${id}`)
 }

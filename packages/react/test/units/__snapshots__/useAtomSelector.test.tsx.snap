@@ -5,7 +5,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "1": {
     "className": "AtomInstance",
     "observers": {
-      "@@selector-unnamed-0": {
+      "@selector(unknown)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -18,10 +18,23 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "status": "Active",
     "weight": 1,
   },
-  "@@selector-unnamed-0": {
+  "@component(Test)-:ra:": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@selector(unknown)-1": {
+        "flags": 5,
+        "operation": "useAtomSelector",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 3,
+  },
+  "@selector(unknown)-1": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:ra:": {
+      "@component(Test)-:ra:": {
         "flags": 5,
         "operation": "useAtomSelector",
       },
@@ -38,19 +51,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     },
     "status": "Active",
     "weight": 2,
-  },
-  "Test-:ra:": {
-    "className": "ExternalNode",
-    "observers": {},
-    "sources": {
-      "@@selector-unnamed-0": {
-        "flags": 5,
-        "operation": "useAtomSelector",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 3,
   },
 }
 `;
@@ -60,7 +60,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "1": {
     "className": "AtomInstance",
     "observers": {
-      "@@selector-unnamed-0": {
+      "@selector(unknown)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -73,10 +73,23 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "status": "Active",
     "weight": 1,
   },
-  "@@selector-unnamed-0": {
+  "@component(Test)-:ra:": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@selector(unknown)-1": {
+        "flags": 5,
+        "operation": "useAtomSelector",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 3,
+  },
+  "@selector(unknown)-1": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:ra:": {
+      "@component(Test)-:ra:": {
         "flags": 5,
         "operation": "useAtomSelector",
       },
@@ -93,19 +106,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     },
     "status": "Active",
     "weight": 2,
-  },
-  "Test-:ra:": {
-    "className": "ExternalNode",
-    "observers": {},
-    "sources": {
-      "@@selector-unnamed-0": {
-        "flags": 5,
-        "operation": "useAtomSelector",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 3,
   },
 }
 `;
@@ -115,7 +115,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "1": {
     "className": "AtomInstance",
     "observers": {
-      "@@selector-unnamed-0": {
+      "@selector(unknown)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -128,10 +128,23 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "status": "Stale",
     "weight": 1,
   },
-  "@@selector-unnamed-0": {
+  "@component(Test)-:rb:": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@selector(unknown)-1": {
+        "flags": 5,
+        "operation": "useAtomValue",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 3,
+  },
+  "@selector(unknown)-1": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:rb:": {
+      "@component(Test)-:rb:": {
         "flags": 5,
         "operation": "useAtomValue",
       },
@@ -148,19 +161,6 @@ exports[`useAtomSelector inline selector that returns a different object referen
     },
     "status": "Active",
     "weight": 2,
-  },
-  "Test-:rb:": {
-    "className": "ExternalNode",
-    "observers": {},
-    "sources": {
-      "@@selector-unnamed-0": {
-        "flags": 5,
-        "operation": "useAtomValue",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 3,
   },
 }
 `;
@@ -170,7 +170,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
   "1": {
     "className": "AtomInstance",
     "observers": {
-      "@@selector-unnamed-0": {
+      "@selector(unknown)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -183,10 +183,23 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "status": "Stale",
     "weight": 1,
   },
-  "@@selector-unnamed-0": {
+  "@component(Test)-:rb:": {
+    "className": "ExternalNode",
+    "observers": {},
+    "sources": {
+      "@selector(unknown)-1": {
+        "flags": 5,
+        "operation": "useAtomValue",
+      },
+    },
+    "state": undefined,
+    "status": "Active",
+    "weight": 3,
+  },
+  "@selector(unknown)-1": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:rb:": {
+      "@component(Test)-:rb:": {
         "flags": 5,
         "operation": "useAtomValue",
       },
@@ -204,28 +217,15 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "status": "Active",
     "weight": 2,
   },
-  "Test-:rb:": {
-    "className": "ExternalNode",
-    "observers": {},
-    "sources": {
-      "@@selector-unnamed-0": {
-        "flags": 5,
-        "operation": "useAtomValue",
-      },
-    },
-    "state": undefined,
-    "status": "Active",
-    "weight": 3,
-  },
 }
 `;
 
 exports[`useAtomSelector inline selectors are swapped out in strict mode double-renders 1`] = `
 {
-  "@@selector-unnamed-0": {
+  "@selector(unknown)-1": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:r9:": {
+      "@component(Test)-:r9:": {
         "flags": 5,
         "operation": "useAtomValue",
       },
@@ -246,10 +246,10 @@ exports[`useAtomSelector inline selectors are swapped out in strict mode double-
 
 exports[`useAtomSelector inline selectors are swapped out in strict mode double-renders 2`] = `
 {
-  "@@selector-unnamed-0": {
+  "@selector(unknown)-1": {
     "className": "SelectorInstance",
     "observers": {
-      "Test-:r9:": {
+      "@component(Test)-:r9:": {
         "flags": 5,
         "operation": "useAtomValue",
       },

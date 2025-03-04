@@ -45,7 +45,7 @@ const changeScopedNodeId = (
 
     return (resolvedVal as GraphNode)?.izn
       ? (resolvedVal as GraphNode).id
-      : ecosystem._idGenerator.hashParams(resolvedVal, true)
+      : ecosystem.hash(resolvedVal, true)
   })
 
   const scopedId = `${newNode.id}-@scope(${contextValueStrings.join(',')})`

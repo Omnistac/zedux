@@ -334,7 +334,7 @@ function App() {
 - `untrack` - A new top-level export for bumping out of a reactive context.
 - When called with no deps, `injectMemo` now automatically tracks any signal usages in the callback and reactively updates when they change, causing the injecting atom to reevaluate.
 - `ecosystem.withScope` - Runs a callback in a scoped context with the passed scope.
-- `injectCallback` - Wraps the callback in `ecosystem.withScope` (in addition to `ecosystem.batch`) if the injecting atom is scoped.
+- `injectCallback` now wraps the callback in `ecosystem.withScope` (in addition to `ecosystem.batch`) if the injecting atom is scoped.
 - Atom APIs wrap exports in `ecosystem.batch` and, if the atom that's evaluating when `api()` is called is scoped, `ecosystem.withScope`. Disable this by passing `{ wrap: false }` as the second parameter to `api.setExports` and `api.addExports`.
 
 ## Breaking Changes
@@ -459,6 +459,52 @@ const signal = injectLocalFirstSignal('the default value')
 ```
 
 Manual hydration is recommended in this case of having multiple third-party hydrators, as otherwise you have to rely on listener registration order to determine priority. With only one third-party hydrator, automatic hydration is fine, though it will result in three total initial evaluations.
+
+### Id Generation
+
+Zedux node ids are now more readable and consistent. Everything now uses consistent id `@` prefixes. See the jsdoc for `Ecosystem#makeId` for the full list.
+
+The default id generator also doesn't add any randomized hashes to ids in v2. Most apps shouldn't need those, so they were unnecessary overhead. Ids are still guaranteed to be unique inside the ecosystem. This default is ideal for testing too, since ids are now predictable.
+
+If a uniqueness guarantee is needed outside the ecosystem, e.g. when working with multiple ecosystems (not common), you can now supply your own id generator. Just pass a `makeId` function to `createEcosystem`. It will receive the id prefix and should return a unique string.
+
+For example:
+
+```ts
+const ecosystem = createEcosystem({
+  makeId: function (...args) {
+    return `${Ecosystem.prototype.makeId.apply(this, args)}-${uuid()}`
+  },
+})
+```
+
+This new id generation will likely break any code that checked for exact id matches. If you have lots of code relying on this or snapshot tests capturing the old ids, you can get them back by supplying a custom id generator. This should do:
+
+```ts
+const ecosystem = createEcosystem({
+  makeId: function (nodeType, context, suffix) {
+    const prefix = nodeType === 'selector' ? '@@selector-' : ''
+
+    const content =
+      nodeType === 'component' && context === 'unknown'
+        ? 'rc'
+        : nodeType === 'listener'
+        ? 'no'
+        : nodeType === 'selector' && context === 'unknown'
+        ? 'unnamed'
+        : (context as GraphNode)?.id ?? context ?? ''
+
+    const uniqueId =
+      suffix === ''
+        ? ''
+        : suffix
+        ? `-${suffix}`
+        : `-${++this.idCounter}${Math.random().toString(36).slice(2, 8)}`
+
+    return `${prefix}${content}${uniqueId}`
+  },
+})
+```
 
 ## Migrating to Signals
 

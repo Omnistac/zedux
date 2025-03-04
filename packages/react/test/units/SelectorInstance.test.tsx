@@ -14,30 +14,27 @@ const selector3 = ({ select }: AtomGetters) => select(selector2) + 'd'
 describe('the SelectorInstance class', () => {
   test('deeply nested selectors get auto-created', () => {
     const instance = ecosystem.getNode(selector3)
-    const expected = {
-      id: '@@selector-selector3-0',
-      p: [],
-      t: selector3,
-      v: 'abcd',
-      w: [],
-    }
 
-    expect(instance).toEqual(expect.objectContaining(expected))
+    expect(instance.id).toBe('@selector(selector3)-1')
+    expect(instance.p).toEqual([])
+    expect(instance.t).toBe(selector3)
+    expect(instance.v).toBe('abcd')
+    expect(instance.w).toEqual([])
     snapshotSelectorNodes()
   })
 
   test('on() adds and removes observers', () => {
     const instance2a = ecosystem.getNode(selector2)
 
-    expect(getSelectorNodes()).toEqual({
-      '@@selector-selector1-1': expect.any(Object),
-      '@@selector-selector2-0': expect.any(Object),
-    })
+    expect(Object.keys(getSelectorNodes())).toEqual([
+      '@selector(selector1)-2',
+      '@selector(selector2)-1',
+    ])
 
     // trigger cleanup without adding a dependent first
     instance2a.destroy()
 
-    expect(getSelectorNodes()).toEqual({})
+    expect(Object.keys(getSelectorNodes())).toEqual([])
 
     const instance2b = ecosystem.getNode(selector2)
     const instance1b = ecosystem.getNode(selector1)
@@ -45,24 +42,24 @@ describe('the SelectorInstance class', () => {
 
     instance2b.destroy() // destroys only selector2
 
-    expect(getSelectorNodes()).toEqual({
-      // id # is still 1 'cause the Selector class's `_refBaseKeys` still holds
+    expect(Object.keys(getSelectorNodes())).toEqual([
+      // id # is still 2 'cause the Selector class's `_refBaseKeys` still holds
       // the cached key despite `instance2b`'s destruction above
-      '@@selector-selector1-1': expect.any(Object),
-    })
+      '@selector(selector1)-2',
+    ])
 
     cleanup()
 
-    expect(getSelectorNodes()).toEqual({})
+    expect(Object.keys(getSelectorNodes())).toEqual([])
   })
 
-  test('ecosystem.dehydrate("@@selector") returns all cached selectors', () => {
+  test('ecosystem.dehydrate("@selector") returns all cached selectors', () => {
     ecosystem.getNode(selector3)
 
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-selector1-2': 'ab',
-      '@@selector-selector2-1': 'abc',
-      '@@selector-selector3-0': 'abcd', // selector3's id is created first
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(selector1)-3': 'ab',
+      '@selector(selector2)-2': 'abc',
+      '@selector(selector3)-1': 'abcd', // selector3's id is created first
     })
   })
 
@@ -88,10 +85,10 @@ describe('the SelectorInstance class', () => {
 
     expect(instance1.status).toBe('Active')
     expect(instance2.status).toBe('Active')
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-selector1-2': 'ab',
-      '@@selector-selector2-1': 'abc',
-      '@@selector-selector3-0': 'abcd',
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(selector1)-3': 'ab',
+      '@selector(selector2)-2': 'abc',
+      '@selector(selector3)-1': 'abcd',
     })
 
     ecosystem.getNode(selector2, []).destroy(true) // destroys both 1 & 2
@@ -99,17 +96,17 @@ describe('the SelectorInstance class', () => {
 
     expect(instance1.status).toBe('Destroyed')
     expect(instance2.status).toBe('Destroyed')
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
+    expect(ecosystem.dehydrate('@selector')).toEqual({
       // ids 2 & 1 - the refs are still cached in the Selector class's
       // `_refBaseKeys`
-      '@@selector-selector1-2': 'ab',
-      '@@selector-selector2-1': 'abc',
-      '@@selector-selector3-0': 'abcd',
+      '@selector(selector1)-3': 'ab',
+      '@selector(selector2)-2': 'abc',
+      '@selector(selector3)-1': 'abcd',
     })
 
     ecosystem.getNode(selector3).destroy()
 
-    expect(ecosystem.dehydrate('@@selector')).toEqual({})
+    expect(ecosystem.dehydrate('@selector')).toEqual({})
   })
 
   test('ecosystem.find() returns the first selector instance that matches the passed string', () => {
@@ -125,21 +122,21 @@ describe('the SelectorInstance class', () => {
 
     expect(Object.keys(allNodes)).toEqual([
       '1',
-      '@@selector-selector1-2',
-      '@@selector-selector2-1',
-      '@@selector-selector3-0', // the id for selector3 is generated first
+      '@selector(selector1)-3',
+      '@selector(selector2)-2',
+      '@selector(selector3)-1', // the id for selector3 is generated first
     ])
 
     const instances1 = ecosystem.findAll('selector2')
 
     expect(instances1).toEqual({
-      '@@selector-selector2-1': ecosystem.getNode(selector2),
+      '@selector(selector2)-2': ecosystem.getNode(selector2),
     })
 
     const instances2 = ecosystem.findAll(selector3)
 
     expect(instances2).toEqual({
-      '@@selector-selector3-0': instance,
+      '@selector(selector3)-1': instance,
     })
   })
 

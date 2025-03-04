@@ -247,7 +247,7 @@ describe('injectors', () => {
         sources: [],
         weight: 1,
       },
-      '@@selector-selector1-0': {
+      '@selector(selector1)-1': {
         observers: [],
         sources: [],
         weight: 1,

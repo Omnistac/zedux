@@ -113,6 +113,19 @@ export interface EcosystemConfig<
   }
   complexParams?: boolean
   context?: Context
+  makeId?: (
+    this: Ecosystem,
+    nodeType:
+      | 'atom'
+      | 'component'
+      | 'listener'
+      | 'memo'
+      | 'ref'
+      | 'selector'
+      | 'signal',
+    context?: GraphNode | string,
+    suffix?: number | string
+  ) => string
   tags?: string[]
   id?: string
   onReady?: (

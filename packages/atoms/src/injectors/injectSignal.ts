@@ -33,7 +33,7 @@ export const injectSignal = <State, MappedEvents extends EventMap = None>(
   const instance = injectSelf()
 
   const signal = injectMemo(() => {
-    const id = instance.e._idGenerator.generateId(`@signal(${instance.id})`)
+    const id = instance.e.makeId('signal', instance)
 
     const signal = new Signal<{
       Events: MapEvents<MappedEvents>

@@ -262,7 +262,7 @@ describe('selection', () => {
 
     const instance = ecosystem.getNode(selector)
 
-    expect(instance.id).toBe('@@selector-testName-0')
+    expect(instance.id).toBe('@selector(testName)-1')
   })
 
   test('same-name selectors share the namespace when destroyed and recreated at different times', () => {

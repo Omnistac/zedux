@@ -2,10 +2,10 @@
 
 exports[`the SelectorInstance class deeply nested selectors get auto-created 1`] = `
 {
-  "@@selector-selector1-2": {
+  "@selector(selector1)-3": {
     "className": "SelectorInstance",
     "observers": {
-      "@@selector-selector2-1": {
+      "@selector(selector2)-2": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -22,17 +22,17 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "status": "Active",
     "weight": 2,
   },
-  "@@selector-selector2-1": {
+  "@selector(selector2)-2": {
     "className": "SelectorInstance",
     "observers": {
-      "@@selector-selector3-0": {
+      "@selector(selector3)-1": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
       },
     },
     "sources": {
-      "@@selector-selector1-2": {
+      "@selector(selector1)-3": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -42,11 +42,11 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
     "status": "Active",
     "weight": 3,
   },
-  "@@selector-selector3-0": {
+  "@selector(selector3)-1": {
     "className": "SelectorInstance",
     "observers": {},
     "sources": {
-      "@@selector-selector2-1": {
+      "@selector(selector2)-2": {
         "flags": 1,
         "operation": "get",
         "p": undefined,
@@ -61,7 +61,7 @@ exports[`the SelectorInstance class deeply nested selectors get auto-created 1`]
 
 exports[`the SelectorInstance class different arg-accepting selectors with the exact same name and args create different instances 1`] = `
 {
-  "@@selector-commonName-0-["a"]": {
+  "@selector(commonName)-1-["a"]": {
     "className": "SelectorInstance",
     "observers": {},
     "sources": {},
@@ -69,7 +69,7 @@ exports[`the SelectorInstance class different arg-accepting selectors with the e
     "status": "Active",
     "weight": 1,
   },
-  "@@selector-commonName-1-["a"]": {
+  "@selector(commonName)-2-["a"]": {
     "className": "SelectorInstance",
     "observers": {},
     "sources": {},

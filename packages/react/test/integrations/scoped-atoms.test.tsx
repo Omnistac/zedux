@@ -438,7 +438,7 @@ describe('scoped atoms', () => {
     calls.splice(0, calls.length)
 
     expect(Object.keys(ecosystem.findAll())).toEqual([
-      '@@selector-unnamed-0-@scope({"a":{"b":1}})',
+      '@selector(unknown)-1-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":1}})',
     ])
 
@@ -450,7 +450,7 @@ describe('scoped atoms', () => {
     expect(calls).toEqual([{ a: { b: 2 } }])
 
     expect(Object.keys(ecosystem.findAll())).toEqual([
-      '@@selector-unnamed-0-@scope({"a":{"b":1}})',
+      '@selector(unknown)-1-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":2}})',
     ])

@@ -14,7 +14,7 @@ import { GraphNode } from '../classes/GraphNode'
 import { SelectorInstance } from '../classes/SelectorInstance'
 import { getEvaluationContext } from './evaluationContext'
 import { DESTROYED, is } from './general'
-import { getSelectorKey } from './selectors'
+import { getInstanceId, getSelectorKey } from './selectors'
 
 const getContextualizedId = (
   ecosystem: Ecosystem,
@@ -41,7 +41,7 @@ const getContextualizedId = (
 
     return is(resolvedVal, AtomInstance)
       ? (resolvedVal as AtomInstance).id
-      : ecosystem._idGenerator.hashParams(resolvedVal, true)
+      : ecosystem.hash(resolvedVal, true)
   })
 
   return allResolved && `${id}-@scope(${contextValueStrings.join(',')})`
@@ -66,6 +66,16 @@ const resolveAtom = <A extends AnyAtomTemplate>(
   }
 
   return maybeOverriddenAtom
+}
+
+export const mapRefToId = (ecosystem: Ecosystem, obj: any, name: string) => {
+  let id = ecosystem.b.get(obj)
+  if (id) return id
+
+  id = ecosystem.makeId('ref', name || 'unknown')
+  ecosystem.b.set(obj, id)
+
+  return id
 }
 
 /**
@@ -95,7 +105,7 @@ export const getNode = <G extends AtomGenerics>(
     const id = (template as AtomTemplate).getInstanceId(ecosystem, params)
 
     // try to find an existing instance
-    const instance = ecosystem.n.get(id) as AtomInstance
+    let instance = ecosystem.n.get(id) as AtomInstance
     if (instance) return instance
 
     const templateScope = ecosystem.s?.[(template as AtomTemplate).key]
@@ -118,10 +128,7 @@ export const getNode = <G extends AtomGenerics>(
     }
 
     // create a new instance
-    const newInstance = resolveAtom(
-      ecosystem,
-      template as AtomTemplate
-    )._createInstance(
+    instance = resolveAtom(ecosystem, template as AtomTemplate)._createInstance(
       ecosystem,
       id,
       (params || []) as G['Params']
@@ -129,14 +136,14 @@ export const getNode = <G extends AtomGenerics>(
 
     const pre = schedulerPre(ecosystem)
     try {
-      newInstance.i() // TODO: remove. Run this in AtomInstance constructor
+      instance.i() // TODO: remove. Run this in AtomInstance constructor
     } finally {
       schedulerPost(ecosystem, pre)
     }
 
-    ecosystem.n.set(newInstance.id, newInstance)
+    ecosystem.n.set(instance.id, instance)
 
-    return newInstance
+    return instance
   }
 
   if (
@@ -144,7 +151,7 @@ export const getNode = <G extends AtomGenerics>(
     (template && (template as AtomSelectorConfig).selector)
   ) {
     const selectorOrConfig = template as AtomSelectorOrConfig<G>
-    const id = ecosystem.hash(selectorOrConfig, params)
+    const id = getInstanceId(ecosystem, selectorOrConfig, params)
     let instance = ecosystem.n.get(id) as SelectorInstance<G>
 
     if (instance) return instance

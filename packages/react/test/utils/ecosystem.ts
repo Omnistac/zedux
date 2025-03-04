@@ -8,10 +8,6 @@ import {
 
 export const ecosystem = createEcosystem({ id: 'test' })
 
-export const generateIdMock = jest.fn(function generateIdMock(prefix: string) {
-  return `${prefix}-${this.idCounter++}`
-})
-
 export const getEdges = (map: Map<GraphNode, GraphEdge>) =>
   Object.fromEntries([...map].map(([node, edge]) => [node.id, edge]))
 
@@ -37,12 +33,9 @@ export const getSelectorNodes = () =>
     )
   )
 
-ecosystem._idGenerator.generateId = generateIdMock
-
 afterEach(() => {
-  ecosystem._idGenerator.idCounter = 0
-
   act(() => {
+    // also resets the ecosystem idCounter, which `makeIdMock` uses.
     ecosystem.reset({
       context: null,
       hydration: true,
