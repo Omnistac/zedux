@@ -2,17 +2,7 @@
 
 exports[`ecosystem big graph 1`] = `
 {
-  "@signal(atom1)-0": {
-    "observers": [
-      {
-        "key": "atom1",
-        "operation": "injectSignal",
-      },
-    ],
-    "sources": [],
-    "weight": 1,
-  },
-  "Child-:r0:": {
+  "@component(Child)-:r0:": {
     "observers": [],
     "sources": [
       {
@@ -22,7 +12,7 @@ exports[`ecosystem big graph 1`] = `
     ],
     "weight": 16,
   },
-  "Child-:r1:": {
+  "@component(Child)-:r1:": {
     "observers": [],
     "sources": [
       {
@@ -32,7 +22,7 @@ exports[`ecosystem big graph 1`] = `
     ],
     "weight": 10,
   },
-  "Child-:r2:": {
+  "@component(Child)-:r2:": {
     "observers": [],
     "sources": [
       {
@@ -42,7 +32,7 @@ exports[`ecosystem big graph 1`] = `
     ],
     "weight": 7,
   },
-  "Child-:r3:": {
+  "@component(Child)-:r3:": {
     "observers": [],
     "sources": [
       {
@@ -52,7 +42,7 @@ exports[`ecosystem big graph 1`] = `
     ],
     "weight": 4,
   },
-  "Child-:r4:": {
+  "@component(Child)-:r4:": {
     "observers": [],
     "sources": [
       {
@@ -61,6 +51,16 @@ exports[`ecosystem big graph 1`] = `
       },
     ],
     "weight": 3,
+  },
+  "@signal(atom1)-1": {
+    "observers": [
+      {
+        "key": "atom1",
+        "operation": "injectSignal",
+      },
+    ],
+    "sources": [],
+    "weight": 1,
   },
   "atom1": {
     "observers": [
@@ -81,13 +81,13 @@ exports[`ecosystem big graph 1`] = `
         "operation": "injectAtomValue",
       },
       {
-        "key": "Child-:r4:",
+        "key": "@component(Child)-:r4:",
         "operation": "useAtomValue",
       },
     ],
     "sources": [
       {
-        "key": "@signal(atom1)-0",
+        "key": "@signal(atom1)-1",
         "operation": "injectSignal",
       },
     ],
@@ -104,7 +104,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "injectAtomValue",
       },
       {
-        "key": "Child-:r3:",
+        "key": "@component(Child)-:r3:",
         "operation": "useAtomValue",
       },
     ],
@@ -123,7 +123,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "injectAtomValue",
       },
       {
-        "key": "Child-:r2:",
+        "key": "@component(Child)-:r2:",
         "operation": "useAtomValue",
       },
     ],
@@ -146,7 +146,7 @@ exports[`ecosystem big graph 1`] = `
         "operation": "injectAtomValue",
       },
       {
-        "key": "Child-:r1:",
+        "key": "@component(Child)-:r1:",
         "operation": "useAtomState",
       },
     ],
@@ -165,7 +165,7 @@ exports[`ecosystem big graph 1`] = `
   "atom5": {
     "observers": [
       {
-        "key": "Child-:r0:",
+        "key": "@component(Child)-:r0:",
         "operation": "useAtomValue",
       },
     ],
@@ -190,94 +190,94 @@ exports[`ecosystem big graph 1`] = `
 
 exports[`ecosystem big graph 2`] = `
 {
-  "Child-:r0:": {
+  "@component(Child)-:r0:": {
     "atom5": {
       "atom1": {
-        "@signal(atom1)-0": {},
+        "@signal(atom1)-1": {},
       },
       "atom2": {
         "atom1": {
-          "@signal(atom1)-0": {},
+          "@signal(atom1)-1": {},
         },
       },
       "atom4": {
         "atom1": {
-          "@signal(atom1)-0": {},
+          "@signal(atom1)-1": {},
         },
         "atom3-["1"]": {
           "atom1": {
-            "@signal(atom1)-0": {},
+            "@signal(atom1)-1": {},
           },
           "atom2": {
             "atom1": {
-              "@signal(atom1)-0": {},
+              "@signal(atom1)-1": {},
             },
           },
         },
       },
     },
   },
-  "Child-:r1:": {
+  "@component(Child)-:r1:": {
     "atom4": {
       "atom1": {
-        "@signal(atom1)-0": {},
+        "@signal(atom1)-1": {},
       },
       "atom3-["1"]": {
         "atom1": {
-          "@signal(atom1)-0": {},
+          "@signal(atom1)-1": {},
         },
         "atom2": {
           "atom1": {
-            "@signal(atom1)-0": {},
+            "@signal(atom1)-1": {},
           },
         },
       },
     },
   },
-  "Child-:r2:": {
+  "@component(Child)-:r2:": {
     "atom3-["1"]": {
       "atom1": {
-        "@signal(atom1)-0": {},
+        "@signal(atom1)-1": {},
       },
       "atom2": {
         "atom1": {
-          "@signal(atom1)-0": {},
+          "@signal(atom1)-1": {},
         },
       },
     },
   },
-  "Child-:r3:": {
+  "@component(Child)-:r3:": {
     "atom2": {
       "atom1": {
-        "@signal(atom1)-0": {},
+        "@signal(atom1)-1": {},
       },
     },
   },
-  "Child-:r4:": {
+  "@component(Child)-:r4:": {
     "atom1": {
-      "@signal(atom1)-0": {},
+      "@signal(atom1)-1": {},
     },
   },
   "atom5": {
     "atom1": {
-      "@signal(atom1)-0": {},
+      "@signal(atom1)-1": {},
     },
     "atom2": {
       "atom1": {
-        "@signal(atom1)-0": {},
+        "@signal(atom1)-1": {},
       },
     },
     "atom4": {
       "atom1": {
-        "@signal(atom1)-0": {},
+        "@signal(atom1)-1": {},
       },
       "atom3-["1"]": {
         "atom1": {
-          "@signal(atom1)-0": {},
+          "@signal(atom1)-1": {},
         },
         "atom2": {
           "atom1": {
-            "@signal(atom1)-0": {},
+            "@signal(atom1)-1": {},
           },
         },
       },
@@ -288,41 +288,41 @@ exports[`ecosystem big graph 2`] = `
 
 exports[`ecosystem big graph 3`] = `
 {
-  "@signal(atom1)-0": {
+  "@signal(atom1)-1": {
     "atom1": {
-      "Child-:r4:": {},
+      "@component(Child)-:r4:": {},
       "atom2": {
-        "Child-:r3:": {},
+        "@component(Child)-:r3:": {},
         "atom3-["1"]": {
-          "Child-:r2:": {},
+          "@component(Child)-:r2:": {},
           "atom4": {
-            "Child-:r1:": {},
+            "@component(Child)-:r1:": {},
             "atom5": {
-              "Child-:r0:": {},
+              "@component(Child)-:r0:": {},
             },
           },
         },
         "atom5": {
-          "Child-:r0:": {},
+          "@component(Child)-:r0:": {},
         },
       },
       "atom3-["1"]": {
-        "Child-:r2:": {},
+        "@component(Child)-:r2:": {},
         "atom4": {
-          "Child-:r1:": {},
+          "@component(Child)-:r1:": {},
           "atom5": {
-            "Child-:r0:": {},
+            "@component(Child)-:r0:": {},
           },
         },
       },
       "atom4": {
-        "Child-:r1:": {},
+        "@component(Child)-:r1:": {},
         "atom5": {
-          "Child-:r0:": {},
+          "@component(Child)-:r0:": {},
         },
       },
       "atom5": {
-        "Child-:r0:": {},
+        "@component(Child)-:r0:": {},
       },
     },
   },

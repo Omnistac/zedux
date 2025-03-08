@@ -56,7 +56,7 @@ export const injectMemo = <T = any>(
     ? untrack(valueFactory)
     : (value.n ??= new SelectorInstance(
         instance.e,
-        instance.e._idGenerator.generateId(`injectMemo(${instance.id})-`),
+        instance.e.makeId('memo', instance),
         valueFactory,
         []
       )).get()

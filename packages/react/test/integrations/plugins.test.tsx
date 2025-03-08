@@ -121,9 +121,8 @@ describe('plugins', () => {
 
     expect(calls).toEqual([
       ['1', { a: 11 }],
-      // TODO: decide between @ and @@
-      ['@@selector-selector1-1', 22],
-      ['@signal(2)-0', { a: { a: 11 }, b: 2 }],
+      ['@selector(selector1)-2', 22],
+      ['@signal(2)-1', { a: { a: 11 }, b: 2 }],
       ['2', { a: { a: 11 }, b: 2 }],
     ])
     calls.splice(0, calls.length)
@@ -143,7 +142,7 @@ describe('plugins', () => {
     node2.mutate({ b: 222 })
 
     expect(calls).toEqual([
-      ['@signal(2)-0', { a: { a: 11 }, b: 222 }],
+      ['@signal(2)-1', { a: { a: 11 }, b: 222 }],
       ['2', { a: { a: 11 }, b: 222 }],
     ])
   })
@@ -160,9 +159,9 @@ describe('plugins', () => {
     jest.runAllTimers()
 
     expect(calls).toEqual([
-      ['add', '@signal(2)-0', '1'],
+      ['add', '@signal(2)-1', '1'],
       ['add', '2', '1'],
-      ['add', '2', '@signal(2)-0'],
+      ['add', '2', '@signal(2)-1'],
     ])
     calls.splice(0, calls.length)
 
@@ -250,7 +249,7 @@ describe('plugins', () => {
       ['errorAtom', 'error'],
       ['errorAtom', 'error'],
       ['mappedSignal', 'error'],
-      ['@@selector-errorSelector-0', 'not an error'],
+      ['@selector(errorSelector)-1', 'not an error'],
       ['errorPromise', 'reject'],
     ]
 
@@ -437,8 +436,8 @@ describe('plugins', () => {
 
     const expectedCalls = [
       ['2', 'runStart'],
-      ['@signal(2)-0', 'runStart'],
-      ['@signal(2)-0', 'runEnd'],
+      ['@signal(2)-1', 'runStart'],
+      ['@signal(2)-1', 'runEnd'],
       ['2', 'runEnd'],
     ]
 

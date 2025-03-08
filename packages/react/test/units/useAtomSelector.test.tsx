@@ -105,8 +105,8 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('0')
     expect(selector1).toHaveBeenCalledTimes(1)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0-[0]': 0,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1-[0]': 0,
     })
 
     act(() => {
@@ -116,8 +116,8 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(2)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0-[1]': 1,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1-[1]': 1,
     })
   })
 
@@ -155,8 +155,8 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('2')
     expect(selector1).not.toHaveBeenCalled()
     expect(selector2).toHaveBeenCalledTimes(1)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0': 2,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1': 2,
     })
 
     act(() => {
@@ -167,8 +167,8 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(1)
     expect(selector2).toHaveBeenCalledTimes(1)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-1-[1]': 1,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-2-[1]': 1,
     })
   })
 
@@ -200,8 +200,8 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(1)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0': 1,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1': 1,
     })
 
     act(() => {
@@ -211,8 +211,8 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(2)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0': 1,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1': 1,
     })
   })
 
@@ -246,8 +246,8 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('0')
     expect(selector1.selector).toHaveBeenCalledTimes(1)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0-[0]': 0,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1-[0]': 0,
     })
 
     act(() => {
@@ -257,8 +257,8 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('0')
     expect(selector1.selector).toHaveBeenCalledTimes(1)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0-[0]': 0,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1-[0]': 0,
     })
   })
 
@@ -297,8 +297,8 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('0')
     expect(selector1).toHaveBeenCalledTimes(1)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0-[0]': 0,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1-[0]': 0,
     })
 
     act(() => {
@@ -308,8 +308,8 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('0')
     expect(selector1).toHaveBeenCalledTimes(2)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0-[0]': 0,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1-[0]': 0,
     })
   })
 
@@ -346,21 +346,21 @@ describe('useAtomSelector', () => {
 
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(1)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0': 1,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1': 1,
     })
     expect(renders).toBe(1)
 
     act(() => {
       fireEvent.click(button)
-      ecosystem.find('@@selector')?.destroy()
+      ecosystem.find('@selector')?.destroy()
       jest.runAllTimers()
     })
 
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(2)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0': 1,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1': 1,
     })
     expect(renders).toBe(2)
   })
@@ -396,8 +396,8 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('2')
     expect(selector1).not.toHaveBeenCalled()
     expect(selector2).toHaveBeenCalledTimes(1)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0': 2,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1': 2,
     })
 
     act(() => {
@@ -408,10 +408,10 @@ describe('useAtomSelector', () => {
     expect(div.innerHTML).toBe('1')
     expect(selector1).toHaveBeenCalledTimes(1)
     expect(selector2).toHaveBeenCalledTimes(1)
-    expect(ecosystem.dehydrate('@@selector')).toEqual({
-      '@@selector-mockConstructor-0': 2,
-      // id # 2 'cause `.on` generated id 1:
-      '@@selector-mockConstructor-2': 1,
+    expect(ecosystem.dehydrate('@selector')).toEqual({
+      '@selector(mockConstructor)-1': 2,
+      // id # 3 'cause `.on` generated id 2:
+      '@selector(mockConstructor)-3': 1,
     })
   })
 
@@ -599,11 +599,11 @@ describe('useAtomSelector', () => {
     const div = await findByTestId('text')
 
     expect(div.innerHTML).toBe('1a1b1c')
-    expect(ecosystem.dehydrate('@@selector')).toMatchInlineSnapshot(`
+    expect(ecosystem.dehydrate('@selector')).toMatchInlineSnapshot(`
       {
-        "@@selector-selector1-0-["a"]": "1a",
-        "@@selector-selector1-0-["b"]": "1b",
-        "@@selector-selector1-0-["c"]": "1c",
+        "@selector(selector1)-1-["a"]": "1a",
+        "@selector(selector1)-1-["b"]": "1b",
+        "@selector(selector1)-1-["c"]": "1c",
       }
     `)
 
@@ -613,11 +613,11 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('1a1b1c')
-    expect(ecosystem.dehydrate('@@selector')).toMatchInlineSnapshot(`
+    expect(ecosystem.dehydrate('@selector')).toMatchInlineSnapshot(`
       {
-        "@@selector-selector1-0-["a"]": "1a",
-        "@@selector-selector1-0-["b"]": "1b",
-        "@@selector-selector1-0-["c"]": "1c",
+        "@selector(selector1)-1-["a"]": "1a",
+        "@selector(selector1)-1-["b"]": "1b",
+        "@selector(selector1)-1-["c"]": "1c",
       }
     `)
   })

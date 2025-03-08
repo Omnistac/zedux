@@ -2,35 +2,7 @@
 
 exports[`graph ecosystem getters 1`] = `
 {
-  "@signal(atom4)-0": {
-    "observers": [
-      {
-        "key": "@signal(atom4)-2",
-        "operation": "get",
-      },
-      {
-        "key": "atom4",
-        "operation": "injectSignal",
-      },
-    ],
-    "sources": [],
-    "weight": 1,
-  },
-  "@signal(atom4)-1": {
-    "observers": [
-      {
-        "key": "@signal(atom4)-2",
-        "operation": "get",
-      },
-      {
-        "key": "atom4",
-        "operation": "injectSignal",
-      },
-    ],
-    "sources": [],
-    "weight": 1,
-  },
-  "Test-:r0:": {
+  "@component(Test)-:r0:": {
     "observers": [],
     "sources": [
       {
@@ -40,7 +12,7 @@ exports[`graph ecosystem getters 1`] = `
     ],
     "weight": 9,
   },
-  "Test-:r1:": {
+  "@component(Test)-:r1:": {
     "observers": [],
     "sources": [
       {
@@ -48,6 +20,34 @@ exports[`graph ecosystem getters 1`] = `
         "operation": "useAtomInstance",
       },
     ],
+    "weight": 1,
+  },
+  "@signal(atom4)-1": {
+    "observers": [
+      {
+        "key": "@signal(atom4)-3",
+        "operation": "get",
+      },
+      {
+        "key": "atom4",
+        "operation": "injectSignal",
+      },
+    ],
+    "sources": [],
+    "weight": 1,
+  },
+  "@signal(atom4)-2": {
+    "observers": [
+      {
+        "key": "@signal(atom4)-3",
+        "operation": "get",
+      },
+      {
+        "key": "atom4",
+        "operation": "injectSignal",
+      },
+    ],
+    "sources": [],
     "weight": 1,
   },
   "atom1": {
@@ -78,25 +78,25 @@ exports[`graph ecosystem getters 1`] = `
   "atom4": {
     "observers": [
       {
-        "key": "Test-:r0:",
+        "key": "@component(Test)-:r0:",
         "operation": "useAtomValue",
       },
       {
-        "key": "Test-:r1:",
+        "key": "@component(Test)-:r1:",
         "operation": "useAtomInstance",
       },
     ],
     "sources": [
-      {
-        "key": "@signal(atom4)-0",
-        "operation": "injectSignal",
-      },
       {
         "key": "@signal(atom4)-1",
         "operation": "injectSignal",
       },
       {
         "key": "@signal(atom4)-2",
+        "operation": "injectSignal",
+      },
+      {
+        "key": "@signal(atom4)-3",
         "operation": "injectMappedSignal",
       },
       {
@@ -115,25 +115,25 @@ exports[`graph ecosystem getters 1`] = `
 
 exports[`graph ecosystem getters 2`] = `
 {
-  "Test-:r0:": {
+  "@component(Test)-:r0:": {
     "atom4": {
-      "@signal(atom4)-0": {},
       "@signal(atom4)-1": {},
-      "@signal(atom4)-2": {
-        "@signal(atom4)-0": {},
+      "@signal(atom4)-2": {},
+      "@signal(atom4)-3": {
         "@signal(atom4)-1": {},
+        "@signal(atom4)-2": {},
       },
       "atom1": {},
       "atom3": {},
     },
   },
-  "Test-:r1:": {
+  "@component(Test)-:r1:": {
     "atom4": {
-      "@signal(atom4)-0": {},
       "@signal(atom4)-1": {},
-      "@signal(atom4)-2": {
-        "@signal(atom4)-0": {},
+      "@signal(atom4)-2": {},
+      "@signal(atom4)-3": {
         "@signal(atom4)-1": {},
+        "@signal(atom4)-2": {},
       },
       "atom1": {},
       "atom3": {},
@@ -141,11 +141,11 @@ exports[`graph ecosystem getters 2`] = `
   },
   "atom2": {},
   "atom4": {
-    "@signal(atom4)-0": {},
     "@signal(atom4)-1": {},
-    "@signal(atom4)-2": {
-      "@signal(atom4)-0": {},
+    "@signal(atom4)-2": {},
+    "@signal(atom4)-3": {
       "@signal(atom4)-1": {},
+      "@signal(atom4)-2": {},
     },
     "atom1": {},
     "atom3": {},
@@ -155,41 +155,41 @@ exports[`graph ecosystem getters 2`] = `
 
 exports[`graph ecosystem getters 3`] = `
 {
-  "@signal(atom4)-0": {
-    "@signal(atom4)-2": {
+  "@signal(atom4)-1": {
+    "@signal(atom4)-3": {
       "atom4": {
-        "Test-:r0:": {},
-        "Test-:r1:": {},
+        "@component(Test)-:r0:": {},
+        "@component(Test)-:r1:": {},
       },
     },
     "atom4": {
-      "Test-:r0:": {},
-      "Test-:r1:": {},
+      "@component(Test)-:r0:": {},
+      "@component(Test)-:r1:": {},
     },
   },
-  "@signal(atom4)-1": {
-    "@signal(atom4)-2": {
+  "@signal(atom4)-2": {
+    "@signal(atom4)-3": {
       "atom4": {
-        "Test-:r0:": {},
-        "Test-:r1:": {},
+        "@component(Test)-:r0:": {},
+        "@component(Test)-:r1:": {},
       },
     },
     "atom4": {
-      "Test-:r0:": {},
-      "Test-:r1:": {},
+      "@component(Test)-:r0:": {},
+      "@component(Test)-:r1:": {},
     },
   },
   "atom1": {
     "atom4": {
-      "Test-:r0:": {},
-      "Test-:r1:": {},
+      "@component(Test)-:r0:": {},
+      "@component(Test)-:r1:": {},
     },
   },
   "atom2": {},
   "atom3": {
     "atom4": {
-      "Test-:r0:": {},
-      "Test-:r1:": {},
+      "@component(Test)-:r0:": {},
+      "@component(Test)-:r1:": {},
     },
   },
 }

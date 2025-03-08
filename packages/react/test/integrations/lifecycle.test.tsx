@@ -277,7 +277,7 @@ describe('ttl', () => {
 
     expect(keys).toHaveLength(2)
     expect(keys[0]).toBe('1')
-    expect(keys[1].slice(0, 3)).toBe('no-')
+    expect(keys[1]).toBe('@listener(1)-1')
 
     cleanup()
 
