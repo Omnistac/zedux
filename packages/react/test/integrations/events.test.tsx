@@ -45,7 +45,7 @@ describe('events', () => {
       oldStatus: 'Active',
       newStatus: 'Stale',
       operation: undefined,
-      reasons: [],
+      reasons: undefined,
       source: node1,
       type: 'cycle',
     }
@@ -60,7 +60,7 @@ describe('events', () => {
       newStatus: 'Destroyed',
       // the edge is destroyed before the event is created. TODO: maybe fix
       operation: undefined,
-      reasons: [],
+      reasons: undefined,
       source: node1,
       type: 'cycle',
     }

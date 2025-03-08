@@ -19,7 +19,7 @@ describe('the SelectorInstance class', () => {
     expect(instance.p).toEqual([])
     expect(instance.t).toBe(selector3)
     expect(instance.v).toBe('abcd')
-    expect(instance.w).toEqual([])
+    expect(instance.w).toBeUndefined()
     snapshotSelectorNodes()
   })
 

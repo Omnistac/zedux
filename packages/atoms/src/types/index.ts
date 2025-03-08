@@ -291,6 +291,13 @@ export interface InternalEvaluationReason<State = any> {
   f?: Record<string, any>
 
   /**
+   * `l`inkedReason - Evaluation reasons use a singly-linked list rather than an
+   * array for better performance/memory usage. This references the next reason
+   * in the chain.
+   */
+  l?: InternalEvaluationReason
+
+  /**
    * `n`ewStateOrStatus - depending on `t`ype, this is either the new state or
    * new lifecycle status of the `s`ource node.
    */
@@ -308,10 +315,10 @@ export interface InternalEvaluationReason<State = any> {
   s?: GraphNode
 
   /**
-   * `r`easons - an indefinitely nested list of reasons that caused the `s`ource
-   * to update in the first place
+   * `r`easons - indefinitely nested singly-linked lists of reasons that caused
+   * the `s`ource to update in the first place
    */
-  r?: InternalEvaluationReason[]
+  r?: InternalEvaluationReason
 
   /**
    * `t`ype - an obfuscated number representing the type of update (e.g. whether

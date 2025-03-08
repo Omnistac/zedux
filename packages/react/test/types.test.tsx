@@ -808,7 +808,7 @@ describe('react types', () => {
       newState: 2,
       oldState: 1,
       operation: undefined,
-      reasons: [],
+      reasons: undefined,
       source: signal,
       type: 'change',
     }

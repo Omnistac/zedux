@@ -190,12 +190,16 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public s: Record<string, Record<string, any>[]> | undefined = undefined
 
   /**
-   * `w`hy - the list of events this ecosystem is passing to event listeners
-   * next job run. The ecosystem only cares about the `.f`ullEventMap property.
+   * `w`hy - the list of events this ecosystem is passing to event listeners on
+   * the next job run. This is a singly-linked list. The ecosystem only cares
+   * about the `.f`ullEventMap property.
    */
-  public w: InternalEvaluationReason[] = []
+  public w: InternalEvaluationReason | undefined = undefined
 
-  public _refCount = 0
+  /**
+   * `w`hy`T`ail - the last reason in the `w`hy linked list.
+   */
+  public wT: InternalEvaluationReason | undefined = undefined
 
   /**
    * Only for use by internal addon packages - lets us attach anything we want
@@ -1109,13 +1113,16 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * @see Job.j
    */
   public j() {
-    for (const reason of this.w) {
-      for (const listener of this.L) {
-        listener(reason)
-      }
-    }
+    const isSingleEvent = this.w === this.wT
+    let reason: InternalEvaluationReason | undefined = this.w!
 
-    this.w = []
+    do {
+      for (const listener of this.L) {
+        listener(isSingleEvent ? reason : reason.r!)
+      }
+    } while ((reason = reason?.l))
+
+    this.w = this.wT = undefined
   }
 
   /**

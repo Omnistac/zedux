@@ -95,6 +95,25 @@ export const addEdge = (
   return newEdge
 }
 
+export const addReason = (
+  node: GraphNode | Ecosystem,
+  reason: InternalEvaluationReason
+) => {
+  if (node.w) {
+    // a reason reference is shared to all observers so we can't mutate it
+    // per-observer. Wrap them if a node gets more than one evaluation reason.
+    // This optimizes the most common case: 1 reason.
+    if (node.w === node.wT) {
+      node.w = node.wT = { r: node.w }
+    }
+
+    node.wT!.l = node.wT = { r: reason }
+  } else {
+    node.w = node.wT = reason
+    return true
+  }
+}
+
 export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
   // If we're not force-destroying, don't destroy if there are observers. Also
   // don't destroy if `node.K`eep is set
@@ -105,7 +124,7 @@ export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
   node.c?.()
   node.c = undefined
 
-  if (node.w.length) node.e.syncScheduler.unschedule(node)
+  if (node.w) node.e.syncScheduler.unschedule(node)
 
   return true
 }

@@ -32,7 +32,7 @@ import {
   ListenableEvents,
 } from '../types/events'
 import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
-import { addEdge, removeEdge, setNodeStatus } from '../utils/graph'
+import { addEdge, addReason, removeEdge, setNodeStatus } from '../utils/graph'
 import { parseOnArgs, shouldScheduleImplicit } from '../utils/events'
 import { scheduleSync } from '../utils/ecosystem'
 
@@ -363,9 +363,13 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
     // calls when destroyed probably indicate a memory leak on the user's part.
     // Notify them. TODO: Can we pause evaluations while status is Stale (and
     // should we just always evaluate once when waking up a stale node)?
-    this.l === DESTROYED ||
-      reason.t === EventSent ||
-      (this.w.push(reason) === 1 && scheduleSync(this.e, this))
+    if (
+      this.l !== DESTROYED &&
+      reason.t !== EventSent &&
+      addReason(this, reason)
+    ) {
+      scheduleSync(this.e, this)
+    }
   }
 
   /**
@@ -392,9 +396,14 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
 
   /**
    * `w`hy - the list of reasons explaining why this graph node updated or is
-   * going to update.
+   * going to update. This is a singly-linked list.
    */
-  public w: InternalEvaluationReason[] = []
+  public w: InternalEvaluationReason | undefined = undefined
+
+  /**
+   * `w`hy`T`ail - the last reason in the `w`hy linked list.
+   */
+  public wT: InternalEvaluationReason | undefined = undefined
 }
 
 export class ExternalNode<
@@ -448,7 +457,7 @@ export class ExternalNode<
    */
   public destroy(skipUpdate?: boolean) {
     if (!this.i) return
-    if (this.w.length) this.e.syncScheduler.unschedule(this)
+    if (this.w) this.e.syncScheduler.unschedule(this)
 
     // external nodes only have one source, no observers
     removeEdge(this, this.i!)
@@ -488,11 +497,14 @@ export class ExternalNode<
    */
   public j() {
     if (this.n.m) {
-      for (const reason of this.w) {
-        this.n(reason)
-      }
+      const isSingleReason = this.w === this.wT
+      let reason: InternalEvaluationReason | undefined = this.w!
+
+      do {
+        this.n(isSingleReason ? reason : reason.r!)
+      } while ((reason = reason!.l))
     }
-    this.w = []
+    this.w = this.wT = undefined
   }
 
   /**
@@ -597,12 +609,15 @@ export class Listener<
   public j() {
     if (this.N.length) {
       for (const notify of this.N) {
-        for (const reason of this.w) {
-          notify(reason)
-        }
+        const isSingleReason = this.w === this.wT
+        let reason: InternalEvaluationReason | undefined = this.w!
+
+        do {
+          notify(isSingleReason ? reason : reason.r!)
+        } while ((reason = reason!.l))
       }
     }
-    this.w = []
+    this.w = this.wT = undefined
 
     // listeners auto-detach and destroy themselves when the node they listen to
     // is destroyed (after telling `this.N`otifiers about it)
@@ -615,13 +630,13 @@ export class Listener<
    * @see ExternalNode.r
    */
   public r(reason: InternalEvaluationReason) {
-    const { e, w } = this
+    const { e } = this
     const shouldSchedule = shouldScheduleImplicit(this, reason)
 
     // schedule the job if needed. If not scheduling, kill this listener now if
     // its source is destroyed.
     shouldSchedule && this.l !== DESTROYED
-      ? w.push(reason) === 1 && scheduleSync(e, this)
+      ? addReason(this, reason) && scheduleSync(e, this)
       : this.i?.l === DESTROYED && this.k(this.i)
   }
 }
