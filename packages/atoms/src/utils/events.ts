@@ -11,6 +11,7 @@ import {
 } from '../types/index'
 import { scheduleAsync } from './ecosystem'
 import { CATCH_ALL, ERROR, EventSent, makeReasonReadable } from './general'
+import { addReason } from './graph'
 
 export const isListeningTo = (
   ecosystem: Ecosystem,
@@ -25,7 +26,7 @@ export const sendEcosystemEvent = (
 
   return (
     shouldSchedule &&
-    ecosystem.w.push({ f: { [event.type]: event } }) === 1 &&
+    addReason(ecosystem, { f: { [event.type]: event } }) &&
     scheduleAsync(ecosystem, ecosystem)
   )
 }
@@ -48,7 +49,7 @@ export const sendImplicitEcosystemEvent = (
   const shouldSchedule = shouldScheduleImplicit(ecosystem, reason)
 
   shouldSchedule &&
-    ecosystem.w.push(reason) === 1 &&
+    addReason(ecosystem, reason) &&
     scheduleAsync(ecosystem, ecosystem)
 }
 

@@ -270,7 +270,7 @@ export class AtomInstance<
         this._bufferedUpdate = undefined
       }
 
-      this.w = []
+      this.w = this.wt = undefined
     }
 
     // store the new injectors

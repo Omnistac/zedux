@@ -174,7 +174,7 @@ export class MappedSignal<
       // signals were updated. Either `set` was called with a different object
       // reference (making `this.N` undefined and this whole call a noop) or
       // `this.N` will contain one or more updates for non-signal inner values.
-      if (!this.w.length && this.N) {
+      if (!this.w && this.N) {
         if (this.e.syncScheduler.I) {
           // inner signals have updates, but they're deferred. Defer here too
           this.e.syncScheduler.i(() => this.j())
@@ -200,10 +200,7 @@ export class MappedSignal<
       this.N,
       this.C ?? (this.b && ({ mutate: this.b } as Partial<SendableEvents<G>>))
     )
-    this.w = []
-    this.C = undefined
-    this.N = undefined
-    this.b = undefined
+    this.w = this.wt = this.C = this.N = this.b = undefined
   }
 
   /**

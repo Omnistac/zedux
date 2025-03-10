@@ -9,6 +9,7 @@ import {
   InjectorDeps,
   InjectPromiseConfig,
   InjectSignalConfig,
+  InternalEvaluationReason,
   MapEvents,
   None,
   PromiseState,
@@ -22,6 +23,17 @@ import { AtomApi } from '../classes/AtomApi'
 import { Invalidate } from '../utils/general'
 import { Signal } from '../classes/Signal'
 import { injectSelf } from './injectSelf'
+
+const hasInvalidateReason = (node: ReturnType<typeof injectSelf>) => {
+  if (!node.w) return
+
+  const isSingleReason = node.w === node.wt
+  let reason: InternalEvaluationReason | undefined = node.w
+
+  do {
+    if ((isSingleReason ? reason : reason.r!).t === Invalidate) return true
+  } while ((reason = reason.l))
+}
 
 /**
  * Create a memoized promise reference. Kicks off the promise immediately
@@ -118,7 +130,7 @@ export const injectPromise: {
   if (
     runOnInvalidate &&
     // injectWhy is an unrestricted injector - using it conditionally is fine:
-    injectSelf().w.some(reason => reason.t === Invalidate)
+    hasInvalidateReason(injectSelf())
   ) {
     refs.current.counter++
   }

@@ -115,6 +115,13 @@ export const makeReasonReadable = (
   node?: GraphNode,
   includeOperation = false
 ): EvaluationReason => {
+  // when a node gets 2 or more reasons at once, we start wrapping them in these
+  // wrapper reasons so they can be mutated per-node to avoid mutation bugs.
+  // Unwrap them
+  if (reason.r && !reason.s) {
+    return makeReasonReadable(reason.r, node, includeOperation)
+  }
+
   const base = {
     operation: includeOperation ? node?.s.get(reason.s!)?.operation : undefined,
     reasons:
@@ -163,12 +170,21 @@ export const makeReasonReadable = (
 
 export const makeReasonsReadable = (
   node?: GraphNode,
-  internalReasons: InternalEvaluationReason[] | undefined = node?.w,
+  reason: InternalEvaluationReason | undefined = node?.w,
   includeOperation = true
-): EvaluationReason[] | undefined =>
-  internalReasons?.map(reason =>
-    makeReasonReadable(reason, node, includeOperation)
-  )
+): EvaluationReason[] | undefined => {
+  if (!node) return
+
+  const reasons: EvaluationReason[] = []
+
+  if (!reason) return reasons
+
+  do {
+    reasons.push(makeReasonReadable(reason, node, includeOperation))
+  } while ((reason = reason.l))
+
+  return reasons
+}
 
 export const StatusMap: Record<InternalLifecycleStatus, LifecycleStatus> = {
   [ACTIVE]: 'Active',

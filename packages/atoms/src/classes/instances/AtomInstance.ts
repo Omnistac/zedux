@@ -390,7 +390,7 @@ export class AtomInstance<
    * @see Signal.j
    */
   public j() {
-    if (this.a && this.w.length === 1 && this.w[0].s === this.S) {
+    if (this.a && this.w?.s === this.S) {
       // if we altered the edge between this atom and its wrapped signal, the
       // wrapped signal should not trigger an evaluation of this atom. Skip
       // evaluation - just capture the state update and forward to this atom's
@@ -468,7 +468,7 @@ export class AtomInstance<
 
       throw err
     } finally {
-      this.w = []
+      this.w = this.wt = undefined
     }
 
     // store the new injectors

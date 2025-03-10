@@ -148,7 +148,7 @@ describe('signals', () => {
 
     const commonChangeProps = {
       operation: undefined,
-      reasons: [],
+      reasons: undefined,
       source: instance1.exports.signal,
       type: 'change',
     }
