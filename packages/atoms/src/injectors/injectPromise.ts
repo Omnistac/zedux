@@ -27,7 +27,7 @@ import { injectSelf } from './injectSelf'
 const hasInvalidateReason = (node: ReturnType<typeof injectSelf>) => {
   if (!node.w) return
 
-  const isSingleReason = node.w === node.wT
+  const isSingleReason = node.w === node.wt
   let reason: InternalEvaluationReason | undefined = node.w
 
   do {

@@ -103,13 +103,13 @@ export const addReason = (
     // a reason reference is shared to all observers so we can't mutate it
     // per-observer. Wrap them if a node gets more than one evaluation reason.
     // This optimizes the most common case: 1 reason.
-    if (node.w === node.wT) {
-      node.w = node.wT = { r: node.w }
+    if (node.w === node.wt) {
+      node.w = node.wt = { r: node.w }
     }
 
-    node.wT!.l = node.wT = { r: reason }
+    node.wt!.l = node.wt = { r: reason }
   } else {
-    node.w = node.wT = reason
+    node.w = node.wt = reason
     return true
   }
 }

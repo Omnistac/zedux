@@ -401,9 +401,9 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
   public w: InternalEvaluationReason | undefined = undefined
 
   /**
-   * `w`hy`T`ail - the last reason in the `w`hy linked list.
+   * `w`hy `t`ail - the last reason in the `w`hy linked list.
    */
-  public wT: InternalEvaluationReason | undefined = undefined
+  public wt: InternalEvaluationReason | undefined = undefined
 }
 
 export class ExternalNode<
@@ -497,14 +497,14 @@ export class ExternalNode<
    */
   public j() {
     if (this.n.m) {
-      const isSingleReason = this.w === this.wT
+      const isSingleReason = this.w === this.wt
       let reason: InternalEvaluationReason | undefined = this.w!
 
       do {
         this.n(isSingleReason ? reason : reason.r!)
       } while ((reason = reason!.l))
     }
-    this.w = this.wT = undefined
+    this.w = this.wt = undefined
   }
 
   /**
@@ -609,7 +609,7 @@ export class Listener<
   public j() {
     if (this.N.length) {
       for (const notify of this.N) {
-        const isSingleReason = this.w === this.wT
+        const isSingleReason = this.w === this.wt
         let reason: InternalEvaluationReason | undefined = this.w!
 
         do {
@@ -617,7 +617,7 @@ export class Listener<
         } while ((reason = reason!.l))
       }
     }
-    this.w = this.wT = undefined
+    this.w = this.wt = undefined
 
     // listeners auto-detach and destroy themselves when the node they listen to
     // is destroyed (after telling `this.N`otifiers about it)

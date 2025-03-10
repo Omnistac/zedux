@@ -197,9 +197,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public w: InternalEvaluationReason | undefined = undefined
 
   /**
-   * `w`hy`T`ail - the last reason in the `w`hy linked list.
+   * `w`hy `t`ail - the last reason in the `w`hy linked list.
    */
-  public wT: InternalEvaluationReason | undefined = undefined
+  public wt: InternalEvaluationReason | undefined = undefined
 
   /**
    * Only for use by internal addon packages - lets us attach anything we want
@@ -1113,7 +1113,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * @see Job.j
    */
   public j() {
-    const isSingleEvent = this.w === this.wT
+    const isSingleEvent = this.w === this.wt
     let reason: InternalEvaluationReason | undefined = this.w!
 
     do {
@@ -1122,7 +1122,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       }
     } while ((reason = reason?.l))
 
-    this.w = this.wT = undefined
+    this.w = this.wt = undefined
   }
 
   /**

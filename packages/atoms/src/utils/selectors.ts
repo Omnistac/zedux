@@ -85,12 +85,12 @@ export const runSelector = <G extends SelectorGenerics>(
     }
 
     // `finally` is slower than repeating this here and outside the `catch`:
-    node.w = node.wT = undefined
+    node.w = node.wt = undefined
 
     throw err
   }
 
-  node.w = node.wT = undefined
+  node.w = node.wt = undefined
   flushBuffer(prevNode)
 
   if (isInitializing) {
