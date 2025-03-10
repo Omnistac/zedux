@@ -9,7 +9,6 @@ import {
   flushBuffer,
   getEvaluationContext,
   setEvaluationContext,
-  startBuffer,
 } from './utils/evaluationContext'
 import { sendImplicitEcosystemEvent } from './utils/events'
 import { DESTROYED, INITIALIZING } from './utils/general'
@@ -53,6 +52,5 @@ export const zi = {
   I: INITIALIZING,
   i: sendImplicitEcosystemEvent,
   f: flushBuffer,
-  s: startBuffer,
   u: scheduleDependents,
 }

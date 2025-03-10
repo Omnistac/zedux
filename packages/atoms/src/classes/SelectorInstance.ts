@@ -1,4 +1,4 @@
-import { DehydrationFilter, SelectorGenerics } from '../types/index'
+import { DehydrationFilter, GraphEdge, SelectorGenerics } from '../types/index'
 import { prefix } from '../utils/general'
 import { destroyNodeFinish, destroyNodeStart } from '../utils/graph'
 import { runSelector } from '../utils/selectors'
@@ -13,6 +13,18 @@ export class SelectorInstance<
   }
 > extends GraphNode<G & { Events: any }> {
   public static $$typeof = Symbol.for(`${prefix}/SelectorInstance`)
+
+  /**
+   * @see GraphNode.s Selectors typically have observers. So we initialize this
+   * upfront.
+   */
+  public o = new Map<GraphNode, GraphEdge>()
+
+  /**
+   * @see GraphNode.s Selectors typically have sources. So we initialize this
+   * upfront.
+   */
+  public s = new Map<GraphNode, GraphEdge>()
 
   constructor(
     /**

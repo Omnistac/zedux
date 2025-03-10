@@ -41,7 +41,6 @@ import { AtomTemplateBase } from '../templates/AtomTemplateBase'
 import {
   destroyNodeFinish,
   destroyNodeStart,
-  handleStateChange,
   scheduleEventListeners,
   scheduleStaticDependents,
   setNodeStatus,
@@ -51,7 +50,6 @@ import {
   destroyBuffer,
   flushBuffer,
   getEvaluationContext,
-  startBuffer,
 } from '@zedux/atoms/utils/evaluationContext'
 import { Signal } from '../Signal'
 import {
@@ -397,12 +395,12 @@ export class AtomInstance<
       // observers.
       const oldState = this.v
       this.v = this.S!.v // `this.S`ignal must exist if `this.a`lteredEdge does
-      handleStateChange(this, oldState)
+      this.e.ch(this, oldState)
 
       return
     }
 
-    const prevNode = startBuffer(this)
+    const prevNode = this.e.cs(this)
 
     try {
       const newFactoryResult = evaluate(this)
@@ -430,7 +428,7 @@ export class AtomInstance<
         const oldState = this.v
         this.v = this.S ? newFactoryResult.v : newFactoryResult
 
-        this.v === oldState || handleStateChange(this, oldState)
+        this.v === oldState || this.e.ch(this, oldState)
       }
 
       if (this.S) {
@@ -463,7 +461,7 @@ export class AtomInstance<
         const oldState = this.v
         this.v = this.S.v
 
-        handleStateChange(this, oldState)
+        this.e.ch(this, oldState)
       }
 
       throw err
@@ -564,7 +562,7 @@ export class AtomInstance<
       this.v = reason.s.v
 
       this.v === oldState ||
-        handleStateChange(this, oldState, reason.e as Partial<G['Events']>)
+        this.e.ch(this, oldState, reason.e as Partial<G['Events']>)
     }
   }
 

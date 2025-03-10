@@ -2,35 +2,35 @@ import { Job } from '@zedux/atoms/types/index'
 import { runJobs, SchedulerBase } from './SchedulerBase'
 
 /**
- * An O(log n) replacement for `syncScheduler.j.findIndex`
+ * An O(log n) replacement for `syncScheduler.j.findIndex`. Leaving this here
+ * for now since the new, non-recursive, much faster code in
+ * `SyncScheduler#schedule` is impossible to understand. It's exactly the same
+ * as this
  */
-const findIndex = (
-  scheduler: SyncScheduler,
-  cb: (job: Job) => number,
-  index = Math.ceil(scheduler.j.length / 2) - 1,
-  iteration = 1
-): number => {
-  const job = scheduler.j[index]
-  if (job == null) return index
+// const findIndex = (
+//   scheduler: SyncScheduler,
+//   cb: (job: Job) => number,
+//   index = Math.ceil((scheduler.j.length - scheduler.c) / 2) + scheduler.c - 1,
+//   divisor = 2
+// ): number => {
+//   const job = scheduler.j[index]
+//   if (job == null) return index
 
-  const direction = cb(job)
-  if (!direction) return index
+//   const direction = cb(job)
+//   if (direction === 0) return index
 
-  const divisor = 2 ** iteration
-  const isDone = divisor > scheduler.j.length
+//   if (divisor > scheduler.j.length - scheduler.c) {
+//     return index + (direction === 1 ? 1 : 0)
+//   }
 
-  if (isDone) {
-    return index + (direction === 1 ? 1 : 0)
-  }
+//   const effectualSize = ((scheduler.j.length - scheduler.c) / divisor) << 0
+//   const newIndex = Math.min(
+//     scheduler.j.length - scheduler.c + scheduler.c - 1,
+//     Math.max(0, index + Math.ceil(effectualSize / 2) * direction)
+//   )
 
-  const effectualSize = Math.round(scheduler.j.length / divisor)
-  const newIndex = Math.min(
-    scheduler.j.length - 1,
-    Math.max(0, index + Math.ceil(effectualSize / 2) * direction)
-  )
-
-  return findIndex(scheduler, cb, newIndex, iteration + 1)
-}
+//   return findIndex(scheduler, cb, newIndex, divisor * divisor)
+// }
 
 export class SyncScheduler extends SchedulerBase {
   /**
@@ -56,14 +56,49 @@ export class SyncScheduler extends SchedulerBase {
   public schedule(newJob: Job) {
     const weight = newJob.W ?? 0
 
-    const index = findIndex(this, job => {
-      if (job.T !== newJob.T) return +(newJob.T - job.T > 0) || -1 // 1 or -1
+    // const index = findIndex(this, job => {
+    //   if (job.T !== newJob.T) return +(newJob.T - job.T > 0) || -1 // 1 or -1
 
-      // EvaluateGraphNode (2) and UpdateExternalDependent (3) jobs use weight
-      // comparison. `W` will always be defined here. TODO: use discriminated
-      // union types to reflect this
-      return weight < job.W! ? -1 : +(weight > job.W!) // + = 0 or 1
-    })
+    //   // EvaluateGraphNode (2) and UpdateExternalDependent (3) jobs use weight
+    //   // comparison. `W` will always be defined here. TODO: use discriminated
+    //   // union types to reflect this
+    //   return weight < job.W! ? -1 : +(weight > job.W!) // + = 0 or 1
+    // })
+
+    let index = Math.ceil((this.j.length - this.c) / 2) + this.c - 1
+    let divisor = 2
+    let job
+
+    // This impossible-to-read loop is almost twice as fast as the above,
+    // commented-out `findIndex` code. Refer to that to figure out what this
+    // does; it's exactly the same algorithm.
+    while ((job = this.j[index])) {
+      const direction =
+        job.T === newJob.T
+          ? weight < job.W!
+            ? -1
+            : +(weight > job.W!)
+          : +(newJob.T - job.T > 0) || -1
+
+      if (direction === 0) break
+
+      if (divisor > this.j.length - this.c) {
+        index += direction === 1 ? 1 : 0
+        break
+      }
+
+      index = Math.min(
+        this.j.length - this.c + this.c - 1,
+        Math.max(
+          0,
+          index +
+            Math.ceil((((this.j.length - this.c) / divisor + 0.5) << 0) / 2) *
+              direction
+        )
+      )
+
+      divisor *= divisor
+    }
 
     if (index === -1) {
       this.j.push(newJob)
@@ -86,7 +121,7 @@ export class SyncScheduler extends SchedulerBase {
 
     const jobList = [task]
 
-    this.j.unshift({
+    this.j.splice(this.c, 0, {
       j: () => {
         for (const job of jobList) {
           job()

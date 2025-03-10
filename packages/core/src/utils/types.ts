@@ -32,11 +32,6 @@ export interface Hierarchy {
 
 export interface Job {
   /**
-   * `W`eight - the weight of the node (for EvaluateGraphNode jobs).
-   */
-  W?: number
-
-  /**
    * `j`ob - the actual task to run.
    */
   j: () => void
@@ -50,7 +45,7 @@ export interface Job {
    * 2 - EvaluateGraphNode
    * 3 - UpdateExternalDependent
    */
-  T: 0 | 1 | 2 | 3
+  T: 0 | 1
 }
 
 export interface NullNode extends HierarchyNodeBase {

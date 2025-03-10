@@ -162,6 +162,16 @@ export const handleStateChange = <
   oldState: G['State'],
   events?: Partial<SendableEvents<G>>
 ) => {
+  scheduleDependents({ e: events, n: node.v, o: oldState, r: node.w, s: node })
+}
+
+export const handleStateChangeWithEvent = <
+  G extends Pick<AtomGenerics, 'Events' | 'State'>
+>(
+  node: GraphNode<G & { Params: any; Template: any }>,
+  oldState: G['State'],
+  events?: Partial<SendableEvents<G>>
+) => {
   const reason = { e: events, n: node.v, o: oldState, r: node.w, s: node }
 
   if (isListeningTo(node.e, CHANGE)) {

@@ -10,8 +10,8 @@ export const runJobs = (scheduler: SchedulerBase) => {
   let errors: any[] | undefined
 
   scheduler.r = true
-  while (jobs.length) {
-    const job = jobs.shift() as Job
+  while (jobs.length > scheduler.c) {
+    const job = jobs[scheduler.c++] as Job
     try {
       job.j()
     } catch (err) {
@@ -20,11 +20,15 @@ export const runJobs = (scheduler: SchedulerBase) => {
     }
   }
 
+  scheduler.j = []
+  scheduler.c = 0
   scheduler.r = false
   if (errors) throw errors[0]
 }
 
 export abstract class SchedulerBase {
+  public c = 0
+
   /**
    * `r`unning - We set this to true internally when the scheduler starts
    * flushing. We also set it to true when batching updates, to prevent anything
@@ -104,7 +108,7 @@ export abstract class SchedulerBase {
   public abstract schedule(newJob: Job): void
 
   public unschedule(job: Job) {
-    const index = this.j.indexOf(job)
+    const index = this.j.indexOf(job, this.c)
 
     if (index !== -1) this.j.splice(index, 1)
   }

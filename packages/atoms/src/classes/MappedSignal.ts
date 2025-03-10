@@ -8,7 +8,7 @@ import {
   Transaction,
   UndefinedEvents,
 } from '../types/index'
-import { flushBuffer, startBuffer } from '../utils/evaluationContext'
+import { flushBuffer } from '../utils/evaluationContext'
 import { Ecosystem } from './Ecosystem'
 import { doMutate, Signal } from './Signal'
 import { ACTIVE, EventSent, INITIALIZING, TopPrio } from '../utils/general'
@@ -248,7 +248,7 @@ export class MappedSignal<
   public u(map: SignalMap) {
     const entries = Object.entries(map)
 
-    const prevNode = startBuffer(this)
+    const prevNode = this.e.cs(this)
 
     // `get` every signal and auto-add each one as a source of the mapped signal
     const edgeConfig = { f: TopPrio }

@@ -71,7 +71,7 @@ export const destroyBuffer = (previousNode: GraphNode | undefined) => {
     sourceEdge.p = undefined
   }
 
-  evaluationContext.n!.e.f(previousNode)
+  evaluationContext.n!.e.cf(previousNode)
 }
 
 /**
@@ -142,7 +142,7 @@ export const flushBuffer = (previousNode: GraphNode | undefined) => {
     source[1].p = undefined
   }
 
-  evaluationContext.n!.e.f(previousNode)
+  evaluationContext.n!.e.cf(previousNode)
 }
 
 export const getEvaluationContext = () => evaluationContext
@@ -164,11 +164,15 @@ export const startBuffer = (node: GraphNode) => {
 
   evaluationContext.n = node
 
+  return prevNode
+}
+
+export const startBufferWithEvent = (node: GraphNode) => {
   if (isListeningTo(node.e, RUN_START)) {
     sendEcosystemEvent(node.e, { source: node, type: RUN_START })
   }
 
-  return prevNode
+  return startBuffer(node)
 }
 
 /**
