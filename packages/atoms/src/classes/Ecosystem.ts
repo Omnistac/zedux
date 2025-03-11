@@ -62,6 +62,8 @@ import {
   finishBuffer,
   finishBufferWithEvent,
   getEvaluationContext,
+  startBuffer,
+  startBufferWithEvent,
 } from '../utils/evaluationContext'
 import { isListeningTo, parseOnArgs, sendEcosystemEvent } from '../utils/events'
 import {
@@ -76,6 +78,7 @@ import { AtomInstance } from './instances/AtomInstance'
 import { AsyncScheduler } from './schedulers/AsyncScheduler'
 import { SyncScheduler } from './schedulers/SyncScheduler'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
+import { handleStateChange, handleStateChangeWithEvent } from '../utils/graph'
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements EventEmitter, Job
@@ -167,10 +170,25 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public b = new WeakMap<AtomSelectorOrConfig, string>()
 
   /**
-   * `f`inishBuffer - the currently-used `finishBuffer` implementation. We swap
-   * this out for better perf when no `runEnd` listeners are registered
+   * `c`urrent `f`inishBuffer - the currently-used `finishBuffer`
+   * implementation. We swap this out for better perf when no `runEnd` ecosystem
+   * event listeners are registered.
    */
-  public f = finishBuffer
+  public cf = finishBuffer
+
+  /**
+   * `c`urrent `h`andleStateChange - the currently-used `handleStateChange`
+   * implementation. We swap this out for better perf when no `change` ecosystem
+   * event listeners are registered.
+   */
+  public ch = handleStateChange
+
+  /**
+   * `c`urrent `s`tartBuffer - the currently-used `startBuffer` implementation.
+   * We swap this out for better perf when no `runStart` ecosystem event
+   * listeners are registered.
+   */
+  public cs = startBuffer
 
   /**
    * `n`odes - a flat map of every cached graph node (atom instance or selector)
@@ -736,10 +754,21 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     this.L.push(notify)
     this.C[eventName as keyof typeof this.C]++
+    const hasCatchAll = this.C[CATCH_ALL]
 
     // deoptimize the `finishBuffer` operation
-    if (this.C[RUN_END] || this.C[CATCH_ALL]) {
-      this.f = finishBufferWithEvent
+    if (this.C[RUN_END] || hasCatchAll) {
+      this.cf = finishBufferWithEvent
+    }
+
+    // deoptimize the `handleStateChange` operation
+    if (this.C[CHANGE] || hasCatchAll) {
+      this.ch = handleStateChangeWithEvent
+    }
+
+    // deoptimize the `startBuffer` operation
+    if (this.C[RUN_START] || hasCatchAll) {
+      this.cs = startBufferWithEvent
     }
 
     return () => {
@@ -750,9 +779,21 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
         this.C[eventName as keyof typeof this.C]--
       }
 
+      const noCatchAll = !this.C[CATCH_ALL]
+
       // reoptimize the `finishBuffer` operation
-      if (!this.C[RUN_END] && !this.C[CATCH_ALL]) {
-        this.f = finishBuffer
+      if (!this.C[RUN_END] && noCatchAll) {
+        this.cf = finishBuffer
+      }
+
+      // reoptimize the `handleStateChange` operation
+      if (!this.C[CHANGE] && noCatchAll) {
+        this.ch = handleStateChange
+      }
+
+      // reoptimize the `startBuffer` operation
+      if (!this.C[RUN_START] && noCatchAll) {
+        this.cs = startBuffer
       }
     }
   }

@@ -198,7 +198,7 @@ export class AtomInstance<
   public j() {
     this.N = []
     this._isEvaluating = true
-    const prevNode = zi.s(this)
+    const prevNode = this.e.cs(this)
 
     try {
       const newFactoryResult = this._eval()

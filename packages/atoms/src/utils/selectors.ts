@@ -5,10 +5,10 @@ import {
   SelectorGenerics,
 } from '../types/index'
 import { schedulerPost, schedulerPre } from './ecosystem'
-import { destroyBuffer, flushBuffer, startBuffer } from './evaluationContext'
+import { destroyBuffer, flushBuffer } from './evaluationContext'
 import { isListeningTo, sendEcosystemErrorEvent } from './events'
 import { ACTIVE, ERROR } from './general'
-import { handleStateChange, setNodeStatus } from './graph'
+import { setNodeStatus } from './graph'
 import type { Ecosystem } from '../classes/Ecosystem'
 import type { SelectorInstance } from '../classes/SelectorInstance'
 
@@ -55,26 +55,30 @@ export const runSelector = <G extends SelectorGenerics>(
   isInitializing?: boolean,
   suppressNotify?: boolean
 ) => {
-  const selector =
-    typeof node.t === 'function' ? (node.t as AtomSelector) : node.t.selector
-
-  const resultsComparator =
-    (typeof node.t !== 'function' && node.t.resultsComparator) ||
-    defaultResultsComparator
-
-  const prevNode = startBuffer(node)
+  const isFunction = typeof node.t === 'function'
+  const prevNode = node.e.cs(node)
 
   try {
-    const result = selector(node.e, ...node.p)
+    const result = (
+      isFunction
+        ? (node.t as AtomSelector)
+        : (node.t as AtomSelectorConfig).selector
+    )(node.e, ...node.p)
+
     const oldState = node.v
     node.v = result
 
     if (
       !isInitializing &&
       !suppressNotify &&
-      !resultsComparator(result, oldState)
+      (isFunction
+        ? result !== oldState
+        : !(
+            (node.t as AtomSelectorConfig).resultsComparator ??
+            defaultResultsComparator
+          )(result, oldState))
     ) {
-      handleStateChange(node, oldState)
+      node.e.ch(node, oldState)
     }
   } catch (err) {
     destroyBuffer(prevNode)
@@ -115,8 +119,11 @@ export const swapSelectorRefs = <G extends SelectorGenerics>(
   ecosystem.b.delete(oldInstance.t)
   oldInstance.t = newRef
   oldInstance.p = params
+  // oldInstance.i =
+  //   typeof newRef === 'function' ? runSelectorFunction : runSelectorConfig
 
   const pre = schedulerPre(ecosystem)
+
   runSelector(oldInstance, false, true)
   schedulerPost(ecosystem, pre)
 }

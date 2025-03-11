@@ -1,5 +1,6 @@
 import {
   AtomGenerics,
+  GraphEdge,
   Mutatable,
   NodeGenerics,
   SendableEvents,
@@ -11,7 +12,6 @@ import { ACTIVE, EventSent } from '../utils/general'
 import {
   destroyNodeFinish,
   destroyNodeStart,
-  handleStateChange,
   scheduleEventListeners,
   setNodeStatus,
 } from '../utils/graph'
@@ -79,7 +79,7 @@ export const doMutate = <G extends NodeGenerics>(
       node.v = newState
 
       const pre = schedulerPre(node.e)
-      handleStateChange(node, oldState, {
+      node.e.ch(node, oldState, {
         ...events,
         mutate: transactions,
       } as Partial<SendableEvents<G>>)
@@ -103,12 +103,26 @@ export class Signal<
   }
 > {
   /**
+   * @see GraphNode.o
+   */
+  public o = new Map<GraphNode, GraphEdge>()
+
+  /**
    * @see GraphNode.p
    */
   // @ts-expect-error params are not defined by signals, so this will always be
   // undefined here, doesn't matter that we don't specify it in the constructor.
   // Subclasses like `AtomInstance` do specify it
   public p: G['Params']
+
+  /**
+   * @see GraphNode.s Signals don't typically have sources. So this starts off
+   * as a getter for efficiency.
+   */
+  public get s(): Map<GraphNode, GraphEdge> {
+    Object.defineProperty(this, 's', { value: new Map() })
+    return this.s
+  }
 
   /**
    * @see GraphNode.t
@@ -239,7 +253,7 @@ export class Signal<
 
     if (newState !== oldState) {
       const pre = schedulerPre(this.e)
-      handleStateChange(this, oldState, events)
+      this.e.ch(this, oldState, events)
       schedulerPost(this.e, pre)
     }
   }

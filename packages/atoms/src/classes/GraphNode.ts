@@ -342,7 +342,7 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    * exact same object reference will also be stored in another node's
    * `s`ources. The only exception is pseudo-nodes.
    */
-  public o = new Map<GraphNode, GraphEdge>()
+  public abstract o: Map<GraphNode, GraphEdge>
 
   /**
    * `p`arams - a reference to the exact params passed to this node. These never
@@ -373,12 +373,12 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
   }
 
   /**
-   * `s`ources - a map of the edges drawn between this node and all of its
-   * dependencies, keyed by the GraphNode object reference of the source. Every
+   * `s`ources - a map of the edges drawn between this node and all the nodes it
+   * depends on, keyed by the GraphNode object reference of the source. Every
    * edge stored here is reverse-mapped - the exact same object reference will
    * also be stored in another node's `o`bservers.
    */
-  public s = new Map<GraphNode, GraphEdge>()
+  public abstract s: Map<GraphNode, GraphEdge>
 
   /**
    * `t`emplate - a reference to the template that was used to create this node
@@ -420,9 +420,23 @@ export class ExternalNode<
   public i?: GraphNode
 
   /**
+   * @see GraphNode.o External nodes don't typically have observers. So this
+   * starts off as a getter for efficiency.
+   */
+  public get o(): Map<GraphNode, GraphEdge> {
+    Object.defineProperty(this, 'o', { value: new Map() })
+    return this.o
+  }
+
+  /**
    * @see GraphNode.p external nodes don't have params
    */
   public p: undefined
+
+  /**
+   * @see GraphNode.s
+   */
+  public s = new Map<GraphNode, GraphEdge>()
 
   /**
    * @see GraphNode.t external nodes don't have templates
