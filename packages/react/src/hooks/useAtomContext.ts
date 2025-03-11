@@ -7,7 +7,6 @@ import {
   ParamsOf,
   zi,
 } from '@zedux/atoms'
-import { is } from '@zedux/core'
 import { useContext } from 'react'
 import { useEcosystem } from './useEcosystem'
 import { getReactContext } from '../utils'
@@ -57,7 +56,7 @@ export const useAtomContext: {
     getReactContext(ecosystem, template)
   )
 
-  if (!defaultParams || is(instance, AtomInstance)) {
+  if (!defaultParams || instance?.izn) {
     if (DEV && instance?.l === zi.D) {
       console.error(
         `Zedux: useAtomContext - A destroyed atom instance was provided with key "${instance.id}". This is not recommended. Provide an active atom instance instead e.g. by calling \`useAtomInstance()\` in the providing component.`
