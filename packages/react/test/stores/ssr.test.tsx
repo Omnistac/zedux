@@ -273,4 +273,18 @@ describe('ssr', () => {
       b: 'ab',
     })
   })
+
+  test('dehydrate only atoms with "@atom"', () => {
+    const atom1 = atom('1', 1)
+    const atom2 = atom('2', 2)
+    const atom3 = ion('3', ({ get }) => get(atom1) + get(atom2))
+
+    ecosystem.getNode(atom3)
+
+    expect(ecosystem.dehydrate('@atom')).toEqual({
+      1: 1,
+      2: 2,
+      3: 3,
+    })
+  })
 })

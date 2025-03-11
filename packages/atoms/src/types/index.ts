@@ -103,7 +103,11 @@ export interface DehydrationOptions extends NodeFilterOptions {
   transform?: boolean
 }
 
-export type DehydrationFilter = string | AnyAtomTemplate | DehydrationOptions
+export type DehydrationFilter =
+  | string
+  | NodeType
+  | AnyAtomTemplate
+  | DehydrationOptions
 
 export interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
@@ -382,17 +386,26 @@ export interface Observable<T = any> {
 }
 
 export interface NodeFilterOptions {
-  exclude?: (AnyAtomTemplate | AtomSelectorOrConfig | string)[]
+  exclude?: (AnyAtomTemplate | AtomSelectorOrConfig | NodeType | string)[]
   excludeTags?: string[]
-  include?: (AnyAtomTemplate | AtomSelectorOrConfig | string)[]
+  include?: (AnyAtomTemplate | AtomSelectorOrConfig | NodeType | string)[]
   includeTags?: string[]
 }
 
 export type NodeFilter =
   | string
+  | NodeType
   | AnyAtomTemplate
   | AtomSelectorOrConfig
   | NodeFilterOptions
+
+export type NodeType =
+  | '@atom'
+  | '@component'
+  | '@listener'
+  | '@memo'
+  | '@selector'
+  | '@signal'
 
 /**
  * Reads better than `Record<never, never>` in atom generics

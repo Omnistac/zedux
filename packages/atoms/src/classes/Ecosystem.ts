@@ -30,6 +30,7 @@ import {
   InternalEvaluationReason,
   GetNode,
   Job,
+  NodeType,
 } from '../types/index'
 import {
   CATCH_ALL,
@@ -266,11 +267,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       ...mapOverrides(overrides),
     }
 
-    overrides.forEach(override => {
-      const nodes = this.findAll(override)
-
-      Object.values(nodes).forEach(node => node.destroy(true))
-    })
+    for (const override of overrides) {
+      for (const node of this.findAll(override)) {
+        node.destroy(true)
+      }
+    }
   }
 
   /**
@@ -297,8 +298,27 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
   }
 
+  public dehydrate(options?: NodeType): Record<string, unknown>
+  public dehydrate(options?: DehydrationFilter): Record<string, unknown>
+
   /**
    * Retrieve an object mapping atom instance ids to their current values.
+   *
+   * Accepts a single filter/config argument. Pass an `@`-prefixed string to
+   * only dehydrate a certain type of node (e.g. `@atom`, `@selector`,
+   * `@signal`).
+   *
+   * ```ts
+   * // the most common:
+   * const dehydration = myEcosystem.dehydrate('@atom')
+   * ```
+   *
+   * Pass any string to fuzzy search for nodes that match the passed string.
+   *
+   * Pass any atom template to dehydrate all instances of that template.
+   *
+   * For full control, pass an object with optional `include`, `includeTags`,
+   * `exclude`, `excludeTags`, and `transform` fields.
    *
    * Calls the `dehydrate` atom config option (on atoms that have one) to
    * transform state to a serializable form. Pass `transform: false` to prevent
@@ -345,7 +365,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (typeof dehydration !== 'undefined') obj[node.id] = dehydration
 
       return obj
-    }, {} as Record<string, any>)
+    }, {} as Record<string, unknown>)
   }
 
   /**
@@ -417,29 +437,32 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const matches = this.findAll(template)
 
     return (
-      (isString && matches[template]) ||
+      (isString && matches.find(match => match.id === template)) ||
       (Object.values(matches)[0] as G['Node'] | undefined)
     )
   }
 
+  public findAll(type?: NodeType): GraphNode[]
+  public findAll(options?: NodeFilter): GraphNode[]
+
   /**
-   * Get an object of all atom instances in this ecosystem keyed by their id.
+   * Get a list of all atom instances in this ecosystem.
+   *
+   * Pass an `@`-prefixed string to only find certain types of node (e.g.
+   * `@atom`, `@component`, `@selector`, `@signal`).
    *
    * Pass an atom template to only find instances of that atom. Pass an atom key
    * string to only return instances whose id weakly matches the passed key.
+   *
+   * @see Ecosystem.dehydrate
+   *
+   * Too much to remember? Just call `.findAll()` with no arguments and filter
+   * the result yourself.
    */
   public findAll(options?: NodeFilter) {
-    const hash: Record<string, GraphNode> = {}
-
-    // TODO: normalize filter options here, before passing to `node.f`ilter
-    ;[...this.n.values()]
+    return [...this.n.values()]
       .filter(node => node.f(options))
       .sort((a, b) => a.id.localeCompare(b.id))
-      .forEach(node => {
-        hash[node.id] = node
-      })
-
-    return hash
   }
 
   /**
@@ -817,11 +840,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       )
     )
 
-    overrides.forEach(override => {
-      const instances = this.findAll(override)
-
-      Object.values(instances).forEach(instance => instance.destroy(true))
-    })
+    for (const override of overrides) {
+      for (const instance of this.findAll(override)) {
+        instance.destroy(true)
+      }
+    }
   }
 
   /**
@@ -948,21 +971,17 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     if (!retroactive) return
 
-    newOverrides.forEach(atom => {
-      const instances = this.findAll(atom)
-
-      Object.values(instances).forEach(instance => {
+    for (const template of newOverrides) {
+      for (const instance of this.findAll(template)) {
         instance.destroy(true)
-      })
-    })
+      }
+    }
 
-    Object.values(oldOverrides).forEach(atom => {
-      const instances = this.findAll(atom)
-
-      Object.values(instances).forEach(instance => {
+    for (const template of Object.values(oldOverrides)) {
+      for (const instance of this.findAll(template)) {
         instance.destroy(true)
-      })
-    })
+      }
+    }
   }
 
   public signal<State, MappedEvents extends EventMap = None>(

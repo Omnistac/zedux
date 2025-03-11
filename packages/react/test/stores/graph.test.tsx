@@ -161,11 +161,11 @@ describe('graph', () => {
 
     const ionInstance = ecosystem.getInstance(ion1)
 
-    expect(ecosystem.findAll()).toEqual({
-      atom1: expect.any(Object),
-      atom2: expect.any(Object),
-      ion1: expect.any(Object),
-    })
+    expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
+      'atom1',
+      'atom2',
+      'ion1',
+    ])
 
     snapshotNodes()
     expect(evaluations).toEqual([1])

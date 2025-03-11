@@ -259,7 +259,12 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    * typically called by `node.d`ehydrate to perform its filtering logic.
    *
    * This is made to be universally compatible with all Zedux's built-in node
-   * classes. Custom nodes (e.g. that extend `Signal`) may need to override it
+   * classes. Custom nodes (e.g. that extend `Signal`) may need to override it.
+   *
+   * NOTE: This is only designed to work with Zedux's default id structure
+   * (where every node except atoms has an `@` prefix). When supplying a custom
+   * `makeId` function, you should call `ecosystem.findAll()` (with no
+   * arguments) and filter/dehydrate the list of nodes yourself.
    */
   public f(options?: NodeFilter): boolean | undefined | void {
     const { id, t } = this
@@ -276,7 +281,9 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
     const isExcluded =
       exclude.some(templateOrKey =>
         typeof templateOrKey === 'string'
-          ? lowerCaseId.includes(templateOrKey.toLowerCase())
+          ? templateOrKey === '@atom'
+            ? !lowerCaseId.startsWith('@')
+            : lowerCaseId.includes(templateOrKey.toLowerCase())
           : (t?.key && (templateOrKey as AtomTemplateBase)?.key === t?.key) ||
             templateOrKey === t
       ) || excludeTags.some(tag => t.tags?.includes(tag))
@@ -286,7 +293,9 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
       ((!include.length && !includeTags.length) ||
         include.some(templateOrKey =>
           typeof templateOrKey === 'string'
-            ? lowerCaseId.includes(templateOrKey.toLowerCase())
+            ? templateOrKey === '@atom'
+              ? !lowerCaseId.startsWith('@')
+              : lowerCaseId.includes(templateOrKey.toLowerCase())
             : (t?.key && (templateOrKey as AtomTemplateBase)?.key === t?.key) ||
               templateOrKey === t
         ) ||
