@@ -462,7 +462,7 @@ Manual hydration is recommended in this case of having multiple third-party hydr
 
 ### Id Generation
 
-Zedux node ids are now more readable and consistent. Everything now uses consistent id `@` prefixes. See the jsdoc for `Ecosystem#makeId` for the full list.
+Zedux node ids are now more readable and consistent. Everything but atoms now uses consistent id `@` prefixes. See the jsdoc for `Ecosystem#makeId` for the full list.
 
 The default id generator also doesn't add any randomized hashes to ids in v2. Most apps shouldn't need those, so they were unnecessary overhead. Ids are still guaranteed to be unique inside the ecosystem. This default is ideal for testing too, since ids are now predictable.
 
@@ -504,6 +504,20 @@ const ecosystem = createEcosystem({
     return `${prefix}${content}${uniqueId}`
   },
 })
+```
+
+### Other Changes
+
+`ecosystem.findAll` now returns an array instead of an object keyed by node id. This is to make it easier to sort/filter/map/reduce the returned list yourself.
+
+In particular, the default filtering logic is only designed for the default id generation. Now that you can easily customize ids with `makeId`, we need an API that lends itself to custom filtering of those ids better. Simply adding the ability to chain array operations directly off the `.findAll()` call is really all we need. It also makes manual dehydration easier:
+
+```ts
+// custom dehydration example
+ecosystem
+  .findAll('@atom')
+  .filter(myCustomFilter)
+  .reduce((obj, node) => ({ ...obj, [node.id]: node.get() }), {})
 ```
 
 ## Migrating to Signals

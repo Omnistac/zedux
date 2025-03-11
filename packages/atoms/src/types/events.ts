@@ -1,4 +1,4 @@
-import { GraphNode } from '../classes/GraphNode'
+import { ZeduxNode } from '../classes/ZeduxNode'
 import {
   AnyNodeGenerics,
   AtomGenerics,
@@ -40,12 +40,12 @@ export interface EcosystemEvents extends ImplicitEvents {
 }
 
 export interface EcosystemEventBase {
-  source: GraphNode
+  source: ZeduxNode
 }
 
 export interface EdgeEvent extends EcosystemEventBase {
   action: 'add' | 'remove' | 'update'
-  observer: GraphNode
+  observer: ZeduxNode
   type: 'edge'
 }
 
@@ -64,7 +64,7 @@ export type EvaluationReason<G extends NodeGenerics = AnyNodeGenerics> =
 export interface EventBase<G extends NodeGenerics = AnyNodeGenerics> {
   operation?: string // e.g. a method like "injectValue"
   reasons?: EvaluationReason[]
-  source?: GraphNode<G>
+  source?: ZeduxNode<G>
 }
 
 export interface EventEmitter<G extends NodeGenerics = AnyNodeGenerics> {
@@ -112,12 +112,12 @@ export interface ExplicitEvents {
  */
 export interface ImplicitEvents<G extends NodeGenerics = AnyNodeGenerics> {
   /**
-   * Zedux sends this event whenever a GraphNode's value changes.
+   * Zedux sends this event whenever a ZeduxNode's value changes.
    */
   change: ChangeEvent<G>
 
   /**
-   * When listening to a GraphNode, Zedux sends this event for the following
+   * When listening to a ZeduxNode, Zedux sends this event for the following
    * lifecycle status changes:
    *
    * - Active -> Stale
@@ -129,7 +129,7 @@ export interface ImplicitEvents<G extends NodeGenerics = AnyNodeGenerics> {
    *
    * - Initializing -> Active
    *
-   * (It isn't possible to attach an event listener to a GraphNode before it's
+   * (It isn't possible to attach an event listener to a ZeduxNode before it's
    * Active)
    */
   cycle: CycleEvent<G>

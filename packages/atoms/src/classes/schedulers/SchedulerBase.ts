@@ -42,7 +42,7 @@ export abstract class SchedulerBase {
    * The dynamic list of "full" jobs to run. Full jobs are:
    *
    * - Interrupt (1)
-   * - EvaluateGraphNode (2)
+   * - EvaluateZeduxNode (2)
    * - UpdateExternalDependent (3)
    * - RunEffect (4) (includes async jobs that were upgraded to sync jobs)
    */

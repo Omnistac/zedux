@@ -50,7 +50,7 @@ export class SyncScheduler extends SchedulerBase {
   }
 
   /**
-   * Insert an EvaluateGraphNode (2) or UpdateExternalDependent (3) job into the
+   * Insert an EvaluateZeduxNode (2) or UpdateExternalDependent (3) job into the
    * queue. Insertion point depends on job's type and weight.
    */
   public schedule(newJob: Job) {
@@ -59,7 +59,7 @@ export class SyncScheduler extends SchedulerBase {
     // const index = findIndex(this, job => {
     //   if (job.T !== newJob.T) return +(newJob.T - job.T > 0) || -1 // 1 or -1
 
-    //   // EvaluateGraphNode (2) and UpdateExternalDependent (3) jobs use weight
+    //   // EvaluateZeduxNode (2) and UpdateExternalDependent (3) jobs use weight
     //   // comparison. `W` will always be defined here. TODO: use discriminated
     //   // union types to reflect this
     //   return weight < job.W! ? -1 : +(weight > job.W!) // + = 0 or 1

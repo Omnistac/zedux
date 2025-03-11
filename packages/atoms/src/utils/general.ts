@@ -1,4 +1,4 @@
-import type { GraphNode } from '../classes/GraphNode'
+import type { ZeduxNode } from '../classes/ZeduxNode'
 import {
   EvaluationReason,
   InternalEvaluationReason,
@@ -112,7 +112,7 @@ export const is = (val: any, classToCheck: { $$typeof: symbol }): boolean =>
 
 export const makeReasonReadable = (
   reason: InternalEvaluationReason,
-  node?: GraphNode,
+  node?: ZeduxNode,
   includeOperation = false
 ): EvaluationReason => {
   // when a node gets 2 or more reasons at once, we start wrapping them in these
@@ -169,7 +169,7 @@ export const makeReasonReadable = (
 }
 
 export const makeReasonsReadable = (
-  node?: GraphNode,
+  node?: ZeduxNode,
   reason: InternalEvaluationReason | undefined = node?.w,
   includeOperation = true
 ): EvaluationReason[] | undefined => {

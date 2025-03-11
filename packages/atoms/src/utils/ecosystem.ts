@@ -10,7 +10,7 @@ import { AtomInstance } from '../classes/instances/AtomInstance'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomTemplate } from '../classes/templates/AtomTemplate'
 import type { Ecosystem } from '../classes/Ecosystem'
-import { GraphNode } from '../classes/GraphNode'
+import { ZeduxNode } from '../classes/ZeduxNode'
 import { SelectorInstance } from '../classes/SelectorInstance'
 import { getEvaluationContext } from './evaluationContext'
 import { DESTROYED, is } from './general'
@@ -84,14 +84,14 @@ export const mapRefToId = (ecosystem: Ecosystem, obj: any, name: string) => {
  */
 export const getNode = <G extends AtomGenerics>(
   ecosystem: Ecosystem,
-  template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+  template: AtomTemplateBase<G> | ZeduxNode<G> | AtomSelectorOrConfig<G>,
   params?: G['Params']
-): GraphNode => {
-  if ((template as GraphNode).izn) {
+): ZeduxNode => {
+  if ((template as ZeduxNode).izn) {
     // if the passed atom instance is Destroyed, get(/create) the
     // non-Destroyed instance
-    return (template as GraphNode).l === DESTROYED && (template as GraphNode).t
-      ? ecosystem.getNode((template as GraphNode).t, (template as GraphNode).p)
+    return (template as ZeduxNode).l === DESTROYED && (template as ZeduxNode).t
+      ? ecosystem.getNode((template as ZeduxNode).t, (template as ZeduxNode).p)
       : template
   }
 

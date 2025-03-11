@@ -42,7 +42,7 @@ export interface Job {
    *
    * 0 - UpdateStore
    * 1 - InformSubscribers
-   * 2 - EvaluateGraphNode
+   * 2 - EvaluateZeduxNode
    * 3 - UpdateExternalDependent
    */
   T: 0 | 1

@@ -2,13 +2,13 @@ import { act } from '@testing-library/react'
 import {
   createEcosystem,
   GraphEdge,
-  GraphNode,
+  ZeduxNode,
   SelectorInstance,
 } from '@zedux/atoms'
 
 export const ecosystem = createEcosystem({ id: 'test' })
 
-export const getEdges = (map: Map<GraphNode, GraphEdge>) =>
+export const getEdges = (map: Map<ZeduxNode, GraphEdge>) =>
   Object.fromEntries([...map].map(([node, edge]) => [node.id, edge]))
 
 export const getNodes = () =>

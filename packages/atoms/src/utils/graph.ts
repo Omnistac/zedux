@@ -4,7 +4,7 @@ import {
   InternalEvaluationReason,
 } from '@zedux/atoms/types/index'
 import { type Ecosystem } from '../classes/Ecosystem'
-import { type GraphNode } from '../classes/GraphNode'
+import { type ZeduxNode } from '../classes/ZeduxNode'
 import { SendableEvents } from '../types/events'
 import {
   ACTIVE,
@@ -29,7 +29,7 @@ import { getSelectorKey } from './selectors'
 const changeScopedNodeId = (
   ecosystem: Ecosystem,
   templateKey: string,
-  newNode: GraphNode
+  newNode: ZeduxNode
 ) => {
   // if this is the first scoped node of its template to evaluate, record the
   // scope all future instances of the template will need to be provided
@@ -43,8 +43,8 @@ const changeScopedNodeId = (
         ? (val as WeakRef<any>).deref()
         : val
 
-    return (resolvedVal as GraphNode)?.izn
-      ? (resolvedVal as GraphNode).id
+    return (resolvedVal as ZeduxNode)?.izn
+      ? (resolvedVal as ZeduxNode).id
       : ecosystem.hash(resolvedVal, true)
   })
 
@@ -58,8 +58,8 @@ const changeScopedNodeId = (
  * really just deferring the calling of this function.
  */
 export const addEdge = (
-  observer: GraphNode,
-  source: GraphNode,
+  observer: ZeduxNode,
+  source: ZeduxNode,
   newEdge: GraphEdge
 ) => {
   // draw the edge in both nodes
@@ -96,7 +96,7 @@ export const addEdge = (
 }
 
 export const addReason = (
-  node: GraphNode | Ecosystem,
+  node: ZeduxNode | Ecosystem,
   reason: InternalEvaluationReason
 ) => {
   if (node.w) {
@@ -114,7 +114,7 @@ export const addReason = (
   }
 }
 
-export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
+export const destroyNodeStart = (node: ZeduxNode, force?: boolean) => {
   // If we're not force-destroying, don't destroy if there are observers. Also
   // don't destroy if `node.K`eep is set
   if (node.l === DESTROYED || (!force && node.o.size - (node.L ? 1 : 0))) {
@@ -130,7 +130,7 @@ export const destroyNodeStart = (node: GraphNode, force?: boolean) => {
 }
 
 // TODO: merge this into destroyNodeStart. We should be able to
-export const destroyNodeFinish = (node: GraphNode) => {
+export const destroyNodeFinish = (node: ZeduxNode) => {
   // first remove all edges between this node and its sources
   for (const dependency of node.s.keys()) {
     removeEdge(node, dependency)
@@ -158,7 +158,7 @@ export const destroyNodeFinish = (node: GraphNode) => {
 export const handleStateChange = <
   G extends Pick<AtomGenerics, 'Events' | 'State'>
 >(
-  node: GraphNode<G & { Params: any; Template: any }>,
+  node: ZeduxNode<G & { Params: any; Template: any }>,
   oldState: G['State'],
   events?: Partial<SendableEvents<G>>
 ) => {
@@ -168,7 +168,7 @@ export const handleStateChange = <
 export const handleStateChangeWithEvent = <
   G extends Pick<AtomGenerics, 'Events' | 'State'>
 >(
-  node: GraphNode<G & { Params: any; Template: any }>,
+  node: ZeduxNode<G & { Params: any; Template: any }>,
   oldState: G['State'],
   events?: Partial<SendableEvents<G>>
 ) => {
@@ -181,7 +181,7 @@ export const handleStateChangeWithEvent = <
   scheduleDependents(reason)
 }
 
-const recalculateNodeWeight = (weightDiff: number, node: GraphNode) => {
+const recalculateNodeWeight = (weightDiff: number, node: ZeduxNode) => {
   node.W += weightDiff
   const observers = node.o.keys()
   let observer
@@ -198,7 +198,7 @@ const recalculateNodeWeight = (weightDiff: number, node: GraphNode) => {
  * means a parent EcosystemProvider may have already unmounted and wiped the
  * whole graph; this edge may already be destroyed.
  */
-export const removeEdge = (observer: GraphNode, source: GraphNode) => {
+export const removeEdge = (observer: ZeduxNode, source: ZeduxNode) => {
   // erase graph edge between observer and source
   observer.s.delete(source)
 
@@ -298,11 +298,11 @@ export const scheduleStaticDependents = (
 /**
  * When a node's refCount hits 0, schedule destruction of that node.
  */
-export const scheduleNodeDestruction = (node: GraphNode) =>
+export const scheduleNodeDestruction = (node: ZeduxNode) =>
   node.o.size - (node.L ? 1 : 0) || node.l !== ACTIVE || node.m()
 
 export const setNodeStatus = (
-  node: GraphNode,
+  node: ZeduxNode,
   newStatus: InternalLifecycleStatus
 ) => {
   const oldStatus = node.l

@@ -5,7 +5,7 @@ import {
   AtomInstance,
   ChangeEvent,
   createEcosystem,
-  GraphNode,
+  ZeduxNode,
   injectMappedSignal,
   ion,
 } from '@zedux/react'
@@ -448,7 +448,7 @@ describe('plugins', () => {
 
     ecosystem.on('runStart', event => {
       expectTypeOf(event).toEqualTypeOf<{
-        source: GraphNode
+        source: ZeduxNode
         type: 'runStart'
       }>()
 
@@ -457,7 +457,7 @@ describe('plugins', () => {
 
     ecosystem.on('runEnd', event => {
       expectTypeOf(event).toEqualTypeOf<{
-        source: GraphNode
+        source: ZeduxNode
         type: 'runEnd'
       }>()
 

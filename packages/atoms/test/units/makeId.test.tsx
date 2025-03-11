@@ -1,4 +1,4 @@
-import { atom, createEcosystem, Ecosystem, GraphNode } from '@zedux/atoms'
+import { atom, createEcosystem, Ecosystem, ZeduxNode } from '@zedux/atoms'
 
 /**
  * unit test the Ecosystem's `makeId` function property since we replace it for
@@ -24,7 +24,7 @@ describe('makeId', () => {
             ? 'no'
             : nodeType === 'selector' && context === 'unknown'
             ? 'unnamed'
-            : (context as GraphNode)?.id ?? context ?? ''
+            : (context as ZeduxNode)?.id ?? context ?? ''
 
         const uniqueId =
           suffix === ''

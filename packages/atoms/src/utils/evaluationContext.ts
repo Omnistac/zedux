@@ -1,4 +1,4 @@
-import { type GraphNode } from '../classes/GraphNode'
+import { type ZeduxNode } from '../classes/ZeduxNode'
 import {
   EDGE,
   ExplicitExternal,
@@ -13,7 +13,7 @@ export interface EvaluationContext {
   /**
    * `n`ode - the node that's currently evaluating
    */
-  n?: GraphNode
+  n?: ZeduxNode
 }
 
 /**
@@ -36,7 +36,7 @@ let evaluationContext: EvaluationContext = {}
  * checks and throws.
  */
 export const bufferEdge = (
-  source: GraphNode,
+  source: ZeduxNode,
   operation: string,
   flags: number
 ) => {
@@ -61,7 +61,7 @@ export const bufferEdge = (
  * Always pass the previously captured node/startTime (undefined if this is the
  * last item in the stack)
  */
-export const destroyBuffer = (previousNode: GraphNode | undefined) => {
+export const destroyBuffer = (previousNode: ZeduxNode | undefined) => {
   for (const [source, sourceEdge] of evaluationContext.n!.s) {
     // the edge wasn't created during the evaluation that errored; keep it
     if (sourceEdge.flags === OutOfRange) {
@@ -82,14 +82,14 @@ export const destroyBuffer = (previousNode: GraphNode | undefined) => {
  * Zedux code execution - everything calls this. If no `runEnd` event listeners
  * are registered, we optimize.
  */
-export const finishBuffer = (previousNode?: GraphNode) => {
+export const finishBuffer = (previousNode?: ZeduxNode) => {
   evaluationContext.n = previousNode
 }
 
 /**
  * @see finishBuffer
  */
-export const finishBufferWithEvent = (previousNode?: GraphNode) => {
+export const finishBufferWithEvent = (previousNode?: ZeduxNode) => {
   sendEcosystemEvent(evaluationContext.n!.e, {
     source: evaluationContext.n!,
     type: RUN_END,
@@ -105,7 +105,7 @@ export const finishBufferWithEvent = (previousNode?: GraphNode) => {
  * Always pass the previously captured node/startTime (undefined if this is the
  * last item in the stack)
  */
-export const flushBuffer = (previousNode: GraphNode | undefined) => {
+export const flushBuffer = (previousNode: ZeduxNode | undefined) => {
   let source
   const entries = evaluationContext.n!.s.entries()
 
@@ -116,7 +116,7 @@ export const flushBuffer = (previousNode: GraphNode | undefined) => {
     // auto-create during evaluation - other types may have been added manually
     // by the user and we don't want to touch them here). TODO: this check may
     // be unnecessary - users only manually add observers (e.g. via
-    // `GraphNode#on`), not sources. Possibly remove
+    // `ZeduxNode#on`), not sources. Possibly remove
     if (source[1].flags & ExplicitExternal) continue
 
     if (source[1].p == null) {
@@ -159,7 +159,7 @@ export const setEvaluationContext = (newContext: EvaluationContext) =>
  * This is used during atom and selector evaluation to make the graph as
  * efficient as possible.
  */
-export const startBuffer = (node: GraphNode) => {
+export const startBuffer = (node: ZeduxNode) => {
   const prevNode = evaluationContext.n
 
   evaluationContext.n = node
@@ -167,7 +167,7 @@ export const startBuffer = (node: GraphNode) => {
   return prevNode
 }
 
-export const startBufferWithEvent = (node: GraphNode) => {
+export const startBufferWithEvent = (node: ZeduxNode) => {
   if (isListeningTo(node.e, RUN_START)) {
     sendEcosystemEvent(node.e, { source: node, type: RUN_START })
   }

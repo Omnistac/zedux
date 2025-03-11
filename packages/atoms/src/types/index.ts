@@ -1,7 +1,7 @@
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
-import { GraphNode } from '../classes/GraphNode'
+import { ZeduxNode } from '../classes/ZeduxNode'
 import { SelectorInstance } from '../classes/SelectorInstance'
 import { Signal } from '../classes/Signal'
 import {
@@ -127,7 +127,7 @@ export interface EcosystemConfig<
       | 'ref'
       | 'selector'
       | 'signal',
-    context?: GraphNode | string,
+    context?: ZeduxNode | string,
     suffix?: number | string
   ) => string
   tags?: string[]
@@ -165,17 +165,17 @@ export interface GetNode {
   // TODO: Dedupe these overloads
   // atoms
   <G extends AtomGenerics = AnyAtomGenerics>(
-    templateOrNode: AtomTemplateBase<G> | GraphNode<G>,
+    templateOrNode: AtomTemplateBase<G> | ZeduxNode<G>,
     params: G['Params'],
     edgeConfig?: GraphEdgeConfig
   ): G['Node']
 
   <G extends AnyAtomGenerics<{ Params: [] }> = AnyAtomGenerics<{ Params: [] }>>(
-    templateOrNode: AtomTemplateBase<G> | GraphNode<G>
+    templateOrNode: AtomTemplateBase<G> | ZeduxNode<G>
   ): G['Node']
 
   <G extends AtomGenerics = AnyAtomGenerics>(
-    templateOrInstance: ParamlessTemplate<AtomTemplateBase<G> | GraphNode<G>>
+    templateOrInstance: ParamlessTemplate<AtomTemplateBase<G> | ZeduxNode<G>>
   ): G['Node']
 
   // selectors
@@ -209,11 +209,11 @@ export interface GetNode {
       }>
     : S
 
-  <N extends GraphNode>(node: N, params?: [], edgeConfig?: GraphEdgeConfig): N
+  <N extends ZeduxNode>(node: N, params?: [], edgeConfig?: GraphEdgeConfig): N
 
   // catch-all
   <G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+    template: AtomTemplateBase<G> | ZeduxNode<G> | AtomSelectorOrConfig<G>,
     params: G['Params'],
     edgeConfig?: GraphEdgeConfig
   ): G['Node']
@@ -290,7 +290,7 @@ export interface InternalEvaluationReason<State = any> {
    * trigger. These ImplicitEvents are merged into the existing `e`ventMap of
    * custom events and ExplicitEvents.
    *
-   * This is what ultimately gets passed to `GraphNode#on` event listeners.
+   * This is what ultimately gets passed to `ZeduxNode#on` event listeners.
    */
   f?: Record<string, any>
 
@@ -316,7 +316,7 @@ export interface InternalEvaluationReason<State = any> {
   /**
    * `s`ource - the node that caused its observer to update
    */
-  s?: GraphNode
+  s?: ZeduxNode
 
   /**
    * `r`easons - indefinitely nested singly-linked lists of reasons that caused
@@ -343,7 +343,7 @@ export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
 
 export interface Job {
   /**
-   * `W`eight - the weight of the node (for EvaluateGraphNode jobs).
+   * `W`eight - the weight of the node (for EvaluateZeduxNode jobs).
    */
   W?: number
 
@@ -358,7 +358,7 @@ export interface Job {
    *
    * 0 - UpdateStore
    * 1 - InformSubscribers
-   * 2 - EvaluateGraphNode
+   * 2 - EvaluateZeduxNode
    * 3 - UpdateExternalDependent
    * 4 - RunEffect
    */
@@ -417,7 +417,7 @@ export type None = Prettify<Record<never, never>>
  * params or has only optional params.
  */
 export type ParamlessTemplate<
-  A extends AnyAtomTemplate | AtomSelectorOrConfig | GraphNode
+  A extends AnyAtomTemplate | AtomSelectorOrConfig | ZeduxNode
 > = ParamsOf<A> extends [AnyNonNullishValue | undefined | null, ...any[]]
   ? never
   : A

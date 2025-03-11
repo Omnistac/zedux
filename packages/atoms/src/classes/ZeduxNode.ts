@@ -36,13 +36,13 @@ import { addEdge, addReason, removeEdge, setNodeStatus } from '../utils/graph'
 import { parseOnArgs, shouldScheduleImplicit } from '../utils/events'
 import { scheduleSync } from '../utils/ecosystem'
 
-export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
+export abstract class ZeduxNode<G extends NodeGenerics = AnyNodeGenerics>
   implements Job, EventEmitter<G>
 {
   /**
    * TS drops the entire `G`enerics type unless it's used somewhere in this
    * class definition. With this here, type helpers are able to infer any atom
-   * generic (and even extra properties) from anything that extends GraphNode.
+   * generic (and even extra properties) from anything that extends ZeduxNode.
    *
    * This will never be populated. It's just for TS.
    */
@@ -209,7 +209,7 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    * obfuscated `p` property internally for efficiency, but end users should
    * prefer using `node.params`, invoking this getter.
    *
-   * @see GraphNode.p
+   * @see ZeduxNode.p
    */
   get params() {
     return this.p
@@ -224,7 +224,7 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    * obfuscated `t` property internally for efficiency, but end users should
    * prefer using `node.template`, invoking this getter.
    *
-   * @see GraphNode.t
+   * @see ZeduxNode.t
    */
   get template() {
     return this.t
@@ -351,7 +351,7 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
    * exact same object reference will also be stored in another node's
    * `s`ources. The only exception is pseudo-nodes.
    */
-  public abstract o: Map<GraphNode, GraphEdge>
+  public abstract o: Map<ZeduxNode, GraphEdge>
 
   /**
    * `p`arams - a reference to the exact params passed to this node. These never
@@ -383,11 +383,11 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
 
   /**
    * `s`ources - a map of the edges drawn between this node and all the nodes it
-   * depends on, keyed by the GraphNode object reference of the source. Every
+   * depends on, keyed by the ZeduxNode object reference of the source. Every
    * edge stored here is reverse-mapped - the exact same object reference will
    * also be stored in another node's `o`bservers.
    */
-  public abstract s: Map<GraphNode, GraphEdge>
+  public abstract s: Map<ZeduxNode, GraphEdge>
 
   /**
    * `t`emplate - a reference to the template that was used to create this node
@@ -417,49 +417,49 @@ export abstract class GraphNode<G extends NodeGenerics = AnyNodeGenerics>
 
 export class ExternalNode<
   G extends NodeGenerics = AnyNodeGenerics
-> extends GraphNode<G> {
+> extends ZeduxNode<G> {
   /**
-   * @see GraphNode.T
+   * @see ZeduxNode.T
    */
   public T = 3 as 2 // temporary until we sort out new graph algo
 
   /**
    * `i`nstance - the single source node this external node is observing
    */
-  public i?: GraphNode
+  public i?: ZeduxNode
 
   /**
-   * @see GraphNode.o External nodes don't typically have observers. So this
+   * @see ZeduxNode.o External nodes don't typically have observers. So this
    * starts off as a getter for efficiency.
    */
-  public get o(): Map<GraphNode, GraphEdge> {
+  public get o(): Map<ZeduxNode, GraphEdge> {
     Object.defineProperty(this, 'o', { value: new Map() })
     return this.o
   }
 
   /**
-   * @see GraphNode.p external nodes don't have params
+   * @see ZeduxNode.p external nodes don't have params
    */
   public p: undefined
 
   /**
-   * @see GraphNode.s
+   * @see ZeduxNode.s
    */
-  public s = new Map<GraphNode, GraphEdge>()
+  public s = new Map<ZeduxNode, GraphEdge>()
 
   /**
-   * @see GraphNode.t external nodes don't have templates
+   * @see ZeduxNode.t external nodes don't have templates
    */
   public t: undefined
 
   constructor(
     /**
-     * @see GraphNode.e
+     * @see ZeduxNode.e
      */
     public readonly e: Ecosystem,
 
     /**
-     * @see GraphNode.id
+     * @see ZeduxNode.id
      */
     public readonly id: string,
 
@@ -476,7 +476,7 @@ export class ExternalNode<
   }
 
   /**
-   * @see GraphNode.destroy
+   * @see ZeduxNode.destroy
    */
   public destroy(skipUpdate?: boolean) {
     if (!this.i) return
@@ -495,28 +495,28 @@ export class ExternalNode<
   }
 
   /**
-   * @see GraphNode.get external nodes have no own value. Their "value" is the
+   * @see ZeduxNode.get external nodes have no own value. Their "value" is the
    * value of the single node they depend on. Access that directly instead.
    */
   public get() {}
 
   /**
-   * @see GraphNode.d can't dehydrate external nodes
+   * @see ZeduxNode.d can't dehydrate external nodes
    */
   public d() {}
 
   /**
-   * @see GraphNode.f `ecosystem.findAll()` never returns external nodes
+   * @see ZeduxNode.f `ecosystem.findAll()` never returns external nodes
    */
   public f() {}
 
   /**
-   * @see GraphNode.j can't hydrate external nodes
+   * @see ZeduxNode.j can't hydrate external nodes
    */
   public h() {}
 
   /**
-   * @see GraphNode.j
+   * @see ZeduxNode.j
    */
   public j() {
     if (this.n.m) {
@@ -543,13 +543,13 @@ export class ExternalNode<
    * wants esp. in strict mode (usage in React hooks is currently the primary
    * purpose of external nodes).
    */
-  public k(source: GraphNode) {
+  public k(source: ZeduxNode) {
     removeEdge(this, source)
     source === this.i && this.destroy(true)
   }
 
   /**
-   * @see GraphNode.m
+   * @see ZeduxNode.m
    */
   public m() {
     this.destroy()
@@ -559,7 +559,7 @@ export class ExternalNode<
    * `u`pdateEdge - ExternalNodes maintain a single edge on a source node. But
    * the source can change. Call this to update it if needed.
    */
-  public u(source: GraphNode, operation: string, flags: number) {
+  public u(source: ZeduxNode, operation: string, flags: number) {
     this.i && removeEdge(this, this.i)
 
     this.i = source

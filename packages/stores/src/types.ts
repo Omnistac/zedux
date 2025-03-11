@@ -4,7 +4,7 @@ import {
   AtomGetters,
   AtomSelectorOrConfig,
   AtomTemplateBase,
-  GraphNode,
+  ZeduxNode,
   Prettify,
 } from '@zedux/atoms'
 import { Store } from '@zedux/core'
@@ -59,20 +59,20 @@ export type AtomApiGenericsPartial<G extends Partial<AtomApiGenerics>> = Omit<
 export type AtomApiPromise = Promise<any> | undefined
 
 export type AtomEventsType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | GraphNode
+  A extends AnyAtomApi | AnyStoreAtomTemplate | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['Events']
-  : A extends GraphNode<infer G>
+  : A extends ZeduxNode<infer G>
   ? G extends { Events: infer Events }
     ? Events
     : never
   : never
 
 export type AtomExportsType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | GraphNode
+  A extends AnyAtomApi | AnyStoreAtomTemplate | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['Exports']
-  : A extends GraphNode<infer G>
+  : A extends ZeduxNode<infer G>
   ? G extends { Exports: infer Exports }
     ? Exports
     : never
@@ -100,14 +100,14 @@ export type AtomInstanceType<A extends AnyStoreAtomTemplate> =
   A extends AtomTemplateBase<infer G>
     ? G extends { Node: infer Node }
       ? Node
-      : GraphNode<G>
+      : ZeduxNode<G>
     : never
 
 export type AtomParamsType<
-  A extends AnyStoreAtomTemplate | GraphNode | AtomSelectorOrConfig
+  A extends AnyStoreAtomTemplate | ZeduxNode | AtomSelectorOrConfig
 > = A extends AtomTemplateBase<infer G>
   ? G['Params']
-  : A extends GraphNode<infer G>
+  : A extends ZeduxNode<infer G>
   ? G extends { Params: infer Params }
     ? Params
     : never
@@ -116,10 +116,10 @@ export type AtomParamsType<
   : never
 
 export type AtomPromiseType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | GraphNode
+  A extends AnyAtomApi | AnyStoreAtomTemplate | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['Promise']
-  : A extends GraphNode<infer G>
+  : A extends ZeduxNode<infer G>
   ? G extends { Promise: infer Promise }
     ? Promise
     : never
@@ -144,10 +144,10 @@ export type AtomValueOrFactory<
 > = AtomStateFactory<G> | G['Store'] | G['State']
 
 export type AtomStateType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | AtomSelectorOrConfig | GraphNode
+  A extends AnyAtomApi | AnyStoreAtomTemplate | AtomSelectorOrConfig | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['State']
-  : A extends GraphNode<infer G>
+  : A extends ZeduxNode<infer G>
   ? G['State']
   : A extends AtomApi<infer G>
   ? G['State']
@@ -156,12 +156,12 @@ export type AtomStateType<
   : never
 
 export type AtomStoreType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | GraphNode
+  A extends AnyAtomApi | AnyStoreAtomTemplate | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G extends { Store: infer Store }
     ? Store
     : never
-  : A extends GraphNode<infer G>
+  : A extends ZeduxNode<infer G>
   ? G extends { Store: infer Store }
     ? Store
     : never
@@ -169,9 +169,9 @@ export type AtomStoreType<
   ? G['Store']
   : never
 
-// TODO: Now that GraphNode has the Template generic, this G extends { Template
+// TODO: Now that ZeduxNode has the Template generic, this G extends { Template
 // ... } check shouldn't be necessary. Double check and remove.
-export type AtomTemplateType<A extends GraphNode> = A extends GraphNode<infer G>
+export type AtomTemplateType<A extends ZeduxNode> = A extends ZeduxNode<infer G>
   ? G extends { Template: infer Template }
     ? Template
     : G extends AtomGenerics

@@ -1,7 +1,7 @@
 import { AtomInstance } from '../classes/instances/AtomInstance'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
 import { AtomApi } from '../classes/AtomApi'
-import { GraphNode } from '../classes/GraphNode'
+import { ZeduxNode } from '../classes/ZeduxNode'
 import {
   AnyNonNullishValue,
   AtomSelectorOrConfig,
@@ -72,10 +72,10 @@ export interface AtomGenerics {
 
 export type AtomApiPromise = Promise<any> | undefined
 
-export type EventsOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
+export type EventsOf<A extends AnyAtomApi | AnyAtomTemplate | ZeduxNode> =
   A extends AtomTemplateBase<infer G>
     ? G['Events']
-    : A extends GraphNode<infer G>
+    : A extends ZeduxNode<infer G>
     ? G['Events']
     : A extends Signal<infer G>
     ? G['Events']
@@ -89,10 +89,10 @@ export type EventsOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
     ? Events
     : never
 
-export type ExportsOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
+export type ExportsOf<A extends AnyAtomApi | AnyAtomTemplate | ZeduxNode> =
   A extends AtomTemplateBase<infer G>
     ? G['Exports']
-    : A extends GraphNode<infer G>
+    : A extends ZeduxNode<infer G>
     ? G extends { Exports: infer Exports }
       ? Exports
       : never
@@ -100,8 +100,8 @@ export type ExportsOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
     ? G['Exports']
     : never
 
-export type GenericsOf<A extends GraphNode | AtomTemplateBase> =
-  A extends GraphNode<infer G>
+export type GenericsOf<A extends ZeduxNode | AtomTemplateBase> =
+  A extends ZeduxNode<infer G>
     ? G
     : A extends AtomTemplateBase<infer G>
     ? G
@@ -118,7 +118,7 @@ export type NodeOf<A extends AnyAtomTemplate | Selectable<any, any>> =
       // even accept it but were passed one:
       G extends { Node: infer Node }
       ? Node
-      : GraphNode<G>
+      : ZeduxNode<G>
     : A extends Selectable<infer State, infer Params>
     ? SelectorInstance<{
         Params: Params
@@ -128,10 +128,10 @@ export type NodeOf<A extends AnyAtomTemplate | Selectable<any, any>> =
     : never
 
 export type ParamsOf<
-  A extends AnyAtomTemplate | GraphNode | AtomSelectorOrConfig
+  A extends AnyAtomTemplate | ZeduxNode | AtomSelectorOrConfig
 > = A extends AtomTemplateBase<infer G>
   ? G['Params']
-  : A extends GraphNode<infer G>
+  : A extends ZeduxNode<infer G>
   ? G extends { Params: infer Params }
     ? Params
     : never
@@ -139,10 +139,10 @@ export type ParamsOf<
   ? Params
   : never
 
-export type PromiseOf<A extends AnyAtomApi | AnyAtomTemplate | GraphNode> =
+export type PromiseOf<A extends AnyAtomApi | AnyAtomTemplate | ZeduxNode> =
   A extends AtomTemplateBase<infer G>
     ? G['Promise']
-    : A extends GraphNode<infer G>
+    : A extends ZeduxNode<infer G>
     ? G extends { Promise: infer Promise }
       ? Promise
       : never
@@ -156,10 +156,10 @@ export type SelectorGenerics = Pick<AtomGenerics, 'State'> & {
 }
 
 export type StateOf<
-  A extends AnyAtomApi | AnyAtomTemplate | AtomSelectorOrConfig | GraphNode
+  A extends AnyAtomApi | AnyAtomTemplate | AtomSelectorOrConfig | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['State']
-  : A extends GraphNode<infer G>
+  : A extends ZeduxNode<infer G>
   ? G['State']
   : A extends Signal<infer G>
   ? G['State']
@@ -171,9 +171,9 @@ export type StateOf<
   ? State
   : never
 
-// TODO: Now that GraphNode has the Template generic, this G extends { Template
+// TODO: Now that ZeduxNode has the Template generic, this G extends { Template
 // ... } check shouldn't be necessary. Double check and remove.
-export type TemplateOf<A extends GraphNode> = A extends GraphNode<infer G>
+export type TemplateOf<A extends ZeduxNode> = A extends ZeduxNode<infer G>
   ? G extends { Template: infer Template }
     ? Template
     : G extends AtomGenerics

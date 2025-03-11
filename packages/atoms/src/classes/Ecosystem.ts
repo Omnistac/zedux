@@ -72,7 +72,7 @@ import {
   getSelectorName,
   swapSelectorRefs,
 } from '../utils/selectors'
-import { GraphNode } from './GraphNode'
+import { ZeduxNode } from './ZeduxNode'
 import { SelectorInstance } from './SelectorInstance'
 import { Signal } from './Signal'
 import { AtomInstance } from './instances/AtomInstance'
@@ -195,7 +195,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * `n`odes - a flat map of every cached graph node (atom instance or selector)
    * keyed by id.
    */
-  public n = new Map<string, GraphNode>()
+  public n = new Map<string, ZeduxNode>()
 
   /**
    * `s`copesByAtom - tracks the "scope" (set of contexts) used by instances of
@@ -402,7 +402,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     >
   ): G['Node'] | undefined
 
-  public find(searchStr: string, params?: []): GraphNode | undefined
+  public find(searchStr: string, params?: []): ZeduxNode | undefined
 
   public find<G extends AtomGenerics>(
     template: AtomTemplateBase<G> | AtomSelectorOrConfig<G> | string,
@@ -442,8 +442,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     )
   }
 
-  public findAll(type?: NodeType): GraphNode[]
-  public findAll(options?: NodeFilter): GraphNode[]
+  public findAll(type?: NodeType): ZeduxNode[]
+  public findAll(options?: NodeFilter): ZeduxNode[]
 
   /**
    * Get a list of all atom instances in this ecosystem.
@@ -482,7 +482,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateOf<A>
     <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateOf<A>
 
-    <N extends GraphNode>(node: N): StateOf<N>
+    <N extends ZeduxNode>(node: N): StateOf<N>
 
     <S extends Selectable>(template: S, params: ParamsOf<S>): StateOf<S>
     <S extends Selectable<any, []>>(template: S): StateOf<S>
@@ -542,7 +542,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * without registering dependencies, @see Ecosystem.getNodeOnce
    */
   public getNode: GetNode = <G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+    template: AtomTemplateBase<G> | ZeduxNode<G> | AtomSelectorOrConfig<G>,
     params?: G['Params'],
     edgeConfig?: GraphEdgeConfig
   ) => {
@@ -569,7 +569,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * even when called in reactive contexts.
    */
   public getNodeOnce: GetNode = <G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+    template: AtomTemplateBase<G> | ZeduxNode<G> | AtomSelectorOrConfig<G>,
     params?: G['Params']
   ) => getNode(this, template, params)
 
@@ -581,7 +581,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * even when called in reactive contexts.
    */
   public getOnce: GetNode = <G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | GraphNode<G> | AtomSelectorOrConfig<G>,
+    template: AtomTemplateBase<G> | ZeduxNode<G> | AtomSelectorOrConfig<G>,
     params?: G['Params']
   ) => getNode(this, template, params).getOnce()
 
@@ -597,7 +597,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public hash(params: any[], acceptComplexParams = this.complexParams) {
     return JSON.stringify(params, (_, param) => {
       if (!param) return param
-      if (param.izn) return (param as GraphNode).id
+      if (param.izn) return (param as ZeduxNode).id
 
       // if the prototype has no prototype, it's likely not a plain object:
       if (Object.getPrototypeOf(param.constructor.prototype)) {
@@ -686,7 +686,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * - `@component()-` An external node created via a React hook call. Wraps the
    *   component's name inside the `()`.
    *
-   * - `@listener()-` A `GraphNode#on` call. Wraps the listened node's template
+   * - `@listener()-` A `ZeduxNode#on` call. Wraps the listened node's template
    *   key inside the `()`.
    *
    * - `@memo()-` An atom selector created via an `injectMemo` call with no
@@ -713,12 +713,12 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       | 'ref'
       | 'selector'
       | 'signal',
-    context?: GraphNode | string,
+    context?: ZeduxNode | string,
     suffix: number | string = `-${++this.idCounter}`
   ) {
     return nodeType === 'atom'
       ? (context as string)
-      : `@${nodeType}(${(context as GraphNode)?.id ?? context ?? ''})${suffix}`
+      : `@${nodeType}(${(context as ZeduxNode)?.id ?? context ?? ''})${suffix}`
   }
 
   public on<E extends keyof EcosystemEvents>(
@@ -1066,7 +1066,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       }
     }
 
-    const recurse = (node?: GraphNode) => {
+    const recurse = (node?: ZeduxNode) => {
       if (!node) return
 
       const map = view === 'bottom-up' ? node.s : node.o

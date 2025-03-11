@@ -3,7 +3,7 @@ import {
   As,
   atom,
   ChangeEvent,
-  GraphNode,
+  ZeduxNode,
   injectEcosystem,
   injectSignal,
   ion,
@@ -122,7 +122,7 @@ describe('signals', () => {
       calls.push(['direct mutate', transactions, eventMap])
     })
 
-    type GenericsOf<T extends GraphNode> = T extends Signal<infer G> ? G : never
+    type GenericsOf<T extends ZeduxNode> = T extends Signal<infer G> ? G : never
 
     type ExpectedChangeEvent = ChangeEvent<
       GenericsOf<typeof instance1.exports.signal> & {

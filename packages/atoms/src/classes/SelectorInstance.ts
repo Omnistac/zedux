@@ -3,7 +3,7 @@ import { prefix } from '../utils/general'
 import { destroyNodeFinish, destroyNodeStart } from '../utils/graph'
 import { runSelector } from '../utils/selectors'
 import { Ecosystem } from './Ecosystem'
-import { GraphNode } from './GraphNode'
+import { ZeduxNode } from './ZeduxNode'
 
 export class SelectorInstance<
   G extends SelectorGenerics = {
@@ -11,29 +11,29 @@ export class SelectorInstance<
     State: any
     Template: any
   }
-> extends GraphNode<G & { Events: any }> {
+> extends ZeduxNode<G & { Events: any }> {
   public static $$typeof = Symbol.for(`${prefix}/SelectorInstance`)
 
   /**
-   * @see GraphNode.s Selectors typically have observers. So we initialize this
+   * @see ZeduxNode.s Selectors typically have observers. So we initialize this
    * upfront.
    */
-  public o = new Map<GraphNode, GraphEdge>()
+  public o = new Map<ZeduxNode, GraphEdge>()
 
   /**
-   * @see GraphNode.s Selectors typically have sources. So we initialize this
+   * @see ZeduxNode.s Selectors typically have sources. So we initialize this
    * upfront.
    */
-  public s = new Map<GraphNode, GraphEdge>()
+  public s = new Map<ZeduxNode, GraphEdge>()
 
   constructor(
     /**
-     * @see GraphNode.e
+     * @see ZeduxNode.e
      */
     public e: Ecosystem,
 
     /**
-     * @see GraphNode.id
+     * @see ZeduxNode.id
      */
     public id: string,
 
@@ -41,12 +41,12 @@ export class SelectorInstance<
      * `t`emplate - the function or object reference of this selector or
      * selector config object
      *
-     * @see GraphNode.t
+     * @see ZeduxNode.t
      */
     public t: G['Template'],
 
     /**
-     * @see GraphNode.p
+     * @see ZeduxNode.p
      */
     public p: G['Params']
   ) {
@@ -55,7 +55,7 @@ export class SelectorInstance<
   }
 
   /**
-   * @see GraphNode.destroy
+   * @see ZeduxNode.destroy
    */
   public destroy(force?: boolean) {
     destroyNodeStart(this, force) && destroyNodeFinish(this)
@@ -66,14 +66,14 @@ export class SelectorInstance<
   }
 
   /**
-   * @see GraphNode.d
+   * @see ZeduxNode.d
    */
   public d(options?: DehydrationFilter) {
     if (this.f(options)) return this.v
   }
 
   /**
-   * @see GraphNode.h
+   * @see ZeduxNode.h
    *
    * While selectors can be dehydrated for debugging purposes, they currently
    * can't be hydrated as part of SSR, etc. This is a no-op.
@@ -81,14 +81,14 @@ export class SelectorInstance<
   public h() {}
 
   /**
-   * @see GraphNode.j
+   * @see ZeduxNode.j
    */
   public j() {
     runSelector(this)
   }
 
   /**
-   * @see GraphNode.m
+   * @see ZeduxNode.m
    */
   public m() {
     this.destroy()

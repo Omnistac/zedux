@@ -16,7 +16,7 @@ import {
   setNodeStatus,
 } from '../utils/graph'
 import { Ecosystem } from './Ecosystem'
-import { GraphNode } from './GraphNode'
+import { ZeduxNode } from './ZeduxNode'
 import { recursivelyMutate, recursivelyProxy } from './proxies'
 import { getEvaluationContext } from '../utils/evaluationContext'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
@@ -96,19 +96,19 @@ export class Signal<
     Events: any
     State: any
   }
-> extends GraphNode<
+> extends ZeduxNode<
   G & {
     Params: G extends { Params: infer P } ? P : undefined
     Template: G extends { Template: infer T } ? T : undefined
   }
 > {
   /**
-   * @see GraphNode.o
+   * @see ZeduxNode.o
    */
-  public o = new Map<GraphNode, GraphEdge>()
+  public o = new Map<ZeduxNode, GraphEdge>()
 
   /**
-   * @see GraphNode.p
+   * @see ZeduxNode.p
    */
   // @ts-expect-error params are not defined by signals, so this will always be
   // undefined here, doesn't matter that we don't specify it in the constructor.
@@ -116,33 +116,33 @@ export class Signal<
   public p: G['Params']
 
   /**
-   * @see GraphNode.s Signals don't typically have sources. So this starts off
+   * @see ZeduxNode.s Signals don't typically have sources. So this starts off
    * as a getter for efficiency.
    */
-  public get s(): Map<GraphNode, GraphEdge> {
+  public get s(): Map<ZeduxNode, GraphEdge> {
     Object.defineProperty(this, 's', { value: new Map() })
     return this.s
   }
 
   /**
-   * @see GraphNode.t
+   * @see ZeduxNode.t
    */
   // @ts-expect-error this is undefined for signals, only defined by subclasses
   public t: G['Template']
 
   public constructor(
     /**
-     * @see GraphNode.e
+     * @see ZeduxNode.e
      */
     public readonly e: Ecosystem,
 
     /**
-     * @see GraphNode.id
+     * @see ZeduxNode.id
      */
     public readonly id: string,
 
     /**
-     * @see GraphNode.v
+     * @see ZeduxNode.v
      */
     public v: G['State'],
 
@@ -161,7 +161,7 @@ export class Signal<
   }
 
   /**
-   * @see GraphNode.destroy
+   * @see ZeduxNode.destroy
    */
   public destroy(force?: boolean) {
     destroyNodeStart(this, force) && destroyNodeFinish(this)
@@ -259,7 +259,7 @@ export class Signal<
   }
 
   /**
-   * @see GraphNode.d
+   * @see ZeduxNode.d
    *
    * TODO: When dehydrating, we could specifically not dehydrate atoms that wrap
    * signals and instead dehydrate the signal. Then that signal would rehydrate
@@ -269,18 +269,18 @@ export class Signal<
   public d() {}
 
   /**
-   * @see GraphNode.h
+   * @see ZeduxNode.h
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public h(val: any) {}
 
   /**
-   * @see GraphNode.j
+   * @see ZeduxNode.j
    */
   public j() {}
 
   /**
-   * @see GraphNode.m Signals are always destroyed when no longer in use
+   * @see ZeduxNode.m Signals are always destroyed when no longer in use
    */
   public m() {
     this.destroy()

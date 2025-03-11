@@ -1,5 +1,5 @@
 import type { Ecosystem } from '../classes/Ecosystem'
-import type { GraphNode } from '../classes/GraphNode'
+import type { ZeduxNode } from '../classes/ZeduxNode'
 import {
   CatchAllListener,
   EcosystemEvent,
@@ -31,7 +31,7 @@ export const sendEcosystemEvent = (
   )
 }
 
-export const sendEcosystemErrorEvent = (source: GraphNode, error: unknown) => {
+export const sendEcosystemErrorEvent = (source: ZeduxNode, error: unknown) => {
   sendEcosystemEvent(source.e, {
     error:
       error instanceof Error
