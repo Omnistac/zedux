@@ -1,3 +1,9 @@
+## v2.0.0-beta.7 (Mar 11, 2025)
+
+### Fixes:
+
+- `react`: remove react package dep on core package (#206)
+
 ## v2.0.0-beta.6 (Mar 11, 2025)
 
 ### New Features:
