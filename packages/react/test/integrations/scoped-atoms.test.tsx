@@ -180,7 +180,7 @@ describe('scoped atoms', () => {
     // 2 parents, 4 children, 2 nested, 6 external
     expect(ecosystem.n.size).toBe(14)
 
-    expect(Object.keys(ecosystem.findAll())).toEqual([
+    expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
       'child-@scope("a",parent-[1])',
       'child-@scope("a",parent-[2])',
       'child-@scope("b",parent-[1])',
@@ -205,7 +205,7 @@ describe('scoped atoms', () => {
 
     expect(ecosystem.n.size).toBe(14) // 2 new children, 2 destroyed
 
-    expect(Object.keys(ecosystem.findAll())).toEqual([
+    expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
       'child-@scope("aa",parent-[1])',
       'child-@scope("aa",parent-[2])',
       'child-@scope("b",parent-[1])',
@@ -231,7 +231,7 @@ describe('scoped atoms', () => {
 
     expect(ecosystem.n.size).toBe(14) // no changes
 
-    expect(Object.keys(ecosystem.findAll())).toEqual([
+    expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
       'child-@scope("aa",parent-[1])',
       'child-@scope("aa",parent-[2])',
       'child-@scope("b",parent-[1])',
@@ -340,7 +340,7 @@ describe('scoped atoms', () => {
     // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
     expect(ecosystem.n.size).toBe(28)
 
-    expect(Object.keys(ecosystem.findAll())).toMatchSnapshot()
+    expect(ecosystem.findAll().map(({ id }) => id)).toMatchSnapshot()
 
     act(() => {
       button1.click()
@@ -357,7 +357,7 @@ describe('scoped atoms', () => {
     // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
     expect(ecosystem.n.size).toBe(28)
 
-    expect(Object.keys(ecosystem.findAll())).toMatchSnapshot()
+    expect(ecosystem.findAll().map(({ id }) => id)).toMatchSnapshot()
 
     const scope = new Map<Record<string, any>, any>([
       [context, 'b'],
@@ -379,7 +379,7 @@ describe('scoped atoms', () => {
     // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
     expect(ecosystem.n.size).toBe(28)
 
-    expect(Object.keys(ecosystem.findAll())).toMatchSnapshot()
+    expect(ecosystem.findAll().map(({ id }) => id)).toMatchSnapshot()
 
     act(() => {
       childInstance.destroy(true)
@@ -391,7 +391,7 @@ describe('scoped atoms', () => {
     // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
     expect(ecosystem.n.size).toBe(28)
 
-    expect(Object.keys(ecosystem.findAll())).toMatchSnapshot()
+    expect(ecosystem.findAll().map(({ id }) => id)).toMatchSnapshot()
   })
 
   test('React context reference changes create new scopes', async () => {
@@ -437,7 +437,7 @@ describe('scoped atoms', () => {
     expect(calls).toEqual([{ a: { b: 1 } }])
     calls.splice(0, calls.length)
 
-    expect(Object.keys(ecosystem.findAll())).toEqual([
+    expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
       '@selector(unknown)-1-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":1}})',
     ])
@@ -449,7 +449,7 @@ describe('scoped atoms', () => {
     expect(child).toHaveTextContent('2')
     expect(calls).toEqual([{ a: { b: 2 } }])
 
-    expect(Object.keys(ecosystem.findAll())).toEqual([
+    expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
       '@selector(unknown)-1-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":2}})',

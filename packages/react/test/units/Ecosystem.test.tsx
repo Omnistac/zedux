@@ -127,12 +127,9 @@ describe('Ecosystem', () => {
   test('findAll() with no params returns all atom instances', () => {
     const atom1 = atom('1', (id: number) => id)
 
-    const instances = Array(10)
+    const expected = Array(10)
       .fill(null)
       .map((_, i) => ecosystem.getInstance(atom1, [i]))
-    const expected = Object.fromEntries(
-      instances.map(instance => [instance.id, instance])
-    )
 
     expect(ecosystem.findAll()).toEqual(expected)
   })

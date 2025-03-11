@@ -118,32 +118,37 @@ describe('the SelectorInstance class', () => {
 
   test('ecosystem.findAll() accepts selector refs or string ids', () => {
     const instance = ecosystem.getNode(selector3)
-    const allNodes = ecosystem.findAll()
 
-    expect(Object.keys(allNodes)).toEqual([
-      '1',
+    expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
       '@selector(selector1)-3',
       '@selector(selector2)-2',
       '@selector(selector3)-1', // the id for selector3 is generated first
+      '1',
     ])
 
-    const instances1 = ecosystem.findAll('selector2')
+    expect(ecosystem.findAll('selector2')).toEqual([
+      ecosystem.getNode(selector2),
+    ])
 
-    expect(instances1).toEqual({
-      '@selector(selector2)-2': ecosystem.getNode(selector2),
-    })
+    expect(ecosystem.findAll(selector3)).toEqual([instance])
 
-    const instances2 = ecosystem.findAll(selector3)
+    expect(ecosystem.findAll('@selector').map(({ id }) => id)).toEqual([
+      '@selector(selector1)-3',
+      '@selector(selector2)-2',
+      '@selector(selector3)-1',
+    ])
 
-    expect(instances2).toEqual({
-      '@selector(selector3)-1': instance,
-    })
+    expect(ecosystem.findAll('@atom').map(({ id }) => id)).toEqual(['1'])
+
+    expect(
+      ecosystem.findAll({ include: ['@atom'] }).map(({ id }) => id)
+    ).toEqual(['1'])
   })
 
   test("ecosystem.findAll() returns an empty object if the selector hasn't been cached", () => {
     ecosystem.getNode(selector2)
 
-    expect(ecosystem.findAll(selector3)).toEqual({})
+    expect(ecosystem.findAll(selector3)).toEqual([])
   })
 
   test('getNode(instance) returns the passed instance', () => {

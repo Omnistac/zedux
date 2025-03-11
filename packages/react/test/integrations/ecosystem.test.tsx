@@ -257,15 +257,21 @@ describe('ecosystem', () => {
     ecosystem.getInstance(atomA, ['aa'])
     ecosystem.getInstance(atomB)
 
-    expect(ecosystem.findAll(atomA)).toEqual({
-      'a-["a"]': expect.objectContaining({ params: ['a'] }),
-      'a-["aa"]': expect.objectContaining({ params: ['aa'] }),
-    })
+    expect(ecosystem.findAll(atomA)).toEqual([
+      expect.objectContaining({ id: 'a-["a"]', params: ['a'] }),
+      expect.objectContaining({ id: 'a-["aa"]', params: ['aa'] }),
+    ])
 
-    expect(ecosystem.findAll('a')).toEqual({
-      'a-["a"]': expect.objectContaining({ params: ['a'] }),
-      'a-["aa"]': expect.objectContaining({ params: ['aa'] }),
-    })
+    expect(ecosystem.findAll('a')).toEqual([
+      expect.objectContaining({ id: 'a-["a"]', params: ['a'] }),
+      expect.objectContaining({ id: 'a-["aa"]', params: ['aa'] }),
+    ])
+
+    expect(ecosystem.findAll('@atom').map(({ id }) => id)).toEqual([
+      'a-["a"]',
+      'a-["aa"]',
+      'b',
+    ])
 
     ecosystem.reset({ listeners: true })
   })
