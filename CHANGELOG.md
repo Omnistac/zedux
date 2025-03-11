@@ -1,3 +1,12 @@
+## v2.0.0-beta.6 (Mar 11, 2025)
+
+### New Features:
+
+- **Breaking Change** `atoms`: support `@atom` node type filter in `findAll` and `dehydrate` (#204)
+- **Breaking Change** `atoms`, `stores`: use a singly-linked list for evaluation reasons (#202)
+- **Breaking Change** `atoms`, `react`, `stores`: standardize id generation (#201)
+- **Breaking Change** `atoms`, `core`, `immer`, `machines`, `react`, `stores`: separate sync and async schedulers (#200)
+
 ## v2.0.0-beta.5 (Feb 28, 2025)
 
 ### New Features:
