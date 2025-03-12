@@ -20,14 +20,16 @@ export const injectCallback = <Args extends any[] = [], Ret = any>(
 ) => {
   const self = injectSelf()
 
-  return injectMemo(
-    () =>
-      (...args: Args) =>
-        self.e.batch(() =>
-          self.V
-            ? self.e.withScope(self.V, () => callback(...args))
-            : callback(...args)
-        ),
-    deps
-  )
+  return injectMemo(() => {
+    const wrapperFn = (...args: Args) =>
+      self.e.batch(() =>
+        self.V
+          ? self.e.withScope(self.V, () => callback(...args))
+          : callback(...args)
+      )
+
+    Object.defineProperty(wrapperFn, 'name', { value: callback.name })
+
+    return wrapperFn
+  }, deps)
 }

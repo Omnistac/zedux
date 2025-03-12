@@ -374,4 +374,17 @@ describe('injectors', () => {
 
     expect(node1.get()).toBe(0)
   })
+
+  test('injectCallback preserves the callback name', () => {
+    const fn = () => {}
+    let callback: typeof fn | undefined
+
+    const atom1 = atom('1', () => {
+      callback = injectCallback(fn, [])
+    })
+
+    ecosystem.getNode(atom1)
+
+    expect(callback?.name).toBe('fn')
+  })
 })

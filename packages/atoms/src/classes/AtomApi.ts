@@ -16,19 +16,25 @@ const wrapExports = <T extends Record<string, any>>(
   // wrap normal arrow functions in `batch` and, if needed, `withScope` calls.
   // Only do this when `api()` is called during initial atom evaluation.
   return config?.wrap !== false && instance && instance.l === INITIALIZING
-    ? (Object.fromEntries(
-        Object.entries(exports).map(([key, val]) => [
-          key,
-          typeof val === 'function' && !val.prototype
-            ? (...args: any[]) =>
-                instance.e.batch(() =>
-                  instance.V
-                    ? instance.e.withScope(instance.V, () => val(...args))
-                    : val(...args)
-                )
-            : val,
-        ])
-      ) as T)
+    ? Object.entries(exports).reduce((obj, [key, val]) => {
+        let maybeWrappedVal = val
+
+        if (typeof val === 'function') {
+          const wrappedFn = (...args: any[]) =>
+            instance.e.batch(() =>
+              instance.V
+                ? instance.e.withScope(instance.V, () => val(...args))
+                : val(...args)
+            )
+
+          Object.defineProperty(wrappedFn, 'name', { value: val.name })
+          maybeWrappedVal = wrappedFn
+        }
+
+        ;(obj as Record<string, any>)[key] = maybeWrappedVal
+
+        return obj
+      }, {} as T)
     : exports
 }
 
