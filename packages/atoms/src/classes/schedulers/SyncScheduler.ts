@@ -55,6 +55,7 @@ export class SyncScheduler extends SchedulerBase {
    */
   public schedule(newJob: Job) {
     const weight = newJob.W ?? 0
+    const numJobs = this.j.length
 
     // const index = findIndex(this, job => {
     //   if (job.T !== newJob.T) return +(newJob.T - job.T > 0) || -1 // 1 or -1
@@ -65,7 +66,7 @@ export class SyncScheduler extends SchedulerBase {
     //   return weight < job.W! ? -1 : +(weight > job.W!) // + = 0 or 1
     // })
 
-    let index = Math.ceil((this.j.length - this.c) / 2) + this.c - 1
+    let index = ((numJobs - this.c) / 2 + this.c) << 0
     let divisor = 2
     let job
 
@@ -82,22 +83,20 @@ export class SyncScheduler extends SchedulerBase {
 
       if (direction === 0) break
 
-      if (divisor > this.j.length - this.c) {
+      if (divisor > numJobs - this.c) {
         index += direction === 1 ? 1 : 0
         break
       }
 
+      divisor *= 2
+
       index = Math.min(
-        this.j.length - this.c + this.c - 1,
+        numJobs - 1,
         Math.max(
-          0,
-          index +
-            Math.ceil((((this.j.length - this.c) / divisor + 0.5) << 0) / 2) *
-              direction
+          this.c,
+          index + Math.ceil((numJobs - this.c) / divisor + this.c) * direction
         )
       )
-
-      divisor *= divisor
     }
 
     if (index === -1) {

@@ -356,13 +356,12 @@ export interface Job {
    * `T`ype - the job type. Different types get different priorities in the
    * scheduler.
    *
-   * 0 - UpdateStore
-   * 1 - InformSubscribers
+   * 1 - Interrupt
    * 2 - EvaluateZeduxNode
    * 3 - UpdateExternalDependent
    * 4 - RunEffect
    */
-  T: 0 | 1 | 2 | 3 | 4
+  T: 1 | 2 | 3 | 4
 }
 
 export type LifecycleStatus = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
