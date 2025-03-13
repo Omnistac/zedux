@@ -457,6 +457,11 @@ export interface RefObject<T = any> {
   readonly current: T | null
 }
 
+export type Scope = Map<
+  Record<string, any>,
+  WeakRef<any> | number | string | boolean | null | undefined
+>
+
 export type Selectable<State = any, Params extends any[] = any> =
   | AtomSelectorOrConfig<State, Params>
   | SelectorInstance<{

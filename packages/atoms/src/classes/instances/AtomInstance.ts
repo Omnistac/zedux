@@ -92,15 +92,15 @@ export type InjectorDescriptor<T = any> = {
 const evaluate = <G extends Omit<AtomGenerics, 'Node'>>(
   instance: AtomInstance<G>
 ) => {
-  const { _value } = instance.t
+  const { v } = instance.t
 
-  if (typeof _value !== 'function') {
-    return _value
+  if (typeof v !== 'function') {
+    return v
   }
 
   try {
     const val = (
-      _value as (
+      v as (
         ...params: G['Params']
       ) => Signal<G> | G['State'] | AtomApi<AtomGenericsToAtomApiGenerics<G>>
     )(...instance.p)

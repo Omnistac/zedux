@@ -11,6 +11,7 @@ import {
   NodeFilter,
   NodeFilterOptions,
   NodeGenerics,
+  Scope,
 } from '@zedux/atoms/types/index'
 import { Ecosystem } from './Ecosystem'
 import {
@@ -80,12 +81,7 @@ export abstract class ZeduxNode<G extends NodeGenerics = AnyNodeGenerics>
    * provided. If the values have changed, a new atom instance is created with
    * the new scope.
    */
-  public V:
-    | Map<
-        Record<string, any>,
-        WeakRef<any> | number | string | boolean | null | undefined
-      >
-    | undefined = undefined
+  public V: Scope | undefined = undefined
 
   /**
    * @see Job.W

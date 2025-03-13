@@ -2,6 +2,7 @@ import {
   AtomGenerics,
   GraphEdge,
   InternalEvaluationReason,
+  Scope,
 } from '@zedux/atoms/types/index'
 import { type Ecosystem } from '../classes/Ecosystem'
 import { type ZeduxNode } from '../classes/ZeduxNode'
@@ -37,18 +38,7 @@ const changeScopedNodeId = (
   ecosystem.s[templateKey] ??= [...newNode.V!.keys()]
 
   // give the new scoped node a `@scope()`-suffixed id
-  const contextValueStrings = [...newNode.V!.values()].map(val => {
-    const resolvedVal =
-      val?.constructor?.name === WeakRef.name
-        ? (val as WeakRef<any>).deref()
-        : val
-
-    return (resolvedVal as ZeduxNode)?.izn
-      ? (resolvedVal as ZeduxNode).id
-      : ecosystem.hash(resolvedVal, true)
-  })
-
-  const scopedId = `${newNode.id}-@scope(${contextValueStrings.join(',')})`
+  const scopedId = `${newNode.id}-${getScopeString(ecosystem, newNode.V!)}`
 
   newNode.id = scopedId
 }
@@ -158,6 +148,28 @@ export const destroyNodeFinish = (node: ZeduxNode) => {
   // optimization that prevents `ZeduxNode#r`un, which is in Zedux's hot path,
   // from having to check if destroyed on every run.
   node.r = () => {}
+}
+
+/**
+ * Creates a consistent hash for the passed scope's contextual values.
+ *
+ * TODO: add this method to the ecosystem so it can be used with `.makeId` and
+ * `.hash` to manually construct every part of an id exactly the same as Zedux
+ * does internally.
+ */
+export const getScopeString = (ecosystem: Ecosystem, scope: Scope) => {
+  const contextValueStrings = [...scope.values()].map(val => {
+    const resolvedVal =
+      val?.constructor?.name === WeakRef.name
+        ? (val as WeakRef<any>).deref()
+        : val
+
+    return (resolvedVal as ZeduxNode)?.izn
+      ? (resolvedVal as ZeduxNode).id
+      : ecosystem.hash(resolvedVal, true)
+  })
+
+  return `@scope(${contextValueStrings})`
 }
 
 export const handleStateChange = <
