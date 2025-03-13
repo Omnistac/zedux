@@ -1,3 +1,13 @@
+## v2.0.0-beta.8 (Mar 13, 2025)
+
+### New Features:
+
+- `atoms`: make wrapper functions reuse wrapped function names (#208)
+
+### Fixes:
+
+- `atoms`: fix and optimize quicksort calculations (#209)
+
 ## v2.0.0-beta.7 (Mar 11, 2025)
 
 ### Fixes:
