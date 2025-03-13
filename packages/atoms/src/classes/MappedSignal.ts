@@ -112,7 +112,7 @@ export class MappedSignal<
     eventName: E,
     payload?: G['Events'][E]
   ) {
-    const pre = schedulerPre(this.e)
+    schedulerPre(this.e)
 
     for (const signal of Object.values(this.M)) {
       if ((signal as Signal | undefined)?.izn) {
@@ -121,7 +121,7 @@ export class MappedSignal<
       }
     }
 
-    schedulerPost(this.e, pre)
+    schedulerPost(this.e)
   }
 
   public set(
@@ -137,7 +137,7 @@ export class MappedSignal<
 
     this.C = events
 
-    const pre = schedulerPre(this.e)
+    schedulerPre(this.e)
 
     try {
       for (const [key, value] of Object.entries(newState)) {
@@ -184,7 +184,7 @@ export class MappedSignal<
         }
       }
     } finally {
-      schedulerPost(this.e, pre)
+      schedulerPost(this.e)
     }
   }
 

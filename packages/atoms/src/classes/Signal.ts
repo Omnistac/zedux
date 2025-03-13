@@ -78,12 +78,12 @@ export const doMutate = <G extends NodeGenerics>(
     } else {
       node.v = newState
 
-      const pre = schedulerPre(node.e)
+      schedulerPre(node.e)
       node.e.ch(node, oldState, {
         ...events,
         mutate: transactions,
       } as Partial<SendableEvents<G>>)
-      schedulerPost(node.e, pre)
+      schedulerPost(node.e)
     }
   }
 }
@@ -252,9 +252,9 @@ export class Signal<
         : settable)
 
     if (newState !== oldState) {
-      const pre = schedulerPre(this.e)
+      schedulerPre(this.e)
       this.e.ch(this, oldState, events)
-      schedulerPost(this.e, pre)
+      schedulerPost(this.e)
     }
   }
 

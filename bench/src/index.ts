@@ -26,9 +26,9 @@ async function main() {
     cellxbench(framework)
   }
 
-  for (const frameworkTest of frameworkInfo) {
-    await dynamicBench(frameworkTest)
-  }
+  // for (const frameworkTest of frameworkInfo) {
+  //   await dynamicBench(frameworkTest)
+  // }
 
   // When running chrome profiler, line level profiling numbers disappear when
   // the process exits. Keep it alive

@@ -1,36 +1,5 @@
 import { Job } from '@zedux/atoms/types/index'
-import { runJobs, SchedulerBase } from './SchedulerBase'
-
-/**
- * An O(log n) replacement for `syncScheduler.j.findIndex`. Leaving this here
- * for now since the new, non-recursive, much faster code in
- * `SyncScheduler#schedule` is impossible to understand. It's exactly the same
- * as this
- */
-// const findIndex = (
-//   scheduler: SyncScheduler,
-//   cb: (job: Job) => number,
-//   index = Math.ceil((scheduler.j.length - scheduler.c) / 2) + scheduler.c - 1,
-//   divisor = 2
-// ): number => {
-//   const job = scheduler.j[index]
-//   if (job == null) return index
-
-//   const direction = cb(job)
-//   if (direction === 0) return index
-
-//   if (divisor > scheduler.j.length - scheduler.c) {
-//     return index + (direction === 1 ? 1 : 0)
-//   }
-
-//   const effectualSize = ((scheduler.j.length - scheduler.c) / divisor) << 0
-//   const newIndex = Math.min(
-//     scheduler.j.length - scheduler.c + scheduler.c - 1,
-//     Math.max(0, index + Math.ceil(effectualSize / 2) * direction)
-//   )
-
-//   return findIndex(scheduler, cb, newIndex, divisor * divisor)
-// }
+import { SchedulerBase } from './SchedulerBase'
 
 export class SyncScheduler extends SchedulerBase {
   /**
@@ -43,13 +12,6 @@ export class SyncScheduler extends SchedulerBase {
   public I: (() => void)[] | undefined = undefined
 
   /**
-   * Run all jobs immediately. Does nothing if this scheduler is already running.
-   */
-  public flush() {
-    if (!this.r) runJobs(this)
-  }
-
-  /**
    * Insert an EvaluateZeduxNode (2) or UpdateExternalDependent (3) job into the
    * queue. Insertion point depends on job's type and weight.
    */
@@ -57,22 +19,11 @@ export class SyncScheduler extends SchedulerBase {
     const weight = newJob.W ?? 0
     const numJobs = this.j.length
 
-    // const index = findIndex(this, job => {
-    //   if (job.T !== newJob.T) return +(newJob.T - job.T > 0) || -1 // 1 or -1
-
-    //   // EvaluateZeduxNode (2) and UpdateExternalDependent (3) jobs use weight
-    //   // comparison. `W` will always be defined here. TODO: use discriminated
-    //   // union types to reflect this
-    //   return weight < job.W! ? -1 : +(weight > job.W!) // + = 0 or 1
-    // })
-
-    let index = ((numJobs - this.c) / 2 + this.c) << 0
+    let index = ((numJobs - this.r) / 2 + this.r) << 0
     let divisor = 2
     let job
 
-    // This impossible-to-read loop is almost twice as fast as the above,
-    // commented-out `findIndex` code. Refer to that to figure out what this
-    // does; it's exactly the same algorithm.
+    // An O(log n) quicksort replacement for `syncScheduler.j.findIndex`
     while ((job = this.j[index])) {
       const direction =
         job.T === newJob.T
@@ -83,7 +34,7 @@ export class SyncScheduler extends SchedulerBase {
 
       if (direction === 0) break
 
-      if (divisor > numJobs - this.c) {
+      if (divisor > numJobs - this.r) {
         index += direction === 1 ? 1 : 0
         break
       }
@@ -93,13 +44,14 @@ export class SyncScheduler extends SchedulerBase {
       index = Math.min(
         numJobs - 1,
         Math.max(
-          this.c,
-          index + Math.ceil((numJobs - this.c) / divisor + this.c) * direction
+          this.r,
+          index + Math.ceil((numJobs - this.r) / divisor) * direction
         )
       )
     }
 
-    if (index === -1) {
+    if (index === numJobs) {
+      // push if we can 'cause it's faster
       this.j.push(newJob)
     } else {
       this.j.splice(index, 0, newJob)
@@ -120,7 +72,7 @@ export class SyncScheduler extends SchedulerBase {
 
     const jobList = [task]
 
-    this.j.splice(this.c, 0, {
+    this.j.splice(this.r, 0, {
       j: () => {
         for (const job of jobList) {
           job()

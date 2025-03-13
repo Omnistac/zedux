@@ -153,6 +153,11 @@ export const destroyNodeFinish = (node: ZeduxNode) => {
   node.e.n.delete(node.id)
 
   setNodeStatus(node, DESTROYED)
+
+  // override `node.r` so the destroyed node can't be scheduled. This is a micro
+  // optimization that prevents `ZeduxNode#r`un, which is in Zedux's hot path,
+  // from having to check if destroyed on every run.
+  node.r = () => {}
 }
 
 export const handleStateChange = <
@@ -268,13 +273,13 @@ export const scheduleEventListeners = (
     s: NonNullable<InternalEvaluationReason['s']>
   }
 ) => {
-  const pre = schedulerPre(reason.s.e)
+  schedulerPre(reason.s.e)
 
   for (const [observer, edge] of reason.s.o) {
     edge.flags & Eventless || observer.r(reason)
   }
 
-  schedulerPost(reason.s.e, pre)
+  schedulerPost(reason.s.e)
 }
 
 /**
@@ -286,13 +291,13 @@ export const scheduleStaticDependents = (
     s: NonNullable<InternalEvaluationReason['s']>
   }
 ) => {
-  const pre = schedulerPre(reason.s.e)
+  schedulerPre(reason.s.e)
 
   for (const observer of reason.s.o.keys()) {
     observer.r(reason)
   }
 
-  schedulerPost(reason.s.e, pre)
+  schedulerPost(reason.s.e)
 }
 
 /**

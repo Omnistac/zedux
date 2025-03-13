@@ -9,9 +9,8 @@ export const runJobs = (scheduler: SchedulerBase) => {
   const jobs = scheduler.j
   let errors: any[] | undefined
 
-  scheduler.r = true
-  while (jobs.length > scheduler.c) {
-    const job = jobs[scheduler.c++] as Job
+  while (jobs.length > scheduler.r) {
+    const job = jobs[scheduler.r++]
     try {
       job.j()
     } catch (err) {
@@ -20,21 +19,25 @@ export const runJobs = (scheduler: SchedulerBase) => {
     }
   }
 
+  scheduler.r = 0
   scheduler.j = []
-  scheduler.c = 0
-  scheduler.r = false
   if (errors) throw errors[0]
 }
 
 export abstract class SchedulerBase {
-  public c = 0
+  /**
+   * `r`unCounter - We increment this as the scheduler is running to prevent
+   * expensive array resizing from `.shift()` calls. This is always a non-zero
+   * value if the scheduler is running, so we use it to detect that too.
+   */
+  public r = 0
 
   /**
-   * `r`unning - We set this to true internally when the scheduler starts
-   * flushing. We also set it to true when batching updates, to prevent anything
-   * from flushing.
+   * `f`lushCounter - `scheduler.pre` and `scheduler.post` work by
+   * incrementing/decrementing this counter. When it hits 0 in `scheduler.post`
+   * after having been incremented by previous `scheduler.pre` calls, we flush.
    */
-  public r = false
+  public f = 0
 
   // private _runStartTime?: number
 
@@ -51,9 +54,12 @@ export abstract class SchedulerBase {
   constructor(private readonly ecosystem: Ecosystem) {}
 
   /**
-   * Start running jobs. Behavior depends on scheduler type.
+   * Run all jobs immediately. Does nothing if this scheduler is already
+   * running.
    */
-  public abstract flush(): void
+  public flush() {
+    if (this.r === 0) runJobs(this)
+  }
 
   /**
    * Call after any operation that may have nested flush attempts. This in
@@ -63,9 +69,8 @@ export abstract class SchedulerBase {
    * This is the counterpart to `scheduler.pre()`. Call with the value returned
    * from `.pre()`
    */
-  public post(prevIsRunning: boolean) {
-    this.r = prevIsRunning
-    this.flush()
+  public post() {
+    if (--this.f === 0) this.flush()
   }
 
   /**
@@ -77,29 +82,23 @@ export abstract class SchedulerBase {
    * multiple times - only the top-level call finally flushes when everything is
    * scheduled.
    *
-   * Returns a value that should be passed to `scheduler.post()` after the
-   * potentially-nested flush operation. Always combine with
-   * `scheduler.post(preReturnValue)`
-   *
-   * IMPORTANT: If an error can possibly be thrown before calling
-   * `scheduler.post`, wrap the operation in `try..finally`
+   * IMPORTANT: Always combine with `scheduler.post()`. If an error can possibly
+   * be thrown before calling `scheduler.post`, wrap the operation in
+   * `try..finally`
    *
    * Example:
    *
    * ```ts
-   * const pre = scheduler.pre()
+   * scheduler.pre()
    * try {
    *   setAtomStateOrSendSignalEventsEtc()
    * } finally {
-   *   scheduler.post(pre)
+   *   scheduler.post()
    * }
    * ```
    */
   public pre() {
-    const prevIsRunning = this.r
-    this.r = true
-
-    return prevIsRunning
+    this.f++
   }
 
   /**
@@ -108,7 +107,7 @@ export abstract class SchedulerBase {
   public abstract schedule(newJob: Job): void
 
   public unschedule(job: Job) {
-    const index = this.j.indexOf(job, this.c)
+    const index = this.j.indexOf(job, this.r)
 
     if (index !== -1) this.j.splice(index, 1)
   }

@@ -282,20 +282,21 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * batched when the scheduler is running.
    */
   public batch<T = any>(callback: () => T) {
-    const pre = schedulerPre(this)
+    let result
+    schedulerPre(this)
 
     try {
-      const result = callback()
-
-      schedulerPost(this, pre)
-
-      return result
+      result = callback()
     } catch (err) {
       // this duplication is more performant than using `finally`
-      schedulerPost(this, pre)
+      schedulerPost(this)
 
       throw err
     }
+
+    schedulerPost(this)
+
+    return result
   }
 
   public dehydrate(options?: NodeType): Record<string, unknown>
@@ -891,8 +892,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     this.cleanup?.()
 
     // prevent node destruction from flushing the scheduler
-    const syncPre = syncScheduler.pre()
-    const asyncPre = asyncScheduler.pre()
+    syncScheduler.pre()
+    asyncScheduler.pre()
 
     // TODO: Delete nodes in an optimal order, starting with nodes with no
     // internal observers. This is different from highest-weighted nodes since
@@ -912,8 +913,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     syncScheduler.wipe()
     asyncScheduler.wipe()
 
-    syncScheduler.post(syncPre)
-    asyncScheduler.post(asyncPre)
+    syncScheduler.post()
+    asyncScheduler.post()
 
     const prevContext = this.context
     if (typeof config?.context !== 'undefined') this.context = config.context

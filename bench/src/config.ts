@@ -35,7 +35,7 @@ export const frameworkInfo: FrameworkInfo[] = [
   // { framework: usignalFramework, testPullCounts: true },
   // { framework: vueReactivityFramework, testPullCounts: true },
   // { framework: xReactivityFramework, testPullCounts: true },
-  { framework: zeduxFramework, testPullCounts: true },
+  { framework: zeduxFramework },
 ]
 
 export const perfTests: TestConfig[] = [

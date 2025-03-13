@@ -17,7 +17,6 @@ import {
   ACTIVE,
   DESTROYED,
   Eventless,
-  EventSent,
   ExplicitExternal,
   INITIALIZING,
   InternalLifecycleStatus,
@@ -368,17 +367,12 @@ export abstract class ZeduxNode<G extends NodeGenerics = AnyNodeGenerics>
    * tree.
    */
   public r(reason: InternalEvaluationReason) {
-    // don't schedule if destroyed and ignore `EventSent` reasons TODO: Any
-    // calls when destroyed probably indicate a memory leak on the user's part.
-    // Notify them. TODO: Can we pause evaluations while status is Stale (and
-    // should we just always evaluate once when waking up a stale node)?
-    if (
-      this.l !== DESTROYED &&
-      reason.t !== EventSent &&
-      addReason(this, reason)
-    ) {
-      scheduleSync(this.e, this)
-    }
+    // We override this method on destruction, so no need to check if destroyed
+    // here. TODO: Any calls when destroyed probably indicate a memory leak on
+    // the user's part. Notify them. TODO: Can we pause evaluations while status
+    // is Stale (and should we just always evaluate once when waking up a stale
+    // node)?
+    if (addReason(this, reason)) scheduleSync(this.e, this)
   }
 
   /**

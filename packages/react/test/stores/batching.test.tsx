@@ -3,6 +3,17 @@ import { api, atom, injectStore, zeduxTypes } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('batching', () => {
+  test('`ecosystem.batch` handles errors', () => {
+    expect(() =>
+      ecosystem.batch(() => {
+        throw new Error('test')
+      })
+    ).toThrow('test')
+
+    // the thrown error would ruin the `f`lushCounter if we didn't handle it
+    expect(ecosystem.syncScheduler.f).toBe(0)
+  })
+
   test('injectCallback() batches updates by default', () => {
     const evaluations: number[] = []
 

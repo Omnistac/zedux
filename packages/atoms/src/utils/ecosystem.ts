@@ -134,11 +134,11 @@ export const getNode = <G extends AtomGenerics>(
       (params || []) as G['Params']
     ) as AnyAtomInstance
 
-    const pre = schedulerPre(ecosystem)
+    schedulerPre(ecosystem)
     try {
       instance.i() // TODO: remove. Run this in AtomInstance constructor
     } finally {
-      schedulerPost(ecosystem, pre)
+      schedulerPost(ecosystem)
     }
 
     ecosystem.n.set(instance.id, instance)
@@ -177,7 +177,7 @@ export const getNode = <G extends AtomGenerics>(
     }
 
     // create the instance; it doesn't exist yet
-    const pre = schedulerPre(ecosystem)
+    schedulerPre(ecosystem)
     try {
       instance = new SelectorInstance(
         ecosystem,
@@ -190,7 +190,7 @@ export const getNode = <G extends AtomGenerics>(
 
       return instance
     } finally {
-      schedulerPost(ecosystem, pre)
+      schedulerPost(ecosystem)
     }
   }
 
@@ -206,10 +206,10 @@ export const mapOverrides = (overrides: AnyAtomTemplate[]) =>
   }, {} as Record<string, AnyAtomTemplate>)
 
 export const schedulerPre = (ecosystem: Ecosystem) =>
-  ecosystem.syncScheduler.pre()
+  ecosystem.syncScheduler.f++
 
-export const schedulerPost = (ecosystem: Ecosystem, pre: boolean) =>
-  ecosystem.syncScheduler.post(pre)
+export const schedulerPost = (ecosystem: Ecosystem) =>
+  ecosystem.syncScheduler.post()
 
 /**
  * Schedules an async job _if needed_. Otherwise schedules a sync job. Async
