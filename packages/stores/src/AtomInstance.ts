@@ -341,16 +341,20 @@ export class AtomInstance<
     oldState: G['State'] | undefined,
     action: ActionChain
   ) {
+    const isBatching = action.meta === zeduxTypes.batch
+
+    if (!isBatching) this.e.syncScheduler.pre()
+
     const reason = { n: newState, o: oldState, r: this.w, s: this }
     this.v = newState
     zi.u(reason)
 
-    if (this.e.C.change) zi.i(this.e, reason)
+    if (this.e.C.change || this.e.C['']) {
+      zi.i(this.e, reason)
+    }
 
     // run the scheduler synchronously after any atom instance state update
-    if (action.meta !== zeduxTypes.batch) {
-      this.e.syncScheduler.flush()
-    }
+    if (!isBatching) this.e.syncScheduler.post()
   }
 
   private _setPromise(promise: Promise<any>, isStateUpdater?: boolean) {

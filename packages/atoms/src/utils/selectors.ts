@@ -119,11 +119,12 @@ export const swapSelectorRefs = <G extends SelectorGenerics>(
   ecosystem.b.delete(oldInstance.t)
   oldInstance.t = newRef
   oldInstance.p = params
-  // oldInstance.i =
-  //   typeof newRef === 'function' ? runSelectorFunction : runSelectorConfig
 
-  const pre = schedulerPre(ecosystem)
+  schedulerPre(ecosystem)
 
-  runSelector(oldInstance, false, true)
-  schedulerPost(ecosystem, pre)
+  try {
+    runSelector(oldInstance, false, true)
+  } finally {
+    schedulerPost(ecosystem)
+  }
 }
