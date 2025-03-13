@@ -102,7 +102,7 @@ export const getNode = <G extends AtomGenerics>(
   }
 
   if (is(template, AtomTemplateBase)) {
-    const id = (template as AtomTemplate).getInstanceId(ecosystem, params)
+    const id = (template as AtomTemplate).getNodeId(ecosystem, params)
 
     // try to find an existing instance
     let instance = ecosystem.n.get(id) as AtomInstance
@@ -128,7 +128,7 @@ export const getNode = <G extends AtomGenerics>(
     }
 
     // create a new instance
-    instance = resolveAtom(ecosystem, template as AtomTemplate)._createInstance(
+    instance = resolveAtom(ecosystem, template as AtomTemplate)._instantiate(
       ecosystem,
       id,
       (params || []) as G['Params']

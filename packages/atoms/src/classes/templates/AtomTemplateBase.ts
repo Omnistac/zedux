@@ -3,10 +3,12 @@ import {
   AtomValueOrFactory,
   AtomGenerics,
   AnyAtomGenerics,
+  Scope,
 } from '@zedux/atoms/types/index'
 import { prefix } from '@zedux/atoms/utils/general'
 import { Ecosystem } from '../Ecosystem'
 import { Signal } from '../Signal'
+import { getScopeString } from '@zedux/atoms/utils/graph'
 
 export abstract class AtomTemplateBase<
   G extends AtomGenerics & { Node: any } = AnyAtomGenerics<{
@@ -33,14 +35,26 @@ export abstract class AtomTemplateBase<
 
   constructor(
     public readonly key: string,
-    public readonly _value: AtomValueOrFactory<
+
+    /**
+     * `v`alueOrFactory - the initial value of all instances of this atom or a
+     * state factory that will be used to define the atom's params and create
+     * the initial state and setup injectors, exports, a promise, and/or ttl for
+     * the atom instance.
+     */
+    public readonly v: AtomValueOrFactory<
       G & {
         Signal: Signal<{ State: G['State']; Events: G['Events'] }> | undefined
       }
     >,
-    public readonly _config?: AtomConfig<G['State']>
+
+    /**
+     * `c`onfig - a reference to the exact config object passed to this atom.
+     * Stored as-is so we can pass it along to atom overrides
+     */
+    public readonly c?: AtomConfig<G['State']>
   ) {
-    Object.assign(this, _config)
+    Object.assign(this, c)
 
     // const map = new WeakMap();
     // map.set(newAtomInstance, true);
@@ -48,17 +62,39 @@ export abstract class AtomTemplateBase<
     // console.log({ key: atom.key, map });
   }
 
-  public abstract _createInstance(
+  /**
+   * IMPORTANT: You should never call this manually. Zedux calls it internally
+   * to create a new atom instance when an atom template + params combo is used
+   * for the first time.
+   *
+   * Creates and returns a new AtomInstance class instance.
+   *
+   * This method should be overridden when creating custom AtomTemplate classes
+   * that instantiate a custom AtomInstance class. Return a new instance of your
+   * AtomInstance class. Use the passed ecosystem's `.makeId` and `.hash`
+   * methods to construct id strings for the passed id and params.
+   */
+  public abstract _instantiate(
     ecosystem: Ecosystem,
     id: string,
     params: G['Params']
   ): G['Node']
 
-  public getInstanceId(ecosystem: Ecosystem, params?: G['Params']) {
+  public getNodeId(
+    ecosystem: Ecosystem,
+    params?: G['Params'],
+    { scope }: { scope?: Scope } = {}
+  ) {
     const base = ecosystem.makeId('atom', this.key, '')
 
-    if (!params?.length) return base
+    // optimize the most common scenario
+    if (!params?.length && !scope) return base
 
-    return `${base}-${ecosystem.hash(params)}`
+    const idParts = [base]
+
+    if (params?.length) idParts.push(ecosystem.hash(params))
+    if (scope) idParts.push(getScopeString(ecosystem, scope))
+
+    return idParts.join('-')
   }
 }

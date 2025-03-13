@@ -295,15 +295,15 @@ export class AtomInstance<
    * - A function that returns an AtomApi
    */
   private _eval(): G['Store'] | G['State'] {
-    const { _value } = this.t
+    const { v } = this.t
 
-    if (typeof _value !== 'function') {
-      return _value
+    if (typeof v !== 'function') {
+      return v
     }
 
     try {
       const val = (
-        _value as (
+        v as (
           ...params: G['Params']
         ) => G['Store'] | G['State'] | AtomApi<AtomGenericsToAtomApiGenerics<G>>
       )(...this.p)

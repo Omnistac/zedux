@@ -31,11 +31,9 @@ export class AtomTemplate<
   G extends AtomGenerics = AnyAtomGenerics
 > extends AtomTemplateBase<G> {
   /**
-   * This method should be overridden when creating custom atom classes that
-   * create a custom atom instance class. Return a new instance of your atom
-   * instance class.
+   * @see AtomTemplateBase._instantiate
    */
-  public _createInstance(
+  public _instantiate(
     ecosystem: Ecosystem,
     id: string,
     params: G['Params']
@@ -50,7 +48,7 @@ export class AtomTemplate<
       }
     >
   ): AtomTemplate<G> {
-    const newAtom = atom(this.key, newValue, this._config)
+    const newAtom = atom(this.key, newValue, this.c)
     newAtom._isOverride = true
     return newAtom as any
   }

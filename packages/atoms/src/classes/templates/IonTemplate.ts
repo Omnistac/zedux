@@ -32,12 +32,12 @@ export class IonTemplate<
   constructor(
     key: string,
     stateFactory: IonStateFactory<Omit<G, 'Node' | 'Template'>>,
-    _config?: AtomConfig<G['State']>
+    config?: AtomConfig<G['State']>
   ) {
     super(
       key,
       (...params: G['Params']) => stateFactory(injectEcosystem(), ...params),
-      _config
+      config
     )
   }
 }

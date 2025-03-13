@@ -26,10 +26,10 @@ export class AtomTemplate<
 > extends AtomTemplateBase<G> {
   constructor(
     key: string,
-    _value: AtomValueOrFactory<G>,
-    _config?: AtomConfig<G['State']> | undefined
+    valueOrFactory: AtomValueOrFactory<G>,
+    config?: AtomConfig<G['State']> | undefined
   ) {
-    super(key, _value, _config)
+    super(key, valueOrFactory, config)
   }
 
   /**
@@ -37,7 +37,7 @@ export class AtomTemplate<
    * create a custom atom instance class. Return a new instance of your atom
    * instance class.
    */
-  public _createInstance(
+  public _instantiate(
     ecosystem: Ecosystem,
     id: string,
     params: G['Params']
@@ -46,7 +46,7 @@ export class AtomTemplate<
   }
 
   public override(newValue: AtomValueOrFactory<G>): AtomTemplate<G> {
-    const newAtom = atom(this.key, newValue, this._config)
+    const newAtom = atom(this.key, newValue, this.c)
     newAtom._isOverride = true
     return newAtom as any
   }

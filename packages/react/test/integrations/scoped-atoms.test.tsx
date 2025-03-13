@@ -670,4 +670,22 @@ describe('scoped atoms', () => {
     )
     expect(mock).toHaveBeenCalledTimes(1)
   })
+
+  test('`AtomTemplate#getNodeId` can return scoped strings', () => {
+    const template = atom('1', (id?: string) => id)
+
+    const scope = new Map<Record<string, any>, any>([[template, 'b']])
+
+    expect(template.getNodeId(ecosystem, [], { scope })).toBe('1-@scope("b")')
+
+    expect(template.getNodeId(ecosystem, ['a'], { scope })).toBe(
+      '1-["a"]-@scope("b")'
+    )
+
+    scope.set({}, 'c')
+
+    expect(template.getNodeId(ecosystem, ['a'], { scope })).toBe(
+      '1-["a"]-@scope("b","c")'
+    )
+  })
 })

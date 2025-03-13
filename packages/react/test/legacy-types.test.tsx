@@ -741,10 +741,10 @@ describe('react types', () => {
   })
 
   test('recursive templates and nodes', () => {
-    const instanceA = exampleAtom._createInstance(ecosystem, 'a', ['b'])
-    const instanceB = instanceA.t._createInstance(ecosystem, '', ['b'])
-    const instanceC = instanceB.t._createInstance(ecosystem, '', ['b'])
-    const instanceD = instanceC.t._createInstance(ecosystem, '', ['b'])
+    const instanceA = exampleAtom._instantiate(ecosystem, 'a', ['b'])
+    const instanceB = instanceA.t._instantiate(ecosystem, '', ['b'])
+    const instanceC = instanceB.t._instantiate(ecosystem, '', ['b'])
+    const instanceD = instanceC.t._instantiate(ecosystem, '', ['b'])
 
     expectTypeOf<AtomParamsType<typeof instanceD.t>>().toEqualTypeOf<
       [p: string]

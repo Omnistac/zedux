@@ -660,6 +660,7 @@ This section is a work in progress
 - `atomInstance._promiseError` -> `atomInstance.promiseError`
 - `{ flags }` -> `{ tags }` (in atom config objects)
 - `{ includeFlags, excludeFlags }` -> `{ includeTags, excludeTags }` (in the object passed to `ecosystem.dehydrate`)
+- `atomTemplate.getInstanceId` -> `atomTemplate.getNodeId`
 
 For mods (previously added to `ZeduxPlugin`s, now "ecosystem events" registered with `ecosystem.on`), replace:
 
@@ -804,3 +805,6 @@ Some public-but-underscore-prefixed properties changed. Most apps shouldn't have
 
 - `ecosystem._consumeHydration`. Removed. The `cycle` ecosystem event can be used to delete `ecosystem.hydration` entries yourself when hydrated nodes become `Active`.
 - `_createdAt` (the property on atom and selector instances). Removed. Plugins can track time created themselves if needed.
+- `atomTemplate._createInstance`. Renamed to `atomTemplate._instantiate`. Zedux uses this internally. You shouldn't use it manually.
+- `atomTemplate._config`. Renamed to `atomTemplate.c` (short for `config`). This is for internal use so it's obfuscated
+- `atomTemplate._value`. Renamed to `atomTemplate.v` (short for `valueOrFactory`). This is for internal use.

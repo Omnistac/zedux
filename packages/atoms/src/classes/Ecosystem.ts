@@ -414,7 +414,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     if (!isString) {
       const id = isTemplate
-        ? (template as AnyAtomTemplate).getInstanceId(this, params)
+        ? (template as AnyAtomTemplate).getNodeId(this, params)
         : getSelectorKey(this, template as AtomSelectorOrConfig)
 
       // try to find an existing instance
