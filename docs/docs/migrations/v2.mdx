@@ -378,12 +378,14 @@ While using the old `AtomGetters` type will still work for typing the first argu
 
 Stores now live in the `@zedux/stores` package. They are not deprecated, you can still use them. But it's recommended to use signals when possible 'cause they're better. And because of that, we may officially deprecate stores someday. That's a maybe, but keep it in mind.
 
-The types for store atoms do have a few breaking changes:
+Every export in the `@zedux/stores` package has been renamed to be store-specific. Some examples:
 
-- `AnyAtomInstance` is renamed to `AnyStoreAtomInstance`
-- `AnyAtomTemplate` is renamed to `AnyStoreAtomTemplate`
+- `atom` -> `storeAtom`
+- `api` -> `storeApi`
+- `ion` -> `storeIon`
+- `AtomInstance` -> `StoreAtomInstance`
 
-Several other types in the stores package, like most of the `Atom*Type` helpers, are deprecated. See below for the [full list](#full-list).
+See below for the [full list](#full-list).
 
 ### `injectEffect` Order
 
@@ -528,7 +530,7 @@ The new signals-based ions now set `ttl: 0` by default. This reflects their prim
 
 ## Migrating to Signals
 
-To upgrade to v2 initially, you can simply replace most `@zedux/react` imports with `@zedux/stores`:
+To upgrade to v2 initially, you can replace most `@zedux/react` imports with `@zedux/stores` and alias the imports:
 
 ```ts
 // before:
@@ -536,14 +538,14 @@ import { api, atom, injectMemo, injectStore } from '@zedux/react'
 
 // after:
 import { injectMemo } from '@zedux/react'
-import { api, atom, injectStore } from '@zedux/stores'
+import { storeApi as api, storeAtom as atom, injectStore } from '@zedux/stores'
 ```
 
 For bigger apps, it's recommended to migrate incrementally to signals. For most store-based atoms it will be as simple as this:
 
 ```ts
 // before:
-import { api, atom, injectStore } from '@zedux/stores'
+import { storeApi as api, storeAtom as atom, injectStore } from '@zedux/stores'
 
 // after:
 import { api, atom, injectSignal } from '@zedux/react'
@@ -713,7 +715,7 @@ Also optionally replace some deprecated and/or "legacy" types:
 
 If you're using stores extensively, especially with lots of advanced features, it may be easier to keep using stores for now and migrate incrementally to signals.
 
-To do this, replace any store-atom-related imports from `@zedux/atoms` or `@zedux/react` with imports from `@zedux/stores`. Refer to this diff for the full list:
+To do this, replace any store-atom-related imports from `@zedux/atoms` or `@zedux/react` with imports from `@zedux/stores`. Refer to this for the full list:
 
 ```ts
 import {
@@ -755,9 +757,7 @@ import {
   StoreIonStateFactory as IonStateFactory,
   StoreIonTemplateRecursive as IonTemplateRecursive,
   PartialStoreAtomInstance as PartialAtomInstance,
-// just swap these two lines:
-- } from '@zedux/react' // or '@zedux/atoms'
-+ } from '@zedux/stores'
+} from '@zedux/stores'
 ```
 
 The easiest way to do this at scale is to alias the `@zedux/react` package to point to a local file that re-exports all Zedux's APIs, named as above.
@@ -792,12 +792,11 @@ Replace:
 - `atomInstance.getState` -> `atomInstance.getOnce` (but prefer `.get` for automatic reactivity)
 - `atomInstance.setState` -> `atomInstance.set`
 - `atomInstance.setStateDeep` -> `atomInstance.mutate`
-- (if you previously migrated to using the `@zedux/stores` package): `AnyStoreAtomInstance` -> back to `AnyAtomInstance`
-- (if you previously migrated to using the `@zedux/stores` package): `AnyStoreAtomTemplate` -> back to `AnyAtomTemplate`
+- (if you previously migrated to using the `@zedux/stores` package): Remove any import aliases (like `storeAtom as atom` -> `atom`) and import from `@zedux/react` (or `@zedux/atoms` if not using React) instead.
 
 Remove:
 
-- `ttl: 0` in ions. This is the default for signals-based ions. That also means you may need to add `ttl: -1` (infinity) to ions that you don't want to give `ttl: 0` (tip: If you're unsure, leave the new default alone).
+- `ttl: 0` in ions. This is the default for signals-based ions. That also means you may need to add `ttl: -1` (infinity) to ions that you don't want to give `ttl: 0` (tip: If you're unsure, leave the default).
 - `createStore`. Use mapped signals instead for composing state primitives. Use `ecosystem.signal` instead for creating state containers on the fly.
 - `atomInstance.store`. Signal-based atoms don't expose the underlying signal. Use the atom instance itself; it forwards all state updates and sent events to wrapped signals
   - `atomInstance.store.getState` -> `atomInstance.getOnce` (but prefer `.get` for automatic reactivity)
