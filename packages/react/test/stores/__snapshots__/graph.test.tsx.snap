@@ -3,7 +3,7 @@
 exports[`graph getInstance(atom) returns the instance 1`] = `
 {
   "atom1": {
-    "className": "AtomInstance",
+    "className": "StoreAtomInstance",
     "observers": {
       "ion1": {
         "flags": 9,
@@ -17,7 +17,7 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
     "weight": 1,
   },
   "atom2": {
-    "className": "AtomInstance",
+    "className": "StoreAtomInstance",
     "observers": {
       "ion1": {
         "flags": 9,
@@ -31,7 +31,7 @@ exports[`graph getInstance(atom) returns the instance 1`] = `
     "weight": 1,
   },
   "ion1": {
-    "className": "AtomInstance",
+    "className": "StoreAtomInstance",
     "observers": {},
     "sources": {
       "atom1": {
@@ -168,7 +168,7 @@ exports[`graph injectAtomGetters 3`] = `
 exports[`graph on reevaluation, get() updates the graph 1`] = `
 {
   "a": {
-    "className": "AtomInstance",
+    "className": "StoreAtomInstance",
     "observers": {
       "d": {
         "flags": 1,
@@ -182,7 +182,7 @@ exports[`graph on reevaluation, get() updates the graph 1`] = `
     "weight": 1,
   },
   "b-["b"]": {
-    "className": "AtomInstance",
+    "className": "StoreAtomInstance",
     "observers": {
       "d": {
         "flags": 1,
@@ -196,7 +196,7 @@ exports[`graph on reevaluation, get() updates the graph 1`] = `
     "weight": 1,
   },
   "d": {
-    "className": "AtomInstance",
+    "className": "StoreAtomInstance",
     "observers": {},
     "sources": {
       "a": {
@@ -220,7 +220,7 @@ exports[`graph on reevaluation, get() updates the graph 1`] = `
 exports[`graph on reevaluation, get() updates the graph 2`] = `
 {
   "a": {
-    "className": "AtomInstance",
+    "className": "StoreAtomInstance",
     "observers": {
       "d": {
         "flags": 1,
@@ -234,7 +234,7 @@ exports[`graph on reevaluation, get() updates the graph 2`] = `
     "weight": 1,
   },
   "b-["b"]": {
-    "className": "AtomInstance",
+    "className": "StoreAtomInstance",
     "observers": {},
     "sources": {},
     "state": "b",
@@ -242,7 +242,7 @@ exports[`graph on reevaluation, get() updates the graph 2`] = `
     "weight": 1,
   },
   "c": {
-    "className": "AtomInstance",
+    "className": "StoreAtomInstance",
     "observers": {
       "d": {
         "flags": 1,
@@ -256,7 +256,7 @@ exports[`graph on reevaluation, get() updates the graph 2`] = `
     "weight": 1,
   },
   "d": {
-    "className": "AtomInstance",
+    "className": "StoreAtomInstance",
     "observers": {},
     "sources": {
       "a": {

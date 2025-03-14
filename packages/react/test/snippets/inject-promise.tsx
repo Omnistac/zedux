@@ -1,15 +1,15 @@
 import { useAtomValue } from '@zedux/react'
 import {
-  api,
-  atom,
+  storeApi,
+  storeAtom,
   createStore,
-  injectPromise,
+  injectStorePromise,
   injectStore,
 } from '@zedux/stores'
 import React, { Suspense } from 'react'
 
-const asyncAtom = atom('async', () => {
-  const promiseApi = injectPromise(async () => {
+const asyncAtom = storeAtom('async', () => {
+  const promiseApi = injectStorePromise(async () => {
     const val = await new Promise<string>((resolve, reject) => {
       setTimeout(() => {
         Math.random() > 0.5 ? resolve('the value!') : reject('the error!')
@@ -28,7 +28,7 @@ const asyncAtom = atom('async', () => {
     { subscribe: false }
   )
 
-  return api(store).setPromise(promiseApi.promise as Promise<any>)
+  return storeApi(store).setPromise(promiseApi.promise as Promise<any>)
 })
 
 function Child() {

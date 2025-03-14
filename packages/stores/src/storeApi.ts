@@ -1,6 +1,6 @@
 import { AtomApiPromise } from '@zedux/atoms'
 import { Store, StoreStateType } from '@zedux/core'
-import { AtomApi } from './AtomApi'
+import { StoreAtomApi } from './StoreAtomApi'
 
 /**
  * Create an AtomApi
@@ -17,20 +17,20 @@ import { AtomApi } from './AtomApi'
  *     triggers the appropriate updates in all the atom's dynamic observers.
  *     Promise reference changes also notify static observers.
  */
-export const api: {
+export const storeApi: {
   // Custom Stores (AtomApi cloning)
   <
     StoreType extends Store<any> = Store<any>,
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: AtomApi<{
+    value: StoreAtomApi<{
       Exports: Exports
       Promise: PromiseType
       State: StoreStateType<StoreType>
       Store: StoreType
     }>
-  ): AtomApi<{
+  ): StoreAtomApi<{
     Exports: Exports
     Promise: PromiseType
     State: StoreStateType<StoreType>
@@ -38,7 +38,7 @@ export const api: {
   }>
 
   // Custom Stores (normal)
-  <StoreType extends Store<any> = Store<any>>(value: StoreType): AtomApi<{
+  <StoreType extends Store<any> = Store<any>>(value: StoreType): StoreAtomApi<{
     Exports: Record<string, never>
     Promise: undefined
     State: StoreStateType<StoreType>
@@ -46,7 +46,7 @@ export const api: {
   }>
 
   // No Value
-  (): AtomApi<{
+  (): StoreAtomApi<{
     Exports: Record<string, never>
     Promise: undefined
     State: undefined
@@ -57,7 +57,7 @@ export const api: {
     State = undefined,
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
-  >(): AtomApi<{
+  >(): StoreAtomApi<{
     Exports: Exports
     Promise: PromiseType
     State: State
@@ -70,13 +70,13 @@ export const api: {
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
-    value: AtomApi<{
+    value: StoreAtomApi<{
       Exports: Exports
       Promise: PromiseType
       State: State
       Store: undefined
     }>
-  ): AtomApi<{
+  ): StoreAtomApi<{
     Exports: Exports
     Promise: PromiseType
     State: State
@@ -84,7 +84,7 @@ export const api: {
   }>
 
   // No Store (normal)
-  <State = undefined>(value: State): AtomApi<{
+  <State = undefined>(value: State): StoreAtomApi<{
     Exports: Record<string, never>
     Promise: undefined
     State: State
@@ -101,13 +101,13 @@ export const api: {
     value:
       | State
       | StoreType
-      | AtomApi<{
+      | StoreAtomApi<{
           Exports: Exports
           Promise: PromiseType
           State: State
           Store: StoreType
         }>
-  ): AtomApi<{
+  ): StoreAtomApi<{
     Exports: Exports
     Promise: PromiseType
     State: State
@@ -120,7 +120,7 @@ export const api: {
   PromiseType extends AtomApiPromise = undefined
 >(
   value?:
-    | AtomApi<{
+    | StoreAtomApi<{
         Exports: Exports
         Promise: PromiseType
         State: State
@@ -129,9 +129,9 @@ export const api: {
     | StoreType
     | State
 ) =>
-  new AtomApi(
+  new StoreAtomApi(
     value as
-      | AtomApi<{
+      | StoreAtomApi<{
           Exports: Exports
           Promise: PromiseType
           State: State

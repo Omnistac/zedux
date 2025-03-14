@@ -7,18 +7,24 @@ import {
   useAtomInstance,
   useAtomValue,
 } from '@zedux/react'
-import { api, atom, createStore, injectStore, ion } from '@zedux/stores'
+import {
+  storeApi,
+  storeAtom,
+  createStore,
+  injectStore,
+  storeIon,
+} from '@zedux/stores'
 import React, { FC } from 'react'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 import { ecosystem } from '../utils/ecosystem'
 
-const normalAtom = atom('normal', () => {
+const normalAtom = storeAtom('normal', () => {
   const store = injectStore(0)
 
   return store
 })
 
-const updatingAtom = atom('updating', () => {
+const updatingAtom = storeAtom('updating', () => {
   const store = injectStore(0)
 
   injectEffect(() => {
@@ -32,12 +38,12 @@ const updatingAtom = atom('updating', () => {
   return store
 })
 
-const composedStoresAtom = atom('composedStores', () => {
+const composedStoresAtom = storeAtom('composedStores', () => {
   const a = injectStore(1)
   const b = injectStore(2)
   const store = injectStore(() => createStore({ a, b }))
 
-  return api(store).setExports({
+  return storeApi(store).setExports({
     update: () => {
       a.setState(11)
       b.setState(22)
@@ -124,8 +130,8 @@ describe('using atoms in components', () => {
 
   test('overrides can be dynamically swapped in and out', async () => {
     jest.useFakeTimers()
-    const atom1 = atom('1', 'a')
-    const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
+    const atom1 = storeAtom('1', 'a')
+    const atom2 = storeIon('2', ({ get }) => get(atom1) + 'b')
     const atom1Override = atom1.override('aa')
     const atom2Override = atom2.override(
       () => injectEcosystem().get(atom1) + 'bb'

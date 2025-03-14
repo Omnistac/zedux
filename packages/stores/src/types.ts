@@ -8,58 +8,61 @@ import {
   Prettify,
 } from '@zedux/atoms'
 import { Store } from '@zedux/core'
-import { AtomInstance } from './AtomInstance'
-import { AtomApi } from './AtomApi'
-import { AtomTemplate } from './AtomTemplate'
+import { StoreAtomInstance } from './StoreAtomInstance'
+import { StoreAtomApi } from './StoreAtomApi'
+import { StoreAtomTemplate } from './StoreAtomTemplate'
 
-export type AnyAtomApiGenerics = { [K in keyof AtomGenerics]: any }
+export type AnyStoreAtomApiGenerics = { [K in keyof StoreAtomGenerics]: any }
 
-export type AnyAtomGenerics<
-  G extends Partial<AtomGenerics> = AnyNonNullishValue
+export type AnyStoreAtomGenerics<
+  G extends Partial<StoreAtomGenerics> = AnyNonNullishValue
 > = Prettify<
-  Omit<{ [K in keyof AtomGenerics]: any }, keyof G> & { [K in keyof G]-?: G[K] }
+  Omit<{ [K in keyof StoreAtomGenerics]: any }, keyof G> & {
+    [K in keyof G]-?: G[K]
+  }
 >
 
-export type AnyAtomApi<G extends Partial<AtomApiGenerics> | 'any' = 'any'> =
-  AtomApi<G extends Partial<AtomApiGenerics> ? AtomApiGenericsPartial<G> : any>
+export type AnyStoreAtomApi<
+  G extends Partial<StoreAtomApiGenerics> | 'any' = 'any'
+> = StoreAtomApi<
+  G extends Partial<StoreAtomApiGenerics> ? StoreAtomApiGenericsPartial<G> : any
+>
 
 export type AnyStoreAtomInstance<
-  G extends Partial<AtomGenerics> | 'any' = 'any'
-> = AtomInstance<
-  G extends Partial<AtomGenerics>
-    ? { Template: any } & AnyAtomGenerics<
+  G extends Partial<StoreAtomGenerics> | 'any' = 'any'
+> = StoreAtomInstance<
+  G extends Partial<StoreAtomGenerics>
+    ? { Template: any } & AnyStoreAtomGenerics<
         { Template: AnyStoreAtomTemplate<G> } & G
       >
     : any
 >
 
 export type AnyStoreAtomTemplate<
-  G extends Partial<AtomGenerics> | 'any' = 'any'
+  G extends Partial<StoreAtomGenerics> | 'any' = 'any'
 > = AtomTemplateBase<
-  G extends Partial<AtomGenerics>
+  G extends Partial<StoreAtomGenerics>
     ? {
         Node: AnyStoreAtomInstance<G>
-      } & AnyAtomGenerics<G & { Node: AnyStoreAtomInstance<G> }>
-    : AnyAtomGenerics
+      } & AnyStoreAtomGenerics<G & { Node: AnyStoreAtomInstance<G> }>
+    : AnyStoreAtomGenerics
 >
 
-export type AtomApiGenerics = Pick<
-  AtomGenerics,
+export type StoreAtomApiGenerics = Pick<
+  StoreAtomGenerics,
   'Exports' | 'Promise' | 'State'
 > & {
   Store: Store<any> | undefined
 }
 
-export type AtomApiGenericsPartial<G extends Partial<AtomApiGenerics>> = Omit<
-  AnyAtomApiGenerics,
-  keyof G
-> &
-  G
+export type StoreAtomApiGenericsPartial<
+  G extends Partial<StoreAtomApiGenerics>
+> = Omit<AnyStoreAtomApiGenerics, keyof G> & G
 
-export type AtomApiPromise = Promise<any> | undefined
+export type StoreAtomApiPromise = Promise<any> | undefined
 
 export type AtomEventsType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | ZeduxNode
+  A extends AnyStoreAtomApi | AnyStoreAtomTemplate | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['Events']
   : A extends ZeduxNode<infer G>
@@ -69,31 +72,31 @@ export type AtomEventsType<
   : never
 
 export type AtomExportsType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | ZeduxNode
+  A extends AnyStoreAtomApi | AnyStoreAtomTemplate | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['Exports']
   : A extends ZeduxNode<infer G>
   ? G extends { Exports: infer Exports }
     ? Exports
     : never
-  : A extends AtomApi<infer G>
+  : A extends StoreAtomApi<infer G>
   ? G['Exports']
   : never
 
-export type AtomGenericsToAtomApiGenerics<
+export type StoreAtomGenericsToStoreAtomApiGenerics<
   G extends Pick<
-    AtomGenerics,
+    StoreAtomGenerics,
     'Events' | 'Exports' | 'Promise' | 'State' | 'Store'
   >
 > = Pick<G, 'Exports' | 'Promise' | 'State'> & {
   Store: G['Store'] | undefined
 }
 
-export interface AtomGenerics
+export interface StoreAtomGenerics
   extends Omit<NewAtomGenerics, 'Node' | 'Template'> {
-  Node: AtomInstance<any>
+  Node: StoreAtomInstance<any>
   Store: Store<any>
-  Template: AtomTemplate<any>
+  Template: StoreAtomTemplate<any>
 }
 
 export type AtomInstanceType<A extends AnyStoreAtomTemplate> =
@@ -116,47 +119,54 @@ export type AtomParamsType<
   : never
 
 export type AtomPromiseType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | ZeduxNode
+  A extends AnyStoreAtomApi | AnyStoreAtomTemplate | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['Promise']
   : A extends ZeduxNode<infer G>
   ? G extends { Promise: infer Promise }
     ? Promise
     : never
-  : A extends AtomApi<infer G>
+  : A extends StoreAtomApi<infer G>
   ? G['Promise']
   : never
 
-export type AtomStateFactory<
+export type StoreAtomStateFactory<
   G extends Pick<
-    AtomGenerics,
+    StoreAtomGenerics,
     'Events' | 'Exports' | 'Params' | 'Promise' | 'State' | 'Store'
   >
 > = (
   ...params: G['Params']
-) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | G['Store'] | G['State']
+) =>
+  | StoreAtomApi<StoreAtomGenericsToStoreAtomApiGenerics<G>>
+  | G['Store']
+  | G['State']
 
-export type AtomValueOrFactory<
+export type StoreAtomValueOrFactory<
   G extends Pick<
-    AtomGenerics,
+    StoreAtomGenerics,
     'Events' | 'Exports' | 'Params' | 'Promise' | 'State' | 'Store'
   >
-> = AtomStateFactory<G> | G['Store'] | G['State']
+> = StoreAtomStateFactory<G> | G['Store'] | G['State']
 
 export type AtomStateType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | SelectorTemplate | ZeduxNode
+  A extends
+    | AnyStoreAtomApi
+    | AnyStoreAtomTemplate
+    | SelectorTemplate
+    | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['State']
   : A extends ZeduxNode<infer G>
   ? G['State']
-  : A extends AtomApi<infer G>
+  : A extends StoreAtomApi<infer G>
   ? G['State']
   : A extends SelectorTemplate<infer State>
   ? State
   : never
 
 export type AtomStoreType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | ZeduxNode
+  A extends AnyStoreAtomApi | AnyStoreAtomTemplate | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G extends { Store: infer Store }
     ? Store
@@ -165,7 +175,7 @@ export type AtomStoreType<
   ? G extends { Store: infer Store }
     ? Store
     : never
-  : A extends AtomApi<infer G>
+  : A extends StoreAtomApi<infer G>
   ? G['Store']
   : never
 
@@ -174,16 +184,20 @@ export type AtomStoreType<
 export type AtomTemplateType<A extends ZeduxNode> = A extends ZeduxNode<infer G>
   ? G extends { Template: infer Template }
     ? Template
-    : G extends AtomGenerics
+    : G extends StoreAtomGenerics
     ? AtomTemplateBase<G>
     : never
   : never
 
-export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
-  (
-    getters: AtomGetters,
-    ...params: G['Params']
-  ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | G['Store'] | G['State']
+export type StoreIonStateFactory<
+  G extends Omit<StoreAtomGenerics, 'Node' | 'Template'>
+> = (
+  getters: AtomGetters,
+  ...params: G['Params']
+) =>
+  | StoreAtomApi<StoreAtomGenericsToStoreAtomApiGenerics<G>>
+  | G['Store']
+  | G['State']
 
 /**
  * Part of the atom instance can be accessed during initial evaluation. The only
@@ -194,8 +208,3 @@ export type PartialStoreAtomInstance = Omit<
   AnyStoreAtomInstance,
   'api' | 'exports' | 'promise' | 'S'
 >
-
-export type SelectorGenerics = Pick<AtomGenerics, 'State'> & {
-  Params: any[]
-  Template: SelectorTemplate
-}

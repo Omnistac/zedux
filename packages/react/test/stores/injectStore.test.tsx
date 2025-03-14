@@ -1,11 +1,11 @@
-import { atom, injectStore } from '@zedux/stores'
+import { storeAtom, injectStore } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('injectStore()', () => {
   test('subscribe: false prevents subscription', () => {
     let evaluations = 0
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const store = injectStore('a', { subscribe: false })
 
       evaluations++
@@ -27,7 +27,7 @@ describe('injectStore()', () => {
   test('unrecognized meta types are ignored', () => {
     const evaluations: string[] = []
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const store = injectStore('a')
 
       evaluations.push(store.getState())

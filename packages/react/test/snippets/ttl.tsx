@@ -7,26 +7,26 @@ import {
   injectSelf,
   useAtomValue,
 } from '@zedux/react'
-import { atom, injectStore } from '@zedux/stores'
+import { storeAtom, injectStore } from '@zedux/stores'
 import React, { useState } from 'react'
 
 const testEcosystem = createEcosystem({ id: 'test' })
 
-const atom1 = atom('atom1', () => {
+const atom1 = storeAtom('atom1', () => {
   console.log('evaluating atom1')
   const store = injectStore('1')
 
   return store
 })
 
-const atom2 = atom('atom2', () => {
+const atom2 = storeAtom('atom2', () => {
   console.log('evaluating atom2')
   const atom1val = injectAtomValue(atom1)
 
   return atom1val + '2'
 })
 
-const atom3 = atom(
+const atom3 = storeAtom(
   'atom3',
   (id: string) => {
     console.log('evaluating atom3')
@@ -45,7 +45,7 @@ const atom3 = atom(
   { ttl: 0 }
 )
 
-const atom4 = atom(
+const atom4 = storeAtom(
   'atom4',
   () => {
     const roll = Math.random() > 0.5

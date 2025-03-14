@@ -10,9 +10,9 @@ import {
   Subscription,
 } from '@zedux/core'
 import {
-  AtomGenerics,
-  AtomGenericsToAtomApiGenerics,
-  AnyAtomGenerics,
+  StoreAtomGenerics,
+  StoreAtomGenericsToStoreAtomApiGenerics,
+  AnyStoreAtomGenerics,
 } from './types'
 import {
   AtomInstance as NewAtomInstance,
@@ -22,7 +22,7 @@ import {
   zi,
   SendableEvents,
 } from '@zedux/atoms'
-import { AtomApi } from './AtomApi'
+import { StoreAtomApi } from './StoreAtomApi'
 import {
   prefix,
   PromiseChange,
@@ -31,7 +31,7 @@ import {
   getSuccessPromiseState,
   InjectorDescriptor,
 } from './atoms-port'
-import { AtomTemplate } from './AtomTemplate'
+import { StoreAtomTemplate } from './StoreAtomTemplate'
 
 const StoreState = 1
 const RawState = 2
@@ -68,10 +68,10 @@ const getStateStore = <
   return [stateType, stateStore] as const
 }
 
-export class AtomInstance<
-  G extends Omit<AtomGenerics, 'Node' | 'Template'> & {
-    Template: AtomTemplate<G & { Node: any }>
-  } = AnyAtomGenerics<{
+export class StoreAtomInstance<
+  G extends Omit<StoreAtomGenerics, 'Node' | 'Template'> & {
+    Template: StoreAtomTemplate<G & { Node: any }>
+  } = AnyStoreAtomGenerics<{
     Node: any
   }>
 > extends NewAtomInstance<G> {
@@ -309,12 +309,17 @@ export class AtomInstance<
       const val = (
         v as (
           ...params: G['Params']
-        ) => G['Store'] | G['State'] | AtomApi<AtomGenericsToAtomApiGenerics<G>>
+        ) =>
+          | G['Store']
+          | G['State']
+          | StoreAtomApi<StoreAtomGenericsToStoreAtomApiGenerics<G>>
       )(...this.p)
 
-      if (!is(val, AtomApi)) return val as G['Store'] | G['State']
+      if (!is(val, StoreAtomApi)) return val as G['Store'] | G['State']
 
-      const api = (this.api = val as AtomApi<AtomGenericsToAtomApiGenerics<G>>)
+      const api = (this.api = val as StoreAtomApi<
+        StoreAtomGenericsToStoreAtomApiGenerics<G>
+      >)
 
       // Exports can only be set on initial evaluation
       if (this.l === zi.I && api.exports) {

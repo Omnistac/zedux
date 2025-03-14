@@ -7,11 +7,17 @@ import {
   useAtomSelector,
   useAtomValue,
 } from '@zedux/react'
-import { api, atom, AtomInstanceType, injectStore, ion } from '@zedux/stores'
+import {
+  storeApi,
+  storeAtom,
+  AtomInstanceType,
+  injectStore,
+  storeIon,
+} from '@zedux/stores'
 import React, { useState } from 'react'
 
-const otherAtom = atom('other', () => 'hello')
-const paramAtom = atom('param', (param: string) => {
+const otherAtom = storeAtom('other', () => 'hello')
+const paramAtom = storeAtom('param', (param: string) => {
   const store = injectStore({
     param: param.toUpperCase(),
     counter: 0,
@@ -26,7 +32,7 @@ const paramAtom = atom('param', (param: string) => {
   return store
 })
 
-const testAtom = ion(
+const testAtom = storeIon(
   'test',
   ({ ecosystem, get, getInstance }) => {
     const val = injectAtomSelector(({ get }) => get(paramAtom, ['param']).param)
@@ -34,14 +40,14 @@ const testAtom = ion(
     console.log('rendering stable atom:', { ecosystem, val })
     const other = get(otherAtom)
 
-    return api(other + ' world!' + ' ' + val).setExports({
+    return storeApi(other + ' world!' + ' ' + val).setExports({
       update: (newVal: string) => getInstance(otherAtom).setState(newVal),
     })
   },
   { ttl: 0 }
 )
 
-const upperCaseAtom = ion(
+const upperCaseAtom = storeIon(
   'upperCase',
   ({ get }, instance: AtomInstanceType<typeof testAtom>) =>
     get(instance).toUpperCase()

@@ -1,13 +1,13 @@
 import { createStore } from '@zedux/core'
 import { injectAtomInstance, injectEffect } from '@zedux/react'
-import { atom, injectStore } from '@zedux/stores'
+import { storeAtom, injectStore } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('stores in atoms', () => {
   test('state set in a parent store subscriber lets previous dispatches inform subscribers in order', () => {
     const calls: any[] = []
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const child = createStore(null, 'a')
       const parent = createStore({ child })
       const grandparent = createStore({ parent })
@@ -47,7 +47,7 @@ describe('stores in atoms', () => {
 
   test("state set on a `subscribed` store during atom evaluation doesn't trigger a reevaluation", () => {
     // this exact atom1, atom2 setup is needed to prevent a scheduler loop regression
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const store = injectStore(0)
 
       store.setState(state => state + 1)
@@ -55,7 +55,7 @@ describe('stores in atoms', () => {
       return store
     })
 
-    const atom2 = atom('2', () => {
+    const atom2 = storeAtom('2', () => {
       const store = injectStore(0)
       const instance1 = injectAtomInstance(atom1)
 
