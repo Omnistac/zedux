@@ -1,10 +1,13 @@
 import { AtomConfig, AtomApiPromise, PromiseState } from '@zedux/atoms'
 import { Store, StoreStateType } from '@zedux/core'
-import { AtomApi } from './AtomApi'
-import { AtomTemplate, AtomTemplateRecursive } from './AtomTemplate'
-import { AtomValueOrFactory } from './types'
+import { StoreAtomApi } from './StoreAtomApi'
+import {
+  StoreAtomTemplate,
+  StoreAtomTemplateRecursive,
+} from './StoreAtomTemplate'
+import { StoreAtomValueOrFactory } from './types'
 
-export const atom: {
+export const storeAtom: {
   // Query Atoms
   <
     State = any,
@@ -12,14 +15,14 @@ export const atom: {
     Exports extends Record<string, any> = Record<string, never>
   >(
     key: string,
-    value: (...params: Params) => AtomApi<{
+    value: (...params: Params) => StoreAtomApi<{
       Exports: Exports
       Promise: any
       State: Promise<State>
       Store: undefined
     }>,
     config?: AtomConfig<State>
-  ): AtomTemplateRecursive<{
+  ): StoreAtomTemplateRecursive<{
     State: PromiseState<State>
     Params: Params
     Events: Record<string, never>
@@ -38,14 +41,14 @@ export const atom: {
     key: string,
     value: (...params: Params) =>
       | StoreType
-      | AtomApi<{
+      | StoreAtomApi<{
           Exports: Exports
           Promise: PromiseType
           State: StoreStateType<Store>
           Store: StoreType
         }>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): AtomTemplateRecursive<{
+  ): StoreAtomTemplateRecursive<{
     State: StoreStateType<StoreType>
     Params: Params
     Events: Record<string, never>
@@ -63,7 +66,7 @@ export const atom: {
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
-    value: AtomValueOrFactory<{
+    value: StoreAtomValueOrFactory<{
       Events: Record<string, never>
       Exports: Exports
       Params: Params
@@ -72,7 +75,7 @@ export const atom: {
       Store: StoreType
     }>,
     config?: AtomConfig<State>
-  ): AtomTemplateRecursive<{
+  ): StoreAtomTemplateRecursive<{
     Events: Record<string, never>
     Exports: Exports
     Params: Params
@@ -88,7 +91,7 @@ export const atom: {
   PromiseType extends AtomApiPromise = undefined
 >(
   key: string,
-  value: AtomValueOrFactory<{
+  value: StoreAtomValueOrFactory<{
     Events: Record<string, never>
     Exports: Exports
     Params: Params
@@ -102,5 +105,5 @@ export const atom: {
     throw new TypeError('Zedux: All atoms must have a key')
   }
 
-  return new AtomTemplate(key, value, config)
+  return new StoreAtomTemplate(key, value, config)
 }

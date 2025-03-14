@@ -1,10 +1,10 @@
 import { AtomConfig, AtomGetters, PromiseState } from '@zedux/atoms'
 import { Store, StoreStateType } from '@zedux/core'
-import { AtomApi } from './AtomApi'
-import { IonTemplate, IonTemplateRecursive } from './IonTemplate'
-import { AtomApiPromise, IonStateFactory } from './types'
+import { StoreAtomApi } from './StoreAtomApi'
+import { StoreIonTemplate, StoreIonTemplateRecursive } from './StoreIonTemplate'
+import { StoreAtomApiPromise, StoreIonStateFactory } from './types'
 
-export const ion: {
+export const storeIon: {
   // Query Atoms
   <
     State = any,
@@ -15,14 +15,14 @@ export const ion: {
     value: (
       getters: AtomGetters,
       ...params: Params
-    ) => AtomApi<{
+    ) => StoreAtomApi<{
       Exports: Exports
       Promise: any
       State: Promise<State>
       Store: undefined
     }>,
     config?: AtomConfig<State>
-  ): IonTemplateRecursive<{
+  ): StoreIonTemplateRecursive<{
     State: PromiseState<State>
     Params: Params
     Events: Record<string, never>
@@ -36,7 +36,7 @@ export const ion: {
     StoreType extends Store<any> = Store<any>,
     Params extends any[] = [],
     Exports extends Record<string, any> = Record<string, never>,
-    PromiseType extends AtomApiPromise = undefined
+    PromiseType extends StoreAtomApiPromise = undefined
   >(
     key: string,
     get: (
@@ -44,14 +44,14 @@ export const ion: {
       ...params: Params
     ) =>
       | StoreType
-      | AtomApi<{
+      | StoreAtomApi<{
           Exports: Exports
           Promise: PromiseType
           State: StoreStateType<Store>
           Store: StoreType
         }>,
     config?: AtomConfig<StoreStateType<StoreType>>
-  ): IonTemplateRecursive<{
+  ): StoreIonTemplateRecursive<{
     State: StoreStateType<StoreType>
     Params: Params
     Events: Record<string, never>
@@ -65,14 +65,14 @@ export const ion: {
     State = any,
     Params extends any[] = [],
     Exports extends Record<string, any> = Record<string, never>,
-    PromiseType extends AtomApiPromise = undefined
+    PromiseType extends StoreAtomApiPromise = undefined
   >(
     key: string,
     get: (
       getters: AtomGetters,
       ...params: Params
     ) =>
-      | AtomApi<{
+      | StoreAtomApi<{
           Exports: Exports
           Promise: PromiseType
           State: State
@@ -80,7 +80,7 @@ export const ion: {
         }>
       | State,
     config?: AtomConfig<State>
-  ): IonTemplateRecursive<{
+  ): StoreIonTemplateRecursive<{
     State: State
     Params: Params
     Events: Record<string, never>
@@ -95,10 +95,10 @@ export const ion: {
     Params extends any[] = [],
     Exports extends Record<string, any> = Record<string, never>,
     StoreType extends Store<any> = Store<any>,
-    PromiseType extends AtomApiPromise = undefined
+    PromiseType extends StoreAtomApiPromise = undefined
   >(
     key: string,
-    get: IonStateFactory<{
+    get: StoreIonStateFactory<{
       State: State
       Params: Params
       Events: Record<string, never>
@@ -107,7 +107,7 @@ export const ion: {
       Promise: PromiseType
     }>,
     config?: AtomConfig<State>
-  ): IonTemplateRecursive<{
+  ): StoreIonTemplateRecursive<{
     State: State
     Params: Params
     Events: Record<string, never>
@@ -120,10 +120,10 @@ export const ion: {
   Params extends any[] = [],
   Exports extends Record<string, any> = Record<string, never>,
   StoreType extends Store<State> = Store<State>,
-  PromiseType extends AtomApiPromise = undefined
+  PromiseType extends StoreAtomApiPromise = undefined
 >(
   key: string,
-  get: IonStateFactory<{
+  get: StoreIonStateFactory<{
     State: State
     Params: Params
     Events: Record<string, never>
@@ -132,4 +132,4 @@ export const ion: {
     Promise: PromiseType
   }>,
   config?: AtomConfig<State>
-) => new IonTemplate(key, get, config)
+) => new StoreIonTemplate(key, get, config)

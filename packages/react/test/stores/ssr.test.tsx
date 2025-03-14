@@ -1,5 +1,5 @@
 import { createStore } from '@zedux/core'
-import { atom, injectStore, ion } from '@zedux/stores'
+import { storeAtom, injectStore, storeIon } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('ssr', () => {
@@ -9,7 +9,7 @@ describe('ssr', () => {
   })
 
   test('ecosystem.hydrate() hydrates atoms retroactively by default', () => {
-    const atom1 = atom('1', () => 'a')
+    const atom1 = storeAtom('1', () => 'a')
     const instance1 = ecosystem.getInstance(atom1)
 
     ecosystem.hydrate({
@@ -23,7 +23,7 @@ describe('ssr', () => {
   })
 
   test('retroactive hydration can be turned off', () => {
-    const atom1 = atom('1', () => 'a')
+    const atom1 = storeAtom('1', () => 'a')
     const instance1 = ecosystem.getInstance(atom1)
 
     ecosystem.hydrate(
@@ -40,8 +40,8 @@ describe('ssr', () => {
   })
 
   test('hydrations can apply retroactively and going forward', () => {
-    const atom1 = atom('1', () => 'a')
-    const atom2 = atom('2', () => 'b')
+    const atom1 = storeAtom('1', () => 'a')
+    const atom2 = storeAtom('2', () => 'b')
     const instance1 = ecosystem.getInstance(atom1)
 
     ecosystem.hydrate({
@@ -65,7 +65,7 @@ describe('ssr', () => {
   })
 
   test('atom transform options transform hydrated values', () => {
-    const atom1 = atom('1', () => new Map([['a', 1]]), {
+    const atom1 = storeAtom('1', () => new Map([['a', 1]]), {
       dehydrate: m => Object.fromEntries(m.entries()),
       hydrate: obj => {
         if (typeof obj === 'object' && obj) {
@@ -91,7 +91,7 @@ describe('ssr', () => {
   })
 
   test('retroactive hydration uses the `hydrate` transform option', () => {
-    const atom1 = atom('1', () => new Map([['a', 1]]), {
+    const atom1 = storeAtom('1', () => new Map([['a', 1]]), {
       dehydrate: m => Object.fromEntries(m.entries()),
       hydrate: obj => {
         if (typeof obj === 'object' && obj) {
@@ -117,8 +117,8 @@ describe('ssr', () => {
   })
 
   test('`ecosystem.dehydrate({ exclude })` excludes atoms from dehydration', () => {
-    const atom1 = atom('1', 'a')
-    const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
+    const atom1 = storeAtom('1', 'a')
+    const atom2 = storeIon('2', ({ get }) => get(atom1) + 'b')
 
     ecosystem.getInstance(atom2)
 
@@ -147,8 +147,8 @@ describe('ssr', () => {
   })
 
   test('`ecosystem.dehydrate({ excludeTags })` excludes atoms from dehydration', () => {
-    const atom1 = atom('1', 'a', { tags: ['exclude-me'] })
-    const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
+    const atom1 = storeAtom('1', 'a', { tags: ['exclude-me'] })
+    const atom2 = storeIon('2', ({ get }) => get(atom1) + 'b')
 
     ecosystem.getInstance(atom2)
 
@@ -168,8 +168,8 @@ describe('ssr', () => {
   })
 
   test('`ecosystem.dehydrate({ include })` includes atoms in dehydration', () => {
-    const atom1 = atom('1', 'a')
-    const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
+    const atom1 = storeAtom('1', 'a')
+    const atom2 = storeIon('2', ({ get }) => get(atom1) + 'b')
 
     ecosystem.getInstance(atom2)
 
@@ -201,8 +201,8 @@ describe('ssr', () => {
   })
 
   test('`ecosystem.dehydrate({ includeTags })` includes atoms in dehydration', () => {
-    const atom1 = atom('1', 'a', { tags: ['include-me'] })
-    const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
+    const atom1 = storeAtom('1', 'a', { tags: ['include-me'] })
+    const atom2 = storeIon('2', ({ get }) => get(atom1) + 'b')
 
     ecosystem.getInstance(atom2)
 
@@ -221,8 +221,8 @@ describe('ssr', () => {
   })
 
   test('excludes take precedence over includes', () => {
-    const atom1 = atom('1', 'a', { tags: ['include-me', 'exclude-me'] })
-    const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
+    const atom1 = storeAtom('1', 'a', { tags: ['include-me', 'exclude-me'] })
+    const atom2 = storeIon('2', ({ get }) => get(atom1) + 'b')
 
     ecosystem.getInstance(atom2)
 
@@ -255,7 +255,7 @@ describe('ssr', () => {
   })
 
   test('all injectors receive the hydration', () => {
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const a = injectStore('a', { hydrate: true })
       const b = injectStore('b', { hydrate: true })
 
@@ -275,9 +275,9 @@ describe('ssr', () => {
   })
 
   test('dehydrate only atoms with "@atom"', () => {
-    const atom1 = atom('1', 1)
-    const atom2 = atom('2', 2)
-    const atom3 = ion('3', ({ get }) => get(atom1) + get(atom2))
+    const atom1 = storeAtom('1', 1)
+    const atom2 = storeAtom('2', 2)
+    const atom3 = storeIon('3', ({ get }) => get(atom1) + get(atom2))
 
     ecosystem.getNode(atom3)
 

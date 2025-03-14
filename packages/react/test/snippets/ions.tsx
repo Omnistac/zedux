@@ -4,25 +4,25 @@ import {
   useAtomInstance,
   useAtomValue,
 } from '@zedux/react'
-import { api, atom, AtomInstanceType, ion } from '@zedux/stores'
+import { storeApi, storeAtom, AtomInstanceType, storeIon } from '@zedux/stores'
 import React, { useState } from 'react'
 
-const otherAtom = atom('other', () => 'hello')
+const otherAtom = storeAtom('other', () => 'hello')
 
-const testAtom = ion(
+const testAtom = storeIon(
   'test',
   ({ ecosystem, get, getInstance }) => {
     console.log('the ecosystem:', ecosystem)
     const other = get(otherAtom)
 
-    return api(other + ' world!').setExports({
+    return storeApi(other + ' world!').setExports({
       update: (newVal: string) => getInstance(otherAtom).setState(newVal),
     })
   },
   { ttl: 0 }
 )
 
-const upperCaseAtom = ion(
+const upperCaseAtom = storeIon(
   'upperCase',
   ({ get }, instance: AtomInstanceType<typeof testAtom>) =>
     get(instance).toUpperCase()

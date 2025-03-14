@@ -14,7 +14,7 @@ import {
   injectSelf,
   injectWhy,
 } from '@zedux/react'
-import { api, atom, injectStore } from '@zedux/stores'
+import { storeApi, storeAtom, injectStore } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('injectors', () => {
@@ -50,7 +50,7 @@ describe('injectors', () => {
     const cbA = () => 'aa'
     const cbB = () => 'bb'
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const store = injectStore('a')
       const val1 = injectMemo(() => store.getState())
       const val2 = injectMemo(() => store.getState(), [])
@@ -98,16 +98,16 @@ describe('injectors', () => {
   test('dynamic injectors subscribe to updates', () => {
     const vals: [string, number, number][] = []
 
-    const atom1 = atom('1', () => 1)
-    const atom2 = atom('2', () => {
+    const atom1 = storeAtom('1', () => 1)
+    const atom2 = storeAtom('2', () => {
       const store = injectStore(2)
 
-      return api(store).setExports({
+      return storeApi(store).setExports({
         set2: (val: number) => store.setState(val),
       })
     })
 
-    const atom3 = atom('3', () => {
+    const atom3 = storeAtom('3', () => {
       const self = injectSelf()
       const store = injectStore('a')
       const one = injectAtomValue(atom1)
@@ -116,7 +116,7 @@ describe('injectors', () => {
 
       vals.push([store.getState(), one, two])
 
-      return api(store).setExports({
+      return storeApi(store).setExports({
         invalidate: () => self.invalidate(),
         set2,
         setTwo,
@@ -155,10 +155,10 @@ describe('injectors', () => {
   test("static injectors don't subscribe to updates", () => {
     const vals: [string, boolean, number][] = []
 
-    const atom1 = atom('1', () => true)
-    const atom2 = atom('2', () => 2)
+    const atom1 = storeAtom('1', () => true)
+    const atom2 = storeAtom('2', () => 2)
 
-    const atom3 = atom('3', () => {
+    const atom3 = storeAtom('3', () => {
       const self = injectSelf()
       const instance1 = injectAtomInstance(atom1)
       const [subscribe, setSubscribe] = injectAtomState(instance1)
@@ -167,7 +167,7 @@ describe('injectors', () => {
 
       vals.push([store.getState(), subscribe, instance2.getState()])
 
-      return api(store).setExports({
+      return storeApi(store).setExports({
         invalidate: () => self.invalidate(),
         setSubscribe,
         setTwo: instance2.setState,
@@ -211,10 +211,10 @@ describe('injectors', () => {
   })
 
   test('injected AtomGetters do nothing after evaluation is over', () => {
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const { get, getInstance, select } = injectAtomGetters()
 
-      return api('a').setExports({ get, getInstance, select })
+      return storeApi('a').setExports({ get, getInstance, select })
     })
 
     const selector1 = () => 1
@@ -242,10 +242,10 @@ describe('injectors', () => {
   })
 
   test('injectEcosystem() methods do nothing after evaluation is over', () => {
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const { get, getNode } = injectEcosystem()
 
-      return api('a').setExports({ get, getNode })
+      return storeApi('a').setExports({ get, getNode })
     })
 
     const selector1 = () => 1
@@ -275,7 +275,7 @@ describe('injectors', () => {
   test('injectWhy() is an alias of ecosystem.why() during atom evaluation', () => {
     const whys: (EvaluationReason[] | undefined)[] = []
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const store = injectStore('a')
       const { ecosystem } = injectAtomGetters()
 

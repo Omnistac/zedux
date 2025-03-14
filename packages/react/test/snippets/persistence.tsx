@@ -1,8 +1,8 @@
 import { injectAtomInstance, injectAtomValue, useAtomState } from '@zedux/react'
-import { api, atom, createStore, injectStore } from '@zedux/stores'
+import { storeApi, storeAtom, createStore, injectStore } from '@zedux/stores'
 import React from 'react'
 
-const localStorageAtom = atom('localStorage', (key: string) => {
+const localStorageAtom = storeAtom('localStorage', (key: string) => {
   const val = localStorage.getItem(key)
 
   // using the function overload of `injectStore` to prevent JSON.parse from running unnecesarily on reevaluations:
@@ -15,16 +15,16 @@ const localStorageAtom = atom('localStorage', (key: string) => {
     localStorage.setItem(key, JSON.stringify(newVal))
   }
 
-  return api(store).setExports({ update })
+  return storeApi(store).setExports({ update })
 })
 
-const usernameAtom = atom('username', () => {
+const usernameAtom = storeAtom('username', () => {
   const storageInstance = injectAtomInstance(localStorageAtom, ['username'])
   const { update } = storageInstance.exports
   const storedName = injectAtomValue(storageInstance)
   const val = (storedName as any) || ''
 
-  return api(val as string).setExports({
+  return storeApi(val as string).setExports({
     call: (a: string) => 2,
     update,
   })

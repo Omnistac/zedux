@@ -3,7 +3,7 @@ import {
   InjectMachineStoreParams,
   MachineState,
 } from '@zedux/machines'
-import { api, atom } from '@zedux/stores'
+import { storeApi, storeAtom } from '@zedux/stores'
 import { ecosystem } from '../../../react/test/utils/ecosystem'
 
 const injectMachine = <
@@ -13,12 +13,12 @@ const injectMachine = <
   ...args: InjectMachineStoreParams<States, Context>
 ) => {
   const store = injectMachineStore(...args)
-  return api(store)
+  return storeApi(store)
 }
 
 describe('state machines', () => {
   test('toggler machine be togglin', () => {
-    const toggleAtom = atom('toggle', () =>
+    const toggleAtom = storeAtom('toggle', () =>
       injectMachine(state => [
         state('a').on('toggle', 'b'),
         state('b').on('toggle', 'a'),
@@ -52,7 +52,7 @@ describe('state machines', () => {
   })
 
   test('only takes valid transitions', () => {
-    const machineAtom = atom('machine', () =>
+    const machineAtom = storeAtom('machine', () =>
       injectMachine(state => [
         state('a').on('up', 'b'),
         state('b').on('up', 'c').on('down', 'a'),
@@ -88,7 +88,7 @@ describe('state machines', () => {
 
   test('context helpers update context correctly', () => {
     const initialContext = { a: 1, b: { c: 2, d: 3 } }
-    const machineAtom = atom('machine', () =>
+    const machineAtom = storeAtom('machine', () =>
       injectMachine(state => [state('a')], initialContext)
     )
 
@@ -108,7 +108,7 @@ describe('state machines', () => {
   })
 
   test('state transition guard be guardin', () => {
-    const toggleAtom = atom('toggle', () =>
+    const toggleAtom = storeAtom('toggle', () =>
       injectMachine(
         state => [
           state('a').on('toggle', 'b', context => !context.isPaused),
@@ -138,7 +138,7 @@ describe('state machines', () => {
   })
 
   test('universal transition guard be guardin', () => {
-    const toggleAtom = atom('toggle', () =>
+    const toggleAtom = storeAtom('toggle', () =>
       injectMachine(
         state => [state('a').on('toggle', 'b'), state('b').on('toggle', 'a')],
         { isPaused: false },
@@ -166,7 +166,7 @@ describe('state machines', () => {
   })
 
   test('universal guard is called when state guard returns true', () => {
-    const toggleAtom = atom('toggle', () =>
+    const toggleAtom = storeAtom('toggle', () =>
       injectMachine(
         state => [
           state('a').on('toggle', 'b', () => true),
@@ -202,7 +202,7 @@ describe('state machines', () => {
     const enter = jest.fn()
     const leave = jest.fn()
     const leave2 = jest.fn()
-    const trafficLightAtom = atom('trafficLight', () =>
+    const trafficLightAtom = storeAtom('trafficLight', () =>
       injectMachine(
         state => [
           state('green')
@@ -252,7 +252,7 @@ describe('state machines', () => {
   test('universal transition listener be listenin', () => {
     const onTransition = jest.fn()
 
-    const toggleAtom = atom('toggle', () =>
+    const toggleAtom = storeAtom('toggle', () =>
       injectMachine(
         state => [state('a').on('toggle', 'b'), state('b').on('toggle', 'a')],
         undefined,

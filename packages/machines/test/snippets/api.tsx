@@ -1,24 +1,26 @@
 import { useAtomSelector, useAtomValue } from '../../../react/src'
 import { injectMachineStore } from '@zedux/machines'
-import { api, atom, injectStore, ion } from '@zedux/stores'
+import { storeApi, storeAtom, injectStore, storeIon } from '@zedux/stores'
 import React, { Suspense, useState } from 'react'
 
-const a = atom('a', () => injectStore('a'))
-const b = atom('b', () => api(injectStore('a')))
-const c = atom('c', () =>
+const a = storeAtom('a', () => injectStore('a'))
+const b = storeAtom('b', () => storeApi(injectStore('a')))
+const c = storeAtom('c', () =>
   injectMachineStore(state => [state('a').on('next', 'b')])
 )
-const d = atom('d', () =>
-  api(injectMachineStore(state => [state('a').on('next', 'b')]))
+const d = storeAtom('d', () =>
+  storeApi(injectMachineStore(state => [state('a').on('next', 'b')]))
 )
-const e = atom('e', () => api(new Promise<string>(resolve => resolve('a'))))
-const f = ion('f', () => injectStore('a'))
-const g = ion('g', () => api(injectStore('a')))
-const h = ion('h', () =>
+const e = storeAtom('e', () =>
+  storeApi(new Promise<string>(resolve => resolve('a')))
+)
+const f = storeIon('f', () => injectStore('a'))
+const g = storeIon('g', () => storeApi(injectStore('a')))
+const h = storeIon('h', () =>
   injectMachineStore(state => [state('a').on('next', 'b')])
 )
-const i = ion('i', () =>
-  api(injectMachineStore(state => [state('a').on('next', 'b')]))
+const i = storeIon('i', () =>
+  storeApi(injectMachineStore(state => [state('a').on('next', 'b')]))
 )
 
 function Child() {

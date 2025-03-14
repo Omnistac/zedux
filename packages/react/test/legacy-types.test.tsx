@@ -17,28 +17,28 @@ import {
 import {
   AnyStoreAtomInstance,
   AnyStoreAtomTemplate,
-  AnyAtomGenerics,
-  api,
-  atom,
-  AtomApi,
+  AnyStoreAtomGenerics,
+  storeApi,
+  storeAtom,
+  StoreAtomApi,
   AtomExportsType,
-  AtomInstance,
-  AtomInstanceRecursive,
+  StoreAtomInstance,
+  StoreAtomInstanceRecursive,
   AtomInstanceType,
   AtomParamsType,
   AtomPromiseType,
   AtomStateType,
   AtomStoreType,
-  AtomTemplateRecursive,
+  StoreAtomTemplateRecursive,
   AtomTemplateType,
-  injectPromise,
+  injectStorePromise,
   injectStore,
-  ion,
-  IonTemplateRecursive,
+  storeIon,
+  StoreIonTemplateRecursive,
 } from '@zedux/stores'
 import { expectTypeOf } from 'expect-type'
 
-const exampleAtom = atom('example', (p: string) => {
+const exampleAtom = storeAtom('example', (p: string) => {
   const store = injectStore(p)
 
   const partialInstance = injectSelf()
@@ -47,7 +47,7 @@ const exampleAtom = atom('example', (p: string) => {
     ;(partialInstance as AtomInstanceType<typeof exampleAtom>).store.getState()
   }
 
-  return api(store)
+  return storeApi(store)
     .setExports({
       getBool: () => Boolean(store.getState()),
       getNum: () => Number(store.getState()),
@@ -106,17 +106,17 @@ describe('react types', () => {
   })
 
   test('non-atom-api inference in atoms', () => {
-    const storeAtom = atom('store', (p: string) => injectStore(p))
-    const valueAtom = atom('value', (p: string) => p)
+    const storeBasedAtom = storeAtom('store', (p: string) => injectStore(p))
+    const valueAtom = storeAtom('value', (p: string) => p)
 
-    const storeInstance = ecosystem.getInstance(storeAtom, ['a'])
+    const storeInstance = ecosystem.getInstance(storeBasedAtom, ['a'])
     const valueInstance = ecosystem.getInstance(valueAtom, ['a'])
 
-    type StoreAtomState = AtomStateType<typeof storeAtom>
-    type StoreAtomParams = AtomParamsType<typeof storeAtom>
-    type StoreAtomExports = AtomExportsType<typeof storeAtom>
-    type StoreAtomPromise = AtomPromiseType<typeof storeAtom>
-    type StoreAtomStore = AtomStoreType<typeof storeAtom>
+    type StoreAtomState = AtomStateType<typeof storeBasedAtom>
+    type StoreAtomParams = AtomParamsType<typeof storeBasedAtom>
+    type StoreAtomExports = AtomExportsType<typeof storeBasedAtom>
+    type StoreAtomPromise = AtomPromiseType<typeof storeBasedAtom>
+    type StoreAtomStore = AtomStoreType<typeof storeBasedAtom>
     type ValueAtomState = AtomStateType<typeof valueAtom>
     type ValueAtomParams = AtomParamsType<typeof valueAtom>
     type ValueAtomExports = AtomExportsType<typeof valueAtom>
@@ -134,7 +134,7 @@ describe('react types', () => {
     type ValueAtomInstancePromise = AtomPromiseType<typeof storeInstance>
     type ValueAtomInstanceStore = AtomStoreType<typeof storeInstance>
 
-    type TStoreAtomInstance = AtomInstanceType<typeof storeAtom>
+    type TStoreAtomInstance = AtomInstanceType<typeof storeBasedAtom>
     type TStoreAtomTemplate = AtomTemplateType<typeof storeInstance>
     type TValueAtomInstance = AtomInstanceType<typeof valueAtom>
     type TValueAtomTemplate = AtomTemplateType<typeof valueInstance>
@@ -170,7 +170,7 @@ describe('react types', () => {
     expectTypeOf<TStoreAtomTemplate>().toEqualTypeOf<typeof storeInstance.t>()
     expectTypeOf<TValueAtomInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TValueAtomTemplate>().toEqualTypeOf<
-      AtomTemplateRecursive<{
+      StoreAtomTemplateRecursive<{
         State: ValueAtomState
         Params: ValueAtomParams
         Events: Record<string, never>
@@ -182,39 +182,39 @@ describe('react types', () => {
   })
 
   test('atom api inference in atoms', () => {
-    const storeAtom = atom('store', (p: string) => {
+    const storeBasedAtom = storeAtom('store', (p: string) => {
       const store = injectStore(p)
 
-      return api(store)
+      return storeApi(store)
         .setExports({ toNum: (str: string) => Number(str) })
         .setPromise(Promise.resolve('b'))
     })
 
-    const valueAtom = atom('value', (p: string) => {
-      return api(p)
+    const valueAtom = storeAtom('value', (p: string) => {
+      return storeApi(p)
         .setExports({ toNum: (str: string) => Number(str) })
         .setPromise(Promise.resolve('b'))
     })
 
-    const queryAtom = atom('query', (p: string) => {
-      return api(Promise.resolve(p)).setExports({
+    const queryAtom = storeAtom('query', (p: string) => {
+      return storeApi(Promise.resolve(p)).setExports({
         toNum: (str: string) => Number(str),
       })
     })
 
-    const queryWithPromiseAtom = atom('queryWithPromise', (p: string) => {
-      return api(Promise.resolve(p))
+    const queryWithPromiseAtom = storeAtom('queryWithPromise', (p: string) => {
+      return storeApi(Promise.resolve(p))
         .setExports({ toNum: (str: string) => Number(str) })
         .setPromise(Promise.resolve(1))
     })
 
-    const noExportsAtom = atom('noExports', () => api('a'))
+    const noExportsAtom = storeAtom('noExports', () => storeApi('a'))
 
     type ExpectedExports = {
       toNum: (str: string) => number
     }
 
-    expectTypeOf<AtomStateType<typeof storeAtom>>().toBeString()
+    expectTypeOf<AtomStateType<typeof storeBasedAtom>>().toBeString()
     expectTypeOf<AtomStateType<typeof valueAtom>>().toBeString()
     expectTypeOf<AtomStateType<typeof queryAtom>>().toEqualTypeOf<
       PromiseState<string>
@@ -224,7 +224,7 @@ describe('react types', () => {
     >()
     expectTypeOf<AtomStateType<typeof noExportsAtom>>().toBeString()
 
-    expectTypeOf<AtomParamsType<typeof storeAtom>>().toEqualTypeOf<
+    expectTypeOf<AtomParamsType<typeof storeBasedAtom>>().toEqualTypeOf<
       [p: string]
     >()
     expectTypeOf<AtomParamsType<typeof valueAtom>>().toEqualTypeOf<
@@ -239,7 +239,7 @@ describe('react types', () => {
     expectTypeOf<AtomParamsType<typeof noExportsAtom>>().toEqualTypeOf<[]>()
 
     expectTypeOf<
-      AtomExportsType<typeof storeAtom>
+      AtomExportsType<typeof storeBasedAtom>
     >().toEqualTypeOf<ExpectedExports>()
     expectTypeOf<
       AtomExportsType<typeof valueAtom>
@@ -254,7 +254,7 @@ describe('react types', () => {
       Record<string, never>
     >()
 
-    expectTypeOf<AtomStoreType<typeof storeAtom>>().toEqualTypeOf<
+    expectTypeOf<AtomStoreType<typeof storeBasedAtom>>().toEqualTypeOf<
       Store<string>
     >()
     expectTypeOf<AtomStoreType<typeof valueAtom>>().toEqualTypeOf<
@@ -270,7 +270,7 @@ describe('react types', () => {
       Store<string>
     >()
 
-    expectTypeOf<AtomPromiseType<typeof storeAtom>>().toEqualTypeOf<
+    expectTypeOf<AtomPromiseType<typeof storeBasedAtom>>().toEqualTypeOf<
       Promise<string>
     >()
     expectTypeOf<AtomPromiseType<typeof valueAtom>>().toEqualTypeOf<
@@ -288,17 +288,17 @@ describe('react types', () => {
   })
 
   test('non-atom-api inference in ions', () => {
-    const storeIon = ion('store', (_, p: string) => injectStore(p))
-    const valueIon = ion('value', (_, p: string) => p)
+    const storeBasedIon = storeIon('store', (_, p: string) => injectStore(p))
+    const valueIon = storeIon('value', (_, p: string) => p)
 
-    const storeInstance = ecosystem.getNode(storeIon, ['a'])
+    const storeInstance = ecosystem.getNode(storeBasedIon, ['a'])
     const valueInstance = ecosystem.getNode(valueIon, ['a'])
 
-    type StoreIonState = AtomStateType<typeof storeIon>
-    type StoreIonParams = AtomParamsType<typeof storeIon>
-    type StoreIonExports = AtomExportsType<typeof storeIon>
-    type StoreIonPromise = AtomPromiseType<typeof storeIon>
-    type StoreIonStore = AtomStoreType<typeof storeIon>
+    type StoreIonState = AtomStateType<typeof storeBasedIon>
+    type StoreIonParams = AtomParamsType<typeof storeBasedIon>
+    type StoreIonExports = AtomExportsType<typeof storeBasedIon>
+    type StoreIonPromise = AtomPromiseType<typeof storeBasedIon>
+    type StoreIonStore = AtomStoreType<typeof storeBasedIon>
     type ValueIonState = AtomStateType<typeof valueIon>
     type ValueIonParams = AtomParamsType<typeof valueIon>
     type ValueIonExports = AtomExportsType<typeof valueIon>
@@ -316,7 +316,7 @@ describe('react types', () => {
     type ValueIonInstancePromise = AtomPromiseType<typeof storeInstance>
     type ValueIonInstanceStore = AtomStoreType<typeof storeInstance>
 
-    type TStoreIonInstance = AtomInstanceType<typeof storeIon>
+    type TStoreIonInstance = AtomInstanceType<typeof storeBasedIon>
     type TStoreIonTemplate = AtomTemplateType<typeof storeInstance>
     type TValueIonInstance = AtomInstanceType<typeof valueIon>
     type TValueIonTemplate = AtomTemplateType<typeof valueInstance>
@@ -350,7 +350,7 @@ describe('react types', () => {
 
     expectTypeOf<TStoreIonInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TStoreIonTemplate>().toEqualTypeOf<
-      IonTemplateRecursive<{
+      StoreIonTemplateRecursive<{
         State: StoreIonState
         Params: StoreIonParams
         Events: Record<string, never>
@@ -361,7 +361,7 @@ describe('react types', () => {
     >()
     expectTypeOf<TValueIonInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TValueIonTemplate>().toEqualTypeOf<
-      IonTemplateRecursive<{
+      StoreIonTemplateRecursive<{
         State: StoreIonState
         Params: StoreIonParams
         Events: Record<string, never>
@@ -373,28 +373,28 @@ describe('react types', () => {
   })
 
   test('atom api inference in ions', () => {
-    const storeIon = ion('store', (_, p: string) => {
+    const storeBasedIon = storeIon('store', (_, p: string) => {
       const store = injectStore(p)
 
-      return api(store)
+      return storeApi(store)
         .setExports({ toNum: (str: string) => Number(str) })
         .setPromise(Promise.resolve('b'))
     })
 
-    const valueIon = ion('value', (_, p: string) => {
-      return api(p)
+    const valueIon = storeIon('value', (_, p: string) => {
+      return storeApi(p)
         .setExports({ toNum: (str: string) => Number(str) })
         .setPromise(Promise.resolve('b'))
     })
 
-    const queryIon = ion('query', (_, p: string) => {
-      return api(Promise.resolve(p)).setExports({
+    const queryIon = storeIon('query', (_, p: string) => {
+      return storeApi(Promise.resolve(p)).setExports({
         toNum: (str: string) => Number(str),
       })
     })
 
-    const queryWithPromiseIon = ion('queryWithPromise', (_, p: string) => {
-      return api(Promise.resolve(p))
+    const queryWithPromiseIon = storeIon('queryWithPromise', (_, p: string) => {
+      return storeApi(Promise.resolve(p))
         .setExports({ toNum: (str: string) => Number(str) })
         .setPromise(Promise.resolve(1))
     })
@@ -403,7 +403,7 @@ describe('react types', () => {
       toNum: (str: string) => number
     }
 
-    expectTypeOf<AtomStateType<typeof storeIon>>().toBeString()
+    expectTypeOf<AtomStateType<typeof storeBasedIon>>().toBeString()
     expectTypeOf<AtomStateType<typeof valueIon>>().toBeString()
     expectTypeOf<AtomStateType<typeof queryIon>>().toEqualTypeOf<
       PromiseState<string>
@@ -412,7 +412,9 @@ describe('react types', () => {
       PromiseState<string>
     >()
 
-    expectTypeOf<AtomParamsType<typeof storeIon>>().toEqualTypeOf<[p: string]>()
+    expectTypeOf<AtomParamsType<typeof storeBasedIon>>().toEqualTypeOf<
+      [p: string]
+    >()
     expectTypeOf<AtomParamsType<typeof valueIon>>().toEqualTypeOf<[p: string]>()
     expectTypeOf<AtomParamsType<typeof queryIon>>().toEqualTypeOf<[p: string]>()
     expectTypeOf<AtomParamsType<typeof queryWithPromiseIon>>().toEqualTypeOf<
@@ -420,7 +422,7 @@ describe('react types', () => {
     >()
 
     expectTypeOf<
-      AtomExportsType<typeof storeIon>
+      AtomExportsType<typeof storeBasedIon>
     >().toEqualTypeOf<ExpectedExports>()
     expectTypeOf<
       AtomExportsType<typeof valueIon>
@@ -432,7 +434,7 @@ describe('react types', () => {
       AtomExportsType<typeof queryWithPromiseIon>
     >().toEqualTypeOf<ExpectedExports>()
 
-    expectTypeOf<AtomStoreType<typeof storeIon>>().toEqualTypeOf<
+    expectTypeOf<AtomStoreType<typeof storeBasedIon>>().toEqualTypeOf<
       Store<string>
     >()
     expectTypeOf<AtomStoreType<typeof valueIon>>().toEqualTypeOf<
@@ -445,7 +447,7 @@ describe('react types', () => {
       Store<PromiseState<string>>
     >()
 
-    expectTypeOf<AtomPromiseType<typeof storeIon>>().toEqualTypeOf<
+    expectTypeOf<AtomPromiseType<typeof storeBasedIon>>().toEqualTypeOf<
       Promise<string>
     >()
     expectTypeOf<AtomPromiseType<typeof valueIon>>().toEqualTypeOf<
@@ -460,11 +462,13 @@ describe('react types', () => {
   })
 
   test('AnyAtomGenerics - instances as params', () => {
-    const innerAtom = atom('inner', 'a')
+    const innerAtom = storeAtom('inner', 'a')
 
-    const outerAtom = atom(
+    const outerAtom = storeAtom(
       'outer',
-      (instance: AtomInstance<AnyAtomGenerics<{ State: string }>>) => {
+      (
+        instance: StoreAtomInstance<AnyStoreAtomGenerics<{ State: string }>>
+      ) => {
         const val = injectAtomValue(instance) // subscribe to updates
 
         return val.toUpperCase()
@@ -477,7 +481,7 @@ describe('react types', () => {
 
     expect(val).toBe('A')
     expectTypeOf<typeof innerInstance>().toMatchTypeOf<
-      AtomInstanceRecursive<{
+      StoreAtomInstanceRecursive<{
         Events: Record<string, never>
         Exports: Record<string, never>
         Params: []
@@ -488,12 +492,12 @@ describe('react types', () => {
     >()
 
     expectTypeOf<typeof outerInstance>().toMatchTypeOf<
-      AtomInstanceRecursive<{
+      StoreAtomInstanceRecursive<{
         Events: Record<string, never>
         Exports: Record<string, never>
         Params: [
-          instance: AtomInstance<
-            AnyAtomGenerics<{
+          instance: StoreAtomInstance<
+            AnyStoreAtomGenerics<{
               State: string
             }>
           >
@@ -506,7 +510,7 @@ describe('react types', () => {
   })
 
   test('accepting templates', () => {
-    const allOptionalParamsAtom = atom(
+    const allOptionalParamsAtom = storeAtom(
       'allOptionalParams',
       (a?: boolean, b?: string[]) => {
         const store = injectStore(a ? b : 2)
@@ -515,12 +519,12 @@ describe('react types', () => {
       }
     )
 
-    const allRequiredParamsAtom = atom(
+    const allRequiredParamsAtom = storeAtom(
       'allRequiredParams',
       (a: string, b: number, c: boolean) => (c ? a : b)
     )
 
-    const someOptionalParamsAtom = atom(
+    const someOptionalParamsAtom = storeAtom(
       'someOptionalParams',
       (a: string, b?: number) => a + b
     )
@@ -554,7 +558,7 @@ describe('react types', () => {
 
     expectTypeOf<typeof key>().toBeString()
     expectTypeOf<typeof instance>().toMatchTypeOf<
-      AtomInstanceRecursive<{
+      StoreAtomInstanceRecursive<{
         State: string
         Params: [p: string]
         Events: Record<string, never>
@@ -567,7 +571,7 @@ describe('react types', () => {
       }>
     >()
     expectTypeOf<typeof instance2>().toMatchTypeOf<
-      AtomInstanceRecursive<{
+      StoreAtomInstanceRecursive<{
         State: number | string[] | undefined
         Params: [a?: boolean | undefined, b?: string[] | undefined]
         Events: Record<string, never>
@@ -594,7 +598,9 @@ describe('react types', () => {
       ecosystem.get(someOptionalParamsAtom, ['a'])
     ).toMatchTypeOf<string>()
 
-    expectTypeOf(noParams(atom('no-params-test', null))).toMatchTypeOf<null>()
+    expectTypeOf(
+      noParams(storeAtom('no-params-test', null))
+    ).toMatchTypeOf<null>()
   })
 
   test('accepting instances', () => {
@@ -658,7 +664,7 @@ describe('react types', () => {
   })
 
   test('injectors', () => {
-    const injectingAtom = atom('injecting', () => {
+    const injectingAtom = storeAtom('injecting', () => {
       // @ts-expect-error missing param
       injectAtomInstance(exampleAtom)
       const instance = injectAtomInstance(exampleAtom, ['a'])
@@ -668,9 +674,9 @@ describe('react types', () => {
       const [val4] = injectAtomState(instance)
       const val5 = injectMemo(() => true, [])
       const val6 = injectCallback(() => true, [])
-      const val7 = injectPromise(() => Promise.resolve(1), [])
+      const val7 = injectStorePromise(() => Promise.resolve(1), [])
 
-      return api(injectStore(instance.getState())).setExports({
+      return storeApi(injectStore(instance.getState())).setExports({
         val1,
         val2,
         val3,
@@ -691,7 +697,7 @@ describe('react types', () => {
       val4: string
       val5: boolean
       val6: () => boolean
-      val7: AtomApi<{
+      val7: StoreAtomApi<{
         Exports: Record<string, any>
         Promise: Promise<number>
         State: PromiseState<number>
@@ -712,7 +718,7 @@ describe('react types', () => {
 
   test('AtomApi types helpers', () => {
     const store = createStore(null, 'a')
-    const withEverything = api(store)
+    const withEverything = storeApi(store)
       .addExports({ a: 1 })
       .setPromise(Promise.resolve(true))
 
@@ -729,10 +735,10 @@ describe('react types', () => {
   })
 
   test('promises', () => {
-    const atom1 = atom('1', () => api().setPromise())
-    const atom2 = atom('1', () => api().setPromise(undefined))
-    const atom3 = atom('1', () =>
-      api().setPromise().setPromise(Promise.resolve(2))
+    const atom1 = storeAtom('1', () => storeApi().setPromise())
+    const atom2 = storeAtom('1', () => storeApi().setPromise(undefined))
+    const atom3 = storeAtom('1', () =>
+      storeApi().setPromise().setPromise(Promise.resolve(2))
     )
 
     expectTypeOf<AtomPromiseType<typeof atom1>>().toBeUndefined()

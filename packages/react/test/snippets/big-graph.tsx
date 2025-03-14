@@ -1,22 +1,22 @@
 import { injectAtomInstance, injectAtomValue, useAtomValue } from '@zedux/react'
-import { atom, injectStore } from '@zedux/stores'
+import { storeAtom, injectStore } from '@zedux/stores'
 import React from 'react'
 
-const atom1 = atom('atom1', () => {
+const atom1 = storeAtom('atom1', () => {
   console.log('evaluating atom1')
   const store = injectStore('1')
 
   return store
 })
 
-const atom2 = atom('atom2', () => {
+const atom2 = storeAtom('atom2', () => {
   console.log('evaluating atom2')
   const atom1val = injectAtomValue(atom1)
 
   return atom1val + '2'
 })
 
-const atom3 = atom('atom3', (id: string) => {
+const atom3 = storeAtom('atom3', (id: string) => {
   console.log('evaluating atom3')
   const atom1val = injectAtomValue(atom1)
   const atom2val = injectAtomValue(atom2)
@@ -24,7 +24,7 @@ const atom3 = atom('atom3', (id: string) => {
   return `${id} ${atom1val} ${atom2val}`
 })
 
-const atom4 = atom('atom4', () => {
+const atom4 = storeAtom('atom4', () => {
   console.log('evaluating atom4')
   const atom3val = injectAtomValue(atom3, ['1'])
   const atom1val = injectAtomValue(atom1)
@@ -32,7 +32,7 @@ const atom4 = atom('atom4', () => {
   return `${atom3val} ${atom1val}`
 })
 
-const atom5 = atom('atom5', () => {
+const atom5 = storeAtom('atom5', () => {
   console.log('evaluating atom5')
   const atom2val = injectAtomValue(atom2)
   const atom4val = injectAtomValue(atom4)
@@ -41,7 +41,7 @@ const atom5 = atom('atom5', () => {
   return `${atom4val} ${atom2val} ${atom1val}`
 })
 
-const setterAtom = atom('setter', () => {
+const setterAtom = storeAtom('setter', () => {
   const setters = [
     injectAtomInstance(atom1).setState,
     injectAtomInstance(atom2).setState,

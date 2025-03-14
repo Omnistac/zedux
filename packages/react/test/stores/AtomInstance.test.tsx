@@ -1,12 +1,12 @@
 import { injectEffect } from '@zedux/atoms'
 import { createStore } from '@zedux/core'
-import { atom, injectStore } from '@zedux/stores'
+import { storeAtom, injectStore } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 import { mockConsole } from '../utils/console'
 
 describe('AtomInstance', () => {
   test("an instance's state can be a function", () => {
-    const atom1 = atom('1', () => (param: string) => param + 1)
+    const atom1 = storeAtom('1', () => (param: string) => param + 1)
 
     const instance = ecosystem.getInstance(atom1)
     const getVal = instance.get()
@@ -22,7 +22,7 @@ describe('AtomInstance', () => {
 
   test('atom instances have to return the same state type on every evaluation', () => {
     let evaluations = 0
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const store = injectStore()
       evaluations++
 
@@ -37,7 +37,7 @@ describe('AtomInstance', () => {
   })
 
   test('atom instances have to return the same store on every evaluation', () => {
-    const atom1 = atom('1', () => createStore(null, 1))
+    const atom1 = storeAtom('1', () => createStore(null, 1))
 
     const instance = ecosystem.getInstance(atom1)
 
@@ -49,7 +49,7 @@ describe('AtomInstance', () => {
   test('errors thrown during evaluation are rethrown', () => {
     const mock = mockConsole('error')
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       throw 'test'
     })
 
@@ -66,7 +66,7 @@ describe('AtomInstance', () => {
     const mock = mockConsole('error')
     const cleanup = jest.fn()
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       injectEffect(() => cleanup, [], { synchronous: true })
       throw 'test'
     })
@@ -82,7 +82,7 @@ describe('AtomInstance', () => {
   })
 
   test('setStateDeep() is an alias for `store.setStateDeep()`', () => {
-    const atom1 = atom('1', { a: 1, b: { c: 3 } })
+    const atom1 = storeAtom('1', { a: 1, b: { c: 3 } })
 
     const instance1 = ecosystem.getInstance(atom1)
 

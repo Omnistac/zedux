@@ -11,23 +11,23 @@ import {
   EvaluationReason,
 } from '@zedux/react'
 import {
-  api,
-  atom,
+  storeApi,
+  storeAtom,
   AtomInstanceType,
   createStore,
   injectStore,
-  ion,
+  storeIon,
 } from '@zedux/stores'
 import React from 'react'
 import { ecosystem, getNodes, snapshotNodes } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 import { Eventless } from '@zedux/react/utils'
 
-const atom1 = atom('atom1', () => 1)
-const atom2 = atom('atom2', () => 2)
-const atom3 = atom('atom3', () => 3)
+const atom1 = storeAtom('atom1', () => 1)
+const atom2 = storeAtom('atom2', () => 2)
+const atom3 = storeAtom('atom3', () => 3)
 
-const atom4 = atom('atom4', () => {
+const atom4 = storeAtom('atom4', () => {
   const switchStore = injectStore(true)
   const sumStore = injectStore(0)
   const store = injectStore(() =>
@@ -41,7 +41,7 @@ const atom4 = atom('atom4', () => {
   // won't cause a reevaluation loop
   sumStore.setState(one + two)
 
-  return api(store).setExports({
+  return storeApi(store).setExports({
     toggle: () => switchStore.setState(val => !val),
   })
 })
@@ -146,13 +146,13 @@ describe('graph', () => {
   test('getInstance(atom) returns the instance', () => {
     const evaluations: number[] = []
 
-    const ion1 = ion('ion1', ({ getInstance }) => {
+    const ion1 = storeIon('ion1', ({ getInstance }) => {
       const instance1 = getInstance(atom1)
       const instance2 = getInstance(atom2)
 
       evaluations.push(instance1.store.getState())
 
-      return api(
+      return storeApi(
         instance1.store.getState() + instance2.store.getState()
       ).setExports({
         set: (val: number) => getInstance(atom1).setState(val + 1),
@@ -180,10 +180,10 @@ describe('graph', () => {
   test('on reevaluation, get() updates the graph', () => {
     jest.useFakeTimers()
     let useB = true
-    const atomA = atom('a', () => 'a')
-    const atomB = atom('b', (param: string) => param)
-    const atomC = atom('c', 'c')
-    const atomD = ion('d', ({ get }) => {
+    const atomA = storeAtom('a', () => 'a')
+    const atomB = storeAtom('b', (param: string) => param)
+    const atomC = storeAtom('c', 'c')
+    const atomD = storeIon('d', ({ get }) => {
       const a = injectAtomValue(atomA)
       const b = useB ? get(atomB, ['b']) : get(atomC)
 
@@ -204,7 +204,7 @@ describe('graph', () => {
   test('atom instances can be passed as atom params', () => {
     const instance1 = ecosystem.getInstance(atom1)
 
-    const testAtom = atom(
+    const testAtom = storeAtom(
       'test',
       (instance: AtomInstanceType<typeof atom1>) => {
         const subRef = injectRef(false)
@@ -213,7 +213,7 @@ describe('graph', () => {
 
         if (subRef.current) get(asDep)
 
-        return api(asDep.getState()).setExports({ subRef })
+        return storeApi(asDep.getState()).setExports({ subRef })
       }
     )
 
@@ -236,8 +236,8 @@ describe('graph', () => {
   })
 
   test('simultaneously-scheduled selector evaluations cause one evaluation', () => {
-    const atom1 = atom('1', 'a')
-    const atom2 = ion('2', ({ get }) => get(atom1) + 'b')
+    const atom1 = storeAtom('1', 'a')
+    const atom2 = storeIon('2', ({ get }) => get(atom1) + 'b')
 
     let why: EvaluationReason[] | undefined
 

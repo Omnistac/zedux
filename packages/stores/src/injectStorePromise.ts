@@ -14,8 +14,8 @@ import {
   getInitialPromiseState,
   getSuccessPromiseState,
 } from './atoms-port'
-import { AtomApi } from './AtomApi'
-import { api } from './api'
+import { StoreAtomApi } from './StoreAtomApi'
+import { storeApi } from './storeApi'
 import { injectStore } from './injectStore'
 
 /**
@@ -62,14 +62,14 @@ import { injectStore } from './injectStore'
  * })
  * ```
  */
-export const injectPromise: {
+export const injectStorePromise: {
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps: InjectorDeps,
     config: Omit<InjectPromiseConfig, 'dataOnly'> & {
       dataOnly: true
     } & InjectStoreConfig
-  ): AtomApi<{
+  ): StoreAtomApi<{
     Exports: Record<string, any>
     Promise: Promise<T>
     State: T
@@ -80,7 +80,7 @@ export const injectPromise: {
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps?: InjectorDeps,
     config?: InjectPromiseConfig<T> & InjectStoreConfig
-  ): AtomApi<{
+  ): StoreAtomApi<{
     Exports: Record<string, any>
     Promise: Promise<T>
     State: PromiseState<T>
@@ -170,5 +170,5 @@ export const injectPromise: {
     []
   )
 
-  return api(store).setPromise(refs.current.promise)
+  return storeApi(store).setPromise(refs.current.promise)
 }

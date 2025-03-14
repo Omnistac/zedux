@@ -1,5 +1,5 @@
 import { injectAtomGetters, injectCallback, injectRef } from '@zedux/atoms'
-import { api, atom, injectStore, zeduxTypes } from '@zedux/stores'
+import { storeApi, storeAtom, injectStore, zeduxTypes } from '@zedux/stores'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('batching', () => {
@@ -17,12 +17,12 @@ describe('batching', () => {
   test('injectCallback() batches updates by default', () => {
     const evaluations: number[] = []
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const store = injectStore(0)
 
       evaluations.push(store.getState())
 
-      return api(store).setExports({
+      return storeApi(store).setExports({
         update: injectCallback(() => {
           store.setState(1)
           store.setState(2)
@@ -42,12 +42,12 @@ describe('batching', () => {
   test("inline callbacks don't batch updates", () => {
     const evaluations: number[] = []
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const store = injectStore(0)
 
       evaluations.push(store.getState())
 
-      return api(store).setExports({
+      return storeApi(store).setExports({
         update: () => {
           store.setState(1)
           store.setState(2)
@@ -67,7 +67,7 @@ describe('batching', () => {
   test('ecosystem.batch() batches updates', () => {
     const evaluations: number[] = []
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const { ecosystem } = injectAtomGetters()
       const store = injectStore(0)
       const batchRef = injectRef(() => {
@@ -83,7 +83,7 @@ describe('batching', () => {
 
       evaluations.push(store.getState())
 
-      return api(store).setExports({
+      return storeApi(store).setExports({
         batchRef,
         noBatchRef,
       })
@@ -107,7 +107,7 @@ describe('batching', () => {
 
     const evaluations: number[] = []
 
-    const atom1 = atom('1', () => {
+    const atom1 = storeAtom('1', () => {
       const store = injectStore(0)
       const batchAllRef = injectRef(() => {
         store.setState(1, zeduxTypes.batch)
@@ -124,7 +124,7 @@ describe('batching', () => {
 
       evaluations.push(store.getState())
 
-      return api(store).setExports({
+      return storeApi(store).setExports({
         batchAllRef,
         batchOneRef,
         noBatchRef,
