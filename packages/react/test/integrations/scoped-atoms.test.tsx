@@ -180,7 +180,7 @@ describe('scoped atoms', () => {
     // 2 parents, 4 children, 2 nested, 6 external
     expect(ecosystem.n.size).toBe(14)
 
-    expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
+    expect(ecosystem.findAll('@atom').map(({ id }) => id)).toEqual([
       'child-@scope("a",parent-[1])',
       'child-@scope("a",parent-[2])',
       'child-@scope("b",parent-[1])',
@@ -205,7 +205,7 @@ describe('scoped atoms', () => {
 
     expect(ecosystem.n.size).toBe(14) // 2 new children, 2 destroyed
 
-    expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
+    expect(ecosystem.findAll('@atom').map(({ id }) => id)).toEqual([
       'child-@scope("aa",parent-[1])',
       'child-@scope("aa",parent-[2])',
       'child-@scope("b",parent-[1])',
@@ -231,7 +231,7 @@ describe('scoped atoms', () => {
 
     expect(ecosystem.n.size).toBe(14) // no changes
 
-    expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
+    expect(ecosystem.findAll('@atom').map(({ id }) => id)).toEqual([
       'child-@scope("aa",parent-[1])',
       'child-@scope("aa",parent-[2])',
       'child-@scope("b",parent-[1])',
@@ -298,7 +298,14 @@ describe('scoped atoms', () => {
       const instance2 = useAtomInstance(parentAtom2, [2])
       const instance200 = useAtomInstance(parentAtom2, [200])
 
-      // 8 pairs
+      /**
+       * 4 triplets:
+       *
+       * - contextA+instance1+instance2
+       * - contextA+instance100+instance200
+       * - contextB+instance1+instance2
+       * - contextB+instance100+instance200
+       */
       return (
         <>
           {[state1, 'b'].map((value, index) => (
@@ -340,7 +347,9 @@ describe('scoped atoms', () => {
     // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
     expect(ecosystem.n.size).toBe(28)
 
-    expect(ecosystem.findAll().map(({ id }) => id)).toMatchSnapshot()
+    expect(
+      ecosystem.findAll(['@atom', '@selector']).map(({ id }) => id)
+    ).toMatchSnapshot()
 
     act(() => {
       button1.click()
@@ -357,7 +366,9 @@ describe('scoped atoms', () => {
     // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
     expect(ecosystem.n.size).toBe(28)
 
-    expect(ecosystem.findAll().map(({ id }) => id)).toMatchSnapshot()
+    expect(
+      ecosystem.findAll(['@atom', '@selector']).map(({ id }) => id)
+    ).toMatchSnapshot()
 
     const scope = new Map<Record<string, any>, any>([
       [context, 'b'],
@@ -379,7 +390,9 @@ describe('scoped atoms', () => {
     // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
     expect(ecosystem.n.size).toBe(28)
 
-    expect(ecosystem.findAll().map(({ id }) => id)).toMatchSnapshot()
+    expect(
+      ecosystem.findAll(['@atom', '@selector']).map(({ id }) => id)
+    ).toMatchSnapshot()
 
     act(() => {
       childInstance.destroy(true)
@@ -391,7 +404,9 @@ describe('scoped atoms', () => {
     // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
     expect(ecosystem.n.size).toBe(28)
 
-    expect(ecosystem.findAll().map(({ id }) => id)).toMatchSnapshot()
+    expect(
+      ecosystem.findAll(['@atom', '@selector']).map(({ id }) => id)
+    ).toMatchSnapshot()
   })
 
   test('React context reference changes create new scopes', async () => {
@@ -438,6 +453,7 @@ describe('scoped atoms', () => {
     calls.splice(0, calls.length)
 
     expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
+      '@component(Child)-:rh:',
       '@selector(unknown)-1-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":1}})',
     ])
@@ -450,6 +466,7 @@ describe('scoped atoms', () => {
     expect(calls).toEqual([{ a: { b: 2 } }])
 
     expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
+      '@component(Child)-:rh:',
       '@selector(unknown)-1-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":2}})',

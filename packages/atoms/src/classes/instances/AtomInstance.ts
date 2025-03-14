@@ -483,7 +483,14 @@ export class AtomInstance<
    * @see Signal.m
    */
   public m() {
-    const ttl = this._getTtl()
+    const apiTtl = this.api?.ttl
+    const ttl =
+      apiTtl == null
+        ? this.t.ttl
+        : typeof apiTtl === 'function'
+        ? apiTtl()
+        : apiTtl
+
     if (ttl === 0) return this.destroy()
 
     setNodeStatus(this, STALE)
@@ -566,23 +573,18 @@ export class AtomInstance<
     }
   }
 
-  public _set?: ExportsInfusedSetter<G['State'], G['Exports']>
-  public get _infusedSetter() {
-    if (this._set) return this._set
-    const setState: any = (settable: any, meta?: any) =>
-      this.set(settable, meta)
+  /**
+   * e`x`portsInfusedSetter - a thin wrapper function around `this.set` with all
+   * of this atom instance's exports spread onto the function reference itself.
+   */
+  public get x(): ExportsInfusedSetter<G['State'], G['Exports']> {
+    Object.defineProperty(this, 'x', {
+      value: Object.assign(
+        (settable: Settable, meta?: any) => this.set(settable, meta),
+        this.exports
+      ),
+    })
 
-    return (this._set = Object.assign(setState, this.exports))
-  }
-
-  private _getTtl() {
-    if (this.api?.ttl == null) {
-      return this.t.ttl ?? this.e.atomDefaults?.ttl
-    }
-
-    // this atom instance set its own ttl
-    const { ttl } = this.api
-
-    return typeof ttl === 'function' ? ttl() : ttl
+    return this.x
   }
 }

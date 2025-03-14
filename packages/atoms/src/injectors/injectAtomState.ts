@@ -41,5 +41,5 @@ export const injectAtomState: {
     subscribe: true,
   })
 
-  return [instance.v, instance._infusedSetter]
+  return [instance.v, instance.x]
 }

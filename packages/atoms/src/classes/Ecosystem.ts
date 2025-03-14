@@ -5,7 +5,7 @@ import {
   NodeOf,
   ParamsOf,
   AtomSelectorConfig,
-  AtomSelectorOrConfig,
+  SelectorTemplate,
   StateOf,
   Cleanup,
   DehydrationFilter,
@@ -85,7 +85,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements EventEmitter, Job
 {
   public asyncScheduler = new AsyncScheduler(this)
-  public atomDefaults: EcosystemConfig['atomDefaults'] | undefined = undefined
   public complexParams = false
 
   // @ts-expect-error context can be specifically undefined, and that's its type
@@ -168,7 +167,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * selectorKey that can be used to predictably create selectorKey+params ids
    * to look up the cached selector instance in `this.n`odes.
    */
-  public b = new WeakMap<AtomSelectorOrConfig, string>()
+  public b = new WeakMap<SelectorTemplate, string>()
 
   /**
    * `c`urrent `f`inishBuffer - the currently-used `finishBuffer`
@@ -383,30 +382,28 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   >(
     template: G extends AtomGenerics
       ? AtomTemplateBase<G>
-      : AtomSelectorOrConfig<G>,
+      : SelectorTemplate<G>,
     params: G['Params']
   ): G['Node'] | undefined
 
   public find<
     G extends Pick<AtomGenerics, 'Node' | 'State' | 'Template'> & { Params: [] }
   >(
-    template: G extends AtomGenerics
-      ? AtomTemplateBase<G>
-      : AtomSelectorOrConfig<G>
+    template: G extends AtomGenerics ? AtomTemplateBase<G> : SelectorTemplate<G>
   ): G['Node'] | undefined
 
   public find<
     G extends Pick<AtomGenerics, 'Node' | 'Params' | 'State' | 'Template'>
   >(
     template: ParamlessTemplate<
-      G extends AtomGenerics ? AtomTemplateBase<G> : AtomSelectorOrConfig<G>
+      G extends AtomGenerics ? AtomTemplateBase<G> : SelectorTemplate<G>
     >
   ): G['Node'] | undefined
 
   public find(searchStr: string, params?: []): ZeduxNode | undefined
 
   public find<G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | AtomSelectorOrConfig<G> | string,
+    template: AtomTemplateBase<G> | SelectorTemplate<G> | string,
     params?: G['Params']
   ) {
     const isString = typeof template === 'string'
@@ -415,7 +412,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     if (!isString) {
       const id = isTemplate
         ? (template as AnyAtomTemplate).getNodeId(this, params)
-        : getSelectorKey(this, template as AtomSelectorOrConfig)
+        : getSelectorKey(this, template as SelectorTemplate)
 
       // try to find an existing instance
       const instance = this.n.get(id)
@@ -430,7 +427,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
           : `${
               isTemplate
                 ? (template as AnyAtomTemplate).key
-                : getSelectorKey(this, template as AtomSelectorOrConfig)
+                : getSelectorKey(this, template as SelectorTemplate)
             }-${this.hash(params)}`
       )
     }
@@ -444,6 +441,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   }
 
   public findAll(type?: NodeType): ZeduxNode[]
+  public findAll(type?: NodeType[]): ZeduxNode[]
   public findAll(options?: NodeFilter): ZeduxNode[]
 
   /**
@@ -543,7 +541,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * without registering dependencies, @see Ecosystem.getNodeOnce
    */
   public getNode: GetNode = <G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | ZeduxNode<G> | AtomSelectorOrConfig<G>,
+    template: AtomTemplateBase<G> | ZeduxNode<G> | SelectorTemplate<G>,
     params?: G['Params'],
     edgeConfig?: GraphEdgeConfig
   ) => {
@@ -570,7 +568,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * even when called in reactive contexts.
    */
   public getNodeOnce: GetNode = <G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | ZeduxNode<G> | AtomSelectorOrConfig<G>,
+    template: AtomTemplateBase<G> | ZeduxNode<G> | SelectorTemplate<G>,
     params?: G['Params']
   ) => getNode(this, template, params)
 
@@ -582,7 +580,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * even when called in reactive contexts.
    */
   public getOnce: GetNode = <G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | ZeduxNode<G> | AtomSelectorOrConfig<G>,
+    template: AtomTemplateBase<G> | ZeduxNode<G> | SelectorTemplate<G>,
     params?: G['Params']
   ) => getNode(this, template, params).getOnce()
 

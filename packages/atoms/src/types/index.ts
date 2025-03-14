@@ -73,8 +73,7 @@ export interface AtomSelectorConfig<State = any, Params extends any[] = any> {
   selector: AtomSelector<State, Params>
 }
 
-// TODO: rename to SelectorTemplate
-export type AtomSelectorOrConfig<State = any, Params extends any[] = any> =
+export type SelectorTemplate<State = any, Params extends any[] = any> =
   | AtomSelector<State, Params>
   | AtomSelectorConfig<State, Params>
 
@@ -112,9 +111,6 @@ export type DehydrationFilter =
 export interface EcosystemConfig<
   Context extends Record<string, any> | undefined = any
 > {
-  atomDefaults?: {
-    ttl?: number
-  }
   complexParams?: boolean
   context?: Context
   makeId?: (
@@ -183,7 +179,7 @@ export interface GetNode {
     template: S,
     params: ParamsOf<S>,
     edgeConfig?: GraphEdgeConfig
-  ): S extends AtomSelectorOrConfig
+  ): S extends SelectorTemplate
     ? SelectorInstance<{
         Params: ParamsOf<S>
         State: StateOf<S>
@@ -191,7 +187,7 @@ export interface GetNode {
       }>
     : S
 
-  <S extends Selectable<any, []>>(template: S): S extends AtomSelectorOrConfig
+  <S extends Selectable<any, []>>(template: S): S extends SelectorTemplate
     ? SelectorInstance<{
         Params: ParamsOf<S>
         State: StateOf<S>
@@ -201,7 +197,7 @@ export interface GetNode {
 
   <S extends Selectable>(
     template: ParamlessTemplate<S>
-  ): S extends AtomSelectorOrConfig
+  ): S extends SelectorTemplate
     ? SelectorInstance<{
         Params: ParamsOf<S>
         State: StateOf<S>
@@ -213,7 +209,7 @@ export interface GetNode {
 
   // catch-all
   <G extends AtomGenerics>(
-    template: AtomTemplateBase<G> | ZeduxNode<G> | AtomSelectorOrConfig<G>,
+    template: AtomTemplateBase<G> | ZeduxNode<G> | SelectorTemplate<G>,
     params: G['Params'],
     edgeConfig?: GraphEdgeConfig
   ): G['Node']
@@ -385,9 +381,9 @@ export interface Observable<T = any> {
 }
 
 export interface NodeFilterOptions {
-  exclude?: (AnyAtomTemplate | AtomSelectorOrConfig | NodeType | string)[]
+  exclude?: (AnyAtomTemplate | SelectorTemplate | NodeType | string)[]
   excludeTags?: string[]
-  include?: (AnyAtomTemplate | AtomSelectorOrConfig | NodeType | string)[]
+  include?: (AnyAtomTemplate | SelectorTemplate | NodeType | string)[]
   includeTags?: string[]
 }
 
@@ -395,8 +391,9 @@ export type NodeFilter =
   | string
   | NodeType
   | AnyAtomTemplate
-  | AtomSelectorOrConfig
+  | SelectorTemplate
   | NodeFilterOptions
+  | NodeFilter[]
 
 export type NodeType =
   | '@atom'
@@ -416,7 +413,7 @@ export type None = Prettify<Record<never, never>>
  * params or has only optional params.
  */
 export type ParamlessTemplate<
-  A extends AnyAtomTemplate | AtomSelectorOrConfig | ZeduxNode
+  A extends AnyAtomTemplate | SelectorTemplate | ZeduxNode
 > = ParamsOf<A> extends [AnyNonNullishValue | undefined | null, ...any[]]
   ? never
   : A
@@ -463,11 +460,11 @@ export type Scope = Map<
 >
 
 export type Selectable<State = any, Params extends any[] = any> =
-  | AtomSelectorOrConfig<State, Params>
+  | SelectorTemplate<State, Params>
   | SelectorInstance<{
       Params: Params
       State: State
-      Template: AtomSelectorOrConfig<State, Params>
+      Template: SelectorTemplate<State, Params>
     }>
 
 export type Settable<State = any, StateIn = State> =

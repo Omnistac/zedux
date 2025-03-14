@@ -3,7 +3,7 @@ import {
   AnyAtomTemplate,
   AtomGenerics,
   AtomSelectorConfig,
-  AtomSelectorOrConfig,
+  SelectorTemplate,
   Job,
 } from '../types'
 import { AtomInstance } from '../classes/instances/AtomInstance'
@@ -84,7 +84,7 @@ export const mapRefToId = (ecosystem: Ecosystem, obj: any, name: string) => {
  */
 export const getNode = <G extends AtomGenerics>(
   ecosystem: Ecosystem,
-  template: AtomTemplateBase<G> | ZeduxNode<G> | AtomSelectorOrConfig<G>,
+  template: AtomTemplateBase<G> | ZeduxNode<G> | SelectorTemplate<G>,
   params?: G['Params']
 ): ZeduxNode => {
   if ((template as ZeduxNode).izn) {
@@ -150,7 +150,7 @@ export const getNode = <G extends AtomGenerics>(
     typeof template === 'function' ||
     (template && (template as AtomSelectorConfig).selector)
   ) {
-    const selectorOrConfig = template as AtomSelectorOrConfig<G>
+    const selectorOrConfig = template as SelectorTemplate<G>
     const id = getInstanceId(ecosystem, selectorOrConfig, params)
     let instance = ecosystem.n.get(id) as SelectorInstance<G>
 
