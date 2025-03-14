@@ -1,3 +1,11 @@
+## v2.0.0-rc.0 (Mar 14, 2025)
+
+### New Features:
+
+- **Breaking Change** `atoms`, `stores`: improve `findAll`, ions, and clean up types, properties, and deprecations (#212)
+- **Breaking Change** `atoms`, `stores`: rename `getInstanceId` to `getNodeId` and add a `scope` option (#211)
+- **Breaking Change** `machines`, `stores`: rename store-based APIs and types in the stores package (#213)
+
 ## v2.0.0-beta.8 (Mar 13, 2025)
 
 ### New Features:
