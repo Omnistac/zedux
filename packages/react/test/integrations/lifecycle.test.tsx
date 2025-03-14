@@ -2,7 +2,6 @@ import { act, fireEvent } from '@testing-library/react'
 import {
   api,
   atom,
-  createEcosystem,
   injectAtomValue,
   injectEffect,
   injectSignal,
@@ -265,22 +264,5 @@ describe('ttl', () => {
     jest.runAllTimers()
 
     expect(instance1.status).toBe('Destroyed')
-  })
-
-  test('ecosystem `atomDefaults.ttl` is used as a default', () => {
-    const testEcosystem = createEcosystem({ atomDefaults: { ttl: 0 } })
-    const atom1 = atom('1', () => 'a')
-
-    const instance1 = testEcosystem.getInstance(atom1)
-    const cleanup = instance1.on(() => {}, { active: true })
-    const keys = [...testEcosystem.n.keys()]
-
-    expect(keys).toHaveLength(2)
-    expect(keys[0]).toBe('1')
-    expect(keys[1]).toBe('@listener(1)-1')
-
-    cleanup()
-
-    expect([...testEcosystem.n.keys()]).toEqual([])
   })
 })

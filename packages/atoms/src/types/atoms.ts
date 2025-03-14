@@ -4,7 +4,7 @@ import { AtomApi } from '../classes/AtomApi'
 import { ZeduxNode } from '../classes/ZeduxNode'
 import {
   AnyNonNullishValue,
-  AtomSelectorOrConfig,
+  SelectorTemplate,
   Prettify,
   Selectable,
 } from './index'
@@ -85,7 +85,7 @@ export type EventsOf<A extends AnyAtomApi | AnyAtomTemplate | ZeduxNode> =
     ? G['Signal'] extends Signal
       ? EventsOf<G['Signal']>
       : never
-    : A extends AtomSelectorOrConfig<infer Events>
+    : A extends SelectorTemplate<infer Events>
     ? Events
     : never
 
@@ -123,21 +123,20 @@ export type NodeOf<A extends AnyAtomTemplate | Selectable<any, any>> =
     ? SelectorInstance<{
         Params: Params
         State: State
-        Template: AtomSelectorOrConfig<State, Params>
+        Template: SelectorTemplate<State, Params>
       }>
     : never
 
-export type ParamsOf<
-  A extends AnyAtomTemplate | ZeduxNode | AtomSelectorOrConfig
-> = A extends AtomTemplateBase<infer G>
-  ? G['Params']
-  : A extends ZeduxNode<infer G>
-  ? G extends { Params: infer Params }
+export type ParamsOf<A extends AnyAtomTemplate | ZeduxNode | SelectorTemplate> =
+  A extends AtomTemplateBase<infer G>
+    ? G['Params']
+    : A extends ZeduxNode<infer G>
+    ? G extends { Params: infer Params }
+      ? Params
+      : never
+    : A extends SelectorTemplate<any, infer Params>
     ? Params
     : never
-  : A extends AtomSelectorOrConfig<any, infer Params>
-  ? Params
-  : never
 
 export type PromiseOf<A extends AnyAtomApi | AnyAtomTemplate | ZeduxNode> =
   A extends AtomTemplateBase<infer G>
@@ -152,11 +151,11 @@ export type PromiseOf<A extends AnyAtomApi | AnyAtomTemplate | ZeduxNode> =
 
 export type SelectorGenerics = Pick<AtomGenerics, 'State'> & {
   Params: any[]
-  Template: AtomSelectorOrConfig
+  Template: SelectorTemplate
 }
 
 export type StateOf<
-  A extends AnyAtomApi | AnyAtomTemplate | AtomSelectorOrConfig | ZeduxNode
+  A extends AnyAtomApi | AnyAtomTemplate | SelectorTemplate | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['State']
   : A extends ZeduxNode<infer G>
@@ -167,7 +166,7 @@ export type StateOf<
   ? G['State']
   : A extends AtomApi<infer G>
   ? G['State']
-  : A extends AtomSelectorOrConfig<infer State>
+  : A extends SelectorTemplate<infer State>
   ? State
   : never
 

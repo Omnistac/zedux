@@ -331,6 +331,10 @@ function App() {
 
 ## Other New Features
 
+- `ecosystem.findAll` now accepts all the same filtering parameters as `ecosystem.dehydrate` and then some:
+  - Pass an `@`-prefixed string like `@atom` or `@selector` to only return nodes of that type.
+  - The types have been improved to make editors autocomplete those `@`-prefixed strings, leading to some slick DX.
+  - Pass an array of filters (`.findAll([...myFilters])`) as a shorthand for `.findAll({ include: [...myFilters] })`
 - `untrack` - A new top-level export for bumping out of a reactive context.
 - When called with no deps, `injectMemo` now automatically tracks any signal usages in the callback and reactively updates when they change, causing the injecting atom to reevaluate.
 - `ecosystem.withScope` - Runs a callback in a scoped context with the passed scope.
@@ -510,7 +514,7 @@ const ecosystem = createEcosystem({
 
 `ecosystem.findAll` now returns an array instead of an object keyed by node id. This is to make it easier to sort/filter/map/reduce the returned list yourself.
 
-In particular, the default filtering logic is only designed for the default id generation. Now that you can easily customize ids with `makeId`, we need an API that lends itself to custom filtering of those ids better. Simply adding the ability to chain array operations directly off the `.findAll()` call is really all we need. It also makes manual dehydration easier:
+The default filtering logic is only designed for the default id generation. Now that you can easily customize ids with `makeId`, we need an API that lends itself to custom filtering of those ids better. Simply adding the ability to chain array operations directly off the `.findAll()` call is really all we need. It also makes manual dehydration easier:
 
 ```ts
 // custom dehydration example
@@ -519,6 +523,8 @@ ecosystem
   .filter(myCustomFilter)
   .reduce((obj, node) => ({ ...obj, [node.id]: node.get() }), {})
 ```
+
+The new signals-based ions now set `ttl: 0` by default. This reflects their primary purpose - to derive state. Derivations are usually transient and should be cleaned up (by default!) when no longer in use.
 
 ## Migrating to Signals
 
@@ -661,6 +667,7 @@ This section is a work in progress
 - `{ flags }` -> `{ tags }` (in atom config objects)
 - `{ includeFlags, excludeFlags }` -> `{ includeTags, excludeTags }` (in the object passed to `ecosystem.dehydrate`)
 - `atomTemplate.getInstanceId` -> `atomTemplate.getNodeId`
+- `AtomSelectorOrConfig` -> `SelectorTemplate`
 
 For mods (previously added to `ZeduxPlugin`s, now "ecosystem events" registered with `ecosystem.on`), replace:
 
@@ -675,6 +682,7 @@ Note that the `instanceReused` mod is removed with no equivalent (see below). Al
 
 Optionally replace deprecated APIs. May be needed for TS support in rare cases. These will be required in Zedux v3:
 
+- `atomInstance.setState` -> `atomInstance.set`
 - `atomGetters.select(selector, arg1, arg2)` -> `atomGetters.get(selector, [arg1, arg2])`
 - `useAtomSelector(selector, arg1, arg2)` -> `useAtomValue(selector, [arg1, arg2])`
 - `injectAtomSelector(selector, arg1, arg2)` -> `injectAtomValue(selector, [arg1, arg2])`
@@ -694,6 +702,7 @@ Also optionally replace some deprecated and/or "legacy" types:
 
 - `manualHydration` atom config option.
 - `AtomInstanceBase` usages. This was an unnecessary superclass. The `AtomInstance` class itself now handles everything this class did.
+- `atomDefaults` ecosystem config options. Use custom atom factories to share atom behaviors. Or use `ion`s to create `ttl: 0` atoms easily.
 - `ZeduxPlugin` usages. Use [ecosystem events](#feature-ecosystem-events) instead.
 - `instanceReused` mods. No replacement. We're working on build tool plugins to do what this mod was trying to do. Those will be released later.
 - reading `sourceType` field on evaluation reasons.
@@ -789,6 +798,7 @@ Replace:
 
 Remove:
 
+- `ttl: 0` in ions. This is the default for signals-based ions. That also means you may need to add `ttl: -1` (infinity) to ions that you don't want to give `ttl: 0` (tip: If you're unsure, leave the new default alone).
 - `createStore`. Use mapped signals instead for composing state primitives. Use `ecosystem.signal` instead for creating state containers on the fly.
 - `atomInstance.store`. Signal-based atoms don't expose the underlying signal. Use the atom instance itself; it forwards all state updates and sent events to wrapped signals
   - `atomInstance.store.getState` -> `atomInstance.getOnce` (but prefer `.get` for automatic reactivity)

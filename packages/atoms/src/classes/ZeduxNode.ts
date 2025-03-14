@@ -269,7 +269,9 @@ export abstract class ZeduxNode<G extends NodeGenerics = AnyNodeGenerics>
       excludeTags = [],
       include = [],
       includeTags = [],
-    } = typeof options === 'object' && !is(options, AtomTemplateBase)
+    } = Array.isArray(options)
+      ? { include: options }
+      : options && typeof options === 'object' && !is(options, AtomTemplateBase)
       ? (options as NodeFilterOptions)
       : { include: options ? [options as string | AnyAtomTemplate] : [] }
 
@@ -380,9 +382,9 @@ export abstract class ZeduxNode<G extends NodeGenerics = AnyNodeGenerics>
   public abstract s: Map<ZeduxNode, GraphEdge>
 
   /**
-   * `t`emplate - a reference to the template that was used to create this node
-   * - e.g. an `AtomTemplate` instance for atom instances or an
-   * AtomSelectorOrConfig function or object for selector instances.
+   * `t`emplate - a reference to the template that was used to create this node.
+   * e.g. an `AtomTemplate` instance for atom instances or a SelectorTemplate
+   * function or object for selector instances.
    */
   public abstract t: G['Template']
 
@@ -494,11 +496,6 @@ export class ExternalNode<
    * @see ZeduxNode.d can't dehydrate external nodes
    */
   public d() {}
-
-  /**
-   * @see ZeduxNode.f `ecosystem.findAll()` never returns external nodes
-   */
-  public f() {}
 
   /**
    * @see ZeduxNode.j can't hydrate external nodes

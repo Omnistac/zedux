@@ -15,6 +15,14 @@ import {
   None,
 } from '../types/index'
 
+/**
+ * Creates an atom template that's specifically geared toward derivations:
+ *
+ * - The first parameter of the state factory will be the `ecosystem`, so you
+ *   can easily `get(otherAtom)`
+ * - The atom's `ttl` will be set to `0` by default, destroying instances of
+ *   this atom as soon as they're no longer used.
+ */
 export const ion: {
   // Query Atoms
   <

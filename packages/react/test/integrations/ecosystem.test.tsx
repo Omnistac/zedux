@@ -10,6 +10,7 @@ import {
   EcosystemProvider,
   useEcosystem,
   getDefaultEcosystem,
+  useAtomInstance,
 } from '@zedux/react'
 import React, { useEffect, useState } from 'react'
 import { act } from '@testing-library/react'
@@ -270,6 +271,28 @@ describe('ecosystem', () => {
     expect(ecosystem.findAll('@atom').map(({ id }) => id)).toEqual([
       'a-["a"]',
       'a-["aa"]',
+      'b',
+    ])
+
+    function Test() {
+      useAtomValue(atomA, ['aaa'])
+      useAtomInstance(atomA, ['aaa'])
+
+      return null
+    }
+
+    renderInEcosystem(<Test />)
+
+    expect(
+      ecosystem
+        .findAll(['@atom', '@component'])
+        .map(({ id }) => id.replace(/-:.*:/, ''))
+    ).toEqual([
+      '@component(Test)',
+      '@component(Test)',
+      'a-["a"]',
+      'a-["aa"]',
+      'a-["aaa"]',
       'b',
     ])
 

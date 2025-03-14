@@ -2,7 +2,7 @@ import {
   AnyNonNullishValue,
   AtomGenerics as NewAtomGenerics,
   AtomGetters,
-  AtomSelectorOrConfig,
+  SelectorTemplate,
   AtomTemplateBase,
   ZeduxNode,
   Prettify,
@@ -104,14 +104,14 @@ export type AtomInstanceType<A extends AnyStoreAtomTemplate> =
     : never
 
 export type AtomParamsType<
-  A extends AnyStoreAtomTemplate | ZeduxNode | AtomSelectorOrConfig
+  A extends AnyStoreAtomTemplate | ZeduxNode | SelectorTemplate
 > = A extends AtomTemplateBase<infer G>
   ? G['Params']
   : A extends ZeduxNode<infer G>
   ? G extends { Params: infer Params }
     ? Params
     : never
-  : A extends AtomSelectorOrConfig<any, infer Params>
+  : A extends SelectorTemplate<any, infer Params>
   ? Params
   : never
 
@@ -144,14 +144,14 @@ export type AtomValueOrFactory<
 > = AtomStateFactory<G> | G['Store'] | G['State']
 
 export type AtomStateType<
-  A extends AnyAtomApi | AnyStoreAtomTemplate | AtomSelectorOrConfig | ZeduxNode
+  A extends AnyAtomApi | AnyStoreAtomTemplate | SelectorTemplate | ZeduxNode
 > = A extends AtomTemplateBase<infer G>
   ? G['State']
   : A extends ZeduxNode<infer G>
   ? G['State']
   : A extends AtomApi<infer G>
   ? G['State']
-  : A extends AtomSelectorOrConfig<infer State>
+  : A extends SelectorTemplate<infer State>
   ? State
   : never
 
@@ -197,5 +197,5 @@ export type PartialStoreAtomInstance = Omit<
 
 export type SelectorGenerics = Pick<AtomGenerics, 'State'> & {
   Params: any[]
-  Template: AtomSelectorOrConfig
+  Template: SelectorTemplate
 }

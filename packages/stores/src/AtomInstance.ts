@@ -180,6 +180,10 @@ export class AtomInstance<
 
   /**
    * An alias for `.store.setState()`
+   *
+   * @deprecated prefer `.set`, which is a thin wrapper around this method but
+   * is compatible with the new signals-based atoms. Using `.set` will make it
+   * easier to migrate to signals.
    */
   public setState = (settable: Settable<G['State']>, meta?: any): G['State'] =>
     this.store.setState(settable, meta)

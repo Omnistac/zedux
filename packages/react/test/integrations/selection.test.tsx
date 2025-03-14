@@ -336,4 +336,20 @@ describe('selection', () => {
 
     expect(node2.get()).toBe('aab')
   })
+
+  test('ions have ttl: 0 by default', () => {
+    const atom1 = atom('1', () => 'a', { ttl: 0 })
+    const atom2 = ion('2', ({ get }) => get(atom1))
+
+    const node2 = ecosystem.getNode(atom2)
+    const node1 = ecosystem.getNode(atom1)
+
+    expect(node2.status).toBe('Active')
+
+    node2.on(() => {}, { active: true })() // add a dep and immediately remove
+
+    expect(node2.status).toBe('Destroyed')
+    expect(node1.status).toBe('Destroyed')
+    expect(ecosystem.n.size).toBe(0)
+  })
 })

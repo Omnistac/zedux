@@ -1,7 +1,7 @@
 import {
   AtomSelector,
   AtomSelectorConfig,
-  AtomSelectorOrConfig,
+  SelectorTemplate,
   SelectorGenerics,
 } from '../types/index'
 import { schedulerPost, schedulerPre } from './ecosystem'
@@ -19,7 +19,7 @@ const defaultResultsComparator = (a: any, b: any) => a === b
  */
 export const getInstanceId = (
   ecosystem: Ecosystem,
-  selectorOrConfig: AtomSelectorOrConfig,
+  selectorOrConfig: SelectorTemplate,
   params?: any[]
 ) => {
   const baseKey = getSelectorKey(ecosystem, selectorOrConfig)
@@ -29,7 +29,7 @@ export const getInstanceId = (
 
 export const getSelectorKey = (
   ecosystem: Ecosystem,
-  template: AtomSelectorOrConfig
+  template: SelectorTemplate
 ) => {
   const existingKey = ecosystem.b.get(template)
 
@@ -42,7 +42,7 @@ export const getSelectorKey = (
   return key
 }
 
-export const getSelectorName = (template: AtomSelectorOrConfig) =>
+export const getSelectorName = (template: SelectorTemplate) =>
   template.name || (template as AtomSelectorConfig).selector?.name || 'unknown'
 
 /**

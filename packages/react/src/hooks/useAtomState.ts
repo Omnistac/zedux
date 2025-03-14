@@ -74,5 +74,5 @@ export const useAtomState: {
     subscribe: true,
   })
 
-  return [instance.v, instance._infusedSetter]
+  return [instance.v, instance.x]
 }
