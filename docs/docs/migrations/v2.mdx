@@ -210,12 +210,13 @@ function Child() {
 
 function App() {
   const ecosystem = useEcosystem()
-  const cleanupRef = useRef()
 
-  if (!cleanupRef.current) {
+  useEffect(() => {
     // uncomment this and open browser console:
-    // cleanupRef.current = ecosystem.on(event => console.log(event))
-  }
+    // const cleanup = ecosystem.on(event => console.log(event))
+    // return () => cleanup()
+  }, [ecosystem])
+  const cleanupRef = useRef()
 
   const [count, setCount] = useAtomState(parentCountAtom)
 
@@ -669,6 +670,7 @@ This section is a work in progress
 - `{ flags }` -> `{ tags }` (in atom config objects)
 - `{ includeFlags, excludeFlags }` -> `{ includeTags, excludeTags }` (in the object passed to `ecosystem.dehydrate`)
 - `atomTemplate.getInstanceId` -> `atomTemplate.getNodeId`
+- `ecosystem._idGenerator.generateId` -> `ecosystem.makeId`. Use the new `makeId` ecosystem config option in tests instead of mocking Zedux APIs.
 - `AtomSelectorOrConfig` -> `SelectorTemplate`
 
 For mods (previously added to `ZeduxPlugin`s, now "ecosystem events" registered with `ecosystem.on`), replace:
@@ -710,53 +712,112 @@ Also optionally replace some deprecated and/or "legacy" types:
 - reading `sourceType` field on evaluation reasons.
 - `internalStore` usages. Zedux no longer stores ecosystems in module-level state. Pass them around yourself as needed.
 - `wipe` usages (the top-level export). Zedux no longer has internal state to clear.
+- any other usages of `ecosystem._idGenerator`.
 
 ### Keeping Stores
 
 If you're using stores extensively, especially with lots of advanced features, it may be easier to keep using stores for now and migrate incrementally to signals.
 
-To do this, replace any store-atom-related imports from `@zedux/atoms` or `@zedux/react` with imports from `@zedux/stores`. Refer to this for the full list:
+To do this, replace any store-atom-related imports from `@zedux/atoms` or `@zedux/react` with the relevant imports from `@zedux/stores`. It may be easier to use import aliases to map the new names to the old. Refer to this for the full list:
 
 ```ts
 import {
-  // APIs:
+  // APIs that need aliasing for migrating from Zedux v1:
+  injectStorePromise as injectPromise,
   storeApi as api,
   storeAtom as atom,
   StoreAtomApi as AtomApi,
   StoreAtomInstance as AtomInstance,
-  StoreAtomInstanceRecursive as AtomInstanceRecursive,
   StoreAtomTemplate as AtomTemplate,
-  StoreAtomTemplateRecursive as AtomTemplateRecursive,
-  injectStorePromise as injectPromise,
-  injectStore,
   storeIon as ion,
   StoreIonTemplate as IonTemplate,
 
-  // types:
+  // APIs that don't need aliasing:
+  actionFactory,
+  createReducer,
+  createStore,
+  detailedTypeof,
+  doSubscribe,
+  getMetaData,
+  getStoreInternals,
+  injectStore,
+  is,
+  isPlainObject,
+  removeAllMeta,
+  removeMeta,
+  setStoreInternals,
+  Store,
+  zeduxTypes,
+} from '@zedux/stores'
+
+import type {
+  // Types that need aliasing for migrating from Zedux v1:
+  AnyStoreAtomApi as AnyAtomApi,
   AnyStoreAtomApiGenerics as AnyAtomApiGenerics,
   AnyStoreAtomGenerics as AnyAtomGenerics,
-  AnyStoreAtomApi as AnyAtomApi,
   AnyStoreAtomInstance as AnyAtomInstance,
   AnyStoreAtomTemplate as AnyAtomTemplate,
+  PartialStoreAtomInstance as PartialAtomInstance,
   StoreAtomApiGenerics as AtomApiGenerics,
   StoreAtomApiGenericsPartial as AtomApiGenericsPartial,
   StoreAtomApiPromise as AtomApiPromise,
-  AtomEventsType,
-  AtomExportsType,
   StoreAtomGenerics as AtomGenerics,
   StoreAtomGenericsToStoreAtomApiGenerics as AtomGenericsToAtomApiGenerics,
-  AtomInstanceType,
-  AtomParamsType,
-  AtomPromiseType,
+  StoreAtomInstanceRecursive as AtomInstanceRecursive,
   StoreAtomStateFactory as AtomStateFactory,
-  AtomStateType,
-  AtomStoreType,
+  StoreAtomTemplateRecursive as AtomTemplateRecursive,
   StoreAtomValueOrFactory as AtomValueOrFactory,
-  AtomTemplateType,
   StoreIonInstanceRecursive as IonInstanceRecursive,
   StoreIonStateFactory as IonStateFactory,
   StoreIonTemplateRecursive as IonTemplateRecursive,
-  PartialStoreAtomInstance as PartialAtomInstance,
+  StoreSettable as Settable,
+
+  // types that don't need aliasing:
+  AtomTemplateType,
+  AtomStateType,
+  AtomStoreType,
+  AtomInstanceType,
+  AtomParamsType,
+  AtomPromiseType,
+  AtomEventsType,
+  AtomExportsType,
+  Action,
+  ActionChain,
+  ActionCreator,
+  ActionFactory,
+  ActionFactoryActionType,
+  ActionFactoryPayloadType,
+  ActionFactoryTypeType,
+  ActionMeta,
+  ActionMetaType,
+  ActionPayloadType,
+  ActionType,
+  ActionTypeType,
+  Branch,
+  Composable,
+  Dispatchable,
+  Dispatcher,
+  EffectType,
+  EffectsSubscriber,
+  ErrorSubscriber,
+  HierarchyDescriptor,
+  KnownHierarchyDescriptor,
+  NextSubscriber,
+  Observable,
+  Reactable,
+  RecursivePartial,
+  Reducer,
+  ReducerBuilder,
+  Scheduler,
+  Selector,
+  SetState,
+  StateSetter,
+  StoreEffect,
+  StoreStateType,
+  SubReducer,
+  Subscriber,
+  SubscriberObject,
+  Subscription,
 } from '@zedux/stores'
 ```
 
