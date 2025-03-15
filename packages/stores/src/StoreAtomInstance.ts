@@ -5,7 +5,7 @@ import {
   zeduxTypes,
   is,
   RecursivePartial,
-  Settable,
+  StoreSettable,
   Store,
   Subscription,
 } from '@zedux/core'
@@ -172,7 +172,7 @@ export class StoreAtomInstance<
   }
 
   public set(
-    settable: Settable<G['State']>,
+    settable: StoreSettable<G['State']>,
     events?: Partial<SendableEvents<G>>
   ) {
     return this.setState(settable, events && Object.keys(events)[0])
@@ -185,14 +185,16 @@ export class StoreAtomInstance<
    * is compatible with the new signals-based atoms. Using `.set` will make it
    * easier to migrate to signals.
    */
-  public setState = (settable: Settable<G['State']>, meta?: any): G['State'] =>
-    this.store.setState(settable, meta)
+  public setState = (
+    settable: StoreSettable<G['State']>,
+    meta?: any
+  ): G['State'] => this.store.setState(settable, meta)
 
   /**
    * An alias for `.store.setStateDeep()`
    */
   public setStateDeep = (
-    settable: Settable<RecursivePartial<G['State']>, G['State']>,
+    settable: StoreSettable<RecursivePartial<G['State']>, G['State']>,
     meta?: any
   ): G['State'] => this.store.setStateDeep(settable, meta)
 

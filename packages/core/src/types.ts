@@ -179,11 +179,11 @@ export type SetState<State = any, PartialState extends Partial<State> = any> = (
   state: State
 ) => PartialState
 
-export type Settable<State = any, StateIn = State> =
+export type StoreSettable<State = any, StateIn = State> =
   | ((state: StateIn) => State)
   | State
 
-export type StateSetter<State = any> = (settable: Settable<State>) => State
+export type StateSetter<State = any> = (settable: StoreSettable<State>) => State
 
 export type StoreStateType<S extends Store> = S extends Store<infer T>
   ? T

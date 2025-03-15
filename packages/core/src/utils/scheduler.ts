@@ -40,7 +40,7 @@ export class Scheduler {
   public j: Job[] = []
 
   /**
-   * `s`cheduler - add a job to the queue. Starts running jobs if we're not
+   * `s`chedule - add a job to the queue. Starts running jobs if we're not
    * already running.
    *
    * UpdateStore (0) jobs must run immediately but also need the scheduler to be

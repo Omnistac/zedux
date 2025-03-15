@@ -1,4 +1,4 @@
-import { RecursivePartial, Settable, Store } from '@zedux/core'
+import { RecursivePartial, StoreSettable, Store } from '@zedux/core'
 import { MachineStateShape } from './types'
 
 /**
@@ -53,7 +53,7 @@ export class MachineStore<
       return { context: currentState.context, value: nextValue.name }
     }, meta)
 
-  public setContext = (context: Settable<Context>, meta?: any) =>
+  public setContext = (context: StoreSettable<Context>, meta?: any) =>
     this.setState(
       state => ({
         context:
@@ -64,7 +64,7 @@ export class MachineStore<
     )
 
   public setContextDeep = (
-    partialContext: Settable<RecursivePartial<Context>, Context>,
+    partialContext: StoreSettable<RecursivePartial<Context>, Context>,
     meta?: any
   ) =>
     this.setStateDeep(

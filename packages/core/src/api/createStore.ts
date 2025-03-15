@@ -11,7 +11,7 @@ import {
   SetState,
   RecursivePartial,
   Reducer,
-  Settable,
+  StoreSettable,
   Subscriber,
   SubscriberObject,
   KnownHierarchyDescriptor,
@@ -161,10 +161,10 @@ export class Store<State = any> {
     recreates this small function. But it's always bound and can be passed
     around easily.
   */
-  public setState = (settable: Settable<State>, meta?: any) => {
+  public setState = (settable: StoreSettable<State>, meta?: any) => {
     if (this._isSolo) {
       return this._setState(
-        settable as Settable<RecursivePartial<State>, State>,
+        settable as StoreSettable<RecursivePartial<State>, State>,
         meta
       )
     }
@@ -172,7 +172,7 @@ export class Store<State = any> {
     getScheduler().s({
       j: () =>
         this._setState(
-          settable as Settable<RecursivePartial<State>, State>,
+          settable as StoreSettable<RecursivePartial<State>, State>,
           meta
         ),
       T: 0, // UpdateStore (0)
@@ -206,12 +206,12 @@ export class Store<State = any> {
     e.g. by using dot-notation: `store.setStateDeep(...)`
   */
   public setStateDeep(
-    settable: Settable<RecursivePartial<State>, State>,
+    settable: StoreSettable<RecursivePartial<State>, State>,
     meta?: any
   ) {
     if (this._isSolo) {
       return this._setState(
-        settable as Settable<RecursivePartial<State>, State>,
+        settable as StoreSettable<RecursivePartial<State>, State>,
         meta,
         true
       )
@@ -220,7 +220,7 @@ export class Store<State = any> {
     getScheduler().s({
       j: () =>
         this._setState(
-          settable as Settable<RecursivePartial<State>, State>,
+          settable as StoreSettable<RecursivePartial<State>, State>,
           meta,
           true
         ),
@@ -559,7 +559,7 @@ export class Store<State = any> {
   }
 
   private _setState(
-    settable: Settable<RecursivePartial<State>, State>,
+    settable: StoreSettable<RecursivePartial<State>, State>,
     meta?: any,
     deep = false
   ) {
