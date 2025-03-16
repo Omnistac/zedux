@@ -1,6 +1,7 @@
 import {
   atom,
   AtomProvider,
+  inject,
   injectEffect,
   useAtomContext,
   useAtomInstance,
@@ -248,5 +249,118 @@ describe('React context', () => {
     ecosystem.asyncScheduler.flush()
 
     expect(calls).toEqual(['a'])
+  })
+
+  test('AtomProvider accepts function overloads', async () => {
+    const atom1 = atom('1', (id: string) => id)
+
+    function Child() {
+      const instance = useAtomContext(atom1, true)
+      const val = useAtomValue(instance)
+
+      return <div data-testid="value">{val}</div>
+    }
+
+    function Parent() {
+      return (
+        <AtomProvider instance={ecosystem => ecosystem.getNode(atom1, ['a'])}>
+          <AtomProvider
+            instances={ecosystem => [
+              ecosystem.getNode(atom1, ['b']),
+              ecosystem.getNode(atom1, ['c']),
+            ]}
+          >
+            <Child />
+          </AtomProvider>
+        </AtomProvider>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Parent />)
+    const div = await findByTestId('value')
+
+    expect(div).toHaveTextContent('c')
+  })
+
+  test('AtomProvider prevents the instance from being cleaned up', () => {
+    const atom1 = atom('1', () => 1)
+
+    function Child() {
+      const instance = useAtomContext(atom1)
+
+      return instance?.get()
+    }
+
+    function Parent() {
+      return (
+        <AtomProvider instance={ecosystem => ecosystem.getNode(atom1)}>
+          <Child />
+        </AtomProvider>
+      )
+    }
+
+    renderInEcosystem(<Parent />, { useStrictMode: true })
+
+    const node1 = ecosystem.getNode(atom1)
+
+    expect(node1.o.size).toBe(1)
+    expect(ecosystem.viewGraph()).toMatchInlineSnapshot(`
+      {
+        "1": {
+          "observers": [
+            {
+              "key": "@component(AtomProvider)-:rj:",
+              "operation": "useAtomInstance",
+            },
+          ],
+          "sources": [],
+          "weight": 1,
+        },
+        "@component(AtomProvider)-:rj:": {
+          "observers": [],
+          "sources": [
+            {
+              "key": "1",
+              "operation": "useAtomInstance",
+            },
+          ],
+          "weight": 1,
+        },
+      }
+    `)
+  })
+
+  test('AtomProvider function overloads have access to scope', async () => {
+    const contextAtom = atom('context', (id: string) => id)
+
+    const scopedAtom = atom('scoped', () => inject(contextAtom))
+
+    function Child() {
+      const scopedInstance = useAtomContext(scopedAtom, true)
+      const val = useAtomValue(scopedInstance)
+
+      return <div data-testid="value">{val}</div>
+    }
+
+    function Parent() {
+      return (
+        <AtomProvider instance={({ getNode }) => getNode(scopedAtom)}>
+          <Child />
+        </AtomProvider>
+      )
+    }
+
+    function Grandparent() {
+      return (
+        <AtomProvider instance={({ getNode }) => getNode(contextAtom, ['a'])}>
+          <Parent />
+        </AtomProvider>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Grandparent />)
+    const div = await findByTestId('value')
+
+    expect(div).toHaveTextContent('a')
   })
 })
