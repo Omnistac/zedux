@@ -9,7 +9,7 @@ import {
 } from '@zedux/atoms'
 import { useContext } from 'react'
 import { useEcosystem } from './useEcosystem'
-import { getReactContext } from '../utils'
+import { getReactContext, reactContextScope } from '../utils'
 
 /**
  * A React hook that accepts an atom template and returns an atom instance of
@@ -78,5 +78,13 @@ export const useAtomContext: {
     return instance
   }
 
-  return ecosystem.getInstance(template, defaultParams)
+  ecosystem.S = reactContextScope
+
+  try {
+    return ecosystem.getNode(template, defaultParams)
+  } finally {
+    // We shouldn't need to capture/restore previous `S`cope. There should be no
+    // way for React to be rendering inside another scope.
+    ecosystem.S = undefined
+  }
 }

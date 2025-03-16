@@ -1,6 +1,7 @@
 import {
   atom,
   AtomProvider,
+  injectEffect,
   useAtomContext,
   useAtomInstance,
   useAtomValue,
@@ -220,5 +221,32 @@ describe('React context', () => {
     const pattern = /no atom instance was provided/i
 
     expect(() => renderInEcosystem(<Test />)).toThrowError(pattern)
+  })
+
+  test('useAtomContext with default params flags the context as unsafe before getting the instance', () => {
+    const calls: any[] = []
+
+    const atom1 = atom('1', (id: string) => {
+      injectEffect(() => {
+        calls.push(id)
+      })
+
+      return id
+    })
+
+    function Test() {
+      const instance = useAtomContext(atom1, ['a'])
+
+      return instance.get()
+    }
+
+    renderInEcosystem(<Test />)
+
+    expect(calls).toEqual([])
+    expect(ecosystem.asyncScheduler.j.length).toEqual(1)
+
+    ecosystem.asyncScheduler.flush()
+
+    expect(calls).toEqual(['a'])
   })
 })
