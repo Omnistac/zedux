@@ -5,12 +5,14 @@ import {
   injectAtomValue,
   injectEffect,
   injectSignal,
+  useAtomInstance,
   useAtomValue,
 } from '@zedux/react'
 import React, { useState } from 'react'
 import { timer } from 'rxjs'
 import { ecosystem } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
+import { mockConsole } from '../utils/console'
 
 describe('ttl', () => {
   test('component unmount destroys an instance', async () => {
@@ -264,5 +266,32 @@ describe('ttl', () => {
     jest.runAllTimers()
 
     expect(instance1.status).toBe('Destroyed')
+  })
+
+  test("atoms that error during initial evaluation don't run effects", () => {
+    const mock = mockConsole('error')
+    const calls: any[] = []
+
+    const atom1 = atom('1', () => {
+      injectEffect(() => {
+        calls.push(1)
+      }, [])
+
+      throw new Error('test error')
+
+      return '1'
+    })
+
+    function Test() {
+      const node1 = useAtomInstance(atom1)
+
+      return node1.get()
+    }
+
+    expect(() => renderInEcosystem(<Test />)).toThrowError('test error')
+    expect(() => ecosystem.getNode(atom1)).toThrowError('test error')
+
+    expect(calls).toEqual([])
+    expect(mock).toHaveBeenCalledTimes(3) // React tries twice.
   })
 })
