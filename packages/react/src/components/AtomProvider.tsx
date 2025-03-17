@@ -1,7 +1,8 @@
-import { AnyAtomInstance } from '@zedux/atoms'
+import { AnyAtomInstance, Ecosystem } from '@zedux/atoms'
 import React, { ReactElement, ReactNode } from 'react'
 import { useEcosystem } from '../hooks/useEcosystem'
-import { getReactContext } from '../utils'
+import { getReactContext, reactContextScope } from '../utils'
+import { useAtomInstance } from '../hooks'
 
 /**
  * Provides an atom instance over React context.
@@ -19,13 +20,15 @@ export const AtomProvider: (
   props:
     | {
         children?: ReactNode
-        instance: AnyAtomInstance
+        instance: AnyAtomInstance | ((ecosystem: Ecosystem) => AnyAtomInstance)
         instances?: undefined
       }
     | {
         children?: ReactNode
         instance?: undefined
-        instances: AnyAtomInstance[]
+        instances:
+          | AnyAtomInstance[]
+          | ((ecosystem: Ecosystem) => AnyAtomInstance[])
       }
 ) => ReactElement = ({ children, instance, instances }) => {
   const ecosystem = useEcosystem()
@@ -36,18 +39,32 @@ export const AtomProvider: (
     )
   }
 
-  const [nextInstance, ...childInstances] =
-    instances || ([instance] as AnyAtomInstance[])
+  ecosystem.S = reactContextScope
 
-  const context = getReactContext(ecosystem, nextInstance.t)
+  try {
+    const [nextInstance, ...childInstances] = instances
+      ? typeof instances === 'function'
+        ? instances(ecosystem)
+        : instances
+      : typeof instance === 'function'
+      ? [instance(ecosystem)]
+      : [instance!]
 
-  return (
-    <context.Provider value={nextInstance}>
-      {childInstances.length ? (
-        <AtomProvider instances={childInstances}>{children}</AtomProvider>
-      ) : (
-        children
-      )}
-    </context.Provider>
-  )
+    const context = getReactContext(ecosystem, nextInstance.t)
+
+    // prevent the atom from being cleaned up until this provider unmounts
+    useAtomInstance(nextInstance)
+
+    return (
+      <context.Provider value={nextInstance}>
+        {childInstances.length ? (
+          <AtomProvider instances={childInstances}>{children}</AtomProvider>
+        ) : (
+          children
+        )}
+      </context.Provider>
+    )
+  } finally {
+    ecosystem.S = undefined
+  }
 }

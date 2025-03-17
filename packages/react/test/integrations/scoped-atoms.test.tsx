@@ -177,8 +177,8 @@ describe('scoped atoms', () => {
     expect(calls).toEqual(['a1 1', 'a2 2', 'b1 1', 'b2 2'])
     calls.splice(0, calls.length)
 
-    // 2 parents, 4 children, 2 nested, 6 external
-    expect(ecosystem.n.size).toBe(14)
+    // 2 parents, 4 providers, 4 children, 2 nested, 6 external
+    expect(ecosystem.n.size).toBe(18)
 
     expect(ecosystem.findAll('@atom').map(({ id }) => id)).toEqual([
       'child-@scope("a",parent-[1])',
@@ -203,7 +203,7 @@ describe('scoped atoms', () => {
     expect(calls).toEqual(['aa1 1', 'aa2 2', 'b1 1', 'b2 2'])
     calls.splice(0, calls.length)
 
-    expect(ecosystem.n.size).toBe(14) // 2 new children, 2 destroyed
+    expect(ecosystem.n.size).toBe(18) // 2 new children, 2 destroyed
 
     expect(ecosystem.findAll('@atom').map(({ id }) => id)).toEqual([
       'child-@scope("aa",parent-[1])',
@@ -229,7 +229,7 @@ describe('scoped atoms', () => {
     expect(calls).toEqual(['aa11 11', 'b11 11'])
     calls.splice(0, calls.length)
 
-    expect(ecosystem.n.size).toBe(14) // no changes
+    expect(ecosystem.n.size).toBe(18) // no changes
 
     expect(ecosystem.findAll('@atom').map(({ id }) => id)).toEqual([
       'child-@scope("aa",parent-[1])',
@@ -344,8 +344,8 @@ describe('scoped atoms', () => {
     expect(calls).toEqual(['a1 2', 'a100 200', 'b1 2', 'b100 200'])
     calls.splice(0, calls.length)
 
-    // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
-    expect(ecosystem.n.size).toBe(28)
+    // 4 parents, 8 providers, 4 children, 4 nested, 4 middle, 4 top, 8 external
+    expect(ecosystem.n.size).toBe(36)
 
     expect(
       ecosystem.findAll(['@atom', '@selector']).map(({ id }) => id)
@@ -363,8 +363,8 @@ describe('scoped atoms', () => {
     expect(calls).toEqual(['aa1 2', 'aa100 200'])
     calls.splice(0, calls.length)
 
-    // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
-    expect(ecosystem.n.size).toBe(28)
+    // 4 parents, 8 providers, 4 children, 4 nested, 4 middle, 4 top, 8 external
+    expect(ecosystem.n.size).toBe(36)
 
     expect(
       ecosystem.findAll(['@atom', '@selector']).map(({ id }) => id)
@@ -387,8 +387,8 @@ describe('scoped atoms', () => {
     expect(calls).toEqual(['b1 2'])
     calls.splice(0, calls.length)
 
-    // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
-    expect(ecosystem.n.size).toBe(28)
+    // 4 parents, 8 providers, 4 children, 4 nested, 4 middle, 4 top, 8 external
+    expect(ecosystem.n.size).toBe(36)
 
     expect(
       ecosystem.findAll(['@atom', '@selector']).map(({ id }) => id)
@@ -401,8 +401,8 @@ describe('scoped atoms', () => {
     expect(calls).toEqual(['b1 2'])
     calls.splice(0, calls.length)
 
-    // 4 parents, 4 children, 4 nested, 4 middle, 4 top, 8 external
-    expect(ecosystem.n.size).toBe(28)
+    // 4 parents, 8 providers, 4 children, 4 nested, 4 middle, 4 top, 8 external
+    expect(ecosystem.n.size).toBe(36)
 
     expect(
       ecosystem.findAll(['@atom', '@selector']).map(({ id }) => id)
@@ -453,7 +453,7 @@ describe('scoped atoms', () => {
     calls.splice(0, calls.length)
 
     expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
-      '@component(Child)-:rh:',
+      expect.stringContaining('@component(Child)'),
       '@selector(unknown)-1-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":1}})',
     ])
@@ -466,7 +466,7 @@ describe('scoped atoms', () => {
     expect(calls).toEqual([{ a: { b: 2 } }])
 
     expect(ecosystem.findAll().map(({ id }) => id)).toEqual([
-      '@component(Child)-:rh:',
+      expect.stringContaining('@component(Child)'),
       '@selector(unknown)-1-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":1}})',
       'child-@scope({"a":{"b":2}})',
