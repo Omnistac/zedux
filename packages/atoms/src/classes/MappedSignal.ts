@@ -15,6 +15,21 @@ import { ACTIVE, EventSent, INITIALIZING, TopPrio } from '../utils/general'
 import { setNodeStatus } from '../utils/graph'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
+const getRelevantEvents = (signal: Signal, events?: Record<string, any>) =>
+  (signal as Signal).E &&
+  events &&
+  Object.fromEntries(
+    Object.entries(events).filter(
+      // we don't pass mutate events to inner signals - they weren't
+      // mutated, the outer signal was. This is to optimize
+      // performance for the most common case - usually you won't
+      // subscribe to individual inner signals; you subscribe to the
+      // full, outer signal or the atom itself.
+      ([eventName]) =>
+        eventName !== 'mutate' && eventName in (signal as Signal).E!
+    )
+  )
+
 export type SignalMap = Record<string, Signal<AnyNodeGenerics> | unknown>
 
 export class MappedSignal<
@@ -109,17 +124,30 @@ export class MappedSignal<
    * This forwards events on to all inner signals that expect them.
    */
   public send<E extends keyof G['Events']>(
-    eventName: E,
+    eventNameOrMap: E,
     payload?: G['Events'][E]
   ) {
     schedulerPre(this.e)
 
+    const events =
+      typeof eventNameOrMap === 'object'
+        ? eventNameOrMap
+        : { [eventNameOrMap]: payload }
+
+    this.C = events as Partial<SendableEvents<G>>
+
     for (const signal of Object.values(this.M)) {
       if ((signal as Signal | undefined)?.izn) {
-        ;(signal as Signal).E?.[eventName] &&
-          (signal as Signal).send(eventName, payload)
+        const relevantEvents = getRelevantEvents(signal as Signal, events)
+
+        if (relevantEvents && Object.keys(relevantEvents).length) {
+          ;(signal as Signal).send(relevantEvents)
+        }
       }
     }
+
+    super.send(this.C)
+    this.C = undefined
 
     schedulerPost(this.e)
   }
@@ -151,22 +179,10 @@ export class MappedSignal<
             continue
           }
 
-          const relevantEvents =
-            (signal as Signal).E &&
-            events &&
-            Object.fromEntries(
-              Object.entries(events).filter(
-                // we don't pass mutate events to inner signals - they weren't
-                // mutated, the outer signal was. This is to optimize
-                // performance for the most common case - usually you won't
-                // subscribe to individual inner signals; you subscribe to the
-                // full, outer signal or the atom itself.
-                ([eventName]) =>
-                  eventName !== 'mutate' && eventName in (signal as Signal).E!
-              )
-            )
-
-          ;(signal as Signal).set(value, relevantEvents)
+          ;(signal as Signal).set(
+            value,
+            getRelevantEvents(signal as Signal, events)
+          )
         }
       }
 
@@ -237,7 +253,11 @@ export class MappedSignal<
     // forward events from wrapped signals to observers of this wrapper signal.
     // Use `super.send` for this 'cause `this.send` intercepts events and passes
     // them the other way (up to wrapped signals)
-    if (reason.e && (!reason.e.mutate || Object.keys(reason.e).length > 1)) {
+    if (
+      reason.e &&
+      !this.C &&
+      (!reason.e.mutate || Object.keys(reason.e).length > 1)
+    ) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { mutate, ...events } = reason.e
 

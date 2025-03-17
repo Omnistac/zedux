@@ -2,8 +2,10 @@ import { MappedSignal, SignalMap } from '../classes/MappedSignal'
 import { Signal } from '../classes/Signal'
 import {
   AnyNonNullishValue,
+  EventMap,
   EventsOf,
   InjectSignalConfig,
+  MapEvents,
   None,
   Prettify,
   StateOf,
@@ -68,15 +70,18 @@ type UnionToTuple<T> = UnionToIntersection<
  * })
  * ```
  */
-export const injectMappedSignal = <M extends SignalMap>(
+export const injectMappedSignal = <
+  M extends SignalMap,
+  MappedEvents extends EventMap = None
+>(
   map: M,
-  config?: Pick<InjectSignalConfig<MapAll<M>>, 'reactive'>
+  config?: InjectSignalConfig<MappedEvents>
 ) => {
   const instance = injectSelf()
 
   const signal = injectMemo(() => {
     return new MappedSignal<{
-      Events: Prettify<MapAll<M>>
+      Events: Prettify<MapAll<M> & MapEvents<MappedEvents>>
       State: { [K in keyof M]: M[K] extends Signal<any> ? StateOf<M[K]> : M[K] }
     }>(instance.e, instance.e.makeId('signal', instance), map)
   }, [])

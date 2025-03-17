@@ -195,7 +195,14 @@ describe('mapped signals', () => {
         },
       })
 
-      const signal = injectMappedSignal({ a: signalA, b: signalB })
+      const signal = injectMappedSignal(
+        { a: signalA, b: signalB },
+        {
+          events: {
+            c1: As<string[]>,
+          },
+        }
+      )
 
       return api(signal).setExports({ signal, signalA, signalB })
     })
@@ -240,6 +247,7 @@ describe('mapped signals', () => {
       a1: string
       a2: boolean
       b1: number
+      c1: string[]
     }>()
   })
 
@@ -493,5 +501,27 @@ describe('mapped signals', () => {
       ['bb', 'bb'],
       { a: 'a', b: 'bb' },
     ])
+  })
+
+  test('events that reach multiple inner signals are only propagated to observers of the mapped signal once', () => {
+    const calls: any[] = []
+
+    const atom1 = atom('1', () => {
+      const signal1 = injectSignal(1, { events: { test: As<string> } })
+      const signal2 = injectSignal(2, { events: { test: As<string> } })
+
+      return injectMappedSignal({
+        1: signal1,
+        2: signal2,
+      })
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+
+    node1.on('test', event => calls.push(event))
+
+    node1.send({ test: 'a' })
+
+    expect(calls).toEqual(['a'])
   })
 })
