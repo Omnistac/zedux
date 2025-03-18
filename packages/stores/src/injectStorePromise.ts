@@ -6,6 +6,7 @@ import {
   InjectStoreConfig,
   injectWhy,
   PromiseState,
+  ZeduxPromise,
 } from '@zedux/atoms'
 import { detailedTypeof, RecursivePartial, Store } from '@zedux/core'
 import {
@@ -72,9 +73,9 @@ export const injectStorePromise: {
     } & InjectStoreConfig
   ): StoreAtomApi<{
     Exports: Record<string, any>
-    Promise: Promise<T>
-    State: T
-    Store: Store<T>
+    Promise: ZeduxPromise<T>
+    State: T | undefined
+    Store: Store<T | undefined>
   }>
 
   <T>(
@@ -83,7 +84,7 @@ export const injectStorePromise: {
     config?: InjectStorePromiseConfig<T> & InjectStoreConfig
   ): StoreAtomApi<{
     Exports: Record<string, any>
-    Promise: Promise<T>
+    Promise: ZeduxPromise<T>
     State: PromiseState<T>
     Store: Store<PromiseState<T>>
   }>
@@ -100,7 +101,7 @@ export const injectStorePromise: {
   const refs = injectRef({ counter: 0 } as {
     controller?: AbortController
     counter: number
-    promise: Promise<T>
+    promise: ZeduxPromise<T>
   })
 
   const store = injectStore(
@@ -160,7 +161,7 @@ export const injectStorePromise: {
         store.setStateDeep(getErrorPromiseState(error))
       })
 
-    return promise
+    return promise as ZeduxPromise<T>
   }, deps && [...deps, refs.current.counter])
 
   injectEffect(
