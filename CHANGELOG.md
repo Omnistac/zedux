@@ -1,3 +1,16 @@
+## v2.0.0-rc.1 (Mar 18, 2025)
+
+### New Features:
+
+- `atoms`: dedupe mapped signal events that reach multiple children (#221)
+- `react`: add function overloads to `AtomProvider` props (#219)
+
+### Fixes:
+
+- `atoms`: unschedule effects from the right scheduler (#216)
+- `react`: use scope in `useAtomContext` when using default params (#217)
+- `core`, `machines`, `stores`: rename core package `Settable` to `StoreSettable` (#215)
+
 ## v2.0.0-rc.0 (Mar 14, 2025)
 
 ### New Features:
