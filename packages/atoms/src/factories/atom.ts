@@ -3,8 +3,6 @@ import {
   AtomApiPromise,
   AtomValueOrFactory,
   PromiseState,
-  StateOf,
-  EventsOf,
   None,
 } from '../types/index'
 import {
@@ -39,25 +37,31 @@ export const atom: {
 
   // Signals
   <
-    SignalType extends Signal<any> = Signal<any>,
+    StateType,
+    EventsType extends Record<string, any> = None,
     Params extends any[] = [],
     Exports extends Record<string, any> = Record<string, never>,
     PromiseType extends AtomApiPromise = undefined
   >(
     key: string,
     value: (...params: Params) =>
-      | SignalType
+      | Signal<{
+          State: StateType
+          Events: EventsType
+          Params: any
+          Template: any
+        }>
       | AtomApi<{
           Exports: Exports
           Promise: PromiseType
-          Signal: SignalType
-          State: StateOf<SignalType>
+          Signal: Signal<{ State: StateType; Events: EventsType }>
+          State: StateType
         }>,
-    config?: AtomConfig<StateOf<SignalType>>
+    config?: AtomConfig<StateType>
   ): AtomTemplateRecursive<{
-    State: StateOf<SignalType>
+    State: StateType
     Params: Params
-    Events: EventsOf<SignalType>
+    Events: EventsType
     Exports: Exports
     Promise: PromiseType
   }>

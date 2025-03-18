@@ -1,10 +1,21 @@
-import { api, atom, useAtomValue } from '@zedux/react'
+import {
+  api,
+  atom,
+  injectAtomValue,
+  injectPromise,
+  StateOf,
+  useAtomInstance,
+  useAtomState,
+  useAtomValue,
+  ZeduxPromise,
+} from '@zedux/react'
 import React, { Suspense } from 'react'
 import { ErrorBoundary } from '../utils/ErrorBoundary'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 import { mockConsole } from '../utils/console'
 import { ecosystem } from '../utils/ecosystem'
 import { act } from '@testing-library/react'
+import { expectTypeOf } from 'expect-type'
 
 describe('suspense', () => {
   test('api().setPromise() makes a component suspend', async () => {
@@ -195,5 +206,98 @@ describe('suspense', () => {
     await Promise.resolve()
 
     expect(div2.innerHTML).toBe('c')
+  })
+
+  test('dataSignal is properly typed', async () => {
+    const zeduxPromiseAtom = atom('zeduxPromise', () => {
+      const { dataSignal, promise } = injectPromise(
+        () => Promise.resolve(1),
+        []
+      )
+
+      return api(dataSignal).setPromise(promise)
+    })
+
+    const normalPromiseAtom = atom('normalPromise', () => {
+      const { dataSignal } = injectPromise(() => Promise.resolve(1), [])
+
+      return api(dataSignal).setPromise(Promise.resolve(2))
+    })
+
+    const atom1 = atom('1', () => {
+      const value1 = injectAtomValue(zeduxPromiseAtom)
+      const value2 = injectAtomValue(normalPromiseAtom)
+
+      // in atoms, a suspendable atom's `data` type can be undefined:
+      expectTypeOf(value1).toEqualTypeOf<number | undefined>()
+      expectTypeOf(value2).toEqualTypeOf<number | undefined>()
+
+      return (value1 || 0) + (value2 || 0)
+    })
+
+    function Child() {
+      const value1 = useAtomValue(zeduxPromiseAtom)
+      const [state1] = useAtomState(zeduxPromiseAtom)
+      const value1NoSuspense = useAtomValue(zeduxPromiseAtom, [], {
+        suspend: false,
+      })
+      const [state1NoSuspense] = useAtomState(zeduxPromiseAtom, [], {
+        suspend: false,
+      })
+      const value2 = useAtomValue(normalPromiseAtom)
+      const value = useAtomValue(atom1)
+
+      const instance1 = useAtomInstance(zeduxPromiseAtom)
+      const instanceValue1 = useAtomValue(instance1)
+      const instanceValue1NoSuspense = useAtomValue(instance1, [], {
+        suspend: false,
+      })
+
+      const instance2 = useAtomInstance(normalPromiseAtom)
+      const instanceValue2 = useAtomValue(instance2)
+      const instanceValue2NoSuspense = useAtomValue(instance2, [], {
+        suspend: false,
+      })
+
+      expectTypeOf(value).toEqualTypeOf<number>()
+      // in react, a suspendable atom's `data` type is defined (unless `suspend: false`)
+      expectTypeOf(value1).toEqualTypeOf<number>()
+      expectTypeOf(state1).toEqualTypeOf<number>()
+      expectTypeOf(value1NoSuspense).toEqualTypeOf<number | undefined>()
+      expectTypeOf(state1NoSuspense).toEqualTypeOf<number | undefined>()
+      expectTypeOf(value2).toEqualTypeOf<number | undefined>()
+
+      expectTypeOf(instance1.promise).toEqualTypeOf<ZeduxPromise<number>>()
+      expectTypeOf<StateOf<typeof instance1>>().toEqualTypeOf<
+        number | undefined
+      >()
+      expectTypeOf(instanceValue1).toEqualTypeOf<number>()
+      expectTypeOf(instanceValue1NoSuspense).toEqualTypeOf<number | undefined>()
+
+      expectTypeOf(instance2.promise).toEqualTypeOf<Promise<number>>()
+      expectTypeOf<StateOf<typeof instance2>>().toEqualTypeOf<
+        number | undefined
+      >()
+      expectTypeOf(instanceValue2).toEqualTypeOf<number | undefined>()
+      expectTypeOf(instanceValue2NoSuspense).toEqualTypeOf<number | undefined>()
+
+      return <div data-testid="value">{value1 + (value2 || 0) + value}</div>
+    }
+
+    function Parent() {
+      return (
+        <Suspense fallback={<div>loading...</div>}>
+          <Child />
+        </Suspense>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Parent />, {
+      useStrictMode: true,
+    })
+
+    const div = await findByTestId('value')
+
+    expect(div).toHaveTextContent('4')
   })
 })

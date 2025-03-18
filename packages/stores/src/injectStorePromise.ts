@@ -2,7 +2,6 @@ import {
   injectEffect,
   injectMemo,
   InjectorDeps,
-  InjectPromiseConfig,
   injectRef,
   InjectStoreConfig,
   injectWhy,
@@ -17,6 +16,7 @@ import {
 import { StoreAtomApi } from './StoreAtomApi'
 import { storeApi } from './storeApi'
 import { injectStore } from './injectStore'
+import { InjectStorePromiseConfig } from './types'
 
 /**
  * Create a memoized promise reference. Kicks off the promise immediately
@@ -44,12 +44,13 @@ import { injectStore } from './injectStore'
  * - `dataOnly`: Set this to true to prevent the store from tracking promise
  *   status and make your promise's `data` the entire state.
  *
- * - `initialState`: Set the initial state of the store (e.g. a placeholder
- *   value before the promise resolves)
+ * - `initialData`: Set the initial state of the store's `data` property (or the
+ *   entire state if `dataOnly` is true). For example, use this to set a default
+ *   `data` value before the promise resolves.
  *
  * - store config: Any other config options will be passed directly to
- *   `injectStore`'s config. For example, pass `subscribe: false` to
- *   prevent the store from reevaluating the current atom on update.
+ *   `injectStore`'s config. For example, pass `subscribe: false` to prevent the
+ *   store from reevaluating the current atom on update.
  *
  * ```ts
  * const promiseApi = injectPromise(async () => {
@@ -57,7 +58,7 @@ import { injectStore } from './injectStore'
  *   return await response.json()
  * }, [url], {
  *   dataOnly: true,
- *   initialState: '',
+ *   initialData: '',
  *   subscribe: false
  * })
  * ```
@@ -66,7 +67,7 @@ export const injectStorePromise: {
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps: InjectorDeps,
-    config: Omit<InjectPromiseConfig, 'dataOnly'> & {
+    config: Omit<InjectStorePromiseConfig, 'dataOnly'> & {
       dataOnly: true
     } & InjectStoreConfig
   ): StoreAtomApi<{
@@ -79,7 +80,7 @@ export const injectStorePromise: {
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps?: InjectorDeps,
-    config?: InjectPromiseConfig<T> & InjectStoreConfig
+    config?: InjectStorePromiseConfig<T> & InjectStoreConfig
   ): StoreAtomApi<{
     Exports: Record<string, any>
     Promise: Promise<T>
@@ -91,10 +92,10 @@ export const injectStorePromise: {
   deps?: InjectorDeps,
   {
     dataOnly,
-    initialState,
+    initialData,
     runOnInvalidate,
     ...storeConfig
-  }: InjectPromiseConfig<T> & InjectStoreConfig = {}
+  }: InjectStorePromiseConfig<T> & InjectStoreConfig = {}
 ) => {
   const refs = injectRef({ counter: 0 } as {
     controller?: AbortController
@@ -103,7 +104,7 @@ export const injectStorePromise: {
   })
 
   const store = injectStore(
-    dataOnly ? initialState : getInitialPromiseState<T>(initialState),
+    dataOnly ? initialData : getInitialPromiseState<T>(initialData),
     storeConfig
   )
 

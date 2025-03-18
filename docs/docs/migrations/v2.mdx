@@ -337,6 +337,7 @@ function App() {
   - The types have been improved to make editors autocomplete those `@`-prefixed strings, leading to some slick DX.
   - Pass an array of filters (`.findAll([...myFilters])`) as a shorthand for `.findAll({ include: [...myFilters] })`
 - `untrack` - A new top-level export for bumping out of a reactive context.
+- `AtomProvider` now accepts function overloads for its `instance` and `instances` props. The function will receive the ecosystem as its first parameter and should return an atom instance (or an array of instances for the `instances` prop).
 - When called with no deps, `injectMemo` now automatically tracks any signal usages in the callback and reactively updates when they change, causing the injecting atom to reevaluate.
 - `ecosystem.withScope` - Runs a callback in a scoped context with the passed scope.
 - `injectCallback` now wraps the callback in `ecosystem.withScope` (in addition to `ecosystem.batch`) if the injecting atom is scoped.
@@ -672,6 +673,8 @@ This section is a work in progress
 - `atomTemplate.getInstanceId` -> `atomTemplate.getNodeId`
 - `ecosystem._idGenerator.generateId` -> `ecosystem.makeId`. Use the new `makeId` ecosystem config option in tests instead of mocking Zedux APIs.
 - `AtomSelectorOrConfig` -> `SelectorTemplate`
+- The `initialState` option of `injectPromise` -> `initialData`.
+- The `dataOnly` option of `injectPromise` -> use the returned `dataSignal` instead.
 
 For mods (previously added to `ZeduxPlugin`s, now "ecosystem events" registered with `ecosystem.on`), replace:
 
@@ -722,7 +725,7 @@ To do this, replace any store-atom-related imports from `@zedux/atoms` or `@zedu
 
 ```ts
 import {
-  // APIs that need aliasing for migrating from Zedux v1:
+  // APIs you may want to alias when migrating from Zedux v1:
   injectStorePromise as injectPromise,
   storeApi as api,
   storeAtom as atom,
@@ -751,7 +754,7 @@ import {
 } from '@zedux/stores'
 
 import type {
-  // Types that need aliasing for migrating from Zedux v1:
+  // Types you may want to alias when migrating from Zedux v1:
   AnyStoreAtomApi as AnyAtomApi,
   AnyStoreAtomApiGenerics as AnyAtomApiGenerics,
   AnyStoreAtomGenerics as AnyAtomGenerics,

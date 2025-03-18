@@ -5,6 +5,7 @@ import {
   getSuccessPromiseState,
 } from '../utils/promiseUtils'
 import {
+  AtomApiGenerics,
   EventMap,
   InjectorDeps,
   InjectPromiseConfig,
@@ -13,7 +14,7 @@ import {
   MapEvents,
   None,
   PromiseState,
-  RecursivePartial,
+  ZeduxPromise,
 } from '../types/index'
 import { injectEffect } from './injectEffect'
 import { injectMemo } from './injectMemo'
@@ -21,8 +22,21 @@ import { injectSignal } from './injectSignal'
 import { injectRef } from './injectRef'
 import { AtomApi } from '../classes/AtomApi'
 import { Invalidate } from '../utils/general'
-import { Signal } from '../classes/Signal'
 import { injectSelf } from './injectSelf'
+import { injectMappedSignal } from './injectMappedSignal'
+import { MappedSignal, Signal } from '../classes'
+
+export class InjectPromiseAtomApi<
+  G extends AtomApiGenerics,
+  MappedEvents extends EventMap,
+  Data
+> extends AtomApi<G> {
+  // @ts-expect-error defined later
+  dataSignal: Signal<{
+    Events: MapEvents<MappedEvents>
+    State: Data | undefined
+  }>
+}
 
 const hasInvalidateReason = (node: ReturnType<typeof injectSelf>) => {
   if (!node.w) return
@@ -51,67 +65,77 @@ const hasInvalidateReason = (node: ReturnType<typeof injectSelf>) => {
  * }
  * ```
  *
- * Returns an Atom API with `.signal` and `.promise` set.
+ * Returns an Atom API with `.signal` and `.promise` set. The returned Atom API
+ * will also have a `.dataSignal` property whose state is set to the promise's
+ * resolved value. The `.signal` property is a mapped signal that holds promise
+ * state and wraps the inner `dataSignal` on its `data` property.
+ *
+ * @see PromiseState
  *
  * The 2nd `deps` param is just like `injectMemo` - these deps determine when
  * the promise's reference should change.
  *
  * The 3rd `config` param can take the following options:
  *
- * - `dataOnly`: Set this to true to prevent the signal from tracking promise
- *   status and make your promise's `data` the entire state.
+ * - `events`: A set of custom events that the inner `dataSignal` accepts. An
+ *   object mapping event names to payload types. Use the `As` helper to type
+ *   payloads.
  *
- * - `initialState`: Set the initial state of the signal (e.g. a placeholder
- *   value before the promise resolves)
+ * - `initialData`: Set the initial value of the `dataSignal` (also thereby sets
+ *   the value of the outer `signal`'s `data` property). E.g. use this to set a
+ *   default `data` value before the promise resolves.
  *
- * - signal config: Any other config options will be passed directly to
- *   `injectSignal`'s config. For example, pass `reactive: false` to
- *   prevent the signal from reevaluating the current atom on update.
+ * - `reactive`: Prevent the signal from reevaluating the current atom when its
+ *   state changes. Use with caution.
+ *
+ * - `runOnInvalidate`: Rerun the promise factory, making the `signal`'s cycle
+ *   through its promise state again when the current atom is invalidated.
  *
  * ```ts
  * const promiseApi = injectPromise(async () => {
  *   const response = await fetch(url)
  *   return await response.json()
  * }, [url], {
- *   dataOnly: true,
- *   initialState: '',
- *   reactive: false
+ *   initialData: [],
+ *   runOnInvalidate: true,
  * })
  * ```
  */
 export const injectPromise: {
   <Data, MappedEvents extends EventMap = None>(
-    promiseFactory: (controller?: AbortController) => Promise<Data>,
-    deps: InjectorDeps,
-    config: Omit<InjectPromiseConfig, 'dataOnly'> & {
-      dataOnly: true
-    } & InjectSignalConfig<MappedEvents>
-  ): AtomApi<{
-    Exports: Record<string, any>
-    Promise: Promise<Data>
-    Signal: Signal<{ Events: MapEvents<MappedEvents>; State: Data }>
-    State: Data
-  }>
-
-  <Data, MappedEvents extends EventMap = None>(
-    promiseFactory: (controller?: AbortController) => Promise<Data>,
+    promiseFactory: (params: {
+      controller?: AbortController
+      dataSignal: Signal<{
+        State: Data | undefined
+        Events: MapEvents<MappedEvents>
+      }>
+    }) => Promise<Data>,
     deps?: InjectorDeps,
     config?: InjectPromiseConfig<Data> & InjectSignalConfig<MappedEvents>
-  ): AtomApi<{
-    Exports: Record<string, any>
-    Promise: Promise<Data>
-    Signal: Signal<{
-      Events: MapEvents<MappedEvents>
+  ): InjectPromiseAtomApi<
+    {
+      Exports: Record<string, any>
+      Promise: ZeduxPromise<Data>
+      Signal: MappedSignal<{
+        Events: MapEvents<MappedEvents>
+        State: PromiseState<Data>
+      }>
       State: PromiseState<Data>
-    }>
-    State: PromiseState<Data>
-  }>
+    },
+    MappedEvents,
+    Data
+  >
 } = <Data, MappedEvents extends EventMap = None>(
-  promiseFactory: (controller?: AbortController) => Promise<Data>,
+  promiseFactory: (params: {
+    controller?: AbortController
+    dataSignal: Signal<{
+      State: Data | undefined
+      Events: MapEvents<MappedEvents>
+    }>
+  }) => Promise<Data>,
   deps?: InjectorDeps,
   {
-    dataOnly,
-    initialState,
+    initialData,
     runOnInvalidate,
     ...signalConfig
   }: InjectPromiseConfig<Data> & InjectSignalConfig<MappedEvents> = {}
@@ -119,13 +143,21 @@ export const injectPromise: {
   const refs = injectRef({ counter: 0 } as {
     controller?: AbortController
     counter: number
-    promise: Promise<Data>
+    promise: ZeduxPromise<Data>
   })
 
-  const signal = injectSignal(
-    dataOnly ? initialState : getInitialPromiseState<Data>(initialState),
+  const dataSignal = injectSignal<Data | undefined, MappedEvents>(
+    initialData,
     signalConfig
   )
+
+  const signal = injectMappedSignal({
+    ...getInitialPromiseState<Data>(),
+    data: dataSignal,
+  }) as MappedSignal<{
+    Events: MapEvents<MappedEvents>
+    State: PromiseState<Data>
+  }>
 
   if (
     runOnInvalidate &&
@@ -142,7 +174,18 @@ export const injectPromise: {
       typeof AbortController !== 'undefined' ? new AbortController() : undefined
 
     refs.current.controller = nextController
-    const promise = promiseFactory(refs.current.controller)
+    let promise: ReturnType<typeof promiseFactory> | undefined
+
+    try {
+      promise = promiseFactory({
+        controller: refs.current.controller,
+        dataSignal,
+      })
+    } catch (err) {
+      signal.mutate(getErrorPromiseState(err))
+
+      return Promise.reject(err) as ZeduxPromise<Data>
+    }
 
     if (DEV && typeof promise?.then !== 'function') {
       throw new TypeError(
@@ -155,30 +198,23 @@ export const injectPromise: {
 
     if (prevController) (prevController as any).abort('updated')
 
-    if (!dataOnly) {
-      // preserve previous data and error using mutate:
-      signal.mutate(
-        state =>
-          getInitialPromiseState(
-            (state as PromiseState<Data>).data
-          ) as RecursivePartial<PromiseState<Data>>
-      )
-    }
+    // preserve previous data and error using mutate:
+    signal.mutate(getInitialPromiseState())
 
     promise
       .then(data => {
         if (nextController?.signal.aborted) return
 
-        signal.set(dataOnly ? data : getSuccessPromiseState(data))
+        signal.set(getSuccessPromiseState(data))
       })
       .catch(error => {
-        if (dataOnly || nextController?.signal.aborted) return
+        if (nextController?.signal.aborted) return
 
         // preserve previous data using mutate:
         signal.mutate(getErrorPromiseState(error))
       })
 
-    return promise
+    return promise as ZeduxPromise<Data>
   }, deps && [...deps, refs.current.counter])
 
   injectEffect(
@@ -189,5 +225,23 @@ export const injectPromise: {
     []
   )
 
-  return api(signal).setPromise(refs.current.promise)
+  const atomApi = api(signal).setPromise(
+    refs.current.promise
+  ) as unknown as InjectPromiseAtomApi<
+    {
+      Exports: Record<string, any>
+      Promise: ZeduxPromise<Data>
+      Signal: MappedSignal<{
+        Events: MapEvents<MappedEvents>
+        State: PromiseState<Data>
+      }>
+      State: PromiseState<Data>
+    },
+    MappedEvents,
+    Data
+  >
+
+  atomApi.dataSignal = dataSignal
+
+  return atomApi
 }
