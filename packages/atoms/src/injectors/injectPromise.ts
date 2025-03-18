@@ -21,10 +21,11 @@ import { injectMemo } from './injectMemo'
 import { injectSignal } from './injectSignal'
 import { injectRef } from './injectRef'
 import { AtomApi } from '../classes/AtomApi'
+import type { MappedSignal } from '../classes/MappedSignal'
+import type { Signal } from '../classes/Signal'
 import { Invalidate } from '../utils/general'
 import { injectSelf } from './injectSelf'
 import { injectMappedSignal } from './injectMappedSignal'
-import { MappedSignal, Signal } from '../classes'
 
 export class InjectPromiseAtomApi<
   G extends AtomApiGenerics,
