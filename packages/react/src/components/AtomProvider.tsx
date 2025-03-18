@@ -2,7 +2,7 @@ import { AnyAtomInstance, Ecosystem } from '@zedux/atoms'
 import React, { ReactElement, ReactNode } from 'react'
 import { useEcosystem } from '../hooks/useEcosystem'
 import { getReactContext, reactContextScope } from '../utils'
-import { useAtomInstance } from '../hooks'
+import { useAtomInstance } from '../hooks/useAtomInstance'
 
 /**
  * Provides an atom instance over React context.
