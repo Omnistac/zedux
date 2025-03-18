@@ -1,3 +1,9 @@
+## v2.0.0-rc.2 (Mar 18, 2025)
+
+### Fixes:
+
+- `react`: fix import path in `AtomProvider` (#224)
+
 ## v2.0.0-rc.1 (Mar 18, 2025)
 
 ### New Features:
