@@ -48,24 +48,32 @@ export const createStore: {
 
 export class Store<State = any> {
   static readonly $$typeof = STORE_IDENTIFIER
-  private _state: State
-  private _isDispatching?: boolean
 
   /**
-   * We can optimize some things if this store is never composed. Disable
-   * optimizations as soon as this store is used as a parent or child store.
+   * `s`cheduler - a reference to the instance of the atoms package's
+   * `SyncScheduler` for the ecosystem of the atom that created this store.
    */
-  private _isSolo = true
+  public static s?: { post(): void; pre(): void }
+
+  private _state: State
+  private _isDispatching?: boolean
   private _parents?: EffectsSubscriber[]
   private _rootReducer?: Reducer<State>
   private _subscribers: SubscriberObject[] = []
   private _tree?: HierarchyNode
+
+  /**
+   * `s`cheduler - a reference to the instance of the atoms package's
+   * `SyncScheduler` for the ecosystem of the atom that created this store.
+   */
+  public s?: { post(): void; pre(): void }
 
   constructor(
     initialHierarchy?: HierarchyDescriptor<State>,
     initialState?: State
   ) {
     this._state = initialState as State
+    this.s = Store.s
 
     if (initialHierarchy) {
       this.use(initialHierarchy as KnownHierarchyDescriptor<State>)
@@ -116,14 +124,12 @@ export class Store<State = any> {
     function. But it's always bound and can be passed around easily.
   */
   public dispatch = (action: Dispatchable) => {
-    if (this._isSolo) {
-      return this._dispatch(action)
-    }
-
+    if (action.meta !== zeduxTypes.batch) this.s?.pre()
     getScheduler().s({
       j: () => this._dispatch(action),
       T: 0, // UpdateStore (0)
     })
+    if (action.meta !== zeduxTypes.batch) this.s?.post()
 
     return this._state
   }
@@ -162,13 +168,7 @@ export class Store<State = any> {
     around easily.
   */
   public setState = (settable: StoreSettable<State>, meta?: any) => {
-    if (this._isSolo) {
-      return this._setState(
-        settable as StoreSettable<RecursivePartial<State>, State>,
-        meta
-      )
-    }
-
+    if (meta !== zeduxTypes.batch) this.s?.pre()
     getScheduler().s({
       j: () =>
         this._setState(
@@ -177,6 +177,7 @@ export class Store<State = any> {
         ),
       T: 0, // UpdateStore (0)
     })
+    if (meta !== zeduxTypes.batch) this.s?.post()
 
     return this._state
   }
@@ -209,14 +210,7 @@ export class Store<State = any> {
     settable: StoreSettable<RecursivePartial<State>, State>,
     meta?: any
   ) {
-    if (this._isSolo) {
-      return this._setState(
-        settable as StoreSettable<RecursivePartial<State>, State>,
-        meta,
-        true
-      )
-    }
-
+    if (meta !== zeduxTypes.batch) this.s?.pre()
     getScheduler().s({
       j: () =>
         this._setState(
@@ -226,6 +220,7 @@ export class Store<State = any> {
         ),
       T: 0, // UpdateStore (0)
     })
+    if (meta !== zeduxTypes.batch) this.s?.post()
 
     return this._state
   }
@@ -321,7 +316,6 @@ export class Store<State = any> {
   public _register(effects: EffectsSubscriber) {
     const parents = this._parents || (this._parents = [])
     parents.push(effects)
-    this._isSolo = false
 
     return () => {
       const index = parents.indexOf(effects)
@@ -361,7 +355,7 @@ export class Store<State = any> {
       return this._state
     }
 
-    return this._routeAction(action)
+    this._routeAction(action)
   }
 
   private _dispatchAction(
@@ -484,10 +478,6 @@ export class Store<State = any> {
     // Update the stored state
     this._state = newState
 
-    if (this._isSolo) {
-      return this._doNotify(effect)
-    }
-
     // defer informing if a parent store is currently dispatching
     getScheduler().s({
       j: () => this._doNotify(effect),
@@ -501,7 +491,6 @@ export class Store<State = any> {
     childStorePath: string[],
     childStore: Store
   ) {
-    this._isSolo = false
     const effectsSubscriber: EffectsSubscriber<State> = ({
       action,
       error,

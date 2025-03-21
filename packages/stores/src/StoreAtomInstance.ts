@@ -204,6 +204,11 @@ export class StoreAtomInstance<
   public j() {
     this.N = []
     this._isEvaluating = true
+
+    // all stores created during evaluation automatically belong to the
+    // ecosystem.
+    Store.s = this.e.syncScheduler
+
     const prevNode = this.e.cs(this)
 
     try {
@@ -264,6 +269,8 @@ export class StoreAtomInstance<
       throw err
     } finally {
       this._isEvaluating = false
+
+      Store.s = undefined
 
       // even if evaluation errored, we need to update observers if the store's
       // state changed
