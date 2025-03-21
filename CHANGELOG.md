@@ -1,3 +1,13 @@
+## v2.0.0-rc.3 (Mar 21, 2025)
+
+### New Features:
+
+- `react`: support react 18 component names (#227)
+
+### Fixes:
+
+- `core`, `stores`: make stores scheduler kick off the atoms scheduler first (#226)
+
 ## v2.0.0-rc.2 (Mar 18, 2025)
 
 ### Fixes:
