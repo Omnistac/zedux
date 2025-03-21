@@ -241,10 +241,10 @@ describe('graph', () => {
 
     let why: EvaluationReason[] | undefined
 
-    const selector1 = ({ get }: AtomGetters) => {
+    const selector1 = jest.fn(({ get }: AtomGetters) => {
       why = ecosystem.why()
       return get(atom1) + get(atom2)
-    }
+    })
 
     const selectorInstance = ecosystem.getNode(selector1)
     const atomInstance = ecosystem.getInstance(atom1)
@@ -254,6 +254,7 @@ describe('graph', () => {
 
     atomInstance.setState('aa')
 
+    expect(selector1).toHaveBeenCalledTimes(2)
     expect(selectorInstance.v).toBe('aaaab')
     expect(why).toHaveLength(2)
     expect(why).toEqual([
