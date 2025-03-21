@@ -1,3 +1,9 @@
+## v2.0.0-rc.4 (Mar 21, 2025)
+
+### Fixes:
+
+- `stores`: restore previous store scheduler instead of clearing (#229)
+
 ## v2.0.0-rc.3 (Mar 21, 2025)
 
 ### New Features:
