@@ -13,16 +13,12 @@ const wait = (time: number) =>
   new Promise<string>(resolve => setTimeout(() => resolve('whatever'), time))
 
 const suspendingAtom = atom('suspending', (param?: string) => {
-  const promiseApi = injectPromise(
-    async () => {
-      const val = await wait(2500)
-      return val
-    },
-    [],
-    { dataOnly: true }
-  )
+  const { dataSignal, promise } = injectPromise(async () => {
+    const val = await wait(2500)
+    return val
+  }, [])
 
-  return api("I am the value you're looking for").setPromise(promiseApi.promise)
+  return api("I am the value you're looking for").setPromise(promise)
 })
 
 const forwardingAtom = atom('forwarding', (param?: string) => {

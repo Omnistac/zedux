@@ -7,6 +7,7 @@ import {
   SelectorTemplate,
   Prettify,
   Selectable,
+  ZeduxPromise,
 } from './index'
 import { SelectorInstance } from '../classes/SelectorInstance'
 import type { Signal } from '../classes/Signal'
@@ -148,6 +149,9 @@ export type PromiseOf<A extends AnyAtomApi | AnyAtomTemplate | ZeduxNode> =
     : A extends AtomApi<infer G>
     ? G['Promise']
     : never
+
+export type ResolvedStateOf<A extends AnyAtomTemplate | ZeduxNode> =
+  PromiseOf<A> extends ZeduxPromise<any> ? Awaited<PromiseOf<A>> : StateOf<A>
 
 export type SelectorGenerics = Pick<AtomGenerics, 'State'> & {
   Params: any[]

@@ -5,6 +5,7 @@ import {
   AtomTemplateBase,
   ParamlessTemplate,
   ParamsOf,
+  ResolvedStateOf,
   Selectable,
   StateOf,
 } from '@zedux/atoms'
@@ -39,21 +40,37 @@ import { useAtomInstance } from './useAtomInstance'
  * ```
  */
 export const useAtomValue: {
+  // no suspense
+  <A extends AnyAtomTemplate>(
+    template: A,
+    params: ParamsOf<A>,
+    config: Omit<ZeduxHookConfig, 'subscribe' | 'suspend'> & { suspend: false }
+  ): StateOf<A>
+
+  // suspense
   <A extends AnyAtomTemplate>(
     template: A,
     params: ParamsOf<A>,
     config?: Omit<ZeduxHookConfig, 'subscribe'>
-  ): StateOf<A>
+  ): ResolvedStateOf<A>
 
-  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateOf<A>
+  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): ResolvedStateOf<A>
 
-  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateOf<A>
+  <A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
+  ): ResolvedStateOf<A>
+
+  <I extends AnyAtomInstance>(
+    instance: I,
+    params: [],
+    config: Omit<ZeduxHookConfig, 'subscribe' | 'suspend'> & { suspend: false }
+  ): StateOf<I>
 
   <I extends AnyAtomInstance>(
     instance: I,
     params?: [],
     config?: Omit<ZeduxHookConfig, 'subscribe'>
-  ): StateOf<I>
+  ): ResolvedStateOf<I>
 
   <S extends Selectable>(
     template: S,

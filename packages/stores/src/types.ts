@@ -130,6 +130,12 @@ export type AtomPromiseType<
   ? G['Promise']
   : never
 
+export interface InjectStorePromiseConfig<T = any> {
+  dataOnly?: boolean
+  initialData?: T
+  runOnInvalidate?: boolean
+}
+
 export type StoreAtomStateFactory<
   G extends Pick<
     StoreAtomGenerics,
