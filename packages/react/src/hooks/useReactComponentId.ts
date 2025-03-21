@@ -8,6 +8,16 @@ type MaybeComponent =
     }
   | undefined
 
+type React18 = {
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?: {
+    ReactCurrentOwner?: {
+      current?: {
+        type?: MaybeComponent
+      }
+    }
+  }
+}
+
 type React19 = {
   __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE?: {
     A?: {
@@ -44,9 +54,12 @@ const serverKey = `__SERVER${react19KeyBase}` as const
  * cost of some DX.
  */
 export const useReactComponentId = (ecosystem: Ecosystem) => {
-  const component: MaybeComponent = (
-    (React as React19)[clientKey] || (React as React19)[serverKey]
-  )?.A?.getOwner?.()?.type
+  const component: MaybeComponent =
+    (
+      (React as React19)[clientKey] ?? (React as React19)[serverKey]
+    )?.A?.getOwner?.()?.type ??
+    (React as React18).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      ?.ReactCurrentOwner?.current?.type
 
   const name = component?.displayName || component?.name
   const id = useId()
