@@ -13,17 +13,22 @@ export const getEdges = (map: Map<ZeduxNode, GraphEdge>) =>
 
 export const getNodes = () =>
   Object.fromEntries(
-    [...ecosystem.n.entries()].map(([id, node]) => [
-      id,
-      {
-        className: node.constructor.name,
-        observers: getEdges(node.o),
-        sources: getEdges(node.s),
-        state: node.get(),
-        status: node.status,
-        weight: node.W,
-      },
-    ])
+    [...ecosystem.n.entries()].map(([id, node]) => {
+      // resolve node weight if needed
+      if (node.R) node.R(node)
+
+      return [
+        id,
+        {
+          className: node.constructor.name,
+          observers: getEdges(node.o),
+          sources: getEdges(node.s),
+          state: node.get(),
+          status: node.status,
+          weight: node.W,
+        },
+      ]
+    })
   )
 
 export const getSelectorNodes = () =>

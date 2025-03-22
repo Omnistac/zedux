@@ -242,7 +242,7 @@ exports[`graph getNode(atom) returns the instance 1`] = `
     },
     "state": 3,
     "status": "Active",
-    "weight": 3,
+    "weight": 1,
   },
 }
 `;

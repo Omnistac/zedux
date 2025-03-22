@@ -59,6 +59,11 @@ export abstract class ZeduxNode<G extends NodeGenerics = AnyNodeGenerics>
   public L: undefined | Listener = undefined
 
   /**
+   * @see Job.R
+   */
+  public R: ((node: ZeduxNode) => void) | undefined = undefined
+
+  /**
    * @see Job.T
    */
   public T = 2 as const
@@ -87,8 +92,6 @@ export abstract class ZeduxNode<G extends NodeGenerics = AnyNodeGenerics>
    * @see Job.W
    */
   public W = 1
-
-  public P = 1
 
   /**
    * Detach this node from the ecosystem and clean up all graph edges and other
