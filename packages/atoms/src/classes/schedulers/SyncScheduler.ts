@@ -1,5 +1,7 @@
 import { Job } from '@zedux/atoms/types/index'
 import { SchedulerBase } from './SchedulerBase'
+import { resolveWeight } from '../../utils/graph'
+import { ZeduxNode } from '../ZeduxNode'
 
 export class SyncScheduler extends SchedulerBase {
   /**
@@ -16,6 +18,9 @@ export class SyncScheduler extends SchedulerBase {
    * queue. Insertion point depends on job's type and weight.
    */
   public schedule(newJob: Job) {
+    // For ZeduxNode jobs, ensure weight is calculated if needed
+    if (newJob.R) resolveWeight(newJob as ZeduxNode)
+
     const weight = newJob.W ?? 0
     const numJobs = this.j.length
 

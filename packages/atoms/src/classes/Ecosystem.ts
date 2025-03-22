@@ -79,7 +79,11 @@ import { AtomInstance } from './instances/AtomInstance'
 import { AsyncScheduler } from './schedulers/AsyncScheduler'
 import { SyncScheduler } from './schedulers/SyncScheduler'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
-import { handleStateChange, handleStateChangeWithEvent } from '../utils/graph'
+import {
+  handleStateChange,
+  handleStateChangeWithEvent,
+  resolveWeight,
+} from '../utils/graph'
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements EventEmitter, Job
@@ -1036,6 +1040,8 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       > = {}
 
       for (const [id, node] of this.n) {
+        if (node.R) resolveWeight(node)
+
         hash[id] = {
           observers: [...node.o].map(([observer, edge]) => ({
             key: observer.id,
