@@ -112,6 +112,7 @@ export const useAtomInstance: {
     ecosystem.S = undefined
   }
 
+  const renderedInstance = instance
   const renderedValue = instance.v
   const isSelector = is(instance, SelectorInstance)
 
@@ -154,7 +155,10 @@ export const useAtomInstance: {
     // an unmounting component's effect cleanup can update or force-destroy the
     // atom instance before this component is mounted. If that happened, trigger
     // a rerender to recreate the atom instance and/or get its new state
-    if ((subscribe && instance.v !== renderedValue) || instance.l === zi.D) {
+    if (
+      (subscribe && instance.v !== renderedValue) ||
+      renderedInstance.l === zi.D
+    ) {
       render({})
     }
 

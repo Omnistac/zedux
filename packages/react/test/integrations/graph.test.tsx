@@ -311,4 +311,60 @@ describe('graph', () => {
     expect(receivingNode.get()).toBe(1)
     expect(mock).toHaveBeenCalledTimes(1)
   })
+
+  test('static hooks do cause rerenders when the atom is destroyed', async () => {
+    const atom1 = atom(
+      '1',
+      () => {
+        const signal = injectSignal(0)
+
+        return api(signal).setExports({
+          increment: () => signal.set(val => val + 1),
+        })
+      },
+      {
+        ttl: 0,
+      }
+    )
+
+    function Value() {
+      const val = useAtomValue(atom1)
+
+      return <div data-testid="val">{val}</div>
+    }
+
+    function Button() {
+      const { increment } = useAtomInstance(atom1).exports
+
+      return (
+        <button data-testid="button" onClick={increment}>
+          increment
+        </button>
+      )
+    }
+
+    function Test() {
+      return (
+        <>
+          <Value />
+          <Button />
+        </>
+      )
+    }
+
+    const { findByTestId, findByText } = renderInEcosystem(<Test />, {
+      useStrictMode: true,
+    })
+
+    const val = await findByTestId('val')
+    expect(val).toHaveTextContent('0')
+
+    const button = await findByText('increment')
+
+    act(() => {
+      fireEvent.click(button)
+    })
+
+    expect(val).toHaveTextContent('1')
+  })
 })
