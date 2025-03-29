@@ -102,37 +102,10 @@ const hasInvalidateReason = (node: ReturnType<typeof injectSelf>) => {
  * })
  * ```
  */
-export const injectPromise: {
-  <Data, MappedEvents extends EventMap = None>(
-    promiseFactory: (params: {
-      controller?: AbortController
-      dataSignal: Signal<{
-        State: Data | undefined
-        Events: MapEvents<MappedEvents>
-      }>
-    }) => Promise<Data>,
-    deps?: InjectorDeps,
-    config?: InjectPromiseConfig<Data> & InjectSignalConfig<MappedEvents>
-  ): InjectPromiseAtomApi<
-    {
-      Exports: Record<string, any>
-      Promise: ZeduxPromise<Data>
-      Signal: MappedSignal<{
-        Events: MapEvents<MappedEvents>
-        State: PromiseState<Data>
-      }>
-      State: PromiseState<Data>
-    },
-    MappedEvents,
-    Data
-  >
-} = <Data, MappedEvents extends EventMap = None>(
+export const injectPromise = <Data, MappedEvents extends EventMap = None>(
   promiseFactory: (params: {
     controller?: AbortController
-    dataSignal: Signal<{
-      State: Data | undefined
-      Events: MapEvents<MappedEvents>
-    }>
+    prevData?: NoInfer<Data>
   }) => Promise<Data>,
   deps?: InjectorDeps,
   {
@@ -180,7 +153,7 @@ export const injectPromise: {
     try {
       promise = promiseFactory({
         controller: refs.current.controller,
-        dataSignal,
+        prevData: dataSignal.v,
       })
     } catch (err) {
       signal.mutate(getErrorPromiseState(err))

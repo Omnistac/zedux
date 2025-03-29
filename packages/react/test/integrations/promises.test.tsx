@@ -259,22 +259,33 @@ describe('injectPromise', () => {
 
   test('the dataSignal is passed to the promise factory', async () => {
     const atom1 = atom('1', () => {
-      return injectPromise(async ({ dataSignal }) => {
-        dataSignal.set('a')
+      return injectPromise(
+        async ({
+          prevData,
+        }: {
+          controller?: AbortController
+          prevData?: string
+        }) => {
+          await Promise.resolve(1)
 
-        await Promise.resolve(1)
-
-        return 'b'
-      })
+          return prevData ? prevData + 'b' : 'a'
+        },
+        [],
+        { runOnInvalidate: true }
+      )
     })
 
     const node1 = ecosystem.getNode(atom1)
+    expect(node1.get().data).toBeUndefined()
 
+    await node1.promise
+    expect(node1.get().data).toBe('a')
+
+    node1.invalidate()
     expect(node1.get().data).toBe('a')
 
     await node1.promise
-
-    expect(node1.get().data).toBe('b')
+    expect(node1.get().data).toBe('ab')
   })
 
   test('The AbortController aborts on rerun', async () => {
