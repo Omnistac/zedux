@@ -339,6 +339,12 @@ export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
 
 export interface Job {
   /**
+   * needs`R`ecalculation - for ZeduxNodes, tracks whether this node's weight
+   * needs to be lazily recalculated before this node can be scheduled as a job
+   */
+  R?: (node: ZeduxNode) => void
+
+  /**
    * `W`eight - the weight of the node (for EvaluateZeduxNode jobs).
    */
   W?: number

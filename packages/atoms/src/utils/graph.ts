@@ -58,9 +58,7 @@ export const addEdge = (
   source.c?.()
 
   // Static sources don't change a node's weight
-  if (!(newEdge.flags & Static)) {
-    recalculateNodeWeight(source.W, observer)
-  }
+  if (!(newEdge.flags & Static)) observer.R = resolveWeight
 
   // scoped atoms propagate their scope to all observers. Any node that uses a
   // scoped atom was run in a scoped context and needs to remember the used
@@ -81,32 +79,34 @@ export const addEdge = (
       type: EDGE,
     })
   }
-
-  return newEdge
 }
 
+/**
+ * Add a reason to the node's `w`hy linked list. Returns true if this was the
+ * first reason added, meaning a job should be scheduled to process this update.
+ */
 export const addReason = (
   node: ZeduxNode | Ecosystem,
   reason: InternalEvaluationReason
 ) => {
-  if (node.w) {
-    // a reason reference is shared to all observers so we can't mutate it
-    // per-observer. Wrap them if a node gets more than one evaluation reason.
-    // This optimizes the most common case: 1 reason.
-    if (node.w === node.wt) {
-      node.w = node.wt = { r: node.w }
-    }
-
-    node.wt!.l = node.wt = { r: reason }
-  } else {
+  if (!node.w) {
     node.w = node.wt = reason
     return true
   }
+
+  // a reason reference is shared to all observers so we can't mutate it
+  // per-observer. Wrap them if a node gets more than one evaluation reason.
+  // This optimizes the most common case: 1 reason.
+  if (node.w === node.wt) {
+    node.w = node.wt = { r: node.w }
+  }
+
+  node.wt!.l = node.wt = { r: reason }
 }
 
 export const destroyNodeStart = (node: ZeduxNode, force?: boolean) => {
-  // If we're not force-destroying, don't destroy if there are observers. Also
-  // don't destroy if `node.K`eep is set
+  // If we're not force-destroying, don't destroy if there are non-passive
+  // observers.
   if (node.l === DESTROYED || (!force && node.o.size - (node.L ? 1 : 0))) {
     return
   }
@@ -129,7 +129,7 @@ export const destroyNodeFinish = (node: ZeduxNode) => {
   // now remove all edges between this node and its observers
   for (const [observer, edge] of node.o) {
     if (!(edge.flags & Static)) {
-      recalculateNodeWeight(-node.W, observer)
+      markForWeightRecalculation(observer)
     }
 
     observer.s.delete(node)
@@ -198,13 +198,19 @@ export const handleStateChangeWithEvent = <
   scheduleDependents(reason)
 }
 
-const recalculateNodeWeight = (weightDiff: number, node: ZeduxNode) => {
-  node.W += weightDiff
+/**
+ * Mark a node and its observers (recursively) for weight recalculation
+ */
+export const markForWeightRecalculation = (node: ZeduxNode) => {
+  if (node.R) return
+
+  node.R = resolveWeight
+
   const observers = node.o.keys()
   let observer
 
   while ((observer = observers.next().value)) {
-    recalculateNodeWeight(weightDiff, observer)
+    markForWeightRecalculation(observer as ZeduxNode)
   }
 }
 
@@ -233,7 +239,7 @@ export const removeEdge = (observer: ZeduxNode, source: ZeduxNode) => {
 
   // static dependencies don't change a node's weight
   if (!(edge.flags & Static)) {
-    recalculateNodeWeight(-source.W, observer)
+    observer.R = resolveWeight
   }
 
   // Note: We don't remove scope added by the edge here. Once scope is added to
@@ -252,6 +258,26 @@ export const removeEdge = (observer: ZeduxNode, source: ZeduxNode) => {
     source.L = undefined
   } else {
     scheduleNodeDestruction(source)
+  }
+}
+
+/**
+ * Lazily recalculate a node's weight when needed
+ */
+export const resolveWeight = (node: ZeduxNode) => {
+  node.R = undefined
+
+  const entries = node.s.entries()
+  node.W = 1
+  let entry
+
+  while ((entry = entries.next().value)) {
+    // static sources don't affect a node's weight
+    if (!(entry[1].flags & Static)) {
+      if (entry[0].R) resolveWeight(entry[0])
+
+      node.W += entry[0].W
+    }
   }
 }
 
