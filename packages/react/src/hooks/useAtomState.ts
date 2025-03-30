@@ -6,10 +6,12 @@ import {
   ExportsOf,
   ParamlessTemplate,
   ParamsOf,
+  ResolvedStateOf,
   StateHookTuple,
   StateOf,
 } from '@zedux/atoms'
 import { useAtomInstance } from './useAtomInstance'
+import { ZeduxHookConfig } from '../types'
 
 /**
  * Creates an atom instance for the passed atom template based on the passed
@@ -50,21 +52,35 @@ import { useAtomInstance } from './useAtomInstance'
 export const useAtomState: {
   <A extends AnyAtomTemplate<{ Node: AtomInstance }>>(
     template: A,
-    params: ParamsOf<A>
-  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
-
-  <A extends AnyAtomTemplate<{ Node: AtomInstance; Params: [] }>>(
-    template: A
+    params: ParamsOf<A>,
+    config: Omit<ZeduxHookConfig, 'subscribe' | 'suspend'> & { suspend: false }
   ): StateHookTuple<StateOf<A>, ExportsOf<A>>
 
   <A extends AnyAtomTemplate<{ Node: AtomInstance }>>(
-    template: ParamlessTemplate<A>
-  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
+    template: A,
+    params: ParamsOf<A>,
+    config?: Omit<ZeduxHookConfig, 'subscribe'>
+  ): StateHookTuple<ResolvedStateOf<A>, ExportsOf<A>>
 
-  <I extends AtomInstance>(instance: I): StateHookTuple<
-    StateOf<I>,
-    ExportsOf<I>
-  >
+  <A extends AnyAtomTemplate<{ Node: AtomInstance; Params: [] }>>(
+    template: A
+  ): StateHookTuple<ResolvedStateOf<A>, ExportsOf<A>>
+
+  <A extends AnyAtomTemplate<{ Node: AtomInstance }>>(
+    template: ParamlessTemplate<A>
+  ): StateHookTuple<ResolvedStateOf<A>, ExportsOf<A>>
+
+  <I extends AtomInstance>(
+    instance: I,
+    params: [],
+    config: Omit<ZeduxHookConfig, 'subscribe' | 'suspend'> & { suspend: false }
+  ): StateHookTuple<StateOf<I>, ExportsOf<I>>
+
+  <I extends AtomInstance>(
+    instance: I,
+    params?: [],
+    config?: Omit<ZeduxHookConfig, 'subscribe'>
+  ): StateHookTuple<ResolvedStateOf<I>, ExportsOf<I>>
 } = <G extends AnyAtomGenerics<{ Node: AtomInstance }>>(
   atom: AtomTemplateBase<G>,
   params?: G['Params']

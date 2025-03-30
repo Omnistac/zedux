@@ -257,8 +257,7 @@ export type InjectOrUseSelector<State, Params extends any[]> = Params extends []
   : <D = any>(params: Params, selector: (state: State) => D) => D
 
 export interface InjectPromiseConfig<T = any> {
-  dataOnly?: boolean
-  initialState?: T
+  initialData?: T
   runOnInvalidate?: boolean
 }
 
@@ -481,3 +480,9 @@ export type StateHookTuple<State, Exports> = [
   State,
   ExportsInfusedSetter<State, Exports>
 ]
+
+export interface ZeduxPromise<T> extends Promise<T> {
+  // this type needs a junk field to prevent TS from collapsing it down to match
+  // normal `Promise` types
+  _: never
+}

@@ -1,11 +1,13 @@
 import {
   api,
+  As,
   atom,
   injectAtomValue,
   injectPromise,
   injectRef,
 } from '@zedux/react'
 import { ecosystem } from '../utils/ecosystem'
+import { expectTypeOf } from 'expect-type'
 
 const reloadAtom = atom('reload', 0)
 
@@ -36,53 +38,6 @@ const queryAtom = atom('query', () => {
 })
 
 describe('promises', () => {
-  test('injectPromise retains data during reload', async () => {
-    jest.useFakeTimers()
-
-    const promiseInstance = ecosystem.getInstance(promiseAtom)
-    const reloadInstance = ecosystem.getInstance(reloadAtom)
-
-    expect(promiseInstance.get()).toEqual({
-      data: undefined,
-      isError: false,
-      isLoading: true,
-      isSuccess: false,
-      status: 'loading',
-    })
-
-    jest.runAllTimers()
-    await Promise.resolve() // wait for injectPromise's `.then` to run
-
-    expect(promiseInstance.get()).toEqual({
-      data: 0,
-      isError: false,
-      isLoading: false,
-      isSuccess: true,
-      status: 'success',
-    })
-
-    reloadInstance.set(1)
-
-    expect(promiseInstance.get()).toEqual({
-      data: 0,
-      isError: false,
-      isLoading: true,
-      isSuccess: false,
-      status: 'loading',
-    })
-
-    jest.runAllTimers()
-    await Promise.resolve() // wait for injectPromise's `.then` to run
-
-    expect(promiseInstance.get()).toEqual({
-      data: 2,
-      isError: false,
-      isLoading: false,
-      isSuccess: true,
-      status: 'success',
-    })
-  })
-
   test('query atoms retain data during reload', async () => {
     jest.useFakeTimers()
 
@@ -129,8 +84,57 @@ describe('promises', () => {
       status: 'success',
     })
   })
+})
 
-  test('injectPromise runOnInvalidate reruns promise factory on atom invalidation', async () => {
+describe('injectPromise', () => {
+  test('retains data during reload', async () => {
+    jest.useFakeTimers()
+
+    const promiseInstance = ecosystem.getInstance(promiseAtom)
+    const reloadInstance = ecosystem.getInstance(reloadAtom)
+
+    expect(promiseInstance.get()).toEqual({
+      data: undefined,
+      isError: false,
+      isLoading: true,
+      isSuccess: false,
+      status: 'loading',
+    })
+
+    jest.runAllTimers()
+    await Promise.resolve() // wait for injectPromise's `.then` to run
+
+    expect(promiseInstance.get()).toEqual({
+      data: 0,
+      isError: false,
+      isLoading: false,
+      isSuccess: true,
+      status: 'success',
+    })
+
+    reloadInstance.set(1)
+
+    expect(promiseInstance.get()).toEqual({
+      data: 0,
+      isError: false,
+      isLoading: true,
+      isSuccess: false,
+      status: 'loading',
+    })
+
+    jest.runAllTimers()
+    await Promise.resolve() // wait for injectPromise's `.then` to run
+
+    expect(promiseInstance.get()).toEqual({
+      data: 2,
+      isError: false,
+      isLoading: false,
+      isSuccess: true,
+      status: 'success',
+    })
+  })
+
+  test('runOnInvalidate reruns promise factory on atom invalidation', async () => {
     jest.useFakeTimers()
 
     const promiseInstance = ecosystem.getNode(promiseAtom, [true])
@@ -176,7 +180,7 @@ describe('promises', () => {
     })
   })
 
-  test('injectPromise does not rerun promise function on atom invalidation when !runOnInvalidate', async () => {
+  test('does not rerun promise function on atom invalidation when !runOnInvalidate', async () => {
     jest.useFakeTimers()
 
     const promiseInstance = ecosystem.getInstance(promiseAtom, [false])
@@ -220,5 +224,135 @@ describe('promises', () => {
       isSuccess: true,
       status: 'success',
     })
+  })
+
+  test('custom events reach the dataSignal and outer observers', () => {
+    const calls: any[] = []
+
+    const atom1 = atom('1', () => {
+      const atomApi = injectPromise(() => Promise.resolve(1), [], {
+        events: { test: As<string> },
+      })
+
+      return atomApi.setExports({ dataSignal: atomApi.dataSignal })
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+
+    node1.on('test', event => {
+      expectTypeOf(event).toEqualTypeOf<string>()
+      calls.push(['atom', event])
+    })
+
+    node1.x.dataSignal.on('test', event => {
+      expectTypeOf(event).toEqualTypeOf<string>()
+      calls.push(['dataSignal', event])
+    })
+
+    node1.send({ test: 'a' })
+
+    expect(calls).toEqual([
+      ['dataSignal', 'a'],
+      ['atom', 'a'],
+    ])
+  })
+
+  test('the dataSignal is passed to the promise factory', async () => {
+    const atom1 = atom('1', () => {
+      return injectPromise(
+        async ({
+          prevData,
+        }: {
+          controller?: AbortController
+          prevData?: string
+        }) => {
+          await Promise.resolve(1)
+
+          return prevData ? prevData + 'b' : 'a'
+        },
+        [],
+        { runOnInvalidate: true }
+      )
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+    expect(node1.get().data).toBeUndefined()
+
+    await node1.promise
+    expect(node1.get().data).toBe('a')
+
+    node1.invalidate()
+    expect(node1.get().data).toBe('a')
+
+    await node1.promise
+    expect(node1.get().data).toBe('ab')
+  })
+
+  test('The AbortController aborts on rerun', async () => {
+    const calls: any[] = []
+
+    const atom1 = atom('1', () => {
+      return injectPromise(
+        async ({ controller }) => {
+          if (controller) {
+            controller.signal.onabort = () => {
+              calls.push('aborted')
+            }
+          }
+
+          calls.push('awaiting')
+          await Promise.resolve(1)
+          calls.push('resolved')
+
+          return 'a'
+        },
+        [],
+        { runOnInvalidate: true }
+      )
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+
+    expect(calls).toEqual(['awaiting'])
+
+    await node1.promise
+
+    expect(calls).toEqual(['awaiting', 'resolved'])
+
+    node1.invalidate()
+
+    expect(calls).toEqual(['awaiting', 'resolved', 'awaiting', 'aborted'])
+  })
+
+  test('abort is aborted if the promise factory returns the same promise reference', async () => {
+    const calls: any[] = []
+    const promise = Promise.resolve('a')
+
+    const atom1 = atom('1', () => {
+      return injectPromise(
+        ({ controller }) => {
+          if (controller) {
+            controller.signal.onabort = () => {
+              calls.push('aborted')
+            }
+          }
+
+          calls.push('awaiting')
+
+          return promise
+        },
+        [],
+        { runOnInvalidate: true }
+      )
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+    await node1.promise
+
+    expect(calls).toEqual(['awaiting'])
+
+    node1.invalidate()
+
+    expect(calls).toEqual(['awaiting', 'awaiting'])
   })
 })
