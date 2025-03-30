@@ -1,3 +1,14 @@
+## v2.0.0-rc.5 (Mar 30, 2025)
+
+### New Features:
+
+- **Breaking Change** `atoms`, `react`, `stores`: improve `injectPromise` - add `dataSignal`, `initialData`, `ZeduxPromise` (#222)
+- `atoms`: lazily recalculate node weights (#231)
+
+### Fixes:
+
+- `react`: make static hooks always rerender on destroy (#232)
+
 ## v2.0.0-rc.4 (Mar 21, 2025)
 
 ### Fixes:
