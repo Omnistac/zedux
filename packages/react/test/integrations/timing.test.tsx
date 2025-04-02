@@ -1,6 +1,12 @@
-import { atom, injectEcosystem, injectEffect } from '@zedux/atoms'
+import {
+  api,
+  atom,
+  injectEcosystem,
+  injectEffect,
+  injectSignal,
+} from '@zedux/atoms'
 import { ecosystem } from '../utils/ecosystem'
-import React, { useEffect } from 'react'
+import React, { act, useEffect } from 'react'
 import { useAtomValue } from '@zedux/react'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 
@@ -123,5 +129,62 @@ describe('timing', () => {
       'atom 1 effect 2',
       'atom 2 effect',
     ])
+  })
+
+  test('effect callbacks are batched when run outside React', () => {
+    const calls: any[] = []
+
+    const atom1 = atom('1', () => {
+      const signal = injectSignal(0)
+
+      calls.push(signal.get())
+
+      injectEffect(() => {
+        signal.set(state => state + 1)
+        signal.set(state => state + 1)
+      }, [])
+
+      return api(signal).setExports({
+        update: () => signal.set(state => state + 1),
+      })
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+
+    expect(node1.get()).toBe(2)
+    expect(calls).toEqual([0, 2])
+  })
+
+  test('effect callbacks are batched when run in React', () => {
+    const calls: any[] = []
+
+    const atom1 = atom('1', () => {
+      const signal = injectSignal(0)
+
+      calls.push(signal.get())
+
+      injectEffect(() => {
+        signal.set(state => state + 1)
+        signal.set(state => state + 1)
+      }, [])
+
+      return api(signal).setExports({
+        update: () => signal.set(state => state + 1),
+      })
+    })
+
+    function Test() {
+      const val = useAtomValue(atom1)
+
+      return <div>{val}</div>
+    }
+
+    renderInEcosystem(<Test />, { useStrictMode: true })
+
+    act(() => {
+      ecosystem.asyncScheduler.flush()
+    })
+
+    expect(calls).toEqual([0, 2])
   })
 })

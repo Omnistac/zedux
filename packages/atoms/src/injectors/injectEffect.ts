@@ -66,7 +66,7 @@ export const injectEffect = (
     j: () => {
       prevDescriptor?.c?.()
 
-      const cleanup = untrack(effect) // let this throw
+      const cleanup = untrack(() => e.batch(effect)) // let this throw
 
       if (typeof cleanup === 'function') nextDescriptor.c = cleanup
     },
