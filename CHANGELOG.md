@@ -1,3 +1,9 @@
+## v2.0.0-rc.7 (Apr 3, 2025)
+
+### New Features:
+
+- `atoms`, `stores`: improve `injectPromise` and `injectStorePromise` type overloads (#238)
+
 ## v2.0.0-rc.6 (Apr 3, 2025)
 
 ### New Features:
