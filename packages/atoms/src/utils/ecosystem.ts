@@ -68,16 +68,6 @@ const resolveAtom = <A extends AnyAtomTemplate>(
   return maybeOverriddenAtom
 }
 
-export const mapRefToId = (ecosystem: Ecosystem, obj: any, name: string) => {
-  let id = ecosystem.b.get(obj)
-  if (id) return id
-
-  id = ecosystem.makeId('ref', name || 'unknown')
-  ecosystem.b.set(obj, id)
-
-  return id
-}
-
 /**
  * The node gateway. This is the entry point for creating all graph nodes. This
  * only creates nodes if they don't exist yet.
@@ -204,6 +194,16 @@ export const mapOverrides = (overrides: AnyAtomTemplate[]) =>
     map[atom.key] = atom
     return map
   }, {} as Record<string, AnyAtomTemplate>)
+
+export const mapRefToId = (ecosystem: Ecosystem, obj: any, name: string) => {
+  let id = ecosystem.b.get(obj)
+  if (id) return id
+
+  id = ecosystem.makeId('ref', name || 'unknown')
+  ecosystem.b.set(obj, id)
+
+  return id
+}
 
 export const schedulerPre = (ecosystem: Ecosystem) =>
   ecosystem.syncScheduler.f++

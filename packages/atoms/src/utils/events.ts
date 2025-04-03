@@ -9,9 +9,7 @@ import {
   ListenerConfig,
   SingleEventListener,
 } from '../types/index'
-import { scheduleAsync } from './ecosystem'
 import { CATCH_ALL, ERROR, EventSent, makeReasonReadable } from './general'
-import { addReason } from './graph'
 
 export const isListeningTo = (
   ecosystem: Ecosystem,
@@ -22,13 +20,11 @@ export const sendEcosystemEvent = (
   ecosystem: Ecosystem,
   event: EcosystemEvent
 ) => {
-  const shouldSchedule = ecosystem.C[CATCH_ALL] || ecosystem.C[event.type]
-
-  return (
-    shouldSchedule &&
-    addReason(ecosystem, { f: { [event.type]: event } }) &&
-    scheduleAsync(ecosystem, ecosystem)
-  )
+  if (ecosystem.C[CATCH_ALL] || ecosystem.C[event.type]) {
+    for (const listener of ecosystem.L) {
+      listener({ f: { [event.type]: event } })
+    }
+  }
 }
 
 export const sendEcosystemErrorEvent = (source: ZeduxNode, error: unknown) => {
@@ -46,11 +42,11 @@ export const sendImplicitEcosystemEvent = (
   ecosystem: Ecosystem,
   reason: InternalEvaluationReason
 ) => {
-  const shouldSchedule = shouldScheduleImplicit(ecosystem, reason)
-
-  shouldSchedule &&
-    addReason(ecosystem, reason) &&
-    scheduleAsync(ecosystem, ecosystem)
+  if (shouldScheduleImplicit(ecosystem, reason)) {
+    for (const listener of ecosystem.L) {
+      listener(reason)
+    }
+  }
 }
 
 export const shouldScheduleImplicit = (

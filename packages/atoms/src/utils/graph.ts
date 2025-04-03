@@ -86,7 +86,7 @@ export const addEdge = (
  * first reason added, meaning a job should be scheduled to process this update.
  */
 export const addReason = (
-  node: ZeduxNode | Ecosystem,
+  node: ZeduxNode,
   reason: InternalEvaluationReason
 ) => {
   if (!node.w) {
@@ -376,6 +376,11 @@ export const setNodeStatus = (
     } as const
 
     if (isListeningToCycle) {
+      // ensure this is set before sending the `cycle` ecosystem event for the
+      // new node. It's fine that we set it again to the same ref in other
+      // places.
+      if (oldStatus === INITIALIZING) node.e.n.set(node.id, node)
+
       sendImplicitEcosystemEvent(node.e, reason)
     }
 
