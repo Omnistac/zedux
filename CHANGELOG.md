@@ -1,3 +1,11 @@
+## v2.0.0-rc.6 (Apr 3, 2025)
+
+### New Features:
+
+- **Breaking Change** `atoms`: send ecosystem events immediately (#236)
+- `atoms`: add memos to `ecosystem.n` for cache management (#235)
+- `atoms`: consistently batch effect callbacks (#234)
+
 ## v2.0.0-rc.5 (Mar 30, 2025)
 
 ### New Features:
