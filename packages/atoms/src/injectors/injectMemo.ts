@@ -1,5 +1,5 @@
 import { SelectorInstance } from '../classes/SelectorInstance'
-import { InjectorDeps } from '../types/index'
+import { InjectorDeps, PartialAtomInstance } from '../types/index'
 import { untrack } from '../utils/evaluationContext'
 import { compare } from '../utils/general'
 import { injectPrevDescriptor, setNextInjector } from './injectPrevDescriptor'
@@ -23,6 +23,23 @@ interface MemoValue<T> {
 }
 
 const TYPE = 'memo'
+
+const instantiateSelector = <T>(
+  self: PartialAtomInstance,
+  valueFactory: () => T
+) => {
+  // let this throw
+  const selector = new SelectorInstance(
+    self.e,
+    self.e.makeId('memo', self),
+    valueFactory,
+    []
+  )
+
+  self.e.n.set(selector.id, selector)
+
+  return selector
+}
 
 /**
  * The injector equivalent of React's `useMemo` hook. Memoizes a value. Only
@@ -54,12 +71,7 @@ export const injectMemo = <T = any>(
 
   value.v = deps
     ? untrack(valueFactory)
-    : (value.n ??= new SelectorInstance(
-        instance.e,
-        instance.e.makeId('memo', instance),
-        valueFactory,
-        []
-      )).get()
+    : (value.n ??= instantiateSelector(instance, valueFactory)).get()
 
   return setNextInjector({
     c: undefined,
