@@ -29,7 +29,6 @@ import {
   EcosystemEvents,
   InternalEvaluationReason,
   GetNode,
-  Job,
   NodeType,
 } from '../types/index'
 import {
@@ -86,7 +85,7 @@ import {
 } from '../utils/graph'
 
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
-  implements EventEmitter, Job
+  implements EventEmitter
 {
   public asyncScheduler = new AsyncScheduler(this)
   public complexParams = false
@@ -210,18 +209,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * looked up via these context object references in a scoped context.
    */
   public s: Record<string, Record<string, any>[]> | undefined = undefined
-
-  /**
-   * `w`hy - the list of events this ecosystem is passing to event listeners on
-   * the next job run. This is a singly-linked list. The ecosystem only cares
-   * about the `.f`ullEventMap property.
-   */
-  public w: InternalEvaluationReason | undefined = undefined
-
-  /**
-   * `w`hy `t`ail - the last reason in the `w`hy linked list.
-   */
-  public wt: InternalEvaluationReason | undefined = undefined
 
   /**
    * Only for use by internal addon packages - lets us attach anything we want
@@ -1172,22 +1159,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     } finally {
       this.S = prev
     }
-  }
-
-  /**
-   * @see Job.j
-   */
-  public j() {
-    const isSingleEvent = this.w === this.wt
-    let reason: InternalEvaluationReason | undefined = this.w!
-
-    do {
-      for (const listener of this.L) {
-        listener(isSingleEvent ? reason : reason.r!)
-      }
-    } while ((reason = reason?.l))
-
-    this.w = this.wt = undefined
   }
 
   /**

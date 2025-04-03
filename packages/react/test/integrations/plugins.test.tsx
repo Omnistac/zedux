@@ -29,11 +29,8 @@ afterEach(() => {
 describe('plugins', () => {
   test('ecosystem events fire only when there are ecosystem event listeners', () => {
     jest.useFakeTimers()
-    const ecosystemJobFn = jest.spyOn(ecosystem, 'j')
     const node1 = ecosystem.getNode(atom1)
     const calls: any[] = []
-
-    expect(ecosystemJobFn).not.toHaveBeenCalled()
 
     const cleanup = ecosystem.on(eventMap => {
       calls.push(Object.keys(eventMap))
@@ -41,21 +38,19 @@ describe('plugins', () => {
 
     node1.set({ a: 11 })
 
-    expect(ecosystemJobFn).toHaveBeenCalledTimes(1)
     expect(calls).toEqual([['change']])
 
     node1.mutate(state => {
       state.a = 111
     })
 
-    expect(ecosystemJobFn).toHaveBeenCalledTimes(2)
     expect(calls).toEqual([['change'], ['mutate', 'change']])
 
     cleanup()
 
     node1.set({ a: 1 })
 
-    expect(ecosystemJobFn).toHaveBeenCalledTimes(2)
+    expect(calls).toEqual([['change'], ['mutate', 'change']])
   })
 
   test('overrides fire cycle events', () => {
