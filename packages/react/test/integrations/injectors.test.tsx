@@ -17,7 +17,7 @@ import {
   injectSignal,
   injectWhy,
 } from '@zedux/react'
-import { ecosystem } from '../utils/ecosystem'
+import { ecosystem, snapshotNodes } from '../utils/ecosystem'
 
 describe('injectors', () => {
   test('injectors can only be called during atom evaluation', () => {
@@ -339,16 +339,23 @@ describe('injectors', () => {
 
     expect(node1.get()).toBe(3)
     expect(calls).toEqual([1])
+    snapshotNodes()
 
     signal1.set(11)
 
     expect(node1.get()).toBe(13)
     expect(calls).toEqual([1, 11])
+    snapshotNodes()
 
     signal2.set(22)
 
     expect(node1.get()).toBe(33)
     expect(calls).toEqual([1, 11])
+    snapshotNodes()
+
+    node1.destroy()
+
+    snapshotNodes()
   })
 
   test('injectEffect() callback does not track signal usages', () => {
