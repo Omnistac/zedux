@@ -102,7 +102,51 @@ const hasInvalidateReason = (node: ReturnType<typeof injectSelf>) => {
  * })
  * ```
  */
-export const injectPromise = <Data, MappedEvents extends EventMap = None>(
+export const injectPromise: {
+  <Data, MappedEvents extends EventMap = None>(
+    promiseFactory: (params: {
+      controller?: AbortController
+      prevData?: NoInfer<Data>
+    }) => Promise<Data>,
+    deps: InjectorDeps,
+    config: Omit<InjectPromiseConfig<Data>, 'initialData'> & {
+      initialData: Data
+    } & InjectSignalConfig<MappedEvents>
+  ): InjectPromiseAtomApi<
+    {
+      Exports: Record<string, any>
+      Promise: ZeduxPromise<Data>
+      Signal: MappedSignal<{
+        Events: MapEvents<MappedEvents>
+        State: Omit<PromiseState<Data>, 'data'> & { data: Data }
+      }>
+      State: Omit<PromiseState<Data>, 'data'> & { data: Data }
+    },
+    MappedEvents,
+    Data
+  >
+
+  <Data, MappedEvents extends EventMap = None>(
+    promiseFactory: (params: {
+      controller?: AbortController
+      prevData?: NoInfer<Data>
+    }) => Promise<Data>,
+    deps: InjectorDeps,
+    config?: InjectPromiseConfig<Data> & InjectSignalConfig<MappedEvents>
+  ): InjectPromiseAtomApi<
+    {
+      Exports: Record<string, any>
+      Promise: ZeduxPromise<Data>
+      Signal: MappedSignal<{
+        Events: MapEvents<MappedEvents>
+        State: PromiseState<Data>
+      }>
+      State: PromiseState<Data>
+    },
+    MappedEvents,
+    Data
+  >
+} = <Data, MappedEvents extends EventMap = None>(
   promiseFactory: (params: {
     controller?: AbortController
     prevData?: NoInfer<Data>
@@ -217,5 +261,5 @@ export const injectPromise = <Data, MappedEvents extends EventMap = None>(
 
   atomApi.dataSignal = dataSignal
 
-  return atomApi
+  return atomApi as any // required to satisfy both overloads
 }
