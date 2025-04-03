@@ -68,6 +68,33 @@ export const injectStorePromise: {
   <T>(
     promiseFactory: (controller?: AbortController) => Promise<T>,
     deps: InjectorDeps,
+    config: Omit<InjectStorePromiseConfig, 'dataOnly' | 'initialData'> & {
+      dataOnly: true
+      initialData: T
+    } & InjectStoreConfig
+  ): StoreAtomApi<{
+    Exports: Record<string, any>
+    Promise: ZeduxPromise<T>
+    State: T
+    Store: Store<T>
+  }>
+
+  <T>(
+    promiseFactory: (controller?: AbortController) => Promise<T>,
+    deps: InjectorDeps,
+    config: Omit<InjectStorePromiseConfig, 'initialData'> & {
+      initialData: T
+    } & InjectStoreConfig
+  ): StoreAtomApi<{
+    Exports: Record<string, any>
+    Promise: ZeduxPromise<T>
+    State: Omit<PromiseState<T>, 'data'> & { data: T }
+    Store: Store<Omit<PromiseState<T>, 'data'> & { data: T }>
+  }>
+
+  <T>(
+    promiseFactory: (controller?: AbortController) => Promise<T>,
+    deps: InjectorDeps,
     config: Omit<InjectStorePromiseConfig, 'dataOnly'> & {
       dataOnly: true
     } & InjectStoreConfig

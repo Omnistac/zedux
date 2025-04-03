@@ -37,6 +37,7 @@ import {
   InvalidateEvent,
   PromiseChangeEvent,
   Ecosystem,
+  InjectPromiseAtomApi,
 } from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 import { ecosystem, snapshotNodes } from './utils/ecosystem'
@@ -619,6 +620,14 @@ describe('react types', () => {
       const val5 = injectMemo(() => true, [])
       const val6 = injectCallback(() => true, [])
       const val7 = injectPromise(() => Promise.resolve(1), [])
+      const val8 = injectPromise(() => Promise.resolve('a'), [], {
+        initialData: 'b',
+      })
+
+      injectPromise(() => Promise.resolve(true), [1, 'a'], {
+        // @ts-expect-error initialData must match promiseFactory return type
+        initialData: 'bad',
+      })
 
       return api(injectSignal(instance.getOnce())).setExports({
         val1,
@@ -628,6 +637,7 @@ describe('react types', () => {
         val5,
         val6,
         val7,
+        val8,
       })
     })
 
@@ -647,6 +657,19 @@ describe('react types', () => {
         State: PromiseState<number>
         Signal: Signal<{ Events: None; State: PromiseState<number> }>
       }>
+      val8: InjectPromiseAtomApi<
+        {
+          Exports: Record<string, any>
+          Promise: Promise<string>
+          State: Omit<PromiseState<string>, 'data'> & { data: string }
+          Signal: Signal<{
+            Events: None
+            State: Omit<PromiseState<string>, 'data'> & { data: string }
+          }>
+        },
+        None,
+        string
+      >
     }>()
   })
 
