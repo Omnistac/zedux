@@ -6,7 +6,6 @@ import {
   InjectStoreConfig,
   injectWhy,
   PromiseState,
-  ZeduxPromise,
 } from '@zedux/atoms'
 import { detailedTypeof, RecursivePartial, Store } from '@zedux/core'
 import {
@@ -74,7 +73,8 @@ export const injectStorePromise: {
     } & InjectStoreConfig
   ): StoreAtomApi<{
     Exports: Record<string, any>
-    Promise: ZeduxPromise<T>
+    Promise: Promise<T>
+    ResolvedState: T
     State: T
     Store: Store<T>
   }>
@@ -87,7 +87,8 @@ export const injectStorePromise: {
     } & InjectStoreConfig
   ): StoreAtomApi<{
     Exports: Record<string, any>
-    Promise: ZeduxPromise<T>
+    Promise: Promise<T>
+    ResolvedState: T
     State: Omit<PromiseState<T>, 'data'> & { data: T }
     Store: Store<Omit<PromiseState<T>, 'data'> & { data: T }>
   }>
@@ -100,7 +101,8 @@ export const injectStorePromise: {
     } & InjectStoreConfig
   ): StoreAtomApi<{
     Exports: Record<string, any>
-    Promise: ZeduxPromise<T>
+    Promise: Promise<T>
+    ResolvedState: T
     State: T | undefined
     Store: Store<T | undefined>
   }>
@@ -111,7 +113,8 @@ export const injectStorePromise: {
     config?: InjectStorePromiseConfig<T> & InjectStoreConfig
   ): StoreAtomApi<{
     Exports: Record<string, any>
-    Promise: ZeduxPromise<T>
+    Promise: Promise<T>
+    ResolvedState: T
     State: PromiseState<T>
     Store: Store<PromiseState<T>>
   }>
@@ -128,7 +131,7 @@ export const injectStorePromise: {
   const refs = injectRef({ counter: 0 } as {
     controller?: AbortController
     counter: number
-    promise: ZeduxPromise<T>
+    promise: Promise<T>
   })
 
   const store = injectStore(
@@ -188,7 +191,7 @@ export const injectStorePromise: {
         store.setStateDeep(getErrorPromiseState(error))
       })
 
-    return promise as ZeduxPromise<T>
+    return promise
   }, deps && [...deps, refs.current.counter])
 
   injectEffect(
@@ -199,5 +202,5 @@ export const injectStorePromise: {
     []
   )
 
-  return storeApi(store).setPromise(refs.current.promise)
+  return storeApi(store).setPromise(refs.current.promise) as any
 }

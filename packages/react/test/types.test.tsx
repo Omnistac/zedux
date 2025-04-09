@@ -38,6 +38,9 @@ import {
   PromiseChangeEvent,
   Ecosystem,
   InjectPromiseAtomApi,
+  injectEcosystem,
+  ResolvedStateOf,
+  IonInstanceRecursive,
 } from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 import { ecosystem, snapshotNodes } from './utils/ecosystem'
@@ -154,11 +157,9 @@ describe('react types', () => {
     expectTypeOf<SignalAtomInstanceParams>().toEqualTypeOf<[p: string]>()
     expectTypeOf<SignalAtomInstanceParams>().toEqualTypeOf<ValueAtomInstanceParams>()
 
-    expectTypeOf<SignalAtomExports>().toEqualTypeOf<Record<string, never>>()
+    expectTypeOf<SignalAtomExports>().toEqualTypeOf<None>()
     expectTypeOf<SignalAtomExports>().toEqualTypeOf<ValueAtomExports>()
-    expectTypeOf<SignalAtomInstanceExports>().toEqualTypeOf<
-      Record<string, never>
-    >()
+    expectTypeOf<SignalAtomInstanceExports>().toEqualTypeOf<None>()
     expectTypeOf<SignalAtomInstanceExports>().toEqualTypeOf<ValueAtomInstanceExports>()
 
     expectTypeOf<SignalAtomPromise>().toBeUndefined()
@@ -175,7 +176,32 @@ describe('react types', () => {
 
     expectTypeOf<TSignalAtomInstance>().toEqualTypeOf<typeof signalInstance>()
     expectTypeOf<TSignalAtomTemplate>().toEqualTypeOf<typeof signalInstance.t>()
-    expectTypeOf<TValueAtomInstance>().toEqualTypeOf<typeof signalInstance>()
+    expectTypeOf<TValueAtomInstance>().toEqualTypeOf<
+      AtomInstance<
+        {
+          Events: None
+          Exports: None
+          Params: [p: string]
+          Promise: undefined
+          State: string
+        } & {
+          Node: AtomInstanceRecursive<{
+            Events: None
+            Exports: None
+            Params: [p: string]
+            Promise: undefined
+            State: string
+          }>
+          Template: AtomTemplateRecursive<{
+            Events: None
+            Exports: None
+            Params: [p: string]
+            Promise: undefined
+            State: string
+          }>
+        }
+      >
+    >()
     expectTypeOf<TValueAtomTemplate>().toEqualTypeOf<
       AtomTemplateRecursive<{
         State: ValueAtomState
@@ -246,9 +272,7 @@ describe('react types', () => {
     expectTypeOf<
       ExportsOf<typeof queryWithPromiseAtom>
     >().toEqualTypeOf<ExpectedExports>()
-    expectTypeOf<ExportsOf<typeof noExportsAtom>>().toEqualTypeOf<
-      Record<string, never>
-    >()
+    expectTypeOf<ExportsOf<typeof noExportsAtom>>().toEqualTypeOf<None>()
 
     expectTypeOf<EventsOf<typeof signalAtom>>().toEqualTypeOf<
       Record<never, never>
@@ -340,9 +364,35 @@ describe('react types', () => {
         Exports: SignalIonExports
         Events: SignalIonEvents
         Promise: SignalIonPromise
+        ResolvedState: string
       }>
     >()
-    expectTypeOf<TValueIonInstance>().toEqualTypeOf<typeof signalInstance>()
+    expectTypeOf<TValueIonInstance>().toEqualTypeOf<
+      AtomInstance<
+        {
+          State: string
+          Params: [p: string]
+          Events: None
+          Exports: None
+          Promise: undefined
+        } & {
+          Node: IonInstanceRecursive<{
+            State: string
+            Params: [p: string]
+            Events: None
+            Exports: None
+            Promise: undefined
+          }>
+          Template: IonTemplateRecursive<{
+            State: string
+            Params: [p: string]
+            Events: None
+            Exports: None
+            Promise: undefined
+          }>
+        }
+      >
+    >()
     expectTypeOf<TValueIonTemplate>().toEqualTypeOf<
       IonTemplateRecursive<{
         State: SignalIonState
@@ -442,7 +492,7 @@ describe('react types', () => {
     expect(val).toBe('A')
     expectTypeOf<typeof innerInstance>().toMatchTypeOf<
       AtomInstanceRecursive<{
-        Exports: Record<string, never>
+        Exports: None
         Params: []
         State: string
         Events: None
@@ -452,7 +502,7 @@ describe('react types', () => {
 
     expectTypeOf<typeof outerInstance>().toMatchTypeOf<
       AtomInstanceRecursive<{
-        Exports: Record<string, never>
+        Exports: None
         Params: [
           instance: AtomInstance<
             AnyAtomGenerics<{
@@ -529,7 +579,7 @@ describe('react types', () => {
       AtomInstanceRecursive<{
         State: number | string[] | undefined
         Params: [a?: boolean | undefined, b?: string[] | undefined]
-        Exports: Record<string, never>
+        Exports: None
         Events: None
         Promise: undefined
       }>
@@ -644,6 +694,7 @@ describe('react types', () => {
     const instance = ecosystem.getInstance(injectingAtom)
 
     expectTypeOf<StateOf<typeof instance>>().toBeString()
+    instance.exports.val7
     expectTypeOf<ExportsOf<typeof instance>>().toMatchTypeOf<{
       val1: string
       val2: string
@@ -655,7 +706,11 @@ describe('react types', () => {
         Exports: Record<string, any>
         Promise: Promise<number>
         State: PromiseState<number>
-        Signal: Signal<{ Events: None; State: PromiseState<number> }>
+        Signal: Signal<{
+          Events: None
+          ResolvedState: Omit<PromiseState<number>, 'data'> & { data: number }
+          State: PromiseState<number>
+        }>
       }>
       val8: InjectPromiseAtomApi<
         {
@@ -878,5 +933,113 @@ describe('react types', () => {
     expectTypeOf<SignalState>().toEqualTypeOf<number>()
 
     expect(ecosystem.get(signal)).toBe(2)
+  })
+
+  test('wrapper atoms', () => {
+    const atom1 = atom('atom1', () => api(1).setExports({ a: 'a' }))
+    const ion1 = ion('ion1', () => api(1).setExports({ b: 'b' }))
+
+    const atom1WrapperAtom = atom('atom1WrapperAtom', () =>
+      injectEcosystem().getNode(atom1)
+    )
+    const atom1WrapperIon = ion('atom1WrapperIon', ({ getNode }) =>
+      getNode(atom1)
+    )
+
+    const ion1WrapperAtom = atom('ion1WrapperAtom', () =>
+      injectEcosystem().getNode(ion1)
+    )
+    const ion1WrapperIon = ion('ion1WrapperIon', ({ getNode }) => getNode(ion1))
+
+    const atom1WrapperAtomWithApi = atom('atom1WrapperAtomWithApi', () => {
+      const node = injectEcosystem().getNode(atom1)
+
+      return api(node).setExports(node.exports)
+    })
+
+    const atom1WrapperIonWithApi = ion(
+      'atom1WrapperIonWithApi',
+      ({ getNode }) => {
+        const node = getNode(atom1)
+
+        return api(node).setExports(node.exports)
+      }
+    )
+
+    const ion1WrapperAtomWithApi = atom('ion1WrapperAtomWithApi', () => {
+      const node = injectEcosystem().getNode(ion1)
+
+      return api(node).setExports(node.exports)
+    })
+
+    const ion1WrapperIonWithApi = ion(
+      'ion1WrapperIonWithApi',
+      ({ getNode }) => {
+        const node = getNode(ion1)
+
+        return api(node).setExports(node.exports)
+      }
+    )
+
+    expectTypeOf<StateOf<typeof atom1>>().toEqualTypeOf<number>()
+    expectTypeOf<StateOf<typeof ion1>>().toEqualTypeOf<number>()
+    expectTypeOf<StateOf<typeof atom1WrapperAtom>>().toEqualTypeOf<number>()
+    expectTypeOf<StateOf<typeof atom1WrapperIon>>().toEqualTypeOf<number>()
+    expectTypeOf<StateOf<typeof ion1WrapperAtom>>().toEqualTypeOf<number>()
+    expectTypeOf<StateOf<typeof ion1WrapperIon>>().toEqualTypeOf<number>()
+    expectTypeOf<
+      StateOf<typeof atom1WrapperAtomWithApi>
+    >().toEqualTypeOf<number>()
+    expectTypeOf<
+      StateOf<typeof atom1WrapperIonWithApi>
+    >().toEqualTypeOf<number>()
+    expectTypeOf<
+      StateOf<typeof ion1WrapperAtomWithApi>
+    >().toEqualTypeOf<number>()
+    expectTypeOf<
+      StateOf<typeof ion1WrapperIonWithApi>
+    >().toEqualTypeOf<number>()
+
+    expectTypeOf<ExportsOf<typeof atom1>>().toEqualTypeOf<{ a: string }>()
+    expectTypeOf<ExportsOf<typeof ion1>>().toEqualTypeOf<{ b: string }>()
+    expectTypeOf<ExportsOf<typeof atom1WrapperAtom>>().toEqualTypeOf<None>()
+    expectTypeOf<ExportsOf<typeof atom1WrapperIon>>().toEqualTypeOf<None>()
+    expectTypeOf<ExportsOf<typeof ion1WrapperAtom>>().toEqualTypeOf<None>()
+    expectTypeOf<ExportsOf<typeof ion1WrapperIon>>().toEqualTypeOf<None>()
+    expectTypeOf<ExportsOf<typeof atom1WrapperAtomWithApi>>().toEqualTypeOf<{
+      a: string
+    }>()
+    expectTypeOf<ExportsOf<typeof atom1WrapperIonWithApi>>().toEqualTypeOf<{
+      a: string
+    }>()
+    expectTypeOf<ExportsOf<typeof ion1WrapperAtomWithApi>>().toEqualTypeOf<{
+      b: string
+    }>()
+    expectTypeOf<ExportsOf<typeof ion1WrapperIonWithApi>>().toEqualTypeOf<{
+      b: string
+    }>()
+  })
+
+  test('ResolvedState', async () => {
+    const atom1 = atom('1', () => injectPromise(() => Promise.resolve(1), []))
+    const ion1 = ion('1', () => injectPromise(() => Promise.resolve(1), []))
+
+    expectTypeOf<StateOf<typeof atom1>>().toEqualTypeOf<PromiseState<number>>()
+    expectTypeOf(ecosystem.get(atom1).data).toEqualTypeOf<number | undefined>()
+    expectTypeOf(await ecosystem.getNode(atom1).promise).toEqualTypeOf<number>()
+    expectTypeOf<ResolvedStateOf<typeof atom1>>().toEqualTypeOf<
+      Omit<PromiseState<number>, 'data'> & {
+        data: number
+      }
+    >()
+
+    expectTypeOf<StateOf<typeof ion1>>().toEqualTypeOf<PromiseState<number>>()
+    expectTypeOf(ecosystem.get(ion1).data).toEqualTypeOf<number | undefined>()
+    expectTypeOf(await ecosystem.getNode(ion1).promise).toEqualTypeOf<number>()
+    expectTypeOf<ResolvedStateOf<typeof ion1>>().toEqualTypeOf<
+      Omit<PromiseState<number>, 'data'> & {
+        data: number
+      }
+    >()
   })
 })

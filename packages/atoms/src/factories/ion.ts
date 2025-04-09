@@ -10,8 +10,6 @@ import {
   AtomApiPromise,
   IonStateFactory,
   PromiseState,
-  StateOf,
-  EventsOf,
   None,
 } from '../types/index'
 
@@ -51,30 +49,62 @@ export const ion: {
 
   // Signals
   <
-    SignalType extends Signal<any> = Signal<any>,
+    StateType,
+    EventsType extends Record<string, any> = None,
     Params extends any[] = [],
     Exports extends Record<string, any> = None,
-    PromiseType extends AtomApiPromise = undefined
+    PromiseType extends AtomApiPromise = undefined,
+    ResolvedState = StateType
   >(
     key: string,
     value: (
       ecosystem: Ecosystem,
       ...params: Params
     ) =>
-      | SignalType
+      | Signal<{
+          Events: EventsType
+          Params: any
+          State: StateType
+          Template: any
+        }>
       | AtomApi<{
           Exports: Exports
           Promise: PromiseType
-          Signal: SignalType
-          State: StateOf<SignalType>
+          Signal: Signal<{
+            Events: EventsType
+            Params: any
+            State: StateType
+            Template: any
+          }>
+          State: StateType
+        }>
+      | Signal<{
+          Events: EventsType
+          Params: any
+          ResolvedState: ResolvedState
+          State: StateType
+          Template: any
+        }>
+      | AtomApi<{
+          Exports: Exports
+          Promise: PromiseType
+          Signal: Signal<{
+            Events: EventsType
+            Params: any
+            ResolvedState: ResolvedState
+            State: StateType
+            Template: any
+          }>
+          State: StateType
         }>,
-    config?: AtomConfig<StateOf<SignalType>>
+    config?: AtomConfig<StateType>
   ): IonTemplateRecursive<{
-    State: StateOf<SignalType>
+    State: StateType
     Params: Params
-    Events: EventsOf<SignalType>
+    Events: EventsType
     Exports: Exports
     Promise: PromiseType
+    ResolvedState: ResolvedState
   }>
 
   // No Signal (TODO: Is this overload unnecessary? `atom` doesn't have it)

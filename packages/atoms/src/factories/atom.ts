@@ -17,7 +17,7 @@ export const atom: {
   <
     State = any,
     Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>
+    Exports extends Record<string, any> = None
   >(
     key: string,
     value: (...params: Params) => AtomApi<{
@@ -40,21 +40,46 @@ export const atom: {
     StateType,
     EventsType extends Record<string, any> = None,
     Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>,
-    PromiseType extends AtomApiPromise = undefined
+    Exports extends Record<string, any> = None,
+    PromiseType extends AtomApiPromise = undefined,
+    ResolvedState = StateType
   >(
     key: string,
     value: (...params: Params) =>
       | Signal<{
-          State: StateType
           Events: EventsType
           Params: any
+          State: StateType
           Template: any
         }>
       | AtomApi<{
           Exports: Exports
           Promise: PromiseType
-          Signal: Signal<{ State: StateType; Events: EventsType }>
+          Signal: Signal<{
+            Events: EventsType
+            Params: any
+            State: StateType
+            Template: any
+          }>
+          State: StateType
+        }>
+      | Signal<{
+          Events: EventsType
+          Params: any
+          ResolvedState: ResolvedState
+          State: StateType
+          Template: any
+        }>
+      | AtomApi<{
+          Exports: Exports
+          Promise: PromiseType
+          Signal: Signal<{
+            Events: EventsType
+            Params: any
+            ResolvedState: ResolvedState
+            State: StateType
+            Template: any
+          }>
           State: StateType
         }>,
     config?: AtomConfig<StateType>
@@ -64,16 +89,17 @@ export const atom: {
     Events: EventsType
     Exports: Exports
     Promise: PromiseType
+    ResolvedState: ResolvedState
   }>
 
   // Catch-all
   <
     State = any,
     Params extends any[] = [],
-    Exports extends Record<string, any> = Record<string, never>,
+    Exports extends Record<string, any> = None,
     Events extends Record<string, any> = None,
     SignalType extends
-      | Signal<{ State: State; Events: Events }>
+      | Signal<{ Events: Events; Params: any; State: State; Template: any }>
       | undefined = undefined,
     PromiseType extends AtomApiPromise = undefined
   >(
@@ -96,10 +122,10 @@ export const atom: {
 } = <
   State = any,
   Params extends any[] = [],
-  Exports extends Record<string, any> = Record<string, never>,
+  Exports extends Record<string, any> = None,
   Events extends Record<string, any> = None,
   SignalType extends
-    | Signal<{ State: State; Events: Events }>
+    | Signal<{ Events: Events; Params: any; State: State; Template: any }>
     | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(

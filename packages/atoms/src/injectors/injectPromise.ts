@@ -14,7 +14,6 @@ import {
   MapEvents,
   None,
   PromiseState,
-  ZeduxPromise,
 } from '../types/index'
 import { injectEffect } from './injectEffect'
 import { injectMemo } from './injectMemo'
@@ -27,14 +26,14 @@ import { Invalidate } from '../utils/general'
 import { injectSelf } from './injectSelf'
 import { injectMappedSignal } from './injectMappedSignal'
 
-export class InjectPromiseAtomApi<
+export interface InjectPromiseAtomApi<
   G extends AtomApiGenerics,
   MappedEvents extends EventMap,
   Data
 > extends AtomApi<G> {
-  // @ts-expect-error defined later
   dataSignal: Signal<{
     Events: MapEvents<MappedEvents>
+    ResolvedState: Data
     State: Data | undefined
   }>
 }
@@ -115,7 +114,7 @@ export const injectPromise: {
   ): InjectPromiseAtomApi<
     {
       Exports: Record<string, any>
-      Promise: ZeduxPromise<Data>
+      Promise: Promise<Data>
       Signal: MappedSignal<{
         Events: MapEvents<MappedEvents>
         State: Omit<PromiseState<Data>, 'data'> & { data: Data }
@@ -136,9 +135,10 @@ export const injectPromise: {
   ): InjectPromiseAtomApi<
     {
       Exports: Record<string, any>
-      Promise: ZeduxPromise<Data>
+      Promise: Promise<Data>
       Signal: MappedSignal<{
         Events: MapEvents<MappedEvents>
+        ResolvedState: Omit<PromiseState<Data>, 'data'> & { data: Data }
         State: PromiseState<Data>
       }>
       State: PromiseState<Data>
@@ -161,13 +161,14 @@ export const injectPromise: {
   const refs = injectRef({ counter: 0 } as {
     controller?: AbortController
     counter: number
-    promise: ZeduxPromise<Data>
+    promise: Promise<Data>
   })
 
-  const dataSignal = injectSignal<Data | undefined, MappedEvents>(
-    initialData,
-    signalConfig
-  )
+  const dataSignal = injectSignal(initialData, signalConfig) as Signal<{
+    Events: MapEvents<MappedEvents>
+    ResolvedState: Data
+    State: Data | undefined
+  }>
 
   const signal = injectMappedSignal({
     ...getInitialPromiseState<Data>(),
@@ -202,7 +203,7 @@ export const injectPromise: {
     } catch (err) {
       signal.mutate(getErrorPromiseState(err))
 
-      return Promise.reject(err) as ZeduxPromise<Data>
+      return Promise.reject(err) as Promise<Data>
     }
 
     if (DEV && typeof promise?.then !== 'function') {
@@ -232,7 +233,7 @@ export const injectPromise: {
         signal.mutate(getErrorPromiseState(error))
       })
 
-    return promise as ZeduxPromise<Data>
+    return promise as Promise<Data>
   }, deps && [...deps, refs.current.counter])
 
   injectEffect(
@@ -248,7 +249,7 @@ export const injectPromise: {
   ) as unknown as InjectPromiseAtomApi<
     {
       Exports: Record<string, any>
-      Promise: ZeduxPromise<Data>
+      Promise: Promise<Data>
       Signal: MappedSignal<{
         Events: MapEvents<MappedEvents>
         State: PromiseState<Data>
