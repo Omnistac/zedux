@@ -7,7 +7,6 @@ import {
   useAtomInstance,
   useAtomState,
   useAtomValue,
-  ZeduxPromise,
 } from '@zedux/react'
 import React, { Suspense } from 'react'
 import { ErrorBoundary } from '../utils/ErrorBoundary'
@@ -265,9 +264,9 @@ describe('suspense', () => {
       expectTypeOf(state1).toEqualTypeOf<number>()
       expectTypeOf(value1NoSuspense).toEqualTypeOf<number | undefined>()
       expectTypeOf(state1NoSuspense).toEqualTypeOf<number | undefined>()
-      expectTypeOf(value2).toEqualTypeOf<number | undefined>()
+      expectTypeOf(value2).toEqualTypeOf<number>()
 
-      expectTypeOf(instance1.promise).toEqualTypeOf<ZeduxPromise<number>>()
+      expectTypeOf(instance1.promise).toEqualTypeOf<Promise<number>>()
       expectTypeOf<StateOf<typeof instance1>>().toEqualTypeOf<
         number | undefined
       >()
@@ -278,7 +277,7 @@ describe('suspense', () => {
       expectTypeOf<StateOf<typeof instance2>>().toEqualTypeOf<
         number | undefined
       >()
-      expectTypeOf(instanceValue2).toEqualTypeOf<number | undefined>()
+      expectTypeOf(instanceValue2).toEqualTypeOf<number>()
       expectTypeOf(instanceValue2NoSuspense).toEqualTypeOf<number | undefined>()
 
       return <div data-testid="value">{value1 + (value2 || 0) + value}</div>

@@ -1,5 +1,5 @@
 import { AtomApi } from '../classes/AtomApi'
-import { AtomApiPromise, StateOf } from '../types/index'
+import { AtomApiPromise, None, ResolvedStateOf, StateOf } from '../types/index'
 import { Signal } from '../classes/Signal'
 
 /**
@@ -21,7 +21,7 @@ export const api: {
   // Signals (AtomApi cloning)
   <
     SignalType extends Signal<any> = Signal<any>,
-    Exports extends Record<string, any> = Record<string, never>,
+    Exports extends Record<string, any> = None,
     PromiseType extends AtomApiPromise = undefined
   >(
     value: AtomApi<{
@@ -39,15 +39,16 @@ export const api: {
 
   // Signals (normal)
   <SignalType extends Signal<any> = Signal<any>>(value: SignalType): AtomApi<{
-    Exports: Record<string, never>
+    Exports: None
     Promise: undefined
+    ResolvedState: ResolvedStateOf<SignalType>
     Signal: SignalType
     State: StateOf<SignalType>
   }>
 
   // No Value
   (): AtomApi<{
-    Exports: Record<string, never>
+    Exports: None
     Promise: undefined
     Signal: undefined
     State: undefined
@@ -56,7 +57,7 @@ export const api: {
   // No Value (passing generics manually)
   <
     State = undefined,
-    Exports extends Record<string, any> = Record<string, never>,
+    Exports extends Record<string, any> = None,
     PromiseType extends AtomApiPromise = undefined
   >(): AtomApi<{
     Exports: Exports
@@ -68,7 +69,7 @@ export const api: {
   // No Signal (AtomApi cloning)
   <
     State = undefined,
-    Exports extends Record<string, any> = Record<string, never>,
+    Exports extends Record<string, any> = None,
     PromiseType extends AtomApiPromise = undefined
   >(
     value: AtomApi<{
@@ -87,7 +88,7 @@ export const api: {
   // Normal Value
   <
     State = undefined,
-    Exports extends Record<string, any> = Record<string, never>,
+    Exports extends Record<string, any> = None,
     SignalType extends
       | Signal<{ Events: any; State: State }>
       | undefined = undefined
@@ -101,7 +102,7 @@ export const api: {
   }>
 } = <
   State = undefined,
-  Exports extends Record<string, any> = Record<string, never>,
+  Exports extends Record<string, any> = None,
   SignalType extends
     | Signal<{ Events: any; State: State }>
     | undefined = undefined,
@@ -121,6 +122,7 @@ export const api: {
       | AtomApi<{
           Exports: Exports
           Promise: PromiseType
+          ResolvedState: State
           Signal: SignalType
           State: State
         }>

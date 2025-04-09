@@ -11,6 +11,7 @@ import {
   injectCallback,
   injectMemo,
   injectSelf,
+  None,
   ParamlessTemplate,
   PromiseState,
 } from '@zedux/react'
@@ -149,11 +150,9 @@ describe('react types', () => {
     expectTypeOf<StoreAtomInstanceParams>().toEqualTypeOf<[p: string]>()
     expectTypeOf<StoreAtomInstanceParams>().toEqualTypeOf<ValueAtomInstanceParams>()
 
-    expectTypeOf<StoreAtomExports>().toEqualTypeOf<Record<string, never>>()
+    expectTypeOf<StoreAtomExports>().toEqualTypeOf<None>()
     expectTypeOf<StoreAtomExports>().toEqualTypeOf<ValueAtomExports>()
-    expectTypeOf<StoreAtomInstanceExports>().toEqualTypeOf<
-      Record<string, never>
-    >()
+    expectTypeOf<StoreAtomInstanceExports>().toEqualTypeOf<None>()
     expectTypeOf<StoreAtomInstanceExports>().toEqualTypeOf<ValueAtomInstanceExports>()
 
     expectTypeOf<StoreAtomPromise>().toBeUndefined()
@@ -168,12 +167,40 @@ describe('react types', () => {
 
     expectTypeOf<TStoreAtomInstance>().toEqualTypeOf<typeof storeInstance>()
     expectTypeOf<TStoreAtomTemplate>().toEqualTypeOf<typeof storeInstance.t>()
-    expectTypeOf<TValueAtomInstance>().toEqualTypeOf<typeof storeInstance>()
+    expectTypeOf<TValueAtomInstance>().toEqualTypeOf<
+      StoreAtomInstance<
+        {
+          Events: None
+          Exports: None
+          Params: [p: string]
+          Promise: undefined
+          State: string
+          Store: Store<string>
+        } & {
+          Node: StoreAtomInstanceRecursive<{
+            Events: None
+            Exports: None
+            Params: [p: string]
+            Promise: undefined
+            State: string
+            Store: Store<string>
+          }>
+          Template: StoreAtomTemplateRecursive<{
+            Events: None
+            Exports: None
+            Params: [p: string]
+            Promise: undefined
+            State: string
+            Store: Store<string>
+          }>
+        }
+      >
+    >()
     expectTypeOf<TValueAtomTemplate>().toEqualTypeOf<
       StoreAtomTemplateRecursive<{
         State: ValueAtomState
         Params: ValueAtomParams
-        Events: Record<string, never>
+        Events: None
         Exports: ValueAtomExports
         Store: ValueAtomStore
         Promise: ValueAtomPromise
@@ -251,7 +278,7 @@ describe('react types', () => {
       AtomExportsType<typeof queryWithPromiseAtom>
     >().toEqualTypeOf<ExpectedExports>()
     expectTypeOf<AtomExportsType<typeof noExportsAtom>>().toEqualTypeOf<
-      Record<string, never>
+      Record<never, never>
     >()
 
     expectTypeOf<AtomStoreType<typeof storeBasedAtom>>().toEqualTypeOf<
@@ -331,11 +358,9 @@ describe('react types', () => {
     expectTypeOf<StoreIonInstanceParams>().toEqualTypeOf<[p: string]>()
     expectTypeOf<StoreIonInstanceParams>().toEqualTypeOf<ValueIonInstanceParams>()
 
-    expectTypeOf<StoreIonExports>().toEqualTypeOf<Record<string, never>>()
+    expectTypeOf<StoreIonExports>().toEqualTypeOf<None>()
     expectTypeOf<StoreIonExports>().toEqualTypeOf<ValueIonExports>()
-    expectTypeOf<StoreIonInstanceExports>().toEqualTypeOf<
-      Record<string, never>
-    >()
+    expectTypeOf<StoreIonInstanceExports>().toEqualTypeOf<None>()
     expectTypeOf<StoreIonInstanceExports>().toEqualTypeOf<ValueIonInstanceExports>()
 
     expectTypeOf<StoreIonPromise>().toBeUndefined()
@@ -353,7 +378,7 @@ describe('react types', () => {
       StoreIonTemplateRecursive<{
         State: StoreIonState
         Params: StoreIonParams
-        Events: Record<string, never>
+        Events: None
         Exports: StoreIonExports
         Store: StoreIonStore
         Promise: StoreIonPromise
@@ -364,7 +389,7 @@ describe('react types', () => {
       StoreIonTemplateRecursive<{
         State: StoreIonState
         Params: StoreIonParams
-        Events: Record<string, never>
+        Events: None
         Exports: StoreIonExports
         Store: StoreIonStore
         Promise: StoreIonPromise
@@ -482,8 +507,8 @@ describe('react types', () => {
     expect(val).toBe('A')
     expectTypeOf<typeof innerInstance>().toMatchTypeOf<
       StoreAtomInstanceRecursive<{
-        Events: Record<string, never>
-        Exports: Record<string, never>
+        Events: None
+        Exports: None
         Params: []
         State: string
         Store: Store<string>
@@ -493,8 +518,8 @@ describe('react types', () => {
 
     expectTypeOf<typeof outerInstance>().toMatchTypeOf<
       StoreAtomInstanceRecursive<{
-        Events: Record<string, never>
-        Exports: Record<string, never>
+        Events: None
+        Exports: None
         Params: [
           instance: StoreAtomInstance<
             AnyStoreAtomGenerics<{
@@ -561,7 +586,7 @@ describe('react types', () => {
       StoreAtomInstanceRecursive<{
         State: string
         Params: [p: string]
-        Events: Record<string, never>
+        Events: None
         Exports: {
           getBool: () => boolean
           getNum: () => number
@@ -574,8 +599,9 @@ describe('react types', () => {
       StoreAtomInstanceRecursive<{
         State: number | string[] | undefined
         Params: [a?: boolean | undefined, b?: string[] | undefined]
-        Events: Record<string, never>
-        Exports: Record<string, never>
+        Events: None
+        Exports: None
+        ResolvedState: number | string[] | undefined
         Store: Store<number | string[] | undefined>
         Promise: undefined
       }>
