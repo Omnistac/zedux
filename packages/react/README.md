@@ -12,7 +12,7 @@ yarn add @zedux/react # yarn
 pnpm add @zedux/react # pnpm
 ```
 
-This package has a direct dependency on the [`@zedux/atoms` package](https://www.npmjs.com/package/@zedux/atoms), which in turn has a direct dependency on the [`@zedux/core` package](https://www.npmjs.com/package/@zedux/core). If you install any of those directly, ensure their versions exactly match your `@zedux/react` version to prevent installing duplicate packages.
+This package has a direct dependency on the [`@zedux/atoms` package](https://www.npmjs.com/package/@zedux/atoms). If you install that directly, ensure the version exactly matches your `@zedux/react` version to prevent installing duplicate packages.
 
 ## Usage
 

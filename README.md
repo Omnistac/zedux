@@ -7,7 +7,10 @@
 
 A Molecular State Engine for React.
 
-Zedux is a multi-paradigm state management tool that features a powerful composable store model wrapped in a DI-driven atomic architecture.
+> [!NOTE]  
+> Zedux v2 is right around the corner! This readme has been updated for v2, and the docs are steadily getting there. Despite documentation being sparse, it's highly recommended that new projects use the latest stable v2 release candidate. Refer to the [v2 migration guide](https://zedux.dev/docs/migrations/v2) for a v2 quick start.
+
+Zedux is a multi-paradigm state management tool that features a powerful signals implementation wrapped in a DI-driven atomic architecture.
 
 ## Installation
 
@@ -17,15 +20,15 @@ yarn add @zedux/react # yarn
 pnpm add @zedux/react # pnpm
 ```
 
-The React package (`@zedux/react`) contains everything you need to use Zedux in a React app - the [core store model](https://www.npmjs.com/package/@zedux/core), the [core atomic model](https://www.npmjs.com/package/@zedux/atoms), and the React-specific APIs.
+The React package (`@zedux/react`) contains everything you need to use Zedux in a React app - the [core atomic model](https://www.npmjs.com/package/@zedux/atoms) and all React-specific APIs.
 
-`@zedux/react` has a peer dependency on React. It supports React version 18 and up.
+`@zedux/react` has a peer dependency on React. It has partial support for React 18, but primarily supports React 19 and up.
 
 ## Intro
 
 We borrowed ideas from dozens of state management tools over the past 5 years, invented a few ourselves, and put it all together in one powerhouse of a state management library.
 
-Most notably, Zedux borrows ideas from Redux, Recoil, and React Query. Zedux takes the unique approach of separating the state layer (stores) from the architecture layer (atoms). This allows for a powerful Dependency Injection model, conceptually similar to Angular's but simpler and more dynamic.
+Think of Zedux as a cross between React Query, Valtio, and Recoil/Jotai + Bunshi. It's both a cache manager and a normal state manager with real Dependency Injection, rich events, opt-in mutation proxying, and an extension model patterned after React itself.
 
 Sound complex? Zedux is actually very beginner-friendly. In fact, here's all you need to begin:
 
