@@ -1,5 +1,5 @@
 import { Signal } from '../classes/Signal'
-import { EventMap, InjectSignalConfig, MapEvents, None } from '../types/index'
+import { InjectSignalConfig, None } from '../types/index'
 import { untrack } from '../utils/evaluationContext'
 import { Eventless, EventlessStatic } from '../utils/general'
 import { injectMemo } from './injectMemo'
@@ -26,9 +26,12 @@ export const As = <T>() => 0 as unknown as T
  * injected signal. Pass `{ reactive: false }` as the second argument to disable
  * this.
  */
-export const injectSignal = <State, MappedEvents extends EventMap = None>(
+export const injectSignal = <
+  State,
+  EventMap extends Record<string, any> = None
+>(
   state: (() => State) | State,
-  config?: InjectSignalConfig<MappedEvents>
+  config?: InjectSignalConfig<EventMap>
 ) => {
   const instance = injectSelf()
 
@@ -36,7 +39,7 @@ export const injectSignal = <State, MappedEvents extends EventMap = None>(
     const id = instance.e.makeId('signal', instance)
 
     const signal = new Signal<{
-      Events: MapEvents<MappedEvents>
+      Events: EventMap
       State: State
     }>(
       instance.e,

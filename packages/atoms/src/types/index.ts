@@ -138,17 +138,6 @@ export interface EcosystemConfig<
 
 export type EffectCallback = () => MaybeCleanup | Promise<any>
 
-/**
- * A user-defined object mapping custom event names to unused placeholder
- * functions whose return types are used to infer expected event payloads.
- *
- * We map all Zedux built-in events to `never` here to prevent users from
- * specifying those events
- */
-export type EventMap = {
-  [K in keyof ExplicitEvents & ImplicitEvents]?: never
-} & Record<string, () => any>
-
 export interface ExportsConfig {
   wrap?: boolean
 }
@@ -273,8 +262,39 @@ export interface InjectPromiseConfig<T = any> {
   runOnInvalidate?: boolean
 }
 
-export interface InjectSignalConfig<MappedEvents extends EventMap> {
-  events?: MappedEvents
+export interface InjectSignalConfig<EventMap extends Record<string, any>> {
+  /**
+   * A map of event names to functions that return the payload type of that
+   * event. These functions are never called, they're merely a means to specify
+   * types using runtime code.
+   *
+   * This is designed for use with Zedux's `As` helper. Example:
+   *
+   * ```ts
+   * injectSignal(myState, {
+   *   events: {
+   *     myEvent: As<MyType>,
+   *     // can specify a function manually, but typing it is harder and bleh:
+   *     myOtherEvent: () => null as MyType // (again, this is never called)
+   *   }
+   * })
+   * ```
+   *
+   * This type maps all built-in events to `never` to prevent specifying
+   * built-in events
+   */
+  events?: {
+    [K in keyof EventMap]: K extends keyof (ExplicitEvents & ImplicitEvents)
+      ? never
+      : () => EventMap[K]
+  }
+
+  /**
+   * Whether this injector should register a dynamic graph dependency on the
+   * injected signal(s). Default: `true`. Specify `reactive: false` to prevent
+   * updates in the injected signal from triggering reevaluations of the
+   * injecting atom.
+   */
   reactive?: boolean
 }
 
@@ -382,10 +402,6 @@ export type LifecycleStatus = 'Active' | 'Destroyed' | 'Initializing' | 'Stale'
 export interface ListenerConfig {
   active?: boolean
 }
-
-export type MapEvents<T extends EventMap> = Prettify<{
-  [K in keyof T]: ReturnType<T[K]>
-}>
 
 export type MaybeCleanup = Cleanup | void
 

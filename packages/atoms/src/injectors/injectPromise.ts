@@ -6,12 +6,10 @@ import {
 } from '../utils/promiseUtils'
 import {
   AtomApiGenerics,
-  EventMap,
   InjectorDeps,
   InjectPromiseConfig,
   InjectSignalConfig,
   InternalEvaluationReason,
-  MapEvents,
   None,
   PromiseState,
 } from '../types/index'
@@ -28,11 +26,11 @@ import { injectMappedSignal } from './injectMappedSignal'
 
 export interface InjectPromiseAtomApi<
   G extends AtomApiGenerics,
-  MappedEvents extends EventMap,
+  EventMap extends Record<string, any>,
   Data
 > extends AtomApi<G> {
   dataSignal: Signal<{
-    Events: MapEvents<MappedEvents>
+    Events: EventMap
     ResolvedState: Data
     State: Data | undefined
   }>
@@ -102,7 +100,7 @@ const hasInvalidateReason = (node: ReturnType<typeof injectSelf>) => {
  * ```
  */
 export const injectPromise: {
-  <Data, MappedEvents extends EventMap = None>(
+  <Data, EventMap extends Record<string, any> = None>(
     promiseFactory: (params: {
       controller?: AbortController
       prevData?: NoInfer<Data>
@@ -110,43 +108,43 @@ export const injectPromise: {
     deps: InjectorDeps,
     config: Omit<InjectPromiseConfig<Data>, 'initialData'> & {
       initialData: Data
-    } & InjectSignalConfig<MappedEvents>
+    } & InjectSignalConfig<EventMap>
   ): InjectPromiseAtomApi<
     {
       Exports: Record<string, any>
       Promise: Promise<Data>
       Signal: MappedSignal<{
-        Events: MapEvents<MappedEvents>
+        Events: EventMap
         State: Omit<PromiseState<Data>, 'data'> & { data: Data }
       }>
       State: Omit<PromiseState<Data>, 'data'> & { data: Data }
     },
-    MappedEvents,
+    EventMap,
     Data
   >
 
-  <Data, MappedEvents extends EventMap = None>(
+  <Data, EventMap extends Record<string, any> = None>(
     promiseFactory: (params: {
       controller?: AbortController
       prevData?: NoInfer<Data>
     }) => Promise<Data>,
     deps: InjectorDeps,
-    config?: InjectPromiseConfig<Data> & InjectSignalConfig<MappedEvents>
+    config?: InjectPromiseConfig<Data> & InjectSignalConfig<EventMap>
   ): InjectPromiseAtomApi<
     {
       Exports: Record<string, any>
       Promise: Promise<Data>
       Signal: MappedSignal<{
-        Events: MapEvents<MappedEvents>
+        Events: EventMap
         ResolvedState: Omit<PromiseState<Data>, 'data'> & { data: Data }
         State: PromiseState<Data>
       }>
       State: PromiseState<Data>
     },
-    MappedEvents,
+    EventMap,
     Data
   >
-} = <Data, MappedEvents extends EventMap = None>(
+} = <Data, EventMap extends Record<string, any> = None>(
   promiseFactory: (params: {
     controller?: AbortController
     prevData?: NoInfer<Data>
@@ -156,7 +154,7 @@ export const injectPromise: {
     initialData,
     runOnInvalidate,
     ...signalConfig
-  }: InjectPromiseConfig<Data> & InjectSignalConfig<MappedEvents> = {}
+  }: InjectPromiseConfig<Data> & InjectSignalConfig<EventMap> = {}
 ) => {
   const refs = injectRef({ counter: 0 } as {
     controller?: AbortController
@@ -165,7 +163,7 @@ export const injectPromise: {
   })
 
   const dataSignal = injectSignal(initialData, signalConfig) as Signal<{
-    Events: MapEvents<MappedEvents>
+    Events: EventMap
     ResolvedState: Data
     State: Data | undefined
   }>
@@ -174,7 +172,7 @@ export const injectPromise: {
     ...getInitialPromiseState<Data>(),
     data: dataSignal,
   }) as MappedSignal<{
-    Events: MapEvents<MappedEvents>
+    Events: EventMap
     State: PromiseState<Data>
   }>
 
@@ -251,12 +249,12 @@ export const injectPromise: {
       Exports: Record<string, any>
       Promise: Promise<Data>
       Signal: MappedSignal<{
-        Events: MapEvents<MappedEvents>
+        Events: EventMap
         State: PromiseState<Data>
       }>
       State: PromiseState<Data>
     },
-    MappedEvents,
+    EventMap,
     Data
   >
 

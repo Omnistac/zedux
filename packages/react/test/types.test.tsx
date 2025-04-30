@@ -41,6 +41,7 @@ import {
   injectEcosystem,
   ResolvedStateOf,
   IonInstanceRecursive,
+  injectMappedSignal,
 } from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 import { ecosystem, snapshotNodes } from './utils/ecosystem'
@@ -679,6 +680,12 @@ describe('react types', () => {
         initialData: 'bad',
       })
 
+      // @ts-expect-error cannot specify built-in events
+      const signal = injectSignal(1, { events: { change: As<number> } })
+
+      // @ts-expect-error cannot specify built-in events
+      injectMappedSignal({ signal }, { events: { change: As<number> } })
+
       return api(injectSignal(instance.getOnce())).setExports({
         val1,
         val2,
@@ -741,8 +748,8 @@ describe('react types', () => {
   test('AtomApi types helpers', () => {
     const signal = ecosystem.signal('a', {
       events: {
-        eventA: () => 1,
-        eventB: () => 2,
+        eventA: () => 1 as const,
+        eventB: () => 2 as const,
       },
     })
 
@@ -840,6 +847,9 @@ describe('react types', () => {
         b: As<undefined>,
       },
     })
+
+    // @ts-expect-error cannot specify built-in events
+    ecosystem.signal(1, { events: { mutate: As<number> } }).destroy()
 
     type Generics = {
       Events: EventsOf<typeof signal>
