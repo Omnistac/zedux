@@ -157,6 +157,18 @@ export type ExportsInfusedSetter<State, Exports> = Exports & {
   (settable: Settable<State>, meta?: any): State
 }
 
+export interface Get {
+  <A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>): StateOf<A>
+  <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateOf<A>
+  <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateOf<A>
+
+  <N extends ZeduxNode>(node: N): StateOf<N>
+
+  <S extends Selectable>(template: S, params: ParamsOf<S>): StateOf<S>
+  <S extends Selectable<any, []>>(template: S): StateOf<S>
+  <S extends Selectable>(template: ParamlessTemplate<S>): StateOf<S>
+}
+
 export interface GetNode {
   // TODO: Dedupe these overloads
   // atoms
