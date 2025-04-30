@@ -211,37 +211,51 @@ describe('mapped signals', () => {
     const calls: any[] = []
 
     node1.exports.signalA.on(eventMap => {
-      calls.push(eventMap)
+      calls.push(['a', eventMap])
     })
 
     node1.exports.signalB.on(eventMap => {
-      calls.push(eventMap)
+      calls.push(['b', eventMap])
     })
 
     node1.exports.signal.on('a1', (_, eventMap) => {
-      calls.push(eventMap)
+      calls.push(['signal a1', eventMap])
     })
 
     node1.exports.signal.on('b1', (_, eventMap) => {
-      calls.push(eventMap)
+      calls.push(['signal b1', eventMap])
     })
 
     node1.on(eventMap => {
-      calls.push(eventMap)
+      calls.push(['node *', eventMap])
     })
 
+    // sending to the node will propagate up to all sources then back
     node1.send('a1', 'a')
 
     const expectedA1Event = { a1: 'a' }
 
-    expect(calls).toEqual([expectedA1Event, expectedA1Event, expectedA1Event])
-    calls.splice(0, 3)
+    expect(calls).toEqual([
+      // TODO: The order of a and b here is non-deterministic. Maybe address
+      // this
+      ['b', expectedA1Event],
+      ['a', expectedA1Event],
+      ['signal a1', expectedA1Event],
+      ['node *', expectedA1Event],
+    ])
+    calls.splice(0, 4)
 
+    // sending to this source will only propagate downward (not back up to
+    // signalA)
     node1.exports.signalB.send('b1', 2)
 
     const expectedB1Event = { b1: 2 }
 
-    expect(calls).toEqual([expectedB1Event, expectedB1Event, expectedB1Event])
+    expect(calls).toEqual([
+      ['b', expectedB1Event],
+      ['signal b1', expectedB1Event],
+      ['node *', expectedB1Event],
+    ])
 
     expectTypeOf<EventsOf<typeof node1>>().toEqualTypeOf<{
       a1: string

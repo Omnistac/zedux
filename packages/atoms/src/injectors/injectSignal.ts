@@ -25,6 +25,16 @@ export const As = <T>() => 0 as unknown as T
  * By default, this makes the current atom react to state updates in the
  * injected signal. Pass `{ reactive: false }` as the second argument to disable
  * this.
+ *
+ * For TS users: Configure custom events for this signal by either passing the
+ * `EventMap` generic manually or the `events` config option. Use the `As`
+ * helper to type each event's payload:
+ *
+ * ```ts
+ * // these are functionally equivalent:
+ * injectSignal<typeof myState, { myEvent: MyType }>(myState)
+ * injectSignal(myState, { events: { myEvent: As<MyType> } })
+ * ```
  */
 export const injectSignal = <
   State,
@@ -44,8 +54,7 @@ export const injectSignal = <
     }>(
       instance.e,
       id,
-      typeof state === 'function' ? untrack(state as () => State) : state, // TODO: should hydration be passed to the `state()` factory?
-      config?.events
+      typeof state === 'function' ? untrack(state as () => State) : state
     )
 
     instance.e.n.set(id, signal)

@@ -965,6 +965,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
   public signal<State, EventMap extends Record<string, any> = None>(
     state: State,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     config?: Pick<InjectSignalConfig<EventMap>, 'events'>
   ) {
     const id = this.makeId('signal')
@@ -972,7 +973,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     const signal = new Signal<{
       Events: EventMap
       State: State
-    }>(this, id, state, config?.events)
+    }>(this, id, state)
 
     this.n.set(id, signal)
 

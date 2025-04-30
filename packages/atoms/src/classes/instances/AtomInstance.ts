@@ -258,7 +258,7 @@ export class AtomInstance<
      */
     public readonly p: G['Params']
   ) {
-    super(e, id, undefined, undefined, true)
+    super(e, id, undefined, true)
   }
 
   /**
@@ -409,7 +409,6 @@ export class AtomInstance<
         if ((newFactoryResult as Signal)?.izn) {
           this.S = newFactoryResult
           this.v = (newFactoryResult as Signal<G>).v
-          this.E = (newFactoryResult as Signal<G>).E
         } else {
           this.v = newFactoryResult
         }
