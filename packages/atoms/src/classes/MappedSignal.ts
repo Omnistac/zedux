@@ -268,6 +268,8 @@ export class MappedSignal<
   public u(map: SignalMap) {
     const entries = Object.entries(map)
 
+    // create a new graph edge buffer so `.get` calls add deps to this
+    // MappedSignal rather than any containing atom
     const prevNode = this.e.cs(this)
 
     // `get` every signal and auto-add each one as a source of the mapped signal

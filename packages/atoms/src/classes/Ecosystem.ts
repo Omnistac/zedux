@@ -17,10 +17,8 @@ import {
   ParamlessTemplate,
   Selectable,
   SelectorGenerics,
-  EventMap,
   None,
   InjectSignalConfig,
-  MapEvents,
   SingleEventListener,
   CatchAllListener,
   EventEmitter,
@@ -965,14 +963,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     }
   }
 
-  public signal<State, MappedEvents extends EventMap = None>(
+  public signal<State, EventMap extends Record<string, any> = None>(
     state: State,
-    config?: Pick<InjectSignalConfig<MappedEvents>, 'events'>
+    config?: Pick<InjectSignalConfig<EventMap>, 'events'>
   ) {
     const id = this.makeId('signal')
 
     const signal = new Signal<{
-      Events: MapEvents<MappedEvents>
+      Events: EventMap
       State: State
     }>(this, id, state, config?.events)
 
