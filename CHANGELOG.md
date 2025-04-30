@@ -1,3 +1,10 @@
+## v2.0.0-rc.8 (Apr 30, 2025)
+
+### Fixes:
+
+- `atoms`: correct the return type of `Ecosystem#getOnce` (#247)
+- `atoms`, `stores`: improve types for ions and promises in atoms and atom apis (#242)
+
 ## v2.0.0-rc.7 (Apr 3, 2025)
 
 ### New Features:
