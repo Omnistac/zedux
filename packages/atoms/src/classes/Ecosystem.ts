@@ -30,6 +30,7 @@ import {
   InternalEvaluationReason,
   GetNode,
   NodeType,
+  Get,
 } from '../types/index'
 import {
   CATCH_ALL,
@@ -467,17 +468,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * this is functionally equivalent to calling `.get()` directly on the passed
    * instance.
    */
-  public get: {
-    <A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>): StateOf<A>
-    <A extends AnyAtomTemplate<{ Params: [] }>>(template: A): StateOf<A>
-    <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateOf<A>
-
-    <N extends ZeduxNode>(node: N): StateOf<N>
-
-    <S extends Selectable>(template: S, params: ParamsOf<S>): StateOf<S>
-    <S extends Selectable<any, []>>(template: S): StateOf<S>
-    <S extends Selectable>(template: ParamlessTemplate<S>): StateOf<S>
-  } = <A extends AnyAtomTemplate>(
+  public get: Get = <A extends AnyAtomTemplate>(
     atom: A | AnyAtomInstance,
     params?: ParamsOf<A>
   ) => getNode(this, atom, params as ParamsOf<A>).get()
@@ -570,7 +561,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Unlike `.getNode`, this is static - it doesn't register graph dependencies
    * even when called in reactive contexts.
    */
-  public getOnce: GetNode = <G extends AtomGenerics>(
+  public getOnce: Get = <G extends AtomGenerics>(
     template: AtomTemplateBase<G> | ZeduxNode<G> | SelectorTemplate<G>,
     params?: G['Params']
   ) => getNode(this, template, params).getOnce()

@@ -1,6 +1,7 @@
-import { atom, createEcosystem, ion } from '@zedux/react'
+import { atom, createEcosystem, injectEcosystem, ion } from '@zedux/react'
 import { ecosystem } from '../utils/ecosystem'
 import { mockConsole } from '../utils/console'
+import { expectTypeOf } from 'expect-type'
 
 describe('Ecosystem', () => {
   test('passing a SelectorInstance to .select() and .get() returns the result of the passed instance', () => {
@@ -191,6 +192,24 @@ describe('Ecosystem', () => {
 
     expect(reactiveNode2.get()).toBe(1) // re-ran on source node force-destroy
     expect(staticNode2.get()).toBe(11)
+  })
+
+  test("getOnce() returns the resolved node's value", () => {
+    const atomA = atom('a', 1)
+    const atomB = atom('b', () => injectEcosystem().getOnce(atomA))
+    const valueA = ecosystem.getOnce(atomA)
+    const valueB = ecosystem.getOnce(atomB)
+
+    expectTypeOf(valueA).toEqualTypeOf<number>()
+    expect(valueA).toBe(1)
+    expectTypeOf(valueB).toEqualTypeOf<number>()
+    expect(valueB).toBe(1)
+
+    ecosystem.getNode(atomA).set(2)
+    expect(ecosystem.getOnce(atomA)).toBe(2)
+    expect(ecosystem.getOnce(atomB)).toBe(1) // getOnce registers no deps
+
+    expect(ecosystem.getNode(atomB).s.size).toBe(0)
   })
 
   test('getOnce() does not register graph edges in reactive contexts', () => {
