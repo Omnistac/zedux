@@ -24,35 +24,35 @@ importers:
         specifier: ^3.5.2
         version: 3.7.0(@docusaurus/plugin-content-docs@3.7.0(@mdx-js/react@3.1.0(@types/react@18.3.18)(react@19.0.0))(acorn@6.4.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.3))(@mdx-js/react@3.1.0(@types/react@18.3.18)(react@19.0.0))(acorn@6.4.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.3)
       '@zedux.v1/atoms':
-        specifier: npm:@zedux/atoms@^1.3.4
+        specifier: npm:@zedux/atoms@1.3.4
         version: '@zedux/atoms@1.3.4'
       '@zedux.v1/core':
-        specifier: npm:@zedux/core@^1.3.4
+        specifier: npm:@zedux/core@1.3.4
         version: '@zedux/core@1.3.4'
       '@zedux.v1/immer':
-        specifier: npm:@zedux/immer@^1.3.4
-        version: '@zedux/immer@1.3.4(@zedux/atoms@2.0.0-beta.4)(immer@9.0.21)'
+        specifier: npm:@zedux/immer@1.3.4
+        version: '@zedux/immer@1.3.4(@zedux/atoms@1.3.4)(immer@9.0.21)'
       '@zedux.v1/machines':
-        specifier: npm:@zedux/machines@^1.3.4
-        version: '@zedux/machines@1.3.4(@zedux/atoms@2.0.0-beta.4)'
+        specifier: npm:@zedux/machines@1.3.4
+        version: '@zedux/machines@1.3.4(@zedux/atoms@1.3.4)'
       '@zedux.v1/react':
-        specifier: npm:@zedux/react@^1.3.4
+        specifier: npm:@zedux/react@1.3.4
         version: '@zedux/react@1.3.4(react@19.0.0)'
       '@zedux.v2/atoms':
-        specifier: npm:@zedux/atoms@^2.0.0-beta.4
-        version: '@zedux/atoms@2.0.0-beta.4'
+        specifier: npm:@zedux/atoms@2.0.0-rc.8
+        version: '@zedux/atoms@2.0.0-rc.8'
       '@zedux.v2/core':
-        specifier: npm:@zedux/core@^2.0.0-beta.4
-        version: '@zedux/core@2.0.0-beta.4'
+        specifier: npm:@zedux/core@2.0.0-rc.8
+        version: '@zedux/core@2.0.0-rc.8'
       '@zedux.v2/immer':
-        specifier: npm:@zedux/immer@^2.0.0-beta.4
-        version: '@zedux/immer@2.0.0-beta.4(@zedux/atoms@2.0.0-beta.4)(immer@9.0.21)'
+        specifier: npm:@zedux/immer@2.0.0-rc.8
+        version: '@zedux/immer@2.0.0-rc.8(@zedux/atoms@2.0.0-rc.8)(immer@9.0.21)'
       '@zedux.v2/machines':
-        specifier: npm:@zedux/machines@^2.0.0-beta.4
-        version: '@zedux/machines@2.0.0-beta.4(@zedux/atoms@2.0.0-beta.4)(@zedux/core@2.0.0-beta.4)'
+        specifier: npm:@zedux/machines@2.0.0-rc.8
+        version: '@zedux/machines@2.0.0-rc.8(@zedux/atoms@2.0.0-rc.8)(@zedux/core@2.0.0-rc.8)'
       '@zedux.v2/react':
-        specifier: npm:@zedux/react@^2.0.0-beta.4
-        version: '@zedux/react@2.0.0-beta.4(react@19.0.0)'
+        specifier: npm:@zedux/react@2.0.0-rc.8
+        version: '@zedux/react@2.0.0-rc.8(react@19.0.0)'
       framer-motion:
         specifier: ^7.10.3
         version: 7.10.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -1662,14 +1662,14 @@ packages:
   '@zedux/atoms@1.3.4':
     resolution: {integrity: sha512-RdszSW4Va3JtGQFOWJgnwswj+sukNmDiHQJuaHfGR00yNJUeMQxxwLT9285M8tAEmev7l9JnRGtWyODLuFv1kA==}
 
-  '@zedux/atoms@2.0.0-beta.4':
-    resolution: {integrity: sha512-gorpS4ViP8Uf0dDJpInqwzcbdbZaPfVKN9TFKDkzajMrOPA9/Nw+rASQR8gP0f9mwsdrPgKBF/GK96g8JTzuYw==}
+  '@zedux/atoms@2.0.0-rc.8':
+    resolution: {integrity: sha512-vVTdozqrozF3SffTDJFJqifHZm3KmBxw8mIw8qO1UqiVnkMNe1nE5UaDJF0U2VIcJGiF/qJEK73GGxb8XE2a7A==}
 
   '@zedux/core@1.3.4':
     resolution: {integrity: sha512-J1wcgEbZUMV0/2V0ivfazb4at53kunHKOqreJWiq7m6lH9gcufCBY8dN/86OXxu7M8H9pzRkOJgihLbRA9iIfg==}
 
-  '@zedux/core@2.0.0-beta.4':
-    resolution: {integrity: sha512-qG5P+pCflLBU3iofUwnwt1uEmvtRt/T0U5tqCer1XCZ4alJgx18nkDfaHcLUj0rz9dh+DlP9dE02+MpiQSmG1g==}
+  '@zedux/core@2.0.0-rc.8':
+    resolution: {integrity: sha512-zMp/f9g7relQ/qHsyiQauR51i8ZA1LLNrSuoz2UeQcYdbkZOEZZOwBf0EK8244wbPNmEIeJi1grF+SHbIAAF4w==}
 
   '@zedux/immer@1.3.4':
     resolution: {integrity: sha512-nIWQdnCt6r0rRGjocuoPlX9p8RGCJtAaxxTgOSyRoqmD4Ttnz/rs3A8roprRGfLTfrRIOh73pxU/A9pA1Xc06g==}
@@ -1677,10 +1677,10 @@ packages:
       '@zedux/atoms': 1.3.4
       immer: '>=9.0.19'
 
-  '@zedux/immer@2.0.0-beta.4':
-    resolution: {integrity: sha512-b8VAqBpcCeFaISo/4iYEPEXTXorPf/lFxxT0/mQk4CWnrLWx2cPSPb8HkazG01tyQjywpKbfS5vnco7yxPDrsQ==}
+  '@zedux/immer@2.0.0-rc.8':
+    resolution: {integrity: sha512-MeSsNYRtT+BW7RK53kieyULXTFADEssgM4iYK7XfsWnG4tcGrJk3cIMi3DrdGvC/A0yq2vzT9u9I/lUA6GH2IQ==}
     peerDependencies:
-      '@zedux/atoms': 2.0.0-beta.4
+      '@zedux/atoms': 2.0.0-rc.8
       immer: '>=9.0.19'
 
   '@zedux/machines@1.3.4':
@@ -1688,21 +1688,24 @@ packages:
     peerDependencies:
       '@zedux/atoms': 1.3.4
 
-  '@zedux/machines@2.0.0-beta.4':
-    resolution: {integrity: sha512-DSWRff6x8XwDKu1USy7f0/aRa/NzlOc/qa8PxFgOQh6AivSOsjUw4L2Uacv0Ih132FuletVltu490Iic9uSuCA==}
+  '@zedux/machines@2.0.0-rc.8':
+    resolution: {integrity: sha512-AnS4ZHEbKgU9pTr4c1Ymv8VJq/ITrzLeRL+FdYwAoj8j7BpcKf7ip+1h/nSfpU0+thYaPMzumvEwqiYqRtt7QQ==}
     peerDependencies:
-      '@zedux/atoms': 2.0.0-beta.4
-      '@zedux/core': 2.0.0-beta.4
+      '@zedux/atoms': 2.0.0-rc.8
+      '@zedux/core': 2.0.0-rc.8
 
   '@zedux/react@1.3.4':
     resolution: {integrity: sha512-0uKO5Rv7o3a0+DdzLbSmW3fLME+D4xzznNxDWBr/5zIMgM9+ETNZuZRI2B3iA+Y8EtRgijPWqPZTKou8hC2HLA==}
     peerDependencies:
       react: '>=18.0.0'
 
-  '@zedux/react@2.0.0-beta.4':
-    resolution: {integrity: sha512-CAPdTFcW7Rpelx+sI28X1pgeOwdw5IndIDdBv6tvwmHorW+Yeg5EVkefdBWO3q1NM26IN7JKv2THUWU2Vv6IiQ==}
+  '@zedux/react@2.0.0-rc.8':
+    resolution: {integrity: sha512-AUTh/yRdGBeILBEoIhb8v9fzp9CgWk7Wokcqq3oRAbnNalnC4LIobrRAHFul+6vPpaNGoKj1FxeN9SFC29+4tg==}
     peerDependencies:
-      react: '>=19.0.0'
+      react: '>=18.0.0'
+
+  '@zedux/stores@2.0.0-rc.8':
+    resolution: {integrity: sha512-oOcem/s1zS9V50YVcXtMj19KOQjbWv/G0wFP24e8B3D+bvDpY92G5xQmXmWGFDCXqR7iNAjdwauUthEI+rWuyw==}
 
   accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
@@ -7877,42 +7880,47 @@ snapshots:
     dependencies:
       '@zedux/core': 1.3.4
 
-  '@zedux/atoms@2.0.0-beta.4':
-    dependencies:
-      '@zedux/core': 2.0.0-beta.4
+  '@zedux/atoms@2.0.0-rc.8': {}
 
   '@zedux/core@1.3.4': {}
 
-  '@zedux/core@2.0.0-beta.4': {}
+  '@zedux/core@2.0.0-rc.8': {}
 
-  '@zedux/immer@1.3.4(@zedux/atoms@2.0.0-beta.4)(immer@9.0.21)':
+  '@zedux/immer@1.3.4(@zedux/atoms@1.3.4)(immer@9.0.21)':
     dependencies:
-      '@zedux/atoms': 2.0.0-beta.4
+      '@zedux/atoms': 1.3.4
       immer: 9.0.21
 
-  '@zedux/immer@2.0.0-beta.4(@zedux/atoms@2.0.0-beta.4)(immer@9.0.21)':
+  '@zedux/immer@2.0.0-rc.8(@zedux/atoms@2.0.0-rc.8)(immer@9.0.21)':
     dependencies:
-      '@zedux/atoms': 2.0.0-beta.4
+      '@zedux/atoms': 2.0.0-rc.8
+      '@zedux/stores': 2.0.0-rc.8
       immer: 9.0.21
 
-  '@zedux/machines@1.3.4(@zedux/atoms@2.0.0-beta.4)':
+  '@zedux/machines@1.3.4(@zedux/atoms@1.3.4)':
     dependencies:
-      '@zedux/atoms': 2.0.0-beta.4
+      '@zedux/atoms': 1.3.4
 
-  '@zedux/machines@2.0.0-beta.4(@zedux/atoms@2.0.0-beta.4)(@zedux/core@2.0.0-beta.4)':
+  '@zedux/machines@2.0.0-rc.8(@zedux/atoms@2.0.0-rc.8)(@zedux/core@2.0.0-rc.8)':
     dependencies:
-      '@zedux/atoms': 2.0.0-beta.4
-      '@zedux/core': 2.0.0-beta.4
+      '@zedux/atoms': 2.0.0-rc.8
+      '@zedux/core': 2.0.0-rc.8
+      '@zedux/stores': 2.0.0-rc.8
 
   '@zedux/react@1.3.4(react@19.0.0)':
     dependencies:
       '@zedux/atoms': 1.3.4
       react: 19.0.0
 
-  '@zedux/react@2.0.0-beta.4(react@19.0.0)':
+  '@zedux/react@2.0.0-rc.8(react@19.0.0)':
     dependencies:
-      '@zedux/atoms': 2.0.0-beta.4
+      '@zedux/atoms': 2.0.0-rc.8
       react: 19.0.0
+
+  '@zedux/stores@2.0.0-rc.8':
+    dependencies:
+      '@zedux/atoms': 2.0.0-rc.8
+      '@zedux/core': 2.0.0-rc.8
 
   accepts@1.3.8:
     dependencies:
