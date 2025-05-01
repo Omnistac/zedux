@@ -11,12 +11,15 @@ import {
 import { io, type Socket } from 'socket.io-client'
 import { apiConfigAtom } from './config'
 import {
+  BidiStream,
   type BidiStreamMessage,
   type UnaryMessage,
   type UnaryRequest,
 } from '@/shared/api'
 
 export type ConnectionStatus = 'closed' | 'connected' | 'connecting' | 'error'
+
+const DEFAULT_TIMEOUT = 10000
 
 interface ConnectionState {
   /**
@@ -35,7 +38,7 @@ interface ConnectionState {
   status: ConnectionStatus
 }
 
-export const socketConnectionAtom = ion('socketConnection', ({ get }) => {
+export const socketConnectionAtom = ion('socket/connection', ({ get }) => {
   const { wsUrl } = get(apiConfigAtom)
   const socket = injectMemo(() => io(wsUrl, { autoConnect: false }), [wsUrl])
 
@@ -96,7 +99,7 @@ export const socketConnectionAtom = ion('socketConnection', ({ get }) => {
   return api(signal).setPromise(signal.get().resolvable.promise)
 })
 
-export const socketControllerAtom = ion('socketController', ({ getNode }) => {
+export const socketControllerAtom = ion('socket/controller', ({ getNode }) => {
   const idCounterRef = injectRef(0)
   const socketConnectionNode = getNode(socketConnectionAtom)
 
@@ -121,11 +124,15 @@ export const socketControllerAtom = ion('socketController', ({ getNode }) => {
     timestamp: Date.now(),
   })
 
-  const stream = async <RequestType extends UnaryRequest>(
-    eventName: RequestType['eventName'],
-    requestPayload: RequestType['requestPayload'],
-    responseHandler: (response: RequestType['responsePayload']) => void
-  ): Promise<Cleanup> => {
+  const stream = async <StreamType extends BidiStream>(
+    eventName: StreamType['eventName'],
+    initialPayload: StreamType['initialPayload'],
+    messageHandler: (message: StreamType['serverPayload']) => void,
+    { timeout = DEFAULT_TIMEOUT }: { timeout?: number } = {}
+  ): Promise<{
+    cleanup: Cleanup
+    emit: (payload: StreamType['clientPayload']) => void
+  }> => {
     // read the socketConnection's state inside the export to avoid closing over
     // stale values:
     const { resolvable, socket, status } = socketConnectionNode.get()
@@ -139,16 +146,38 @@ export const socketControllerAtom = ion('socketController', ({ getNode }) => {
 
     const cleanup = socketConnectionNode.on('message', message => {
       if ((message as BidiStreamMessage).streamId === streamId) {
-        responseHandler(message.payload as RequestType['responsePayload'])
+        messageHandler(message.payload as StreamType['serverPayload'])
       }
     })
 
+    const { promise, resolve, reject } = Promise.withResolvers()
+
+    // Handle these cases:
+    // 1) initial request times out
+    // 2) request is acked before timing out
+    const timeoutId = setTimeout(() => {
+      reject(new Error('timeout'))
+      cleanup()
+      clearTimeout(timeoutId)
+    }, timeout)
+
     socket.emit(
       eventName,
-      makeStreamMessage(streamId, requestId, requestPayload)
+      makeStreamMessage(streamId, requestId, initialPayload),
+      () => resolve(null)
     )
 
-    return cleanup
+    await promise // wait for ack before proceeding
+    clearTimeout(timeoutId)
+
+    return {
+      cleanup,
+      emit: (payload: StreamType['clientPayload']) =>
+        socket.emit(
+          eventName,
+          makeStreamMessage(streamId, makeId('request'), payload)
+        ),
+    }
   }
 
   /**
@@ -160,7 +189,7 @@ export const socketControllerAtom = ion('socketController', ({ getNode }) => {
     requestPayload: RequestType['requestPayload'],
     {
       controller,
-      timeout = 10000,
+      timeout = DEFAULT_TIMEOUT,
     }: {
       controller?: AbortController
       timeout?: number

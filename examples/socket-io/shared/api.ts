@@ -1,6 +1,8 @@
 import { None, Prettify } from '@zedux/react'
 
 /**
+ * NOTE: Ideally this would be generated e.g. with an RPC layer's stream definitions
+ *
  * Basic request/response breakdown from the client's perspective:
  *
  * unary:
@@ -32,13 +34,14 @@ export interface UnaryMessage<Payload = unknown> {
   payload: Payload
 }
 
-export type ClientStreamMessage = UnaryMessage
+export type ClientStreamMessage<Payload = unknown> = UnaryMessage<Payload>
 
-export interface ServerStreamMessage extends UnaryMessage {
+export interface ServerStreamMessage<Payload = unknown>
+  extends UnaryMessage<Payload> {
   streamId: string
 }
 
-export type BidiStreamMessage = ServerStreamMessage
+export type BidiStreamMessage<Payload = unknown> = ServerStreamMessage<Payload>
 
 export type UnaryDef<
   EventName extends string,
@@ -119,14 +122,14 @@ export type ServerStream = SimpleServerStreamDef | ComplexServerStreamDef
 // Bidi Streams
 
 export type SimpleBidiStreamDef = BidiStreamDef<
-  'simple-client-stream',
+  'simple-bidi-stream',
   None,
   string,
   string
 >
 
 export type ComplexBidiStreamDef = BidiStreamDef<
-  'complex-client-stream',
+  'complex-bidi-stream',
   string,
   string,
   string

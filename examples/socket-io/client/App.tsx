@@ -1,5 +1,6 @@
 import { createEcosystem, Ecosystem, EcosystemProvider } from '@zedux/react'
 import { useMemo } from 'react'
+import { SimpleBidiStream } from './components/SimpleBidiStream/SimpleBidiStream'
 import { SimpleUnaryRequest } from './components/SimpleUnaryRequest'
 
 function App() {
@@ -18,7 +19,10 @@ function App() {
 
   return (
     <EcosystemProvider ecosystem={ecosystem}>
-      <SimpleUnaryRequest />
+      <div className="flex flex-col gap-6 p-2">
+        <SimpleUnaryRequest />
+        <SimpleBidiStream />
+      </div>
     </EcosystemProvider>
   )
 }

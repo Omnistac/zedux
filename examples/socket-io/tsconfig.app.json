@@ -6,7 +6,8 @@
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@zedux/react": ["../../packages/react/src"]
     },
     "skipLibCheck": true,
 
