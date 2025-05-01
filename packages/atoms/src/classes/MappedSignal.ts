@@ -15,20 +15,16 @@ import { ACTIVE, EventSent, INITIALIZING, TopPrio } from '../utils/general'
 import { setNodeStatus } from '../utils/graph'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
-const getRelevantEvents = (signal: Signal, events?: Record<string, any>) =>
-  (signal as Signal).E &&
-  events &&
-  Object.fromEntries(
-    Object.entries(events).filter(
-      // we don't pass mutate events to inner signals - they weren't
-      // mutated, the outer signal was. This is to optimize
-      // performance for the most common case - usually you won't
-      // subscribe to individual inner signals; you subscribe to the
-      // full, outer signal or the atom itself.
-      ([eventName]) =>
-        eventName !== 'mutate' && eventName in (signal as Signal).E!
-    )
-  )
+const getRelevantEvents = (events?: Record<string, any>) => {
+  if (events && events.mutate) {
+    const clonedEvents = { ...events }
+    delete clonedEvents.mutate
+
+    return clonedEvents
+  }
+
+  return events
+}
 
 export type SignalMap = Record<string, Signal<AnyNodeGenerics> | unknown>
 
@@ -81,19 +77,11 @@ export class MappedSignal<
     id: string,
 
     /**
-     * The map of state properties to signals that control them
+     * signal`M`ap - The map of state properties to signals that control them
      */
     public M: SignalMap
   ) {
-    super(
-      e,
-      id,
-      undefined,
-      {} as {
-        [K in keyof G['Events']]: () => G['Events'][K]
-      },
-      true
-    )
+    super(e, id, undefined, true)
   }
 
   /**
@@ -135,12 +123,11 @@ export class MappedSignal<
         : { [eventNameOrMap]: payload }
 
     this.C = events as Partial<SendableEvents<G>>
+    const relevantEvents = getRelevantEvents(events)
 
-    for (const signal of Object.values(this.M)) {
-      if ((signal as Signal | undefined)?.izn) {
-        const relevantEvents = getRelevantEvents(signal as Signal, events)
-
-        if (relevantEvents && Object.keys(relevantEvents).length) {
+    if (relevantEvents && Object.keys(relevantEvents).length) {
+      for (const signal of Object.values(this.M)) {
+        if ((signal as Signal | undefined)?.izn) {
           ;(signal as Signal).send(relevantEvents)
         }
       }
@@ -168,6 +155,8 @@ export class MappedSignal<
     schedulerPre(this.e)
 
     try {
+      const relevantEvents = getRelevantEvents(events)
+
       for (const [key, value] of Object.entries(newState)) {
         if (value !== this.v[key]) {
           const signal = this.M[key]
@@ -179,10 +168,7 @@ export class MappedSignal<
             continue
           }
 
-          ;(signal as Signal).set(
-            value,
-            getRelevantEvents(signal as Signal, events)
-          )
+          ;(signal as Signal).set(value, relevantEvents)
         }
       }
 
@@ -282,9 +268,8 @@ export class MappedSignal<
         entries.map(([key, val]) => {
           if (!(val as Signal | undefined)?.izn) return [key, val as any]
 
-          // flatten all events from all inner signals into the mapped signal's
-          // events list
-          Object.assign(this.E!, (val as Signal).E)
+          // update the `I`dsToKeys map. No need to update the signal`M`ap here,
+          // it was just set in the constructor.
           this.I[(val as Signal).id] = key
 
           return [key, (val as Signal).get(edgeConfig)]

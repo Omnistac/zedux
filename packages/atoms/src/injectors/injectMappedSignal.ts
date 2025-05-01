@@ -67,6 +67,9 @@ type UnionToTuple<T> = UnionToIntersection<
  *   })
  * })
  * ```
+ *
+ * For TS users, custom events can be configured the same way as
+ * {@link injectSignal}
  */
 export const injectMappedSignal = <
   M extends SignalMap,

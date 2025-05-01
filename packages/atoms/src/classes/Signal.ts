@@ -146,13 +146,6 @@ export class Signal<
      */
     public v: G['State'],
 
-    /**
-     * `E`ventMap - an object mapping all custom event names of this signal to
-     * unused functions with typed return types. We use ReturnType on these to
-     * infer the expected payload type of each custom event.
-     */
-    public E?: { [K in keyof G['Events']]: () => G['Events'][K] },
-
     deferActiveStatus?: boolean
   ) {
     super()
