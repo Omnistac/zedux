@@ -1,3 +1,14 @@
+## v2.0.0-rc.9 (May 1, 2025)
+
+### New Features:
+
+- `atoms`: make EventMap generics easier to pass manually (#249)
+- `atoms`: remove implicit event filtering for nested signals (#250)
+
+### Fixes:
+
+- `atoms`, `react`: add `asyncScheduler.queue`; fix strict mode atom destroy loop (#251)
+
 ## v2.0.0-rc.8 (Apr 30, 2025)
 
 ### Fixes:
