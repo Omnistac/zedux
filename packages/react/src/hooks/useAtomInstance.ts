@@ -124,12 +124,18 @@ export const useAtomInstance: {
 
   const addEdge = () => {
     node.l === zi.D && (node = new ExternalNode(ecosystem, observerId, render))
-    node.i === instance ||
+
+    // cancel edge cleanup if the below effect cleanup ran and scheduled it but
+    // the component rerendered or the effect ran again before it happened
+    node.c?.()
+
+    if (node.i !== instance) {
       node.u(
         instance,
         operation,
         External | (subscribe ? Eventless : EventlessStatic)
       )
+    }
   }
 
   // Yes, subscribe during render. This operation is idempotent and we handle
@@ -163,11 +169,7 @@ export const useAtomInstance: {
     }
 
     return () => {
-      // remove the edge immediately - no need for a delay here. When StrictMode
-      // double-invokes (invokes, then cleans up, then re-invokes) this effect,
-      // it's expected that any `ttl: 0` atoms get destroyed and recreated -
-      // that's part of what StrictMode is ensuring
-      node.k(instance)
+      node.k(instance, true)
       // don't set `render.m = false` here
     }
   }, [instance.id])

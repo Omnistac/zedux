@@ -125,7 +125,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "state": {
       "val": 1,
     },
-    "status": "Stale",
+    "status": "Active",
     "weight": 1,
   },
   "@component(Test)-:rb:": {
@@ -180,7 +180,7 @@ exports[`useAtomSelector inline selector that returns a different object referen
     "state": {
       "val": 2,
     },
-    "status": "Stale",
+    "status": "Active",
     "weight": 1,
   },
   "@component(Test)-:rb:": {

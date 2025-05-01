@@ -514,7 +514,7 @@ describe('useAtomSelector', () => {
     const div = await findByTestId('text')
 
     expect(div.innerHTML).toBe('1')
-    expect(renders).toBe(4) // 2 rerenders + 2 for strict mode
+    expect(renders).toBe(2) // 1 render + 1 for strict mode
     snapshotNodes()
 
     act(() => {
@@ -523,7 +523,7 @@ describe('useAtomSelector', () => {
     })
 
     expect(div.innerHTML).toBe('2')
-    expect(renders).toBe(6) // 3 rerenders + 3 for strict mode
+    expect(renders).toBe(4) // 2 renders + 2 for strict mode
     snapshotNodes()
   })
 
