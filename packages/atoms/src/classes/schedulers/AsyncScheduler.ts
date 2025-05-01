@@ -9,6 +9,18 @@ const queueMicrotask =
 
 export class AsyncScheduler extends SchedulerBase {
   /**
+   * A convenience method for using the above `queueMicrotask` shim efficiently
+   * via scheduling. Plugin authors may want to use this to update atom state
+   * safely upon receiving an ecosystem event.
+   */
+  public queue(callback: () => void) {
+    const job = { j: callback, T: 3 as const }
+    this.schedule(job)
+
+    return () => this.unschedule(job)
+  }
+
+  /**
    * Insert a job at the end of the queue. Schedule a flush if this scheduler is
    * not currently running and not scheduled yet.
    *

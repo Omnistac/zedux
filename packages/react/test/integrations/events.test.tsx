@@ -40,6 +40,7 @@ describe('events', () => {
     unmount()
 
     jest.advanceTimersByTime(1)
+    ecosystem.asyncScheduler.flush()
 
     const expectedStaleEvent: CycleEvent = {
       oldStatus: 'Active',

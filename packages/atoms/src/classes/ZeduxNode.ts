@@ -533,7 +533,12 @@ export class ExternalNode<
    * wants esp. in strict mode (usage in React hooks is currently the primary
    * purpose of external nodes).
    */
-  public k(source: ZeduxNode) {
+  public k(source: ZeduxNode, queue?: boolean) {
+    if (queue) {
+      this.c = this.e.asyncScheduler.queue(() => this.k(source))
+      return
+    }
+
     removeEdge(this, source)
     source === this.i && this.destroy(true)
   }
