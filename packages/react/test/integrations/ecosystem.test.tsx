@@ -11,6 +11,7 @@ import {
   useEcosystem,
   getDefaultEcosystem,
   useAtomInstance,
+  injectEffect,
 } from '@zedux/react'
 import React, { useEffect, useState } from 'react'
 import { act } from '@testing-library/react'
@@ -296,7 +297,9 @@ describe('ecosystem', () => {
       'b',
     ])
 
-    ecosystem.reset({ listeners: true })
+    act(() => {
+      ecosystem.reset({ listeners: true })
+    })
   })
 
   test('onReady', () => {
@@ -430,5 +433,97 @@ describe('ecosystem', () => {
 
     expect(div).toHaveTextContent('a')
     expect(ecosystem).toBe(getDefaultEcosystem())
+  })
+
+  test.only('resets cause rerenders when components are subscribed to resetting atoms', async () => {
+    const destructions: any[] = []
+
+    const atom1 = atom('atom1', () => {
+      injectEffect(
+        () => () => {
+          destructions.push('atom1')
+        },
+        []
+      )
+
+      return 'foo'
+    })
+    const atom2 = atom('atom2', () => {
+      injectEffect(
+        () => () => {
+          destructions.push('atom2')
+        },
+        []
+      )
+
+      return 'bar'
+    })
+
+    function Test() {
+      const val1 = useAtomValue(atom1)
+      const val2 = useAtomValue(atom2)
+
+      return (
+        <div>
+          <div data-testid="node1">Node 1: {val1}</div>
+          <div data-testid="node2">Node 2: {val2}</div>
+          <button data-testid="reset" onClick={() => ecosystem.reset()}>
+            Reset
+          </button>
+        </div>
+      )
+    }
+
+    function App() {
+      return (
+        <EcosystemProvider ecosystem={ecosystem}>
+          <Test />
+        </EcosystemProvider>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<App />)
+
+    const node1 = await findByTestId('node1')
+    const node2 = await findByTestId('node2')
+    const reset = await findByTestId('reset')
+
+    expect(node1).toHaveTextContent('Node 1: foo')
+    expect(node2).toHaveTextContent('Node 2: bar')
+
+    act(() => {
+      ecosystem.getNode(atom1).set('foo2')
+    })
+
+    expect(node1).toHaveTextContent('Node 1: foo2')
+
+    act(() => {
+      fireEvent.click(reset)
+    })
+
+    // needed because the effects are scheduled during React render and will
+    // wait for a microtask without this. This needs to be outside the `act`,
+    // since the components render as part of the `act` queue.
+    ecosystem.asyncScheduler.flush()
+
+    expect(destructions).toEqual(['atom1', 'atom2'])
+    expect(node1).toHaveTextContent('Node 1: foo')
+
+    act(() => {
+      ecosystem.getNode(atom2).set('bar2')
+    })
+
+    expect(node2).toHaveTextContent('Node 2: bar2')
+
+    act(() => {
+      fireEvent.click(reset)
+    })
+
+    // Note: Would also need to flush the async scheduler here if this test
+    // continued.
+
+    expect(destructions).toEqual(['atom1', 'atom2', 'atom1', 'atom2'])
+    expect(node1).toHaveTextContent('Node 1: foo')
+    expect(node2).toHaveTextContent('Node 2: bar')
   })
 })
