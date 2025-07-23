@@ -1,0 +1,349 @@
+---
+id: AtomInstance
+title: AtomInstance
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+All standard atoms (aka "atom instances") are actually instances of this class. When Zedux instantiates [atom templates](/not-done?path=./AtomTemplate) (and [ion templates](/not-done?path=./IonTemplate)), it's just creating instances of this class.
+
+This class extends the [`Signal` class](./Signal) (yes, atoms _are_ signals) which in turn extends the [`ZeduxNode` class](./ZeduxNode) (all atoms/signals are graph nodes).
+
+## Creation
+
+You should never instantiate this class yourself. Zedux does it for you.
+
+An atom instance is created the first time a given atom template + params combo is used in many Zedux hooks, injectors, and ecosystem methods.
+
+In components:
+
+```ts
+import { useAtomInstance } from '@zedux/react'
+import { myAtom } from './atoms'
+
+function MyComponent() {
+  // hooks like `useAtomInstance` create the instance if it doesn't exist yet
+  const instance = useAtomInstance(myAtom)
+  ...
+}
+```
+
+In atoms:
+
+```ts
+import { atom, ion } from '@zedux/react'
+
+const textAtom = atom('text', () => 'example text')
+
+// getting an atom in another atom will instantiate it if it doesn't exist yet:
+const uppercaseAtom = ion('uppercase', ({ get }) => get(textAtom).toUpperCase())
+```
+
+Statically, anywhere:
+
+```ts
+import { createEcosystem } from '@zedux/react'
+
+const ecosystem = createEcosystem()
+
+// create atom instances:
+const instance = ecosystem.getNode(myAtom)
+const withParams = ecosystem.getNode(myParameterizedAtom, [
+  'param 1',
+  'param 2',
+])
+```
+
+## Destruction
+
+Atom instances live forever by default. You can configure this with [ttl](#ttl). You can also destroy them manually via [`node.destroy()`](./ZeduxNode#destroy), or indirectly via an [ecosystem reset](/not-done?path=./Ecosystem#reset).
+
+### TTL
+
+Configuring an atom's TTL (Time To Live) is the recommended way to manage its lifecycle. TTL determines how long the atom instance will remain cached after it's no longer in use.
+
+You can configure this in two ways:
+
+- Setting the atom template's [`ttl` config](/not-done?path=./AtomTemplate#ttl). This is suitable for most cases, but only accepts a number in milliseconds.
+- Returning an [atom api](/not-done?path=./AtomApi) from the atom's state factory that configures a TTL via [`.setTtl()`](/not-done?path=./AtomApi#setttl). This is much more powerful, accepting a number, promise, observable, or a function that returns a number, promise, or observable.
+
+  Setting TTL via returning a configured [atom api](/not-done?path=./AtomApi) overrides any TTL configured on the [atom template](/not-done?path=./AtomTemplate#ttl). It also allows you to configure a different TTL for each instance of the atom.
+
+The sky's the limit. With TTL, you can destroy atoms on page route, on log out, when the cache reaches a certain size, or anything else you can think of.
+
+:::tip
+Setting `ttl: 0` on an atom template is the most common as it prevents setting any timeouts. [Ions](/not-done?path=../factories/ion) have `ttl: 0` by default.
+:::
+
+## Signal Wrappers
+
+When a signal is returned from an atom's state factory, the atom becomes a thin wrapper around that signal. Regard this as an implementation detail of the atom.
+
+Since atoms are signals, consumers never need to know if the atom is a signal wrapper. They should always use the signal methods directly on the atom instance. Zedux will sort out the details for you.
+
+This is a change from v1. In v1, all atoms had a `.store` property. This made atoms a bit heavier and less abstract - for example, there were subtle differences between `atom.store.setState` and `atom.setState`. In v2, you never need to worry about this. Just always call [`atom.set()`](#set) or [`atom.mutate()`](#mutate) directly.
+
+## Providing
+
+An atom instance can be provided over React context via [`<AtomProvider>`](/not-done?path=../components/AtomProvider).
+
+```tsx
+import { AtomProvider, useAtomInstance } from '@zedux/react'
+import { myAtom } from './atoms'
+
+function Parent() {
+  const instance = useAtomInstance(myAtom)
+
+  return (
+    <AtomProvider instance={instance}>
+      <Child />
+    </AtomProvider>
+  )
+}
+```
+
+Consume provided instances with [`useAtomContext()`](/not-done?path=../hooks/useAtomContext)
+
+```ts
+import { useAtomContext } from '@zedux/react'
+import { myAtom } from './atoms'
+
+function Child() {
+  const instance = useAtomContext(myAtom)
+}
+```
+
+## Extending
+
+There are many aspects of an atom instance's behavior you can change when extending this class. This is an extremely advanced feature. We're not documenting it yet as the internals of this class may change.
+
+## Generics
+
+For TypeScript users, atom instances have the following unique generics on their [`NodeGenerics`](./ZeduxNode#generics) (`G`) type generic:
+
+<Legend>
+  <Item name="G['Exports']">
+    A Record type. The exports of the atom. Will be an empty record if the atom has no exports.
+  </Item>
+  <Item name="G['Promise']">
+    Extends `Promise<any>`. The promise type of this node. This will be inferred automatically when the atom's state factory returns an atom promise with a promise attached via [`api().setPromise()`](/not-done?path=./AtomApi#setpromise).
+  </Item>
+</Legend>
+
+Atom instances also have the following generics inherited from [`ZeduxNode`](./ZeduxNode#generics):
+
+<Legend>
+  <Item name="G['Events']">
+    See [`ZeduxNode<{ Events }>`](./ZeduxNode#gevents).
+  </Item>
+  <Item name="G['Node']">
+    See [`ZeduxNode<{ Node }>`](./ZeduxNode#gnode).
+  </Item>
+  <Item name="G['Params']">
+    See [`ZeduxNode<{ Params }>`](./ZeduxNode#gparams).
+  </Item>
+  <Item name="G['State']">
+    See [`ZeduxNode<{ State }>`](./ZeduxNode#gstate).
+  </Item>
+  <Item name="G['Template']">
+    See [`ZeduxNode<{ Template }>`](./ZeduxNode#gtemplate).
+  </Item>
+</Legend>
+
+## Events
+
+Atom instances emit several built-in events. They can also be configured with custom event types by returning a configured [signal](./Signal) from the atom's state factory:
+
+```ts
+const greetingAtom = atom('greeting', () => {
+  const signal = injectSignal('Hello', {
+    events: {
+      greetedPerson: As<string>,
+    },
+  })
+
+  return signal
+})
+
+const greetingNode = myEcosystem.getNode(greetingAtom)
+
+// the `greetingAtom` inherits all events from its returned signal:
+greetingNode.send('greetedPerson', 'Jim')
+greetingNode.send('greetedPerson', true) // TS Error! Expected a string.
+```
+
+<Legend>
+  <Item name="invalidate" suffix="event">
+    Zedux sends this event whenever `atomInstance.invalidate()` is called. Some
+    Zedux APIs hook into this event like
+    [`injectPromise`](/not-done?path=../injectors/injectPromise)'s
+    `runOnInvalidate` option.
+  </Item>
+  <Item name="promiseChange" suffix="event">
+    Zedux sends this event when an atom instance's [`.promise`](#promise)
+    reference changed on a reevaluation. This essentially makes an atom's
+    `.promise` another piece of its state - all Zedux's injectors, atom getters,
+    and React hooks will cause a reevaluation/rerender when this event fires.
+  </Item>
+</Legend>
+
+Atom instances also inherit the following built-in events from [`Signal`](./Signal#events):
+
+<Legend>
+  <Item name="mutate" suffix="event">
+    See the [signal `mutate` event](./Signal#mutate-event).
+  </Item>
+</Legend>
+
+Atom instances also inherit the following built-in events from [`ZeduxNode`](./ZeduxNode#events):
+
+<Legend>
+  <Item name="change" suffix="event">
+    See the [node `change` event](./ZeduxNode#change-event).
+  </Item>
+  <Item name="cycle" suffix="event">
+    See the [node `cycle` event](./ZeduxNode#cycle-event).
+  </Item>
+</Legend>
+
+## Properties
+
+Atom instances have the following **readonly** properties:
+
+<Legend>
+  <Item name="api">
+    A reference to the [AtomApi](/not-done?path=./AtomApi) returned from the atom instance's state factory on its last evaluation.
+
+    Unlike [`exports`](#exports), this reference is not stable. It will change on every evaluation. Since atoms have no mechanism to notify observers when this changes, it's not recommended to use this directly. This is exposed for plugin authors and maybe some debugging cases.
+
+  </Item>
+  <Item name="exports">
+    An object. May be undefined, if nothing was exported.
+
+    The exports of the atom instance, as defined by the instance's returned [AtomApi](/not-done?path=./AtomApi). You can export absolutely anything.
+
+    This object is stable. It is set the first time an atom instance is created and will not change on subsequent evaluations.
+
+    ```ts
+    import { api, atom } from '@zedux/react'
+
+    const exportsAtom = atom('exports', () => api().setExports({ hello: 'world' }))
+    const importAtom = atom('import', () => {
+      const { hello } = injectAtomInstance(exportsAtom).exports
+      // `hello` will always be `'world'` here
+    })
+    ```
+
+    :::important
+    Don't export state or functions that close over stateful values.
+
+    ```ts
+    const exampleAtom = atom('example', () => {
+      const signal = injectSignal('example state')
+      const state = signal.get()
+
+      const bad = () => state // closes over a value that will become stale ❌
+      const good = () => signal.get() // only closes over the stable `signal` ref ✅
+    })
+    ```
+
+    :::
+
+  </Item>
+  <Item name="promise">
+    A promise. May be undefined if no promise was set on a returned [AtomApi](/not-done?path=./AtomApi).
+
+    This promise will be used to cause React to suspend whenever this atom instance is used in a component until the promise completes. This promise reference will change if a subsequent evaluation returns a new promise.
+
+  </Item>
+  <Item name="promiseError">
+    The rejection value caught from the instance's [`.promise`](#promise). `undefined` if the promise did not reject.
+  </Item>
+  <Item name="promiseStatus">
+    A string or undefined. The status of the instance's [`.promise`](#promise). Will be `undefined` if the atom did not [set a promise](/not-done?path=./AtomApi#setpromise).
+
+    Possible values:
+
+    - `'error'` - the promise rejected.
+    - `'loading'` - the promise is still pending.
+    - `'success'` - the promise resolved successfully.
+
+  </Item>
+</Legend>
+
+Atom instances also inherit the following properties from [`ZeduxNode`](./ZeduxNode#properties):
+
+<Legend>
+  <Item name="id">See [`ZeduxNode#id`](./ZeduxNode#id).</Item>
+  <Item name="params">
+    See [`ZeduxNode#params`](./ZeduxNode#params). Will always be an array.
+  </Item>
+  <Item name="status">See [`ZeduxNode#status`](./ZeduxNode#status).</Item>
+  <Item name="template">
+    See [`ZeduxNode#template`](./ZeduxNode#template). Will always be a reference
+    to the [atom template](/not-done?path=./AtomTemplate) this instance was
+    created from.
+  </Item>
+</Legend>
+
+## Methods
+
+<Legend>
+  <Item name="invalidate">
+    Forces the atom instance to reevaluate.
+
+    ```tsx live ecosystemId=AtomInstance/invalidate resultVar=Coin version=2
+    const coinTossAtom = atom('coinToss', () => Math.random() < 0.5)
+
+    function Coin() {
+      const isHeads = useAtomValue(coinTossAtom)
+      const { invalidate } = useAtomInstance(coinTossAtom)
+
+      return <button onClick={invalidate}>{isHeads ? 'Heads' : 'Tails'}</button>
+    }
+    ```
+
+    To access this method inside the atom's state factory, use [`injectSelf()`](/not-done?path=../injectors/injectSelf).
+
+  </Item>
+</Legend>
+
+Atom instances also inherit the following methods from [`Signal`](./Signal#methods):
+
+<Legend>
+  <Item name="mutate">
+    See [`Signal.mutate`](#mutate).
+
+    When a signal is returned from an atom's state factory, this method will become a thin wrapper around that signal's `mutate` method.
+
+  </Item>
+  <Item name="send">
+    See [`Signal.send`](#send).
+
+    When a signal is returned from an atom's state factory, this method will become a thin wrapper around that signal's `send` method.
+
+  </Item>
+  <Item name="set">
+    See [`Signal.set`](#set).
+
+    When a signal is returned from an atom's state factory, this method will become a thin wrapper around that signal's `set` method.
+
+  </Item>
+</Legend>
+
+Atom instances also inherit the following methods from [`ZeduxNode`](./ZeduxNode#methods):
+
+<Legend>
+  <Item name="destroy">See [`ZeduxNode.destroy`](./ZeduxNode#destroy).</Item>
+  <Item name="get">See [`ZeduxNode.get`](./ZeduxNode#get).</Item>
+  <Item name="getOnce">See [`ZeduxNode.getOnce`](./ZeduxNode#getonce).</Item>
+  <Item name="on">See [`ZeduxNode.on`](./ZeduxNode#on).</Item>
+</Legend>
+
+## See Also
+
+- [The Atom Instances walkthrough](/not-done?path=../../../walkthrough/atom-instances)
+- [The `Signal` class](./Signal)
+- [The `ZeduxNode` class](./ZeduxNode)
+- [The `AtomTemplate` class](/not-done?path=./AtomTemplate)
+- [The `AtomApi` class](/not-done?path=./AtomApi)

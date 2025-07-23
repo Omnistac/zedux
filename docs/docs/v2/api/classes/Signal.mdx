@@ -7,7 +7,7 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
 The object returned by [`injectSignal`](../injectors/injectSignal). Signals are reactive state containers. Each signal holds a value and provides methods for accessing and updating that value. In Zedux, the term "signal" refers to an instance of this class.
 
-Atoms themselves are signals. That simply means the [AtomInstance](/not-done?path=./AtomInstance) class extend this class. An atom can also contain many inner signals. When a signal is returned from an [atom state factory](/not-done?path=../factories/atom#valueorfactory), the atom becomes a thin wrapper around the returned signal.
+Atoms themselves are signals. That simply means the [AtomInstance](./AtomInstance) class extend this class. An atom can also contain many inner signals. When a signal is returned from an [atom state factory](/not-done?path=../factories/atom#valueorfactory), the atom becomes a thin wrapper around the returned signal.
 
 [Mapped signals](/not-done?path=./MappedSignal) are also signals themselves.
 
@@ -469,4 +469,4 @@ Signals also inherit the following methods from [`ZeduxNode`](./ZeduxNode#method
 
 - [The `MappedSignal` class](/not-done?path=./MappedSignal)
 - [The `ZeduxNode` class](./ZeduxNode)
-- [The `AtomInstance` class](/not-done?path=./AtomInstance)
+- [The `AtomInstance` class](./AtomInstance)
