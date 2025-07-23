@@ -164,7 +164,7 @@ module.exports = {
         {
           type: 'category',
           label: 'Classes',
-          items: ['v2/api/classes/Signal'],
+          items: ['v2/api/classes/Signal', 'v2/api/classes/ZeduxNode'],
         },
         {
           type: 'category',

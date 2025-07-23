@@ -106,20 +106,20 @@ const result = signal.get()
 
 ## Generics
 
-For TypeScript users, signals have the following generics inherited from [`ZeduxNode`](/not-done?path=./ZeduxNode#generics):
+For TypeScript users, signals have the following generics inherited from [`ZeduxNode`](./ZeduxNode#generics):
 
 <Legend>
   <Item name="G['Events']">
-    See [`ZeduxNode<{ Events }>`](/not-done?path=./ZeduxNode#gevents).
+    See [`ZeduxNode<{ Events }>`](./ZeduxNode#gevents).
   </Item>
   <Item name="G['Params']">
-    See [`ZeduxNode<{ Params }>`](/not-done?path=./ZeduxNode#gparams).
+    See [`ZeduxNode<{ Params }>`](./ZeduxNode#gparams).
   </Item>
   <Item name="G['State']">
-    See [`ZeduxNode<{ State }>`](/not-done?path=./ZeduxNode#gstate).
+    See [`ZeduxNode<{ State }>`](./ZeduxNode#gstate).
   </Item>
   <Item name="G['Template']">
-    See [`ZeduxNode<{ Template }>`](/not-done?path=./ZeduxNode#gtemplate).
+    See [`ZeduxNode<{ Template }>`](./ZeduxNode#gtemplate).
   </Item>
 </Legend>
 
@@ -233,34 +233,34 @@ All signals have the following built-in events:
   </Item>
 </Legend>
 
-All signals also inherit the following built-in events from [`ZeduxNode`](/not-done?path=./ZeduxNode#events):
+All signals also inherit the following built-in events from [`ZeduxNode`](./ZeduxNode#events):
 
 <Legend>
   <Item name="change" suffix="event">
-    See the [node `change` event](/not-done?path=./ZeduxNode#change-event).
+    See the [node `change` event](./ZeduxNode#change-event).
   </Item>
   <Item name="cycle" suffix="event">
-    See the [node `cycle` event](/not-done?path=./ZeduxNode#cycle-event).
+    See the [node `cycle` event](./ZeduxNode#cycle-event).
   </Item>
 </Legend>
 
 ## Properties
 
-Signals inherit the following **readonly** properties from [`ZeduxNode`](/not-done?path=./ZeduxNode#properties):
+Signals inherit the following **readonly** properties from [`ZeduxNode`](./ZeduxNode#properties):
 
 <Legend>
-  <Item name="id">See [`ZeduxNode#id`](/not-done?path=./ZeduxNode#id).</Item>
+  <Item name="id">See [`ZeduxNode#id`](./ZeduxNode#id).</Item>
   <Item name="params">
-    See [`ZeduxNode#params`](/not-done?path=./ZeduxNode#params). This will
-    always be undefined - normal signals don't take params.
+    See [`ZeduxNode#params`](./ZeduxNode#params). This will always be undefined
+    - normal signals don't take params.
   </Item>
   <Item name="status">
-    See [`ZeduxNode#status`](/not-done?path=./ZeduxNode#status). This will never
-    be "Stale" - normal signals skip from Active to Destroyed.
+    See [`ZeduxNode#status`](./ZeduxNode#status). This will never be "Stale" -
+    normal signals skip from Active to Destroyed.
   </Item>
   <Item name="template">
-    See [`ZeduxNode#template`](/not-done?path=./ZeduxNode#template). This will
-    always be undefined - normal signals don't have templates.
+    See [`ZeduxNode#template`](./ZeduxNode#template). This will always be
+    undefined - normal signals don't have templates.
   </Item>
 </Legend>
 
@@ -453,24 +453,20 @@ signal.mutate(draft => {
   </Item>
 </Legend>
 
-Signals also inherit the following methods from [`ZeduxNode`](/not-done?path=./ZeduxNode#methods):
+Signals also inherit the following methods from [`ZeduxNode`](./ZeduxNode#methods):
 
 <Legend>
-  <Item name="destroy">
-    See [`ZeduxNode#destroy`](/not-done?path=./ZeduxNode#destroy).
-  </Item>
-  <Item name="get">See [`ZeduxNode#get`](/not-done?path=./ZeduxNode#get).</Item>
-  <Item name="getOnce">
-    See [`ZeduxNode#getOnce`](/not-done?path=./ZeduxNode#getonce).
-  </Item>
+  <Item name="destroy">See [`ZeduxNode#destroy`](./ZeduxNode#destroy).</Item>
+  <Item name="get">See [`ZeduxNode#get`](./ZeduxNode#get).</Item>
+  <Item name="getOnce">See [`ZeduxNode#getOnce`](./ZeduxNode#getonce).</Item>
   <Item name="on">
-    See [`ZeduxNode#on`](/not-done?path=./ZeduxNode#on) and the above
-    documentation for [signal events](#events).
+    See [`ZeduxNode#on`](./ZeduxNode#on) and the above documentation for [signal
+    events](#events).
   </Item>
 </Legend>
 
 ## See Also
 
 - [The `MappedSignal` class](/not-done?path=./MappedSignal)
-- [The `ZeduxNode` class](/not-done?path=./ZeduxNode)
+- [The `ZeduxNode` class](./ZeduxNode)
 - [The `AtomInstance` class](/not-done?path=./AtomInstance)
