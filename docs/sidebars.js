@@ -166,6 +166,11 @@ module.exports = {
           label: 'Classes',
           items: ['v2/api/classes/Signal'],
         },
+        {
+          type: 'category',
+          label: 'Injectors',
+          items: ['v2/api/injectors/injectSignal'],
+        },
       ],
     },
   },

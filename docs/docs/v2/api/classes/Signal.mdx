@@ -5,7 +5,7 @@ title: Signal
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-The object returned by [`injectSignal`](/not-done?path=../injectors/injectSignal). Signals are reactive state containers. Each signal holds a value and provides methods for accessing and updating that value. In Zedux, the term "signal" refers to an instance of this class.
+The object returned by [`injectSignal`](../injectors/injectSignal). Signals are reactive state containers. Each signal holds a value and provides methods for accessing and updating that value. In Zedux, the term "signal" refers to an instance of this class.
 
 Atoms themselves are signals. That simply means the [AtomInstance](/not-done?path=./AtomInstance) class extend this class. An atom can also contain many inner signals. When a signal is returned from an [atom state factory](/not-done?path=../factories/atom#valueorfactory), the atom becomes a thin wrapper around the returned signal.
 
@@ -29,7 +29,7 @@ const counterAtom = atom('counter', () => {
 })
 ```
 
-See [`injectSignal`](/not-done?path=../injectors/injectSignal).
+See [`injectSignal`](../injectors/injectSignal).
 
 ### `ecosystem.signal`
 
@@ -45,7 +45,7 @@ See [`Ecosystem#signal`](/not-done?path=./Ecosystem#signal)
 
 ## Destruction
 
-Signals are always destroyed when they have no more observers. When created via [`injectSignal`](/not-done?path=../injectors/injectSignal), this typically means the signal will be destroyed when the injecting atom is destroyed. When created via [`ecosystem.signal`](/not-done?path=./Ecosystem#signal), you must either manually add observers or destroy the signal when you're done with it.
+Signals are always destroyed when they have no more observers. When created via [`injectSignal`](../injectors/injectSignal), this typically means the signal will be destroyed when the injecting atom is destroyed. When created via [`ecosystem.signal`](/not-done?path=./Ecosystem#signal), you must either manually add observers or destroy the signal when you're done with it.
 
 ```ts
 const exampleAtom = atom('example', () => {
