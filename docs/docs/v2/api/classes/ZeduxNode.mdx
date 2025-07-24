@@ -165,7 +165,7 @@ Every node has the following **readonly** properties:
   <Item name="id">
     A string. The unique id of this node. Zedux always tries to make this somewhat human-readable for easier debugging.
 
-    For nodes that take params, the id is the combination of the node template's key and a deterministic stringification of the params. A node template's "key" can the string passed to the [`atom()`](/not-done?path=../factories/atom) factory for atoms or the selector function's name for selectors See [`ecosystem.hash()`](./Ecosystem#hash) or [`node.params`](#params) for more details on how params are stringified.
+    For nodes that take params, the id is the combination of the node template's key and a deterministic stringification of the params. A node template's "key" can the string passed to the [`atom()`](../factories/atom) factory for atoms or the selector function's name for selectors See [`ecosystem.hash()`](./Ecosystem#hash) or [`node.params`](#params) for more details on how params are stringified.
 
     ```ts
     ecosystem.getNode(atom('a', null)).id // 'a'

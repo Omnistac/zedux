@@ -19,13 +19,13 @@ export const AtomKeyDesc = () => (
   </>
 )
 
-The object returned from [the `atom()` factory](/not-done?path=../factories/atom). Instances of this class are passed to most of Zedux's hooks and injectors.
+The object returned from [the `atom()` factory](../factories/atom). Instances of this class are passed to most of Zedux's hooks and injectors.
 
 An atom template defines a skeleton that Zedux will use to create [atom instances](./AtomInstance) on demand.
 
 ## Creation
 
-Use [the `atom()` factory](/not-done?path=../factories/atom) to create atom templates:
+Use [the `atom()` factory](../factories/atom) to create atom templates:
 
 ```ts
 import { AtomTemplate, atom } from '@zedux/react'
@@ -60,13 +60,13 @@ When creating your own, custom atom types, you'll usually want to extend this cl
   <Item name="dehydrate">
     A function. Can be undefined.
 
-    A reference to the [`dehydrate` atom config option](/not-done?path=../types/AtomConfig#dehydrate) passed to [the `atom()` factory](/not-done?path=../factories/atom), if any.
+    A reference to the [`dehydrate` atom config option](/not-done?path=../types/AtomConfig#dehydrate) passed to [the `atom()` factory](../factories/atom), if any.
 
   </Item>
   <Item name="tags">
     An array of strings. Can be undefined.
 
-    A reference to the [`tags` atom config option](/not-done?path=../types/AtomConfig#tags) passed to [the `atom()` factory](/not-done?path=../factories/atom), if any.
+    A reference to the [`tags` atom config option](/not-done?path=../types/AtomConfig#tags) passed to [the `atom()` factory](../factories/atom), if any.
 
     If the ecosystem has [tags configured](./Ecosystem#tags), these tags will be checked against the ecosystem's to warn about unsafe atom templates being used in certain environments.
 
@@ -74,13 +74,13 @@ When creating your own, custom atom types, you'll usually want to extend this cl
   <Item name="hydrate">
     A function. Can be undefined.
 
-    A reference to the [`hydrate` atom config option](/not-done?path=../types/AtomConfig#hydrate) passed to [`atom()`](/not-done?path=../factories/atom), if any.
+    A reference to the [`hydrate` atom config option](/not-done?path=../types/AtomConfig#hydrate) passed to [`atom()`](../factories/atom), if any.
 
   </Item>
   <Item name="key">
     A string.
 
-    This is the key string passed as the first argument to [the `atom()` factory](/not-done?path=../factories/atom).
+    This is the key string passed as the first argument to [the `atom()` factory](../factories/atom).
 
     <AtomKeyDesc />
 
@@ -88,7 +88,7 @@ When creating your own, custom atom types, you'll usually want to extend this cl
   <Item name="ttl">
     A number. Can be undefined.
 
-    This is the [`ttl` atom config option](/not-done?path=../types/AtomConfig#ttl) passed to [the `atom()` factory](/not-done?path=../factories/atom), if any.
+    This is the [`ttl` atom config option](/not-done?path=../types/AtomConfig#ttl) passed to [the `atom()` factory](../factories/atom), if any.
 
     If not set, instances of this atom will live forever unless configured with [`.setTtl()`](/not-done?path=./AtomApi#setttl) on an AtomApi returned by the state factory.
 
@@ -140,7 +140,7 @@ When creating your own, custom atom types, you'll usually want to extend this cl
     override = (newValue) => newAtom
     ```
 
-    Accepts any of the same [value types](/not-done?path=../factories/atom#value) that [the `atom()` factory](/not-done?path=../factories/atom) accepts. The state, promise, and exports type of the new value should match the corresponding types in the overridden atom. TypeScript will enforce this.
+    Accepts any of the same [value types](../factories/atom#value) that [the `atom()` factory](../factories/atom) accepts. The state, promise, and exports type of the new value should match the corresponding types in the overridden atom. TypeScript will enforce this.
 
     Returns the new atom template. See the [overrides walkthrough](../../../walkthrough/overrides) for more details.
 
@@ -149,5 +149,5 @@ When creating your own, custom atom types, you'll usually want to extend this cl
 
 ## See Also
 
-- [`atom()`](/not-done?path=../factories/atom)
+- [`atom()`](../factories/atom)
 - [The Configuring Atoms walkthrough](../../../walkthrough/configuring-atoms)

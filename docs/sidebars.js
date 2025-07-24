@@ -177,6 +177,11 @@ module.exports = {
           label: 'Injectors',
           items: ['v2/api/injectors/injectSignal'],
         },
+        {
+          type: 'category',
+          label: 'Factories',
+          items: ['v2/api/factories/atom'],
+        },
         'v2/api/glossary',
       ],
     },
