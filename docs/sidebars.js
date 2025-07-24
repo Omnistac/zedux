@@ -185,17 +185,22 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Injectors',
-          items: ['v2/api/injectors/injectSignal'],
-        },
-        {
-          type: 'category',
           label: 'Factories',
           items: [
             'v2/api/factories/api',
             'v2/api/factories/atom',
             'v2/api/factories/ion',
           ],
+        },
+        {
+          type: 'category',
+          label: 'Hooks',
+          items: ['v2/api/hooks/useEcosystem'],
+        },
+        {
+          type: 'category',
+          label: 'Injectors',
+          items: ['v2/api/injectors/injectSignal'],
         },
         'v2/api/glossary',
       ],
