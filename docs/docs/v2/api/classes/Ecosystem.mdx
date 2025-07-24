@@ -28,7 +28,7 @@ import { createEcosystem } from '@zedux/react'
 const rootEcosystem = createEcosystem({ id: 'root' })
 ```
 
-Ecosystems are also created automatically when using an [`<EcosystemProvider>`](/not-done?path=../components/EcosystemProvider) without passing an `ecosystem` prop:
+Ecosystems are also created automatically when using an [`<EcosystemProvider>`](../components/EcosystemProvider) without passing an `ecosystem` prop:
 
 ```tsx
 import { EcosystemProvider } from '@zedux/react'
@@ -48,11 +48,11 @@ The [default ecosystem](../../../walkthrough/ecosystems#global) will be created 
 
 The default ecosystem is great for simple apps. It's a full ecosystem, which means you can use features like [overrides](#overrides) and [ecosystem events](#events). However, it comes preconfigured with no (good) way to set config options like [`ssr`](#ssr) and [`onReady`](#onready).
 
-It's generally recommended to create your own ecosystem(s) via [`createEcosystem()`](/not-done?path=../factories/createEcosystem) and provide them to your app via [`<EcosystemProvider>`](/not-done?path=../components/EcosystemProvider) instead of using the default ecosystem. This is especially needed for SSR.
+It's generally recommended to create your own ecosystem(s) via [`createEcosystem()`](/not-done?path=../factories/createEcosystem) and provide them to your app via [`<EcosystemProvider>`](../components/EcosystemProvider) instead of using the default ecosystem. This is especially needed for SSR.
 
 ## Providing
 
-Ecosystems can take control of all atom usages in a React component tree by wrapping the tree in [`<EcosystemProvider>`](/not-done?path=../components/EcosystemProvider).
+Ecosystems can take control of all atom usages in a React component tree by wrapping the tree in [`<EcosystemProvider>`](../components/EcosystemProvider).
 
 ```tsx
 function App() {
@@ -1109,6 +1109,6 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 - [the Plugins guide](../../../advanced/plugins)
 - [`getDefaultEcosystem()`](/not-done?path=../utils/getDefaultEcosystem)
 - [`setDefaultEcosystem()`](/not-done?path=../utils/setDefaultEcosystem)
-- [the `<EcosystemProvider>` component](/not-done?path=../components/EcosystemProvider)
+- [the `<EcosystemProvider>` component](../components/EcosystemProvider)
 - [the `useEcosystem` hook](/not-done?path=../hooks/useEcosystem)
 - [the `injectEcosystem` injector](/not-done?path=../injectors/injectEcosystem)

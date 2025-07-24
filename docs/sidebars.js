@@ -177,7 +177,10 @@ module.exports = {
         {
           type: 'category',
           label: 'Components',
-          items: ['v2/api/components/AtomProvider'],
+          items: [
+            'v2/api/components/AtomProvider',
+            'v2/api/components/EcosystemProvider',
+          ],
         },
         {
           type: 'category',
