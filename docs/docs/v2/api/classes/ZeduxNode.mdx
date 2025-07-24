@@ -6,7 +6,7 @@ title: ZeduxNode
 import useBaseUrl from '@docusaurus/useBaseUrl'
 import { Legend, Item, Link, Tabs, tab1, tab2 } from '@site/src/all'
 
-This is the base class for every [graph node](../glossary#graph-node). The [AtomInstance class](./AtomInstance), [SelectorInstance class](/not-done?path=./SelectorInstance), [Signal class](./Signal), and several other graph node types extend this class.
+This is the base class for every [graph node](../glossary#graph-node). The [AtomInstance class](./AtomInstance), [SelectorInstance class](./SelectorInstance.mdx), [Signal class](./Signal), and several other graph node types extend this class.
 
 You never create this class directly and should never need to reference it directly except as a type.
 
@@ -47,14 +47,13 @@ Full list of keys on the `NodeGenerics` (`G`) type generic:
   </Item>
   <Item name="G['Params']">
     A tuple type. The parameters of this node. Only exists on [atom
-    instances](./AtomInstance) and [selector
-    instances](/not-done?path=./SelectorInstance).
+    instances](./AtomInstance) and [selector instances](./SelectorInstance.mdx).
   </Item>
   <Item name="G['State']">The state type of this node. Can be anything.</Item>
   <Item name="G['Template']">
     A recursive reference to the current node's full template type. `undefined`
     if none. Only [atom instances](./AtomInstance) and [selector
-    instances](/not-done?path=./SelectorInstance) have templates.
+    instances](./SelectorInstance.mdx) have templates.
   </Item>
 </Legend>
 
@@ -179,7 +178,7 @@ Every node has the following **readonly** properties:
   <Item name="params">
     An array. The parameters passed to this node when it was created.
 
-    A reference to the raw, unserialized params that were used to create this atom instance. Only [atom instances](./AtomInstance) and [selector instances](/not-done?path=./SelectorInstance) take params. This will be `undefined` for node types that don't take params (like signals). For nodes that can take params but weren't passed any (like singleton atoms), this will be an empty array.
+    A reference to the raw, unserialized params that were used to create this atom instance. Only [atom instances](./AtomInstance) and [selector instances](./SelectorInstance.mdx) take params. This will be `undefined` for node types that don't take params (like signals). For nodes that can take params but weren't passed any (like singleton atoms), this will be an empty array.
 
     ```ts
     const instanceA = useAtomInstance(myAtom, ['param 1', 'param 2'])
@@ -241,7 +240,7 @@ function Shout() {
 
   </Item>
   <Item name="template">
-    A reference to the template this node was created from. `undefined` if none. Only [atom instances](./AtomInstance) and [selector instances](/not-done?path=./SelectorInstance) have templates.
+    A reference to the template this node was created from. `undefined` if none. Only [atom instances](./AtomInstance) and [selector instances](./SelectorInstance.mdx) have templates.
 
     For atom instances, this will be the [atom template](./AtomTemplate). For selector instances, this will be the [selector template](/not-done?path=../types/SelectorTemplate).
 
@@ -338,5 +337,5 @@ Every node has the following methods:
 
 - [`ecosystem.getNode()`](./Ecosystem#getnode)
 - [the `AtomInstance` class](./AtomInstance)
-- [the `SelectorInstance` class](/not-done?path=./SelectorInstance)
+- [the `SelectorInstance` class](./SelectorInstance.mdx)
 - [the `Signal` class](./Signal)
