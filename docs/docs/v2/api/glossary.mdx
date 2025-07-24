@@ -45,7 +45,7 @@ There are 3 basic types of injectors:
 
 Injectors should only be used at the top level of [atom state factories](#state-factory). Don't use them in loops or conditional statements.
 
-Injectors can be used any number of times throughout an atom state factory. For certain one-off operations like setting an atom instance's exports or setting a suspense promise, use an [AtomApi](/not-done?path=./classes/AtomApi).
+Injectors can be used any number of times throughout an atom state factory. For certain one-off operations like setting an atom instance's exports or setting a suspense promise, use an [AtomApi](./classes/AtomApi).
 
 Like hooks, you can create custom injectors that compose other injectors. The convention is to start all injectors with the word "inject", similar to the word "use" with React hooks.
 

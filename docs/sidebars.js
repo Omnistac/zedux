@@ -165,6 +165,7 @@ module.exports = {
           type: 'category',
           label: 'Classes',
           items: [
+            'v2/api/classes/AtomApi',
             'v2/api/classes/AtomInstance',
             'v2/api/classes/AtomTemplate',
             'v2/api/classes/Ecosystem',

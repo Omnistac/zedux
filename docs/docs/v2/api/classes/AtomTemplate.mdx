@@ -90,14 +90,14 @@ When creating your own, custom atom types, you'll usually want to extend this cl
 
     This is the [`ttl` atom config option](/not-done?path=../types/AtomConfig#ttl) passed to [the `atom()` factory](../factories/atom), if any.
 
-    If not set, instances of this atom will live forever unless configured with [`.setTtl()`](/not-done?path=./AtomApi#setttl) on an AtomApi returned by the state factory.
+    If not set, instances of this atom will live forever unless configured with [`.setTtl()`](./AtomApi#setttl) on an AtomApi returned by the state factory.
 
     - Set to <code>-1</code> to make this atom's instances live forever.
     - Set to <code>0</code> to destroy all instances of this atom as soon as they go stale.
     - Set to any positive integer to make atoms live in a stale state for{' '}
       <code>&lt;ttl&gt;</code> milliseconds before being cleaned up.
 
-    If set, this option will still be overridden by any `ttl` [set on an AtomApi](/not-done?path=./AtomApi#setttl) returned by the state factory.
+    If set, this option will still be overridden by any `ttl` [set on an AtomApi](./AtomApi#setttl) returned by the state factory.
 
   </Item>
 </Legend>

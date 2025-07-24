@@ -65,9 +65,9 @@ Configuring an atom's TTL (Time To Live) is the recommended way to manage its li
 You can configure this in two ways:
 
 - Setting the atom template's [`ttl` config](./AtomTemplate#ttl). This is suitable for most cases, but only accepts a number in milliseconds.
-- Returning an [atom api](/not-done?path=./AtomApi) from the atom's state factory that configures a TTL via [`.setTtl()`](/not-done?path=./AtomApi#setttl). This is much more powerful, accepting a number, promise, observable, or a function that returns a number, promise, or observable.
+- Returning an [atom api](./AtomApi) from the atom's state factory that configures a TTL via [`.setTtl()`](./AtomApi#setttl). This is much more powerful, accepting a number, promise, observable, or a function that returns a number, promise, or observable.
 
-  Setting TTL via returning a configured [atom api](/not-done?path=./AtomApi) overrides any TTL configured on the [atom template](./AtomTemplate#ttl). It also allows you to configure a different TTL for each instance of the atom.
+  Setting TTL via returning a configured [atom api](./AtomApi) overrides any TTL configured on the [atom template](./AtomTemplate#ttl). It also allows you to configure a different TTL for each instance of the atom.
 
 The sky's the limit. With TTL, you can destroy atoms on page route, on log out, when the cache reaches a certain size, or anything else you can think of.
 
@@ -126,7 +126,7 @@ For TypeScript users, atom instances have the following unique generics on their
     A Record type. The exports of the atom. Will be an empty record if the atom has no exports.
   </Item>
   <Item name="G['Promise']">
-    Extends `Promise<any>`. The promise type of this node. This will be inferred automatically when the atom's state factory returns an atom promise with a promise attached via [`api().setPromise()`](/not-done?path=./AtomApi#setpromise).
+    Extends `Promise<any>`. The promise type of this node. This will be inferred automatically when the atom's state factory returns an atom promise with a promise attached via [`api().setPromise()`](./AtomApi#setpromise).
   </Item>
 </Legend>
 
@@ -212,7 +212,7 @@ Atom instances have the following **readonly** properties:
 
 <Legend>
   <Item name="api">
-    A reference to the [AtomApi](/not-done?path=./AtomApi) returned from the atom instance's state factory on its last evaluation.
+    A reference to the [AtomApi](./AtomApi) returned from the atom instance's state factory on its last evaluation.
 
     Unlike [`exports`](#exports), this reference is not stable. It will change on every evaluation. Since atoms have no mechanism to notify observers when this changes, it's not recommended to use this directly. This is exposed for plugin authors and maybe some debugging cases.
 
@@ -220,7 +220,7 @@ Atom instances have the following **readonly** properties:
   <Item name="exports">
     An object. May be undefined, if nothing was exported.
 
-    The exports of the atom instance, as defined by the instance's returned [AtomApi](/not-done?path=./AtomApi). You can export absolutely anything.
+    The exports of the atom instance, as defined by the instance's returned [AtomApi](./AtomApi). You can export absolutely anything.
 
     This object is stable. It is set the first time an atom instance is created and will not change on subsequent evaluations.
 
@@ -251,7 +251,7 @@ Atom instances have the following **readonly** properties:
 
   </Item>
   <Item name="promise">
-    A promise. May be undefined if no promise was set on a returned [AtomApi](/not-done?path=./AtomApi).
+    A promise. May be undefined if no promise was set on a returned [AtomApi](./AtomApi).
 
     This promise will be used to cause React to suspend whenever this atom instance is used in a component until the promise completes. This promise reference will change if a subsequent evaluation returns a new promise.
 
@@ -260,7 +260,7 @@ Atom instances have the following **readonly** properties:
     The rejection value caught from the instance's [`.promise`](#promise). `undefined` if the promise did not reject.
   </Item>
   <Item name="promiseStatus">
-    A string or undefined. The status of the instance's [`.promise`](#promise). Will be `undefined` if the atom did not [set a promise](/not-done?path=./AtomApi#setpromise).
+    A string or undefined. The status of the instance's [`.promise`](#promise). Will be `undefined` if the atom did not [set a promise](./AtomApi#setpromise).
 
     Possible values:
 
@@ -345,4 +345,4 @@ Atom instances also inherit the following methods from [`ZeduxNode`](./ZeduxNode
 - [The `Signal` class](./Signal)
 - [The `ZeduxNode` class](./ZeduxNode)
 - [The `AtomTemplate` class](./AtomTemplate)
-- [The `AtomApi` class](/not-done?path=./AtomApi)
+- [The `AtomApi` class](./AtomApi)
