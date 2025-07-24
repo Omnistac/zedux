@@ -181,7 +181,7 @@ module.exports = {
         {
           type: 'category',
           label: 'Factories',
-          items: ['v2/api/factories/atom'],
+          items: ['v2/api/factories/api', 'v2/api/factories/atom'],
         },
         'v2/api/glossary',
       ],

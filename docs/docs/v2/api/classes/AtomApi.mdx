@@ -17,7 +17,7 @@ The properties don't _have_ to be stable; Zedux will just ignore the new referen
 
 ## Creation
 
-Create AtomApis with [the `api()` factory](/not-done?path=../factories/api).
+Create AtomApis with [the `api()` factory](../factories/api.mdx).
 
 ```ts
 import { api } from '@zedux/react'
@@ -149,13 +149,13 @@ Full list of keys on the `AtomApiGenerics` (`G`) type generic:
 
   </Item>
   <Item name="G['Signal']">
-    The full type of the signal passed to the [`api()`](/not-done?path=../factories/api) factory (if any). This has the signal's [`G['Events']`](./Signal#generics) and [`G['State']`](./Signal#generics) intact.
+    The full type of the signal passed to the [`api()`](../factories/api.mdx) factory (if any). This has the signal's [`G['Events']`](./Signal#generics) and [`G['State']`](./Signal#generics) intact.
 
   </Item>
   <Item name="G['State']">
     The type that will become the state of the atom instance, if this AtomApi is
     returned from a state factory. This type is inferred based on the value
-    passed to the [`api()`](/not-done?path=../factories/api) factory:
+    passed to the [`api()`](../factories/api.mdx) factory:
     
     - If a raw value is passed, this type will be inferred directly from it.
     
@@ -201,7 +201,7 @@ AtomApis expose the following **readonly** properties:
 
   </Item>
   <Item name="value">
-    A reference to the value passed to the [`api()` factory](/not-done?path=../factories/api) itself. Can be any raw value, a promise, or a [signal](./Signal) (including a [mapped signal](/not-done?path=./MappedSignal) or even another [atom instance](./AtomInstance.mdx)).
+    A reference to the value passed to the [`api()` factory](../factories/api.mdx) itself. Can be any raw value, a promise, or a [signal](./Signal) (including a [mapped signal](/not-done?path=./MappedSignal) or even another [atom instance](./AtomInstance.mdx)).
 
     If it's a signal and this AtomApi is returned from a state factory, the signal should be a stable reference that won't change on subsequent evaluations, e.g. by using [`injectSignal`](../injectors/injectSignal).
 
@@ -381,5 +381,5 @@ AtomApis expose the following **readonly** properties:
 ## See Also
 
 - [The Atom APIs walkthrough](../../../walkthrough/atom-apis)
-- [The `api()` factory](/not-done?path=../factories/api)
+- [The `api()` factory](../factories/api.mdx)
 - [The `AtomInstance` class](./AtomInstance)
