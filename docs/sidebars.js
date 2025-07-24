@@ -176,6 +176,11 @@ module.exports = {
         },
         {
           type: 'category',
+          label: 'Components',
+          items: ['v2/api/components/AtomProvider'],
+        },
+        {
+          type: 'category',
           label: 'Injectors',
           items: ['v2/api/injectors/injectSignal'],
         },
