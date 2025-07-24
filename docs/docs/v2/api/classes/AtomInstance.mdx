@@ -253,7 +253,7 @@ Atom instances have the following **readonly** properties:
 
   </Item>
   <Item name="promise">
-    A promise. May be undefined if no promise was set on a returned [AtomApi](./AtomApi).
+    A promise. This is set via [`.setPromise()`](./AtomApi.mdx#setpromise) on a returned [AtomApi](./AtomApi.mdx). Will be undefined if no promise was set.
 
     This promise will be used to cause React to suspend whenever this atom instance is used in a component until the promise completes. This promise reference will change if a subsequent evaluation returns a new promise.
 
@@ -262,7 +262,7 @@ Atom instances have the following **readonly** properties:
     The rejection value caught from the instance's [`.promise`](#promise). `undefined` if the promise did not reject.
   </Item>
   <Item name="promiseStatus">
-    A string or undefined. The status of the instance's [`.promise`](#promise). Will be `undefined` if the atom did not [set a promise](./AtomApi#setpromise).
+    A string or undefined. The status of the instance's [`.promise`](#promise). Will be `undefined` if the atom did not [set a promise](./AtomApi.mdx#setpromise).
 
     Possible values:
 
@@ -348,8 +348,11 @@ Atom instances also inherit the following methods from [`ZeduxNode`](./ZeduxNode
 
 ## See Also
 
-- [The Atom Instances walkthrough](../../../walkthrough/atom-instances)
-- [The `Signal` class](./Signal)
+- [The Atom Instances walkthrough](../../../walkthrough/atom-instances.mdx)
+- [The `Signal` class](./Signal.mdx)
 - [The `ZeduxNode` class](./ZeduxNode.mdx)
-- [The `AtomTemplate` class](./AtomTemplate)
-- [The `AtomApi` class](./AtomApi)
+- [The `AtomTemplate` class](./AtomTemplate.mdx)
+- [The `AtomApi` class](./AtomApi.mdx)
+- [The `useAtomInstance` hook](../hooks/useAtomInstance.mdx)
+- [The `injectAtomInstance` injector](/not-done?path=../injectors/injectAtomInstance.mdx)
+- [`ecosystem.getNode`](./Ecosystem.mdx#getnode)

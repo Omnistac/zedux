@@ -196,7 +196,11 @@ module.exports = {
         {
           type: 'category',
           label: 'Hooks',
-          items: ['v2/api/hooks/useAtomContext', 'v2/api/hooks/useEcosystem'],
+          items: [
+            'v2/api/hooks/useAtomContext',
+            'v2/api/hooks/useAtomInstance',
+            'v2/api/hooks/useEcosystem',
+          ],
         },
         {
           type: 'category',
