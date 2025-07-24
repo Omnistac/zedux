@@ -41,11 +41,11 @@ const counterSignal = myEcosystem.signal(0)
 
 Unlike `injectSignal`, `ecosystem.signal` can be used in loops and if statements. It's useful for creating dynamic lists of signals e.g. in response to state changes. The tradeoff is that you have to manage the signal's lifecycle manually.
 
-See [`Ecosystem#signal`](/not-done?path=./Ecosystem#signal)
+See [`Ecosystem#signal`](./Ecosystem#signal)
 
 ## Destruction
 
-Signals are always destroyed when they have no more observers. When created via [`injectSignal`](../injectors/injectSignal), this typically means the signal will be destroyed when the injecting atom is destroyed. When created via [`ecosystem.signal`](/not-done?path=./Ecosystem#signal), you must either manually add observers or destroy the signal when you're done with it.
+Signals are always destroyed when they have no more observers. When created via [`injectSignal`](../injectors/injectSignal), this typically means the signal will be destroyed when the injecting atom is destroyed. When created via [`ecosystem.signal`](./Ecosystem#signal), you must either manually add observers or destroy the signal when you're done with it.
 
 ```ts
 const exampleAtom = atom('example', () => {
