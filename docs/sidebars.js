@@ -177,6 +177,7 @@ module.exports = {
           label: 'Injectors',
           items: ['v2/api/injectors/injectSignal'],
         },
+        'v2/api/glossary',
       ],
     },
   },

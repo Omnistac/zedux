@@ -624,7 +624,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
     `get` is reactive by default. This behavior changes depending on when it's called:
 
-    - When called in a [reactive context](/not-done?path=../glossary#reactive-context) (e.g. while an atom or selector is evaluating), `get` registers a [dynamic graph dependency](/not-done?path=../glossary#dynamic-graph-dependency) between the currently-evaluating node and the retrieved node.
+    - When called in a [reactive context](../glossary#reactive-context) (e.g. while an atom or selector is evaluating), `get` registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) between the currently-evaluating node and the retrieved node.
     - When called outside evaluation (e.g. in an effect or callback), `get` doesn't register any graph dependencies.
 
     Note that [`node.get()`](./ZeduxNode#get) has this exact same behavior. In fact, `ecosystem.get(myAtom)` is almost a shorthand for `ecosystem.getNode(myAtom).get()`, with one key difference:
@@ -677,7 +677,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="getNode">
-    Gets a cached [graph node](/not-done?path=../glossary#graph-node), namely an [atom instance](./AtomInstance) or [selector instance](/not-done?path=./SelectorInstance). Creates and caches the node if it doesn't exist yet.
+    Gets a cached [graph node](../glossary#graph-node), namely an [atom instance](./AtomInstance) or [selector instance](/not-done?path=./SelectorInstance). Creates and caches the node if it doesn't exist yet.
 
     ```ts
     const { getNode } = myEcosystem // `getNode` can be destructured like this
@@ -698,7 +698,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
     `getNode` registers graph dependencies by default. This behavior changes depending on when it's called:
 
-    - When called in a [reactive context](/not-done?path=../glossary#reactive-context) (e.g. while an atom or selector is evaluating), `getNode` registers a [static graph dependency](/not-done?path=../glossary#static-graph-dependency) (unlike [`ecosystem.get`](#get), which registers dynamic dependencies) between the currently-evaluating node and the retrieved node.
+    - When called in a [reactive context](../glossary#reactive-context) (e.g. while an atom or selector is evaluating), `getNode` registers a [static graph dependency](../glossary#static-graph-dependency) (unlike [`ecosystem.get`](#get), which registers dynamic dependencies) between the currently-evaluating node and the retrieved node.
     - When called outside evaluation (e.g. in an effect or callback), `getNode` doesn't register any graph dependencies.
 
     #### Note on Caching
@@ -754,7 +754,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="getNodeOnce">
-    Returns a [graph node](/not-done?path=../glossary#graph-node). Functions exactly like [`ecosystem.getNode`](#getnode) except it never registers graph dependencies even when called in [reactive contexts](/not-done?path=../glossary#reactive-context).
+    Returns a [graph node](../glossary#graph-node). Functions exactly like [`ecosystem.getNode`](#getnode) except it never registers graph dependencies even when called in [reactive contexts](../glossary#reactive-context).
 
     Signature:
 
@@ -766,7 +766,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="getOnce">
-    Returns the current value of the resolved atom or selector node. Functions exactly like [`ecosystem.get`](#get) except it never registers graph dependencies even when called in [reactive contexts](/not-done?path=../glossary#reactive-context).
+    Returns the current value of the resolved atom or selector node. Functions exactly like [`ecosystem.get`](#get) except it never registers graph dependencies even when called in [reactive contexts](../glossary#reactive-context).
 
     Signature:
 
@@ -804,7 +804,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
       <Item name="params">
         Required. An array of anything.
 
-        If any item is a [graph node](/not-done?path=../glossary#graph-node), it will be serialized as the node's id.
+        If any item is a [graph node](../glossary#graph-node), it will be serialized as the node's id.
       </Item>
       <Item name="acceptComplexParams">
         Optional. A boolean. Defaults to the ecosystem's [`complexParams` config](#complexparams).
@@ -934,7 +934,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="reset">
-    Force destroys all [graph nodes](/not-done?path=../glossary#graph-node) in the ecosystem. Calls the cleanup function returned from the [onReady](/not-done?path=../types/EcosystemConfig#onready) function (if any), and calls `onReady` again to reinitialize the ecosystem.
+    Force destroys all [graph nodes](../glossary#graph-node) in the ecosystem. Calls the cleanup function returned from the [onReady](/not-done?path=../types/EcosystemConfig#onready) function (if any), and calls `onReady` again to reinitialize the ecosystem.
 
     Accepts several options to also clear cached hydrations, listeners, and overrides.
 
@@ -1071,7 +1071,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="withScope">
-    Runs a callback in a scoped context. This is the only way to create or retrieve [scoped atoms](/not-done?path=../glossary#scoped-atom) outside React components.
+    Runs a callback in a scoped context. This is the only way to create or retrieve [scoped atoms](../glossary#scoped-atom) outside React components.
     
     A "scope" is a JS Map mapping "contexts" to values. "Context" simultaneously means two completely different things:
 

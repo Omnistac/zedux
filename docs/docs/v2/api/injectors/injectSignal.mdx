@@ -5,9 +5,9 @@ title: injectSignal
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-An [injector](/not-done?path=../glossary#injector) that creates and returns a stable [`Signal`](../classes/Signal) instance. The reference will never change for the lifetime of the injecting atom.
+An [injector](../glossary#injector) that creates and returns a stable [`Signal`](../classes/Signal) instance. The reference will never change for the lifetime of the injecting atom.
 
-Registers a [dynamic graph dependency](/not-done?path=../glossary#dynamic-graph-dependency) on the injected signal. By default, every state change in the injected signal will trigger a reevaluation of the current atom.
+Registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the injected signal. By default, every state change in the injected signal will trigger a reevaluation of the current atom.
 
 Unless you register other dependencies, the injecting atom will typically be the only observer of the injected signal. That means the signal will be destroyed when the injecting atom is destroyed.
 
@@ -69,7 +69,7 @@ const passingGenerics = injectSignal<Message[], { message: Message }>([])
       <Item name="reactive">
         A boolean. Default: `true`.
 
-        Pass `false` to prevent the injecting atom from registering a [dynamic graph dependency](/not-done?path=../glossary#dynamic-graph-dependency) on the injected signal. The atom will still register a [static graph dependency](/not-done?path=../glossary#static-graph-dependency) on the injected signal.
+        Pass `false` to prevent the injecting atom from registering a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the injected signal. The atom will still register a [static graph dependency](../glossary#static-graph-dependency) on the injected signal.
       </Item>
     </Legend>
 
