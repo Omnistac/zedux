@@ -201,7 +201,10 @@ module.exports = {
         {
           type: 'category',
           label: 'Injectors',
-          items: ['v2/api/injectors/injectSignal'],
+          items: [
+            'v2/api/injectors/injectEcosystem',
+            'v2/api/injectors/injectSignal',
+          ],
         },
         'v2/api/glossary',
       ],

@@ -41,7 +41,7 @@ There are 3 basic types of injectors:
 
 - React-hook equivalents, like [`injectEffect`](/not-done?path=./injectors/injectEffect), [`injectMemo`](/not-done?path=./injectors/injectMemo), and [`injectRef`](/not-done?path=./injectors/injectRef).
 - Dependency injectors, like [`injectAtomValue`](/not-done?path=./injectors/injectAtomValue) and [`injectAtomInstance`](/not-done?path=./injectors/injectAtomInstance).
-- Utility or dev X injectors, such as [`injectEcosystem`](/not-done?path=./injectors/injectEcosystem) and [`injectWhy`](/not-done?path=./injectors/injectWhy).
+- Utility or dev X injectors, such as [`injectEcosystem`](./injectors/injectEcosystem.mdx) and [`injectWhy`](/not-done?path=./injectors/injectWhy).
 
 Injectors should only be used at the top level of [atom state factories](#state-factory). Don't use them in loops or conditional statements.
 
@@ -106,4 +106,4 @@ An [injector](#injector) whose use isn't restricted like normal injectors. An un
 
 You usually won't need to worry about this distinction. Just use them like normal injectors and you'll be fine.
 
-Examples of unrestricted injectors include [`injectEcosystem()`](/not-done?path=./injectors/injectEcosystem), [`injectSelf()`](/not-done?path=./injectors/injectSelf), and [`injectWhy()`](/not-done?path=./injectors/injectWhy).
+Examples of unrestricted injectors include [`injectEcosystem()`](./injectors/injectEcosystem.mdx), [`injectSelf()`](/not-done?path=./injectors/injectSelf), and [`injectWhy()`](/not-done?path=./injectors/injectWhy).
