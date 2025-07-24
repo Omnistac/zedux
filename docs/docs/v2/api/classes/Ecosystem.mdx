@@ -475,7 +475,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
     ```
 
     <Legend>
-      <Item name="overrides">Required. An array of [atom templates](/not-done?path=./AtomTemplate).</Item>
+      <Item name="overrides">Required. An array of [atom templates](./AtomTemplate).</Item>
     </Legend>
 
   </Item>
@@ -665,7 +665,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
     <Legend>
       <Item name="templateOrInstance">
-        Required. An [atom template](/not-done?path=./AtomTemplate), [selector template](/not-done?path=../types/SelectorTemplate), or atom instance.
+        Required. An [atom template](./AtomTemplate), [selector template](/not-done?path=../types/SelectorTemplate), or atom instance.
       </Item>
       <Item name="params">
         Optional (required if the template takes params). An array of the atom or selector's params. Only relevant when passing an atom or selector template.
@@ -740,7 +740,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
     <Legend>
       <Item name="templateOrInstance">
-        Required. An [atom template](/not-done?path=./AtomTemplate), [selector template](/not-done?path=../types/SelectorTemplate), or [atom instance](./AtomInstance).
+        Required. An [atom template](./AtomTemplate), [selector template](/not-done?path=../types/SelectorTemplate), or [atom instance](./AtomInstance).
 
         When an instance is passed, `getNode` registers a static graph dependency on that instance (when called during evaluation) and returns it as-is.
       </Item>
@@ -928,7 +928,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
     <Legend>
       <Item name="overrides">
-        Required. An array of [atom templates](/not-done?path=./AtomTemplate) and/or template key strings. If any haven't been set as overrides previously, they'll be ignored.
+        Required. An array of [atom templates](./AtomTemplate) and/or template key strings. If any haven't been set as overrides previously, they'll be ignored.
       </Item>
     </Legend>
 
@@ -1076,7 +1076,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
     A "scope" is a JS Map mapping "contexts" to values. "Context" simultaneously means two completely different things:
 
     - A function execution (this is what "scoped context" is referring to).
-    - A stable object reference dynamically associated with a value, e.g. a React context object or an [atom template](/not-done?path=./AtomTemplate).
+    - A stable object reference dynamically associated with a value, e.g. a React context object or an [atom template](./AtomTemplate).
 
     Scopes are recursive - nested `withScope` calls will recursively look for context values in inner -> outer scopes.
 
@@ -1088,7 +1088,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
     <Legend>
       <Item name="scope">
-        Required. A JS Map mapping context objects (e.g. React contexts or [atom templates](/not-done?path=./AtomTemplate)) to the provided values.
+        Required. A JS Map mapping context objects (e.g. React contexts or [atom templates](./AtomTemplate)) to the provided values.
       </Item>
       <Item name="callback">
         Required. The callback function to run in the scoped context. Any [`ecosystem.get`](#get) or [`ecosystem.getNode`](#getnode) calls in the callback will be able to create and retrieve scoped atoms that depend on the provided scope.

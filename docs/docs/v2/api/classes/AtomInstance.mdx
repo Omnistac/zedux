@@ -5,7 +5,7 @@ title: AtomInstance
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-All standard atoms (aka "atom instances") are actually instances of this class. When Zedux instantiates [atom templates](/not-done?path=./AtomTemplate) (and [ion templates](/not-done?path=./IonTemplate)), it's just creating instances of this class.
+All standard atoms (aka "atom instances") are actually instances of this class. When Zedux instantiates [atom templates](./AtomTemplate) (and [ion templates](/not-done?path=./IonTemplate)), it's just creating instances of this class.
 
 This class extends the [`Signal` class](./Signal) (yes, atoms _are_ signals) which in turn extends the [`ZeduxNode` class](./ZeduxNode) (all atoms/signals are graph nodes).
 
@@ -64,10 +64,10 @@ Configuring an atom's TTL (Time To Live) is the recommended way to manage its li
 
 You can configure this in two ways:
 
-- Setting the atom template's [`ttl` config](/not-done?path=./AtomTemplate#ttl). This is suitable for most cases, but only accepts a number in milliseconds.
+- Setting the atom template's [`ttl` config](./AtomTemplate#ttl). This is suitable for most cases, but only accepts a number in milliseconds.
 - Returning an [atom api](/not-done?path=./AtomApi) from the atom's state factory that configures a TTL via [`.setTtl()`](/not-done?path=./AtomApi#setttl). This is much more powerful, accepting a number, promise, observable, or a function that returns a number, promise, or observable.
 
-  Setting TTL via returning a configured [atom api](/not-done?path=./AtomApi) overrides any TTL configured on the [atom template](/not-done?path=./AtomTemplate#ttl). It also allows you to configure a different TTL for each instance of the atom.
+  Setting TTL via returning a configured [atom api](/not-done?path=./AtomApi) overrides any TTL configured on the [atom template](./AtomTemplate#ttl). It also allows you to configure a different TTL for each instance of the atom.
 
 The sky's the limit. With TTL, you can destroy atoms on page route, on log out, when the cache reaches a certain size, or anything else you can think of.
 
@@ -281,8 +281,7 @@ Atom instances also inherit the following properties from [`ZeduxNode`](./ZeduxN
   <Item name="status">See [`ZeduxNode#status`](./ZeduxNode#status).</Item>
   <Item name="template">
     See [`ZeduxNode#template`](./ZeduxNode#template). Will always be a reference
-    to the [atom template](/not-done?path=./AtomTemplate) this instance was
-    created from.
+    to the [atom template](./AtomTemplate) this instance was created from.
   </Item>
 </Legend>
 
@@ -345,5 +344,5 @@ Atom instances also inherit the following methods from [`ZeduxNode`](./ZeduxNode
 - [The Atom Instances walkthrough](/not-done?path=../../../walkthrough/atom-instances)
 - [The `Signal` class](./Signal)
 - [The `ZeduxNode` class](./ZeduxNode)
-- [The `AtomTemplate` class](/not-done?path=./AtomTemplate)
+- [The `AtomTemplate` class](./AtomTemplate)
 - [The `AtomApi` class](/not-done?path=./AtomApi)
