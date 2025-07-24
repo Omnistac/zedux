@@ -189,6 +189,7 @@ module.exports = {
           items: [
             'v2/api/factories/api',
             'v2/api/factories/atom',
+            'v2/api/factories/createEcosystem',
             'v2/api/factories/ion',
           ],
         },
