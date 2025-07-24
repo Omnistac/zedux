@@ -13,7 +13,17 @@ export interface EvaluationContext {
   /**
    * `n`ode - the node that's currently evaluating
    */
-  n?: ZeduxNode
+  n: ZeduxNode | undefined
+
+  /**
+   * `u`ntracked - whether an active evaluation is currently being circumvented
+   * by `untrack`. This is only true when `untrack` is called while a node is
+   * evaluating. When called outside evaluation, it remains false.
+   *
+   * We use this to defer `signal.set` calls while an instance is evaluating.
+   * This needs to happen even when an untracked callback is running.
+   */
+  u: boolean
 }
 
 /**
@@ -21,10 +31,13 @@ export interface EvaluationContext {
  * then restores the previous item when it finishes. This is much faster than
  * pushing/popping an array of stack items (see https://jsbench.me/epm08a9mds/1)
  *
- * This has to live in the module scope so `readInstance` can access it without
- * any ecosystem context. That's how injectors work.
+ * This has to live in the module scope so injectors can access it without any
+ * ecosystem context.
  */
-let evaluationContext: EvaluationContext = {}
+let evaluationContext: EvaluationContext = {
+  n: undefined,
+  u: false,
+}
 
 /**
  * In the current buffer, draw a new edge between the currently evaluating graph
@@ -183,12 +196,15 @@ export const startBufferWithEvent = (node: ZeduxNode) => {
  * from registering graph dependencies while the passed callback runs.
  */
 export const untrack = <T>(callback: () => T) => {
-  const { n } = evaluationContext
+  const { n, u } = evaluationContext
+
+  if (n) evaluationContext.u = true
   evaluationContext.n = undefined
 
   try {
     return callback()
   } finally {
     evaluationContext.n = n
+    evaluationContext.u = u
   }
 }

@@ -232,7 +232,9 @@ export class Signal<
     settable: Settable<G['State']>,
     events?: Partial<SendableEvents<G>>
   ) {
-    if (getEvaluationContext().n) {
+    const { n, u } = getEvaluationContext()
+
+    if (n || u) {
       this.e.syncScheduler.i(() => this.set(settable, events))
 
       return
