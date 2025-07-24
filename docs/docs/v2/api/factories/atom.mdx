@@ -195,7 +195,7 @@ function App() {
 
     - A raw value. Can be anything except a function. When the atom is instantiated, this value as-is will be its initial state.
 
-    - A state factory function that returns a raw value. That raw value can be anything (including a function). The returned value will be the atom instance's initial state.
+    - A [state factory](../glossary.mdx#state-factory) function that returns a raw value. That raw value can be anything (including a function). The returned value will be the atom instance's initial state.
 
     - A state factory function that returns a [signal](../classes/Signal). When the atom is instantiated, the new atom instance will become a thin wrapper around the returned signal, forwarding events and state changes between it and the atom's own observers.
 
@@ -214,6 +214,8 @@ function App() {
         The Atom API's promise will be set as the atom instance's `.promise`.
 
         Any [`ttl`](../classes/AtomApi#ttl) configured in the returned Atom API will control the atom instance's destruction timing.
+
+    When a state factory function is passed, any parameters defined on the function will become the [params](../classes/AtomInstance.mdx#params) of the atom.
 
   </Item>
   <Item name="config">

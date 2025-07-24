@@ -187,18 +187,18 @@ Every node has the following **readonly** properties:
     instanceB.params // ['a', 'b']
     ```
 
-    All params must be serializable (no functions or symbols)! This is because
-    Zedux converts the params to a stable string representation in order to
-    efficiently check for an existing atom instance with the "same" params.
+    All params must be serializable (no functions or symbols)! This is because Zedux converts the params to a stable string representation in order to efficiently check for an existing atom instance with the "same" params.
 
-    Sameness is determined by deep value comparison, not reference equality. Order matters!
+    Sameness is determined by deep value comparison, not reference equality. Order matters! This algorithm is almost exactly like [React Query's hashing algorithm](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys#query-keys-are-hashed-deterministically).
+
+    Note that circular object references are not supported.
 
     ```ts
     // These params are the "same" in Zedux's eyes:
     useAtomInstance(myAtom, ['a', { b: 'b', c: 'c' }])
     useAtomInstance(myAtom, ['a', { c: 'c', b: 'b' }])
 
-    // But these are different:
+    // But these are different (array item order matters):
     useAtomInstance(myAtom, ['a', 'b'])
     useAtomInstance(myAtom, ['b', 'a'])
     ```

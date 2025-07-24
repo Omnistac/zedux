@@ -5,9 +5,9 @@ title: AtomInstance
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-All standard atoms (aka "atom instances") are actually instances of this class. When Zedux instantiates [atom templates](./AtomTemplate) (and [ion templates](/not-done?path=./IonTemplate)), it's just creating instances of this class.
+All standard atoms (aka "atom instances") are actually instances of this class. When Zedux "instantiates" [atom templates](./AtomTemplate) (including those made via [the `ion()` factory](../factories/ion)), it's just creating instances of this class.
 
-This class extends the [`Signal` class](./Signal) (yes, atoms _are_ signals) which in turn extends the [`ZeduxNode` class](./ZeduxNode) (all atoms/signals are graph nodes).
+This class extends the [`Signal` class](./Signal) (yes, atoms _are_ signals) which in turn extends the [`ZeduxNode` class](./ZeduxNode.mdx) (all atoms/signals are graph nodes).
 
 ## Creation
 
@@ -56,7 +56,7 @@ const withParams = ecosystem.getNode(myParameterizedAtom, [
 
 ## Destruction
 
-Atom instances live forever by default. You can configure this with [ttl](#ttl). You can also destroy them manually via [`node.destroy()`](./ZeduxNode#destroy), or indirectly via an [ecosystem reset](./Ecosystem#reset).
+Atom instances live forever by default. You can configure this with [ttl](#ttl). You can also destroy them manually via [`node.destroy()`](./ZeduxNode.mdx#destroy), or indirectly via an [ecosystem reset](./Ecosystem#reset).
 
 ### TTL
 
@@ -72,7 +72,7 @@ You can configure this in two ways:
 The sky's the limit. With TTL, you can destroy atoms on page route, on log out, when the cache reaches a certain size, or anything else you can think of.
 
 :::tip
-Setting `ttl: 0` on an atom template is the most common as it prevents setting any timeouts. [Ions](/not-done?path=../factories/ion) have `ttl: 0` by default.
+Setting `ttl: 0` on an atom template is the most common as it prevents setting any timeouts. [Ions](../factories/ion) have `ttl: 0` by default.
 :::
 
 ## Signal Wrappers
@@ -119,7 +119,7 @@ There are many aspects of an atom instance's behavior you can change when extend
 
 ## Generics
 
-For TypeScript users, atom instances have the following unique generics on their [`NodeGenerics`](./ZeduxNode#generics) (`G`) type generic:
+For TypeScript users, atom instances have the following unique generics on their [`NodeGenerics`](./ZeduxNode.mdx#generics) (`G`) type generic:
 
 <Legend>
   <Item name="G['Exports']">
@@ -130,23 +130,23 @@ For TypeScript users, atom instances have the following unique generics on their
   </Item>
 </Legend>
 
-Atom instances also have the following generics inherited from [`ZeduxNode`](./ZeduxNode#generics):
+Atom instances also have the following generics inherited from [`ZeduxNode`](./ZeduxNode.mdx#generics):
 
 <Legend>
   <Item name="G['Events']">
-    See [`ZeduxNode<{ Events }>`](./ZeduxNode#gevents).
+    See [`ZeduxNode<{ Events }>`](./ZeduxNode.mdx#gevents).
   </Item>
   <Item name="G['Node']">
-    See [`ZeduxNode<{ Node }>`](./ZeduxNode#gnode).
+    See [`ZeduxNode<{ Node }>`](./ZeduxNode.mdx#gnode).
   </Item>
   <Item name="G['Params']">
-    See [`ZeduxNode<{ Params }>`](./ZeduxNode#gparams).
+    See [`ZeduxNode<{ Params }>`](./ZeduxNode.mdx#gparams).
   </Item>
   <Item name="G['State']">
-    See [`ZeduxNode<{ State }>`](./ZeduxNode#gstate).
+    See [`ZeduxNode<{ State }>`](./ZeduxNode.mdx#gstate).
   </Item>
   <Item name="G['Template']">
-    See [`ZeduxNode<{ Template }>`](./ZeduxNode#gtemplate).
+    See [`ZeduxNode<{ Template }>`](./ZeduxNode.mdx#gtemplate).
   </Item>
 </Legend>
 
@@ -195,14 +195,14 @@ Atom instances also inherit the following built-in events from [`Signal`](./Sign
   </Item>
 </Legend>
 
-Atom instances also inherit the following built-in events from [`ZeduxNode`](./ZeduxNode#events):
+Atom instances also inherit the following built-in events from [`ZeduxNode`](./ZeduxNode.mdx#events):
 
 <Legend>
   <Item name="change" suffix="event">
-    See the [node `change` event](./ZeduxNode#change-event).
+    See the [node `change` event](./ZeduxNode.mdx#change-event).
   </Item>
   <Item name="cycle" suffix="event">
-    See the [node `cycle` event](./ZeduxNode#cycle-event).
+    See the [node `cycle` event](./ZeduxNode.mdx#cycle-event).
   </Item>
 </Legend>
 
@@ -271,17 +271,18 @@ Atom instances have the following **readonly** properties:
   </Item>
 </Legend>
 
-Atom instances also inherit the following properties from [`ZeduxNode`](./ZeduxNode#properties):
+Atom instances also inherit the following properties from [`ZeduxNode`](./ZeduxNode.mdx#properties):
 
 <Legend>
-  <Item name="id">See [`ZeduxNode#id`](./ZeduxNode#id).</Item>
+  <Item name="id">See [`ZeduxNode#id`](./ZeduxNode.mdx#id).</Item>
   <Item name="params">
-    See [`ZeduxNode#params`](./ZeduxNode#params). Will always be an array.
+    See [`ZeduxNode#params`](./ZeduxNode.mdx#params). Will always be an array.
   </Item>
-  <Item name="status">See [`ZeduxNode#status`](./ZeduxNode#status).</Item>
+  <Item name="status">See [`ZeduxNode#status`](./ZeduxNode.mdx#status).</Item>
   <Item name="template">
-    See [`ZeduxNode#template`](./ZeduxNode#template). Will always be a reference
-    to the [atom template](./AtomTemplate) this instance was created from.
+    See [`ZeduxNode#template`](./ZeduxNode.mdx#template). Will always be a
+    reference to the [atom template](./AtomTemplate) this instance was created
+    from.
   </Item>
 </Legend>
 
@@ -330,19 +331,23 @@ Atom instances also inherit the following methods from [`Signal`](./Signal#metho
   </Item>
 </Legend>
 
-Atom instances also inherit the following methods from [`ZeduxNode`](./ZeduxNode#methods):
+Atom instances also inherit the following methods from [`ZeduxNode`](./ZeduxNode.mdx#methods):
 
 <Legend>
-  <Item name="destroy">See [`ZeduxNode.destroy`](./ZeduxNode#destroy).</Item>
-  <Item name="get">See [`ZeduxNode.get`](./ZeduxNode#get).</Item>
-  <Item name="getOnce">See [`ZeduxNode.getOnce`](./ZeduxNode#getonce).</Item>
-  <Item name="on">See [`ZeduxNode.on`](./ZeduxNode#on).</Item>
+  <Item name="destroy">
+    See [`ZeduxNode.destroy`](./ZeduxNode.mdx#destroy).
+  </Item>
+  <Item name="get">See [`ZeduxNode.get`](./ZeduxNode.mdx#get).</Item>
+  <Item name="getOnce">
+    See [`ZeduxNode.getOnce`](./ZeduxNode.mdx#getonce).
+  </Item>
+  <Item name="on">See [`ZeduxNode.on`](./ZeduxNode.mdx#on).</Item>
 </Legend>
 
 ## See Also
 
-- [The Atom Instances walkthrough](/not-done?path=../../../walkthrough/atom-instances)
+- [The Atom Instances walkthrough](../../../walkthrough/atom-instances)
 - [The `Signal` class](./Signal)
-- [The `ZeduxNode` class](./ZeduxNode)
+- [The `ZeduxNode` class](./ZeduxNode.mdx)
 - [The `AtomTemplate` class](./AtomTemplate)
 - [The `AtomApi` class](./AtomApi)

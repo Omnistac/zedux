@@ -780,19 +780,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
   <Item name="hash">
     Turns an array of anything into a predictable string.
 
-    This is how all Zedux APIs generate consistent, deterministic ids for atom and selector params. This algorithm is almost exactly like [React Query's hashing algorithm](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys#query-keys-are-hashed-deterministically).
-
-    Note that circular object references are not supported.
-
-    ```ts
-    // these generate the same hash:
-    ecosystem.hash(['todos', { status, page }])
-    ecosystem.hash(['todos', { page, status }])
-
-    // these generate different hashes (array item order matters):
-    ecosystem.hash(['todos', { status, page }])
-    ecosystem.hash([{ page, status }, 'todos'])
-    ```
+    This is how all Zedux APIs generate consistent, deterministic ids for atom and selector params. See [`ZeduxNode#params`](./ZeduxNode.mdx#params) for more details.
 
     Signature:
 
