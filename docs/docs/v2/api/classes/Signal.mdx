@@ -9,7 +9,7 @@ The object returned by [`injectSignal`](../injectors/injectSignal). Signals are 
 
 Atoms themselves are signals. That simply means the [AtomInstance](./AtomInstance) class extend this class. An atom can also contain many inner signals. When a signal is returned from an [atom state factory](../factories/atom#valueorfactory), the atom becomes a thin wrapper around the returned signal.
 
-[Mapped signals](/not-done?path=./MappedSignal) are also signals themselves.
+[Mapped signals](./MappedSignal.mdx) are also signals themselves.
 
 As of v2, signals have replaced stores as the primary state container.
 
@@ -467,6 +467,6 @@ Signals also inherit the following methods from [`ZeduxNode`](./ZeduxNode#method
 
 ## See Also
 
-- [The `MappedSignal` class](/not-done?path=./MappedSignal)
+- [The `MappedSignal` class](./MappedSignal.mdx)
 - [The `ZeduxNode` class](./ZeduxNode)
 - [The `AtomInstance` class](./AtomInstance)

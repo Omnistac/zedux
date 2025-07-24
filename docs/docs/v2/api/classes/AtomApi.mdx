@@ -201,7 +201,7 @@ AtomApis expose the following **readonly** properties:
 
   </Item>
   <Item name="value">
-    A reference to the value passed to the [`api()` factory](../factories/api.mdx) itself. Can be any raw value, a promise, or a [signal](./Signal) (including a [mapped signal](/not-done?path=./MappedSignal) or even another [atom instance](./AtomInstance.mdx)).
+    A reference to the value passed to the [`api()` factory](../factories/api.mdx) itself. Can be any raw value, a promise, or a [signal](./Signal) (including a [mapped signal](./MappedSignal.mdx) or even another [atom instance](./AtomInstance.mdx)).
 
     If it's a signal and this AtomApi is returned from a state factory, the signal should be a stable reference that won't change on subsequent evaluations, e.g. by using [`injectSignal`](../injectors/injectSignal).
 

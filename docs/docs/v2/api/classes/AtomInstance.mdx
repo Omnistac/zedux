@@ -83,6 +83,8 @@ Since atoms are signals, consumers never need to know if the atom is a signal wr
 
 This is a change from v1. In v1, all atoms had a `.store` property. This made atoms a bit heavier and less abstract - for example, there were subtle differences between `atom.store.setState` and `atom.setState`. In v2, you never need to worry about this. Just always call [`atom.set()`](#set) or [`atom.mutate()`](#mutate) directly.
 
+Functionally, this signal wrapping is very similar to how [mapped signals](./MappedSignal.mdx) work.
+
 ## Providing
 
 An atom instance can be provided over React context via [`<AtomProvider>`](../components/AtomProvider).
