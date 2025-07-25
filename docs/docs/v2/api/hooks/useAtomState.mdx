@@ -9,7 +9,7 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { useAtomState } from '@zedux/react'
 ```
 
-A React hook that creates a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on an [atom](../classes/AtomInstance.mdx), triggering component rerenders when the atom updates. This is exactly the same as [`useAtomValue`](/not-done?path=./useAtomValue.mdx), except it returns a `[state, setState]` tuple similar to React's [`useState` hook](https://react.dev/reference/react/useState).
+A React hook that creates a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on an [atom](../classes/AtomInstance.mdx), triggering component rerenders when the atom updates. This is exactly the same as [`useAtomValue`](./useAtomValue.mdx), except it returns a `[state, setState]` tuple similar to React's [`useState` hook](https://react.dev/reference/react/useState).
 
 Just like `useAtomValue`, `useAtomState` creates an atom instance if none exists for the given [atom template](../classes/AtomTemplate.mdx) (+ [params](../classes/AtomInstance.mdx#params) combo, if the atom takes params).
 
@@ -134,7 +134,7 @@ const [, { exports, only }] = useAtomState(myAtom)
 
 ## See Also
 
-- [The `useAtomValue` hook](/not-done?path=./useAtomValue.mdx)
+- [The `useAtomValue` hook](./useAtomValue.mdx)
 - [The `useAtomInstance` hook](./useAtomInstance.mdx)
 - [The `injectAtomState` injector](/not-done?path=../injectors/injectAtomState.mdx)
 - [The React Hooks walkthrough](/not-done?path=../../../walkthrough/react-hooks.mdx)
