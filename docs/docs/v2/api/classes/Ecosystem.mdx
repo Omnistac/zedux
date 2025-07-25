@@ -627,7 +627,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
     - When called in a [reactive context](../glossary#reactive-context) (e.g. while an atom or selector is evaluating), `get` registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) between the currently-evaluating node and the retrieved node.
     - When called outside evaluation (e.g. in an effect or callback), `get` doesn't register any graph dependencies.
 
-    Note that [`node.get()`](./ZeduxNode#get) has this exact same behavior. In fact, `ecosystem.get(myAtom)` is almost a shorthand for `ecosystem.getNode(myAtom).get()`, with one key difference:
+    Note that [`node.get()`](./ZeduxNode#get) has this exact same behavior. In fact, `ecosystem.get(myAtom)` is almost a shorthand for `ecosystem.getNode(myAtom).get()`, with one key difference. See next section:
 
     #### Note on Caching
 

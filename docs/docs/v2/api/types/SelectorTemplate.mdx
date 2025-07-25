@@ -69,7 +69,7 @@ An object that defines a selector plus some additional configuration:
 
     Return false to allow the selector to reevaluate. In this case, if the params create a different [hash](../classes/ZeduxNode.mdx#params), the selector will be reevaluated.
 
-    This config option is only respected by Zedux's React hooks and only runs after the selector has already evaluated once and is about to reevaluate. Its use is to prevent excess React rerenders from running the selector unnecessarily. This option is a noop when passing selectors to other Zedux APIs like [`ecosystem.get`](../classes/Ecosystem.mdx#get), [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode), or [`injectAtomValue`](/not-done?path=../injectors/injectAtomValue.mdx).
+    This config option is only respected by Zedux's React hooks and only runs after the selector has already evaluated once and is about to reevaluate. Its use is to prevent excess React rerenders from running the selector unnecessarily. This option is a noop when passing selectors to other Zedux APIs like [`ecosystem.get`](../classes/Ecosystem.mdx#get), [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode), or [`injectAtomValue`](../injectors/injectAtomValue.mdx).
 
   </Item>
   <Item name="name">

@@ -9,7 +9,7 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { injectAtomState } from '@zedux/react'
 ```
 
-An [injector](../glossary.mdx#injector) that retrieves the value of a cached [atom instance](../classes/AtomInstance.mdx) for a given [atom template](../classes/AtomTemplate.mdx). This is exactly like [`injectAtomValue`](/not-done?path=./injectAtomValue.mdx) except it returns a`[state, setState]` tuple similar to React's [`useState` hook](https://react.dev/reference/react/useState).
+An [injector](../glossary.mdx#injector) that retrieves the value of a cached [atom instance](../classes/AtomInstance.mdx) for a given [atom template](../classes/AtomTemplate.mdx). This is exactly like [`injectAtomValue`](./injectAtomValue.mdx) except it returns a`[state, setState]` tuple similar to React's [`useState` hook](https://react.dev/reference/react/useState).
 
 Registers a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on the retrieved atom instance. The injecting atom will reevaluate when the retrieved atom's state changes.
 
@@ -50,21 +50,22 @@ function App() {
 }
 ```
 
+## Signature
+
 <Tabs>
-  {tab1(`injectAtomState = (template, params?) => [state, setState]`)}
+  {tab1(`injectAtomState = (template, params?, config?) => [state, setState]`)}
   {tab2(`declare const injectAtomState: {
-  <A extends AnyAtomTemplate>(
-    template: A,
-    params: ParamsOf<A>
-  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
-
-  <A extends AnyAtomTemplate<{ Params: [] }>>(
-    template: A
-  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
-
-  <A extends AnyAtomTemplate>(
-    template: ParamlessTemplate<A>
-  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
+    <A extends AnyAtomTemplate<{
+        Node: AtomInstance;
+    }>>(template: A, params: ParamsOf<A>): StateHookTuple<StateOf<A>, ExportsOf<A>>;
+    <A extends AnyAtomTemplate<{
+        Node: AtomInstance;
+        Params: [];
+    }>>(template: A): StateHookTuple<StateOf<A>, ExportsOf<A>>;
+    <A extends AnyAtomTemplate<{
+        Node: AtomInstance;
+    }>>(template: ParamlessTemplate<A>): StateHookTuple<StateOf<A>, ExportsOf<A>>;
+    <I extends AtomInstance>(instance: I): StateHookTuple<StateOf<I>, ExportsOf<I>>;
 }`)}
 </Tabs>
 
@@ -106,6 +107,6 @@ function App() {
 
 ## See Also
 
-- [The `injectAtomValue` injector](/not-done?path=./injectAtomValue.mdx)
+- [The `injectAtomValue` injector](./injectAtomValue.mdx)
 - [The `injectAtomInstance` injector](./injectAtomInstance.mdx)
 - [The `useAtomState` hook](../hooks/useAtomState.mdx)

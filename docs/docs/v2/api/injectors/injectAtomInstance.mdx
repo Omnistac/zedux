@@ -13,7 +13,7 @@ An [injector](../glossary.mdx#injector) that returns a cached [atom instance](..
 
 `injectAtomInstance` registers a [static graph dependency](../glossary.mdx#static-graph-dependency) on the resolved atom instance, preventing it from being destroyed automatically.
 
-Unlike [`injectAtomValue`](/not-done?path=./injectAtomValue.mdx) or [`injectAtomState`](./injectAtomState.mdx), `injectAtomInstance` doesn't subscribe to state changes by default.
+Unlike [`injectAtomValue`](./injectAtomValue.mdx) or [`injectAtomState`](./injectAtomState.mdx), `injectAtomInstance` doesn't subscribe to state changes by default.
 
 This injector has an equivalent React hook: [`useAtomInstance`](../hooks/useAtomInstance.mdx).
 
@@ -22,9 +22,10 @@ While there's nothing wrong with using this injector if you prefer, it's more co
 
 ```ts
 const exampleAtom = ion('example', ({ getNode }) => {
-  // these two lines are exactly equivalent:
+  // all three of these are exactly equivalent:
   const instance = getNode(myAtom)
   const instance = injectAtomInstance(myAtom)
+  const instance = injectEcosystem().getNode(myAtom)
 })
 ```
 
@@ -94,7 +95,7 @@ There are a few ways to do this:
    })
    ```
 
-2. Pass the atom instance to a dynamic injector like [`injectAtomValue`](/not-done?path=./injectAtomValue.mdx) or [`injectAtomState`](./injectAtomState.mdx) or to [`ecosystem.get`](../classes/Ecosystem.mdx#get) after retrieving it from `injectAtomInstance`.
+2. Pass the atom instance to a dynamic injector like [`injectAtomValue`](./injectAtomValue.mdx) or [`injectAtomState`](./injectAtomState.mdx) or to [`ecosystem.get`](../classes/Ecosystem.mdx#get) after retrieving it from `injectAtomInstance`.
 
    ```tsx
    const exampleAtom = atom('example', () => {
@@ -179,7 +180,8 @@ There are a few ways to do this:
 
 ## See Also
 
+- [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode)
 - [The `AtomTemplate` class](../classes/AtomTemplate.mdx)
 - [The `AtomInstance` class](../classes/AtomInstance.mdx)
 - [The `injectAtomState` injector](./injectAtomState.mdx)
-- [The `injectAtomValue` injector](/not-done?path=./injectAtomValue.mdx)
+- [The `injectAtomValue` injector](./injectAtomValue.mdx)

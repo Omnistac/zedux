@@ -211,6 +211,7 @@ module.exports = {
           items: [
             'v2/api/injectors/injectAtomInstance',
             'v2/api/injectors/injectAtomState',
+            'v2/api/injectors/injectAtomValue',
             'v2/api/injectors/injectEcosystem',
             'v2/api/injectors/injectSignal',
           ],

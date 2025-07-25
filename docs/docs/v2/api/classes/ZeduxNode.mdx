@@ -203,7 +203,7 @@ Every node has the following **readonly** properties:
     useAtomInstance(myAtom, ['b', 'a'])
     ```
 
-    The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`instance.get()`](#get) or [`ecosystem.get(instance)`](./Ecosystem#get), [`injectAtomValue()`](/not-done?path=../injectors/injectAtomValue), or any other dynamic injector to register a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the passed atom instance.
+    The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`instance.get()`](#get) or [`ecosystem.get(instance)`](./Ecosystem#get), [`injectAtomValue()`](../injectors/injectAtomValue.mdx), or any other dynamic injector to register a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the passed atom instance.
 
 ```tsx live ecosystemId=AtomInstance-params resultVar=Shout version=2
 const normalAtom = atom(
