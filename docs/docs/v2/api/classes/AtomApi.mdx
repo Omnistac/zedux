@@ -179,7 +179,9 @@ AtomApis expose the following **readonly** properties:
 
     When an AtomApi is returned from a state factory, these will become the atom instance's [`.exports`](./AtomInstance#exports).
 
-    **New in v2:** These exports can change on subsequent evaluations - they no longer have to be stable references. Exports are not part of the atom's state, meaning they don't trigger updates in consumers when changed. However, Zedux works around this by wrapping exported functions. See [`addExports`](#addexports) and [`setExports`](#setexports) for more information.
+    **New in v2:** These exports can change on subsequent evaluations - they no longer have to be stable references. Exports are not part of the atom's state, meaning they don't trigger updates in consumers when changed. However, Zedux works around this by wrapping exported functions.
+
+    See [`addExports`](#addexports) and [`setExports`](#setexports) for more information on function wrapping.
 
   </Item>
   <Item name="promise">
