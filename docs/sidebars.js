@@ -209,6 +209,7 @@ module.exports = {
           type: 'category',
           label: 'Injectors',
           items: [
+            'v2/api/injectors/injectAtomInstance',
             'v2/api/injectors/injectEcosystem',
             'v2/api/injectors/injectSignal',
           ],
