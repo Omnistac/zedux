@@ -242,7 +242,7 @@ function Shout() {
   <Item name="template">
     A reference to the template this node was created from. `undefined` if none. Only [atom instances](./AtomInstance) and [selector instances](./SelectorInstance.mdx) have templates.
 
-    For atom instances, this will be the [atom template](./AtomTemplate). For selector instances, this will be the [selector template](/not-done?path=../types/SelectorTemplate).
+    For atom instances, this will be the [atom template](./AtomTemplate). For selector instances, this will be the [selector template](../types/SelectorTemplate.mdx).
 
   </Item>
 </Legend>
@@ -267,7 +267,7 @@ Every node has the following methods:
       </Item>
     </Legend>
 
-    See the [destruction walkthrough](/not-done?path=../../../walkthrough/destruction) for more information.
+    See the [destruction walkthrough](../../../walkthrough/destruction.mdx) for more information.
 
   </Item>
   <Item name="get">
@@ -323,7 +323,7 @@ Every node has the following methods:
             Active listeners each create their own graph node that observes the target node. They prevent automatic node cleanup and will recreate the target node if it's force-destroyed.
 
             :::tip
-            As of Zedux v2, active listeners are the key to [manual graphing](/not-done?path=../../../walkthrough/destruction#manual-graphing).
+            As of Zedux v2, active listeners are the key to [manual graphing](../../../walkthrough/destruction.mdx#manual-graphing).
             :::
           </Item>
         </Legend>

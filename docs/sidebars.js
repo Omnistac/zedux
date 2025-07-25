@@ -211,6 +211,11 @@ module.exports = {
             'v2/api/injectors/injectSignal',
           ],
         },
+        {
+          type: 'category',
+          label: 'Types',
+          items: ['v2/api/types/SelectorTemplate'],
+        },
         'v2/api/glossary',
       ],
     },

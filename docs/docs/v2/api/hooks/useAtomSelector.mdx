@@ -13,7 +13,7 @@ As of v2, this hook is deprecated. Use [`useAtomValue`](/not-done?path=./useAtom
 import { useAtomSelector } from '@zedux/react'
 ```
 
-A React hook that retrieves a cached [atom selector](/not-done?path=../types/SelectorTemplate.mdx) value. If the selector is not cached yet, `useAtomSelector` caches it by creating a new [selector instance](../classes/SelectorInstance.mdx) and returns the value.
+A React hook that retrieves a cached [atom selector](../types/SelectorTemplate.mdx) value. If the selector is not cached yet, `useAtomSelector` caches it by creating a new [selector instance](../classes/SelectorInstance.mdx) and returns the value.
 
 If the selector takes params, TypeScript will enforce that those are passed correctly.
 
@@ -49,9 +49,9 @@ function Count() {
 
 <Legend>
   <Item name="template">
-    Required. Either a [selector function](/not-done?path=../types/SelectorTemplate.mdx#atomselector) or an [atom selector config object](/not-done?path=../types/SelectorTemplate.mdx#atomselectorconfig).
+    Required. Either a [selector function](../types/SelectorTemplate.mdx#atomselector) or an [atom selector config object](../types/SelectorTemplate.mdx#atomselectorconfig).
 
-    See [the `SelectorTemplate` type](/not-done?path=../types/SelectorTemplate.mdx) for more details.
+    See [the `SelectorTemplate` type](../types/SelectorTemplate.mdx) for more details.
 
   </Item>
   <Item name="params">
@@ -61,7 +61,7 @@ function Count() {
 
   </Item>
   <Item name="Returns">
-    The cached value of the resolved [selector instance](../classes/SelectorInstance.mdx) for the passed [selector template](/not-done?path=../types/SelectorTemplate.mdx) + [params](../classes/SelectorInstance.mdx#params) combo.
+    The cached value of the resolved [selector instance](../classes/SelectorInstance.mdx) for the passed [selector template](../types/SelectorTemplate.mdx) + [params](../classes/SelectorInstance.mdx#params) combo.
   </Item> 
 </Legend>
 
