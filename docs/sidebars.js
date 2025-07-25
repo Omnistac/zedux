@@ -200,6 +200,7 @@ module.exports = {
             'v2/api/hooks/useAtomContext',
             'v2/api/hooks/useAtomInstance',
             'v2/api/hooks/useAtomSelector',
+            'v2/api/hooks/useAtomState',
             'v2/api/hooks/useEcosystem',
           ],
         },

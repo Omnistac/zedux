@@ -13,7 +13,7 @@ A React hook that retrieves a cached [atom instance](../classes/AtomInstance.mdx
 
 If the atom template takes [params](../classes/AtomInstance.mdx#params), `useAtomInstance` will [deterministically hash](../classes/ZeduxNode.mdx#params) the params you pass to find a cached atom with matching params. If no instance exists for the passed template + params combo, `useAtomInstance` will create a new atom instance and cache it.
 
-Unlike [`useAtomValue`](/not-done?path=./useAtomValue.mdx) and [`useAtomState`](/not-done?path=./useAtomState.mdx), `useAtomInstance` creates a [static graph dependency](../glossary.mdx#static-graph-dependency) that does not subscribe to state changes in the retrieved atom. This means the component will not re-render when the atom's state changes.
+Unlike [`useAtomValue`](/not-done?path=./useAtomValue.mdx) and [`useAtomState`](./useAtomState.mdx), `useAtomInstance` creates a [static graph dependency](../glossary.mdx#static-graph-dependency) that does not subscribe to state changes in the retrieved atom. This means the component will not re-render when the atom's state changes.
 
 Some primary uses for this hook are when:
 
@@ -73,31 +73,31 @@ Sometimes, you need both a reference to the atom instance _and_ you want the cur
 
 There are a few ways to do this:
 
-1. Pass the atom instance directly to a dynamic hook like [`useAtomValue`](/not-done?path=./useAtomValue.mdx) or [`useAtomState`](/not-done?path=./useAtomState.mdx).
+1. Pass the atom instance to a dynamic hook like [`useAtomValue`](/not-done?path=./useAtomValue.mdx) or [`useAtomState`](./useAtomState.mdx) after retrieving it from `useAtomInstance`.
 
-```tsx
-function ExampleComponent() {
-  const instance = useAtomInstance(exampleAtom)
+   ```tsx
+   function ExampleComponent() {
+     const instance = useAtomInstance(exampleAtom)
 
-  // pass the instance directly to `useAtomValue` to subscribe to updates:
-  const dynamicValue = useAtomValue(instance)
-}
-```
+     // pass the instance directly to `useAtomValue` to subscribe to updates:
+     const dynamicValue = useAtomValue(instance)
+   }
+   ```
 
 2. Pass `{ subscribe: true }` as the third argument to `useAtomInstance`.
 
-```tsx
-function ExampleComponent() {
-  // pass `[]` if the atom doesn't take params:
-  const instance = useAtomInstance(exampleAtom, [], { subscribe: true })
+   ```tsx
+   function ExampleComponent() {
+     // pass `[]` if the atom doesn't take params:
+     const instance = useAtomInstance(exampleAtom, [], { subscribe: true })
 
-  // This is okay now! The component will rerender when the atom's state changes
-  const dynamicValue = instance.get()
-}
-```
+     // This is okay now! The component will rerender when the atom's state changes
+     const dynamicValue = instance.get()
+   }
+   ```
 
 :::tip
-[`useAtomState`](/not-done?path=./useAtomState.mdx) is often good enough when you don't need a reference to the full atom instance.
+[`useAtomState`](./useAtomState.mdx) is often good enough when you don't need a reference to the full atom instance.
 :::
 
 ## Signature
@@ -161,7 +161,7 @@ function ExampleComponent() {
 ## See Also
 
 - [The `AtomInstance` class](../classes/AtomInstance.mdx)
-- [The `useAtomState` hook](/not-done?path=./useAtomState.mdx)
+- [The `useAtomState` hook](./useAtomState.mdx)
 - [The `useAtomValue` hook](/not-done?path=./useAtomValue.mdx)
 - [The `injectAtomInstance` injector](/not-done?path=../injectors/injectAtomInstance.mdx)
 - [The React Hooks walkthrough](/not-done?path=/../../walkthrough/react-hooks.mdx)

@@ -1,0 +1,140 @@
+---
+id: useAtomState
+title: useAtomState
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { useAtomState } from '@zedux/react'
+```
+
+A React hook that creates a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on an [atom](../classes/AtomInstance.mdx), triggering component rerenders when the atom updates. This is exactly the same as [`useAtomValue`](/not-done?path=./useAtomValue.mdx), except it returns a `[state, setState]` tuple similar to React's [`useState` hook](https://react.dev/reference/react/useState).
+
+Just like `useAtomValue`, `useAtomState` creates an atom instance if none exists for the given [atom template](../classes/AtomTemplate.mdx) (+ [params](../classes/AtomInstance.mdx#params) combo, if the atom takes params).
+
+## Examples
+
+`useAtomState` is the simplest way to consume zero-config atoms:
+
+```tsx live ecosystemId=useAtomState/example resultVar=Counter version=2
+const countAtom = atom('count', 0)
+
+function Counter() {
+  const [count, setCount] = useAtomState(countAtom)
+
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <button onClick={() => setCount(state => state - 1)}>-</button>
+      <button onClick={() => setCount(state => state + 1)}>+</button>
+      <button onClick={() => setCount(0)}>Reset</button>
+    </div>
+  )
+}
+```
+
+More sophisticated atoms can have [atom exports](../classes/AtomInstance.mdx#exports). These exports can be destructured directly off the `setState` function returned by `useAtomState`:
+
+```tsx live ecosystemId=useAtomState/exports resultVar=Counter version=2
+const counterAtom = atom('counter', () => {
+  const signal = injectSignal(0)
+
+  const decrement = () => signal.set(state => state - 1)
+  const increment = () => signal.set(state => state + 1)
+  const reset = () => signal.set(0)
+
+  return api(signal).setExports({ decrement, increment, reset })
+})
+
+function Counter() {
+  // destructure the exports!
+  const [count, { decrement, increment, reset }] = useAtomState(counterAtom)
+
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <button onClick={decrement}>-</button>
+      <button onClick={increment}>+</button>
+      <button onClick={reset}>Reset</button>
+    </div>
+  )
+}
+```
+
+Miscellaneous:
+
+```ts
+const [state, setState] = useAtomState(myAtom)
+const withParams = useAtomState(myAtom, ['param 1', 'param 2'])
+const fromInstance = useAtomState(myAtomInstance)
+const [, setterOnly] = useAtomState(myAtom)
+const [, { exports, only }] = useAtomState(myAtom)
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`useAtomState = (template, params?, config?) => [state, setState]`)}
+  {tab2(`declare const useAtomState: {
+    <A extends AnyAtomTemplate<{
+        Node: AtomInstance;
+    }>>(template: A, params: ParamsOf<A>, config: Omit<ZeduxHookConfig, 'subscribe' | 'suspend'> & {
+        suspend: false;
+    }): StateHookTuple<StateOf<A>, ExportsOf<A>>;
+    <A extends AnyAtomTemplate<{
+        Node: AtomInstance;
+    }>>(template: A, params: ParamsOf<A>, config?: Omit<ZeduxHookConfig, 'subscribe'>): StateHookTuple<ResolvedStateOf<A>, ExportsOf<A>>;
+    <A extends AnyAtomTemplate<{
+        Node: AtomInstance;
+        Params: [];
+    }>>(template: A): StateHookTuple<ResolvedStateOf<A>, ExportsOf<A>>;
+    <A extends AnyAtomTemplate<{
+        Node: AtomInstance;
+    }>>(template: ParamlessTemplate<A>): StateHookTuple<ResolvedStateOf<A>, ExportsOf<A>>;
+    <I extends AtomInstance>(instance: I, params: [], config: Omit<ZeduxHookConfig, 'subscribe' | 'suspend'> & {
+        suspend: false;
+    }): StateHookTuple<StateOf<I>, ExportsOf<I>>;
+    <I extends AtomInstance>(instance: I, params?: [], config?: Omit<ZeduxHookConfig, 'subscribe'>): StateHookTuple<ResolvedStateOf<I>, ExportsOf<I>>;
+}`)}
+</Tabs>
+
+<Legend>
+  <Item name="template">
+    Required. The [atom template](../classes/AtomTemplate.mdx) to find or create a cached [instance](../classes/AtomInstance.mdx) of.
+
+    Also accepts an [atom instance](../classes/AtomInstance.mdx) directly. In this case, any passed [`params`](#params) will be ignored and `useAtomState` will subscribe to the passed instance.
+
+  </Item>
+  <Item name="params">
+    An array. Required if the atom template has required parameters. The parameters to pass to the atom state factory.
+
+    These will be [hashed deterministically](../classes/ZeduxNode.mdx#params) to find a cached instance with matching params.
+
+  </Item>
+  <Item name="config">
+    An object with the following optional fields:
+
+    ```ts
+    { operation?, suspend? }
+    ```
+
+    - **`operation`** - A string. Default: `'useAtomState'`. This is just for debugging. The default is usually good enough.
+    - **`suspend`** - A boolean. Default: `true`. Whether `useAtomState` should trigger React suspense if the atom has a [promise](../classes/AtomInstance.mdx#promise) set.
+
+  </Item>
+  <Item name="Returns">
+    A `[state, setState]` tuple:
+    
+    - **`state`** - The current state of the atom instance. This will be kept up to date, as the component will rerender if the atom's state changes.
+    - **`setState`** - An "exports-infused" setter function that's a thin wrapper around [`atom.set`](../classes/AtomInstance.mdx#set). This function has all the atom's exports attached to the function object itself.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `useAtomValue` hook](/not-done?path=./useAtomValue.mdx)
+- [The `useAtomInstance` hook](./useAtomInstance.mdx)
+- [The `injectAtomState` injector](/not-done?path=../injectors/injectAtomState.mdx)
+- [The React Hooks walkthrough](/not-done?path=../../../walkthrough/react-hooks.mdx)

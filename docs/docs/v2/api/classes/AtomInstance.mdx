@@ -255,7 +255,9 @@ Atom instances have the following **readonly** properties:
   <Item name="promise">
     A promise. This is set via [`.setPromise()`](./AtomApi.mdx#setpromise) on a returned [AtomApi](./AtomApi.mdx). Will be undefined if no promise was set.
 
-    This promise will be used to cause React to suspend whenever this atom instance is used in a component until the promise completes. This promise reference will change if a subsequent evaluation returns a new promise.
+    This promise will be used to cause React to suspend whenever this atom instance is used in a component until the promise completes.
+
+    This promise reference will change if a subsequent evaluation returns a new promise. When it changes, all observers of this atom will reevaluate (including [static dependents](../glossary.mdx#static-graph-dependency)) and components will re-suspend.
 
   </Item>
   <Item name="promiseError">
