@@ -17,7 +17,7 @@ Unlike [`useAtomValue`](/not-done?path=./useAtomValue.mdx) and [`useAtomState`](
 
 Some primary uses for this hook are when:
 
-- you only need to acces the atom to update its state, e.g. via [`.set`](../classes/AtomInstance.mdx#set), [`.mutate`](../classes/AtomInstance.mdx#mutate), or by using any custom [`.exports`](../classes/AtomInstance.mdx#exports).
+- you only need to access the atom to update its state, e.g. via [`.set`](../classes/AtomInstance.mdx#set), [`.mutate`](../classes/AtomInstance.mdx#mutate), or by using any custom [`.exports`](../classes/AtomInstance.mdx#exports).
 - you need to provide an atom to a component subtree via [`<AtomProvider>`](../components/AtomProvider.mdx).
 
 This hook has an equivalent injector: [`injectAtomInstance`](/not-done?path=../injectors/injectAtomInstance.mdx), though it's more common to use [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode) to create/retrieve atom instances inside other atoms.
@@ -153,7 +153,7 @@ function ExampleComponent() {
 
   </Item>
   <Item name="Returns">
-    The [atom instance](../classes/AtomInstance.mdx) object.
+    The resolved [atom instance](../classes/AtomInstance.mdx) for the passed template + params combo.
 
   </Item>
 </Legend>
