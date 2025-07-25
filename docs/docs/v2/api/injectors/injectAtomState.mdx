@@ -1,0 +1,111 @@
+---
+id: injectAtomState
+title: injectAtomState
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectAtomState } from '@zedux/react'
+```
+
+An [injector](../glossary.mdx#injector) that retrieves the value of a cached [atom instance](../classes/AtomInstance.mdx) for a given [atom template](../classes/AtomTemplate.mdx). This is exactly like [`injectAtomValue`](/not-done?path=./injectAtomValue.mdx) except it returns a`[state, setState]` tuple similar to React's [`useState` hook](https://react.dev/reference/react/useState).
+
+Registers a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on the retrieved atom instance. The injecting atom will reevaluate when the retrieved atom's state changes.
+
+Creates a new atom instance for the given template (+ params combo if the atom takes [params](../classes/AtomInstance.mdx#params)) if none exists yet.
+
+This injector has an equivalent React hook: [`useAtomState`](../hooks/useAtomState.mdx).
+
+## Example
+
+```tsx live ecosystemId=injectAtomState/example resultVar=App version=2
+const countAtom = atom('count', 0)
+
+const doubleCountAtom = atom('doubleCount', () => {
+  const [count, setCount] = injectAtomState(countAtom)
+
+  const decrement = () => setCount(state => state - 1)
+  const increment = () => setCount(state => state + 1)
+  const reset = () => setCount(0)
+
+  return api(count * 2).setExports({ decrement, increment, reset })
+})
+
+function App() {
+  const count = useAtomValue(countAtom)
+
+  const [doubleCount, { decrement, increment, reset }] =
+    useAtomState(doubleCountAtom)
+
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <div>Double Count: {doubleCount}</div>
+      <button onClick={decrement}>-</button>
+      <button onClick={increment}>+</button>
+      <button onClick={reset}>Reset</button>
+    </div>
+  )
+}
+```
+
+<Tabs>
+  {tab1(`injectAtomState = (template, params?) => [state, setState]`)}
+  {tab2(`declare const injectAtomState: {
+  <A extends AnyAtomTemplate>(
+    template: A,
+    params: ParamsOf<A>
+  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
+
+  <A extends AnyAtomTemplate<{ Params: [] }>>(
+    template: A
+  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
+
+  <A extends AnyAtomTemplate>(
+    template: ParamlessTemplate<A>
+  ): StateHookTuple<StateOf<A>, ExportsOf<A>>
+}`)}
+</Tabs>
+
+<Legend>
+  <Item name="template">
+    Required. The [atom template](../classes/AtomTemplate.mdx) to find or create a cached [instance](../classes/AtomInstance.mdx) of.
+
+    Also accepts an [atom instance](../classes/AtomInstance.mdx) directly. In this case, any passed [`params`](#params) will be ignored and `injectAtomState` will subscribe to the passed instance.
+
+  </Item>
+  <Item name="params">
+    An array of the atom's [params](../classes/AtomInstance.mdx#params).
+    
+    TypeScript users will see that this is required if the atom has required params.
+
+  </Item>
+  <Item name="config">
+    An object with the following optional property:
+
+    ```ts
+    { operation }
+    ```
+
+    <Legend>
+      <Item name="operation">
+        A string. Default: `'injectAtomState'`. Used for debugging to describe the reason for creating this graph edge. This default is usually fine.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="Returns">
+    A `[state, setState]` tuple:
+    
+    - **`state`** - The current state of the atom instance. This will be kept up to date, as the injecting atom will reevaluate if the injected atom's state changes.
+    - **`setState`** - An "exports-infused" setter function that's a thin wrapper around [`atom.set`](../classes/AtomInstance.mdx#set). This function has all the atom's exports attached to the function object itself.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `injectAtomValue` injector](/not-done?path=./injectAtomValue.mdx)
+- [The `injectAtomInstance` injector](./injectAtomInstance.mdx)
+- [The `useAtomState` hook](../hooks/useAtomState.mdx)

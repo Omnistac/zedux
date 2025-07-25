@@ -13,9 +13,9 @@ An [injector](../glossary.mdx#injector) that returns a cached [atom instance](..
 
 `injectAtomInstance` registers a [static graph dependency](../glossary.mdx#static-graph-dependency) on the resolved atom instance, preventing it from being destroyed automatically.
 
-Unlike [`injectAtomValue`](/not-done?path=./injectAtomValue.mdx) or [`injectAtomState`](/not-done?path=./injectAtomState.mdx), `injectAtomInstance` doesn't subscribe to state changes by default.
+Unlike [`injectAtomValue`](/not-done?path=./injectAtomValue.mdx) or [`injectAtomState`](./injectAtomState.mdx), `injectAtomInstance` doesn't subscribe to state changes by default.
 
-This injector has an equivalent hook: [`useAtomInstance`](../hooks/useAtomInstance.mdx).
+This injector has an equivalent React hook: [`useAtomInstance`](../hooks/useAtomInstance.mdx).
 
 :::tip
 While there's nothing wrong with using this injector if you prefer, it's more common to use [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode) to create/retrieve atom instances inside other atoms, especially in [ions](../factories/ion.mdx) where the ecosystem is automatically in scope.
@@ -94,7 +94,7 @@ There are a few ways to do this:
    })
    ```
 
-2. Pass the atom instance to a dynamic injector like [`injectAtomValue`](/not-done?path=./injectAtomValue.mdx) or [`injectAtomState`](/not-done?path=./injectAtomState.mdx) or to [`ecosystem.get`](../classes/Ecosystem.mdx#get) after retrieving it from `injectAtomInstance`.
+2. Pass the atom instance to a dynamic injector like [`injectAtomValue`](/not-done?path=./injectAtomValue.mdx) or [`injectAtomState`](./injectAtomState.mdx) or to [`ecosystem.get`](../classes/Ecosystem.mdx#get) after retrieving it from `injectAtomInstance`.
 
    ```tsx
    const exampleAtom = atom('example', () => {
@@ -143,7 +143,7 @@ There are a few ways to do this:
 
 <Legend>
   <Item name="template">
-    Required. An [atom template](../classes/AtomTemplate.mdx) to find or create an instance of.
+    Required. The [atom template](../classes/AtomTemplate.mdx) to find or create a cached [instance](../classes/AtomInstance.mdx) of.
 
     You can also pass an [atom instance](../classes/AtomInstance.mdx) directly. This is useful when receiving an atom instance from other sources (outside React) that you don't want to cause rerenders, but that you also need to prevent from being destroyed until the component unmounts. This is a rare use case.
 
@@ -170,8 +170,6 @@ There are a few ways to do this:
       </Item>
     </Legend>
 
-    See the [React Hooks walkthrough](/not-done?path=/../../walkthrough/react-hooks.mdx) for more details.
-
   </Item>
   <Item name="Returns">
     The resolved [atom instance](../classes/AtomInstance.mdx) for the passed template + params combo.
@@ -183,5 +181,5 @@ There are a few ways to do this:
 
 - [The `AtomTemplate` class](../classes/AtomTemplate.mdx)
 - [The `AtomInstance` class](../classes/AtomInstance.mdx)
-- [The `injectAtomState` injector](/not-done?path=./injectAtomState.mdx)
+- [The `injectAtomState` injector](./injectAtomState.mdx)
 - [The `injectAtomValue` injector](/not-done?path=./injectAtomValue.mdx)
