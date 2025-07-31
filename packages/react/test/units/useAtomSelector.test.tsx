@@ -645,4 +645,67 @@ describe('useAtomSelector', () => {
       }
     `)
   })
+
+  test('inline selector with closed-over variable returns fresh data when variable changes', async () => {
+    // see https://github.com/Omnistac/zedux/discussions/260
+    jest.useFakeTimers()
+    const playerOffsetAtom = atom('playerOffset', (id: number) => ({
+      timestamp: id * 10,
+      duration: 100,
+    }))
+
+    function Child() {
+      const atEnd = useAtomSelector(({ get }) => {
+        const { timestamp, duration } = get(playerOffsetAtom, [1])
+
+        return timestamp != null && duration != null && timestamp >= duration
+      })
+
+      return <div data-testid="result2">{atEnd ? 'true' : 'false'}</div>
+    }
+
+    function Test() {
+      const [id, setId] = useState(1)
+      const atEnd = useAtomSelector(({ get }) => {
+        const { timestamp, duration } = get(playerOffsetAtom, [id])
+
+        return timestamp != null && duration != null && timestamp >= duration
+      })
+
+      return (
+        <>
+          <Child />
+          <button data-testid="button" onClick={() => setId(id => id + 1)} />
+          <div data-testid="result">{atEnd ? 'true' : 'false'}</div>
+        </>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Test />)
+
+    const button = await findByTestId('button')
+    const result = await findByTestId('result')
+
+    // id = 1, timestamp = 10, duration = 100, so atEnd = false
+    expect(result.innerHTML).toBe('false')
+
+    act(() => {
+      fireEvent.click(button) // id becomes 2
+      jest.runAllTimers()
+    })
+
+    // id = 2, timestamp = 20, duration = 100, so atEnd = false
+    expect(result.innerHTML).toBe('false')
+
+    act(() => {
+      // Click 8 more times to get id = 10
+      for (let i = 0; i < 8; i++) {
+        fireEvent.click(button)
+      }
+      jest.runAllTimers()
+    })
+
+    // id = 10, timestamp = 100, duration = 100, so atEnd = true
+    expect(result.innerHTML).toBe('true')
+  })
 })
