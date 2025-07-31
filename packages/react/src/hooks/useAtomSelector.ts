@@ -80,9 +80,21 @@ export const useAtomSelector = <T, Args extends any[]>(
 
   const addEdge = (isMaterialized?: boolean) => {
     if (!_graph.nodes[cache.id]?.dependents.get(dependentKey)) {
-      edge = _graph.addEdge(dependentKey, cache.id, OPERATION, External, () => {
-        if ((render as any).mounted) render({})
-      })
+      edge = _graph.addEdge(
+        dependentKey,
+        cache.id,
+        OPERATION,
+        External,
+        signal => {
+          if ((render as any).mounted) {
+            if (signal === 'Destroyed') {
+              ;(render as any).cache = undefined
+            }
+
+            render({})
+          }
+        }
+      )
 
       if (edge) {
         edge.isMaterialized = isMaterialized
@@ -156,7 +168,10 @@ export const useAtomSelector = <T, Args extends any[]>(
     // or update the state of its dependencies (causing it to rerun) before we
     // set `render.mounted`. If that happened, trigger a rerender to recreate
     // the selector and/or get its new state
-    if (cache.isDestroyed || cache.result !== renderedResult) {
+    if (cache.isDestroyed) {
+      ;(render as any).cache = undefined
+      render({})
+    } else if (cache.result !== renderedResult) {
       render({})
     }
 
