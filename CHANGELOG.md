@@ -1,3 +1,9 @@
+## v1.3.5 (Jul 31, 2025)
+
+### Fixes:
+
+- `react`: bust cached inline selectors in `useAtomSelector` on destroy (#294)
+
 ## v1.3.4 (Feb 15, 2025)
 
 ### Fixes:
