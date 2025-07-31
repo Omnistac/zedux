@@ -214,6 +214,7 @@ module.exports = {
             'v2/api/injectors/injectAtomValue',
             'v2/api/injectors/injectCallback',
             'v2/api/injectors/injectEcosystem',
+            'v2/api/injectors/injectEffect',
             'v2/api/injectors/injectSignal',
           ],
         },
