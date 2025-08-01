@@ -137,7 +137,7 @@ function App() {
 
   </Item>
   <Item name="stateFactory">
-    Required. A function that receives the ecosystem as the first parameter. The remaining parameters are the parameters of the atom.
+    Required. A function that receives the ecosystem as the first parameter. The remaining parameters are the [params](../classes/AtomInstance.mdx#params) of the atom.
 
     See [the `atom()` factory](./atom.mdx#valueorfactory) for details on what the state factory can return and how that determines the atom's behavior.
 
@@ -145,15 +145,18 @@ function App() {
   <Item name="config">
     Optional. An [AtomConfig](/not-done?path=../types/AtomConfig) object.
 
+    Note that the `ttl` config option is set to `0` by default for ions.
+
   </Item>
   <Item name="Returns">
-    An ion template (selector template) that can be used with atom hooks and ecosystem methods.
+    An [atom template](../classes/AtomTemplate.mdx) that can be used with Zedux's injectors, React hooks, and ecosystem methods.
 
   </Item>
 </Legend>
 
 ## See Also
 
+- [The AtomTemplate class](../classes/AtomTemplate.mdx)
 - [The SelectorInstance class](../classes/SelectorInstance.mdx)
 - [The AtomApi class](../classes/AtomApi.mdx)
-- [The Selectors walkthrough](../../../walkthrough/selectors.mdx)
+- [The selectors walkthrough](../../../walkthrough/selectors.mdx)
