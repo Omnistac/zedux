@@ -857,7 +857,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
     - `@memo()-` An atom selector created via an `injectMemo` call with no deps. Wraps the containing atom's template key inside the `()`.
     - `@ref()-` A function or class instance reference tracked when the ecosystem is configured with `complexParams: true`. Wraps the function or class name inside the `()`.
     - `@selector()-` An atom selector. Wraps the selector's name inside the `()`.
-    - `@signal()-` A signal created via [`ecosystem.signal`](#signal) or [`injectSignal`](../injectors/injectSignal) or a mapped signal created via [`injectMappedSignal`](/not-done?path=../injectors/injectMappedSignal). Wraps the containing atom's template key inside the `()` (empty if created via `ecosystem.signal`).
+    - `@signal()-` A signal created via [`ecosystem.signal`](#signal) or [`injectSignal`](../injectors/injectSignal.mdx) or a mapped signal created via [`injectMappedSignal`](../injectors/injectMappedSignal.mdx). Wraps the containing atom's template key inside the `()` (empty if created via `ecosystem.signal`).
 
   </Item>
 

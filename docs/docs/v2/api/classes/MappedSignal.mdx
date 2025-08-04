@@ -5,11 +5,11 @@ title: MappedSignal
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-The object returned by [`injectMappedSignal`](/not-done?path=../injectors/injectMappedSignal). Mapped signals _are_ signals, meaning this class extends [the `Signal` class](./Signal.mdx) (which in turn extends [the `ZeduxNode` class](./ZeduxNode.mdx)). All signal operations work on mapped signals.
+The object returned by [`injectMappedSignal`](../injectors/injectMappedSignal.mdx). Mapped signals _are_ signals, meaning this class extends [the `Signal` class](./Signal.mdx) (which in turn extends [the `ZeduxNode` class](./ZeduxNode.mdx)). All signal operations work on mapped signals.
 
 Mapped signals are composed of any number of "inner signals" plus any number of other state fields. They're aware of which inner signal controls each piece of state and forward all state changes to the relevant inner signal(s). They also forward events to and from inner signals.
 
-The state of a mapped signal is always an object. Mapped signals don't support nested objects. To nest signals, create multiple mapped signals. See [`injectMappedSignal`](/not-done?path=../injectors/injectMappedSignal) for an example.
+The state of a mapped signal is always an object. Mapped signals don't support nested objects. To nest signals, create multiple mapped signals. See [`injectMappedSignal`](../injectors/injectMappedSignal.mdx) for an example.
 
 The keys of a mapped signal's object never change. They're defined when `injectMappedSignal` is first called in an atom and stay for the lifetime of the mapped signal.
 
@@ -21,7 +21,7 @@ Mapped signals are primarily for composing multiple signals inside an atom into 
 
 ## Creation
 
-You never instantiate this class yourself. Mapped signals can currently only be created via [the `injectMappedSignal` injector](/not-done?path=../injectors/injectMappedSignal):
+You never instantiate this class yourself. Mapped signals can currently only be created via [the `injectMappedSignal` injector](../injectors/injectMappedSignal.mdx):
 
 ```ts
 const exampleAtom = atom('example', () => {
@@ -53,7 +53,7 @@ For TypeScript users, mapped signals have the following generics inherited from 
 
 ## Events
 
-Mapped signals inherit all [custom events](./Signal.mdx#custom-events) from their inner signals. They can also define their own. See [`injectMappedSignal`'s `events`](/not-done?path=../injectors/injectMappedSignal#events) config option.
+Mapped signals inherit all [custom events](./Signal.mdx#custom-events) from their inner signals. They can also define their own. See [`injectMappedSignal`'s `events`](../injectors/injectMappedSignal.mdx#events) config option.
 
 Mapped signals also inherit the following built-in events from the [`Signal` class](./Signal.mdx#events):
 
