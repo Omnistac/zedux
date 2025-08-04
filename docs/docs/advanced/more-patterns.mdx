@@ -127,14 +127,14 @@ const getFormFieldInstance = (
 }
 
 function Form() {
-  // now instead of `useAtomInstance(formFieldAtom, 'email')`, do:
+  // now instead of `useAtomInstance(formFieldAtom, ['email'])`, do:
   const emailFieldInstance = useAtomSelector(
     getFormFieldInstance,
     'email',
     isValidEmail
   )
 
-  // and instead of `useAtomInstance(formFieldAtom, 'password')`, do:
+  // and instead of `useAtomInstance(formFieldAtom, ['password'])`, do:
   const passwordFieldInstance = useAtomSelector(
     getFormFieldInstance,
     'password',
@@ -242,14 +242,11 @@ There shouldn't be a need for this, but it is actually fine to update other atom
 
 ```ts
 const rogueAtom = atom('rogue', () => {
-  const reasons = injectWhy()
   const victimInstance = injectAtomInstance(victimAtom)
 
   victimInstance.setState('sadness') // <- Bad! Don't do this
 
-  // use injectWhy to determine if this is the initial evaluation (reasons is
-  // empty if it is):
-  if (reasons.length) {
+  if (injectSelf().status !== 'Initializing') {
     victimInstance.setState('mwahahaha') // <- fine... but still probably don't
   }
   ...
