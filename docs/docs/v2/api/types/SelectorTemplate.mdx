@@ -129,7 +129,7 @@ This is also useful for debugging, since Zedux uses the selector's function name
 
 Selectors are designed for simple, pure calculations. They always reevaluate when any of their dependencies update. Sometimes you need more control over when/how often a selector evaluates.
 
-It's common to refactor a selector to an ion for better control over memoization details via [`injectMemo`](/not-done?path=../injectors/injectMemo.mdx) or even combining [`injectEffect`](/not-done?path=../injectors/injectEffect.mdx) with async tools like RxJS to throttle or buffer updates.
+It's common to refactor a selector to an ion for better control over memoization details via [`injectMemo`](../injectors/injectMemo.mdx) or even combining [`injectEffect`](../injectors/injectEffect.mdx) with async tools like RxJS to throttle or buffer updates.
 
 ```tsx
 // Before (using an atom selector):

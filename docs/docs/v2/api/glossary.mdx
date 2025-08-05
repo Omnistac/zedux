@@ -25,13 +25,13 @@ These can be created manually with [manual graphing](../../walkthrough/destructi
 
 Zedux builds an internal graph to manage atom dependencies and propagate updates in an optimal way. There are many types of nodes in this graph:
 
-- [Atom instances](./classes/AtomInstance)
+- [Atom instances](./classes/AtomInstance.mdx)
 - [Selector instances](./classes/SelectorInstance.mdx)
-- [Signals](./classes/Signal)
-- [`injectMemo`](/not-done?path=./injectors/injectMemo) calls with no deps array (enabling automatic dependency tracking)
+- [Signals](./classes/Signal.mdx)
+- [`injectMemo`](./injectors/injectMemo.mdx) calls with no deps array (enabling automatic dependency tracking)
 - "External" nodes created for React components and event listeners.
 
-Every node extends [the `ZeduxNode` class](./classes/ZeduxNode).
+Every node extends [the `ZeduxNode` class](./classes/ZeduxNode.mdx).
 
 ### Injector
 
@@ -39,21 +39,21 @@ Injectors are the "hooks" of Atoms. Zedux exports several injectors.
 
 There are 3 basic types of injectors:
 
-- React-hook equivalents, like [`injectEffect`](./injectors/injectEffect.mdx), [`injectMemo`](/not-done?path=./injectors/injectMemo), and [`injectRef`](/not-done?path=./injectors/injectRef).
+- React-hook equivalents, like [`injectEffect`](./injectors/injectEffect.mdx), [`injectMemo`](./injectors/injectMemo.mdx), and [`injectRef`](/not-done?path=./injectors/injectRef).
 - Dependency injectors, like [`injectAtomValue`](./injectors/injectAtomValue.mdx) and [`injectAtomInstance`](./injectors/injectAtomInstance.mdx).
 - Utility or dev X injectors, such as [`injectEcosystem`](./injectors/injectEcosystem.mdx) and [`injectWhy`](/not-done?path=./injectors/injectWhy).
 
 Injectors should only be used at the top level of [atom state factories](#state-factory). Don't use them in loops or conditional statements.
 
-Injectors can be used any number of times throughout an atom state factory. For certain one-off operations like setting an atom instance's exports or setting a suspense promise, use an [AtomApi](./classes/AtomApi).
+Injectors can be used any number of times throughout an atom state factory. For certain one-off operations like setting an atom instance's exports or setting a suspense promise, use an [AtomApi](./classes/AtomApi.mdx).
 
 Like hooks, you can create custom injectors that compose other injectors. The convention is to start all injectors with the word "inject", similar to the word "use" with React hooks.
 
 ### Reactive Context
 
-A function execution context in which Zedux automatically tracks dependencies. Atom state factories, selectors, and auto-tracked [`injectMemo`](/not-done?path=./injectors/injectMemo#auto-tracking) calls create reactive contexts.
+A function execution context in which Zedux automatically tracks dependencies. Atom state factories, selectors, and auto-tracked [`injectMemo`](./injectors/injectMemo.mdx#auto-tracking) calls create reactive contexts.
 
-In a reactive context, any [`node.get()`](./classes/ZeduxNode#get) or [`ecosystem.get()`](./classes/Ecosystem#get) calls will register [dynamic graph dependencies](#dynamic-graph-dependency) on the retrieved node, and any [`ecosystem.getNode()`](./classes/Ecosystem#getnode) calls will register [static graph dependencies](#static-graph-dependency). This automatic dependency tracking is a staple in reactive libraries like Zedux.
+In a reactive context, any [`node.get()`](./classes/ZeduxNode.mdx#get) or [`ecosystem.get()`](./classes/Ecosystem.mdx#get) calls will register [dynamic graph dependencies](#dynamic-graph-dependency) on the retrieved node, and any [`ecosystem.getNode()`](./classes/Ecosystem.mdx#getnode) calls will register [static graph dependencies](#static-graph-dependency). This automatic dependency tracking is a staple in reactive libraries like Zedux.
 
 ### Scope
 
@@ -82,13 +82,13 @@ const val = ecosystem.withScope(exampleScope, () => ecosystem.get(scopedAtom))
 
 ### Scoped Atom
 
-An atom that contains one or more [`inject`](/not-done?path=./injectors/inject) calls. Such atoms must be called with ["scope"](#scope) - e.g. by providing contextual values via Provider components in React or by calling [`ecosystem.withScope`](/not-done?path=./classes/Ecoysstem#withscope)
+An atom that contains one or more [`inject`](/not-done?path=./injectors/inject) calls. Such atoms must be called with ["scope"](#scope) - e.g. by providing contextual values via Provider components in React or by calling [`ecosystem.withScope`](./classes/Ecosystem.mdx#withscope)
 
 ### State Factory
 
-A function passed to [`atom()`](./factories/atom) (or other atom factory functions like [`ion()`](./factories/ion)). This function is called to produce the initial value of the atom instance. It also runs every time an atom instance reevaluates.
+A function passed to [`atom()`](./factories/atom.mdx) (or other atom factory functions like [`ion()`](./factories/ion.mdx)). This function is called to produce the initial value of the atom instance. It also runs every time an atom instance reevaluates.
 
-You can add as many parameters as you want to this function. TS users can specify the types of these params to guarantee that all consumers pass the correct values when accessing the atom via Zedux's [injectors](#injector), React hooks, or [ecosystem](./classes/Ecosystem) methods. Each unique set of params will create a new atom instance. See [`ZeduxNode#params`](./classes/ZeduxNode.mdx#params) for details on how params are stringified.
+You can add as many parameters as you want to this function. TS users can specify the types of these params to guarantee that all consumers pass the correct values when accessing the atom via Zedux's [injectors](#injector), React hooks, or [ecosystem](./classes/Ecosystem.mdx) methods. Each unique set of params will create a new atom instance. See [`ZeduxNode#params`](./classes/ZeduxNode.mdx#params) for details on how params are stringified.
 
 State factories are similar to render functions in React. Except of course they return state instead of UI.
 

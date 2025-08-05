@@ -9,7 +9,7 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { injectCallback } from '@zedux/react'
 ```
 
-An [injector](../glossary.mdx#injector) for creating memoized callback functions inside atoms. This is the injector equivalent of React's [`useCallback` hook](https://react.dev/reference/react/useCallback).
+An [injector](../glossary.mdx#injector) for creating memoized, batched, and scoped callback functions inside atoms. This is the injector equivalent of React's [`useCallback` hook](https://react.dev/reference/react/useCallback).
 
 Like `useCallback`, `injectCallback` returns a memoized version of the callback that only changes when any passed dependencies change.
 
@@ -45,7 +45,7 @@ const callback = injectCallback(
 )
 ```
 
-:::warning These are not the joys you're looking for
+:::warning You may not need `injectCallback`
 While this looks useful, `injectCallback` is rarely needed.
 
 [Exported functions](../classes/AtomApi.mdx#exports) are already automatically batched and scoped. You typically don't need `injectCallback` unless a function is both used locally, e.g. in an [`injectEffect`](./injectEffect.mdx), and exported.
@@ -140,7 +140,7 @@ function App() {
 
 ## See Also
 
-- [The `injectMemo` injector](/not-done?path=./injectMemo.mdx)
+- [The `injectMemo` injector](./injectMemo.mdx)
 - [`ecosystem.batch`](../classes/Ecosystem.mdx#batch)
 - [`ecosystem.withScope`](../classes/Ecosystem.mdx#withscope)
 - Export wrapping is functionally similar and usually preferable to `injectCallback`. See these methods on `AtomApi`:

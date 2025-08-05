@@ -111,7 +111,7 @@ Many of the principles in React's famous ["You Might Not Need an Effect" doc](ht
 
 ### Transformations
 
-You don't typically need effects to transform data. Prefer selectors or ions that naturally derive data. Or just do the transformation inline during atom evaluation if it's cheap. Also consider [`injectMemo`](/not-done?path=./injectMemo.mdx) if it's less cheap.
+You don't typically need effects to transform data. Prefer selectors or ions that naturally derive data. Or just do the transformation inline during atom evaluation if it's cheap. Also consider [`injectMemo`](./injectMemo.mdx) if it's less cheap.
 
 Bad example:
 
@@ -157,7 +157,7 @@ Here are some better approaches:
   })
   ```
 
-- Use [`injectMemo`](/not-done?path=./injectMemo.mdx) if needed:
+- Use [`injectMemo`](./injectMemo.mdx) if needed:
 
   ```tsx
   const computedAtom = atom('computed', () => {
