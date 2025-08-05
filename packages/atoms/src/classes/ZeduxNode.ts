@@ -473,7 +473,7 @@ export class ExternalNode<
   /**
    * @see ZeduxNode.destroy
    */
-  public destroy(skipUpdate?: boolean) {
+  public destroy(force?: boolean, skipUpdate?: boolean) {
     if (!this.i) return
     if (this.w) this.e.syncScheduler.unschedule(this)
 
@@ -486,7 +486,7 @@ export class ExternalNode<
 
     // notify the external observer of the destruction if needed (does nothing
     // if the external observer initiated the destruction)
-    skipUpdate || this.j()
+    force ? this.n.m && this.n({}) : skipUpdate || this.j()
   }
 
   /**
@@ -540,7 +540,7 @@ export class ExternalNode<
     }
 
     removeEdge(this, source)
-    source === this.i && this.destroy(true)
+    source === this.i && this.destroy(false, true)
   }
 
   /**
