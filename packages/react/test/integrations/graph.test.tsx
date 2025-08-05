@@ -8,6 +8,7 @@ import {
   injectAtomInstance,
   injectAtomValue,
   injectEcosystem,
+  injectEffect,
   injectMappedSignal,
   injectRef,
   injectSignal,
@@ -366,5 +367,37 @@ describe('graph', () => {
     })
 
     expect(val).toHaveTextContent('1')
+  })
+
+  test('temporary edges are added immediately', () => {
+    const calls: any[] = []
+
+    const atom2 = atom('2', () => {
+      const signal = injectSignal(0)
+
+      calls.push(signal.get())
+
+      if (signal.get() === 0) {
+        signal.set(1)
+      }
+
+      // Zedux needs specific code to handle this case where a dependend-on
+      // signal is updated synchronously in an untracked callback.
+      injectEffect(
+        () => {
+          if (signal.get() === 0) {
+            signal.set(2)
+          }
+        },
+        [],
+        { synchronous: true }
+      )
+
+      return signal
+    })
+
+    ecosystem.getNode(atom2)
+
+    expect(calls).toEqual([0, 2])
   })
 })
