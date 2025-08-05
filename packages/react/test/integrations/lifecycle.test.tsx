@@ -294,4 +294,47 @@ describe('ttl', () => {
     expect(calls).toEqual([])
     expect(mock).toHaveBeenCalledTimes(3) // React tries twice.
   })
+
+  test('export references are swapped out on reevaluation while staying stable for consumers', () => {
+    const atom1 = atom('1', () => {
+      const signal = injectSignal(1)
+      const state = signal.get()
+
+      const getState = () => state
+
+      return api(signal).setExports({ getState })
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+    const { getState } = node1.exports
+
+    expect(getState()).toBe(1)
+
+    node1.set(2)
+
+    expect(getState()).toBe(2)
+  })
+
+  test('when an api export is called during initial evaluation, it is used directly (not via instance.api)', () => {
+    const atom1 = atom('1', () => {
+      const signal = injectSignal(1)
+      const state = signal.get()
+
+      const getState = () => state
+
+      const api1 = api(signal).setExports({ getState })
+
+      api1.exports?.getState()
+
+      return api1
+    })
+
+    const node1 = ecosystem.getNode(atom1)
+    const { getState } = node1.exports
+
+    expect(getState()).toBe(1)
+
+    node1.set(2)
+    expect(getState()).toBe(2)
+  })
 })
