@@ -290,4 +290,11 @@ describe('Ecosystem', () => {
   test('why() returns undefined if called outside atom or selector evaluation', () => {
     expect(ecosystem.why()).toBeUndefined()
   })
+
+  test('when the ecosystem contains signals, `.findAll` with `includeTags` or `excludeTags` skips them', () => {
+    const signal = ecosystem.signal(1)
+
+    expect(ecosystem.findAll({ includeTags: ['example'] })).toEqual([])
+    expect(ecosystem.findAll({ excludeTags: ['example'] })).toEqual([signal])
+  })
 })

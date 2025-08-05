@@ -286,7 +286,7 @@ export abstract class ZeduxNode<G extends NodeGenerics = AnyNodeGenerics>
             : lowerCaseId.includes(templateOrKey.toLowerCase())
           : (t?.key && (templateOrKey as AtomTemplateBase)?.key === t?.key) ||
             templateOrKey === t
-      ) || excludeTags.some(tag => t.tags?.includes(tag))
+      ) || excludeTags.some(tag => t?.tags?.includes(tag))
 
     return (
       !isExcluded &&
@@ -299,7 +299,7 @@ export abstract class ZeduxNode<G extends NodeGenerics = AnyNodeGenerics>
             : (t?.key && (templateOrKey as AtomTemplateBase)?.key === t?.key) ||
               templateOrKey === t
         ) ||
-        includeTags.some(tag => t.tags?.includes(tag)))
+        includeTags.some(tag => t?.tags?.includes(tag)))
     )
   }
 
