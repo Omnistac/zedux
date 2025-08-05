@@ -4,6 +4,7 @@ import {
   AnyAtomGenerics,
   AnyAtomTemplate,
   ExportsOf,
+  InjectAtomInstanceConfig,
   ParamlessTemplate,
   ParamsOf,
   StateHookTuple,
@@ -17,7 +18,8 @@ import { injectAtomInstance } from './injectAtomInstance'
 export const injectAtomState: {
   <A extends AnyAtomTemplate<{ Node: AtomInstance }>>(
     template: A,
-    params: ParamsOf<A>
+    params: ParamsOf<A>,
+    config?: Omit<InjectAtomInstanceConfig, 'subscribe'>
   ): StateHookTuple<StateOf<A>, ExportsOf<A>>
 
   <A extends AnyAtomTemplate<{ Node: AtomInstance; Params: [] }>>(
@@ -28,16 +30,19 @@ export const injectAtomState: {
     template: ParamlessTemplate<A>
   ): StateHookTuple<StateOf<A>, ExportsOf<A>>
 
-  <I extends AtomInstance>(instance: I): StateHookTuple<
-    StateOf<I>,
-    ExportsOf<I>
-  >
+  <I extends AtomInstance>(
+    instance: I,
+    params?: [],
+    config?: Omit<InjectAtomInstanceConfig, 'subscribe'>
+  ): StateHookTuple<StateOf<I>, ExportsOf<I>>
 } = <G extends AnyAtomGenerics<{ Node: AtomInstance }>>(
   atom: AtomTemplateBase<G>,
-  params?: G['Params']
+  params?: G['Params'],
+  config?: Omit<InjectAtomInstanceConfig, 'subscribe'>
 ): StateHookTuple<G['State'], G['Exports']> => {
   const instance = injectAtomInstance(atom, params, {
     operation: 'injectAtomState',
+    ...config,
     subscribe: true,
   })
 

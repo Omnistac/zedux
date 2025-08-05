@@ -394,4 +394,28 @@ describe('injectors', () => {
 
     expect(callback?.name).toBe('fn')
   })
+
+  test("injectAtomState's default operation name can be overridden", () => {
+    const atom1 = atom('1', () => 1)
+
+    const atom2 = atom('2', () => {
+      const [state] = injectAtomState(atom1, [], { operation: 'test' })
+
+      return state
+    })
+
+    const node2 = ecosystem.getNode(atom2)
+
+    expect(node2.get()).toBe(1)
+
+    expect([...node2.s.values()]).toMatchInlineSnapshot(`
+      [
+        {
+          "flags": 1,
+          "operation": "test",
+          "p": undefined,
+        },
+      ]
+    `)
+  })
 })
