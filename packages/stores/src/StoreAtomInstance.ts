@@ -21,6 +21,7 @@ import {
   Transaction,
   zi,
   SendableEvents,
+  InternalEvaluationReason,
 } from '@zedux/atoms'
 import { StoreAtomApi } from './StoreAtomApi'
 import {
@@ -253,6 +254,12 @@ export class StoreAtomInstance<
 
         // there is no way to cause an evaluation loop when the StateType is Value
         if (newStateType === RawState) {
+          // this will happen eventually, when this atom's store subscription
+          // runs, but that can be too late since the `.setState` call can be
+          // deferred, leading to state tearing between the store's `_state` and
+          // `instance.v`alue in the meantime. So set this now:
+          this.v = newFactoryResult
+
           this.store.setState(
             typeof newFactoryResult === 'function'
               ? () => newFactoryResult as G['State']
@@ -297,6 +304,20 @@ export class StoreAtomInstance<
       // let this.i flush updates after status is set to Active
       zi.f(prevNode)
     }
+  }
+
+  /**
+   * @see NewAtomInstance.r
+   */
+  public r(reason: InternalEvaluationReason) {
+    if (reason.n === this.store.getState()) {
+      // This will happen eventually anyway, so this is possibly unnecessary,
+      // but update it here to guard against any possible state tearing edge
+      // cases.
+      this.v = reason.n
+    }
+
+    return super.r(reason)
   }
 
   /**
