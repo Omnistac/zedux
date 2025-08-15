@@ -1,3 +1,9 @@
+## v2.0.0-rc.10 (Aug 15, 2025)
+
+### Fixes:
+
+- `stores`: prevent state tearing in nested storeAtom store subscribers (#301)
+
 ## v2.0.0-rc.9 (May 1, 2025)
 
 ### New Features:
