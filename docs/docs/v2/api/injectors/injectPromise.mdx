@@ -1,0 +1,240 @@
+---
+id: injectPromise
+title: injectPromise
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectPromise } from '@zedux/react'
+```
+
+An [injector](../glossary.mdx#injector) for controlling the creation of a promise and handling its state. It tracks the promise's status (loading, success, error), resolved value, and rejection error.
+
+`injectPromise` returns an [atom API](../classes/AtomApi.mdx) object with three attached properties: `.signal`, `.dataSignal`, and `.promise`. You can return this API directly from the atom's state factory or pass it to [`api()`](../factories/api.mdx) to clone/extend it. You can also use the `.signal`, `.dataSignal`, and `.promise` properties directly.
+
+The `.signal`'s state is patterned after [React Query's query state](https://tanstack.com/query/latest/docs/framework/react/guides/queries).
+
+## Example
+
+No suspense:
+
+```tsx live ecosystemId=injectPromise/example resultVar=App version=2
+const userAtom = atom('user', (userId: number) => {
+  const fetchUser = async () => {
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate delay
+    if (userId === 999) throw new Error('User not found')
+    return {
+      id: userId,
+      name: `User ${userId}`,
+      email: `user${userId}@example.com`,
+    }
+  }
+
+  const promiseState = injectPromise(fetchUser)
+
+  return promiseState
+})
+
+function UserProfile({ userId }: { userId: number }) {
+  const userState = useAtomValue(userAtom, [userId], { suspend: false })
+
+  if (userState.isLoading) return <div>Loading user...</div>
+  if (userState.isError) return <div>Error: {userState.error?.message}</div>
+  if (userState.isSuccess && userState.data) {
+    return (
+      <div>
+        <h3>{userState.data.name}</h3>
+        <p>{userState.data.email}</p>
+      </div>
+    )
+  }
+
+  return null
+}
+
+function App() {
+  const [userId, setUserId] = useState(1)
+
+  return (
+    <div>
+      <UserProfile userId={userId} />
+      <button onClick={() => setUserId(id => id + 1)}>Next User</button>
+      <button onClick={() => setUserId(999)}>Load Error User</button>
+    </div>
+  )
+}
+```
+
+With suspense:
+
+```tsx live ecosystemId=injectPromise/example-suspense resultVar=App version=2
+const userAtom = atom('user', (userId: number) => {
+  const fetchUser = async () => {
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate delay
+    if (userId === 999) throw new Error('User not found')
+    return {
+      id: userId,
+      name: `User ${userId}`,
+      email: `user${userId}@example.com`,
+    }
+  }
+
+  const promiseState = injectPromise(fetchUser)
+
+  return promiseState
+})
+
+function UserProfile({ userId }: { userId: number }) {
+  const userState = useAtomValue(userAtom, [userId])
+
+  return (
+    <div>
+      <h3>{userState.data.name}</h3>
+      <p>{userState.data.email}</p>
+    </div>
+  )
+}
+
+class ErrorBoundary extends Component {
+  state = { error: null }
+
+  componentDidCatch(error: Error) {
+    this.setState({ error })
+  }
+
+  render() {
+    if (this.state.error) {
+      return <div>Error: {this.state.error.message}</div>
+    }
+
+    return this.props.children
+  }
+}
+
+function App() {
+  const [userId, setUserId] = useState(1)
+
+  return (
+    <div>
+      <ErrorBoundary>
+        <Suspense fallback={<div>Loading user...</div>}>
+          <UserProfile userId={userId} />
+        </Suspense>
+      </ErrorBoundary>
+      <button onClick={() => setUserId(id => id + 1)}>Next User</button>
+      <button onClick={() => setUserId(999)}>Load Error User</button>
+    </div>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`injectPromise = (promiseFactory, deps?, config?) => promiseState`)}
+  {tab2(`declare const injectPromise: {
+    <Data, EventMap extends Record<string, any> = None>(
+      promiseFactory: (params: {
+        controller?: AbortController
+        prevData?: NoInfer<Data>
+      }) => Promise<Data>,
+      deps: InjectorDeps,
+      config: Omit<InjectPromiseConfig<Data>, 'initialData'> & {
+        initialData: Data
+      } & InjectSignalConfig<EventMap>
+    ): InjectPromiseAtomApi<
+      {
+        Exports: Record<string, any>
+        Promise: Promise<Data>
+        Signal: MappedSignal<{
+          Events: EventMap
+          State: Omit<PromiseState<Data>, 'data'> & {
+            data: Data
+          }
+        }>
+        State: Omit<PromiseState<Data>, 'data'> & {
+          data: Data
+        }
+      },
+      EventMap,
+      Data
+    >
+    <Data, EventMap extends Record<string, any> = None>(
+      promiseFactory: (params: {
+        controller?: AbortController
+        prevData?: NoInfer<Data>
+      }) => Promise<Data>,
+      deps: InjectorDeps,
+      config?: InjectPromiseConfig<Data> & InjectSignalConfig<EventMap>
+    ): InjectPromiseAtomApi<
+      {
+        Exports: Record<string, any>
+        Promise: Promise<Data>
+        Signal: MappedSignal<{
+          Events: EventMap
+          ResolvedState: Omit<PromiseState<Data>, 'data'> & {
+            data: Data
+          }
+          State: PromiseState<Data>
+        }>
+        State: PromiseState<Data>
+      },
+      EventMap,
+      Data
+    >
+  }`)}
+</Tabs>
+
+<Legend>
+  <Item name="promiseFactory">
+    Required. A function that returns a promise. This function will be called immediately on initial evaluation of the atom, and again when [dependencies](#deps) change.
+
+  </Item>
+  <Item name="deps">
+    Optional, but you'll always want to pass it. An array of dependencies. When any of these dependencies change, the promise factory will be re-invoked and the promise state cycle will reset.
+
+    This is just like the dependency arrays passed to React's `useMemo()`, `useEffect()`, etc.
+
+  </Item>
+  <Item name="config">
+    Optional. Configuration object with:
+
+    - **`initialData`** - Initial data to use before the promise resolves
+    - **`runOnInvalidate`** - Whether to re-run the promise factory when the atom is invalidated
+
+  </Item>
+  <Item name="Returns">
+    An [atom API](../classes/AtomApi.mdx) object with three attached properties: `.signal`, `.dataSignal`, and `.promise`. This atom API can be returned directly from the atom's state factory or passed to [`api()`](../factories/api.mdx) to clone/extend it. You can also use the `.signal`, `.dataSignal`, and `.promise` properties directly to compose them with other promises/signals or listen to events from them.
+
+    ```ts
+    const { signal, dataSignal, promise } = injectPromise(...)
+    ```
+
+    The extra promise-related state is tracked in the `.signal` property.
+
+    - **`data`** - The resolved value (if success). This state is controlled by the `dataSignal`. See below for more information.
+    - **`error`** - The rejection reason (if error)
+    - **`isLoading`** - Whether the promise is pending
+    - **`isSuccess`** - Whether the promise resolved successfully
+    - **`isError`** - Whether the promise was rejected
+    - **`status`** - Current status: 'loading', 'success', or 'error'
+
+    The `.dataSignal` property is unique to the Atom APIs returned from this injector. You can use it directly to access the promise's resolved value, ignoring the extra promise-related state that `injectPromise` tracks. For example:
+
+    ```tsx
+    const { dataSignal } = injectPromise(...)
+
+    // make the `dataSignal` control this atom's state:
+    return api(dataSignal).setExports({ getUser: () => dataSignal.get() })
+    ```
+
+    The returned atom API's `.signal` is composed of this `dataSignal`, using it to control its `.data` property. Updates to the `dataSignal` will propagate to the `.signal`'s `.data` property and vice versa. See [MappedSignal](../classes/MappedSignal.mdx) for more information on how this works.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Query Atoms walkthrough](../../../walkthrough/query-atoms)
+- [The `api` factory](../factories/api)
