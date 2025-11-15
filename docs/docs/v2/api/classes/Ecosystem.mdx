@@ -28,7 +28,7 @@ import { createEcosystem } from '@zedux/react'
 const rootEcosystem = createEcosystem({ id: 'root' })
 ```
 
-Ecosystems are also created automatically when using an [`<EcosystemProvider>`](../components/EcosystemProvider) without passing an `ecosystem` prop:
+Ecosystems are also created automatically when using an [`<EcosystemProvider>`](../components/EcosystemProvider.mdx) without passing an `ecosystem` prop:
 
 ```tsx
 import { EcosystemProvider } from '@zedux/react'
@@ -44,15 +44,15 @@ function App() {
 
 ### Default Ecosystem
 
-The [default ecosystem](../../../walkthrough/ecosystems#global) will be created automatically if atoms are used in React outside any `<EcosystemProvider>` or the first time you call [`getDefaultEcosystem()`](/not-done?path=../utils/getDefaultEcosystem).
+The [default ecosystem](../../../walkthrough/ecosystems.mdx#global) will be created automatically if atoms are used in React outside any `<EcosystemProvider>` or the first time you call [`getDefaultEcosystem()`](../utils/getDefaultEcosystem.mdx).
 
 The default ecosystem is great for simple apps. It's a full ecosystem, which means you can use features like [overrides](#overrides) and [ecosystem events](#events). However, it comes preconfigured with no (good) way to set config options like [`ssr`](#ssr) and [`onReady`](#onready).
 
-It's generally recommended to create your own ecosystem(s) via [`createEcosystem()`](../factories/createEcosystem.mdx) and provide them to your app via [`<EcosystemProvider>`](../components/EcosystemProvider) instead of using the default ecosystem. This is especially needed for SSR.
+It's generally recommended to create your own ecosystem(s) via [`createEcosystem()`](../factories/createEcosystem.mdx) and provide them to your app via [`<EcosystemProvider>`](../components/EcosystemProvider.mdx) instead of using the default ecosystem. This is especially needed for SSR.
 
 ## Providing
 
-Ecosystems can take control of all atom usages in a React component tree by wrapping the tree in [`<EcosystemProvider>`](../components/EcosystemProvider).
+Ecosystems can take control of all atom usages in a React component tree by wrapping the tree in [`<EcosystemProvider>`](../components/EcosystemProvider.mdx).
 
 ```tsx
 function App() {
@@ -1091,12 +1091,11 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
 ## See Also
 
-- [the Ecosystems walkthrough](../../../walkthrough/ecosystems)
+- [the Ecosystems walkthrough](../../../walkthrough/ecosystems.mdx)
 - [the `createEcosystem()` factory](../factories/createEcosystem.mdx)
-- [the Overrides walkthrough](../../../walkthrough/overrides)
-- [the Plugins guide](../../../advanced/plugins)
-- [`getDefaultEcosystem()`](/not-done?path=../utils/getDefaultEcosystem)
-- [`setDefaultEcosystem()`](/not-done?path=../utils/setDefaultEcosystem)
-- [the `<EcosystemProvider>` component](../components/EcosystemProvider)
+- [the Overrides walkthrough](../../../walkthrough/overrides.mdx)
+- [the Plugins guide](../../../advanced/plugins.mdx)
+- [`getDefaultEcosystem()`](../utils/getDefaultEcosystem.mdx)
+- [the `<EcosystemProvider>` component](../components/EcosystemProvider.mdx)
 - [the `useEcosystem` hook](../hooks/useEcosystem.mdx)
 - [the `injectEcosystem` injector](../injectors/injectEcosystem.mdx)
