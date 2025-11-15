@@ -52,7 +52,7 @@ export const Item = ({
         className="anchor anchorWithStickyNavbar_node_modules-@docusaurus-theme-classic-lib-theme-Heading-styles-module"
         id={id}
       >
-        {name === 'Returns' ? name : <code>{name}</code>}
+        {name === 'Returns' || name === 'Throws' ? name : <code>{name}</code>}
         {suffix && <span> {suffix}</span>}
         <a className="hash-link" href={`#${id}`} />
       </ItemName>

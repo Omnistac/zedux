@@ -229,6 +229,11 @@ module.exports = {
           label: 'Types',
           items: ['v2/api/types/AtomConfig', 'v2/api/types/SelectorTemplate'],
         },
+        {
+          type: 'category',
+          label: 'Utils',
+          items: ['v2/api/utils/inject'],
+        },
         'v2/api/glossary',
       ],
     },

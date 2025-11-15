@@ -13,6 +13,17 @@ If the dependent is a React component, it will rerender when the dependency atom
 
 If the dependent is another atom instance, it will reevaluate when the dependency atom instance's state changes.
 
+Some APIs that create dynamic dependencies include:
+
+- [`ecosystem.get`](./classes/Ecosystem.mdx#get) when called during atom/selector evaluation.
+- [`node.get`](./classes/ZeduxNode.mdx#get) when called during atom/selector evaluation.
+- [`injectAtomValue`](./injectors/injectAtomValue.mdx)
+- [`injectAtomState`](./injectors/injectAtomState.mdx)
+- [`useAtomValue`](./hooks/useAtomValue.mdx)
+- [`useAtomState`](./hooks/useAtomState.mdx)
+
+Note that [`ecosystem.getOnce`](./classes/Ecosystem.mdx#getonce) and [`node.getOnce`](./classes/ZeduxNode.mdx#getonce) never create any dependencies.
+
 ### Graph Edge
 
 The edges between [graph nodes](#graph-node). These edges can have several properties, depending on how the edge was created and how it should behave.
@@ -82,7 +93,7 @@ const val = ecosystem.withScope(exampleScope, () => ecosystem.get(scopedAtom))
 
 ### Scoped Atom
 
-An atom that contains one or more [`inject`](/not-done?path=./injectors/inject) calls. Such atoms must be called with ["scope"](#scope) - e.g. by providing contextual values via Provider components in React or by calling [`ecosystem.withScope`](./classes/Ecosystem.mdx#withscope)
+An atom that contains one or more [`inject`](./utils/inject.mdx) calls. Such atoms must be called with ["scope"](#scope) - e.g. by providing contextual values via Provider components in React or by calling [`ecosystem.withScope`](./classes/Ecosystem.mdx#withscope).
 
 ### State Factory
 
@@ -99,6 +110,14 @@ When one [graph node](#graph-node) depends on another, Zedux draws an edge betwe
 A "static" dependency is a dependency that does not trigger updates in the dependent node when the dependency node's state updates. Contrast this to [dynamic dependencies](#dynamic-graph-dependency), which do trigger updates.
 
 While they don't trigger updates, static dependencies are still useful for informing Zedux that an atom instance is in use. Zedux won't try to clean up atom instances that still have dependents.
+
+Some APIs that create static dependencies include:
+
+- [`ecosystem.getNode`](./classes/Ecosystem.mdx#getnode) when called during atom/selector evaluation.
+- [`injectAtomInstance`](./injectors/injectAtomInstance.mdx)
+- [`useAtomInstance`](./hooks/useAtomInstance.mdx)
+
+Note that [`ecosystem.getNodeOnce`](./classes/Ecosystem.mdx#getnodeonce) never creates any dependencies.
 
 ### Unrestricted Injector
 
