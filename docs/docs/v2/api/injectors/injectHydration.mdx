@@ -11,7 +11,7 @@ import { injectHydration } from '@zedux/react'
 
 An [injector](../glossary.mdx#injector) that retrieves data previously passed to [`ecosystem.hydrate`](../classes/Ecosystem.mdx#hydrate) for the currently-evaluating atom.
 
-If the atom has a [`hydrate`](/not-done?path=../types/AtomConfig.mdx#hydrate) function configured, `injectHydration` will call it with the atom's hydration and return the result. Pass `{ transform: false }` to prevent this.
+If the atom has a [`hydrate`](../types/AtomConfig.mdx#hydrate) function configured, `injectHydration` will call it with the atom's hydration and return the result. Pass `{ transform: false }` to prevent this.
 
 `injectHydration` is unique in that it has a side effect: When called, it prevents Zedux from [automatically hydrating](/not-done?path=../../advanced/persistence#automatic-hydration) the atom after its initial evaluation. Pass `{ intercept: false }` to prevent this.
 
@@ -161,6 +161,6 @@ function App() {
 
 - [`ecosystem.hydrate`](../classes/Ecosystem.mdx#hydrate)
 - [`ecosystem.dehydrate`](../classes/Ecosystem.mdx#dehydrate)
-- [The `AtomConfig` type](/not-done?path=../types/AtomConfig.mdx)
+- [The `AtomConfig` type](../types/AtomConfig.mdx)
 - [The persistence walkthrough](../../../advanced/persistence.mdx)
 - [The SSR walkthrough](../../../advanced/ssr.mdx)

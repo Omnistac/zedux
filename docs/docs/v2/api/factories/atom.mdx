@@ -12,7 +12,7 @@ import { atom } from '@zedux/react'
 
 Where it all starts. `atom()` is a factory for creating atom templates. Zedux creates atoms from these templates as you use them in various hooks and injectors.
 
-An atom template is actually an instance of [the AtomTemplate class](../classes/AtomTemplate).
+An atom template is actually an instance of [the AtomTemplate class](../classes/AtomTemplate.mdx).
 
 ## Example
 
@@ -176,7 +176,7 @@ function App() {
   <Item name="key">
     Required. A string.
 
-    This key must be unique **except** when creating [atom overrides](../../../walkthrough/overrides).
+    This key must be unique **except** when creating [atom overrides](../../../walkthrough/overrides.mdx).
 
     <AtomKeyDesc />
 
@@ -197,9 +197,9 @@ function App() {
 
     - A [state factory](../glossary.mdx#state-factory) function that returns a raw value. That raw value can be anything (including a function). The returned value will be the atom instance's initial state.
 
-    - A state factory function that returns a [signal](../classes/Signal). When the atom is instantiated, the new atom instance will become a thin wrapper around the returned signal, forwarding events and state changes between it and the atom's own observers.
+    - A state factory function that returns a [signal](../classes/Signal.mdx). When the atom is instantiated, the new atom instance will become a thin wrapper around the returned signal, forwarding events and state changes between it and the atom's own observers.
 
-    - A state factory function that returns an [AtomApi](../classes/AtomApi) instance.
+    - A state factory function that returns an [AtomApi](../classes/AtomApi.mdx) instance.
 
       The Atom API's value can be any of the following:
 
@@ -207,22 +207,22 @@ function App() {
 
       - A signal. The atom instance will become a thin wrapper around the returned signal, forwarding events and state changes between it and the atom's own observers.
 
-      - A promise. This will turn the atom into a [query atom](../../../walkthrough/query-atoms).
+      - A promise. This will turn the atom into a [query atom](../../../walkthrough/query-atoms.mdx).
 
         The Atom API's exports will be set as the atom instance's `.exports`.
 
         The Atom API's promise will be set as the atom instance's `.promise`.
 
-        Any [`ttl`](../classes/AtomApi#ttl) configured in the returned Atom API will control the atom instance's destruction timing.
+        Any [`ttl`](../classes/AtomApi.mdx#ttl) configured in the returned Atom API will control the atom instance's destruction timing.
 
     When a state factory function is passed, any parameters defined on the function will become the [params](../classes/AtomInstance.mdx#params) of the atom.
 
   </Item>
   <Item name="config">
-    Optional. An [AtomConfig](/not-done?path=../types/AtomConfig) object.
+    Optional. An [AtomConfig](../types/AtomConfig.mdx) object.
   </Item>
   <Item name="Returns">
-    An [atom template](../classes/AtomTemplate).
+    An [atom template](../classes/AtomTemplate.mdx).
 
     Zedux will manage creating and maintaining instances of the atom template as you use it in various hooks, injectors, and ecosystem methods.
 
@@ -231,7 +231,8 @@ function App() {
 
 ## See Also
 
-- [The `AtomTemplate` class](../classes/AtomTemplate)
-- [The `AtomApi` class](../classes/AtomApi)
-- [The Quick Start](../../../walkthrough/quick-start)
-- [The Configuring Atoms walkthrough](../../../walkthrough/configuring-atoms)
+- [The `AtomTemplate` class](../classes/AtomTemplate.mdx)
+- [The `AtomApi` class](../classes/AtomApi.mdx)
+- [The `AtomConfig` type](../types/AtomConfig.mdx)
+- [The Quick Start](../../../walkthrough/quick-start.mdx)
+- [The Configuring Atoms walkthrough](../../../walkthrough/configuring-atoms.mdx)

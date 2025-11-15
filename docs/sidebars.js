@@ -227,7 +227,7 @@ module.exports = {
         {
           type: 'category',
           label: 'Types',
-          items: ['v2/api/types/SelectorTemplate'],
+          items: ['v2/api/types/AtomConfig', 'v2/api/types/SelectorTemplate'],
         },
         'v2/api/glossary',
       ],
