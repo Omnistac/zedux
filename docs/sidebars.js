@@ -219,6 +219,7 @@ module.exports = {
             'v2/api/injectors/injectMemo',
             'v2/api/injectors/injectPromise',
             'v2/api/injectors/injectSignal',
+            'v2/api/injectors/injectRef',
           ],
         },
         {
