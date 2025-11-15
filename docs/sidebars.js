@@ -235,6 +235,7 @@ module.exports = {
           items: [
             'v2/api/utils/As',
             'v2/api/utils/getDefaultEcosystem',
+            'v2/api/utils/getInternals',
             'v2/api/utils/inject',
           ],
         },
