@@ -31,10 +31,10 @@ importers:
         version: '@zedux/core@1.3.4'
       '@zedux.v1/immer':
         specifier: npm:@zedux/immer@1.3.4
-        version: '@zedux/immer@1.3.4(@zedux/atoms@2.0.0-rc.10)(immer@9.0.21)'
+        version: '@zedux/immer@1.3.4(@zedux/atoms@1.3.4)(immer@9.0.21)'
       '@zedux.v1/machines':
         specifier: npm:@zedux/machines@1.3.4
-        version: '@zedux/machines@1.3.4(@zedux/atoms@2.0.0-rc.10)'
+        version: '@zedux/machines@1.3.4(@zedux/atoms@1.3.4)'
       '@zedux.v1/react':
         specifier: npm:@zedux/react@1.3.4
         version: '@zedux/react@1.3.4(react@19.0.0)'
@@ -7886,9 +7886,9 @@ snapshots:
 
   '@zedux/core@2.0.0-rc.10': {}
 
-  '@zedux/immer@1.3.4(@zedux/atoms@2.0.0-rc.10)(immer@9.0.21)':
+  '@zedux/immer@1.3.4(@zedux/atoms@1.3.4)(immer@9.0.21)':
     dependencies:
-      '@zedux/atoms': 2.0.0-rc.10
+      '@zedux/atoms': 1.3.4
       immer: 9.0.21
 
   '@zedux/immer@2.0.0-rc.10(@zedux/atoms@2.0.0-rc.10)(immer@9.0.21)':
@@ -7897,9 +7897,9 @@ snapshots:
       '@zedux/stores': 2.0.0-rc.10
       immer: 9.0.21
 
-  '@zedux/machines@1.3.4(@zedux/atoms@2.0.0-rc.10)':
+  '@zedux/machines@1.3.4(@zedux/atoms@1.3.4)':
     dependencies:
-      '@zedux/atoms': 2.0.0-rc.10
+      '@zedux/atoms': 1.3.4
 
   '@zedux/machines@2.0.0-rc.10(@zedux/atoms@2.0.0-rc.10)(@zedux/core@2.0.0-rc.10)':
     dependencies:
