@@ -9,7 +9,7 @@ import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 import { injectSelf } from '@zedux/react'
 ```
 
-An [injector](../glossary.mdx#injector) that returns the atom instance that's currently evaluating.
+An [unrestricted injector](../glossary.mdx#unrestricted-injector) that returns the atom instance that's currently evaluating.
 
 This gives you access to the atom instance object from within the atom itself, allowing you to read properties like the atom's [`.id`](../classes/AtomInstance.mdx#id) or even update, invalidate, or destroy the atom instance. Make sure you only call these methods in a callback, after the atom has been fully initialized.
 
@@ -22,9 +22,13 @@ The types reflect this by returning a `PartialAtomInstance`. On subsequent evalu
 ## Example
 
 ```tsx live ecosystemId=injectSelf/example resultVar=App version=2
-const recursiveAtom = atom('recursive', () => {
+const selfAwareAtom = atom('selfAware', () => {
   const self = injectSelf()
   const signal = injectSignal(0)
+
+  if (self.status === 'Initializing') {
+    console.log('Initializing selfAware atom')
+  }
 
   const increment = () => signal.set(val => val + 1)
 
@@ -44,7 +48,7 @@ const recursiveAtom = atom('recursive', () => {
 
 function App() {
   const [count, { increment, logSelf, destroySelf }] =
-    useAtomState(recursiveAtom)
+    useAtomState(selfAwareAtom)
 
   return (
     <div>
@@ -56,6 +60,8 @@ function App() {
   )
 }
 ```
+
+## Signature
 
 <Tabs>
   {tab1(`injectSelf = () => atomInstance`)}
