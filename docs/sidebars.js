@@ -220,6 +220,7 @@ module.exports = {
             'v2/api/injectors/injectPromise',
             'v2/api/injectors/injectSignal',
             'v2/api/injectors/injectRef',
+            'v2/api/injectors/injectSelf',
           ],
         },
         {
