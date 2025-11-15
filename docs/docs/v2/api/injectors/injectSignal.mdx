@@ -5,6 +5,10 @@ title: injectSignal
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
+```ts
+import { injectSignal } from '@zedux/react'
+```
+
 An [injector](../glossary.mdx#injector) that creates and returns a stable [`Signal`](../classes/Signal.mdx) instance. The reference will never change for the lifetime of the injecting atom.
 
 Registers a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on the injected signal. By default, every state change in the injected signal will trigger a reevaluation of the current atom.
