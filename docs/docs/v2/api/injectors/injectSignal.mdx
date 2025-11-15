@@ -66,9 +66,9 @@ const passingGenerics = injectSignal<Message[], { message: Message }>([])
 
     <Legend>
       <Item name="events">
-        An object mapping event names to [`As<MyType>`](/not-done?path=../utils/As) where [`As`](/not-done?path=../utils/As) is Zedux's [`As`](/not-done?path=../utils/As) util and `MyType` is the payload type of the event.
+        An object mapping event names to `As<MyType>` where `As` is Zedux's [`As` util](../utils/As.mdx) and `MyType` is the payload type of the event.
 
-        This payload must always be passed when the event is sent. Specify [`As<undefined>`](/not-done?path=../utils/As) to allow no payload.
+        This payload must always be passed when the event is sent. Specify `As<undefined>` to allow no payload.
       </Item>
       <Item name="reactive">
         A boolean. Default: `true`.

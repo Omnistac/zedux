@@ -980,7 +980,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="signal">
-    Creates and caches a new signal. It's recommended to use [`injectSignal`](../injectors/injectSignal) instead when possible. However, `ecosystem.signal` can be useful for dynamically creating signals, at the cost of having to manage their lifecycles. For example:
+    Creates and caches a new signal. It's recommended to use [`injectSignal`](../injectors/injectSignal.mdx) instead when possible. However, `ecosystem.signal` can be useful for dynamically creating signals, at the cost of having to manage their lifecycles. For example:
 
     ```ts
     // `injectSignal` manages the signal's lifecycle...
@@ -996,7 +996,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
     }
     ```
 
-    This is just one example. You can manage these signals however you like - e.g. calling [`.destroy`](./ZeduxNode#destroy) on them manually or just keeping them around forever.
+    This is just one example. You can manage these signals however you like - e.g. calling [`.destroy`](./ZeduxNode.mdx#destroy) on them manually or just keeping them around forever.
 
     Signature:
 
@@ -1015,7 +1015,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
         { events }
         ```
 
-        - `events`: An object mapping custom event names to `As<PayloadType>`. See [the `As` util](/not-done?path=../utils/As) for more details.
+        - `events`: An object mapping custom event names to `As<PayloadType>`. See [the `As` util](../utils/As.mdx) for more details.
       </Item>
       <Item name="Returns">
         A new signal instance.
@@ -1045,7 +1045,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
         Optional. One of `'flat'`, `'top-down'`, or `'bottom-up'`. Default: `'flat'`.
       </Item>
       <Item name="Returns">
-        An object whose structure depends on the requested view. See [the graph walkthrough](../../../walkthrough/the-graph#getting-the-graph).
+        An object whose structure depends on the requested view. See [the graph walkthrough](../../../walkthrough/the-graph.mdx#getting-the-graph).
       </Item>
     </Legend>
 

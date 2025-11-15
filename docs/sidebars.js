@@ -232,7 +232,7 @@ module.exports = {
         {
           type: 'category',
           label: 'Utils',
-          items: ['v2/api/utils/inject'],
+          items: ['v2/api/utils/As', 'v2/api/utils/inject'],
         },
         'v2/api/glossary',
       ],
