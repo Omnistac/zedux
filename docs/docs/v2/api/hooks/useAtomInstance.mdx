@@ -142,14 +142,12 @@ There are a few ways to do this:
         A string. Default: `useAtomInstance`. Used for debugging to describe the reason for creating this graph edge. This default is usually fine.
       </Item>
       <Item name="subscribe">
-        A boolean. Default: `false`. Pass `subscribe: true` to make `useAtomInstance` create a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) instead.
+        A boolean. Default: `false`. Pass `true` to make `useAtomInstance` create a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) instead.
       </Item>
       <Item name="suspend">
         A boolean. Default: `true`. Whether the component should suspend if the resolved atom has a [promise](../classes/AtomInstance.mdx#promise) set. Pass `suspend: false` to prevent this hook from triggering React suspense.
       </Item>
     </Legend>
-
-    See the [React Hooks walkthrough](/not-done?path=/../../walkthrough/react-hooks.mdx) for more details.
 
   </Item>
   <Item name="Returns">
@@ -164,4 +162,3 @@ There are a few ways to do this:
 - [The `useAtomState` hook](./useAtomState.mdx)
 - [The `useAtomValue` hook](./useAtomValue.mdx)
 - [The `injectAtomInstance` injector](../injectors/injectAtomInstance.mdx)
-- [The React Hooks walkthrough](/not-done?path=/../../walkthrough/react-hooks.mdx)

@@ -211,7 +211,7 @@ All signals have the following built-in events:
   <Item name="mutate" suffix="event">
     Sent whenever [`signal.mutate`](#mutate) is called.
 
-    The payload is an array of [transactions](/not-done?path=../types/Transaction) efficiently documenting the changes made to the signal's state by the `mutate` call.
+    The payload is an array of [transactions](../types/Transaction.mdx) efficiently documenting the changes made to the signal's state by the `mutate` call.
 
     ```tsx live noProvide=true resultVar=result version=2
     const ecosystem = createEcosystem()
@@ -274,7 +274,7 @@ Signals have the following unique methods:
 
     This is recursive! Zedux will lazily create proxies as needed when you access nested properties.
 
-    Every `mutate` call also causes the signal to fire both a [`change` event](#change-event) and a [`mutate` event](#mutate-event) with an array of [transactions](/not-done?path=../types/Transaction) efficiently documenting the changes made.
+    Every `mutate` call also causes the signal to fire both a [`change` event](#change-event) and a [`mutate` event](#mutate-event) with an array of [transactions](../types/Transaction.mdx) efficiently documenting the changes made.
 
     :::important
     `mutate` can only be called on signals whose state is a JavaScript object, array, or Set.

@@ -5,9 +5,9 @@ title: SelectorInstance
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-A cached [selector](/not-done?path=../types/AtomSelector). When a selector is used for the first time in most Zedux hooks, injectors, or ecosystem methods, Zedux caches the selector's result by creating an instance of this class.
+A cached [selector](../types/AtomSelector.mdx). When a selector is used for the first time in most Zedux hooks, injectors, or ecosystem methods, Zedux caches the selector's result by creating an instance of this class.
 
-Selectors are cached by reference. Each unique [AtomSelector](/not-done?path=../types/AtomSelector) function reference or [AtomSelectorConfig](/not-done?path=../types/AtomSelectorConfig) object creates a unique cached selector instance.
+Selectors are cached by reference. Each unique [AtomSelector](../types/AtomSelector.mdx) function reference or [AtomSelectorConfig](../types/AtomSelectorConfig.mdx) object creates a unique cached selector instance.
 
 Selectors that take params also create a unique cached selector instance for each unique set of params. This works exactly the same as [atom params](./AtomInstance#params).
 
@@ -15,7 +15,7 @@ Selector instances are graph nodes, meaning this class extends [the `ZeduxNode` 
 
 ## Creation
 
-You never instantiate this class yourself. Zedux instantiates it automatically as you use [selectors](/not-done?path=../types/AtomSelector) in your app.
+You never instantiate this class yourself. Zedux instantiates it automatically as you use [selectors](../types/AtomSelector.mdx) in your app.
 
 ```ts
 const getUsername = ({ get }: Ecosystem) => get(userDataAtom).username
@@ -98,7 +98,7 @@ For TypeScript users, selector instances inherit the following generics from the
   <Item name="G['Template']">
     See [`ZeduxNode<{ Template }>`](./ZeduxNode.mdx#gtemplate).
     
-    For selectors, this is a reference to the [AtomSelector](/not-done?path=../types/AtomSelector) function or [AtomSelectorConfig](/not-done?path=../types/AtomSelectorConfig) object that was used to create this selector instance.
+    For selectors, this is a reference to the [AtomSelector](../types/AtomSelector.mdx) function or [AtomSelectorConfig](../types/AtomSelectorConfig.mdx) object that was used to create this selector instance.
 
   </Item>
 </Legend>
@@ -155,7 +155,7 @@ Selector instances inherit the following methods from [`ZeduxNode`](./ZeduxNode.
 
 ## See Also
 
-- The [selectors walkthrough](../../../walkthrough/selectors.mdx)
+- The [selectors walkthrough](/not-done?path=../../walkthrough/selectors.mdx)
 - The "selector template" types:
-  - [The `AtomSelector` type](/not-done?path=../types/AtomSelector)
-  - [The `AtomSelectorConfig` type](/not-done?path=../types/AtomSelectorConfig)
+  - [The `AtomSelector` type](../types/AtomSelector.mdx)
+  - [The `AtomSelectorConfig` type](../types/AtomSelectorConfig.mdx)

@@ -5,7 +5,7 @@ title: injectWhy
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-An [unrestricted injector](../glossary.mdx#unrestricted-injector) that returns an array of [reasons](/not-done?path=../types/EvaluationReason.mdx) that explain why the current atom is evaluating.
+An [unrestricted injector](../glossary.mdx#unrestricted-injector) that returns an array of [reasons](../types/EvaluationReason.mdx) that explain why the current atom is evaluating.
 
 This is essentially an alias for the following:
 
@@ -75,7 +75,7 @@ function App() {
 
 <Legend>
   <Item name="Returns">
-    An array of [EvaluationReasons](/not-done?path=../types/EvaluationReason.mdx) that explain why the current atom is evaluating.
+    An array of [EvaluationReasons](../types/EvaluationReason.mdx) that explain why the current atom is evaluating.
 
     Returns an empty array on the initial evaluation (and only on the initial evaluation). This can be used to determine if this is the first evaluation. But it's recommended to use [`injectSelf`](./injectSelf.mdx) instead:
 

@@ -67,15 +67,14 @@ function App() {
 
 ## Interface
 
-<Tabs>
-  {tab1(`interface AtomConfig<State>`)}
-  {tab2(`interface AtomConfig<State = any> {
-    dehydrate?: (state: State) => any
-    tags?: string[]
-    hydrate?: (dehydratedState: unknown) => State
-    ttl?: number
-  }`)}
-</Tabs>
+```ts
+interface AtomConfig<State = any> {
+  dehydrate?: (state: State) => any
+  tags?: string[]
+  hydrate?: (dehydratedState: unknown) => State
+  ttl?: number
+}
+```
 
 <Legend>
   <Item name="dehydrate">
@@ -97,7 +96,7 @@ function App() {
     hydrate: (dehydratedState: unknown) => State  
     ```
     
-    This is called before Zedux [automatically hydrates](/not-done?path=../../advanced/persistence#automatic-hydration) the atom or when [`injectHydration`](../injectors/injectHydration.mdx) is called without `{ transform: false }`.
+    This is called before Zedux [automatically hydrates](../../advanced/persistence.mdx#automatic-hydration) the atom or when [`injectHydration`](../injectors/injectHydration.mdx) is called without `{ transform: false }`.
 
   </Item>
   <Item name="ttl">

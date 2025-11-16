@@ -6,7 +6,7 @@ title: ZeduxNode
 import useBaseUrl from '@docusaurus/useBaseUrl'
 import { Legend, Item, Link, Tabs, tab1, tab2 } from '@site/src/all'
 
-This is the base class for every [graph node](../glossary#graph-node). The [AtomInstance class](./AtomInstance), [SelectorInstance class](./SelectorInstance.mdx), [Signal class](./Signal), and several other graph node types extend this class.
+This is the base class for every [graph node](../glossary.mdx#graph-node). The [AtomInstance class](./AtomInstance), [SelectorInstance class](./SelectorInstance.mdx), [Signal class](./Signal), and several other graph node types extend this class.
 
 You never create this class directly and should never need to reference it directly except as a type.
 
@@ -47,12 +47,13 @@ Full list of keys on the `NodeGenerics` (`G`) type generic:
   </Item>
   <Item name="G['Params']">
     A tuple type. The parameters of this node. Only exists on [atom
-    instances](./AtomInstance) and [selector instances](./SelectorInstance.mdx).
+    instances](./AtomInstance.mdx) and [selector
+    instances](./SelectorInstance.mdx).
   </Item>
   <Item name="G['State']">The state type of this node. Can be anything.</Item>
   <Item name="G['Template']">
     A recursive reference to the current node's full template type. `undefined`
-    if none. Only [atom instances](./AtomInstance) and [selector
+    if none. Only [atom instances](./AtomInstance.mdx) and [selector
     instances](./SelectorInstance.mdx) have templates.
   </Item>
 </Legend>
@@ -71,7 +72,7 @@ A node's events can be listened to using [`node.on()`](#on). Every node has the 
 
     - `newState` - The new state of the graph node. Can be anything.
     - `oldState` - The previous state of the graph node. Can be anything.
-    - `reasons` - An indefinitely-nested array of [reasons](/not-done?path=../types/EvaluationReason) why the state changed. This tracks the series of state changes through the dependency graph that led to the current node changing. If the node was updated directly, this will be undefined.
+    - `reasons` - An indefinitely-nested array of [reasons](../types/EvaluationReason.mdx) why the state changed. This tracks the series of state changes through the dependency graph that led to the current node changing. If the node was updated directly, this will be undefined.
     - `source` - The node that changed. Though the types don't reflect it yet, this will always be defined.
     - `type` - The string `"change"`.
 
@@ -164,7 +165,7 @@ Every node has the following **readonly** properties:
   <Item name="id">
     A string. The unique id of this node. Zedux always tries to make this somewhat human-readable for easier debugging.
 
-    For nodes that take params, the id is the combination of the node template's key and a deterministic stringification of the params. A node template's "key" can the string passed to the [`atom()`](../factories/atom) factory for atoms or the selector function's name for selectors See [`ecosystem.hash()`](./Ecosystem#hash) or [`node.params`](#params) for more details on how params are stringified.
+    For nodes that take params, the id is the combination of the node template's key and a deterministic stringification of the params. A node template's "key" can the string passed to the [`atom()`](../factories/atom.mdx) factory for atoms or the selector function's name for selectors See [`ecosystem.hash()`](./Ecosystem.mdx#hash) or [`node.params`](#params) for more details on how params are stringified.
 
     ```ts
     ecosystem.getNode(atom('a', null)).id // 'a'
@@ -178,7 +179,7 @@ Every node has the following **readonly** properties:
   <Item name="params">
     An array. The parameters passed to this node when it was created.
 
-    A reference to the raw, unserialized params that were used to create this atom instance. Only [atom instances](./AtomInstance) and [selector instances](./SelectorInstance.mdx) take params. This will be `undefined` for node types that don't take params (like signals). For nodes that can take params but weren't passed any (like singleton atoms), this will be an empty array.
+    A reference to the raw, unserialized params that were used to create this atom instance. Only [atom instances](./AtomInstance.mdx) and [selector instances](./SelectorInstance.mdx) take params. This will be `undefined` for node types that don't take params (like signals). For nodes that can take params but weren't passed any (like singleton atoms), this will be an empty array.
 
     ```ts
     const instanceA = useAtomInstance(myAtom, ['param 1', 'param 2'])
@@ -203,7 +204,7 @@ Every node has the following **readonly** properties:
     useAtomInstance(myAtom, ['b', 'a'])
     ```
 
-    The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`instance.get()`](#get) or [`ecosystem.get(instance)`](./Ecosystem#get), [`injectAtomValue()`](../injectors/injectAtomValue.mdx), or any other dynamic injector to register a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the passed atom instance.
+    The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`instance.get()`](#get) or [`ecosystem.get(instance)`](./Ecosystem#get), [`injectAtomValue()`](../injectors/injectAtomValue.mdx), or any other dynamic injector to register a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on the passed atom instance.
 
 ```tsx live ecosystemId=AtomInstance-params resultVar=Shout version=2
 const normalAtom = atom(
@@ -236,13 +237,13 @@ function Shout() {
       src={useBaseUrl('/img/diagrams/status-machine.png')}
     />
 
-    This is mostly for debugging, but it has some practical uses. For example, you can check that `node.status !== 'Destroyed'` when holding a reference to a node outside of React/atoms (and if it is, update your local reference using [`ecosystem.getNode()`](./Ecosystem#getnode)).
+    This is mostly for debugging, but it has some practical uses. For example, you can check that `node.status !== 'Destroyed'` when holding a reference to a node outside of React/atoms (and if it is, update your local reference using [`ecosystem.getNode()`](./Ecosystem.mdx#getnode)).
 
   </Item>
   <Item name="template">
-    A reference to the template this node was created from. `undefined` if none. Only [atom instances](./AtomInstance) and [selector instances](./SelectorInstance.mdx) have templates.
+    A reference to the template this node was created from. `undefined` if none. Only [atom instances](./AtomInstance.mdx) and [selector instances](./SelectorInstance.mdx) have templates.
 
-    For atom instances, this will be the [atom template](./AtomTemplate). For selector instances, this will be the [selector template](../types/SelectorTemplate.mdx).
+    For atom instances, this will be the [atom template](./AtomTemplate.mdx). For selector instances, this will be the [selector template](../types/SelectorTemplate.mdx).
 
   </Item>
 </Legend>
@@ -271,10 +272,10 @@ Every node has the following methods:
 
   </Item>
   <Item name="get">
-    Gets the current value of the node. Registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the node when called in [reactive contexts](../glossary#reactive-context).
+    Gets the current value of the node. Registers a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on the node when called in [reactive contexts](../glossary.mdx#reactive-context).
   </Item>
   <Item name="getOnce">
-    Gets the current value of the node. Unlike [`node.get()`], `getOnce` does not register any graph dependencies, even when called in [reactive contexts](../glossary#reactive-context).
+    Gets the current value of the node. Unlike [`node.get()`], `getOnce` does not register any graph dependencies, even when called in [reactive contexts](../glossary.mdx#reactive-context).
   </Item>
   <Item name="on">
     Attaches an event listener to the node.

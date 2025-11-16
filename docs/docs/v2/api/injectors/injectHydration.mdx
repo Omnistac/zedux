@@ -13,7 +13,7 @@ An [injector](../glossary.mdx#injector) that retrieves data previously passed to
 
 If the atom has a [`hydrate`](../types/AtomConfig.mdx#hydrate) function configured, `injectHydration` will call it with the atom's hydration and return the result. Pass `{ transform: false }` to prevent this.
 
-`injectHydration` is unique in that it has a side effect: When called, it prevents Zedux from [automatically hydrating](/not-done?path=../../advanced/persistence#automatic-hydration) the atom after its initial evaluation. Pass `{ intercept: false }` to prevent this.
+`injectHydration` is unique in that it has a side effect: When called, it prevents Zedux from [automatically hydrating](../../advanced/persistence.mdx#automatic-hydration) the atom after its initial evaluation. Pass `{ intercept: false }` to prevent this.
 
 :::tip
 Simple atoms don't need this. Zedux automatically hydrates atoms after their initial evaluation.

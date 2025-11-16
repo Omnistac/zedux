@@ -11,7 +11,7 @@ import { EcosystemProvider } from '@zedux/react'
 
 A React component that provides an [ecosystem](../classes/Ecosystem) to a component tree. The provided ecosystem will take control of all atom usages below it.
 
-You can pass either an existing [ecosystem](../classes/Ecosystem) via the `ecosystem` prop or any number of [EcosystemConfig properties](/not-done?path=../types/EcosystemConfig) via their respectively named props.
+You can pass either an existing [ecosystem](../classes/Ecosystem) via the `ecosystem` prop or any number of [EcosystemConfig properties](../types/EcosystemConfig.mdx) via their respectively named props.
 
 When passing config properties, the EcosystemProvider will create an ecosystem for you.
 
@@ -127,7 +127,7 @@ You must pass either an `ecosystem` prop or any combination of the ecosystem con
 
   </Item>
   <Item name="ecosystemConfig">
-    See [the EcosystemConfig type](/not-done?path=../types/EcosystemConfig) for all the other props and their types. The EcosystemConfig key names have a one-to-one mapping with props of this component.
+    See [the EcosystemConfig type](../types/EcosystemConfig.mdx) for all the other props and their types. The EcosystemConfig key names have a one-to-one mapping with props of this component.
 
     If the `id` prop is changed, Zedux will completely destroy the previous ecosystem and create a new one using the id and the current value of all the other EcosystemConfig props. Changing any other props besides `id` will have no effect unless `id` is also changed.
 
@@ -139,6 +139,6 @@ You must pass either an `ecosystem` prop or any combination of the ecosystem con
 ## See Also
 
 - [The Ecosystems walkthrough](../../../walkthrough/ecosystems.mdx)
-- [The `EcosystemConfig` type](/not-done?path=../types/EcosystemConfig)
+- [The `EcosystemConfig` type](../types/EcosystemConfig.mdx)
 - [The `Ecosystem` class](../classes/Ecosystem.mdx)
 - [The `useEcosystem` hook](../hooks/useEcosystem.mdx)

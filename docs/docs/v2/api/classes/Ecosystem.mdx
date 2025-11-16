@@ -119,7 +119,7 @@ Full event list:
 
     - `newState` - The new state of the graph node. Can be anything.
     - `oldState` - The previous state of the graph node. Can be anything.
-    - `reasons` - An indefinitely-nested array of [reasons](/not-done?path=../types/EvaluationReason) why the state changed. This tracks the series of state changes through the dependency graph that led to the current node changing. If the node was updated directly, this will be undefined.
+    - `reasons` - An indefinitely-nested array of [reasons](../types/EvaluationReason.mdx) why the state changed. This tracks the series of state changes through the dependency graph that led to the current node changing. If the node was updated directly, this will be undefined.
     - `source` - The [`ZeduxNode`](./ZeduxNode) that changed. In normal Zedux v2+ apps, this will always be defined. The legacy `@zedux/stores` package's stores are the only exception.
     - `type` - The string `"change"`.
 
@@ -220,7 +220,7 @@ function App() {
     { reasons, source, type }
     ```
 
-    - `reasons` - An indefinitely-nested array of [reasons](/not-done?path=../types/EvaluationReason) that resulted in the atom reevaluating and changing its promise. This tracks the series of state changes through the dependency graph that led to the current node reevaluating. If the node was updated directly, this will be undefined.
+    - `reasons` - An indefinitely-nested array of [reasons](../types/EvaluationReason.mdx) that resulted in the atom reevaluating and changing its promise. This tracks the series of state changes through the dependency graph that led to the current node reevaluating. If the node was updated directly, this will be undefined.
     - `source` - The [`ZeduxNode`](./ZeduxNode) whose promise changed. Though the types don't reflect it yet, this will always be defined.
     - `type` - The string `"promiseChange"`.
 
@@ -327,10 +327,10 @@ Every ecosystem has the following properties. All properties are readonly!
 
 <Legend>
   <Item name="asyncScheduler">
-    A reference to the [async scheduler](/not-done?path=./AsyncScheduler) used by this ecosystem. You may want to access this scheduler's `queue` or `flush` methods. See the [AsyncScheduler doc](/not-done?path=./AsyncScheduler) for details.
+    A reference to the [async scheduler](./AsyncScheduler.mdx) used by this ecosystem. You may want to access this scheduler's `queue` or `flush` methods. See the [AsyncScheduler doc](./AsyncScheduler.mdx) for details.
   </Item>
   <Item name="complexParams">
-    A boolean. May be undefined. This is set to the `complexParams` value you passed via [EcosystemConfig](/not-done?path=../types/EcosystemConfig#complexparams) when creating this ecosystem.
+    A boolean. May be undefined. This is set to the `complexParams` value you passed via [EcosystemConfig](../types/EcosystemConfig.mdx#complexparams) when creating this ecosystem.
 
     Whether to allow non-serializable values as atom and selector params. See [the complex params guide](../../../advanced/complex-params).
 
@@ -342,18 +342,18 @@ Every ecosystem has the following properties. All properties are readonly!
 
   </Item>
   <Item name="id">
-    A string or undefined. The id of this ecosystem as set via [EcosystemConfig](/not-done?path=../types/EcosystemConfig#id) when creating this ecosystem (if any). The string `'@@zedux/default'` is reserved for the [default ecosystem](#default-ecosystem).
+    A string or undefined. The id of this ecosystem as set via [EcosystemConfig](../types/EcosystemConfig.mdx#id) when creating this ecosystem (if any). The string `'@@zedux/default'` is reserved for the [default ecosystem](#default-ecosystem).
 
     This is just for debugging and is not guaranteed to be unique.
 
   </Item>
   <Item name="syncScheduler">
-    A reference to the [sync scheduler](/not-done?path=./SyncScheduler) used by this ecosystem. Unlike the [`asyncScheduler`](#asyncscheduler), normal users should never need to access this. This is mostly for plugin authors to efficiently schedule Zedux jobs.
+    A reference to the [sync scheduler](./SyncScheduler.mdx) used by this ecosystem. Unlike the [`asyncScheduler`](#asyncscheduler), normal users should never need to access this. This is mostly for plugin authors to efficiently schedule Zedux jobs.
   </Item>
   <Item name="tags">
-    An array of strings. This is set to the `tags` value you passed via [EcosystemConfig](/not-done?path=../types/EcosystemConfig#tags) when creating this ecosystem.
+    An array of strings. This is set to the `tags` value you passed via [EcosystemConfig](../types/EcosystemConfig.mdx#tags) when creating this ecosystem.
 
-    These work in conjunction with [atom tags](/not-done?path=../types/AtomTemplate#tags) to raise warnings when unsafe atom templates are not overridden in certain environments.
+    These work in conjunction with [atom tags](../types/AtomTemplate.mdx#tags) to raise warnings when unsafe atom templates are not overridden in certain environments.
 
     If an atom template is used that has a flag that is not present in this array, Zedux will log a warning.
 
@@ -385,7 +385,7 @@ Every ecosystem has the following properties. All properties are readonly!
 
   </Item>
   <Item name="onReady">
-    A function. May be undefined. This is set to the `onReady` value you passed via [EcosystemConfig](/not-done?path=../types/EcosystemConfig#onready) when creating this ecosystem.
+    A function. May be undefined. This is set to the `onReady` value you passed via [EcosystemConfig](../types/EcosystemConfig.mdx#onready) when creating this ecosystem.
 
     Will be called as soon as the ecosystem has initialized. Is also called
     every time the ecosystem is [`reset`](#reset).
@@ -449,13 +449,10 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
     If an initial `overrides` array is passed, they will be immediately mapped into this object.
 
   </Item>
-  <Item name="selectors">
-    The [Selectors](/not-done?path=../classes/Selectors) class instance that tracks all cached atom selectors in this ecosystem.
-  </Item>
   <Item name="ssr">
     A boolean. Default: `false`. Whether the ecosystem is being used on the server to generate SSR content.
 
-    This is set to the `ssr` value you passed via [EcosystemConfig](/not-done?path=../types/EcosystemConfig) when creating this ecosystem.
+    This is set to the `ssr` value you passed via [EcosystemConfig](../types/EcosystemConfig.mdx) when creating this ecosystem.
 
     Currently the only thing this affects is [`injectEffect()`](../injectors/injectEffect.mdx) - SSR mode prevents effects from running at all in this ecosystem.
 
@@ -497,7 +494,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
       </Item>
     </Legend>
 
-    See [the batching guide](/not-done?path=../../advanced/batching).
+    See [the batching guide](../../advanced/batching.mdx).
 
   </Item>
   <Item name="dehydrate">
@@ -517,7 +514,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
       <Item name="filter">
         Optional. Filters to limit the atoms included in the snapshot. If not specified, all atom instances will be dehydrated.
 
-        See [the DehydrationFilter type](/not-done?path=../types/DehydrationFilter) for allowed values and what they do.
+        See [the DehydrationFilter type](../types/DehydrationFilter.mdx) for allowed values and what they do.
       </Item>
       <Item name="Returns">
         An object mapping atom instance ids to their current state.
@@ -595,7 +592,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
       <Item name="filter">
         Optional. Filters to limit the nodes returned. If not specified, `findAll` returns all nodes.
 
-        See [the NodeFilter type](/not-done?path=../types/NodeFilter) for allowed values and what they do.
+        See [the NodeFilter type](../types/NodeFilter.mdx) for allowed values and what they do.
       </Item>
       <Item name="Returns">
         An array of all cached nodes in the ecosystem that match the filter.
@@ -624,7 +621,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
     `get` is reactive by default. This behavior changes depending on when it's called:
 
-    - When called in a [reactive context](../glossary#reactive-context) (e.g. while an atom or selector is evaluating), `get` registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) between the currently-evaluating node and the retrieved node.
+    - When called in a [reactive context](../glossary.mdx#reactive-context) (e.g. while an atom or selector is evaluating), `get` registers a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) between the currently-evaluating node and the retrieved node.
     - When called outside evaluation (e.g. in an effect or callback), `get` doesn't register any graph dependencies.
 
     Note that [`node.get()`](./ZeduxNode#get) has this exact same behavior. In fact, `ecosystem.get(myAtom)` is almost a shorthand for `ecosystem.getNode(myAtom).get()`, with one key difference. See next section:
@@ -665,7 +662,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
     <Legend>
       <Item name="templateOrInstance">
-        Required. An [atom template](./AtomTemplate), [selector template](../types/SelectorTemplate.mdx), or atom instance.
+        Required. An [atom template](./AtomTemplate.mdx), [selector template](../types/SelectorTemplate.mdx), or [atom instance](./AtomInstance.mdx).
       </Item>
       <Item name="params">
         Optional (required if the template takes params). An array of the atom or selector's params. Only relevant when passing an atom or selector template.
@@ -677,7 +674,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="getNode">
-    Gets a cached [graph node](../glossary#graph-node), namely an [atom instance](./AtomInstance) or [selector instance](./SelectorInstance.mdx). Creates and caches the node if it doesn't exist yet.
+    Gets a cached [graph node](../glossary.mdx#graph-node), namely an [atom instance](./AtomInstance.mdx) or [selector instance](./SelectorInstance.mdx). Creates and caches the node if it doesn't exist yet.
 
     ```ts
     const { getNode } = myEcosystem // `getNode` can be destructured like this
@@ -698,7 +695,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
     `getNode` registers graph dependencies by default. This behavior changes depending on when it's called:
 
-    - When called in a [reactive context](../glossary#reactive-context) (e.g. while an atom or selector is evaluating), `getNode` registers a [static graph dependency](../glossary#static-graph-dependency) (unlike [`ecosystem.get`](#get), which registers dynamic dependencies) between the currently-evaluating node and the retrieved node.
+    - When called in a [reactive context](../glossary.mdx#reactive-context) (e.g. while an atom or selector is evaluating), `getNode` registers a [static graph dependency](../glossary.mdx#static-graph-dependency) (unlike [`ecosystem.get`](#get), which registers dynamic dependencies) between the currently-evaluating node and the retrieved node.
     - When called outside evaluation (e.g. in an effect or callback), `getNode` doesn't register any graph dependencies.
 
     #### Note on Caching
@@ -754,7 +751,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="getNodeOnce">
-    Returns a [graph node](../glossary#graph-node). Functions exactly like [`ecosystem.getNode`](#getnode) except it never registers graph dependencies even when called in [reactive contexts](../glossary#reactive-context).
+    Returns a [graph node](../glossary.mdx#graph-node). Functions exactly like [`ecosystem.getNode`](#getnode) except it never registers graph dependencies even when called in [reactive contexts](../glossary.mdx#reactive-context).
 
     Signature:
 
@@ -766,7 +763,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="getOnce">
-    Returns the current value of the resolved atom or selector node. Functions exactly like [`ecosystem.get`](#get) except it never registers graph dependencies even when called in [reactive contexts](../glossary#reactive-context).
+    Returns the current value of the resolved atom or selector node. Functions exactly like [`ecosystem.get`](#get) except it never registers graph dependencies even when called in [reactive contexts](../glossary.mdx#reactive-context).
 
     Signature:
 
@@ -792,7 +789,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
       <Item name="params">
         Required. An array of anything.
 
-        If any item is a [graph node](../glossary#graph-node), it will be serialized as the node's id.
+        If any item is a [graph node](../glossary.mdx#graph-node), it will be serialized as the node's id.
       </Item>
       <Item name="acceptComplexParams">
         Optional. A boolean. Defaults to the ecosystem's [`complexParams` config](#complexparams).
@@ -835,7 +832,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
   <Item name="makeId">
     Generates a consistent id that is guaranteed to be unique in this ecosystem, but not at all guaranteed to be unique globally.
 
-    You can override this by passing the [`makeId`](/not-done?path=../types/EcosystemConfig#makeid) option to [`createEcosystem`](../factories/createEcosystem.mdx). The default implementation is suitable for most use cases, including:
+    You can override this by passing the [`makeId`](../types/EcosystemConfig.mdx#makeid) option to [`createEcosystem`](../factories/createEcosystem.mdx). The default implementation is suitable for most use cases, including:
 
     - apps that use only one ecosystem (the most common).
     - snapshot testing the ecosystem graph and dehydrations - calling `ecosystem.reset()` after each test will reset the ecosystem's id counter.
@@ -922,7 +919,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="reset">
-    Force destroys all [graph nodes](../glossary#graph-node) in the ecosystem. Calls the cleanup function returned from the [onReady](/not-done?path=../types/EcosystemConfig#onready) function (if any), and calls `onReady` again to reinitialize the ecosystem.
+    Force destroys all [graph nodes](../glossary.mdx#graph-node) in the ecosystem. Calls the cleanup function returned from the [onReady](../types/EcosystemConfig.mdx#onready) function (if any), and calls `onReady` again to reinitialize the ecosystem.
 
     Accepts several options to also clear cached hydrations, listeners, and overrides.
 
@@ -1051,7 +1048,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="why">
-    Returns a list of [EvaluationReasons](/not-done?path=../types/EvaluationReason) detailing why the current atom instance or selector is evaluating.
+    Returns a list of [EvaluationReasons](../types/EvaluationReason.mdx) detailing why the current atom instance or selector is evaluating.
 
     If called outside a selector or atom state factory, `why` always returns `undefined`.
 
@@ -1059,7 +1056,7 @@ ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
 
   </Item>
   <Item name="withScope">
-    Runs a callback in a scoped context. This is the only way to create or retrieve [scoped atoms](../glossary#scoped-atom) outside React components.
+    Runs a callback in a scoped context. This is the only way to create or retrieve [scoped atoms](../glossary.mdx#scoped-atom) outside React components.
     
     A "scope" is a JS Map mapping "contexts" to values. "Context" simultaneously means two completely different things:
 
