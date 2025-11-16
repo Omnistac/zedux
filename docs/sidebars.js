@@ -237,6 +237,7 @@ module.exports = {
             'v2/api/utils/getDefaultEcosystem',
             'v2/api/utils/getInternals',
             'v2/api/utils/inject',
+            'v2/api/utils/is',
           ],
         },
         'v2/api/glossary',
