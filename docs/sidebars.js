@@ -238,6 +238,7 @@ module.exports = {
             'v2/api/utils/getInternals',
             'v2/api/utils/inject',
             'v2/api/utils/is',
+            'v2/api/utils/setInternals',
           ],
         },
         'v2/api/glossary',
