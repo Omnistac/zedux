@@ -5,7 +5,7 @@ title: SelectorInstance
 
 import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
 
-A cached [selector](../types/AtomSelector.mdx). When a selector is used for the first time in most Zedux hooks, injectors, or ecosystem methods, Zedux caches the selector's result by creating an instance of this class.
+A cached [selector](../types/AtomSelector.mdx). When a [selector template](../types/SelectorTemplate.mdx) + [params](#params) combo is used for the first time in most Zedux hooks, injectors, or ecosystem methods, Zedux caches the selector's result by creating an instance of this class.
 
 Selectors are cached by reference. Each unique [AtomSelector](../types/AtomSelector.mdx) function reference or [AtomSelectorConfig](../types/AtomSelectorConfig.mdx) object creates a unique cached selector instance.
 
@@ -155,7 +155,7 @@ Selector instances inherit the following methods from [`ZeduxNode`](./ZeduxNode.
 
 ## See Also
 
-- The [selectors walkthrough](/not-done?path=../../walkthrough/selectors.mdx)
+- The [selectors walkthrough](../../walkthrough/selectors.mdx)
 - The "selector template" types:
   - [The `AtomSelector` type](../types/AtomSelector.mdx)
   - [The `AtomSelectorConfig` type](../types/AtomSelectorConfig.mdx)

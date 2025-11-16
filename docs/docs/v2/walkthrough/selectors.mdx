@@ -1,0 +1,298 @@
+---
+id: selectors
+title: Selectors
+---
+
+Selectors are lightweight, pure functions that derive state from atoms and other selectors. They're the easiest way to compose state in Zedux.
+
+Unlike [atom templates](../api/classes/AtomTemplate.mdx), which are instances of a class, selectors are just plain functions or configuration objects. They have a small footprint and give you a quick way to tap into Zedux's reactive power.
+
+:::tip You will learn
+
+- How to create, configure, compose, and consume selectors.
+- How to control when selectors reevaluate and when they cause dependents to reevaluate.
+- Some best practices for inline selectors.
+- How to refactor selectors to [ions](../api/factories/ion.mdx) for more control.
+
+:::
+
+## Basic Selectors
+
+A selector is a function that takes an [ecosystem](../api/classes/Ecosystem.mdx) as its first parameter and returns a derived value:
+
+```tsx
+import { atom, useAtomValue } from '@zedux/react'
+
+const usersAtom = atom('users', [
+  { id: 1, name: 'Alice', role: 'admin' },
+  { id: 2, name: 'Bob', role: 'user' },
+  { id: 3, name: 'Charlie', role: 'admin' },
+])
+
+// A simple selector that filters users by role
+const getAdminUsers = ({ get }: Ecosystem) =>
+  get(usersAtom).filter(user => user.role === 'admin')
+
+function AdminList() {
+  const adminUsers = useAtomValue(getAdminUsers)
+
+  return (
+    <ul>
+      {adminUsers.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+The return value is automatically cached using the selector function reference as the cache key. When `usersAtom` updates, the selector automatically reevaluates. If the selector's result changes, components using it will rerender and other atoms or selectors using it will reevaluate.
+
+## Using Selectors
+
+Selectors are consumed in the same way as atoms. You can pass them to almost any Zedux hook, injector, or ecosystem method that accepts an atom template or instance:
+
+```tsx
+// in a React component:
+const adminUsers = useAtomValue(getAdminUsers)
+
+// in an atom:
+const adminUsers = injectAtomValue(getAdminUsers)
+// or
+const adminUsers = injectEcosystem().get(getAdminUsers)
+
+// in an ion or another selector:
+const adminUsers = get(getAdminUsers)
+```
+
+Assuming `get` is called during atom or selector evaluation, all of these examples subscribe to changes in the selector's result.
+
+### `SelectorInstance`
+
+When a unique selector is first used, Zedux creates a [selector instance](../api/classes/SelectorInstance.mdx) for it.
+
+You can get a reference to this cached selector instance without subscribing to it via [`ecosystem.getNode`](../api/classes/Ecosystem.mdx#getnode). Or you can find the selector instance after creation with [`ecosystem.find`](../api/classes/Ecosystem.mdx#find) or [`ecosystem.findAll`](../api/classes/Ecosystem.mdx#findall):
+
+```ts
+const getAdminUsersInstance = ecosystem.getNode(getAdminUsers)
+const allInstances = ecosystem.findAll('getAdminUsers')
+
+// as graph nodes, selector instances emit built-in events like `change` and `cycle`:
+getAdminUsersInstance.on('change', event => {
+  console.log('adminUsers changed', event)
+})
+```
+
+These selector instances are graph nodes, meaning they extend the [`ZeduxNode` class](../api/classes/ZeduxNode.mdx). As such, they inherit lots of functionality that atoms and signals also inherit, including the ability to [emit events](../api/classes/SelectorInstance.mdx#events) and [destroy themselves](../api/classes/SelectorInstance.mdx#destroy).
+
+:::tip
+You can think of selector instances as readonly atom instances.
+:::
+
+## Controlling Reevaluations
+
+Any [`ecosystem.get`](../api/classes/Ecosystem.mdx#get) or [`node.get`](../api/classes/ZeduxNode.mdx#get) calls inside a selector create a [dynamic graph dependency](../api/glossary.mdx#dynamic-graph-dependency). The selector will reevaluate whenever the retrieved node's state changes.
+
+You can also use [`ecosystem.getNode`](../api/classes/Ecosystem.mdx#getnode) to create a [static graph dependency](../api/glossary.mdx#static-graph-dependency). Static dependencies prevent the retrieved node from being destroyed while the selector needs it, but won't cause the selector to reevaluate when the node's state changes.
+
+```ts
+const getActiveUserCount = ({ get, getNode }: Ecosystem) => {
+  // Dynamic dependency - selector reevaluates when usersAtom changes
+  const users = get(usersAtom)
+
+  // Static dependency - keeps configAtom alive but doesn't subscribe to
+  // updates. Note that we use `.getOnce` here since `.get` would still
+  // create a dynamic dependency.
+  const config = getNode(configAtom).getOnce()
+
+  return users.filter(u => u.isActive).length
+}
+```
+
+You can also avoid creating graph edges entirely with [`ecosystem.getOnce`](../api/classes/Ecosystem.mdx#getonce) and [`ecosystem.getNodeOnce`](../api/classes/Ecosystem.mdx#getnodeonce):
+
+```ts
+const getActiveUserCount = ({ getNodeOnce, getOnce }: Ecosystem) => {
+  const users = getOnce(usersAtom)
+  const filtersInstance = getNodeOnce(filtersAtom)
+
+  return filtersInstance.exports.filterUsers(users, 'active')
+}
+```
+
+Avoid this unless you're sure you need it. Circumventing Zedux's natural reactivity can create brittle code and subtle bugs.
+
+## Composing Selectors
+
+Selectors can depend on other selectors, creating a graph of derived state:
+
+```tsx
+const getActiveUsers = ({ get }: Ecosystem) =>
+  get(usersAtom).filter(user => user.isActive)
+
+const getActiveUserCount = ({ get }: Ecosystem) => get(getActiveUsers).length
+
+const getUserStats = ({ get }: Ecosystem) => ({
+  total: get(usersAtom).length,
+  active: get(getActiveUserCount),
+  inactive: get(usersAtom).length - get(getActiveUserCount),
+})
+
+function UserStats() {
+  const stats = useAtomValue(getUserStats)
+
+  return (
+    <div>
+      <p>Total Users: {stats.total}</p>
+      <p>Active: {stats.active}</p>
+      <p>Inactive: {stats.inactive}</p>
+    </div>
+  )
+}
+```
+
+This natural derivation model is the primary reason why atomic state scales much better - both performance-wise and DX-wise - than singleton patterns like Redux and Zustand.
+
+## Parameterized Selectors
+
+Selectors can accept additional parameters after the ecosystem parameter. These become the selector's [params](../api/classes/SelectorInstance.mdx#params):
+
+```tsx
+const getUsersByRole = ({ get }: Ecosystem, role: string) =>
+  get(usersAtom).filter(user => user.role === role)
+
+function RoleBasedList({ role }: { role: string }) {
+  // TypeScript enforces that we pass the required param
+  const users = useAtomValue(getUsersByRole, [role])
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  )
+}
+
+// Example usage:
+<RoleBasedList role="admin" />
+<RoleBasedList role="moderator" />
+```
+
+Each unique combination of params creates a separate cached selector instance. This works exactly like [atom params](../api/classes/AtomInstance.mdx#params).
+
+## Inline Selectors
+
+Since selectors are just functions, you can create them inline:
+
+```tsx
+function FilteredTodos() {
+  const completedTodos = useAtomValue(({ get }) =>
+    get(todosAtom).filter(todo => todo.completed)
+  )
+
+  return <ul>{/* render completed todos */}</ul>
+}
+```
+
+This is supported, but since the selector function reference is recreated on every render, Zedux has to do extra work to handle this. For larger apps, it's generally recommended to define selectors outside components.
+
+:::tip
+Consider wrapping inline selectors in `useCallback` to explicitly declare the selector's dependencies.
+:::
+
+## Unstable Results
+
+When a selector returns a different object reference every time it runs, Zedux's caching behavior will be useless - all dependents will reevaluate every time the selector runs.
+
+To fix this, convert the selector to a [selector config object](./AtomSelectorConfig.mdx) with a results comparator:
+
+```tsx
+import type { AtomSelectorConfig } from '@zedux/react'
+
+const getUserSummary: AtomSelectorConfig = {
+  name: 'getUserSummary',
+  // this selector returns a new object reference every time it runs:
+  selector: ({ get }) => ({
+    total: get(usersAtom).length,
+    active: get(usersAtom).filter(u => u.isActive).length,
+  }),
+  // So we need to manually compare the results to prevent unnecessary updates:
+  resultsComparator: (prev, next) =>
+    prev.total === next.total && prev.active === next.active,
+}
+const summary = useAtomValue(getUserSummary)
+```
+
+:::tip
+All Zedux APIs that accept selectors also accept `AtomSelectorConfig` objects. You can use them interchangeably.
+:::
+
+:::note
+Zedux uses the entire config object as the cache key, not just the `selector` function reference. Different config objects for the same selector function will be treated as entirely different selectors.
+:::
+
+The `AtomSelectorConfig` object supports:
+
+- `selector` - The actual selector function you're configuring. This is the only required field.
+- `name` - A custom name for debugging (appears in the selector's [id](../api/classes/SelectorInstance.mdx#id))
+- `resultsComparator` - Compare results to prevent unnecessary updates.
+- `argsComparator` - Control when param changes should cause the selector to reevaluate. Note that Zedux only respects this option when the selector is used directly in a React hook.
+
+See the [`AtomSelectorConfig` type doc](../api/types/AtomSelectorConfig.mdx) for details.
+
+## Refactoring to Ions
+
+Selectors are designed for simple, pure calculations. They always reevaluate when any of their dependencies update. Sometimes you need more control over memoization details or side effects.
+
+When a selector becomes complex or you need fine-grained control over reevaluation, you can easily refactor it to an [ion](../api/factories/ion.mdx):
+
+```tsx
+// Before - a selector that always returns a new object reference
+const getUserName = ({ get }: Ecosystem) => ({
+  firstName: get(userAtom).firstName,
+  lastName: get(userAtom).lastName,
+})
+
+// After - an ion that only returns a new object reference when needed
+const userNameAtom = ion('userName', ({ get }) => {
+  const user = get(userAtom)
+
+  return injectMemo(
+    () => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+    }),
+    [user.firstName, user.lastName]
+  )
+})
+
+// Consuming an ion works exactly the same way as consuming a selector. E.g.:
+const userNameFromSelector = useAtomValue(getUserName)
+const userNameFromIon = useAtomValue(userNameAtom)
+```
+
+Ions give you access to all of Zedux's injectors, allowing you to:
+
+- Use [`injectMemo`](../api/injectors/injectMemo.mdx) for fine-grained memoization control.
+- Combine [`injectEffect`](../api/injectors/injectEffect.mdx) with async tools like RxJS to throttle or buffer updates.
+- Add side effects and custom logic. Sky's the limit, really.
+
+## Recap
+
+- Selectors are lightweight, pure functions that derive state from atoms and other selectors.
+- All Zedux hooks, injectors, and ecosystem methods that accept atoms also accept selectors and selector config objects.
+- Selectors are cached by function or selector config object reference. Each unique selector function reference or config object creates a unique cached selector instance.
+- Selectors can depend on other selectors or atoms, which can in turn depend on other selectors or atoms, creating a graph of derived state.
+- Specify additional parameters after the ecosystem parameter to create a [parameterized selector](#parameterized-selectors).
+- You can create selectors inline, but it's generally recommended to define them outside components.
+- Refactor selectors to an [ion](../api/factories/ion.mdx) for more control over memoization and side effects.
+
+## See Also
+
+- [The `SelectorTemplate` type](../api/types/SelectorTemplate.mdx)
+- [The `AtomSelector` type](../api/types/AtomSelector.mdx)
+- [The `AtomSelectorConfig` type](../api/types/AtomSelectorConfig.mdx)
+- [The `SelectorInstance` class](../api/classes/SelectorInstance.mdx)
+- [The `ion` factory](../api/factories/ion.mdx)
+- [`ecosystem.get`](../api/classes/Ecosystem.mdx#get)

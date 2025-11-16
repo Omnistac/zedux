@@ -160,6 +160,7 @@ module.exports = {
     ],
     'Migration Guides': ['migrations/v2'],
     '🚧 v2 beta docs': {
+      Walkthrough: ['v2/walkthrough/selectors'],
       API: [
         {
           type: 'category',
