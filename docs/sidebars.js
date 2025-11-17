@@ -233,6 +233,7 @@ module.exports = {
             'v2/api/types/AtomSelector',
             'v2/api/types/AtomSelectorConfig',
             'v2/api/types/SelectorTemplate',
+            'v2/api/types/NodeFilter',
           ],
         },
         {
