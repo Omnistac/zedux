@@ -1031,11 +1031,33 @@ describe('react types', () => {
   })
 
   test('ResolvedState', async () => {
-    const atom1 = atom('1', () => injectPromise(() => Promise.resolve(1), []))
-    const ion1 = ion('1', () => injectPromise(() => Promise.resolve(1), []))
+    const atom1 = atom('1', () => {
+      const promiseApi = injectPromise(() => Promise.resolve(1), [])
+      const withExports = promiseApi.setExports({ a: 'a' })
+      const withTtl = withExports.setTtl(1)
+
+      // InjectPromiseAtomApi method return values retain the subtype
+      expectTypeOf(withTtl.dataSignal.get()).toEqualTypeOf<number | undefined>()
+
+      return withTtl
+    })
+
+    const ion1 = ion('1', () => {
+      const promiseApi = injectPromise(() => Promise.resolve(1), [])
+      const withExports = promiseApi.addExports({ b: 'b' })
+      const withStringPromise = withExports.setPromise(Promise.resolve('b'))
+
+      // InjectPromiseAtomApi method return values retain the subtype
+      expectTypeOf(withStringPromise.dataSignal.get()).toEqualTypeOf<
+        number | undefined
+      >()
+
+      return withStringPromise
+    })
 
     expectTypeOf<StateOf<typeof atom1>>().toEqualTypeOf<PromiseState<number>>()
     expectTypeOf(ecosystem.get(atom1).data).toEqualTypeOf<number | undefined>()
+    expectTypeOf<ExportsOf<typeof atom1>>().toEqualTypeOf<{ a: string }>()
     expectTypeOf(await ecosystem.getNode(atom1).promise).toEqualTypeOf<number>()
     expectTypeOf<ResolvedStateOf<typeof atom1>>().toEqualTypeOf<
       Omit<PromiseState<number>, 'data'> & {
@@ -1045,7 +1067,8 @@ describe('react types', () => {
 
     expectTypeOf<StateOf<typeof ion1>>().toEqualTypeOf<PromiseState<number>>()
     expectTypeOf(ecosystem.get(ion1).data).toEqualTypeOf<number | undefined>()
-    expectTypeOf(await ecosystem.getNode(ion1).promise).toEqualTypeOf<number>()
+    expectTypeOf(await ecosystem.getNode(ion1).promise).toEqualTypeOf<string>()
+    expectTypeOf<ExportsOf<typeof ion1>>().toEqualTypeOf<{ b: string }>()
     expectTypeOf<ResolvedStateOf<typeof ion1>>().toEqualTypeOf<
       Omit<PromiseState<number>, 'data'> & {
         data: number

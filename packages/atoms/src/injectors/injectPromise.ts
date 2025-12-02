@@ -6,11 +6,14 @@ import {
 } from '../utils/promiseUtils'
 import {
   AtomApiGenerics,
+  AtomInstanceTtl,
+  ExportsConfig,
   InjectorDeps,
   InjectPromiseConfig,
   InjectSignalConfig,
   InternalEvaluationReason,
   None,
+  Prettify,
   PromiseState,
 } from '../types/index'
 import { injectEffect } from './injectEffect'
@@ -34,6 +37,43 @@ export interface InjectPromiseAtomApi<
     ResolvedState: Data
     State: Data | undefined
   }>
+
+  addExports<NewExports extends Record<string, any>>(
+    exports: NewExports,
+    config?: ExportsConfig
+  ): InjectPromiseAtomApi<
+    Prettify<
+      Omit<G, 'Exports'> & {
+        Exports: (G['Exports'] extends Record<string, never>
+          ? unknown
+          : G['Exports']) &
+          NewExports
+      }
+    >,
+    EventMap,
+    Data
+  >
+
+  setExports<NewExports extends Record<string, any>>(
+    exports: NewExports,
+    config?: ExportsConfig
+  ): InjectPromiseAtomApi<
+    Prettify<Omit<G, 'Exports'> & { Exports: NewExports }>,
+    EventMap,
+    Data
+  >
+
+  setPromise<P extends Promise<any> | undefined>(
+    promise?: P
+  ): InjectPromiseAtomApi<
+    Prettify<Omit<G, 'Promise'> & { Promise: P }>,
+    EventMap,
+    Data
+  >
+
+  setTtl(
+    ttl: AtomInstanceTtl | (() => AtomInstanceTtl)
+  ): InjectPromiseAtomApi<G, EventMap, Data>
 }
 
 const hasInvalidateReason = (node: ReturnType<typeof injectSelf>) => {
@@ -111,7 +151,7 @@ export const injectPromise: {
     } & InjectSignalConfig<EventMap>
   ): InjectPromiseAtomApi<
     {
-      Exports: Record<string, any>
+      Exports: None
       Promise: Promise<Data>
       Signal: MappedSignal<{
         Events: EventMap
@@ -132,7 +172,7 @@ export const injectPromise: {
     config?: InjectPromiseConfig<Data> & InjectSignalConfig<EventMap>
   ): InjectPromiseAtomApi<
     {
-      Exports: Record<string, any>
+      Exports: None
       Promise: Promise<Data>
       Signal: MappedSignal<{
         Events: EventMap
@@ -246,7 +286,7 @@ export const injectPromise: {
     refs.current.promise
   ) as unknown as InjectPromiseAtomApi<
     {
-      Exports: Record<string, any>
+      Exports: None
       Promise: Promise<Data>
       Signal: MappedSignal<{
         Events: EventMap
