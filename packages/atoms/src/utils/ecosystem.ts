@@ -8,7 +8,6 @@ import {
 } from '../types'
 import { AtomInstance } from '../classes/instances/AtomInstance'
 import { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
-import { AtomTemplate } from '../classes/templates/AtomTemplate'
 import type { Ecosystem } from '../classes/Ecosystem'
 import { ZeduxNode } from '../classes/ZeduxNode'
 import { SelectorInstance } from '../classes/SelectorInstance'
@@ -40,7 +39,7 @@ const getContextualizedId = (
     }
 
     return is(resolvedVal, AtomInstance)
-      ? (resolvedVal as AtomInstance).id
+      ? resolvedVal.id
       : ecosystem.hash(resolvedVal, true)
   })
 
@@ -92,13 +91,13 @@ export const getNode = <G extends AtomGenerics>(
   }
 
   if (is(template, AtomTemplateBase)) {
-    const id = (template as AtomTemplate).getNodeId(ecosystem, params)
+    const id = template.getNodeId(ecosystem, params)
 
     // try to find an existing instance
     let instance = ecosystem.n.get(id) as AtomInstance
     if (instance) return instance
 
-    const templateScope = ecosystem.s?.[(template as AtomTemplate).key]
+    const templateScope = ecosystem.s?.[template.key]
 
     if (templateScope && (ecosystem.S || getEvaluationContext().n?.V)) {
       // if no atom was found, but we're in a contextual scope (or able to
@@ -118,7 +117,7 @@ export const getNode = <G extends AtomGenerics>(
     }
 
     // create a new instance
-    instance = resolveAtom(ecosystem, template as AtomTemplate)._instantiate(
+    instance = resolveAtom(ecosystem, template)._instantiate(
       ecosystem,
       id,
       (params || []) as G['Params']
