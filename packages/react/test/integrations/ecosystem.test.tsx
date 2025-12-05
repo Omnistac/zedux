@@ -435,7 +435,7 @@ describe('ecosystem', () => {
     expect(ecosystem).toBe(getDefaultEcosystem())
   })
 
-  test.only('resets cause rerenders when components are subscribed to resetting atoms', async () => {
+  test('resets cause rerenders when components are subscribed to resetting atoms', async () => {
     const destructions: any[] = []
 
     const atom1 = atom('atom1', () => {
