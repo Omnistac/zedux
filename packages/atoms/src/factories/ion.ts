@@ -107,34 +107,6 @@ export const ion: {
     ResolvedState: ResolvedState
   }>
 
-  // No Signal (TODO: Is this overload unnecessary? `atom` doesn't have it)
-  <
-    State = any,
-    Params extends any[] = [],
-    Exports extends Record<string, any> = None,
-    PromiseType extends AtomApiPromise = undefined
-  >(
-    key: string,
-    value: (
-      ecosystem: Ecosystem,
-      ...params: Params
-    ) =>
-      | AtomApi<{
-          Exports: Exports
-          Promise: PromiseType
-          Signal: undefined
-          State: State
-        }>
-      | State,
-    config?: AtomConfig<State>
-  ): IonTemplateRecursive<{
-    State: State
-    Params: Params
-    Events: None
-    Exports: Exports
-    Promise: PromiseType
-  }>
-
   // Catch-all
   <
     State = any,

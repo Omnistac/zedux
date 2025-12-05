@@ -125,9 +125,9 @@ export class AtomApi<G extends AtomApiGenerics> {
     return this as unknown as AtomApi<Omit<G, 'Promise'> & { Promise: P }> // for chaining
   }
 
-  public setTtl(ttl: AtomInstanceTtl | (() => AtomInstanceTtl)) {
+  public setTtl(ttl: AtomInstanceTtl | (() => AtomInstanceTtl)): AtomApi<G> {
     this.ttl = ttl
 
-    return this // for chaining
+    return this as AtomApi<G> // for chaining
   }
 }
