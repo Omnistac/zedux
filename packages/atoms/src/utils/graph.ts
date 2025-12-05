@@ -370,6 +370,8 @@ export const setNodeStatus = (
     const reason = {
       n: newStatus,
       o: oldStatus,
+      // TODO: adding `r`easons doesn't make sense for cycle events (or anything
+      // but change events). Remove.
       r: node.w,
       s: node,
       t: Cycle,

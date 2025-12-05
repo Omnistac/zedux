@@ -212,27 +212,40 @@ describe('injectors', () => {
 
   test('injected AtomGetters do nothing after evaluation is over', () => {
     const atom1 = storeAtom('1', () => {
-      const { get, getInstance, select } = injectAtomGetters()
+      const { get, getNode, select } = injectAtomGetters()
 
-      return storeApi('a').setExports({ get, getInstance, select })
+      return storeApi('a').setExports({ get, getNode, select })
     })
 
     const selector1 = () => 1
 
-    const instance = ecosystem.getInstance(atom1)
+    const instance = ecosystem.getNode(atom1)
     const getValue = instance.exports.get(atom1)
-    const getInstanceValue = instance.exports.getInstance(atom1).getState()
+    const getNodeValue = instance.exports.getNode(atom1).getState()
     const selectValue = instance.exports.select(selector1)
 
     expect(getValue).toBe('a')
-    expect(getInstanceValue).toBe('a')
+    expect(getNodeValue).toBe('a')
     expect(selectValue).toBe(1)
+
     expect(ecosystem.viewGraph()).toEqual({
       1: {
         observers: [],
         sources: [],
         weight: 1,
       },
+      // the selector instance is already destroyed from the `.select()` (`.get()`) call
+    })
+
+    instance.exports.getNode(selector1)
+
+    expect(ecosystem.viewGraph()).toEqual({
+      1: {
+        observers: [],
+        sources: [],
+        weight: 1,
+      },
+      // now, with `.getNode()`, the selector instance remains cached
       '@selector(selector1)-1': {
         observers: [],
         sources: [],
@@ -264,6 +277,18 @@ describe('injectors', () => {
         sources: [],
         weight: 1,
       },
+      // the selector instance is already destroyed from the `.get()` call
+    })
+
+    instance.exports.getNode(selector1)
+
+    expect(ecosystem.viewGraph()).toEqual({
+      1: {
+        observers: [],
+        sources: [],
+        weight: 1,
+      },
+      // now, with `.getNode()`, the selector instance remains cached
       '@selector(selector1)-1': {
         observers: [],
         sources: [],
