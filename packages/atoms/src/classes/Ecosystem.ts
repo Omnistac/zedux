@@ -401,7 +401,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     if (!isString) {
       const id = isTemplate
-        ? (template as AnyAtomTemplate).getNodeId(this, params)
+        ? template.getNodeId(this, params)
         : getSelectorKey(this, template as SelectorTemplate)
 
       // try to find an existing instance
@@ -416,7 +416,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
           ? template
           : `${
               isTemplate
-                ? (template as AnyAtomTemplate).key
+                ? template.key
                 : getSelectorKey(this, template as SelectorTemplate)
             }-${this.hash(params)}`
       )

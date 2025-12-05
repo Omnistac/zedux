@@ -53,7 +53,7 @@ export class AtomApi<G extends AtomApiGenerics> {
     this.signal = (value?.izn ? value : undefined) as G['Signal']
 
     if (is(value, AtomApi)) {
-      Object.assign(this, value as AtomApi<G>)
+      Object.assign(this, value)
     }
   }
 

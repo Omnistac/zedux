@@ -105,25 +105,23 @@ const evaluate = <G extends Omit<AtomGenerics, 'Node'>>(
       ) => Signal<G> | G['State'] | AtomApi<AtomGenericsToAtomApiGenerics<G>>
     )(...instance.p)
 
-    if (!is(val, AtomApi)) return val as Signal<G> | G['State']
+    if (!is(val, AtomApi)) return val
 
-    const api = (instance.api = val as AtomApi<
-      AtomGenericsToAtomApiGenerics<G>
-    >)
+    instance.api = val
 
     // Exports can only be set on initial evaluation
-    if (instance.l === INITIALIZING && api.exports) {
-      instance.exports = api.exports
+    if (instance.l === INITIALIZING && val.exports) {
+      instance.exports = val.exports
     }
 
-    // if api.value is a promise, we ignore api.promise
-    if (typeof (api.value as unknown as Promise<any>)?.then === 'function') {
-      return setPromise(instance, api.value as unknown as Promise<any>, true)
-    } else if (api.promise) {
-      setPromise(instance, api.promise)
+    // if val.value is a promise, we ignore val.promise
+    if (typeof (val.value as unknown as Promise<any>)?.then === 'function') {
+      return setPromise(instance, val.value as unknown as Promise<any>, true)
+    } else if (val.promise) {
+      setPromise(instance, val.promise)
     }
 
-    return api.value as Signal<G> | G['State']
+    return val.value
   } catch (err) {
     console.error(`Zedux: Error while evaluating atom "${instance.id}":`, err)
 
