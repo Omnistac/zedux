@@ -1,6 +1,29 @@
 import { AtomTemplateBase, injectSelf, NodeOf } from '@zedux/atoms'
 import { Context } from 'react'
 
+/**
+ * Retrieves a contextual value from a provided scope.
+ *
+ * Any atom that calls this becomes "scoped". Its id will change to reflect the
+ * retrieved context and it can only be accessed in a scoped context - either
+ * from React hooks or in an `ecosystem.withScope` call.
+ *
+ * Any atom that uses a scoped atom is also scoped, inheriting the scope
+ * dependency of the scoped atom.
+ *
+ * An atom and all transitive dependencies it creates can access the provided
+ * scope.
+ *
+ * - When created from React hooks, `inject` can access provided React context
+ *   values or atom instances.
+ * - When created in an `ecosystem.withScope` callback, `inject` can access the
+ *   provided scope values.
+ *
+ * NOTE: `inject` is currently an injector. But it doesn't have to be. We may
+ * update this to work with selectors too. In that case, this will become a
+ * "utility" function, not an injector. This is similar to React's `use` utility
+ * which isn't a hook.
+ */
 export const inject = <T extends Context<any> | AtomTemplateBase>(
   context: T
 ): T extends Context<infer V>
