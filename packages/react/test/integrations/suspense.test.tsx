@@ -3,12 +3,13 @@ import {
   atom,
   injectAtomValue,
   injectPromise,
+  injectSignal,
   StateOf,
   useAtomInstance,
   useAtomState,
   useAtomValue,
 } from '@zedux/react'
-import React, { Suspense } from 'react'
+import React, { Suspense, useState } from 'react'
 import { ErrorBoundary } from '../utils/ErrorBoundary'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
 import { mockConsole } from '../utils/console'
@@ -330,4 +331,83 @@ describe('suspense', () => {
 
     expect(calls).toEqual([undefined, undefined, 1, 1])
   })
+
+  test('suspending component does not create extra ExternalNodes or register extra observers', async () => {
+    const testSuspenseAtom = atom(
+      'testSuspenseAtom',
+      () => {
+        const signal = injectSignal({ loaded: false })
+
+        const { promise } = injectPromise(async () => {
+          await new Promise(resolve => setTimeout(resolve, 500))
+          signal.set({ loaded: true })
+        }, [])
+
+        return api(signal).setPromise(promise)
+      },
+      { ttl: 0 }
+    )
+
+    const TestComponent: React.FC = () => {
+      const instance = useAtomInstance(testSuspenseAtom)
+
+      return (
+        <div data-testid="mounted">
+          <p>Atom ID: {instance.id}</p>
+        </div>
+      )
+    }
+
+    const TestWrapper: React.FC = () => {
+      const [showComponent, setShowComponent] = useState(false)
+
+      return (
+        <>
+          <button
+            data-testid="toggle"
+            onClick={() => setShowComponent(prev => !prev)}
+          >
+            {showComponent ? 'Hide Component' : 'Show Component'}
+          </button>
+
+          {showComponent && (
+            <Suspense fallback={<div data-testid="loading">Loading...</div>}>
+              <TestComponent />
+            </Suspense>
+          )}
+        </>
+      )
+    }
+
+    const { findByTestId, queryByTestId, getByTestId } = renderInEcosystem(
+      <TestWrapper />
+    )
+
+    expect(ecosystem.find(testSuspenseAtom)).toBeUndefined()
+
+    act(() => {
+      getByTestId('toggle').click()
+    })
+
+    await findByTestId('loading')
+    await findByTestId('mounted')
+
+    expect(ecosystem.find(testSuspenseAtom)?.o.size).toBe(1)
+
+    act(() => {
+      getByTestId('toggle').click()
+    })
+
+    expect(queryByTestId('mounted')).toBeNull()
+
+    // atom should be destroyed when component is unmounted
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(ecosystem.find(testSuspenseAtom)).toBeUndefined()
+  })
+
+  // TODO: Would be nice if we could support this. It's really out of React's realm of practicality:
+  // test('floating suspense nodes are cleaned up when the component finally mounts', () => {})
 })

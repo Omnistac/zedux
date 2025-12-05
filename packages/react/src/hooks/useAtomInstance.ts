@@ -9,6 +9,7 @@ import {
   ParamsOf,
   Selectable,
   SelectorInstance,
+  ZeduxNode,
   zi,
 } from '@zedux/atoms'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
@@ -21,6 +22,9 @@ import {
 } from '../utils'
 import { useEcosystem } from './useEcosystem'
 import { useReactComponentId } from './useReactComponentId'
+
+const unmaterializedNodes = new Set<ZeduxNode>()
+let isQueued = false
 
 /**
  * Creates an atom instance for the passed atom template based on the passed
@@ -116,31 +120,13 @@ export const useAtomInstance: {
   const renderedValue = instance.v
   const isSelector = is(instance, SelectorInstance)
 
-  if (isSelector) render.i = instance as SelectorInstance
-
-  let node =
-    (ecosystem.n.get(observerId) as ExternalNode) ??
-    new ExternalNode(ecosystem, observerId, render)
-
-  const addEdge = () => {
-    node.l === zi.D && (node = new ExternalNode(ecosystem, observerId, render))
-
-    // cancel edge cleanup if the below effect cleanup ran and scheduled it but
-    // the component rerendered or the effect ran again before it happened
-    node.c?.()
-
-    if (node.i !== instance) {
-      node.u(
-        instance,
-        operation,
-        External | (subscribe ? Eventless : EventlessStatic)
-      )
+  if (isSelector) {
+    if (!render.i && !instance.o.size) {
+      unmaterializedNodes.add(instance)
     }
-  }
 
-  // Yes, subscribe during render. This operation is idempotent and we handle
-  // React's StrictMode specifically.
-  addEdge()
+    render.i = instance as SelectorInstance
+  }
 
   // Only remove the graph edge when the instance id changes or on component
   // destruction.
@@ -153,10 +139,40 @@ export const useAtomInstance: {
 
     if (isSelector) render.i = instance as SelectorInstance
 
+    let node =
+      (ecosystem.n.get(observerId) as ExternalNode) ??
+      new ExternalNode(ecosystem, observerId, render)
+
+    const addEdge = () => {
+      node.l === zi.D &&
+        (node = new ExternalNode(ecosystem, observerId, render))
+
+      // cancel edge cleanup if the below effect cleanup ran and scheduled it but
+      // the component rerendered or the effect ran again before it happened
+      node.c?.()
+
+      if (node.i !== instance) {
+        node.u(
+          instance,
+          operation,
+          External | (subscribe ? Eventless : EventlessStatic)
+        )
+      }
+    }
+
     // Try adding the edge again (will be a no-op unless React's StrictMode ran
     // this effect's cleanup unnecessarily)
     addEdge()
     render.m = true
+
+    if (!isQueued) {
+      isQueued = true
+      ecosystem.asyncScheduler.queue(() => {
+        isQueued = false
+        unmaterializedNodes.forEach(node => node.destroy())
+        unmaterializedNodes.clear()
+      })
+    }
 
     // an unmounting component's effect cleanup can update or force-destroy the
     // atom instance before this component is mounted. If that happened, trigger
@@ -172,7 +188,7 @@ export const useAtomInstance: {
       node.k(instance, true)
       // don't set `render.m = false` here
     }
-  }, [instance.id])
+  }, [instance])
 
   if (suspend !== false) {
     const status = (instance as AtomInstance).promiseStatus
