@@ -1,0 +1,197 @@
+---
+id: NodeFilter
+title: NodeFilter
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import type { NodeFilter } from '@zedux/react'
+```
+
+A flexible filter type used by [`ecosystem.findAll`](../classes/Ecosystem.mdx#findall) to search for graph nodes ([atom instances](../classes/AtomInstance.mdx), [selector instances](../classes/SelectorInstance.mdx), [signals](../classes/Signal.mdx), etc) in the ecosystem. Provides multiple ways to filter nodes by type (e.g. atoms or selectors), [id](../classes/ZeduxNode.mdx#id), template reference, template key, or tags.
+
+`NodeFilter` can be a simple string, a node type, an atom template, a selector template, a configuration object with various filter options, or an array containing a mix of these types.
+
+## Examples
+
+Using simple filters:
+
+```tsx live ecosystemId=NodeFilter/example resultVar=App version=2
+const userAtom = atom('user', 'Alice', { tags: ['data'] })
+const settingsAtom = atom('settings', { theme: 'dark' }, { tags: ['data'] })
+const tempAtom = atom('temp', 123)
+
+function App() {
+  const ecosystem = useEcosystem()
+  const [results, setResults] = useState<string[]>([])
+
+  const runFilters = () => {
+    // Find all atom instances (vs selectors, signals, etc)
+    const allAtoms = ecosystem.findAll('@atom')
+
+    // Find instances whose id contains 'user'
+    const userInstances = ecosystem.findAll('user')
+
+    // Find all instances of a specific template
+    const settingsInstances = ecosystem.findAll(settingsAtom)
+
+    // Find all instances with the 'data' tag
+    const dataInstances = ecosystem.findAll({ includeTags: ['data'] })
+
+    setResults([
+      `All atoms: ${allAtoms.map(n => n.id).join(', ')}`,
+      `User atoms: ${userInstances.map(n => n.id).join(', ')}`,
+      `Settings atoms: ${settingsInstances.map(n => n.id).join(', ')}`,
+      `Data tags: ${dataInstances.map(n => n.id).join(', ')}`,
+    ])
+  }
+
+  useAtomValue(userAtom)
+  useAtomValue(settingsAtom)
+  useAtomValue(tempAtom)
+
+  return (
+    <div>
+      <button onClick={runFilters}>Run Filters</button>
+      {results.map((r, i) => (
+        <div key={i}>{r}</div>
+      ))}
+    </div>
+  )
+}
+```
+
+Using filter options:
+
+```ts
+// Include only atoms with specific tags
+ecosystem.findAll({
+  includeTags: ['persistent', 'user-data'],
+})
+
+// Exclude specific atoms and patterns
+ecosystem.findAll({
+  exclude: [debugAtom, 'temp-'],
+  excludeTags: ['internal'],
+})
+
+// Combine include and exclude filters (excludes take precedence over includes)
+ecosystem.findAll({
+  include: ['user', 'settings'],
+  exclude: ['temp'],
+  includeTags: ['ssr'],
+  excludeTags: ['no-persist'],
+})
+
+// Array of filters (an "or" - finds nodes matching any filter)
+ecosystem.findAll(['user', settingsAtom, { includeTags: ['data'] }])
+```
+
+## Interface
+
+```ts
+type NodeFilter =
+  | string
+  | NodeType
+  | AnyAtomTemplate
+  | SelectorTemplate
+  | NodeFilterOptions
+  | NodeFilter[]
+```
+
+When a `string` is passed, it performs a case-insensitive fuzzy search for nodes whose id contains that string.
+
+When the string `'@atom'` is passed, it finds all atom instances.
+
+When an atom or selector template is passed, it finds all instances of that atom or selector.
+
+When a `NodeFilterOptions` object is passed, it includes and/or excludes nodes based on the options passed. See [below](#nodefilteroptions).
+
+When an array is passed, nodes matching any of the filters in the array will be included.
+
+### NodeFilterOptions
+
+```ts
+interface NodeFilterOptions {
+  exclude?: (AnyAtomTemplate | SelectorTemplate | NodeType | string)[]
+  excludeTags?: string[]
+  include?: (AnyAtomTemplate | SelectorTemplate | NodeType | string)[]
+  includeTags?: string[]
+}
+```
+
+<Legend>
+  <Item name="exclude">
+    Optional. An array of filters that will exclude nodes from the result. Can contain:
+
+    - Atom or selector templates - excludes all instances of the atom or selector.
+    - The string `'@atom'` - excludes all atom instances.
+    - Other strings - excludes nodes whose id contains the string (case-insensitive)
+
+    ```ts
+    exclude: [myAtom, 'my-atom-namespace/', '@atom']
+    ```
+
+    Exclude filters take precedence over include filters.
+
+  </Item>
+  <Item name="excludeTags">
+    Optional. An array of tag strings. Nodes with any of these tags (exact matches only) will be excluded.
+
+    ```ts
+    excludeTags: ['no-ssr', 'internal']
+    ```
+
+  </Item>
+  <Item name="include">
+    Optional. An array of filters that must be matched for a node to be included in the result. Can contain the same types as [`exclude`](#exclude).
+
+    ```ts
+    include: [userAtom, '@atom', 'settings']
+    ```
+
+    If neither `include` nor `includeTags` is specified, all nodes are initially included (before applying excludes).
+
+  </Item>
+  <Item name="includeTags">
+    Optional. An array of tag strings. Only nodes with at least one of these tags (exact matches only) will be included in the result.
+
+    ```ts
+    includeTags: ['persistent', 'ssr']
+    ```
+
+  </Item>
+</Legend>
+
+### NodeType
+
+Zedux only has special functionality for the `'@atom'` node type. But technically, the NodeType type includes the following strings:
+
+```ts
+type NodeType =
+  | '@atom'
+  | '@component'
+  | '@listener'
+  | '@memo'
+  | '@selector'
+  | '@signal'
+```
+
+Each corresponds to a type of ZeduxNode. Besides `'@atom'`, each type is a string prefix that appears in node ids:
+
+- `'@atom'` - Atom instances (the only type that does not prefix their ids with their node type).
+- `'@component'` - External nodes created by React components.
+- `'@listener'` - Nodes created by `.on()` event listeners.
+- `'@memo'` - Selectors created by [`injectMemo`](../factories/injectMemo.mdx) when called with no deps.
+- `'@selector'` - Atom selector instances.
+- `'@signal'` - Signal instances.
+
+We may add functionality for the other node types in the future.
+
+## See Also
+
+- [`ecosystem.findAll`](../classes/Ecosystem.mdx#findall)
+- [`ecosystem.find`](../classes/Ecosystem.mdx#find)
+- [`ecosystem.dehydrate`](../classes/Ecosystem.mdx#dehydrate)
+- [The `DehydrationFilter` type](./DehydrationFilter.mdx)

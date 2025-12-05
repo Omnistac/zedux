@@ -1,0 +1,162 @@
+---
+id: ion
+title: ion
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { ion } from '@zedux/react'
+```
+
+A factory for creating specially-configured [atom templates](../classes/AtomTemplate.mdx) that specialize in derivations. Ions are just atoms with two differences:
+
+- The first parameter of the state factory will be the `ecosystem`, so you can easily `get(otherAtom)`
+- The atom's `ttl` will be set to `0` by default, destroying instances of this atom as soon as they're no longer used. You can override this by passing a different `ttl` on the third `config` parameter to the `ion()` factory or by returning an AtomApi from the ion's state factory with a TTL configured via [`.setTtl()`](../classes/AtomApi.mdx#setttl).
+
+## Example
+
+```tsx live ecosystemId=ion/example resultVar=App version=2
+const countAtom = atom('count', 0)
+const doubleCountAtom = atom('doubleCount', 1)
+
+const sumIon = ion('sum', ({ get }) => {
+  const count = get(countAtom)
+  const doubleCount = get(doubleCountAtom)
+
+  return count + doubleCount
+})
+
+function App() {
+  const [count, setCount] = useAtomState(countAtom)
+  const [doubleCount, setDoubleCount] = useAtomState(doubleCountAtom)
+  const sum = useAtomValue(sumIon)
+
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <div>Double Count: {doubleCount}</div>
+      <div>Sum: {sum}</div>
+      <button onClick={() => setCount(c => c + 1)}>Increment Count</button>
+      <button onClick={() => setDoubleCount(c => c + 1)}>
+        Increment Double Count
+      </button>
+    </div>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`ion = (key, stateFactory, config?) => newIon`)}
+  {tab2(`declare const ion: {
+    <State = any, Params extends any[] = [], Exports extends Record<string, any> = None>(key: string, value: (ecosystem: Ecosystem, ...params: Params) => AtomApi<{
+        Exports: Exports;
+        Promise: any;
+        Signal: undefined;
+        State: Promise<State>;
+    }>, config?: AtomConfig<State>): IonTemplateRecursive<{
+        State: PromiseState<State>;
+        Params: Params;
+        Events: None;
+        Exports: Exports;
+        Promise: Promise<State>;
+    }>;
+    <StateType, EventsType extends Record<string, any> = None, Params extends any[] = [], Exports extends Record<string, any> = None, PromiseType extends AtomApiPromise = undefined, ResolvedState = StateType>(key: string, value: (ecosystem: Ecosystem, ...params: Params) => Signal<{
+        Events: EventsType;
+        Params: any;
+        State: StateType;
+        Template: any;
+    }> | AtomApi<{
+        Exports: Exports;
+        Promise: PromiseType;
+        Signal: Signal<{
+            Events: EventsType;
+            Params: any;
+            State: StateType;
+            Template: any;
+        }>;
+        State: StateType;
+    }> | Signal<{
+        Events: EventsType;
+        Params: any;
+        ResolvedState: ResolvedState;
+        State: StateType;
+        Template: any;
+    }> | AtomApi<{
+        Exports: Exports;
+        Promise: PromiseType;
+        Signal: Signal<{
+            Events: EventsType;
+            Params: any;
+            ResolvedState: ResolvedState;
+            State: StateType;
+            Template: any;
+        }>;
+        State: StateType;
+    }>, config?: AtomConfig<StateType>): IonTemplateRecursive<{
+        State: StateType;
+        Params: Params;
+        Events: EventsType;
+        Exports: Exports;
+        Promise: PromiseType;
+        ResolvedState: ResolvedState;
+    }>;
+    <State = any, Params extends any[] = [], Exports extends Record<string, any> = None, PromiseType extends AtomApiPromise = undefined>(key: string, value: (ecosystem: Ecosystem, ...params: Params) => AtomApi<{
+        Exports: Exports;
+        Promise: PromiseType;
+        Signal: undefined;
+        State: State;
+    }> | State, config?: AtomConfig<State>): IonTemplateRecursive<{
+        State: State;
+        Params: Params;
+        Events: None;
+        Exports: Exports;
+        Promise: PromiseType;
+    }>;
+    <State = any, Params extends any[] = [], Exports extends Record<string, any> = None, EventsType extends Record<string, any> = None, PromiseType extends AtomApiPromise = undefined>(key: string, value: IonStateFactory<{
+        State: State;
+        Params: Params;
+        Events: EventsType;
+        Exports: Exports;
+        Promise: PromiseType;
+    }>, config?: AtomConfig<State>): IonTemplateRecursive<{
+        State: State;
+        Params: Params;
+        Events: EventsType;
+        Exports: Exports;
+        Promise: PromiseType;
+    }>;
+}`)}
+</Tabs>
+
+<Legend>
+  <Item name="key">
+    Required. A string. This generally needs to be unique across your codebase. See [the `atom()` factory's key prop](./atom.mdx#key) for details.
+
+  </Item>
+  <Item name="stateFactory">
+    Required. A function that receives the ecosystem as the first parameter. The remaining parameters are the [params](../classes/AtomInstance.mdx#params) of the atom.
+
+    See [the `atom()` factory](./atom.mdx#valueorfactory) for details on what the state factory can return and how that determines the atom's behavior.
+
+  </Item>
+  <Item name="config">
+    Optional. An [AtomConfig](../types/AtomConfig) object.
+
+    Note that the `ttl` config option is set to `0` by default for ions.
+
+  </Item>
+  <Item name="Returns">
+    An [atom template](../classes/AtomTemplate.mdx) that can be used with Zedux's injectors, React hooks, and ecosystem methods.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The AtomTemplate class](../classes/AtomTemplate.mdx)
+- [The SelectorInstance class](../classes/SelectorInstance.mdx)
+- [The AtomApi class](../classes/AtomApi.mdx)
+- [The selectors walkthrough](../../walkthrough/selectors.mdx)
