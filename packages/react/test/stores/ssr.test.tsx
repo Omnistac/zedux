@@ -114,6 +114,14 @@ describe('ssr', () => {
     expect(ecosystem.dehydrate()).toEqual({
       1: { aaa: 111 },
     })
+
+    expect(ecosystem.dehydrate({ transform: false })).toEqual({
+      1: new Map([['aaa', 111]]),
+    })
+
+    expect(ecosystem.dehydrate({ include: ['1'] })).toEqual({
+      1: { aaa: 111 },
+    })
   })
 
   test('`ecosystem.dehydrate({ exclude })` excludes atoms from dehydration', () => {

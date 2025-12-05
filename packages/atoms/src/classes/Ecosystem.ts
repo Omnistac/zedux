@@ -430,6 +430,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     )
   }
 
+  public findAll(type: '@atom'): AnyAtomInstance[]
   public findAll(type?: NodeType): ZeduxNode[]
   public findAll(type?: NodeType[]): ZeduxNode[]
   public findAll(options?: NodeFilter): ZeduxNode[]
@@ -462,6 +463,14 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * This is reactive! When called in reactive contexts, it will register a
    * dynamic graph edge on the node resolved by this call.
    *
+   * When called outside a reactive context, the behavior is slightly different
+   * with selectors: If the selector is not cached, it will run, then if the
+   * selector has no observers, its selector instance will be immediately
+   * destroyed. This is to prevent the selector from being permanently cached in
+   * the ecosystem, leaking memory. Be wary of this, since it can auto-destroy
+   * observerless selectors you've pre-cached. Prefer using
+   * `selectorInstance.get()` instead.
+   *
    * Also accepts an existing atom, selector, or signal instance. In this case,
    * this is functionally equivalent to calling `.get()` directly on the passed
    * instance.
@@ -469,7 +478,22 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public get: Get = <A extends AnyAtomTemplate>(
     atom: A | AnyAtomInstance,
     params?: ParamsOf<A>
-  ) => getNode(this, atom, params as ParamsOf<A>).get()
+  ) => {
+    const node = getNode(this, atom, params as ParamsOf<A>)
+
+    if (
+      !getEvaluationContext().n &&
+      !node.o.size &&
+      is(node, SelectorInstance)
+    ) {
+      const val = node.get()
+      node.destroy()
+
+      return val
+    }
+
+    return node.get()
+  }
 
   /**
    * Returns an atom instance. Creates the atom instance if it doesn't exist
@@ -556,13 +580,32 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
    * Returns a graph node. The type is determined by the passed value. @see
    * Ecosystem.getNode
    *
+   * When called with observerless selectors outside a reactive context, this
+   * functions like `.get()` - running the selector then destroying its instance
+   * to prevent leaks.
+   *
    * Unlike `.getNode`, this is static - it doesn't register graph dependencies
    * even when called in reactive contexts.
    */
   public getOnce: Get = <G extends AtomGenerics>(
     template: AtomTemplateBase<G> | ZeduxNode<G> | SelectorTemplate<G>,
     params?: G['Params']
-  ) => getNode(this, template, params).getOnce()
+  ) => {
+    const node = getNode(this, template, params)
+
+    if (
+      !getEvaluationContext().n &&
+      !node.o.size &&
+      is(node, SelectorInstance)
+    ) {
+      const val = node.get()
+      node.destroy()
+
+      return val
+    }
+
+    return node.getOnce()
+  }
 
   /**
    * Turn an array of anything into a predictable string. If any item is an atom
@@ -578,7 +621,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (!param) return param
       if (param.izn) return (param as ZeduxNode).id
 
-      // if the prototype has no prototype, it's likely not a plain object:
+      // if the prototype has a prototype, it's likely not a plain object:
       if (Object.getPrototypeOf(param.constructor.prototype)) {
         if (!acceptComplexParams || Array.isArray(param)) return param
         if (typeof param === 'function') {
@@ -638,9 +681,6 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       if (!node) return
 
       node.h(val)
-
-      // we know hydration is defined at this point
-      delete (this.hydration as Record<string, any>)[id]
     })
   }
 
@@ -878,9 +918,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     // static observers don't affect weight. This should make sure no internal
     // nodes schedule unnecessary reevaaluations to recreate force-destroyed
     // nodes
-    ;[...n.values()].forEach(node => {
+    for (const node of n.values()) {
       node.destroy(true)
-    })
+    }
 
     this.b = new WeakMap() // TODO: is this necessary?
     this.s = undefined

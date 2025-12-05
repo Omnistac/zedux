@@ -8,13 +8,20 @@ describe('Ecosystem', () => {
     const selector1 = () => ({ a: 1 })
 
     const instance = ecosystem.getNode(selector1)
+
+    // since the selector instance has no observers, this call destroys it ...
     const selectValue = ecosystem.select(instance)
+
+    // ... and this call recreates then redestroys it
     const getValue = ecosystem.get(instance, [])
 
     expect(selectValue).toEqual({ a: 1 })
     expect(getValue).toEqual({ a: 1 })
     expect(instance.v).toBe(selectValue)
-    expect(instance.v).toBe(getValue)
+    expect(instance.v).toEqual(getValue)
+
+    // different instances of the same selector returned different objects
+    expect(selectValue).not.toBe(getValue)
   })
 
   test('tags must be an array', () => {
@@ -135,6 +142,52 @@ describe('Ecosystem', () => {
     expect(ecosystem.findAll()).toEqual(expected)
   })
 
+  test('get() outside a reactive context destroys observerless selectors', () => {
+    const selector1 = () => 1
+    const instance = ecosystem.getNode(selector1)
+
+    expect(ecosystem.get(instance)).toBe(1)
+    expect(ecosystem.viewGraph()).toEqual({})
+    expect(instance.status).toBe('Destroyed')
+  })
+
+  test('get() outside a reactive context does not destroy observed selectors', () => {
+    const selector1 = () => 1
+    const instance = ecosystem.getNode(selector1)
+
+    const cleanup = instance.on('change', () => {}, { active: true })
+
+    expect(ecosystem.get(instance)).toBe(1)
+    expect(ecosystem.viewGraph()).toMatchInlineSnapshot(`
+      {
+        "@listener(@selector(selector1)-1)-2": {
+          "observers": [],
+          "sources": [
+            {
+              "key": "@selector(selector1)-1",
+              "operation": "on",
+            },
+          ],
+          "weight": 2,
+        },
+        "@selector(selector1)-1": {
+          "observers": [
+            {
+              "key": "@listener(@selector(selector1)-1)-2",
+              "operation": "on",
+            },
+          ],
+          "sources": [],
+          "weight": 1,
+        },
+      }
+    `)
+
+    cleanup()
+
+    expect(ecosystem.viewGraph()).toEqual({})
+  })
+
   test('getInstance() throws an error if bad values are passed', () => {
     const atom1 = atom('1', (param: string) => param)
 
@@ -231,6 +284,52 @@ describe('Ecosystem', () => {
 
     expect(reactiveNode2.get()).toBe(1) // re-ran on source node force-destroy
     expect(staticNode2.get()).toBe(11)
+  })
+
+  test('getOnce() outside a reactive context destroys observerless selectors', () => {
+    const selector1 = () => 1
+    const instance = ecosystem.getNode(selector1)
+
+    expect(ecosystem.getOnce(instance)).toBe(1)
+    expect(ecosystem.viewGraph()).toEqual({})
+    expect(instance.status).toBe('Destroyed')
+  })
+
+  test('getOnce() outside a reactive context does not destroy observed selectors', () => {
+    const selector1 = () => 1
+    const instance = ecosystem.getNode(selector1)
+
+    const cleanup = instance.on('change', () => {}, { active: true })
+
+    expect(ecosystem.getOnce(instance)).toBe(1)
+    expect(ecosystem.viewGraph()).toMatchInlineSnapshot(`
+      {
+        "@listener(@selector(selector1)-1)-2": {
+          "observers": [],
+          "sources": [
+            {
+              "key": "@selector(selector1)-1",
+              "operation": "on",
+            },
+          ],
+          "weight": 2,
+        },
+        "@selector(selector1)-1": {
+          "observers": [
+            {
+              "key": "@listener(@selector(selector1)-1)-2",
+              "operation": "on",
+            },
+          ],
+          "sources": [],
+          "weight": 1,
+        },
+      }
+    `)
+
+    cleanup()
+
+    expect(ecosystem.viewGraph()).toEqual({})
   })
 
   test('on() throws an error when passed an invalid ecosystem event name', () => {

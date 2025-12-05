@@ -613,6 +613,9 @@ export class Listener<
     }
   }
 
+  /**
+   * `I`ncrementNotifiers - add a notifier function to this listener's list
+   */
   public I(
     eventName: string,
     notify: (reason: InternalEvaluationReason) => void
