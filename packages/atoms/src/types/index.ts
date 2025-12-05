@@ -67,9 +67,15 @@ export type AtomSelector<State = any, Params extends any[] = any> = (
 ) => State
 
 export interface AtomSelectorConfig<State = any, Params extends any[] = any> {
-  argsComparator?: (newArgs: Params, oldArgs: Params) => boolean
+  argsComparator?: (
+    newArgs: NoInfer<Params>,
+    oldArgs: NoInfer<Params>
+  ) => boolean
   name?: string
-  resultsComparator?: (newResult: State, oldResult: State) => boolean
+  resultsComparator?: (
+    newResult: NoInfer<State>,
+    oldResult: NoInfer<State>
+  ) => boolean
   selector: AtomSelector<State, Params>
 }
 

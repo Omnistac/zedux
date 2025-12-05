@@ -13,6 +13,7 @@ import {
 import React, { useEffect, useState } from 'react'
 import { ecosystem, snapshotNodes } from '../utils/ecosystem'
 import { renderInEcosystem } from '../utils/renderInEcosystem'
+import { expectTypeOf } from 'expect-type'
 
 const testAtom = atom('testAtom', (key: string) => key)
 
@@ -351,5 +352,60 @@ describe('selection', () => {
     expect(node2.status).toBe('Destroyed')
     expect(node1.status).toBe('Destroyed')
     expect(ecosystem.n.size).toBe(0)
+  })
+
+  test('selector params are not inferred from an argsComparator', () => {
+    const argsComparator = (a: any, b: any) => a === b
+
+    const selector = {
+      argsComparator,
+      selector: (_ecosystem: Ecosystem, a: string) => a,
+    }
+
+    // @ts-expect-error param 1 should be a string
+    const value1 = ecosystem.get(selector, [2])
+    const value2 = ecosystem.getNode(selector, ['2']).get()
+
+    // @ts-expect-error param 1 is required
+    const value3 = ecosystem.get(atom('3', () => injectAtomValue(selector)))
+    const value4 = ecosystem
+      .getNode(atom('4', () => injectAtomValue(selector, ['2'])))
+      .get()
+
+    expect(value1).toBe(2)
+    expect(value2).toBe('2')
+    expect(value3).toBe(undefined)
+    expect(value4).toBe('2')
+  })
+
+  test('selector result is not inferred from a resultsComparator', () => {
+    const resultsComparator = (a: any, b: any) => a === b
+
+    const selector = {
+      resultsComparator,
+      selector: (_ecosystem: Ecosystem, a: string) => a,
+    }
+
+    const value1 = ecosystem.get(selector, ['1'])
+    const value2 = ecosystem.getNode(selector, ['2']).get()
+    const value3 = ecosystem.get(
+      atom('3', () => injectAtomValue(selector, ['3']))
+    )
+    const value4 = ecosystem
+      .getNode(atom('4', () => injectAtomValue(selector, ['4'])))
+      .get()
+
+    // @ts-expect-error value1 should be a string
+    const num: number = value1
+
+    expectTypeOf(value1).toEqualTypeOf<string>()
+    expectTypeOf(value2).toEqualTypeOf<string>()
+    expectTypeOf(value3).toEqualTypeOf<string>()
+    expectTypeOf(value4).toEqualTypeOf<string>()
+
+    expect(num).toBe('1')
+    expect(value2).toBe('2')
+    expect(value3).toBe('3')
+    expect(value4).toBe('4')
   })
 })
