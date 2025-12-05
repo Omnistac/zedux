@@ -159,5 +159,23 @@ module.exports = {
       },
     ],
     'Migration Guides': ['migrations/v2'],
+    '🚧 v2 beta docs': {
+      API: [
+        {
+          type: 'category',
+          label: 'Classes',
+          items: [
+            'v2/api/classes/AtomInstance',
+            'v2/api/classes/Signal',
+            'v2/api/classes/ZeduxNode',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Injectors',
+          items: ['v2/api/injectors/injectSignal'],
+        },
+      ],
+    },
   },
 }
