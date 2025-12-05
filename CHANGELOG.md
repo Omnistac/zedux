@@ -1,3 +1,22 @@
+## v2.0.0-rc.11 (Dec 5, 2025)
+
+### New Features:
+
+- `atoms`: add config param to `injectAtomState` (#291)
+- `atoms`: clean up observerless selectors in ecosystem `get` and `getOnce` (#322)
+- `atoms`: dynamically update atom exports; improve export wrapping (#256)
+- `atoms`: give the `is` util overloads to make it a type guard (#323)
+
+### Fixes:
+
+- `atoms`: defer signal `.set` in untracked contexts during evaluation (#269)
+- `atoms`: make external nodes notify on force-destroy (#255)
+- `atoms`: make InjectPromiseAtomApi methods return the subtype (#320)
+- `atoms`: prevent inferring params/result from selector config options (#292)
+- `atoms`: skip template-less nodes in node filter (#254)
+- `react`: defer ExternalNode creation until useEffect runs (#321)
+- `react`: make config passed to `useAtomState` override defaults (#290)
+
 ## v2.0.0-rc.10 (Aug 15, 2025)
 
 ### Fixes:
