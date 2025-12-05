@@ -25,7 +25,8 @@ import { injectSelf } from './injectSelf'
  *
  * When `injectHydration` is called in any atom, it prevents Zedux from trying
  * to auto-hydrate the atom after initial evaluation. Pass `{ intercept: false
- * }` to prevent this.
+ * }` to prevent this - e.g. if you just want to read the hydration, not use it
+ * to initialize state yourself.
  */
 export const injectHydration = <T = unknown>(config?: {
   intercept?: boolean
