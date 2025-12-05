@@ -1,5 +1,10 @@
+import type { AtomInstance } from '../classes/instances/AtomInstance'
+import type { AtomTemplateBase } from '../classes/templates/AtomTemplateBase'
+import type { AtomApi } from '../classes/AtomApi'
+import type { SelectorInstance } from '../classes/SelectorInstance'
 import type { ZeduxNode } from '../classes/ZeduxNode'
-import {
+import type { AtomTemplate } from '../classes/templates/AtomTemplate'
+import type {
   EvaluationReason,
   InternalEvaluationReason,
   LifecycleStatus,
@@ -107,7 +112,12 @@ export const prefix = '@@zedux'
  * @param classToCheck a class with a static $$typeof property
  * @returns boolean - whether val is an instanceof classToCheck
  */
-export const is = (val: any, classToCheck: { $$typeof: symbol }): boolean =>
+export const is: {
+  (value: any, classToCheck: typeof AtomInstance): value is AtomInstance
+  (value: any, classToCheck: typeof AtomTemplateBase): value is AtomTemplate
+  (value: any, classToCheck: typeof AtomApi): value is AtomApi<any>
+  (value: any, classToCheck: typeof SelectorInstance): value is SelectorInstance
+} = (val: any, classToCheck: { $$typeof: symbol }): val is any =>
   val?.constructor?.$$typeof === classToCheck.$$typeof
 
 export const makeReasonReadable = (
