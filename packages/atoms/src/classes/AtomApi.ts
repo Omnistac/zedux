@@ -6,6 +6,7 @@ import {
 } from '@zedux/atoms/types/index'
 import { INITIALIZING, is, prefix } from '@zedux/atoms/utils/general'
 import { getEvaluationContext } from '../utils/evaluationContext'
+import { AtomInstance } from './instances/AtomInstance'
 
 const wrapExports = <T extends Record<string, any>>(
   exports: T,
@@ -13,19 +14,31 @@ const wrapExports = <T extends Record<string, any>>(
 ): T => {
   const instance = getEvaluationContext().n
 
-  // wrap normal arrow functions in `batch` and, if needed, `withScope` calls.
-  // Only do this when `api()` is called during initial atom evaluation.
+  // wrap normal functions in `batch` and, if needed, `withScope` calls. Only do
+  // this when `api()` is called during initial atom evaluation.
   return config?.wrap !== false && instance && instance.l === INITIALIZING
     ? Object.entries(exports).reduce((obj, [key, val]) => {
         let maybeWrappedVal = val
 
-        if (typeof val === 'function') {
-          const wrappedFn = (...args: any[]) =>
-            instance.e.batch(() =>
+        if (
+          typeof val === 'function' &&
+          // don't wrap functions with static properties
+          !Object.keys(val).length &&
+          // don't wrap classes
+          (!val.prototype ||
+            Object.getOwnPropertyDescriptor(val, 'prototype')!.writable)
+        ) {
+          const wrappedFn = (...args: any[]) => {
+            let fn = (instance as AtomInstance<any>).api?.exports[key] ?? val
+
+            if (fn === wrappedFn) fn = val
+
+            return instance.e.batch(() =>
               instance.V
-                ? instance.e.withScope(instance.V, () => val(...args))
-                : val(...args)
+                ? instance.e.withScope(instance.V, () => fn(...args))
+                : fn(...args)
             )
+          }
 
           Object.defineProperty(wrappedFn, 'name', { value: val.name })
           maybeWrappedVal = wrappedFn
