@@ -1,0 +1,139 @@
+---
+id: AtomSelectorConfig
+title: AtomSelectorConfig
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import type { AtomSelectorConfig } from '@zedux/react'
+```
+
+An object that defines a [selector](./AtomSelector.mdx) plus additional configuration for controlling when the selector reevaluates and how results are compared.
+
+[Basic selector functions](./AtomSelector.mdx) work well for most cases. Selector config objects are mainly for selectors that don't return a stable result.
+
+## Example
+
+Basic usage with a name:
+
+```ts
+const getAdminUsers: AtomSelectorConfig = {
+  name: 'getAdminUsers',
+  selector: ({ get }) => get(usersAtom).filter(user => user.role === 'admin'),
+}
+
+const adminUsers = useAtomValue(getAdminUsers)
+```
+
+With a results comparator to prevent unnecessary updates:
+
+```ts
+const getUserSummary: AtomSelectorConfig = {
+  name: 'getUserSummary',
+  // this selector returns a new object reference every time it's called,
+  // so we need to compare the results to prevent unnecessary updates
+  selector: ({ get }) => ({
+    total: get(usersAtom).length,
+    active: get(usersAtom).filter(u => u.isActive).length,
+  }),
+  resultsComparator: (prev, next) =>
+    prev.total === next.total && prev.active === next.active,
+}
+
+// Components won't rerender if the counts haven't changed,
+// even if the users array reference changes
+const summary = useAtomValue(getUserSummary)
+```
+
+With an args comparator to control param comparison (only works in React hooks):
+
+```ts
+const searchUsers: AtomSelectorConfig = {
+  name: 'searchUsers',
+  selector: ({ get }, query: string) =>
+    get(usersAtom).filter(u => u.name.includes(query)),
+  argsComparator: (newArgs, oldArgs) => {
+    // Only reevaluate if query changed by more than just whitespace
+    return newArgs[0].trim() === oldArgs[0].trim()
+  },
+}
+
+const results = useAtomValue(searchUsers, ['john'])
+```
+
+## Interface
+
+```ts
+interface AtomSelectorConfig<State = any, Params extends any[] = any> {
+  argsComparator?: (
+    newArgs: NoInfer<Params>,
+    oldArgs: NoInfer<Params>
+  ) => boolean
+  name?: string
+  resultsComparator?: (
+    newResult: NoInfer<State>,
+    oldResult: NoInfer<State>
+  ) => boolean
+  selector: AtomSelector<State, Params>
+}
+```
+
+<Legend>
+  <Item name="argsComparator">
+    Optional. A function that receives the params from the last selector run and the latest arguments passed to the selector. Return `true` to prevent the selector from reevaluating, or `false` to allow it.
+
+    ```ts
+    argsComparator?: (newArgs: Params, oldArgs: Params) => boolean
+    ```
+
+    If this returns `false` and the params create a different [hash](../classes/ZeduxNode.mdx#params), the selector will reevaluate.
+
+    This option is only respected by Zedux's React hooks and only runs after the selector has already evaluated once. Its purpose is to prevent excess React rerenders from running the selector unnecessarily. This option is a noop when passing selectors to other Zedux APIs like [`ecosystem.get`](../classes/Ecosystem.mdx#get), [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode), or [`injectAtomValue`](../injectors/injectAtomValue.mdx).
+
+  </Item>
+  <Item name="name">
+    Optional. A string that will be used to create user-friendly [ids](../classes/SelectorInstance.mdx#id) for the selector. This takes precedence over the [`selector`](#selector) function's name.
+
+    ```ts
+    name?: string
+    ```
+
+    This is useful when programmatically generating selectors, or if you prefer setting the [`selector`](#selector) field to anonymous arrow functions.
+
+  </Item>
+  <Item name="resultsComparator">
+    Optional. A function that receives the previous and latest return values of the selector. Return `true` if the results should be considered "equal".
+
+    ```ts
+    resultsComparator?: (newResult: State, oldResult: State) => boolean
+    ```
+
+    When a selector returns "equivalent" values on subsequent reevaluations, the latest result is discarded, the previous result remains cached, and consumers of the selector are not notified of any change (since there wasn't one).
+
+  </Item>
+  <Item name="selector">
+    Required. The actual [AtomSelector](./AtomSelector.mdx) function to run.
+
+    ```ts
+    selector: AtomSelector<State, Params>
+    ```
+
+    :::note
+    `AtomSelectorConfig` objects are cached by object reference, not by their `selector` function reference.
+    :::
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The selectors walkthrough](../../walkthrough/selectors.mdx)
+- [The `AtomSelectorConfig` type](./AtomSelectorConfig.mdx)
+- [The `SelectorTemplate` type](./SelectorTemplate.mdx)
+- [The `SelectorInstance` class](../classes/SelectorInstance.mdx)
+- APIs that accept selector config objects:
+  - [`ecosystem.get`](../classes/Ecosystem.mdx#get)
+  - [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode)
+  - [The `useAtomValue` hook](../hooks/useAtomValue.mdx)
+  - [The `injectAtomValue` injector](../injectors/injectAtomValue.mdx)
