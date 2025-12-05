@@ -1,0 +1,58 @@
+---
+id: getInternals
+title: getInternals
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { getInternals } from '@zedux/react'
+```
+
+A utility function that returns Zedux's internal state. This is primarily used for advanced use cases like sharing state between multiple Zedux instances or debugging.
+
+:::warning Advanced Usage
+This is an advanced utility that exposes Zedux internals. Use with caution and only when necessary.
+:::
+
+Pass the returned internals object to [`setInternals`](/not-done?path=./setInternals.mdx) e.g. in a child window or iframe to share state between multiple Zedux instances. Note that you'll typically want to share your [ecosystem(s)](../classes/Ecosystem.mdx) as well.
+
+## Example
+
+```tsx live ecosystemId=getInternals/example resultVar=App version=2
+function App() {
+  const showInternals = () => {
+    const internals = getInternals()
+    console.log('Current evaluation context:', internals.c)
+    console.log('Default ecosystem:', internals.g)
+    console.log('Ecosystem ID:', internals.g.id)
+  }
+
+  return <button onClick={showInternals}>Log Internals (check console)</button>
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`getInternals = () => internals`)}
+  {tab2(`declare const getInternals: () => {
+    c: EvaluationContext
+    g: Ecosystem
+  }`)}
+</Tabs>
+
+<Legend>
+
+  <Item name="Returns">
+    An object containing two obfuscated internal objects:
+    
+    - **`c`** - The current evaluation context. This is how [injectors](../glossary.mdx#injector) and other utilities like [`ecosystem.why`](../classes/Ecosystem.mdx#why) work.
+    - **`g`** - The default ecosystem instance. Note that calling `getInternals` creates this if it hasn't been created yet.
+  </Item>
+  
+</Legend>
+
+## See Also
+
+- [The `setInternals` utility](/not-done?path=./setInternals.mdx)
