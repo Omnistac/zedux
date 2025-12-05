@@ -83,10 +83,12 @@ export const useAtomState: {
   ): StateHookTuple<ResolvedStateOf<I>, ExportsOf<I>>
 } = <G extends AnyAtomGenerics<{ Node: AtomInstance }>>(
   atom: AtomTemplateBase<G>,
-  params?: G['Params']
+  params?: G['Params'],
+  config?: Omit<ZeduxHookConfig, 'subscribe'>
 ): StateHookTuple<G['State'], G['Exports']> => {
   const instance = useAtomInstance(atom, params, {
     operation: 'useAtomState',
+    ...config,
     subscribe: true,
   })
 

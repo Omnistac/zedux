@@ -299,4 +299,35 @@ describe('suspense', () => {
 
     expect(div).toHaveTextContent('4')
   })
+
+  test('useAtomState() can be configured to not suspend', async () => {
+    const atom1 = atom('1', () => {
+      return api(Promise.resolve(1))
+    })
+
+    const calls: any[] = []
+
+    function Child() {
+      const [state] = useAtomState(atom1, [], { suspend: false })
+      calls.push(state.data)
+
+      return <div data-testid="value">{state.data}</div>
+    }
+
+    function Parent() {
+      return (
+        <Suspense fallback={<div>loading...</div>}>
+          <Child />
+        </Suspense>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Parent />, {
+      useStrictMode: true,
+    })
+
+    await findByTestId('value')
+
+    expect(calls).toEqual([undefined, undefined, 1, 1])
+  })
 })
