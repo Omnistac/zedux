@@ -34,7 +34,7 @@ describe('injectors', () => {
       injectStore,
       injectWhy,
     ].forEach(injector => {
-      expect(injector).toThrowError(
+      expect(injector).toThrow(
         /injectors can only be used in atom state factories/i
       )
     })

@@ -49,8 +49,8 @@
   "scripts": {
     "build": "../../scripts/build.js",
     "lint": "eslint 'src/**/*.@(tsx|ts)' && tsc --noEmit",
-    "prepublishOnly": "yarn build",
-    "test": "cd ../.. && yarn test packages/stores --collectCoverageFrom=packages/stores/src/**/*.ts"
+    "prepublishOnly": "pnpm build",
+    "test": "cd ../.. && pnpm run test packages/stores --collectCoverageFrom=packages/stores/src/**/*.ts"
   },
   "sideEffects": false,
   "type": "module"

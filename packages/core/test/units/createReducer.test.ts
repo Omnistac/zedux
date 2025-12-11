@@ -5,10 +5,6 @@ describe('Zedux.createReducer()', () => {
     const reducer = createReducer()
 
     expect(typeof reducer).toBe('function')
-    expect(reducer).toEqual(
-      expect.objectContaining({
-        reduce: expect.any(Function),
-      })
-    )
+    expect(reducer.reduce).toEqual(expect.any(Function))
   })
 })

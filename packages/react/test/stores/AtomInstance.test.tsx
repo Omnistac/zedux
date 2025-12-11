@@ -31,7 +31,7 @@ describe('AtomInstance', () => {
 
     const instance = ecosystem.getInstance(atom1)
 
-    expect(() => instance.invalidate()).toThrowError(
+    expect(() => instance.invalidate()).toThrow(
       /returned a different type/i
     )
   })
@@ -41,7 +41,7 @@ describe('AtomInstance', () => {
 
     const instance = ecosystem.getInstance(atom1)
 
-    expect(() => instance.invalidate()).toThrowError(
+    expect(() => instance.invalidate()).toThrow(
       /returned a different store/i
     )
   })
@@ -53,7 +53,7 @@ describe('AtomInstance', () => {
       throw 'test'
     })
 
-    expect(() => ecosystem.getInstance(atom1)).toThrowError('test')
+    expect(() => ecosystem.getInstance(atom1)).toThrow('test')
     expect(mock).toHaveBeenCalledTimes(1)
     expect(mock).toHaveBeenCalledWith(
       expect.stringMatching(/error while evaluating atom/i),
@@ -71,7 +71,7 @@ describe('AtomInstance', () => {
       throw 'test'
     })
 
-    expect(() => ecosystem.getInstance(atom1)).toThrowError('test')
+    expect(() => ecosystem.getInstance(atom1)).toThrow('test')
     expect(mock).toHaveBeenCalledTimes(1)
     expect(mock).toHaveBeenCalledWith(
       expect.stringMatching(/error while evaluating atom/i),

@@ -44,11 +44,14 @@
     "type": "git",
     "url": "https://github.com/Omnistac/zedux.git"
   },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  },
   "scripts": {
     "build": "../../scripts/build.js",
-    "lint": "eslint 'src/**/*.ts' && tsc --noEmit",
-    "prepublishOnly": "yarn build",
-    "test": "cd ../.. && yarn test packages/core --collectCoverageFrom=packages/core/src/**/*.ts"
+    "lint": "eslint 'src/**/*.ts' && tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
+    "prepublishOnly": "pnpm build",
+    "test": "cd ../.. && pnpm run test packages/core --collectCoverageFrom=packages/core/src/**/*.ts"
   },
   "sideEffects": false,
   "type": "module"

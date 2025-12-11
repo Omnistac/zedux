@@ -221,7 +221,7 @@ describe('React context', () => {
 
     const pattern = /no atom instance was provided/i
 
-    expect(() => renderInEcosystem(<Test />)).toThrowError(pattern)
+    expect(() => renderInEcosystem(<Test />)).toThrow(pattern)
   })
 
   test('useAtomContext with default params flags the context as unsafe before getting the instance', () => {

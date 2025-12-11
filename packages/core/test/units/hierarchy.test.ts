@@ -55,7 +55,7 @@ describe('delegate()', () => {
   test('throws an error if the node path does not exist in the hierarchy', () => {
     toggleDevMode(() => {
       // @ts-expect-error {} isn't a valid node
-      expect(() => delegate({}, action1)).toThrowError()
+      expect(() => delegate({}, action1)).toThrow()
 
       expect(() =>
         delegate(
@@ -69,7 +69,7 @@ describe('delegate()', () => {
           },
           action3
         )
-      ).toThrowError()
+      ).toThrow()
 
       expect(() =>
         delegate(
@@ -84,7 +84,7 @@ describe('delegate()', () => {
           },
           action3
         )
-      ).toThrowError()
+      ).toThrow()
     })
   })
 
@@ -103,7 +103,7 @@ describe('delegate()', () => {
           },
           action1
         )
-      ).toThrowError()
+      ).toThrow()
 
       expect(() =>
         delegate(
@@ -119,7 +119,7 @@ describe('delegate()', () => {
           },
           action2
         )
-      ).toThrowError()
+      ).toThrow()
     })
   })
 

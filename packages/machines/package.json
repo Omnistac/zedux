@@ -13,6 +13,10 @@
     "@zedux/stores": "2.0.0-rc.11"
   },
   "devDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@types/react": "catalog:",
     "@zedux/atoms": "2.0.0-rc.11",
     "@zedux/core": "2.0.0-rc.11"
   },
@@ -50,8 +54,8 @@
   "scripts": {
     "build": "../../scripts/build.js",
     "lint": "eslint 'src/**/*.ts' && tsc --noEmit",
-    "prepublishOnly": "yarn build",
-    "test": "cd ../.. && yarn test packages/machines --collectCoverageFrom=packages/machines/src/**/*.ts"
+    "prepublishOnly": "pnpm build",
+    "test": "cd ../.. && pnpm run test packages/machines --collectCoverageFrom=packages/machines/src/**/*.ts"
   },
   "sideEffects": false,
   "type": "module"

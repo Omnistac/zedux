@@ -2,7 +2,6 @@
   "defaultBase": "master",
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/nx-cloud",
       "options": {
         "cacheableOperations": [
           "build",

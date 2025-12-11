@@ -5,7 +5,7 @@ import { ecosystem } from '../utils/ecosystem'
 describe('ssr', () => {
   test('ecosystem.hydrate() requires a normal object', () => {
     // @ts-expect-error hydrate requires an object
-    expect(() => ecosystem.hydrate(null)).toThrowError(/Expected an object/)
+    expect(() => ecosystem.hydrate(null)).toThrow(/Expected an object/)
   })
 
   test('ecosystem.hydrate() hydrates atoms retroactively by default', () => {

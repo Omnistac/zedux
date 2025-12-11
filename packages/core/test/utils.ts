@@ -1,5 +1,5 @@
 import { Store } from '@zedux/core'
-import { runInNewContext } from 'vm'
+import { runInNewContext } from 'node:vm'
 
 export const createMockReducer = (state: any) => jest.fn(() => state)
 

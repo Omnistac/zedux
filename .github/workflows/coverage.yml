@@ -15,9 +15,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-      - run: yarn --frozen-lockfile
-      - run: yarn build
-      - run: yarn test
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - run: pnpm i --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm test
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v5
         with:

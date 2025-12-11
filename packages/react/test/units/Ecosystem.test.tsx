@@ -26,14 +26,14 @@ describe('Ecosystem', () => {
 
   test('tags must be an array', () => {
     // @ts-expect-error tags must be an array
-    expect(() => createEcosystem({ tags: { a: true } })).toThrowError(
+    expect(() => createEcosystem({ tags: { a: true } })).toThrow(
       /must be an array/i
     )
   })
 
   test('overrides must be an array', () => {
     // @ts-expect-error overrides must be an array
-    expect(() => createEcosystem({ overrides: { a: true } })).toThrowError(
+    expect(() => createEcosystem({ overrides: { a: true } })).toThrow(
       /must be an array/i
     )
   })
@@ -192,17 +192,17 @@ describe('Ecosystem', () => {
     const atom1 = atom('1', (param: string) => param)
 
     // @ts-expect-error first param must be an atom template or instance
-    expect(() => ecosystem.getInstance({})).toThrowError(
+    expect(() => ecosystem.getInstance({})).toThrow(
       /Expected a template, selector, or graph node/i
     )
 
     // @ts-expect-error first param must be an atom template or instance
-    expect(() => ecosystem.getInstance()).toThrowError(
+    expect(() => ecosystem.getInstance()).toThrow(
       "Cannot read properties of undefined (reading 'izn')"
     )
 
     // @ts-expect-error second param must be an array or undefined
-    expect(() => ecosystem.getInstance(atom1, 'a')).toThrowError(
+    expect(() => ecosystem.getInstance(atom1, 'a')).toThrow(
       /Expected atom params to be an array/i
     )
   })
@@ -211,17 +211,17 @@ describe('Ecosystem', () => {
     const atom1 = atom('1', (param: string) => param)
 
     // @ts-expect-error first param must be an atom template or instance
-    expect(() => ecosystem.getNode({})).toThrowError(
+    expect(() => ecosystem.getNode({})).toThrow(
       /Expected a template, selector, or graph node/i
     )
 
     // @ts-expect-error first param must be an atom template or instance
-    expect(() => ecosystem.getNode()).toThrowError(
+    expect(() => ecosystem.getNode()).toThrow(
       "Cannot read properties of undefined (reading 'izn')"
     )
 
     // @ts-expect-error second param must be an array or undefined
-    expect(() => ecosystem.getNode(atom1, 'a')).toThrowError(
+    expect(() => ecosystem.getNode(atom1, 'a')).toThrow(
       /Expected atom params to be an array/i
     )
   })
@@ -334,7 +334,7 @@ describe('Ecosystem', () => {
 
   test('on() throws an error when passed an invalid ecosystem event name', () => {
     // @ts-expect-error invalid event name
-    expect(() => ecosystem.on('nothing', () => {})).toThrowError(
+    expect(() => ecosystem.on('nothing', () => {})).toThrow(
       /Invalid event name "nothing"/
     )
   })

@@ -7,5 +7,3 @@
 coverage
 dist
 node_modules
-yarn-debug.log*
-yarn-error.log*

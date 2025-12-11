@@ -233,9 +233,9 @@ describe('plugins', () => {
       calls.push([event.source.id, event.error.message])
     })
 
-    expect(() => ecosystem.getNode(errorAtom)).toThrowError('error')
-    expect(() => ecosystem.getNode(mappedSignal)).toThrowError('error')
-    expect(() => ecosystem.getNode(errorSelector)).toThrowError('not an error')
+    expect(() => ecosystem.getNode(errorAtom)).toThrow('error')
+    expect(() => ecosystem.getNode(mappedSignal)).toThrow('error')
+    expect(() => ecosystem.getNode(errorSelector)).toThrow('not an error')
     const promiseNode = ecosystem.getNode(errorPromise)
     jest.runAllTimers()
     await Promise.resolve().then()
@@ -262,9 +262,9 @@ describe('plugins', () => {
       }
     })
 
-    expect(() => ecosystem.getNode(errorAtom)).toThrowError('error')
-    expect(() => ecosystem.getNode(mappedSignal)).toThrowError('error')
-    expect(() => ecosystem.getNode(errorSelector)).toThrowError('not an error')
+    expect(() => ecosystem.getNode(errorAtom)).toThrow('error')
+    expect(() => ecosystem.getNode(mappedSignal)).toThrow('error')
+    expect(() => ecosystem.getNode(errorSelector)).toThrow('not an error')
     ecosystem.getNode(errorPromise)
     jest.runAllTimers()
     await Promise.resolve().then()

@@ -39,11 +39,11 @@ const isSupportBranch = branch => /^v\d+\.x$/.test(branch)
 const assertDocsSiteBuilds = async () => {
   console.info('Making sure the docs site builds')
 
-  const output = await cmd('cd docs && yarn build')
+  const output = await cmd('cd docs && pnpm build')
 
   if (output.code) {
     console.error(
-      `Docs site failed to build. You may need to run \`yarn\` in the docs directory. Output: ${output}`
+      `Docs site failed to build. You may need to run \`pnpm i\` in the docs directory. Output: ${output}`
     )
     process.exit(1)
   }

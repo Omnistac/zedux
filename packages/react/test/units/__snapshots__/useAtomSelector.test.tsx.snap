@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`useAtomSelector inline selector that returns a different object reference every time only triggers one extra rerender (strict mode off) 1`] = `
 {

@@ -2,20 +2,20 @@ Abide by the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Starting Development
 
-We use `yarn` to manage package dependencies. Simply running `yarn` in the repo root is all you need to get started with developing the packages.
+We use `pnpm` to manage package dependencies. Simply running `pnpm i` in the repo root is all you need to get started with developing the packages.
 
-We use Nx with yarn workspaces to manage the package-based monorepo. Every directory in the `packages/` folder is its own npm package. Run `yarn nx graph` to see the dependency graph of Zedux packages.
+We use Nx with pnpm workspaces to manage the package-based monorepo. Every directory in the `packages/` folder is its own npm package. Run `pnpm nx graph` to see the dependency graph of Zedux packages.
 
-We recommend Test-Driven Development for most Zedux code changes. Add integration tests and run `yarn test my-test-file` in the repo root to check changes.
+We recommend Test-Driven Development for most Zedux code changes. Add integration tests and run `pnpm run test my-test-file` in the repo root to check changes.
 
 ### Docs
 
-The docs are separated from the rest of the repo - they're not a yarn workspace. To run the docs site:
+The docs are separated from the rest of the repo - they're not a pnpm workspace. To run the docs site:
 
 ```sh
 cd docs
-yarn
-yarn start
+pnpm i
+pnpm start
 ```
 
 This sets up an HMR-enabled dev server for quickly previewing docs site changes.
@@ -28,7 +28,7 @@ Properly type everything - no `any`s unless it's the correct type or you demonst
 
 Add integration tests in the `test/integrations` folder of the appropriate package(s) to **fully** demonstrate all desired functionality. Unit tests aren't required if all functionality is covered well in integration tests, but they are a nice-to-have.
 
-Ensure that all tests pass by running `yarn test` in the repo root. That command will also output code coverage. Ensure that all changes have full Statement, Branch, Function, and Line coverage.
+Ensure that all tests pass by running `pnpm test` in the repo root. That command will also output code coverage. Ensure that all changes have full Statement, Branch, Function, and Line coverage.
 
 The PR title should be in the same format as the main commit. E.g. `feat(react): implement cool new thing`
 
@@ -40,15 +40,15 @@ Make the PR directly against Zedux `master` branch unless it's a hotfix for a sp
 
 If your PR can't be merged due to conflicts, rebase against Zedux master, resolve conflicts locally, and force push the changes.
 
-If your PR requires changes, you can push those as separate commits (only the first commit has to follow the [commit message guidelines](#commit-messages) via `yarn commit`. All other commits can be free-form via `git commit`). Or you can `git commit --amend` a previous commit and force push.
+If your PR requires changes, you can push those as separate commits (only the first commit has to follow the [commit message guidelines](#commit-messages) via `pnpm commit`. All other commits can be free-form via `git commit`). Or you can `git commit --amend` a previous commit and force push.
 
 ## Commit Messages
 
 We use a custom script to generate the CHANGELOG from commit messages. Thus commit messages must follow a specific format. This format is a simplification of the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 
-Use `yarn commit` (in the repo root) instead of `git commit` to make our custom commit formatter tool automatically format these correctly for you.
+Use `pnpm commit` (in the repo root) instead of `git commit` to make our custom commit formatter tool automatically format these correctly for you.
 
-It's recommended to always use `yarn commit`, but if you want to know the format that it outputs, here it is:
+It's recommended to always use `pnpm commit`, but if you want to know the format that it outputs, here it is:
 
 ```
 <type>(<optional scope>): <description>

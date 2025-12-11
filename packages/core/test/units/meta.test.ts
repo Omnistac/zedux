@@ -55,7 +55,7 @@ describe('getMetaData()', () => {
     expect(() =>
       // @ts-expect-error payload can't be null
       getMetaData({ metaType: 'a', payload: null }, 'b')
-    ).toThrowError(/invalid action chain/i)
+    ).toThrow(/invalid action chain/i)
   })
 
   test('retrieves the metaData property from the first meta node with the given metaType in the action chain', () => {

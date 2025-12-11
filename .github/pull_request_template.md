@@ -4,7 +4,7 @@ Hello! Thanks for contributing to Zedux. Read this message and delete it to ackn
 
 Make sure you've followed the [contribution guidelines](https://github.com/Omnistac/zedux/blob/master/CONTRIBUTING.md). Specifically:
 
-- Make sure the first commit is formatted correctly (via running `yarn commit` in the repo root) and indicates all affected packages.
+- Make sure the first commit is formatted correctly (via running `pnpm commit` in the repo root) and indicates all affected packages.
 
   We'll use this to generate the changelog and release notes if your PR is merged. Any other commits will be squashed into the first commit. Each PR can only have one commit, so separate changes into separate PRs if needed.
 

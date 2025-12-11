@@ -93,6 +93,9 @@ importers:
         specifier: ^5.0.2
         version: 5.7.3
     devDependencies:
+      '@babel/preset-env':
+        specifier: ^7.26.9
+        version: 7.26.9(@babel/core@7.26.9)
       '@docusaurus/module-type-aliases':
         specifier: ^3.5.2
         version: 3.7.0(acorn@6.4.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
