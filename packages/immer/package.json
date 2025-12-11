@@ -15,7 +15,7 @@
   "devDependencies": {
     "@zedux/atoms": "2.0.0-rc.11",
     "@zedux/core": "2.0.0-rc.11",
-    "immer": "^10.1.1"
+    "immer": "catalog:"
   },
   "exports": {
     ".": {
@@ -50,8 +50,8 @@
   "scripts": {
     "build": "../../scripts/build.js",
     "lint": "eslint 'src/**/*.ts' && tsc --noEmit",
-    "prepublishOnly": "yarn build",
-    "test": "cd ../.. && yarn test packages/immer --collectCoverageFrom=packages/immer/src/**/*.ts"
+    "prepublishOnly": "pnpm build",
+    "test": "cd ../.. && pnpm run test packages/immer --collectCoverageFrom=packages/immer/src/**/*.ts"
   },
   "sideEffects": false,
   "type": "module"

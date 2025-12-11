@@ -75,7 +75,7 @@ describe('Store.dispatch()', () => {
     const store = createStore()
 
     // @ts-expect-error type must be a string
-    expect(() => store.dispatch({})).toThrowError(
+    expect(() => store.dispatch({})).toThrow(
       /action must have a string "type" property/i
     )
 
@@ -186,7 +186,7 @@ describe('Store.getState()', () => {
       return 'a'
     }
 
-    expect(() => store.use(reducer)).toThrowError(
+    expect(() => store.use(reducer)).toThrow(
       /cannot be called in a reducer/i
     )
   })
@@ -222,7 +222,7 @@ describe('Store.setState()', () => {
       type: 'c',
     }
 
-    expect(() => store.dispatch(action)).toThrowError(
+    expect(() => store.dispatch(action)).toThrow(
       /cannot be called in a reducer/i
     )
   })
@@ -232,7 +232,7 @@ describe('Store.setState()', () => {
     const update = (state: any) => ({ a: state.a })
 
     toggleDevMode(() => {
-      expect(() => store.setState(update)).toThrowError()
+      expect(() => store.setState(update)).toThrow()
     })
   })
 
@@ -379,7 +379,7 @@ describe('Store.setStateDeep()', () => {
     const update = (state: any) => ({ a: state.a })
 
     toggleDevMode(() => {
-      expect(() => store.setStateDeep(update)).toThrowError()
+      expect(() => store.setStateDeep(update)).toThrow()
     })
   })
 

@@ -30,7 +30,7 @@ import { injectSelf } from './injectSelf'
 export const injectHydration = <T = unknown>(config?: {
   intercept?: boolean
   transform?: boolean
-}): T => {
+}): T | undefined => {
   const self = injectSelf()
   self.H ||= config?.intercept !== false
 

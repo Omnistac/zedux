@@ -288,8 +288,8 @@ describe('ttl', () => {
       return node1.get()
     }
 
-    expect(() => renderInEcosystem(<Test />)).toThrowError('test error')
-    expect(() => ecosystem.getNode(atom1)).toThrowError('test error')
+    expect(() => renderInEcosystem(<Test />)).toThrow('test error')
+    expect(() => ecosystem.getNode(atom1)).toThrow('test error')
 
     expect(calls).toEqual([])
     expect(mock).toHaveBeenCalledTimes(3) // React tries twice.

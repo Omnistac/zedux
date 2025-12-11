@@ -8,7 +8,7 @@ const tsconfig = 'tsconfig.build.json'
 const tscBuild = async isCjs => {
   // run tsc
   const tscOutput = await cmd(
-    `yarn tsc --project ${tsconfig}${
+    `pnpm tsc --project ${tsconfig}${
       isCjs ? ' --module commonjs --outDir dist/cjs' : ''
     }`
   )
@@ -20,7 +20,7 @@ const tscBuild = async isCjs => {
 
   // replace TS aliases in the built files with relative paths using tsc-alias
   const tscAliasOutput = await cmd(
-    `yarn tsc-alias -p ${tsconfig}${isCjs ? ' --outDir dist/cjs' : ''}`
+    `pnpm tsc-alias -p ${tsconfig}${isCjs ? ' --outDir dist/cjs' : ''}`
   )
 
   if (tscAliasOutput.code) {
@@ -90,10 +90,10 @@ const tscBuild = async isCjs => {
 
 const run = async () => {
   // run this first; everything else can then run concurrently
-  await cmd('yarn rimraf dist')
+  await cmd('pnpm rimraf dist')
 
   // prod builds (umd & es)
-  cmd('yarn vite build').then(viteOutput => {
+  cmd('pnpm vite build').then(viteOutput => {
     if (viteOutput.code) {
       console.error(`vite failed. Output: ${viteOutput}`)
       process.exit(1)

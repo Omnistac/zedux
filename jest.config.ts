@@ -1,17 +1,31 @@
 import { Config } from '@jest/types'
-import { pathsToModuleNameMapper, RawCompilerOptions } from 'ts-jest'
-import { compilerOptions } from './tsconfig.json'
+import { pathsToModuleNameMapper, TsConfigCompilerOptionsJson } from 'ts-jest'
 
-const jestCompilerOptions: Omit<RawCompilerOptions, 'paths'> & {
+const compilerOptions: Omit<TsConfigCompilerOptionsJson, 'paths'> & {
   paths: Record<string, string[]>
 } = {
-  ...(compilerOptions as any),
-  lib: [...compilerOptions.lib, 'DOM'],
+  baseUrl: '.',
+  declaration: true,
+  esModuleInterop: true,
+  forceConsistentCasingInFileNames: true,
+  jsx: 'react',
+  module: 'ESNext',
+  moduleResolution: 'node',
+  noImplicitAny: true,
+  outDir: './dist',
+  resolveJsonModule: true,
+  skipLibCheck: true,
+  strict: true,
+  target: 'ES2015',
+  types: ['@testing-library/jest-dom'],
+  lib: ['ESNext', 'DOM'],
   paths: {
     '@zedux/atoms': ['./packages/atoms/src'],
     '@zedux/atoms/*': ['./packages/atoms/src/*'],
     '@zedux/core': ['./packages/core/src'],
     '@zedux/core/*': ['./packages/core/src/*'],
+    '@zedux/immer': ['./packages/immer/src'],
+    '@zedux/immer/*': ['./packages/immer/src/*'],
     '@zedux/machines': ['./packages/machines/src'],
     '@zedux/machines/*': ['./packages/machines/src/*'],
     '@zedux/react': ['./packages/react/src'],
@@ -21,6 +35,8 @@ const jestCompilerOptions: Omit<RawCompilerOptions, 'paths'> & {
   },
 }
 
+compilerOptions.baseUrl
+
 const config: Config.InitialOptions = {
   collectCoverage: true,
   collectCoverageFrom: ['**/src/**'],
@@ -28,10 +44,10 @@ const config: Config.InitialOptions = {
     DEV: true,
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  moduleNameMapper: pathsToModuleNameMapper(jestCompilerOptions.paths || {}, {
+  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, {
     prefix: '<rootDir>/',
   }),
-  modulePaths: [compilerOptions.baseUrl],
+  modulePaths: [compilerOptions.baseUrl ?? ''],
   preset: 'ts-jest',
   roots: [
     '<rootDir>/packages/atoms/src',
@@ -52,7 +68,7 @@ const config: Config.InitialOptions = {
     '^.+\\.tsx?$': [
       'ts-jest',
       {
-        tsconfig: jestCompilerOptions,
+        tsconfig: compilerOptions,
       },
     ],
   },

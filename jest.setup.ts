@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom/extend-expect'
+import '@testing-library/jest-dom'
 
 let callstacks: Record<string, string> = {}
 let prevIds: string[] = []

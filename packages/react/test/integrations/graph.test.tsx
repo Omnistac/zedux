@@ -308,7 +308,7 @@ describe('graph', () => {
     const propagatingNode = ecosystem.getNode(propagatingAtom)
 
     expect(receivingNode.get()).toBe(0)
-    expect(() => propagatingNode.exports.change()).toThrowError(/test/)
+    expect(() => propagatingNode.exports.change()).toThrow(/test/)
     expect(receivingNode.get()).toBe(1)
     expect(mock).toHaveBeenCalledTimes(1)
   })

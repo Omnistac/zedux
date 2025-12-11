@@ -81,7 +81,7 @@ export const getNode = <G extends AtomGenerics>(
     // non-Destroyed instance
     return (template as ZeduxNode).l === DESTROYED && (template as ZeduxNode).t
       ? ecosystem.getNode((template as ZeduxNode).t, (template as ZeduxNode).p)
-      : template
+      : template as ZeduxNode
   }
 
   if (DEV && typeof params !== 'undefined' && !Array.isArray(params)) {

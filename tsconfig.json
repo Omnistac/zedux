@@ -27,8 +27,9 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "ES2015"
+    "target": "ES2015",
+    "types": ["@testing-library/jest-dom"]
   },
   "exclude": ["**/dist", "node_modules"],
-  "include": ["./packages", "global.d.ts"]
+  "include": ["./packages", "global.d.ts", "./jest.config.ts"]
 }

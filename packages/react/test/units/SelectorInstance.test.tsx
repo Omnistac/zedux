@@ -165,7 +165,7 @@ describe('the SelectorInstance class', () => {
     // @ts-expect-error accessing undefined property
     const selector1 = ({ get }: AtomGetters) => get(atom1).nothing()
 
-    expect(() => ecosystem.getNode(selector1)).toThrowError(/not a function/i)
+    expect(() => ecosystem.getNode(selector1)).toThrow(/not a function/i)
 
     expect(mock).toHaveBeenCalledTimes(1)
     expect(mock).toHaveBeenCalledWith(
