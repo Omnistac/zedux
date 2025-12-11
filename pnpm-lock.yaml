@@ -225,14 +225,14 @@ importers:
     dependencies:
       '@zedux/stores':
         specifier: 2.0.0-rc.11
-        version: 2.0.0-rc.11
+        version: link:../stores
     devDependencies:
       '@zedux/atoms':
         specifier: 2.0.0-rc.11
-        version: 2.0.0-rc.11
+        version: link:../atoms
       '@zedux/core':
         specifier: 2.0.0-rc.11
-        version: 2.0.0-rc.11
+        version: link:../core
       immer:
         specifier: 'catalog:'
         version: 10.2.0
@@ -241,7 +241,7 @@ importers:
     dependencies:
       '@zedux/stores':
         specifier: 2.0.0-rc.11
-        version: 2.0.0-rc.11
+        version: link:../stores
     devDependencies:
       '@types/react':
         specifier: 'catalog:'
@@ -251,10 +251,10 @@ importers:
         version: 19.0.2(@types/react@19.0.1)
       '@zedux/atoms':
         specifier: 2.0.0-rc.11
-        version: 2.0.0-rc.11
+        version: link:../atoms
       '@zedux/core':
         specifier: 2.0.0-rc.11
-        version: 2.0.0-rc.11
+        version: link:../core
       react:
         specifier: 'catalog:'
         version: 19.0.1
@@ -266,7 +266,7 @@ importers:
     dependencies:
       '@zedux/atoms':
         specifier: 2.0.0-rc.11
-        version: 2.0.0-rc.11
+        version: link:../atoms
     devDependencies:
       '@testing-library/dom':
         specifier: 'catalog:'
@@ -294,10 +294,10 @@ importers:
     dependencies:
       '@zedux/atoms':
         specifier: 2.0.0-rc.11
-        version: 2.0.0-rc.11
+        version: link:../atoms
       '@zedux/core':
         specifier: 2.0.0-rc.11
-        version: 2.0.0-rc.11
+        version: link:../core
 
 packages:
 
@@ -1270,15 +1270,6 @@ packages:
   '@yarnpkg/parsers@3.0.3':
     resolution: {integrity: sha512-mQZgUSgFurUtA07ceMjxrWkYz8QtDuYkvPlu0ZqncgjopQ0t6CNEo/OSealkmnagSUx8ZD5ewvezUwUuMqutQg==}
     engines: {node: '>=18.12.0'}
-
-  '@zedux/atoms@2.0.0-rc.11':
-    resolution: {integrity: sha512-AnkAyk2ilPnN5kZ+g+X2VpyoY6ds5MlZDdNyEGhxrx4qhrsD/32gE6MwxnUqbt9tPkGqinM+VqujRARZxoYZiA==}
-
-  '@zedux/core@2.0.0-rc.11':
-    resolution: {integrity: sha512-zoy21ar8WZazpVwelqztTEV3WW64ODE421vGjcFjRkWNePkXOaqnW15cmQ5vvARTCOviws95+HcaZQ5hEEiqkw==}
-
-  '@zedux/stores@2.0.0-rc.11':
-    resolution: {integrity: sha512-LVS7TRzF7ySXgFLVQ841rl/r/A85QybbTujYw0+EPJJNumN9KCyjdlRR2HGImCiSAYQyoVeHkx8jYwTHXS92bQ==}
 
   '@zkochan/js-yaml@0.0.6':
     resolution: {integrity: sha512-nzvgl3VfhcELQ8LyVrYOru+UtAy1nrygk2+AGbTm8a5YcO6o8lSjAT+pfg3vJWxIoZKOUhrK6UU7xW/+00kQrg==}
@@ -4758,15 +4749,6 @@ snapshots:
     dependencies:
       js-yaml: 3.14.2
       tslib: 2.8.1
-
-  '@zedux/atoms@2.0.0-rc.11': {}
-
-  '@zedux/core@2.0.0-rc.11': {}
-
-  '@zedux/stores@2.0.0-rc.11':
-    dependencies:
-      '@zedux/atoms': 2.0.0-rc.11
-      '@zedux/core': 2.0.0-rc.11
 
   '@zkochan/js-yaml@0.0.6':
     dependencies:

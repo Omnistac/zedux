@@ -37,6 +37,8 @@ catalog:
   vite-plugin-dts: ^2.1.0
   vite-tsconfig-paths: ^4.0.7
 
+linkWorkspacePackages: true
+
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - esbuild
