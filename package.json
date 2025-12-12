@@ -75,5 +75,8 @@
     "release": "./scripts/release.js",
     "test": "jest"
   },
-  "packageManager": "pnpm@10.20.0"
+  "packageManager": "pnpm@10.20.0",
+  "engines": {
+    "node": ">=24.11.1"
+  }
 }
