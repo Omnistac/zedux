@@ -1,4 +1,8 @@
-import { Transaction, MutatableTypes, RecursivePartial } from '../types/index'
+import {
+  Transaction,
+  MutatableTypes,
+  RecursivePartialWithArrayPlucking,
+} from '../types/index'
 
 export type ParentProxy<State> = {
   t: Transaction[]
@@ -292,23 +296,43 @@ const maybeRecursivelyProxy = <State extends MutatableTypes>(
   return result instanceof ProxyWrapper ? result.p : result
 }
 
+const mutateSet = (prevVal: Set<any>, newVal: Set<any>) => {
+  for (const item of prevVal) {
+    if (!newVal.has(item)) prevVal.delete(item)
+  }
+  for (const item of newVal) {
+    if (!prevVal.has(item)) prevVal.add(item)
+  }
+}
+
 /**
  * Handles the object shorthand of `signal.mutate`, translating every field in
  * the passed `update` object into a proxied mutation on the state object
  *
- * Only supports JS objects (and therefore arrays too).
+ * Supports JS objects and arrays and sets.
  *
  * @param state should be a proxy e.g. `recursivelyProxy(...).p`
  * @param update the indefinitely-nested fields we're modifying
  */
-export const recursivelyMutate = <State extends Record<string, any>>(
-  state: State,
-  update: RecursivePartial<State>
-) => {
+export function recursivelyMutate<
+  State extends any[] | Record<string, any> | Set<any>
+>(state: State, update: RecursivePartialWithArrayPlucking<State>) {
+  // the `.mutate` shorthand only supports same-type overwrites (no set ->
+  // object, array -> set, etc. type changes). So we assume `update` is a set
+  // here.
+  if (state instanceof Set) {
+    mutateSet(state, update as Set<any>)
+    return
+  }
+
   for (const [key, val] of Object.entries(update)) {
+    const prevVal = state[key as keyof State]
+
     if (val && typeof val === 'object') {
-      if (state[key] && typeof state[key] === 'object') {
-        recursivelyMutate(state[key], val)
+      if (prevVal === val) continue
+
+      if (prevVal && typeof prevVal === 'object') {
+        recursivelyMutate(prevVal, val)
       } else {
         ;(state as any)[key] = val
       }
@@ -317,7 +341,9 @@ export const recursivelyMutate = <State extends Record<string, any>>(
     }
 
     // ignore undefined (see https://github.com/Omnistac/zedux/issues/95)
-    if (typeof val !== 'undefined') state[key as keyof State] = val
+    if (typeof val !== 'undefined' && prevVal !== val) {
+      state[key as keyof State] = val
+    }
   }
 }
 
