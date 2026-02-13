@@ -1,6 +1,6 @@
 {
   "name": "@zedux/machines",
-  "version": "2.0.0-rc.11",
+  "version": "2.0.0-rc.12",
   "description": "Simple native state machine implementation for Zedux atoms",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -10,15 +10,15 @@
     "url": "https://github.com/Omnistac/zedux/issues"
   },
   "dependencies": {
-    "@zedux/stores": "2.0.0-rc.11"
+    "@zedux/stores": "2.0.0-rc.12"
   },
   "devDependencies": {
     "react": "catalog:",
     "react-dom": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/react": "catalog:",
-    "@zedux/atoms": "2.0.0-rc.11",
-    "@zedux/core": "2.0.0-rc.11"
+    "@zedux/atoms": "2.0.0-rc.12",
+    "@zedux/core": "2.0.0-rc.12"
   },
   "exports": {
     ".": {
@@ -43,8 +43,8 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@zedux/atoms": "2.0.0-rc.11",
-    "@zedux/core": "2.0.0-rc.11"
+    "@zedux/atoms": "2.0.0-rc.12",
+    "@zedux/core": "2.0.0-rc.12"
   },
   "repository": {
     "directory": "packages/machines",

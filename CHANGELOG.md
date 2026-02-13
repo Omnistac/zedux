@@ -1,3 +1,10 @@
+## v2.0.0-rc.12 (Feb 13, 2026)
+
+### Fixes:
+
+- `atoms`: clean up previous effect when atom is destroyed before effect runs (#333)
+- `atoms`: unset effect unschedule function when effect runs (#332)
+
 ## v2.0.0-rc.11 (Dec 5, 2025)
 
 ### New Features:
