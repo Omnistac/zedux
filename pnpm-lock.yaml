@@ -224,14 +224,14 @@ importers:
   packages/immer:
     dependencies:
       '@zedux/stores':
-        specifier: 2.0.0-rc.11
+        specifier: 2.0.0-rc.12
         version: link:../stores
     devDependencies:
       '@zedux/atoms':
-        specifier: 2.0.0-rc.11
+        specifier: 2.0.0-rc.12
         version: link:../atoms
       '@zedux/core':
-        specifier: 2.0.0-rc.11
+        specifier: 2.0.0-rc.12
         version: link:../core
       immer:
         specifier: 'catalog:'
@@ -240,7 +240,7 @@ importers:
   packages/machines:
     dependencies:
       '@zedux/stores':
-        specifier: 2.0.0-rc.11
+        specifier: 2.0.0-rc.12
         version: link:../stores
     devDependencies:
       '@types/react':
@@ -250,10 +250,10 @@ importers:
         specifier: 'catalog:'
         version: 19.0.2(@types/react@19.0.1)
       '@zedux/atoms':
-        specifier: 2.0.0-rc.11
+        specifier: 2.0.0-rc.12
         version: link:../atoms
       '@zedux/core':
-        specifier: 2.0.0-rc.11
+        specifier: 2.0.0-rc.12
         version: link:../core
       react:
         specifier: 'catalog:'
@@ -265,7 +265,7 @@ importers:
   packages/react:
     dependencies:
       '@zedux/atoms':
-        specifier: 2.0.0-rc.11
+        specifier: 2.0.0-rc.12
         version: link:../atoms
     devDependencies:
       '@testing-library/dom':
@@ -293,10 +293,10 @@ importers:
   packages/stores:
     dependencies:
       '@zedux/atoms':
-        specifier: 2.0.0-rc.11
+        specifier: 2.0.0-rc.12
         version: link:../atoms
       '@zedux/core':
-        specifier: 2.0.0-rc.11
+        specifier: 2.0.0-rc.12
         version: link:../core
 
 packages:
