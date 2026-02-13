@@ -1,0 +1,342 @@
+---
+id: ZeduxNode
+title: ZeduxNode
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl'
+import { Legend, Item, Link, Tabs, tab1, tab2 } from '@site/src/all'
+
+This is the base class for every [graph node](/not-done?path=../glossary#graph-node). The [AtomInstance class](./AtomInstance), [SelectorInstance class](/not-done?path=./SelectorInstance), [Signal class](./Signal), and several other graph node types extend this class.
+
+You never create this class directly and should never need to reference it directly except as a type.
+
+## Generics
+
+For TypeScript users, this class holds a single type generic called the `NodeGenerics`. This type generic holds all the type information for a given node. Different node types will have different type information on this generic parameter.
+
+You can pull this generic information off any Zedux node by using various `*Of` type helpers. For example:
+
+```ts
+const exampleAtom = atom('example', () => {
+  const signal = injectSignal<string, { test: boolean }>('example state')
+
+  return api(signal).setExports({ exampleExport: () => signal.get() })
+})
+
+type ExampleEvents = EventsOf<typeof exampleAtom>
+type ExampleExports = ExportsOf<typeof exampleAtom>
+type ExampleNode = NodeOf<typeof exampleAtom>
+type ExampleParams = ParamsOf<typeof exampleAtom>
+type ExamplePromise = PromiseOf<typeof exampleAtom>
+type ExampleState = StateOf<typeof exampleAtom>
+type ExampleTemplate = TemplateOf<typeof exampleAtom>
+```
+
+Full list of keys on the `NodeGenerics` (`G`) type generic:
+
+<Legend>
+  <Item name="G['Events']">
+    A Record type mapping event names to event payloads. These are the events
+    that this node emits. See the [built-in events](#events) below. Some node
+    types can also take custom events.
+  </Item>
+  <Item name="G['Node']">
+    A recursive reference to the current node's full type. This allows some of
+    Zedux's recursive algorithms to keep full type information regardless how
+    deeply accessed they are.
+  </Item>
+  <Item name="G['Params']">
+    A tuple type. The parameters of this node. Only exists on [atom
+    instances](./AtomInstance) and [selector
+    instances](/not-done?path=./SelectorInstance).
+  </Item>
+  <Item name="G['State']">The state type of this node. Can be anything.</Item>
+  <Item name="G['Template']">
+    A recursive reference to the current node's full template type. `undefined`
+    if none. Only [atom instances](./AtomInstance) and [selector
+    instances](/not-done?path=./SelectorInstance) have templates.
+  </Item>
+</Legend>
+
+## Events
+
+A node's events can be listened to using [`node.on()`](#on). Every node has the following built-in events:
+
+<Legend>
+  <Item name="change" suffix="event">
+    Sent whenever the graph node's value changes. Event shape:
+
+    ```ts
+    { newState, oldState, reasons?, source?, type }
+    ```
+
+    - `newState` - The new state of the graph node. Can be anything.
+    - `oldState` - The previous state of the graph node. Can be anything.
+    - `reasons` - An indefinitely-nested array of [reasons](/not-done?path=../types/EvaluationReason) why the state changed. This tracks the series of state changes through the dependency graph that led to the current node changing. If the node was updated directly, this will be undefined.
+    - `source` - The node that changed. Though the types don't reflect it yet, this will always be defined.
+    - `type` - The string `"change"`.
+
+```tsx live noProvide=true resultVar=App version=2
+const counterAtom = atom('counter', () => 0)
+const timesTwoAtom = ion('timesTwo', ({ get }) => get(counterAtom) * 2)
+
+function App() {
+  const [count, setCount] = useAtomState(counterAtom)
+  const timesTwo = useAtomValue(timesTwoAtom)
+  const ecosystem = useEcosystem()
+
+  useEffect(() => {
+    return ecosystem.on('change', (event, eventMap) => {
+      console.log('change', event, eventMap)
+    })
+  }, [])
+
+  return (
+    <>
+      <div>Count: {count}</div>
+      <div>Times Two: {timesTwo}</div>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </>
+  )
+}
+```
+
+  </Item>
+  <Item name="cycle" suffix="event">
+    Sent when the node's [lifecycle status](#status) changes. Possible transitions:
+
+    - `Active` -> `Stale`
+    - `Active` -> `Destroyed`
+    - `Stale` -> `Active`
+    - `Stale` -> `Destroyed`
+
+    Event shape:
+
+    ```ts
+    { oldStatus, newStatus, reasons?, source?, type }
+    ```
+
+    - `oldStatus` - A string. The previous status of the graph node. Refer to the above transitions list for possible values.
+    - `newStatus` - A string. The new status of the graph node. Refer to the above transitions list for possible values.
+    - `source` - The node that changed. Though the types don't reflect it yet, this will always be defined.
+    - `type` - The string `"cycle"`.
+
+```tsx live ecosystemId=ZeduxNode-cycle resultVar=App version=2
+const counterAtom = atom('counter', () => {
+  const node = injectSelf()
+
+  injectEffect(() => {
+    const cleanup = node.on('cycle', (event, eventMap) => {
+      console.log('cycle', event, eventMap)
+    })
+
+    return cleanup
+  }, [])
+
+  return 0
+})
+
+function MaybeMounted() {
+  const [count, setCount] = useAtomState(counterAtom)
+
+  return <div>Count: {count}</div>
+}
+
+function App() {
+  const [isMounted, setIsMounted] = useState(true)
+
+  return (
+    <>
+      <button onClick={() => setIsMounted(state => !state)}>Toggle</button>
+      {isMounted && <MaybeMounted />}
+    </>
+  )
+}
+```
+
+  </Item>
+</Legend>
+
+## Properties
+
+Every node has the following **readonly** properties:
+
+<Legend>
+  <Item name="id">
+    A string. The unique id of this node. Zedux always tries to make this somewhat human-readable for easier debugging.
+
+    For nodes that take params, the id is the combination of the node template's key and a deterministic stringification of the params. A node template's "key" can the string passed to the [`atom()`](/not-done?path=../factories/atom) factory for atoms or the selector function's name for selectors See [`ecosystem.hash()`](/not-done?path=./Ecosystem#hash) or [`node.params`](#params) for more details on how params are stringified.
+
+    ```ts
+    ecosystem.getNode(atom('a', null)).id // 'a'
+    ecosystem.getNode(
+      atom('b', (param: string) => param),
+      ['c']
+    ).id // 'b-["c"]'
+    ```
+
+  </Item>
+  <Item name="params">
+    An array. The parameters passed to this node when it was created.
+
+    A reference to the raw, unserialized params that were used to create this atom instance. Only [atom instances](./AtomInstance) and [selector instances](/not-done?path=./SelectorInstance) take params. This will be `undefined` for node types that don't take params (like signals). For nodes that can take params but weren't passed any (like singleton atoms), this will be an empty array.
+
+    ```ts
+    const instanceA = useAtomInstance(myAtom, ['param 1', 'param 2'])
+    const instanceB = useAtomInstance(myAtom, ['a', 'b'])
+    instanceA.params // ['param 1', 'param 2']
+    instanceB.params // ['a', 'b']
+    ```
+
+    All params must be serializable (no functions or symbols)! This is because
+    Zedux converts the params to a stable string representation in order to
+    efficiently check for an existing atom instance with the "same" params.
+
+    Sameness is determined by deep value comparison, not reference equality. Order matters!
+
+    ```ts
+    // These params are the "same" in Zedux's eyes:
+    useAtomInstance(myAtom, ['a', { b: 'b', c: 'c' }])
+    useAtomInstance(myAtom, ['a', { c: 'c', b: 'b' }])
+
+    // But these are different:
+    useAtomInstance(myAtom, ['a', 'b'])
+    useAtomInstance(myAtom, ['b', 'a'])
+    ```
+
+    The only exception to the serializable rule is other atom instances. That's right! You can pass an atom instance to another atom instance. You can then use [`instance.get()`](#get) or [`ecosystem.get(instance)`](/not-done?path=./Ecosystem#get), [`injectAtomValue()`](/not-done?path=../injectors/injectAtomValue), or any other dynamic injector to register a [dynamic graph dependency](/not-done?path=../glossary#dynamic-graph-dependency) on the passed atom instance.
+
+```tsx live ecosystemId=AtomInstance-params resultVar=Shout version=2
+const normalAtom = atom(
+  'normal',
+  () => 'row, row, row your boat gently lest I scream'
+)
+const shoutingAtom = atom(
+  'shouting',
+  (instance: AnyAtomInstance<{ State: string }>) => {
+    const val = injectAtomValue(instance) // subscribe to updates
+
+    return val.toUpperCase()
+  }
+)
+
+function Shout() {
+  const instance = useAtomInstance(normalAtom)
+  const shout = useAtomValue(shoutingAtom, [instance]) // just pass the instance
+
+  return <div>{shout}</div>
+}
+```
+
+  </Item>
+  <Item name="status">
+    A string representing the status of the node. All nodes go through the following lifecycle:
+
+    <img
+      alt="Initializing -> Active <-> Stale -> Destroyed"
+      src={useBaseUrl('/img/diagrams/status-machine.png')}
+    />
+
+    This is mostly for debugging, but it has some practical uses. For example, you can check that `node.status !== 'Destroyed'` when holding a reference to a node outside of React/atoms (and if it is, update your local reference using [`ecosystem.getNode()`](/not-done?path=./Ecosystem#getnode)).
+
+  </Item>
+  <Item name="template">
+    A reference to the template this node was created from. `undefined` if none. Only [atom instances](./AtomInstance) and [selector instances](/not-done?path=./SelectorInstance) have templates.
+
+    For atom instances, this will be the [atom template](/not-done?path=./AtomTemplate). For selector instances, this will be the [selector template](/not-done?path=../types/SelectorTemplate).
+
+  </Item>
+</Legend>
+
+## Methods
+
+Every node has the following methods:
+
+<Legend>
+  <Item name="destroy">
+    Destroys the node. Destruction will bail out by default if the node still has non-passive observers like event listeners. Pass `true` to force-destroy the node anyway.
+
+    Signature:
+
+    ```ts
+    destroy(force?) => void
+    ```
+
+    <Legend>
+      <Item name="force">
+        Optional. Default: `false`. If `true`, the node will be force-destroyed.
+      </Item>
+    </Legend>
+
+    See the [destruction walkthrough](/not-done?path=../../../walkthrough/destruction) for more information.
+
+  </Item>
+  <Item name="get">
+    Gets the current value of the node. Registers a [dynamic graph dependency](/not-done?path=../glossary#dynamic-graph-dependency) on the node when called in [reactive contexts](/not-done?path=../glossary#reactive-context).
+  </Item>
+  <Item name="getOnce">
+    Gets the current value of the node. Unlike [`node.get()`], `getOnce` does not register any graph dependencies, even when called in [reactive contexts](/not-done?path=../glossary#reactive-context).
+  </Item>
+  <Item name="on">
+    Attaches an event listener to the node.
+
+    Signature:
+
+    ```ts
+    on(eventName?, listener, config?) => Cleanup
+    ```
+
+    <Legend>
+      <Item name="eventName">
+        Optional. The event to listen for. If not passed, the listener will be a "catch-all" listener that will be called on every node event.
+      </Item>
+      <Item name="listener">
+        Required. The callback function that Zedux will call when the event occurs.
+
+        Signature:
+
+        ```ts
+        listener = (event, eventMap) => void
+        ```
+
+        <Legend>
+          <Item name="event">
+            The event object. If the listener is a "catch-all" listener, this argument will be omitted - the `eventMap` will be the only argument.
+          </Item>
+          <Item name="eventMap">
+            An object containing all events that fired at the same time as the listened-to event, keyed by event type.
+          </Item>
+        </Legend>
+      </Item>
+      <Item name="config">
+        Optional. An object with the following optional properties:
+
+        ```ts
+        { active }
+        ```
+
+        <Legend>
+          <Item name="active">
+            Optional. Default: `false`. If `true`, the listener will be an "active" listener, meaning it will prevent the node from becoming `Stale` or `Destroyed`.
+
+            Listeners are passive by default, meaning they don't influence the node's lifecycle status and are appended to a single, special "Listener" observer on the target node. Passive listeners are removed automatically when the node is destroyed (`cycle` listeners will be notified of the destruction just before being removed).
+
+            Active listeners each create their own graph node that observes the target node. They prevent automatic node cleanup and will recreate the target node if it's force-destroyed.
+
+            :::tip
+            As of Zedux v2, active listeners are the key to [manual graphing](/not-done?path=../../../walkthrough/destruction#manual-graphing).
+            :::
+          </Item>
+        </Legend>
+      </Item>
+    </Legend>
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [`ecosystem.getNode()`](/not-done?path=./Ecosystem#getnode)
+- [the `AtomInstance` class](./AtomInstance)
+- [the `SelectorInstance` class](/not-done?path=./SelectorInstance)
+- [the `Signal` class](./Signal)
