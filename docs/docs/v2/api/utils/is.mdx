@@ -1,0 +1,82 @@
+---
+id: is
+title: is
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { is } from '@zedux/react'
+```
+
+A utility function for checking if a value is an instance of a given Zedux class. It provides type guards for all Zedux classes that it can check, helping with runtime type checking.
+
+:::warning
+This is primarily for internal use. It relies on TypeScript to enforce that you pass a valid class to check against. You can get false positives if you pass a class that doesn't have a `$$typeof` property. While we could change this behavior, we don't want to for performance reasons.
+:::
+
+## Example
+
+```tsx live ecosystemId=is/example resultVar=App version=2
+const ecosystem = createEcosystem()
+const anAtom = atom('anAtom', 'Hello')
+const aSignal = ecosystem.signal('World')
+const aSelectorInstance = ecosystem.getNode(() => aSignal.get() + '!')
+
+function TypeChecker() {
+  const anAtomApi = api()
+  const atomInstance = useAtomInstance(anAtom)
+
+  const checkTypes = () => {
+    console.log('Is atom template:', is(anAtom, AtomTemplate))
+    console.log('Is atom instance:', is(atomInstance, AtomInstance))
+    console.log('Is atom api:', is(anAtomApi, AtomApi))
+    console.log(
+      'Is selector instance:',
+      is(aSelectorInstance, SelectorInstance)
+    )
+  }
+
+  return <button onClick={checkTypes}>Check Types (see console)</button>
+}
+
+function App() {
+  return <TypeChecker />
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`is = (value, type) => boolean`)}
+  {tab2(`declare const is: {
+  (value: any, type: AtomInstance): value is AtomInstance
+  (value: any, type: AtomTemplate): value is AtomTemplate  
+  (value: any, type: AtomApi): value is AtomApi<any>
+  (value: any, type: SelectorInstance): value is SelectorInstance
+}`)}
+</Tabs>
+
+<Legend>
+  <Item name="value">Required. The value to check. Can be anything.</Item>
+  <Item name="type">
+
+    Required. A Zedux class constructor reference to check against. Accepted classes:
+
+    - `AtomInstance`
+    - `AtomTemplate`
+    - `AtomApi`
+    - `SelectorInstance`
+
+  </Item>
+  <Item name="Returns">
+    `true` if the value is an instance of the specified class, `false` otherwise.
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `AtomInstance` class](../classes/AtomInstance.mdx)
+- [The `AtomTemplate` class](../classes/AtomTemplate.mdx)
+- [The `AtomApi` class](../classes/AtomApi.mdx)
+- [The `SelectorInstance` class](../classes/SelectorInstance.mdx)
