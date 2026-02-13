@@ -1,0 +1,112 @@
+---
+id: AtomSelector
+title: AtomSelector
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import type { AtomSelector } from '@zedux/react'
+```
+
+A function that takes an [ecosystem](../classes/Ecosystem.mdx) as its first parameter and returns a derived value. The return value is cached and the selector automatically reevaluates when its dependencies change.
+
+Selectors are lightweight, pure functions that derive state from atoms and other selectors. They're the easiest way to compose state in Zedux.
+
+## Example
+
+Simple selector:
+
+```ts
+const getAdminUsers = ({ get }: Ecosystem) =>
+  get(usersAtom).filter(user => user.role === 'admin')
+
+// Use the selector in a component:
+function AdminList() {
+  const adminUsers = useAtomValue(getAdminUsers)
+  return (
+    <ul>
+      {adminUsers.map(user => (
+        <li>{user.name}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+Selector with params:
+
+```ts
+const getUsersByRole = ({ get }: Ecosystem, role: string) =>
+  get(usersAtom).filter(user => user.role === role)
+
+// TypeScript enforces that params are passed:
+const adminUsers = useAtomValue(getUsersByRole, ['admin'])
+const moderators = useAtomValue(getUsersByRole, ['moderator'])
+```
+
+Composing selectors:
+
+```ts
+const getActiveUsers = ({ get }: Ecosystem) =>
+  get(usersAtom).filter(user => user.isActive)
+
+const getActiveUserCount = ({ get }: Ecosystem) => get(getActiveUsers).length
+
+// Selectors can depend on other selectors
+const summary = useAtomValue(getActiveUserCount) // 42
+```
+
+## Unstable Results
+
+When a selector returns a different object reference every time it runs, Zedux's caching behavior will be useless - all dependents will reevaluate every time the selector runs.
+
+To fix this, convert the selector to a [selector config object](./AtomSelectorConfig.mdx) with a results comparator.
+
+```ts
+const getActiveUserCount: AtomSelectorConfig = {
+  name: 'getActiveUserCount',
+  // this selector returns a new object reference every time it's called:
+  selector: ({ get }) => ({ length: get(getActiveUsers).length }),
+  resultsComparator: (prev, next) => prev.length === next.length,
+}
+```
+
+## Interface
+
+```ts
+type AtomSelector<State = any, Params extends any[] = any> = (
+  ecosystem: Ecosystem,
+  ...args: Params
+) => State
+```
+
+<Legend>
+  <Item name="ecosystem">
+    The first parameter is always an [Ecosystem](../classes/Ecosystem.mdx)
+    instance. Use this to access atoms and other selectors via `get` or
+    `getNode`.
+  </Item>
+  <Item name="args">
+    Any additional parameters after the ecosystem become the selector's
+    [params](../classes/SelectorInstance.mdx#params). When params are provided,
+    TypeScript will enforce that consumers pass matching params when using the
+    selector.
+  </Item>
+  <Item name="Returns">
+    The selector can return any value. This value will be cached and returned to
+    all consumers of the selector.
+  </Item>
+</Legend>
+
+## See Also
+
+- [The selectors walkthrough](/not-done?path=../../walkthrough/selectors.mdx)
+- [The `AtomSelectorConfig` type](./AtomSelectorConfig.mdx)
+- [The `SelectorTemplate` type](./SelectorTemplate.mdx)
+- [The `SelectorInstance` class](../classes/SelectorInstance.mdx)
+- APIs that accept selectors:
+  - [`ecosystem.get`](../classes/Ecosystem.mdx#get)
+  - [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode)
+  - [The `useAtomValue` hook](../hooks/useAtomValue.mdx)
+  - [The `injectAtomValue` injector](../injectors/injectAtomValue.mdx)
