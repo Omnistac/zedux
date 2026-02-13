@@ -445,6 +445,58 @@ describe('injectors', () => {
     expect(effectDescriptor2.c).toBeUndefined()
   })
 
+  test('injectEffect cleans up previous effect when atom is destroyed before deferred job runs', () => {
+    const cleanups: string[] = []
+    const effects: string[] = []
+
+    // Simulate React-like async scheduling so effects are deferred to
+    // the async scheduler, creating a window where the atom can be destroyed
+    // before the new effect job runs.
+    ecosystem.S = Object.assign(() => undefined, { t: 'react' as const })
+
+    const atom1 = atom('1', () => {
+      const signal = injectSignal('a')
+
+      injectEffect(() => {
+        effects.push(signal.getOnce())
+
+        return () => cleanups.push(signal.getOnce())
+      }, [signal.get()])
+
+      return signal
+    })
+
+    const node = ecosystem.getNode(atom1)
+
+    // effect is deferred to async scheduler - hasn't run yet
+    expect(effects).toEqual([])
+    expect(cleanups).toEqual([])
+
+    // flush the async scheduler so the initial effect runs
+    ecosystem.asyncScheduler.flush()
+
+    expect(effects).toEqual(['a'])
+    expect(cleanups).toEqual([])
+
+    // trigger re-evaluation so deps change and a new effect job is scheduled
+    // on the async scheduler
+    node.set('b')
+
+    // the atom re-evaluated synchronously but the new effect is deferred
+    expect(effects).toEqual(['a'])
+    expect(cleanups).toEqual([])
+
+    // destroy the atom before the deferred effect job runs - the old effect's
+    // cleanup must still be called
+    node.destroy(true)
+
+    expect(cleanups).toEqual(['b'])
+    // the new effect should never have run
+    expect(effects).toEqual(['a'])
+
+    ecosystem.S = undefined
+  })
+
   test("injectAtomState's default operation name can be overridden", () => {
     const atom1 = atom('1', () => 1)
 
