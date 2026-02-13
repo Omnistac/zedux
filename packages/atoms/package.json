@@ -1,6 +1,6 @@
 {
   "name": "@zedux/atoms",
-  "version": "2.0.0-rc.12",
+  "version": "2.0.0-rc.11",
   "description": "A Molecular State Engine for React",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
