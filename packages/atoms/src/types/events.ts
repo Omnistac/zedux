@@ -7,7 +7,7 @@ import {
   ListenerConfig,
   NodeGenerics,
   Prettify,
-  RecursivePartial,
+  RecursivePartialWithArrayPlucking,
 } from './index'
 
 export type CatchAllListener<G extends NodeGenerics> = (
@@ -159,8 +159,8 @@ export type ListenableEvents<G extends NodeGenerics = AnyNodeGenerics> =
   Prettify<G['Events'] & ExplicitEvents & ImplicitEvents<G>>
 
 export type Mutatable<State> =
-  | RecursivePartial<State>
-  | ((state: State) => void | RecursivePartial<State>)
+  | RecursivePartialWithArrayPlucking<State>
+  | ((state: State) => void | RecursivePartialWithArrayPlucking<State>)
 
 export type MutatableTypes = any[] | Record<string, any> | Set<any>
 
