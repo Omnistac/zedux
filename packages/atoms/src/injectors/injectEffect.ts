@@ -54,10 +54,12 @@ export const injectEffect = (
   const isUsingAsyncScheduler = e.S?.t === 'react'
 
   const nextDescriptor: InjectorDescriptor<InjectorDeps> = {
-    c: () =>
-      (isUsingAsyncScheduler ? e.asyncScheduler : e.syncScheduler).unschedule(
+    c: () => {
+      prevDescriptor?.c?.()
+      ;(isUsingAsyncScheduler ? e.asyncScheduler : e.syncScheduler).unschedule(
         job
-      ),
+      )
+    },
     t: TYPE,
     v: deps,
   }
