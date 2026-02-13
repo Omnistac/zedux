@@ -68,7 +68,7 @@ export const injectEffect = (
 
       const cleanup = untrack(() => e.batch(effect)) // let this throw
 
-      if (typeof cleanup === 'function') nextDescriptor.c = cleanup
+      nextDescriptor.c = typeof cleanup === 'function' ? cleanup : undefined
     },
     T: 4 as const,
   }

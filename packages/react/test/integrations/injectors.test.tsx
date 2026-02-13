@@ -407,6 +407,44 @@ describe('injectors', () => {
     expect(callback?.name).toBe('fn')
   })
 
+  test('injectEffect clears descriptor cleanup ref when effect returns no cleanup', () => {
+    let evalCount = 0
+
+    const atom1 = atom('1', () => {
+      const signal = injectSignal('a')
+      evalCount++
+
+      injectEffect(
+        () => {
+          // no cleanup returned
+        },
+        [signal.get()],
+        { synchronous: true }
+      )
+
+      return signal
+    })
+
+    const node = ecosystem.getNode(atom1)
+
+    expect(evalCount).toBe(1)
+
+    // After the synchronous effect runs with no cleanup returned,
+    // the descriptor's cleanup should be undefined, not the stale
+    // unschedule closure (which would retain a reference chain
+    // through job -> prevDescriptor -> ... causing a memory leak)
+    const effectDescriptor = node.I!.find(d => d.t === 'effect')!
+    expect(effectDescriptor.c).toBeUndefined()
+
+    // Trigger re-evaluation
+    node.set('b')
+    expect(evalCount).toBe(2)
+
+    // Should still be undefined after re-evaluation
+    const effectDescriptor2 = node.I!.find(d => d.t === 'effect')!
+    expect(effectDescriptor2.c).toBeUndefined()
+  })
+
   test("injectAtomState's default operation name can be overridden", () => {
     const atom1 = atom('1', () => 1)
 
