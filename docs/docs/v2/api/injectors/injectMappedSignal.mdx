@@ -1,0 +1,117 @@
+---
+id: injectMappedSignal
+title: injectMappedSignal
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+An [injector](../glossary.mdx#injector) that creates and returns a stable [`MappedSignal`](../classes/MappedSignal.mdx) instance. The reference will never change for the lifetime of the injecting atom.
+
+Registers a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on the injected signal. By default, every state change in the injected mapped signal (or, by extension, any of its inner signals) will trigger a reevaluation of the current atom.
+
+Since mapped signals don't accept nested objects, use this injector multiple times to create deeply-nested signals.
+
+## Examples
+
+Deeply nesting mixed signal types:
+
+```ts
+const exampleAtom = atom('example', () => {
+  const innerSignal = injectSignal(0)
+
+  const innerAtomInstance = injectAtomInstance(someOtherAtom)
+
+  const mappedSignal = injectMappedSignal({
+    inner: innerSignal,
+    // atoms are signals. Using another atom instance is fine:
+    innerAtom: innerAtomInstance,
+  })
+
+  // mapped signals are signals, so they can be nested in other mapped signals:
+  const outermostSignal = injectMappedSignal({ nested: mappedSignal })
+
+  outermostSignal.get() // { nested: { inner: 0, innerAtom: <innerAtomInstance state> } }
+
+  return outermostSignal
+})
+```
+
+Miscellaneous examples:
+
+```ts
+const signalA = injectSignal('a')
+const signalB = injectSignal('b', { events: { exampleEvent: As<string> } })
+
+const signal = injectMappedSignal({ a: signalA, b: signalB })
+const withEvents = injectMappedSignal(
+  { a: signalA },
+  {
+    events: {
+      exampleEvent: As<string>,
+    },
+  }
+)
+const nonReactive = injectMappedSignal({ b: signalB }, { reactive: false })
+const mixedValues = injectMappedSignal({ a: signalA, b: 'anything here' })
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`injectMappedSignal = (signalMap, config?) => MappedSignal`)}
+  {tab2(`declare const injectMappedSignal: <
+    M extends SignalMap,
+    EventMap extends Record<string, any> = {}
+  >(
+    map: M,
+    config?: InjectSignalConfig<EventMap>
+  ) => MappedSignal<{
+    Events: Prettify<MapAll<M> & EventMap>
+    State: { [K in keyof M]: M[K] extends Signal<any> ? StateOf<M[K]> : M[K] }
+  }>`)}
+</Tabs>
+
+<Legend>
+  <Item name="signalMap">
+    Required. A JS object containing signals or any other value.
+
+    The keys of this object will become keys in the state of the returned signal.
+
+    When a value is a signal, that signal will control the state of that key in the mapped signal's state. These don't have to be stable references; on reevaluation, each passed signal reference will be swapped in for its previous reference if they don't match.
+
+    When a value is not a signal, it will be returned as-is in the mapped signal's initial state. On reevaluation, this behaves exactly like [`injectSignal`](./injectSignal.mdx) - the value will be ignored.
+
+  </Item>
+  <Item name="config">
+    Optional. An object containing the following properties:
+
+    <Legend>
+      <Item name="reactive">
+        Optional. A boolean. Default: `true`.
+
+        If `false`, this injector will not register a dynamic graph dependency on the injected mapped signal. Note that if any inner signals are also injected via [`injectSignal`](./injectSignal.mdx), those may still register their own dependencies.
+
+      </Item>
+      <Item name="events">
+        Optional. An object mapping custom event names to `As<MyPayloadType>`. See [the `As` util](/not-done?path=../utils/As.mdx).
+
+        This object is unused. It's just for type inference. As such, passing the second `EventMap` generic to `injectMappedSignal` has the same effect as passing this config option.
+
+        Note that mapped signals always inherit events from their inner signals. You don't need to also specify those here. The mapped signal's [`Events` generic](../classes/MappedSignal.mdx#gevents) will merge any events on this object with those of inner signals. Mapped signals can't remove inner signal events from their own type.
+
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="Returns">
+    A stable [`MappedSignal`](../classes/MappedSignal.mdx) instance.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `MappedSignal` class](../classes/MappedSignal.mdx)
+- [The `Signal` class](../classes/Signal.mdx)
+- [The `injectSignal` injector](./injectSignal.mdx)
+- [The `As` util](/not-done?path=../utils/As.mdx)
