@@ -148,8 +148,12 @@ export interface ExportsConfig {
   wrap?: boolean
 }
 
-export type ExportsInfusedSetter<State, Exports> = Exports & {
-  (settable: Settable<State>, meta?: any): State
+export type ExportsInfusedSetter<
+  State,
+  Exports extends Record<string, any>,
+  Events extends Record<string, any>
+> = Exports & {
+  (settable: Settable<State>, events?: Partial<Events & ExplicitEvents>): State
 }
 
 export interface Get {
@@ -510,7 +514,8 @@ export type Settable<State = any, StateIn = State> =
   | ((state: StateIn) => State)
   | State
 
-export type StateHookTuple<State, Exports> = [
+export type StateHookTuple<
   State,
-  ExportsInfusedSetter<State, Exports>
-]
+  Exports extends Record<string, any>,
+  Events extends Record<string, any>
+> = [State, ExportsInfusedSetter<State, Exports, Events>]
