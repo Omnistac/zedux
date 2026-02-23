@@ -72,7 +72,7 @@
     "dev": "pnpm nx -- watch --all -- pnpm nx run \\$NX_PROJECT_NAME:build",
     "lint": "pnpm nx run-many -t lint",
     "pretest": "pnpm run lint",
-    "release": "./scripts/release.js",
+    "release": "node --experimental-strip-types scripts/release.ts",
     "test": "jest"
   },
   "packageManager": "pnpm@10.20.0"
