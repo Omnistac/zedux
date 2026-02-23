@@ -686,6 +686,9 @@ describe('react types', () => {
       // @ts-expect-error cannot specify built-in events
       injectMappedSignal({ signal }, { events: { change: As<number> } })
 
+      // @ts-expect-error cannot specify built-in events for single-signal wrapping
+      injectMappedSignal(signal, { events: { change: As<number> } })
+
       return api(injectSignal(instance.getOnce())).setExports({
         val1,
         val2,

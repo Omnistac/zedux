@@ -68,24 +68,54 @@ type UnionToTuple<T> = UnionToIntersection<
  * })
  * ```
  *
+ * Can also wrap a single signal, creating a thin wrapper that keeps the inner
+ * signal reference up-to-date:
+ *
+ * ```ts
+ * const inner = injectSignal({ count: 0 })
+ * const signal = injectMappedSignal(inner)
+ * ```
+ *
  * For TS users, custom events can be configured the same way as
  * {@link injectSignal}
  */
-export const injectMappedSignal = <
+export function injectMappedSignal<
+  S extends Signal<any>,
+  EventMap extends Record<string, any> = None
+>(
+  signal: S,
+  config?: InjectSignalConfig<EventMap>
+): MappedSignal<{
+  Events: Prettify<EventsOf<S> & EventMap>
+  State: StateOf<S>
+}>
+
+export function injectMappedSignal<
   M extends SignalMap,
   EventMap extends Record<string, any> = None
 >(
   map: M,
   config?: InjectSignalConfig<EventMap>
-) => {
+): MappedSignal<{
+  Events: Prettify<MapAll<M> & EventMap>
+  State: { [K in keyof M]: M[K] extends Signal<any> ? StateOf<M[K]> : M[K] }
+}>
+
+export function injectMappedSignal(
+  mapOrSignal: SignalMap | Signal<any>,
+  config?: InjectSignalConfig<any>
+) {
   const instance = injectSelf()
 
-  const signal = injectMemo(() => {
-    return new MappedSignal<{
-      Events: Prettify<MapAll<M> & EventMap>
-      State: { [K in keyof M]: M[K] extends Signal<any> ? StateOf<M[K]> : M[K] }
-    }>(instance.e, instance.e.makeId('signal', instance), map)
-  }, [])
+  const signal = injectMemo(
+    () =>
+      new MappedSignal(
+        instance.e,
+        instance.e.makeId('signal', instance),
+        mapOrSignal
+      ),
+    []
+  )
 
   // create a graph edge between the current atom and the new signal
   signal.get({
@@ -95,7 +125,7 @@ export const injectMappedSignal = <
 
   // iterate over the passed object on every evaluation. Check for any changed
   // inner signal references and swap them out if needed.
-  signal.u(map)
+  signal.u(mapOrSignal)
 
   return signal
 }
