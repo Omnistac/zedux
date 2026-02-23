@@ -143,7 +143,7 @@ export const Hero = () => {
         </TaglineDark>
         <QuickStart
           {...getAnimation(0)}
-          href={useBaseUrl('docs/walkthrough/quick-start')}
+          href={useBaseUrl('docs/v1/walkthrough/quick-start')}
         >
           Quick Start!
         </QuickStart>
@@ -165,7 +165,7 @@ export const Hero = () => {
         </TaglineLight>
         <ApiDocs
           {...getAnimation(1)}
-          href={useBaseUrl('docs/api/api-overview')}
+          href={useBaseUrl('docs/v1/api/api-overview')}
         >
           API Docs
         </ApiDocs>
