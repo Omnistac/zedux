@@ -574,10 +574,11 @@ export class AtomInstance<
    * e`x`portsInfusedSetter - a thin wrapper function around `this.set` with all
    * of this atom instance's exports spread onto the function reference itself.
    */
-  public get x(): ExportsInfusedSetter<G['State'], G['Exports']> {
+  public get x(): ExportsInfusedSetter<G['State'], G['Exports'], G['Events']> {
     Object.defineProperty(this, 'x', {
       value: Object.assign(
-        (settable: Settable, meta?: any) => this.set(settable, meta),
+        (settable: Settable<G['State']>, events?: Partial<SendableEvents<G>>) =>
+          this.set(settable, events),
         this.exports
       ),
     })

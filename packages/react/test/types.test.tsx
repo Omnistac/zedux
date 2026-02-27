@@ -42,6 +42,7 @@ import {
   ResolvedStateOf,
   IonInstanceRecursive,
   injectMappedSignal,
+  Settable,
 } from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 import { ecosystem, snapshotNodes } from './utils/ecosystem'
@@ -1074,5 +1075,59 @@ describe('react types', () => {
         data: number
       }
     >()
+  })
+
+  test('StateHookTuple includes Events generic', () => {
+    const atomWithEvents = atom('withEvents', () => {
+      const signal = injectSignal('initial', {
+        events: {
+          customEvent: As<number>,
+          anotherEvent: As<string>,
+        },
+      })
+
+      return api(signal).setExports({ foo: () => 'bar' })
+    })
+
+    const atomWithoutEvents = atom('withoutEvents', () => {
+      const [state1, setter1] = injectAtomState(atomWithEvents)
+      const [state2, setter2] = injectAtomState(atomWithoutEvents)
+
+      // Verify that the setter has the correct type signature with events
+      expectTypeOf(setter1).toEqualTypeOf<
+        {
+          foo: () => string
+        } & {
+          (
+            settable: Settable<string>,
+            events?: Partial<{
+              customEvent: number
+              anotherEvent: string
+            }>
+          ): string
+        }
+      >()
+
+      // Verify that the setter without events still works
+      expectTypeOf(setter2).toEqualTypeOf<
+        {
+          baz: () => number
+        } & {
+          (settable: Settable<string>, events?: Partial<None>): string
+        }
+      >()
+
+      // Verify state types
+      expectTypeOf(state1).toBeString()
+      expectTypeOf(state2).toBeString()
+
+      // Verify exports are infused onto the setter
+      expectTypeOf(setter1.foo).toBeFunction()
+      expectTypeOf(setter1.foo()).toBeString()
+      expectTypeOf(setter2.baz).toBeFunction()
+      expectTypeOf(setter2.baz()).toBeNumber()
+
+      return api('value').setExports({ baz: () => 42 })
+    })
   })
 })
