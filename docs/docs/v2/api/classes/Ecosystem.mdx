@@ -1,0 +1,1102 @@
+---
+id: Ecosystem
+title: Ecosystem
+---
+
+import { Legend, Item, Link, Tabs, tab1, tab2 } from '@site/src/all'
+
+The ecosystem is an isolated atom environment. Every ecosystem manages:
+
+- Schedulers for intelligently running atom-related tasks.
+- A cache of all your active graph nodes, including atoms, selectors, signals, and more.
+- Global events for plugging into your graph, atom state, and more.
+- Dependency Injection overrides.
+- Hydration, e.g. for SSR.
+- Global config options like [`ssr`](#ssr) and [`onReady`](#onready).
+
+The Ecosystem class itself defines many methods for creating, destroying, and inspecting atoms, selectors, signals, and the graph they all form.
+
+Ecosystems can be used completely outside of React. This can be helpful for testing atoms and selectors.
+
+## Creation
+
+Create ecosystems with [the `createEcosystem()` factory](/not-done?path=../factories/createEcosystem).
+
+```ts
+import { createEcosystem } from '@zedux/react'
+
+const rootEcosystem = createEcosystem({ id: 'root' })
+```
+
+Ecosystems are also created automatically when using an [`<EcosystemProvider>`](../components/EcosystemProvider) without passing an `ecosystem` prop:
+
+```tsx
+import { EcosystemProvider } from '@zedux/react'
+
+function App() {
+  return (
+    <EcosystemProvider id="root">
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+### Default Ecosystem
+
+The [default ecosystem](../../../walkthrough/ecosystems#global) will be created automatically if atoms are used in React outside any `<EcosystemProvider>` or the first time you call [`getDefaultEcosystem()`](/not-done?path=../utils/getDefaultEcosystem).
+
+The default ecosystem is great for simple apps. It's a full ecosystem, which means you can use features like [overrides](#overrides) and [ecosystem events](#events). However, it comes preconfigured with no (good) way to set config options like [`ssr`](#ssr) and [`onReady`](#onready).
+
+It's generally recommended to create your own ecosystem(s) via [`createEcosystem()`](/not-done?path=../factories/createEcosystem) and provide them to your app via [`<EcosystemProvider>`](../components/EcosystemProvider) instead of using the default ecosystem. This is especially needed for SSR.
+
+## Providing
+
+Ecosystems can take control of all atom usages in a React component tree by wrapping the tree in [`<EcosystemProvider>`](../components/EcosystemProvider).
+
+```tsx
+function App() {
+  return (
+    <EcosystemProvider ecosystem={rootEcosystem}>
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+## Overrides
+
+The ability to swap out atom implementations on the fly is one of Zedux's superpowers. Use [`.addOverrides`](#addoverrides), [`.removeOverrides`](#removeoverrides), or [`.setOverrides`](#setoverrides).
+
+```tsx live ecosystemId=Ecosystem/modifying-overrides resultVar=Swapper version=2
+const one = atom('common-key', () => 'Numero Uno')
+const two = atom('common-key', () => 'I am the best')
+const three = atom('common-key', () => 'Two is not the best')
+
+function Swapper() {
+  const ecosystem = useEcosystem()
+  const state = useAtomValue(one)
+
+  return (
+    <>
+      <div>Current State: {state}</div>
+      <button onClick={() => ecosystem.setOverrides([one])}>Use One</button>
+      <button onClick={() => ecosystem.setOverrides([two])}>Use Two</button>
+      <button onClick={() => ecosystem.setOverrides([three])}>Use Three</button>
+    </>
+  )
+}
+```
+
+## Events
+
+Ecosystems have many intrinsic events you can hook into to implement plugins and many extra features like universal undo/redo, persistence, and more.
+
+Register event listeners with [`ecosystem.on()`](#on). Clean up the listener with the returned cleanup function.
+
+```ts
+ecosystem.on('change', (event, eventMap) => {
+  // the passed `event` object has properties specific to the event type. The
+  // second `eventMap` parameter contains all events that occurred in the
+  // ecosystem at the same time as the listened-to event.
+})
+
+ecosystem.on(eventMap => {
+  // catch-all listener. Will be called for every possible event. The passed
+  // `eventMap`object maps event names to payloads.
+})
+```
+
+Full event list:
+
+<Legend>
+  <Item name="change">
+    Sent whenever any graph node's value changes. Event shape:
+
+    ```ts
+    { newState, oldState, reasons?, source?, type }
+    ```
+
+    - `newState` - The new state of the graph node. Can be anything.
+    - `oldState` - The previous state of the graph node. Can be anything.
+    - `reasons` - An indefinitely-nested array of [reasons](/not-done?path=../types/EvaluationReason) why the state changed. This tracks the series of state changes through the dependency graph that led to the current node changing. If the node was updated directly, this will be undefined.
+    - `source` - The [`ZeduxNode`](./ZeduxNode) that changed. In normal Zedux v2+ apps, this will always be defined. The legacy `@zedux/stores` package's stores are the only exception.
+    - `type` - The string `"change"`.
+
+```tsx live noProvide=true resultVar=App version=2
+const counterAtom = atom('counter', () => 0)
+const timesTwoAtom = ion('timesTwo', ({ get }) => get(counterAtom) * 2)
+
+function App() {
+  const [count, setCount] = useAtomState(counterAtom)
+  const timesTwo = useAtomValue(timesTwoAtom)
+  const ecosystem = useEcosystem()
+
+  useEffect(() => {
+    return ecosystem.on('change', (event, eventMap) => {
+      console.log('change', event, eventMap)
+    })
+  }, [])
+
+  return (
+    <>
+      <div>Count: {count}</div>
+      <div>Times Two: {timesTwo}</div>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </>
+  )
+}
+```
+
+  </Item>
+  <Item name="cycle">
+    Sent when any graph node's lifecycle status changes. Possible transitions:
+
+    - `Initializing` -> `Active`
+    - `Active` -> `Stale`
+    - `Active` -> `Destroyed`
+    - `Stale` -> `Active`
+    - `Stale` -> `Destroyed`
+
+    Event shape:
+
+    ```ts
+    { oldStatus, newStatus, reasons?, source?, type }
+    ```
+
+    - `oldStatus` - A string. The previous status of the graph node. Refer to the above transitions list for possible values.
+    - `newStatus` - A string. The new status of the graph node. Refer to the above transitions list for possible values.
+    - `source` - The [`ZeduxNode`](./ZeduxNode) that changed. Though the types don't reflect it yet, this will always be defined.
+    - `type` - The string `"cycle"`.
+
+```tsx live noProvide=true resultVar=App version=2
+const counterAtom = atom('counter', () => 0, { ttl: 0 })
+
+function MaybeMounted() {
+  const [count, setCount] = useAtomState(counterAtom)
+
+  return <div>Count: {count}</div>
+}
+
+function App() {
+  const [isMounted, setIsMounted] = useState(true)
+  const ecosystem = useEcosystem()
+
+  useEffect(() => {
+    return ecosystem.on('cycle', (event, eventMap) => {
+      console.log('cycle', event, eventMap)
+    })
+  }, [])
+
+  return (
+    <>
+      <button onClick={() => setIsMounted(state => !state)}>Toggle</button>
+      {isMounted && <MaybeMounted />}
+    </>
+  )
+}
+```
+
+  </Item>
+  <Item name="invalidate">
+    Sent whenever `atomInstance.invalidate()` is called. Some Zedux APIs hook into this event like [`injectPromise`](/not-done?path=../injectors/injectPromise)'s `runOnInvalidate` option.
+
+    Event shape:
+
+    ```ts
+    { source, type }
+    ```
+
+    - `source` - The [`ZeduxNode`](./ZeduxNode) that was [invalidated](./AtomInstance#invalidate).
+    - `type` - The string `"invalidate"`.
+
+  </Item>
+  <Item name="promiseChange">
+    Sent when an atom instance's `.promise` reference changed on a reevaluation. This essentially makes an atom's `.promise` another piece of its state - all Zedux's injectors, atom getters, and React hooks will cause a reevaluation/rerender when this event fires.
+
+    Event shape:
+
+    ```ts
+    { reasons, source, type }
+    ```
+
+    - `reasons` - An indefinitely-nested array of [reasons](/not-done?path=../types/EvaluationReason) that resulted in the atom reevaluating and changing its promise. This tracks the series of state changes through the dependency graph that led to the current node reevaluating. If the node was updated directly, this will be undefined.
+    - `source` - The [`ZeduxNode`](./ZeduxNode) whose promise changed. Though the types don't reflect it yet, this will always be defined.
+    - `type` - The string `"promiseChange"`.
+
+  </Item>
+  <Item name="edge">
+    Sent when a graph edge (aka a dependency) between two nodes is added, updated, or removed.
+
+    Event shape:
+
+    ```ts
+    { action, observer, source, type }
+    ```
+
+    - `action` - A string. Possible values: `"add"`, `"remove"`, or `"update"`. Describes what happened to the edge.
+      - `"add"` - The `observer` node is now observing the `source` node.
+      - `"remove"` - The `observer` node is no longer observing the `source` node.
+      - `"update"` - The relationship between the `observer` and `source` node has changed - e.g. the dependency went from static to dynamic due to calling `get` instead of `getNode` on a reevaluation.
+    - `observer` - The [`ZeduxNode`](./ZeduxNode) that is observing the source.
+    - `source` - The [`ZeduxNode`](./ZeduxNode) that is being observed.
+    - `type` - The string `"edge"`.
+
+  </Item>
+  <Item name="error">
+    Sent when any atom or selector errors during evaluation or when an atom's [promise](./AtomInstance#promise) rejects. Useful for logging.
+
+    Event shape:
+
+    ```ts
+    { error, source, type }
+    ```
+
+    - `error` - An [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) instance. The error that occurred.
+    - `source` - The [`ZeduxNode`](./ZeduxNode) that errored. Though the types don't reflect it yet, this will always be defined.
+    - `type` - The string `"error"`.
+
+  </Item>
+  <Item name="resetEnd">
+    Sent when the ecosystem is [`.reset`](#reset), after the reset completes. This is the perfect time to reinitialize the ecosystem, e.g. preloading atoms.
+
+    Event shape:
+
+    ```ts
+    { hydration, listeners, overrides, type }
+    ```
+
+    - `hydration` - Boolean. Whether [`ecosystem.reset`](#reset) was called with `hydration: true`, removing any previous hydrations set via [`ecosystem.hydrate`](#hydrate).
+    - `listeners` - Boolean. Whether [`ecosystem.reset`](#reset) was called with `listeners: true`, removing ecosystem event listeners registered via [`ecosystem.on`](#on).
+    - `overrides` - Boolean. Whether [`ecosystem.reset`](#reset) was called with `overrides: true`, removing any previous overrides set via [`ecosystem.setOverrides`](#setoverrides)/[`ecosystem.addOverrides`](#addoverrides).
+    - `type` - The string `"resetEnd"`.
+
+  </Item>
+  <Item name="resetStart">
+    Sent when the ecosystem is [`.reset`](#reset), before the reset begins. This can be used to capture atom values, [overrides](#overrides), or any other details about the ecosystem. These can then be restored when the [`resetEnd`](#resetend) event fires.
+
+    Event shape:
+
+    ```ts
+    { hydration, listeners, overrides, type }
+    ```
+
+    - `hydration` - Boolean. Whether [`ecosystem.reset`](#reset) was called with `hydration: true`, removing any previous hydrations set via [`ecosystem.hydrate`](#hydrate).
+    - `listeners` - Boolean. Whether [`ecosystem.reset`](#reset) was called with `listeners: true`, removing ecosystem event listeners registered via [`ecosystem.on`](#on).
+    - `overrides` - Boolean. Whether [`ecosystem.reset`](#reset) was called with `overrides: true`, removing any previous overrides set via [`ecosystem.setOverrides`](#setoverrides)/[`ecosystem.addOverrides`](#addoverrides).
+    - `type` - The string `"resetStart"`.
+
+  </Item>
+  <Item name="runEnd">
+    Sent when any atom or selector finishes evaluating. This can be used in conjunction with the [`runStart`](#runstart) event to track evaluation duration.
+
+    Event shape:
+
+    ```ts
+    { source, type }
+    ```
+
+    - `source` - The [`ZeduxNode`](./ZeduxNode) that finished evaluating. Though the types don't reflect it yet, this will always be defined.
+    - `type` - The string `"runEnd"`.
+
+  </Item>
+  <Item name="runStart">
+    Sent when any atom or selector begins evaluating. This can be used in conjunction with the [`runEnd`](#runend) event to track evaluation duration.
+    
+    It can also be used to detect circular dependencies - if the same id starts running twice with no `runEnd` event in between, it's circular.
+
+    Event shape:
+
+    ```ts
+    { source, type }
+    ```
+
+    - `source` - The [`ZeduxNode`](./ZeduxNode) that started evaluating. Though the types don't reflect it yet, this will always be defined.
+    - `type` - The string `"runStart"`.
+
+    :::important
+    When this event fires on initial evaluation, the `source` node will not be fully defined yet. For atoms, this means its [`.exports`](./AtomInstance#exports), [`.promise`](./AtomInstance#promise), and some internal properties will be undefined. See [`injectSelf`](/not-done?path=../injectors/injectSelf) for more details on uninitialized atoms.
+    :::
+
+  </Item>
+</Legend>
+
+## Properties
+
+Every ecosystem has the following properties. All properties are readonly!
+
+<Legend>
+  <Item name="asyncScheduler">
+    A reference to the [async scheduler](/not-done?path=./AsyncScheduler) used by this ecosystem. You may want to access this scheduler's `queue` or `flush` methods. See the [AsyncScheduler doc](/not-done?path=./AsyncScheduler) for details.
+  </Item>
+  <Item name="complexParams">
+    A boolean. May be undefined. This is set to the `complexParams` value you passed via [EcosystemConfig](/not-done?path=../types/EcosystemConfig#complexparams) when creating this ecosystem.
+
+    Whether to allow non-serializable values as atom and selector params. See [the complex params guide](../../../advanced/complex-params).
+
+  </Item>
+  <Item name="context">
+    An object. May be undefined. A reference to the `context` object passed to [the `createEcosystem()` factory](/not-done?path=../factories/createEcosystem) (if any) or the latest [`.reset()`](#reset) call.
+
+    When `.reset()` is called, the previous context (if any) will be passed as the second parameter to the `onReady` function as part of the reset.
+
+  </Item>
+  <Item name="id">
+    A string or undefined. The id of this ecosystem as set via [EcosystemConfig](/not-done?path=../types/EcosystemConfig#id) when creating this ecosystem (if any). The string `'@@zedux/default'` is reserved for the [default ecosystem](#default-ecosystem).
+
+    This is just for debugging and is not guaranteed to be unique.
+
+  </Item>
+  <Item name="syncScheduler">
+    A reference to the [sync scheduler](/not-done?path=./SyncScheduler) used by this ecosystem. Unlike the [`asyncScheduler`](#asyncscheduler), normal users should never need to access this. This is mostly for plugin authors to efficiently schedule Zedux jobs.
+  </Item>
+  <Item name="tags">
+    An array of strings. This is set to the `tags` value you passed via [EcosystemConfig](/not-done?path=../types/EcosystemConfig#tags) when creating this ecosystem.
+
+    These work in conjunction with [atom tags](/not-done?path=../types/AtomTemplate#tags) to raise warnings when unsafe atom templates are not overridden in certain environments.
+
+    If an atom template is used that has a flag that is not present in this array, Zedux will log a warning.
+
+    Flag checking is off by default - simply don't pass a tags array to `createEcosystem()` and Zedux will ignore all tags. To turn it on, but with no tags, pass an empty array.
+
+    ```ts
+    createEcosystem() // flag checking disabled. Zedux will ignore all atom tags.
+    createEcosystem({ tags: [] }) // flag checking enabled! All tags will log warnings
+    createEcosystem({ tags: ['a'] }) // all atom tags except 'a' will log warnings
+    ```
+
+    Which atoms, which tags, and which environments, is all up to you. You may want to flag atoms that run side effects you don't want to run in tests. Or you may want to flag atoms that use APIs that only work in the browser or electron or any other environment.
+
+    :::tip
+    This is an opt-in feature. You don't have to use atom tags this way. Just don't pass a tags array to `createEcosystem()` to opt out.
+    :::
+
+  </Item>
+  <Item name="hydration">
+    An object. May be undefined. The shallowly merged result of all calls to [`ecosystem.hydrate()`](#hydrate).
+
+    These values stay in the ecosystem indefinitely, re-hydrating matching atoms every time they're recreated. To prevent this, you may access this property directly and modify it. Examples:
+
+    ```ts
+    ecosystem.hydration = {} // reassign to a new object ✅
+    ecosystem.hydration = undefined // set to undefined ✅
+    delete ecosystem.hydration[myAtomId] // mutation ✅
+    ```
+
+  </Item>
+  <Item name="onReady">
+    A function. May be undefined. This is set to the `onReady` value you passed via [EcosystemConfig](/not-done?path=../types/EcosystemConfig#onready) when creating this ecosystem.
+
+    Will be called as soon as the ecosystem has initialized. Is also called
+    every time the ecosystem is [`reset`](#reset).
+
+    This is the ideal place to bootstrap data and preload atoms. Since this
+    function is called on reset, it can be used to ensure the ecosystem's
+    "necessary data" is always loaded.
+
+    Signature:
+
+    ```ts
+    (ecosystem, prevContext?) => maybeCleanup
+    ```
+
+    <Legend>
+      <Item name="ecosystem">A reference to this ecosystem</Item>
+      <Item name="prevContext">
+        A reference to the previous context value of the ecosystem. `ecosystem.reset()` can be optionally given a new context object. If that happens, the ecosystem's context will be updated before this function is called. So a reference to the old context is passed here.
+
+        This parameter will be undefined the first time `onReady` runs. Thus you can use this to check if this is the initial run.
+
+```ts
+const ecosystem = createEcosystem({
+  context: { redux: reduxStore },
+  onReady: (ecosystem, prevContext) => {
+    if (!prevContext) {
+      // this is the initial run
+    } else {
+      // onReady is running after an ecosystem reset
+      const nextContext = ecosystem.context
+
+      if (prevContext.redux !== nextContext.redux) {
+        // ecosystem.reset() changed the redux store reference
+      }
+    }
+  },
+})
+
+ecosystem.reset() // doesn't change context (prevContext === ecosystem.context)
+ecosystem.reset({ context: { redux: otherReduxStore } }) // replaces context
+```
+
+        Note that replacing context is an all-or-nothing deal. Spread `ecosystem.context` into a new object to update only part of the context:
+
+        ```ts
+        ecosystem.reset({
+          context: { ...ecosystem.context, specialField: 'new val' }
+        })
+        ```
+
+      </Item>
+      <Item name="Returns">
+        Either `undefined` or a cleanup function that will be called when the ecosystem is reset.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="overrides">
+    An object mapping atom keys to atom templates. These are the currently-overridden atoms in this ecosystem. Modify this list by calling [`ecosystem.setOverrides()`](#setoverrides), [`ecosystem.addOverrides()`](#addoverrides), and [`ecosystem.removeOverrides()`](#removeoverrides).
+
+    If an initial `overrides` array is passed, they will be immediately mapped into this object.
+
+  </Item>
+  <Item name="selectors">
+    The [Selectors](/not-done?path=../classes/Selectors) class instance that tracks all cached atom selectors in this ecosystem.
+  </Item>
+  <Item name="ssr">
+    A boolean. Default: `false`. Whether the ecosystem is being used on the server to generate SSR content.
+
+    This is set to the `ssr` value you passed via [EcosystemConfig](/not-done?path=../types/EcosystemConfig) when creating this ecosystem.
+
+    Currently the only thing this affects is [`injectEffect()`](/not-done?path=../injectors/injectEffect) - SSR mode prevents effects from running at all in this ecosystem.
+
+  </Item>
+</Legend>
+
+## Methods
+
+<Legend>
+  <Item name="addOverrides">
+    Adds new overrides to the ecosystem's current list of overrides and/or updates existing overrides - swapping them out with different implementations. All existing instances that match atom templates in the passed list will be force-destroyed, allowing their dependents to recreate them.
+
+    Signature:
+
+    ```ts
+    addOverrides = (overrides) => void
+    ```
+
+    <Legend>
+      <Item name="overrides">Required. An array of [atom templates](./AtomTemplate).</Item>
+    </Legend>
+
+  </Item>
+  <Item name="batch">
+    Accepts a callback and batches all updates that happen synchronously while the callback is running. Flushes all updates once the passed callback completes.
+
+    Signature:
+
+    ```ts
+    batch = (callback) => void
+    ```
+
+    <Legend>
+      <Item name="callback">
+        Required. A function that will be called immediately and can do anything and return anything.
+      </Item>
+      <Item name="Returns">
+        Whatever the callback returns. Can be anything.
+      </Item>
+    </Legend>
+
+    See [the batching guide](/not-done?path=../../advanced/batching).
+
+  </Item>
+  <Item name="dehydrate">
+    Returns a snapshot of the current state of atom instances in the ecosystem.
+
+    :::tip
+    Atoms are typically the only node type you want dehydrated/rehydrated, so they're the only nodes this method dehydrates. To dehydrate other node types, use [`ecosystem.findAll()`](#findall) and map/filter/reduce the results yourself.
+    :::
+
+    Signature:
+
+    ```ts
+    dehydrate = (filter?) => snapshot
+    ```
+
+    <Legend>
+      <Item name="filter">
+        Optional. Filters to limit the atoms included in the snapshot. If not specified, all atom instances will be dehydrated.
+
+        See [the DehydrationFilter type](/not-done?path=../types/DehydrationFilter) for allowed values and what they do.
+      </Item>
+      <Item name="Returns">
+        An object mapping atom instance ids to their current state.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="find">
+    Works similar to [`ecosystem.getNode()`](#getnode) except it does NOT create the atom instance if it doesn't exist. In that case, [`ecosystem.find()`](#find) returns undefined. Because of this, `find` is called a "weak getter".
+
+    ```ts
+    // creates the atom instance if needed:
+    instance = ecosystem.getNode(myAtom, [...params])
+    // never creates an atom instance:
+    instance = ecosystem.find(myAtom, [...params])
+
+    // `find` can also search for a node by id:
+    instance = ecosystem.find('myAtomKey')
+    ```
+
+    :::tip
+    `ecosystem.find()` is best used with singleton atoms/selectors (that don't take params) or when you know the exact node id you're looking for. When fuzzy searching, it's much better to use [`ecosystem.findAll()`](#findall) and filter the results yourself rather than assuming that `find` will return the one you want (it usually won't).
+
+    Think of it like `document.querySelector()` - it's nice when you know there's only one match, but usually you want `document.querySelectorAll()`.
+    :::
+
+    Signature:
+
+    ```ts
+    find = (templateOrSearch, params?) => instance
+    ```
+
+    <Legend>
+      <Item name="templateOrSearch">
+        Required. An atom template, selector function reference, or string. If an atom or selector template is passed, `find` will return the first instance of that atom or selector it encounters.
+
+        If a string is passed, `find` will return the node that exactly-matches that id (if any). If no exact match is found, `find` performas a "fuzzy search", returning the first node it encounters whose id contains the passed string (case-insensitive).
+      </Item>
+      <Item name="params">
+        Optional. The atom or selector's params (only relevant when passing an atom or selector template). If passed, `find` will return the node that matches the passed params.
+      </Item>
+      <Item name="Returns">
+        The matching [graph node](./ZeduxNode), if it exists, otherwise undefined.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="findAll">
+    Returns an array of all graph nodes in the ecosystem. Pass a filter to limit the results. Or filter the returned array yourself.
+
+    Since `findAll` only returns existing nodes and can never create them, it's called a "weak getter".
+
+    ```ts
+    // some common patterns:
+    myEcosystem.findAll('@atom') // get all atoms
+    myEcosystem.findAll(myAtom) // get all instances of the `myAtom` template
+
+    myEcosystem.findAll().map(({ id }) => id) // get all cached node ids
+    myEcosystem.findAll('@atom').map(({ id }) => id) // get all cached atom ids
+
+    // get all nodes that export `someExport`:
+    myEcosystem.findAll().filter(node => node.exports?.someExport)
+
+    // get all nodes with a promise set:
+    myEcosystem.findAll().filter(node => node.promise)
+    ```
+
+    Signature:
+
+    ```ts
+    findAll = (filter?) => nodeList
+    ```
+
+    <Legend>
+      <Item name="filter">
+        Optional. Filters to limit the nodes returned. If not specified, `findAll` returns all nodes.
+
+        See [the NodeFilter type](/not-done?path=../types/NodeFilter) for allowed values and what they do.
+      </Item>
+      <Item name="Returns">
+        An array of all cached nodes in the ecosystem that match the filter.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="get">
+    Gets the current value of an atom instance or selector. Creates and caches the atom or selector instance if it doesn't exist yet.
+
+    ```ts
+    const { get } = myEcosystem // `get` can be destructured like this
+
+    value = get(myAtom) // atom
+    value = get(mySelectorFunction) // selector
+    value = get(myAtom, [param1, param2]) // atom with params
+
+    // passing an instance directly:
+    const myAtomInstance = myEcosystem.getNode(myAtom) // creates a static dep
+    value = get(myAtomInstance) // upgrades to a dynamic dep
+    ```
+
+    The node whose value `get` returns is unique for the given template + params combo.
+
+    #### Reactivity
+
+    `get` is reactive by default. This behavior changes depending on when it's called:
+
+    - When called in a [reactive context](../glossary#reactive-context) (e.g. while an atom or selector is evaluating), `get` registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) between the currently-evaluating node and the retrieved node.
+    - When called outside evaluation (e.g. in an effect or callback), `get` doesn't register any graph dependencies.
+
+    Note that [`node.get()`](./ZeduxNode#get) has this exact same behavior. In fact, `ecosystem.get(myAtom)` is almost a shorthand for `ecosystem.getNode(myAtom).get()`, with one key difference:
+
+    #### Note on Caching
+
+    When an `ecosystem.getNode` call creates a new node, it always caches it. `ecosystem.get`, however, only caches nodes when it's "safe":
+
+    - During evaluation, `get` always caches the retrieved node. Zedux's intelligent dependency tracking prevent any memory leaks in this case.
+    - Outside evaluation, `get` only caches atoms, **not selectors**. This is because selectors are often created on-the-fly. Since selectors are cached by reference, this makes it easy to accidentally leak memory.
+
+    Consider this example:
+
+    ```ts
+    // if `get` cached selectors, this would create a new cache entry every time
+    // it's called, with no good way of cleaning up previous entries:
+    function getExpensiveVal(listAtom) {
+      return myEcosystem.get(({ get }) => get(listAtom).reduce(myExpensiveReducer))
+    }
+    ```
+
+    Fortunately, `get` does not cause leaks here. Instead, it creates the new selector instance, gets its value, and immediately destroys it. This ensures that all transitive dependencies of the selector are also cleaned up as necessary.
+
+    :::tip
+    Use [`ecosystem.find(myAtom)?.get()`](#find) to get a value only if the instance already exists. Note however that `find` doesn't register graph dependencies. To weakly register a dependency, use the following pattern:
+
+    ```ts
+    const instance = ecosystem.find(myAtom, [param1, param2])
+    const val = instance ? get(instance) : defaultVal
+    ```
+    :::
+
+    Signature:
+
+    ```ts
+    get = (templateOrInstance, params?) => value
+    ```
+
+    <Legend>
+      <Item name="templateOrInstance">
+        Required. An [atom template](./AtomTemplate), [selector template](/not-done?path=../types/SelectorTemplate), or atom instance.
+      </Item>
+      <Item name="params">
+        Optional (required if the template takes params). An array of the atom or selector's params. Only relevant when passing an atom or selector template.
+      </Item>
+      <Item name="Returns">
+        The current value of the retrieved atom or selector.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="getNode">
+    Gets a cached [graph node](../glossary#graph-node), namely an [atom instance](./AtomInstance) or [selector instance](./SelectorInstance.mdx). Creates and caches the node if it doesn't exist yet.
+
+    ```ts
+    const { getNode } = myEcosystem // `getNode` can be destructured like this
+
+    node = getNode(myAtom) // atom
+    node = getNode(mySelectorFunction) // selector
+    node = getNode(myAtom, [param1, param2]) // atom with params
+
+    // the returned node is an instance of `AtomInstance` or `SelectorInstance`
+    getNode(myAtom).set(newState)
+    getNode(myAtom).exports.myExport()
+    getNode(mySelectorFunction).get()
+    ```
+
+    The returned node is unique for the given template + params combo.
+
+    #### Reactivity
+
+    `getNode` registers graph dependencies by default. This behavior changes depending on when it's called:
+
+    - When called in a [reactive context](../glossary#reactive-context) (e.g. while an atom or selector is evaluating), `getNode` registers a [static graph dependency](../glossary#static-graph-dependency) (unlike [`ecosystem.get`](#get), which registers dynamic dependencies) between the currently-evaluating node and the retrieved node.
+    - When called outside evaluation (e.g. in an effect or callback), `getNode` doesn't register any graph dependencies.
+
+    #### Note on Caching
+
+    When an `ecosystem.getNode` call creates a new node, it always caches it. This is different from [`ecosystem.get`](#get), which only caches nodes when it's "safe". This means you may need to be aware of when a `getNode` call has created a new node so you can properly dispose of it:
+
+    ```ts
+    function getExpensiveVal(listAtom) {
+      // this inline selector creates a new node every time this function runs:
+      const node = myEcosystem.getNode(
+        ({ get }) => get(listAtom).reduce(myExpensiveReducer)
+      )
+      const val = node.get()
+
+      // destroy is safe to call outside evaluation - it bails out if the node
+      // has dependencies:
+      node.destroy()
+
+      return val
+    }
+    ```
+
+    Note that this example is exactly what [`ecosystem.get`](#get) does for you outside evaluation.
+
+    :::tip
+    Use [`ecosystem.find()`](#find) to get an instance only if it already exists. Note however that `find` doesn't register graph dependencies. To weakly register a static dependency, use the following pattern:
+
+    ```ts
+    const maybeInstance = ecosystem.find(myAtom, [param1, param2])
+    const instance = maybeInstance ? getNode(maybeInstance) : undefined
+    ```
+    :::
+
+    Signature:
+
+    ```ts
+    getNode = (templateOrInstance, params?) => instance
+    ```
+
+    <Legend>
+      <Item name="templateOrInstance">
+        Required. An [atom template](./AtomTemplate), [selector template](/not-done?path=../types/SelectorTemplate), or [atom instance](./AtomInstance).
+
+        When an instance is passed, `getNode` registers a static graph dependency on that instance (when called during evaluation) and returns it as-is.
+      </Item>
+      <Item name="params">
+        Optional (required if the template takes params). The atom or selector's params. Only relevant when passing an atom or selector template.
+      </Item>
+      <Item name="Returns">
+        The cached atom or selector instance for the given template + params combo.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="getNodeOnce">
+    Returns a [graph node](../glossary#graph-node). Functions exactly like [`ecosystem.getNode`](#getnode) except it never registers graph dependencies even when called in [reactive contexts](../glossary#reactive-context).
+
+    Signature:
+
+    ```ts
+    getNodeOnce = (templateOrInstance, params?) => instance
+    ```
+
+    See [`ecosystem.getNode`](#getnode) for details.
+
+  </Item>
+  <Item name="getOnce">
+    Returns the current value of the resolved atom or selector node. Functions exactly like [`ecosystem.get`](#get) except it never registers graph dependencies even when called in [reactive contexts](../glossary#reactive-context).
+
+    Signature:
+
+    ```ts
+    getOnce = (templateOrInstance, params?) => instance
+    ```
+
+    See [`ecosystem.get`](#get) for details.
+
+  </Item>
+  <Item name="hash">
+    Turns an array of anything into a predictable string.
+
+    This is how all Zedux APIs generate consistent, deterministic ids for atom and selector params. See [`ZeduxNode#params`](./ZeduxNode.mdx#params) for more details.
+
+    Signature:
+
+    ```ts
+    hash = (params) => hashedString
+    ```
+
+    <Legend>
+      <Item name="params">
+        Required. An array of anything.
+
+        If any item is a [graph node](../glossary#graph-node), it will be serialized as the node's id.
+      </Item>
+      <Item name="acceptComplexParams">
+        Optional. A boolean. Defaults to the ecosystem's [`complexParams` config](#complexparams).
+
+        If true, class instances and functions will be weak-mapped to a consistent id for the reference. These objects can be circular.
+      </Item>
+      <Item name="Returns">
+        A consistent string.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="hydrate">
+    Hydrates the state of atom instances in this ecosystem, usually using a previous state snapshot from [`ecosystem.dehydrate()`](#dehydrate).
+
+    If `.hydrate()` has been called before, the new hydration will be shallowly merged into the existing hydration.
+
+    Signature:
+
+    ```ts
+    hydrate = (snapshot, config?) => void
+    ```
+
+    <Legend>
+      <Item name="snapshot">
+        Required. An object. The keys of this object are ids corresponding to atom instances that may or may not exist in the ecosystem yet.
+      </Item>
+      <Item name="config">
+        Optional. An object containing the following optional property:
+
+        ```ts
+        { retroactive }
+        ```
+
+        By default, Zedux will update the state of all existing atom instances that have an entry in the passed snapshot. To disable this, pass `{ retroactive: false }`.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="makeId">
+    Generates a consistent id that is guaranteed to be unique in this ecosystem, but not at all guaranteed to be unique globally.
+
+    You can override this by passing the [`makeId`](/not-done?path=../types/EcosystemConfig#makeid) option to [`createEcosystem`](/not-done?path=../factories/createEcosystem). The default implementation is suitable for most use cases, including:
+
+    - apps that use only one ecosystem (the most common).
+    - snapshot testing the ecosystem graph and dehydrations - calling `ecosystem.reset()` after each test will reset the ecosystem's id counter.
+
+    You may want to override this when using multiple ecosystems or to customize ids to your liking (for example, prefixing atoms with `@atom()` to match all other node types).
+
+    :::important
+    The default node filtering used by [`ecosystem.findAll()`](#findall), [`ecosystem.find()`](#find), and [`ecosystem.dehydrate()`](#dehydrate) depends on the default id format. When overriding `makeId`, you must filter nodes yourself:
+
+    ```ts
+    ecosystem.findAll().filter(myCustomFilter)
+    ```
+    :::
+
+    Every node type **except atoms** has an `@` prefix. If a node's id is not `@`-prefixed, it's an atom instance. The full list of built-in prefixes is:
+
+    - `@component()-` An external node created via a React hook call. Wraps the component's name inside the `()` (only works in dev builds of React).
+    - `@listener()-` A `ZeduxNode#on` call. Wraps the listened node's template key inside the `()`.
+    - `@memo()-` An atom selector created via an `injectMemo` call with no deps. Wraps the containing atom's template key inside the `()`.
+    - `@ref()-` A function or class instance reference tracked when the ecosystem is configured with `complexParams: true`. Wraps the function or class name inside the `()`.
+    - `@selector()-` An atom selector. Wraps the selector's name inside the `()`.
+    - `@signal()-` A signal created via [`ecosystem.signal`](#signal) or [`injectSignal`](../injectors/injectSignal) or a mapped signal created via [`injectMappedSignal`](/not-done?path=../injectors/injectMappedSignal). Wraps the containing atom's template key inside the `()` (empty if created via `ecosystem.signal`).
+
+  </Item>
+
+  <Item name="on">
+    Adds an event listener to the ecosystem. These listeners can hook into many different ecosystem events. This is the key to building plugins like loggers, dev tools, etc.
+
+    Signature:
+
+    ```ts
+    on = (eventName?, listener) => void
+    ```
+
+    <Legend>
+      <Item name="eventName">
+        Optional. The event to listen for. If not passed, the listener will be a "catch-all" listener that will be called on every ecosystem event.
+
+        See [the events section](#events) for the full list of ecosystem events.
+      </Item>
+      <Item name="listener">
+        Required. The callback function that Zedux will call when the event occurs.
+
+        Signature:
+
+        ```ts
+        listener = (event, eventMap) => void
+        ```
+
+        <Legend>
+          <Item name="event">
+            The event object. If the listener is a "catch-all" listener, this argument will be omitted - the `eventMap` will be the only argument.
+
+            See [the events section](#events) for event object details.
+          </Item>
+          <Item name="eventMap">
+            An object containing all events that fired at the same time as the listened-to event, keyed by event type.
+          </Item>
+        </Legend>
+      </Item>
+      <Item name="Returns">
+        A cleanup function. Call it to remove the listener.
+      </Item>
+    </Legend>
+
+  </Item>
+
+  <Item name="removeOverrides">
+    Removes overrides previously set via `.addOverrides()` or `.setOverrides()`. All existing instances of atom templates in the passed list will be force-destroyed, allowing their dependents to recreate them using the original, non-overridden atom template.
+
+    You can pass either the original template or the override. Zedux only looks at their `key` properties. You can also pass strings matching atom template keys.
+
+    Signature:
+
+    ```ts
+    removeOverrides = (overrides) => void
+    ```
+
+    <Legend>
+      <Item name="overrides">
+        Required. An array of [atom templates](./AtomTemplate) and/or template key strings. If any haven't been set as overrides previously, they'll be ignored.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="reset">
+    Force destroys all [graph nodes](../glossary#graph-node) in the ecosystem. Calls the cleanup function returned from the [onReady](/not-done?path=../types/EcosystemConfig#onready) function (if any), and calls `onReady` again to reinitialize the ecosystem.
+
+    Accepts several options to also clear cached hydrations, listeners, and overrides.
+
+    ```ts
+    const myEcosystem = createEcosystem({
+      context: { someField: 'some val' },
+      id: 'example',
+      onReady: (ecosystem, prevContext) =>
+        console.log('old context:', prevContext, 'new context:', ecosystem.context),
+    })
+    // old context: undefined new context: { someField: 'some val' }
+
+    myEcosystem.reset({ context: { someField: 'new val' } })
+    // old context: { someField: 'some val' } new context: { someField: 'new val' }
+    ```
+
+    Signature:
+
+    ```ts
+    reset = (options?) => void
+    ```
+
+    <Legend>
+      <Item name="options">
+        Optional. An object containing the following optional properties:
+
+        ```ts
+        { context, hydration, listeners, overrides }
+        ```
+
+        - `context`: An object to be set as the new `.context` value of the ecosystem.
+        - `hydration`: A boolean. Default: `false`. Pass `true` to also remove all hydrations previously passed to [`ecosystem.hydrate()`](#hydrate).
+        - `listeners`: A boolean. Default: `false`. Pass `true` to also remove all ecosystem event listeners previously passed to [`ecosystem.on()`](#on).
+        - `overrides`: A boolean. Default: `false`. Pass `true` to also remove all overrides previously passed to [`ecosystem.setOverrides()`](#setoverrides) or [`ecosystem.addOverrides()`](#addoverrides).
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="setOverrides">
+    Replaces the ecosystem's list of overridden atoms with the passed overrides. All instances of atom templates in either the new or old lists will be force-destroyed, allowing their dependencies to recreate them.
+
+    To selectively update only certain atoms, use [`ecosystem.addOverrides()`](#addoverrides) or [`ecosystem.removeOverrides()`](#removeoverrides).
+
+    Signature:
+
+    ```ts
+    setOverrides = (newOverrides) => void
+    ```
+
+    <Legend>
+      <Item name="newOverrides">
+        Required. An array of atom templates. This will be set as the new [`.overrides` property](#overrides).
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="signal">
+    Creates and caches a new signal. It's recommended to use [`injectSignal`](../injectors/injectSignal) instead when possible. However, `ecosystem.signal` can be useful for dynamically creating signals, at the cost of having to manage their lifecycles. For example:
+
+    ```ts
+    // `injectSignal` manages the signal's lifecycle...
+    const injectedSignal = injectSignal(0)
+
+    for (let i = 0; i < 1000; i++) {
+      // ...but `ecosystem.signal` doesn't...
+      const newSignal = ecosystem.signal(i)
+
+      // ...so manually tie these signals to this atom's lifecycle by calling
+      // `.get` on each one during evaluation:
+      newSignal.get()
+    }
+    ```
+
+    This is just one example. You can manage these signals however you like - e.g. calling [`.destroy`](./ZeduxNode#destroy) on them manually or just keeping them around forever.
+
+    Signature:
+
+    ```ts
+    signal = (initialState, config?) => signal
+    ```
+
+    <Legend>
+      <Item name="initialState">
+        Required. The initial state of the signal.
+      </Item>
+      <Item name="config">
+        Optional. An object containing the following optional property:
+
+        ```ts
+        { events }
+        ```
+
+        - `events`: An object mapping custom event names to `As<PayloadType>`. See [the `As` util](/not-done?path=../utils/As) for more details.
+      </Item>
+      <Item name="Returns">
+        A new signal instance.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="viewGraph">
+    See what the ecosystem's atom graph currently looks like. There are 3 graph "views":
+
+    - `'top-down'`
+    - `'bottom-up'`
+    - `'flat'`
+
+    `'flat'` is the default and is the most useful. It returns a normalized object containing every node in the graph. Each node points to its sources (aka "dependencies") and observers (aka "dependents") in the top-level object.
+
+    Top-down and bottom-up are mostly just for DX, to help you quickly gain some insight into what your dependency graph actually looks like.
+
+    Signature:
+
+    ```ts
+    viewGraph = (view) => graph
+    ```
+
+    <Legend>
+      <Item name="view">
+        Optional. One of `'flat'`, `'top-down'`, or `'bottom-up'`. Default: `'flat'`.
+      </Item>
+      <Item name="Returns">
+        An object whose structure depends on the requested view. See [the graph walkthrough](../../../walkthrough/the-graph#getting-the-graph).
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="why">
+    Returns a list of [EvaluationReasons](/not-done?path=../types/EvaluationReason) detailing why the current atom instance or selector is evaluating.
+
+    If called outside a selector or atom state factory, `why` always returns `undefined`.
+
+    If this is the first evaluation of the current atom instance or selector, `why` returns an empty array.
+
+  </Item>
+  <Item name="withScope">
+    Runs a callback in a scoped context. This is the only way to create or retrieve [scoped atoms](../glossary#scoped-atom) outside React components.
+    
+    A "scope" is a JS Map mapping "contexts" to values. "Context" simultaneously means two completely different things:
+
+    - A function execution (this is what "scoped context" is referring to).
+    - A stable object reference dynamically associated with a value, e.g. a React context object or an [atom template](./AtomTemplate).
+
+    Scopes are recursive - nested `withScope` calls will recursively look for context values in inner -> outer scopes.
+
+    Signature:
+
+    ```ts
+    withScope = (scope, callback) => void
+    ```
+
+    <Legend>
+      <Item name="scope">
+        Required. A JS Map mapping context objects (e.g. React contexts or [atom templates](./AtomTemplate)) to the provided values.
+      </Item>
+      <Item name="callback">
+        Required. The callback function to run in the scoped context. Any [`ecosystem.get`](#get) or [`ecosystem.getNode`](#getnode) calls in the callback will be able to create and retrieve scoped atoms that depend on the provided scope.
+      </Item>
+      <Item name="Returns">
+        The callback's result. Can be anything.
+      </Item>
+    </Legend>
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [the Ecosystems walkthrough](../../../walkthrough/ecosystems)
+- [the `createEcosystem()` factory](/not-done?path=../factories/createEcosystem)
+- [the Overrides walkthrough](../../../walkthrough/overrides)
+- [the Plugins guide](../../../advanced/plugins)
+- [`getDefaultEcosystem()`](/not-done?path=../utils/getDefaultEcosystem)
+- [`setDefaultEcosystem()`](/not-done?path=../utils/setDefaultEcosystem)
+- [the `<EcosystemProvider>` component](../components/EcosystemProvider)
+- [the `useEcosystem` hook](/not-done?path=../hooks/useEcosystem)
+- [the `injectEcosystem` injector](/not-done?path=../injectors/injectEcosystem)
