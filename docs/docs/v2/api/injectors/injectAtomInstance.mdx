@@ -1,0 +1,185 @@
+---
+id: injectAtomInstance
+title: injectAtomInstance
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectAtomInstance } from '@zedux/react'
+```
+
+An [injector](../glossary.mdx#injector) that returns a cached [atom instance](../classes/AtomInstance.mdx) for an [atom template](../classes/AtomTemplate.mdx).
+
+`injectAtomInstance` registers a [static graph dependency](../glossary.mdx#static-graph-dependency) on the resolved atom instance, preventing it from being destroyed automatically.
+
+Unlike [`injectAtomValue`](/not-done?path=./injectAtomValue.mdx) or [`injectAtomState`](./injectAtomState.mdx), `injectAtomInstance` doesn't subscribe to state changes by default.
+
+This injector has an equivalent React hook: [`useAtomInstance`](../hooks/useAtomInstance.mdx).
+
+:::tip
+While there's nothing wrong with using this injector if you prefer, it's more common to use [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode) to create/retrieve atom instances inside other atoms, especially in [ions](../factories/ion.mdx) where the ecosystem is automatically in scope.
+
+```ts
+const exampleAtom = ion('example', ({ getNode }) => {
+  // these two lines are exactly equivalent:
+  const instance = getNode(myAtom)
+  const instance = injectAtomInstance(myAtom)
+})
+```
+
+:::
+
+## Examples
+
+Simple example:
+
+```tsx live ecosystemId=injectAtomInstance/example resultVar=App version=2
+const countAtom = atom('count', 0)
+
+const snapshotAtom = atom('snapshot', () => {
+  const instance = injectAtomInstance(countAtom)
+
+  // Use `getOnce()` to avoid subscribing to state changes:
+  return `Static snapshot of ${instance.id}: ${instance.getOnce()}`
+})
+
+const watcherAtom = atom('watcher', () => {
+  const instance = injectAtomInstance(countAtom)
+
+  // Calling `instance.get()` subscribes to state changes:
+  return `Watcher of ${instance.id}: ${instance.get()}`
+})
+
+function App() {
+  const [count, setCount] = useAtomState(countAtom)
+  const snapshot = useAtomValue(snapshotAtom)
+  const watcher = useAtomValue(watcherAtom)
+
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <div>{snapshot}</div>
+      <div>{watcher}</div>
+      <button onClick={() => setCount(c => c + 1)}>Increment</button>
+    </div>
+  )
+}
+```
+
+Miscellaneous:
+
+```ts
+const instance = injectAtomInstance(myAtom)
+const withParams = injectAtomInstance(myAtom, ['param 1', 'param 2'])
+```
+
+## Dynamicizing the Dependency
+
+Sometimes, you need both a reference to the atom instance _and_ you want the current atom or selector to reevaluate when the retrieved atom's state changes.
+
+There are a few ways to do this:
+
+1. Call [`instance.get()`](../classes/AtomInstance.mdx#get) after retrieving it from `injectAtomInstance`:
+
+   ```tsx
+   const exampleAtom = atom('example', () => {
+     const instance = injectAtomInstance(otherAtom)
+
+     // Calling `get` on any of Zedux's reactive primitives automatically
+     // subscribes to updates. In this case, it upgrades `injectAtomInstance`'s
+     // static edge to a dynamic one. This `example` atom will now reevaluate
+     // when the `otherAtom`'s state changes
+     const dynamicValue = instance.get()
+   })
+   ```
+
+2. Pass the atom instance to a dynamic injector like [`injectAtomValue`](/not-done?path=./injectAtomValue.mdx) or [`injectAtomState`](./injectAtomState.mdx) or to [`ecosystem.get`](../classes/Ecosystem.mdx#get) after retrieving it from `injectAtomInstance`.
+
+   ```tsx
+   const exampleAtom = atom('example', () => {
+     const instance = injectAtomInstance(otherAtom)
+
+     // pass the instance directly to `injectAtomValue` to subscribe to updates:
+     const dynamicValue = injectAtomValue(instance)
+     // alternatively, pass the instance to `ecosystem.get`:
+     // const dynamicValue = injectEcosystem().get(instance)
+   })
+   ```
+
+3. Pass `{ subscribe: true }` as the third argument to `injectAtomInstance`.
+
+   ```tsx
+   const exampleAtom = atom('example', () => {
+     // pass `[]` if the atom doesn't take params:
+     const instance = injectAtomInstance(otherAtom, [], { subscribe: true })
+
+     // Even calling `getOnce()` is okay now. This `example` atom will
+     // reevaluate when `otherAtom`'s state changes:
+     const dynamicValue = instance.getOnce()
+   })
+   ```
+
+:::tip
+[`injectAtomState`](./injectAtomState.mdx) is often good enough when you don't need a reference to the full atom instance.
+:::
+
+## Signature
+
+<Tabs>
+  {tab1(`injectAtomInstance = (template, params?, config?) => atomInstance`)}
+  {tab2(`declare const injectAtomInstance: {
+    <A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>, config?: InjectAtomInstanceConfig): NodeOf<A>;
+    <A extends AnyAtomTemplate<{
+        Params: [];
+    }>>(template: A): NodeOf<A>;
+    <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): NodeOf<A>;
+    <I extends AnyAtomInstance>(instance: I, params?: [], config?: InjectAtomInstanceConfig): I;
+    <S extends Selectable>(template: S, params: ParamsOf<S>, config?: InjectAtomInstanceConfig): NodeOf<S>;
+    <S extends Selectable<any, []>>(template: S): NodeOf<S>;
+    <S extends Selectable>(template: ParamlessTemplate<S>): NodeOf<S>;
+}`)}
+</Tabs>
+
+<Legend>
+  <Item name="template">
+    Required. The [atom template](../classes/AtomTemplate.mdx) to find or create a cached [instance](../classes/AtomInstance.mdx) of.
+
+    You can also pass an [atom instance](../classes/AtomInstance.mdx) directly. This is useful when receiving an atom instance from other sources (outside React) that you don't want to cause rerenders, but that you also need to prevent from being destroyed until the component unmounts. This is a rare use case.
+
+  </Item>
+  <Item name="params">
+    An array of the atom's [params](../classes/AtomInstance.mdx#params).
+    
+    TypeScript users will see that this is required if the atom has required params.
+
+  </Item>
+  <Item name="config">
+    An object with the following optional properties:
+
+    ```ts
+    { operation, subscribe }
+    ```
+
+    <Legend>
+      <Item name="operation">
+        A string. Default: `injectAtomInstance`. Used for debugging to describe the reason for creating this graph edge. This default is usually fine.
+      </Item>
+      <Item name="subscribe">
+        A boolean. Default: `false`. Pass `subscribe: true` to make `injectAtomInstance` create a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) instead.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="Returns">
+    The resolved [atom instance](../classes/AtomInstance.mdx) for the passed template + params combo.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `AtomTemplate` class](../classes/AtomTemplate.mdx)
+- [The `AtomInstance` class](../classes/AtomInstance.mdx)
+- [The `injectAtomState` injector](./injectAtomState.mdx)
+- [The `injectAtomValue` injector](/not-done?path=./injectAtomValue.mdx)
