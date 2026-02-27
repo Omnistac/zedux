@@ -1,0 +1,69 @@
+---
+id: SelectorTemplate
+title: SelectorTemplate
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import type { SelectorTemplate } from '@zedux/react'
+```
+
+A union type that encompasses both [AtomSelector](./AtomSelector.mdx) functions and [AtomSelectorConfig](./AtomSelectorConfig.mdx) objects. This type is used by all Zedux APIs that accept selectors.
+
+In other words, anywhere you can pass a selector function, you can also pass a selector config object.
+
+## Example
+
+Using a selector function:
+
+```ts
+const getAdminUsers = ({ get }: Ecosystem) =>
+  get(usersAtom).filter(user => user.role === 'admin')
+
+// Pass the function directly:
+const adminUsers = useAtomValue(getAdminUsers)
+```
+
+Using a selector config object:
+
+```ts
+const getAdminUsersConfig: AtomSelectorConfig = {
+  name: 'getAdminUsers',
+  selector: ({ get }) => get(usersAtom).filter(user => user.role === 'admin'),
+  resultsComparator: (prev, next) => prev.length === next.length,
+}
+
+// Pass the config object:
+const adminUsers = useAtomValue(getAdminUsersConfig)
+```
+
+Both work in any API that accepts a `SelectorTemplate`:
+
+```ts
+// In hooks:
+const value = useAtomValue(selectorOrConfig)
+
+// In ecosystem methods:
+const value = ecosystem.get(selectorOrConfig)
+
+// In injectors:
+const value = injectAtomValue(selectorOrConfig)
+```
+
+## Interface
+
+```ts
+type SelectorTemplate<State = any, Params extends any[] = any> =
+  | AtomSelector<State, Params>
+  | AtomSelectorConfig<State, Params>
+```
+
+## See Also
+
+- [The selectors walkthrough](/not-done?path=../../walkthrough/selectors.mdx)
+- [The `AtomSelector` type](./AtomSelector.mdx)
+- [The `AtomSelectorConfig` type](./AtomSelectorConfig.mdx)
+- [The `SelectorInstance` class](../classes/SelectorInstance.mdx)
+- [`useAtomValue` hook](../hooks/useAtomValue.mdx)
+- [`ecosystem.get`](../classes/Ecosystem.mdx#get)

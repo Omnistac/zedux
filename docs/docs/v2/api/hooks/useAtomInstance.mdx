@@ -1,0 +1,164 @@
+---
+id: useAtomInstance
+title: useAtomInstance
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { useAtomInstance } from '@zedux/react'
+```
+
+A React hook that retrieves a cached [atom instance](../classes/AtomInstance.mdx) for an [atom template](../classes/AtomTemplate.mdx). If the template hasn't been instantiated yet, `useAtomInstance` creates a new atom instance and caches it.
+
+If the atom template takes [params](../classes/AtomInstance.mdx#params), `useAtomInstance` will [deterministically hash](../classes/ZeduxNode.mdx#params) the params you pass to find a cached atom with matching params. If no instance exists for the passed template + params combo, `useAtomInstance` will create a new atom instance and cache it.
+
+Unlike [`useAtomValue`](./useAtomValue.mdx) and [`useAtomState`](./useAtomState.mdx), `useAtomInstance` creates a [static graph dependency](../glossary.mdx#static-graph-dependency) that does not subscribe to state changes in the retrieved atom. This means the component will not re-render when the atom's state changes.
+
+Some primary uses for this hook are when:
+
+- you only need to access the atom to update its state, e.g. via [`.set`](../classes/AtomInstance.mdx#set), [`.mutate`](../classes/AtomInstance.mdx#mutate), or by using any custom [`.exports`](../classes/AtomInstance.mdx#exports).
+- you need to provide an atom to a component subtree via [`<AtomProvider>`](../components/AtomProvider.mdx).
+
+This hook has an equivalent injector: [`injectAtomInstance`](../injectors/injectAtomInstance.mdx), though it's more common to use [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode) to create/retrieve atom instances inside other atoms.
+
+## Example
+
+```tsx live ecosystemId=useAtomInstance/example resultVar=App version=2
+const countAtom = atom('count', () => {
+  const signal = injectSignal(0)
+
+  const decrement = () => signal.set(state => state - 1)
+  const increment = () => signal.set(state => state + 1)
+
+  return api(signal).setExports({ decrement, increment })
+})
+
+function CounterControls() {
+  // This component doesn't need to rerender when `countAtom`'s state changes.
+  // So use `useAtomInstance`:
+  const instance = useAtomInstance(countAtom)
+
+  return (
+    <div>
+      <button onClick={instance.exports.decrement}>-</button>
+      <button onClick={instance.exports.increment}>+</button>
+      <button onClick={() => console.log('Current count:', instance.get())}>
+        Log Count
+      </button>
+    </div>
+  )
+}
+
+function CounterDisplay() {
+  // `useAtomValue` does subscribe to state changes:
+  const count = useAtomValue(countAtom)
+
+  return <div>Count: {count}</div>
+}
+
+function App() {
+  return (
+    <div>
+      <CounterDisplay />
+      <CounterControls />
+    </div>
+  )
+}
+```
+
+## Dynamicizing the Dependency
+
+Sometimes, you need both a reference to the atom instance _and_ you want the current component to rerender when the atom's state changes.
+
+There are a few ways to do this:
+
+1. Pass the atom instance to a dynamic hook like [`useAtomValue`](./useAtomValue.mdx) or [`useAtomState`](./useAtomState.mdx) after retrieving it from `useAtomInstance`.
+
+   ```tsx
+   function ExampleComponent() {
+     const instance = useAtomInstance(exampleAtom)
+
+     // pass the instance directly to `useAtomValue` to subscribe to updates:
+     const dynamicValue = useAtomValue(instance)
+   }
+   ```
+
+2. Pass `{ subscribe: true }` as the third argument to `useAtomInstance`.
+
+   ```tsx
+   function ExampleComponent() {
+     // pass `[]` if the atom doesn't take params:
+     const instance = useAtomInstance(exampleAtom, [], { subscribe: true })
+
+     // This is okay now! The component will rerender when the atom's state changes
+     const dynamicValue = instance.get()
+   }
+   ```
+
+:::tip
+[`useAtomState`](./useAtomState.mdx) is often good enough when you don't need a reference to the full atom instance.
+:::
+
+## Signature
+
+<Tabs>
+  {tab1(`useAtomInstance = (template, params?, config?) => atomInstance`)}
+  {tab2(`declare const useAtomInstance: {
+    <A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>, config?: ZeduxHookConfig): NodeOf<A>;
+    <A extends AnyAtomTemplate<{
+        Params: [];
+    }>>(template: A): NodeOf<A>;
+    <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): NodeOf<A>;
+    <I extends AnyAtomInstance>(instance: I, params?: [], config?: ZeduxHookConfig): I;
+    <S extends Selectable>(template: S, params: ParamsOf<S>, config?: Omit<ZeduxHookConfig, 'subscribe'>): NodeOf<S>;
+    <S extends Selectable<any, []>>(template: S): NodeOf<S>;
+    <S extends Selectable>(template: ParamlessTemplate<S>): NodeOf<S>;
+  }`)}
+</Tabs>
+
+<Legend>
+  <Item name="template">
+    Required. An [atom template](../classes/AtomTemplate.mdx) to find or create an instance of.
+
+    You can also pass an [atom instance](../classes/AtomInstance.mdx) directly. This is useful when receiving an atom instance from other sources (outside React) that you don't want to cause rerenders, but that you also need to prevent from being destroyed until the component unmounts. This is a rare use case.
+
+  </Item>
+  <Item name="params">
+    An array of the atom's [params](../classes/AtomInstance.mdx#params).
+    
+    TypeScript users will see that this is required if the atom has required params.
+
+  </Item>
+  <Item name="config">
+    An object with the following optional properties:
+
+    ```ts
+    { operation, subscribe, suspend }
+    ```
+
+    <Legend>
+      <Item name="operation">
+        A string. Default: `useAtomInstance`. Used for debugging to describe the reason for creating this graph edge. This default is usually fine.
+      </Item>
+      <Item name="subscribe">
+        A boolean. Default: `false`. Pass `true` to make `useAtomInstance` create a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) instead.
+      </Item>
+      <Item name="suspend">
+        A boolean. Default: `true`. Whether the component should suspend if the resolved atom has a [promise](../classes/AtomInstance.mdx#promise) set. Pass `suspend: false` to prevent this hook from triggering React suspense.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="Returns">
+    The resolved [atom instance](../classes/AtomInstance.mdx) for the passed template + params combo.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `AtomInstance` class](../classes/AtomInstance.mdx)
+- [The `useAtomState` hook](./useAtomState.mdx)
+- [The `useAtomValue` hook](./useAtomValue.mdx)
+- [The `injectAtomInstance` injector](../injectors/injectAtomInstance.mdx)
