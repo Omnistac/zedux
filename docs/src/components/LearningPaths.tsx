@@ -192,7 +192,7 @@ export const LearningPaths = () => {
           depth={8}
           ease={8}
           fun={6}
-          href={useBaseUrl('docs/walkthrough/quick-start')}
+          href={useBaseUrl('docs/v1/walkthrough/quick-start')}
           title="Walkthrough"
         >
           Take a gentle journey through Zedux&apos; features
@@ -202,7 +202,7 @@ export const LearningPaths = () => {
           depth={10}
           ease={2}
           fun={1}
-          href={useBaseUrl('docs/api/api-overview')}
+          href={useBaseUrl('docs/v1/api/api-overview')}
           title="API"
         >
           Dive into the comprehensive API docs
