@@ -21,7 +21,7 @@ import { recursivelyMutate, recursivelyProxy } from './proxies'
 import { getEvaluationContext } from '../utils/evaluationContext'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
-export const doMutate = <G extends NodeGenerics>(
+export const doMutate = <G extends Pick<NodeGenerics, 'State' | 'Events'>>(
   node: Signal<G>,
   isWrapperSignal: boolean,
   mutatable: Mutatable<G['State']>,

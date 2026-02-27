@@ -491,6 +491,12 @@ export type RecursivePartial<T> = T extends Record<string, any>
   ? { [P in keyof T]?: RecursivePartial<T[P]> }
   : T
 
+export type RecursivePartialWithArrayPlucking<T> = T extends any[]
+  ? { [K in number]?: RecursivePartialWithArrayPlucking<T[number]> }
+  : T extends Record<string, any>
+    ? { [P in keyof T]?: RecursivePartialWithArrayPlucking<T[P]> }
+    : T
+
 export type Ref<T = any> = MutableRefObject<T>
 
 export interface RefObject<T = any> {
