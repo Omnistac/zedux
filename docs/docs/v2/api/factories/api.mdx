@@ -1,0 +1,148 @@
+---
+id: api
+title: api
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { api } from '@zedux/react'
+```
+
+A factory for defining an atom's API. This factory returns an instance of the special [AtomApi class](../classes/AtomApi).
+
+You can return an AtomApi from an atom state factory to define many characteristics of the atom - namely its state, exports, promise, and lifecycle.
+
+## Example
+
+Defining an atom's `exports`:
+
+```tsx live ecosystemId=api/exports-example resultVar=App version=2
+const counterAtom = atom('counter', () => {
+  const signal = injectSignal(0)
+
+  const decrement = () => signal.set(val => val - 1)
+  const increment = () => signal.set(val => val + 1)
+
+  return api(signal).setExports({ decrement, increment })
+})
+
+function App() {
+  const [count, { decrement, increment }] = useAtomState(counterAtom)
+
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <button onClick={decrement}>-</button>
+      <button onClick={increment}>+</button>
+    </div>
+  )
+}
+```
+
+Defining an atom's `promise`, e.g. for use with React Suspense:
+
+```tsx live ecosystemId=api/promis-example resultVar=App version=2
+const helloWorldAtom = atom('helloWorld', () => {
+  const signal = injectSignal('')
+
+  return api(signal).setPromise(
+    new Promise(resolve => {
+      setTimeout(() => {
+        signal.set('Hello, World!')
+
+        // resolving the promise with the atom's resolved state is a best practice
+        resolve(signal.get())
+      }, 500)
+    })
+  )
+})
+
+function HelloWorld() {
+  const hello = useAtomValue(helloWorldAtom)
+
+  return (
+    <div>
+      The resolved value: {hello} (Click "Reset" to see the fallback again)
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HelloWorld />
+    </Suspense>
+  )
+}
+```
+
+Defining an atom's `ttl`:
+
+```tsx
+// this is equivalent to passing `{ ttl: 0 }` as the third argument to the
+// `atom` factory:
+const staticNumericTtlAtom = atom('staticNumericTtl', () =>
+  api('example state').setTtl(0)
+)
+
+const dynamicNumericTtlAtom = atom('dynamicNumericTtl', () => {
+  const signal = injectSignal(0)
+  const ttlRef = injectRef<null | number>(null)
+
+  // Consumers can set the ttl via `instance.exports.ttlRef.current = newTtl`.
+  // That ttl will then be used when this atom becomes stale.
+  return api(signal)
+    .setExports({ ttlRef })
+    .setTtl(() => ttlRef.current)
+})
+
+const dynamicPromiseTtlAtom = atom('dynamicPromiseTtl', () => {
+  const signal = injectSignal(0)
+  const promise = injectAtomValue(somePromiseAtom)
+
+  return api(signal).setTtl(() => promiseRef.current)
+})
+```
+
+:::tip
+You can mix and match these approaches. For example, export a `promiseRef` or `observableSignal` to give consumers lots of control over the atom's TTL.
+:::
+
+## Signature
+
+<Tabs>
+  {tab1(`api = (value) => newAtomApi`)}
+  {tab2(`declare const api: <
+  Value,
+  Exports extends Record<string, any> = {},
+  Promise extends AtomApiPromise = undefined
+>(
+  value: Value
+) => AtomApi<{
+  Exports: Exports
+  Promise: Promise
+  State: Value
+  Signal: Value extends Signal<any> ? Value : undefined
+}>`)}
+</Tabs>
+
+<Legend>
+  <Item name="value">
+    Required. The state value, signal, or promise that this AtomApi should wrap.
+    - If a signal, the atom instance will become a wrapper around the signal -
+    If a promise, the atom becomes a [query
+    atom](../../../walkthrough/query-atoms) - If any other value, this becomes
+    the atom's state
+  </Item>
+  <Item name="Returns">
+    An [AtomApi instance](../classes/AtomApi) that can be configured with
+    exports, ttl, and other options.
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `AtomApi` class](../classes/AtomApi)
+- [The `atom` factory](./atom)
+- [The AtomApi walkthrough](../../../walkthrough/atom-apis)

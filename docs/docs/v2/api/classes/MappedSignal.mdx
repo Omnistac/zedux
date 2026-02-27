@@ -1,0 +1,118 @@
+---
+id: MappedSignal
+title: MappedSignal
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+The object returned by [`injectMappedSignal`](/not-done?path=../injectors/injectMappedSignal). Mapped signals _are_ signals, meaning this class extends [the `Signal` class](./Signal.mdx) (which in turn extends [the `ZeduxNode` class](./ZeduxNode.mdx)). All signal operations work on mapped signals.
+
+Mapped signals are composed of any number of "inner signals" plus any number of other state fields. They're aware of which inner signal controls each piece of state and forward all state changes to the relevant inner signal(s). They also forward events to and from inner signals.
+
+The state of a mapped signal is always an object. Mapped signals don't support nested objects. To nest signals, create multiple mapped signals. See [`injectMappedSignal`](/not-done?path=../injectors/injectMappedSignal) for an example.
+
+The keys of a mapped signal's object never change. They're defined when `injectMappedSignal` is first called in an atom and stay for the lifetime of the mapped signal.
+
+:::tip
+You do not need to use mapped signals for all nested state. Normal signals are more than capable of handling even deeply-nested state.
+
+Mapped signals are primarily for composing multiple signals inside an atom into a single signal that can be returned from the atom's state factory.
+:::
+
+## Creation
+
+You never instantiate this class yourself. Mapped signals can currently only be created via [the `injectMappedSignal` injector](/not-done?path=../injectors/injectMappedSignal):
+
+```ts
+const exampleAtom = atom('example', () => {
+  const signal = injectSignal(0)
+  const mappedSignal = injectMappedSignal({ inner: signal })
+
+  return mappedSignal // make this signal control the atom's state
+})
+```
+
+## Generics
+
+For TypeScript users, mapped signals have the following generics inherited from [`ZeduxNode`](./ZeduxNode.mdx#generics):
+
+<Legend>
+  <Item name="G['Events']">
+    See [`ZeduxNode<{ Events }>`](./ZeduxNode.mdx#gevents).
+  </Item>
+  <Item name="G['Params']">
+    See [`ZeduxNode<{ Params }>`](./ZeduxNode.mdx#gparams).
+  </Item>
+  <Item name="G['State']">
+    See [`ZeduxNode<{ State }>`](./ZeduxNode.mdx#gstate).
+  </Item>
+  <Item name="G['Template']">
+    See [`ZeduxNode<{ Template }>`](./ZeduxNode.mdx#gtemplate).
+  </Item>
+</Legend>
+
+## Events
+
+Mapped signals inherit all [custom events](./Signal.mdx#custom-events) from their inner signals. They can also define their own. See [`injectMappedSignal`'s `events`](/not-done?path=../injectors/injectMappedSignal#events) config option.
+
+Mapped signals also inherit the following built-in events from the [`Signal` class](./Signal.mdx#events):
+
+<Legend>
+  <Item name="mutate" suffix="event">
+    See the [signal `mutate` event](./Signal.mdx#mutate-event).
+  </Item>
+</Legend>
+
+Mapped signals also inherit the following built-in events from the [`ZeduxNode` class](./ZeduxNode.mdx#events):
+
+<Legend>
+  <Item name="change" suffix="event">
+    See the [node `change` event](./ZeduxNode.mdx#change-event).
+  </Item>
+  <Item name="cycle" suffix="event">
+    See the [node `cycle` event](./ZeduxNode.mdx#cycle-event).
+  </Item>
+</Legend>
+
+## Properties
+
+Mapped signals inherit the following **readonly** properties from the [`ZeduxNode` class](./ZeduxNode.mdx#properties):
+
+<Legend>
+  <Item name="id">See [`ZeduxNode#id`](./ZeduxNode.mdx#id).</Item>
+  <Item name="params">
+    See [`ZeduxNode#params`](./ZeduxNode.mdx#params). This will always be
+    undefined - mapped signals don't take params.
+  </Item>
+  <Item name="status">
+    See [`ZeduxNode#status`](./ZeduxNode.mdx#status). This will never be "Stale"
+    - mapped signals skip from Active to Destroyed.
+  </Item>
+  <Item name="template">
+    See [`ZeduxNode#template`](./ZeduxNode.mdx#template). This will always be
+    undefined - mapped signals don't have templates.
+  </Item>
+</Legend>
+
+## Methods
+
+Mapped signals inherit the following methods from the [`Signal` class](./Signal.mdx#methods):
+
+<Legend>
+  <Item name="mutate">See [`Signal#mutate`](./Signal.mdx#mutate).</Item>
+  <Item name="send">See [`Signal#send`](./Signal.mdx#send).</Item>
+  <Item name="set">See [`Signal#set`](./Signal.mdx#set).</Item>
+</Legend>
+
+Mapped signals also inherit the following methods from the [`ZeduxNode` class](./ZeduxNode.mdx#methods):
+
+<Legend>
+  <Item name="destroy">
+    See [`ZeduxNode#destroy`](./ZeduxNode.mdx#destroy).
+  </Item>
+  <Item name="get">See [`ZeduxNode#get`](./ZeduxNode.mdx#get).</Item>
+  <Item name="getOnce">
+    See [`ZeduxNode#getOnce`](./ZeduxNode.mdx#getonce).
+  </Item>
+  <Item name="on">See [`ZeduxNode#on`](./ZeduxNode.mdx#on).</Item>
+</Legend>
