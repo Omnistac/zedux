@@ -659,6 +659,37 @@ describe('react types', () => {
     expectTypeOf<typeof val2>().toBeString()
   })
 
+  test('override method on AnyAtomTemplate and AnyAtomInstance.t', () => {
+    // AnyAtomTemplate should have the override method
+    const overrideAny = <A extends AnyAtomTemplate>(template: A) =>
+      template.override(() => 'new value')
+
+    // AnyAtomInstance.t should also have override (since .t is AtomTemplateBase)
+    const overrideFromInstance = <I extends AnyAtomInstance>(instance: I) =>
+      instance.t.override(() => 'new value')
+
+    // NodeOf should produce instances whose .t has override and is
+    // assignable to AnyAtomTemplate
+    type ExampleNode = NodeOf<typeof exampleAtom>
+    const templateFromNode = <I extends ExampleNode>(instance: I) =>
+      instance.t.override(() => 'new value')
+
+    // A function accepting AnyAtomTemplate should accept .t from NodeOf
+    const acceptTemplate = (t: AnyAtomTemplate) => t.key
+    const useTemplate = (instance: ExampleNode) => acceptTemplate(instance.t)
+
+    // Inverse: AnyAtomTemplate should be passable where NodeOf<atom>.t is expected
+    const acceptSpecificTemplate = (t: ExampleNode['t']) => t.key
+    const useAnyTemplate = (t: AnyAtomTemplate) => acceptSpecificTemplate(t)
+
+    const instance = ecosystem.getInstance(exampleAtom, ['a'])
+    overrideAny(exampleAtom)
+    overrideFromInstance(instance)
+    templateFromNode(instance)
+    useTemplate(instance)
+    useAnyTemplate(exampleAtom)
+  })
+
   test('injectors', () => {
     const injectingAtom = atom('injecting', () => {
       // @ts-expect-error missing param
