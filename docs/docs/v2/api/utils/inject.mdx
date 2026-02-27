@@ -1,0 +1,222 @@
+---
+id: inject
+title: inject
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { inject } from '@zedux/react'
+```
+
+A utility function that retrieves a contextual value from a provided scope.
+
+:::note
+This is currently an [unrestricted injector](../glossary.mdx#unrestricted-injector). As such, it can only be used in [atom state factories](../glossary.mdx#state-factory).
+
+It doesn't have to be an injector. We may update this to work with selectors too. In that case, this will become a "utility" function, not an injector. This is similar to React's `use` utility which isn't a hook.
+:::
+
+Any atom that calls `inject` becomes "scoped". Its id will change to reflect the retrieved context and it can only be accessed in a scoped context - either from React hooks or in an [`ecosystem.withScope`](../classes/Ecosystem.mdx#withscope) call.
+
+Any atom that uses a scoped atom is also scoped, inheriting the scope dependency of the scoped atom. An atom and all transitive dependencies it creates can access the provided scope.
+
+- When created from React hooks, `inject` can access provided React context values or atom instances.
+- When created in an `ecosystem.withScope` callback, `inject` can access the provided scope values.
+
+## Examples
+
+Simple example with React context:
+
+```tsx live ecosystemId=inject/example resultVar=App version=2
+const UserContext = createContext<{ name: string } | undefined>(undefined)
+
+const greetingAtom = atom('greeting', () => {
+  const user = inject(UserContext) // access the provided context!
+  return `Hello, ${user.name}!`
+})
+
+function UserGreeting() {
+  const greeting = useAtomValue(greetingAtom)
+  return <div>{greeting}</div>
+}
+
+function App() {
+  return (
+    <UserContext.Provider value={{ name: 'Alice' }}>
+      <UserGreeting />
+    </UserContext.Provider>
+  )
+}
+```
+
+In this example, `userAtom` becomes a scoped atom because it calls `inject(UserContext)`. It can only be used within a component tree that provides the `UserContext` or in an [`ecosystem.withScope`](../classes/Ecosystem.mdx#withscope) call that manually maps the `UserContext` to a provided value.
+
+Here's the same example, but using an `ecosystem.withScope` call:
+
+```tsx live ecosystemId=inject/example2 resultVar=UserGreeting version=2
+const UserContext = createContext<{ name: string } | undefined>(undefined)
+const scope = new Map([[UserContext, { name: 'Bob' }]])
+
+const userAtom = atom('user', () => {
+  const user = inject(UserContext) // access the provided context!
+  return `Hello, ${user.name}!`
+})
+
+function UserGreeting() {
+  // use an inline selector to quickly use the ecosystem reactively
+  const greeting = useAtomValue(({ ecosystem, get }) =>
+    ecosystem.withScope(scope, () => get(userAtom))
+  )
+
+  return <div>{greeting}</div>
+}
+```
+
+Simple example with an atom template:
+
+```tsx live ecosystemId=inject/example3 resultVar=App version=2
+const userAtom = atom('user', () => ({ name: 'Jane' }))
+
+const greetingAtom = ion('greeting', ({ get }) => {
+  const userInstance = inject(userAtom) // access the provided atom!
+  const user = get(userInstance)
+  return `Hello, ${user.name}!`
+})
+
+function UserGreeting() {
+  const greeting = useAtomValue(greetingAtom)
+  return <div>{greeting}</div>
+}
+
+function App() {
+  const userInstance = useAtomInstance(userAtom)
+  return (
+    <AtomProvider instance={userInstance}>
+      <UserGreeting />
+    </AtomProvider>
+  )
+}
+```
+
+A more complex example where a transitive dependency uses `inject`:
+
+```tsx live ecosystemId=inject/example4 resultVar=App version=2
+const ThemeContext = createContext<{ color: string } | undefined>(undefined)
+const userAtom = atom('user', () => ({ name: 'Alice' }))
+
+// This atom uses inject, making it scoped to ThemeContext and userAtom
+const styledGreetingAtom = atom('styledGreeting', () => {
+  const theme = inject(ThemeContext)
+  const userInstance = inject(userAtom)
+
+  // create a dynamic dependency on the provided instance
+  const user = userInstance.get()
+
+  return {
+    text: `Welcome, ${user.name}!`,
+    style: { color: theme.color, fontWeight: 'bold' },
+  }
+})
+
+// This atom doesn't call inject directly, but it depends on a scoped atom.
+// Therefore, it inherits the scope dependencies and becomes scoped too!
+const uppercaseGreetingAtom = ion('uppercaseGreeting', ({ get }) => {
+  const greeting = get(styledGreetingAtom)
+
+  return {
+    text: greeting.text.toUpperCase(),
+    style: greeting.style,
+  }
+})
+
+// And this atom depends on uppercaseGreetingAtom, so it's also scoped!
+const finalGreetingAtom = ion('finalGreeting', ({ get }) => {
+  const greeting = get(uppercaseGreetingAtom)
+  return `${greeting.text} 🎉`
+})
+
+function Greeting() {
+  const greeting = useAtomValue(finalGreetingAtom)
+  const style = useAtomValue(uppercaseGreetingAtom).style
+
+  return <div style={style}>{greeting}</div>
+}
+
+function App() {
+  const [color, setColor] = useState('blue')
+  const userInstance = useAtomInstance(userAtom)
+  const [user, setUser] = useAtomState(userInstance)
+
+  return (
+    <ThemeContext.Provider value={{ color }}>
+      <AtomProvider instance={userInstance}>
+        <div>
+          <Greeting />
+          <div style={{ marginTop: 10 }}>
+            <input
+              value={user.name}
+              onChange={e => setUser({ ...user, name: e.target.value })}
+              placeholder="Name"
+            />
+            <select value={color} onChange={e => setColor(e.target.value)}>
+              <option value="blue">Blue</option>
+              <option value="red">Red</option>
+              <option value="green">Green</option>
+            </select>
+          </div>
+        </div>
+      </AtomProvider>
+    </ThemeContext.Provider>
+  )
+}
+```
+
+In this example:
+
+- `styledGreetingAtom` is scoped because it calls `inject(ThemeContext)` and `inject(UserContext)`.
+- `uppercaseGreetingAtom` becomes scoped by depending on `styledGreetingAtom`, even though it doesn't call `inject` directly.
+- `finalGreetingAtom` also becomes scoped by depending on `uppercaseGreetingAtom`.
+- All three atoms can access the provided context values through the scope chain. All three can thus only be accessed in scoped contexts - either from React hooks or in an [`ecosystem.withScope`](../classes/Ecosystem.mdx#withscope) call.
+
+:::tip
+When used with atoms, remember that `inject` returns the atom instance itself, not the value. You need to create a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on the instance to make it reactive. In this example, simply calling `userInstance.get()` created the dependency.
+:::
+
+## Signature
+
+<Tabs>
+  {tab1(`inject = (context) => providedValue`)}
+  {tab2(`declare const inject: <T extends React.Context<any> | AtomTemplateBase>(
+    context: T
+  ) => T extends React.Context<infer V>
+    ? V
+    : T extends AtomTemplateBase
+    ? NodeOf<T>
+    : never`)}
+</Tabs>
+
+<Legend>
+  <Item name="context">
+    Required. Either a React Context object or an atom template. The value
+    currently provided for this context will be returned.
+  </Item>
+  <Item name="Returns">
+    The provided value for the passed context. If a React Context is passed,
+    returns the context value. If an atom template is passed, returns the atom
+    instance itself.
+  </Item>
+  <Item name="Throws">
+    An error if:
+
+    - Called outside an atom state factory.
+    - Called outside a scoped context (a React hook or `ecosystem.withScope` call).
+    - The requested context was not provided.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [`ecosystem.withScope`](../classes/Ecosystem.mdx#withscope)
+- [The scoped atoms walkthrough](/not-done?path=../../walkthrough/scoped-atoms.mdx)

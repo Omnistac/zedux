@@ -8,6 +8,7 @@ const ItemDesc = styled.div`
 
 const ItemName = styled.div`
   padding: 1rem;
+  scroll-margin-top: calc(var(--ifm-navbar-height) + 0.5rem);
 
   @container (max-width: 600px) {
     &:not(:first-of-type) {
@@ -37,9 +38,13 @@ const prefixContext = createContext('')
 export const Item = ({
   children,
   name,
-}: PropsWithChildren<{ name: string }>) => {
+  suffix = '',
+}: PropsWithChildren<{ name: string; suffix?: string }>) => {
   const prefix = useContext(prefixContext)
-  const id = prefix + name.toLowerCase().replace(/[^a-z]/g, '')
+  const id =
+    prefix +
+    name.toLowerCase().replace(/[^a-z]/g, '') +
+    (suffix ? `-${suffix}` : '')
 
   return (
     <>
@@ -47,7 +52,8 @@ export const Item = ({
         className="anchor anchorWithStickyNavbar_node_modules-@docusaurus-theme-classic-lib-theme-Heading-styles-module"
         id={id}
       >
-        {name === 'Returns' ? name : <code>{name}</code>}
+        {name === 'Returns' || name === 'Throws' ? name : <code>{name}</code>}
+        {suffix && <span> {suffix}</span>}
         <a className="hash-link" href={`#${id}`} />
       </ItemName>
       <ItemDesc>
