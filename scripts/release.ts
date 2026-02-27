@@ -450,10 +450,27 @@ const generateChangelog = async (
 
       if (isBreaking) hasBreakingChanges = true
 
-      const affectedPackages =
-        message.match(/^\w+\((.*?)\)!?:/)?.slice(1, 2) ||
-        message.match(/^@affects (.*)?/m)?.[1].split(', ') ||
-        []
+      const packageSet = new Set<string>()
+
+      const scopeMatch = message.match(/^\w+\((.*?)\)!?:/)
+
+      if (scopeMatch) {
+        for (const pkg of scopeMatch[1].split(',')) {
+          const trimmed = pkg.trim()
+          if (trimmed) packageSet.add(trimmed)
+        }
+      }
+
+      const affectsMatch = message.match(/^@affects (.+)/m)
+
+      if (affectsMatch) {
+        for (const pkg of affectsMatch[1].split(',')) {
+          const trimmed = pkg.trim()
+          if (trimmed) packageSet.add(trimmed)
+        }
+      }
+
+      const affectedPackages = [...packageSet]
 
       const item: CommitItem = {
         affectedPackages,
