@@ -1,6 +1,6 @@
 {
   "name": "@zedux/immer",
-  "version": "2.0.0-rc.12",
+  "version": "2.0.0-rc.13",
   "description": "Official Immer integration for Zedux's store and atomic APIs",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -10,11 +10,11 @@
     "url": "https://github.com/Omnistac/zedux/issues"
   },
   "dependencies": {
-    "@zedux/stores": "2.0.0-rc.12"
+    "@zedux/stores": "2.0.0-rc.13"
   },
   "devDependencies": {
-    "@zedux/atoms": "2.0.0-rc.12",
-    "@zedux/core": "2.0.0-rc.12",
+    "@zedux/atoms": "2.0.0-rc.13",
+    "@zedux/core": "2.0.0-rc.13",
     "immer": "catalog:"
   },
   "exports": {
@@ -39,7 +39,7 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@zedux/atoms": "2.0.0-rc.12",
+    "@zedux/atoms": "2.0.0-rc.13",
     "immer": ">=9.0.19"
   },
   "repository": {
