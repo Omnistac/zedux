@@ -1,0 +1,117 @@
+---
+id: useAtomContext
+title: useAtomContext
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { useAtomContext } from '@zedux/react'
+```
+
+A React hook that retrieves an [atom instance](../classes/AtomInstance.mdx) provided over React context via an [`<AtomProvider>`](../components/AtomProvider.mdx).
+
+This hook only returns the atom instance itself. To make the consuming component rerender when the provided atom updates, pass the returned atom instance to [`useAtomValue`](/not-done?path=./useAtomValue.mdx) or [`useAtomState`](./useAtomState.mdx).
+
+## Example
+
+```tsx live ecosystemId=useAtomContext/example resultVar=App version=2
+const themeAtom = atom('theme', (_id: number) => 'light')
+
+function ThemedComponent() {
+  const themeInstance = useAtomContext(themeAtom)
+  const theme = useAtomValue(themeInstance)
+
+  return (
+    <div
+      style={{
+        background: theme === 'light' ? 'white' : 'black',
+        color: theme === 'light' ? 'black' : 'white',
+        padding: '20px',
+      }}
+    >
+      Current theme: {theme}
+    </div>
+  )
+}
+
+function ThemeToggle() {
+  const themeInstance = useAtomContext(themeAtom)
+  const [theme, setTheme] = useAtomState(themeInstance)
+
+  return (
+    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+      Toggle Theme
+    </button>
+  )
+}
+
+function App() {
+  const instance1 = useAtomInstance(themeAtom, [1])
+  const instance2 = useAtomInstance(themeAtom, [2])
+
+  return (
+    <>
+      <AtomProvider instance={instance1}>
+        <div>
+          <ThemedComponent />
+          <ThemeToggle />
+        </div>
+      </AtomProvider>
+      <AtomProvider instance={instance2}>
+        <div>
+          <ThemedComponent />
+          <ThemeToggle />
+        </div>
+      </AtomProvider>
+    </>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`useAtomContext = (template, defaultParams?) => atomInstance
+  // or
+  useAtomContext = (template, throwIfNotProvided?) => providedAtomInstance`)}
+  {tab2(`declare const useAtomContext: {
+    <A extends AnyAtomTemplate>(template: A): NodeOf<A> | undefined;
+    <A extends AnyAtomTemplate>(template: A, defaultParams: ParamsOf<A>): NodeOf<A>;
+    <A extends AnyAtomTemplate>(template: A, throwIfNotProvided: boolean): NodeOf<A>;
+  }`)}
+</Tabs>
+
+<Legend>
+  <Item name="template">
+    Required. The atom template that identifies which atom instance to retrieve from context.
+
+  </Item>
+  <Item name="defaultParams">
+    Optional. An array.
+
+    If no atom instance was provided for the given template, Zedux will use these params to create and return a new atom instance.
+
+  </Item>
+  <Item name="throwIfNotProvided">
+    Optional. A boolean. Whether to throw an error if no atom instance was provided.
+
+    This is the recommended overload in almost all situations:
+
+    ```tsx
+    const providedInstance = useAtomContext(myTemplate, true)
+    ```
+
+  </Item>
+  <Item name="Returns">
+    The provided [atom instance](../classes/AtomInstance.mdx), or the newly-created atom instance if no atom instance was provided and `defaultParams` were passed.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `AtomProvider` component](../components/AtomProvider.mdx)
+- [The `useAtomValue` hook](/not-done?path=./useAtomValue.mdx)
+- [The React Context walkthrough](../../../walkthrough/react-context.mdx)
+- [The `AtomInstance` class](../classes/AtomInstance.mdx)
