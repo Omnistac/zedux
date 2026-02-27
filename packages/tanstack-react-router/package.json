@@ -1,0 +1,63 @@
+{
+  "name": "@zedux/tanstack-react-router",
+  "version": "2.0.0-rc.10",
+  "description": "TanStack React Router integration for Zedux",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "author": "Joshua Claunch",
+  "bugs": {
+    "url": "https://github.com/Omnistac/zedux/issues"
+  },
+  "devDependencies": {
+    "@tanstack/react-router": "^1.100.0",
+    "@zedux/react": "2.0.0-rc.10",
+    "react": "^19.0.0"
+  },
+  "peerDependencies": {
+    "@tanstack/react-router": "^1.131.27",
+    "@zedux/react": "2.0.0-rc.10",
+    "react": "^19.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "homepage": "https://omnistac.github.io/zedux/",
+  "keywords": [
+    "atom",
+    "atomic",
+    "composable",
+    "DI",
+    "easy",
+    "flexible",
+    "molecular",
+    "react",
+    "router",
+    "tanstack",
+    "ssr",
+    "state",
+    "zedux"
+  ],
+  "license": "MIT",
+  "repository": {
+    "directory": "packages/tanstack-react-router",
+    "type": "git",
+    "url": "https://github.com/Omnistac/zedux.git"
+  },
+  "scripts": {
+    "build": "../../scripts/build.js",
+    "lint": "eslint 'src/**/*.@(tsx|ts)' && tsc --noEmit",
+    "prepublishOnly": "yarn build",
+    "test": "cd ../.. && yarn test packages/tanstack-react-router --collectCoverageFrom=packages/tanstack-react-router/src/**/*.ts"
+  },
+  "sideEffects": false,
+  "type": "module"
+}
