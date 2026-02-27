@@ -1,5 +1,7 @@
 # `@zedux/machines`
 
+> IMPORTANT: This readme has not yet been updated for the Zedux v2 signal-based implementation of the `@zedux/machines` package. That will happen after the v2 versions of all linked docs pages have been merged to the docs site.
+
 A simple, TypeScript-first state machine implementation for Zedux. This is an addon package, meaning it doesn't have any own dependencies or re-export any APIs from other packages. It uses peer dependencies instead, expecting you to download the needed packages yourself.
 
 See [the documentation](https://omnistac.github.io/zedux/docs/packages/machines/overview) for this package.
