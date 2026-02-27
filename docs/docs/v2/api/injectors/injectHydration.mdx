@@ -1,0 +1,166 @@
+---
+id: injectHydration
+title: injectHydration
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectHydration } from '@zedux/react'
+```
+
+An [injector](../glossary.mdx#injector) that retrieves data previously passed to [`ecosystem.hydrate`](../classes/Ecosystem.mdx#hydrate) for the currently-evaluating atom.
+
+If the atom has a [`hydrate`](../types/AtomConfig.mdx#hydrate) function configured, `injectHydration` will call it with the atom's hydration and return the result. Pass `{ transform: false }` to prevent this.
+
+`injectHydration` is unique in that it has a side effect: When called, it prevents Zedux from [automatically hydrating](/not-done?path=../../advanced/persistence#automatic-hydration) the atom after its initial evaluation. Pass `{ intercept: false }` to prevent this.
+
+:::tip
+Simple atoms don't need this. Zedux automatically hydrates atoms after their initial evaluation.
+
+Use `injectHydration` for more fine-grained control, e.g. when persisting and restoring only part of an atom's state or when different instances of an atom need unique hydration logic.
+:::
+
+Hydration data is returned again on subsequent evaluations, though you typically ignore it.
+
+## Examples
+
+An example that uses simple React state to simulate persisting and restoring an atom's state.
+
+```tsx live ecosystemId=injectHydration/example resultVar=App version=2
+const persistedCounterAtom = atom('persistedCounter', () => {
+  // Try to get hydration data for this atom
+  const hydration = injectHydration<number>()
+
+  // Initialize with hydrated value or default to 0
+  const signal = injectSignal(hydration ?? 0)
+
+  const increment = () => signal.set(val => val + 1)
+
+  return api(signal).setExports({ increment })
+})
+
+function App() {
+  const [persistedState, setPersistedState] = useState({})
+  const instance = useAtomInstance(persistedCounterAtom)
+  const [count, { increment }] = useAtomState(instance)
+
+  const ecosystem = useEcosystem()
+
+  // Simulate dehydrating and rehydrating persisted data
+  const simulatePersist = () => {
+    setPersistedState({ [instance.id]: count })
+  }
+
+  const simulateHydration = () => {
+    ecosystem.hydrate({
+      [instance.id]: persistedState[instance.id],
+    })
+  }
+
+  return (
+    <div>
+      <div>Current Count: {count}</div>
+      <div>Persisted State:</div>
+      <pre>{JSON.stringify(persistedState, null, 2)}</pre>
+      <button onClick={increment}>Increment</button>
+      <button onClick={simulatePersist}>Simulate Persist</button>
+      <button onClick={simulateHydration}>Simulate Hydration</button>
+    </div>
+  )
+}
+```
+
+See [the persistence walkthrough](../../../advanced/persistence.mdx) for more complete examples using `localStorage` for persistence.
+
+An example using atom configuration to persist and restore only part of an atom's state:
+
+```tsx live ecosystemId=injectHydration/transform resultVar=App version=2
+const hydratedUserAtom = atom(
+  'hydratedUser',
+  () => {
+    // Get hydration with transformation applied
+    const hydration = injectHydration<{ name: string; theme: string }>()
+
+    const signal = injectSignal(
+      hydration ?? { name: 'Default', theme: 'light' }
+    )
+
+    return signal
+  },
+  {
+    // only persist the user's name
+    dehydrate: state => state.name,
+    hydrate: (name: unknown) => ({
+      name: typeof name === 'string' ? name : 'Unknown',
+      theme: 'light',
+    }),
+  }
+)
+
+function App() {
+  const ecosystem = useEcosystem()
+
+  // calling `ecosystem.hydrate` with `{ retroactive: false }` is safe during render:
+  ecosystem.hydrate(
+    {
+      [hydratedUserAtom.getNodeId(ecosystem)]: 'Eagerly-hydrated name',
+    },
+    { retroactive: false }
+  )
+
+  const user = useAtomValue(hydratedUserAtom)
+
+  const hydrateUser = () => {
+    ecosystem.hydrate({
+      [hydratedUserAtom.getNodeId(ecosystem)]: 'Lazily-hydrated name',
+    })
+  }
+
+  return (
+    <div>
+      <div>User: {user.name}</div>
+      <div>Theme: {user.theme}</div>
+      <button onClick={hydrateUser}>Hydrate User Data</button>
+    </div>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`injectHydration = (config?) => hydrationData`)}
+  {tab2(`declare const injectHydration: <T = unknown>(config?: {
+  intercept?: boolean
+  transform?: boolean
+}) => T`)}
+</Tabs>
+
+<Legend>
+  <Item name="config">
+    Optional. An object with the following, optional properties:
+
+    ```ts
+    { intercept?, transform? }
+    ```
+
+    - **`intercept`** - A boolean. Default: `true`. Whether to prevent Zedux from auto-hydrating this atom after evaluation.
+    - **`transform`** - A boolean. Default: `true`. Whether to apply the atom's configured `hydrate` function to transform the raw hydration data.
+
+  </Item>
+  <Item name="Returns">
+    The hydration data for this atom, or `undefined` if no hydration was provided.
+    
+    If the atom has a `hydrate` function configured and `transform` is not `false`, the transformed value is returned.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [`ecosystem.hydrate`](../classes/Ecosystem.mdx#hydrate)
+- [`ecosystem.dehydrate`](../classes/Ecosystem.mdx#dehydrate)
+- [The `AtomConfig` type](../types/AtomConfig.mdx)
+- [The persistence walkthrough](../../../advanced/persistence.mdx)
+- [The SSR walkthrough](../../../advanced/ssr.mdx)

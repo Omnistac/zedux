@@ -60,6 +60,20 @@ const getScope = (version: string) => {
     ...RxJSOperators,
     ...(version === '1' ? Zedux_v1 : Zedux_v2),
     ...React,
+    exports: {},
+    require: (path: string) => {
+      if (path === '@zedux/react') {
+        return ZeduxReact_v2
+      }
+
+      if (path === '@zedux/immer') {
+        return ZeduxImmer_v2
+      }
+
+      if (path === '@zedux/machines') {
+        return ZeduxMachines_v2
+      }
+    },
     window:
       typeof window === 'undefined'
         ? { addEventListener() {}, removeEventListener() {} }
