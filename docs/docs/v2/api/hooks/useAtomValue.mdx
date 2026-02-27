@@ -1,0 +1,176 @@
+---
+id: useAtomValue
+title: useAtomValue
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { useAtomValue } from '@zedux/react'
+```
+
+A React hook that creates a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on an [atom instance](../classes/AtomInstance.mdx), triggering rerenders when the atom updates. Returns the atom's current state.
+
+If no cached atom instance exists for the given [atom template](../classes/AtomTemplate.mdx) (+ [params](../classes/AtomInstance.mdx#params) combo, if the atom takes params), `useAtomValue` will create one.
+
+This is the primary hook for consuming atom state in React components.
+
+## Examples
+
+Simple example:
+
+```tsx live ecosystemId=useAtomValue/example resultVar=App version=2
+const greetingAtom = atom('greeting', 'Hello, World!')
+
+function Greeting() {
+  // use `useAtomValue` to subscribe to state changes:
+  const greeting = useAtomValue(greetingAtom)
+
+  return <div>{greeting}</div>
+}
+
+function Controls() {
+  // use `useAtomInstance` to avoid subscribing to state changes:
+  const greetingInstance = useAtomInstance(greetingAtom)
+
+  return (
+    <button onClick={() => greetingInstance.set('Goodbye, World!')}>
+      Change Greeting
+    </button>
+  )
+}
+
+function App() {
+  return (
+    <div>
+      <Greeting />
+      <Controls />
+    </div>
+  )
+}
+```
+
+Example using `useAtomValue` to offload side effects from React components to atoms:
+
+```tsx live ecosystemId=useAtomValue/example resultVar=Seconds version=2
+const secondsAtom = atom('seconds', () => {
+  const signal = injectSignal(0)
+
+  injectEffect(() => {
+    const intervalId = setInterval(() => signal.set(state => state + 1), 1000)
+
+    return () => clearInterval(intervalId)
+  }, [])
+
+  return signal
+})
+
+function Seconds() {
+  const state = useAtomValue(secondsAtom)
+
+  return <div>Seconds: {state}</div>
+}
+```
+
+A more complex example with React suspense, a [query atom](../../../walkthrough/query-atoms.mdx), and [atom params](../classes/AtomInstance.mdx#params):
+
+```tsx live ecosystemId=useAtomValue/params resultVar=App version=2
+const userAtom = atom('user', (id: number) =>
+  api(
+    fetch(`https://jsonplaceholder.typicode.com/users/${id}`).then(res =>
+      res.json()
+    )
+  )
+)
+
+function UserProfile({ userId }: { userId: number }) {
+  const { data } = useAtomValue(userAtom, [userId])
+
+  return (
+    <div>
+      <h3>{data.name}</h3>
+      <p>{data.email}</p>
+    </div>
+  )
+}
+
+function App() {
+  const [selectedUser, setSelectedUser] = useState(1)
+
+  return (
+    <div>
+      <button onClick={() => setSelectedUser(id => id + 1)}>Next User</button>
+      <Suspense fallback={<div>Loading...</div>}>
+        <UserProfile userId={selectedUser} />
+      </Suspense>
+    </div>
+  )
+}
+```
+
+Miscellaneous:
+
+```ts
+const val = useAtomValue(myAtom)
+const withParams = useAtomValue(myAtom, ['param 1', 'param 2'])
+const fromInstance = useAtomValue(instance)
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`useAtomValue = (template, params?, config?) => currentState`)}
+  {tab2(`declare const useAtomValue: {
+    <A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>, config: Omit<ZeduxHookConfig, 'subscribe' | 'suspend'> & {
+        suspend: false;
+    }): StateOf<A>;
+    <A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>, config?: Omit<ZeduxHookConfig, 'subscribe'>): ResolvedStateOf<A>;
+    <A extends AnyAtomTemplate<{
+        Params: [];
+    }>>(template: A): ResolvedStateOf<A>;
+    <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): ResolvedStateOf<A>;
+    <I extends AnyAtomInstance>(instance: I, params: [], config: Omit<ZeduxHookConfig, 'subscribe' | 'suspend'> & {
+        suspend: false;
+    }): StateOf<I>;
+    <I extends AnyAtomInstance>(instance: I, params?: [], config?: Omit<ZeduxHookConfig, 'subscribe'>): ResolvedStateOf<I>;
+    <S extends Selectable>(template: S, params: ParamsOf<S>, config?: Omit<ZeduxHookConfig, 'subscribe'>): StateOf<S>;
+    <S extends Selectable<any, []>>(template: S): StateOf<S>;
+    <S extends Selectable>(template: ParamlessTemplate<S>): StateOf<S>;
+}`)}
+</Tabs>
+
+<Legend>
+  <Item name="template">
+    Required. The [atom template](../classes/AtomTemplate.mdx) to find or create a cached [instance](../classes/AtomInstance.mdx) of.
+
+    Also accepts an [atom instance](../classes/AtomInstance.mdx) directly. In this case, any passed [`params`](#params) will be ignored and `useAtomValue` will subscribe to the passed instance.
+
+  </Item>
+  <Item name="params">
+    An array. Required if the atom template has required parameters. The parameters to pass to the atom state factory.
+
+    These will be [hashed deterministically](../classes/ZeduxNode.mdx#params) to find a cached instance with matching params.
+
+  </Item>
+  <Item name="config">
+    An object with the following optional fields:
+
+    ```ts
+    { operation?, suspend? }
+    ```
+
+    - **`operation`** - A string. Default: `'useAtomValue'`. This is just for debugging. The default is usually good enough.
+    - **`suspend`** - A boolean. Default: `true`. Whether `useAtomValue` should trigger React suspense if the atom has a [promise](../classes/AtomInstance.mdx#promise) set.
+
+  </Item>
+  <Item name="Returns">
+    The current state of the atom instance. This will be kept up to date, as the component will rerender if the atom's state changes.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `useAtomState` hook](./useAtomState.mdx)
+- [The `useAtomInstance` hook](./useAtomInstance.mdx)
+- [The `injectAtomValue` injector](../injectors/injectAtomValue.mdx)
