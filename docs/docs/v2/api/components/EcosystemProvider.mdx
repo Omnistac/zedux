@@ -1,0 +1,144 @@
+---
+id: EcosystemProvider
+title: EcosystemProvider
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { EcosystemProvider } from '@zedux/react'
+```
+
+A React component that provides an [ecosystem](../classes/Ecosystem) to a component tree. The provided ecosystem will take control of all atom usages below it.
+
+You can pass either an existing [ecosystem](../classes/Ecosystem) via the `ecosystem` prop or any number of [EcosystemConfig properties](/not-done?path=../types/EcosystemConfig) via their respectively named props.
+
+When passing config properties, the EcosystemProvider will create an ecosystem for you.
+
+## Examples
+
+Passing an ecosystem:
+
+```tsx
+import { EcosystemProvider, createEcosystem } from '@zedux/react'
+
+function App() {
+  // this is the recommended way for most apps to create an ecosystem -
+  // memoized in a top-level component.
+  const ecosystem = useMemo(
+    () => createEcosystem({ id: 'root', overrides: [someAtom] }),
+    []
+  )
+
+  return (
+    <EcosystemProvider ecosystem={ecosystem}>
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+Passing configuration:
+
+```tsx
+import { EcosystemProvider } from '@zedux/react'
+
+function App() {
+  return (
+    <EcosystemProvider id="root" overrides={[someAtom]}>
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+All Zedux hooks in any child component will use the provided ecosystem.
+
+Live example:
+
+```tsx live ecosystemId=EcosystemProvider noProvide=true resultVar=App version=2
+import { useEcosystem, EcosystemProvider } from '@zedux/react'
+
+function Example() {
+  const ecosystem = useEcosystem()
+
+  return <div>{ecosystem.id}</div>
+}
+
+function App() {
+  const ecosystem = useMemo(() => createEcosystem({ id: 'root' }), [])
+
+  return (
+    <>
+      <EcosystemProvider ecosystem={ecosystem}>
+        <Example />
+      </EcosystemProvider>
+
+      <Example />
+    </>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(
+    `<EcosystemProvider ecosystem={ecosystem}>
+    {children}
+  </EcosystemProvider>
+  // or
+  <EcosystemProvider {...ecosystemConfig}>
+    {children}
+  </EcosystemProvider>`,
+    true
+  )}
+  {tab2(`declare const EcosystemProvider: ({
+    children,
+    ecosystem,
+    ...ecosystemConfig
+  }:
+    | (Partial<{ [k in keyof EcosystemConfig]: undefined }> & {
+        children?: ReactNode
+        ecosystem?: Ecosystem
+      })
+    | (Partial<EcosystemConfig> & {
+        children?: ReactNode
+        ecosystem?: undefined
+      })) => React.JSX.Element`)}
+</Tabs>
+
+## Props
+
+You must pass either an `ecosystem` prop or any combination of the ecosystem config props (no props is also fine) but not both.
+
+<Legend>
+
+  <Item name="children">
+    Pass a single ReactNode child. To pass multiple components, wrap them in a React Fragment.
+
+  </Item>
+  <Item name="ecosystem">
+    An ecosystem created via [`createEcosystem()`](../factories/createEcosystem.mdx).
+
+    Passing this gives you the most control over the ecosystem, at the cost of being a little lower-level.
+
+    Make sure this ecosystem reference is stable. Changing the reference is supported, but is almost never what you want as it will recreate the entire cache for all atom usages below this component.
+
+  </Item>
+  <Item name="ecosystemConfig">
+    See [the EcosystemConfig type](/not-done?path=../types/EcosystemConfig) for all the other props and their types. The EcosystemConfig key names have a one-to-one mapping with props of this component.
+
+    If the `id` prop is changed, Zedux will completely destroy the previous ecosystem and create a new one using the id and the current value of all the other EcosystemConfig props. Changing any other props besides `id` will have no effect unless `id` is also changed.
+
+    This overload is for convenience when you don't need to configure the ecosystem much. If you need more power, pass an `ecosystem` and manage it yourself.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Ecosystems walkthrough](../../../walkthrough/ecosystems.mdx)
+- [The `EcosystemConfig` type](/not-done?path=../types/EcosystemConfig)
+- [The `Ecosystem` class](../classes/Ecosystem.mdx)
+- [The `useEcosystem` hook](../hooks/useEcosystem.mdx)
