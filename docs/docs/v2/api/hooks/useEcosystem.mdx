@@ -1,0 +1,60 @@
+---
+id: useEcosystem
+title: useEcosystem
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { useEcosystem } from '@zedux/react'
+```
+
+A React hook that returns the [ecosystem](../../../walkthrough/ecosystems.mdx) provided to the current component tree via [`<EcosystemProvider>`](../components/EcosystemProvider.mdx).
+
+Returns the [default ecosystem](../classes/Ecosystem.mdx#default-ecosystem) if no ecosystem is provided, creating it if it hasn't been created yet.
+
+## Example
+
+```tsx live ecosystemId=useEcosystem noProvide=true resultVar=App version=2
+import { useEcosystem, EcosystemProvider } from '@zedux/react'
+
+function Example() {
+  const ecosystem = useEcosystem()
+
+  return <div>{ecosystem.id}</div>
+}
+
+function App() {
+  const ecosystem = useMemo(() => createEcosystem({ id: 'root' }), [])
+
+  return (
+    <>
+      <EcosystemProvider ecosystem={ecosystem}>
+        <Example />
+      </EcosystemProvider>
+
+      <Example />
+    </>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`useEcosystem = () => Ecosystem`)}
+  {tab2(`declare const useEcosystem: () => Ecosystem<any>`)}
+</Tabs>
+
+<Legend>
+  <Item name="Returns">
+    The [ecosystem](../classes/Ecosystem.mdx) provided to the current component tree. Returns the [default ecosystem](../classes/Ecosystem.mdx#default-ecosystem) if no ecosystem is provided.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `Ecosystem` class](../classes/Ecosystem.mdx)
+- [The `<EcosystemProvider>` component](../components/EcosystemProvider.mdx)
+- [The `getDefaultEcosystem()` utility](/not-done?path=../utils/getDefaultEcosystem.mdx)
