@@ -1,3 +1,17 @@
+## v2.0.0-rc.13 (Feb 27, 2026)
+
+### New Features:
+
+- `atoms`: improve proxies, esp sets with mutate shorthand (#331)
+- `atoms`, `react`: add single-signal wrapping support to injectMappedSignal (#337)
+- `atoms`, `react`: improve StateHookTuple type to include Events generic (#336)
+
+### Fixes:
+
+- `atoms`: make Signal passable to functions accepting ZeduxNode (#341)
+- `atoms`: move `override` to AtomTemplateBase for NodeOf<->AnyAtomInstance interop (#343)
+- `atoms`: preserve Template and Node type defaults in Any* type helpers (#340)
+
 ## v2.0.0-rc.12 (Feb 13, 2026)
 
 ### Fixes:

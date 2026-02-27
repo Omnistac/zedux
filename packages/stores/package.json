@@ -1,6 +1,6 @@
 {
   "name": "@zedux/stores",
-  "version": "2.0.0-rc.12",
+  "version": "2.0.0-rc.13",
   "description": "The legacy composable store model of Zedux",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -10,8 +10,8 @@
     "url": "https://github.com/Omnistac/zedux/issues"
   },
   "dependencies": {
-    "@zedux/atoms": "2.0.0-rc.12",
-    "@zedux/core": "2.0.0-rc.12"
+    "@zedux/atoms": "2.0.0-rc.13",
+    "@zedux/core": "2.0.0-rc.13"
   },
   "exports": {
     ".": {
