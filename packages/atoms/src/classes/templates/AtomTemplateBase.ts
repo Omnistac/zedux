@@ -80,6 +80,10 @@ export abstract class AtomTemplateBase<
     params: G['Params']
   ): G['Node']
 
+  public override(_newValue: any): any {
+    return undefined as any // subclasses must override this
+  }
+
   public getNodeId(
     ecosystem: Ecosystem,
     params?: G['Params'],
