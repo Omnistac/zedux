@@ -1,0 +1,77 @@
+---
+id: As
+title: As
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { As } from '@zedux/react'
+```
+
+A runtime helper for typing [signal events](../classes/Signal#events). This is just a stable no-op function reference that Zedux never calls.
+
+## Examples
+
+Pass different generics to `As` to type custom events:
+
+```ts
+interface Todo {
+  id: string
+  isComplete: boolean
+  text: string
+}
+
+const todosSignal = injectSignal([] as Todo[], {
+  events: {
+    addTodo: As<Todo>,
+    removeTodo: As<string>,
+  },
+})
+
+// in a callback or effect:
+todosSignal.send('addTodo', { id: '1', isComplete: false, text: 'succeed' })
+todosSignal.send('removeTodo', 1) // Type Error! Payload must be a string
+```
+
+Usage of `As` is not required. You can either specify no-op functions yourself:
+
+```ts
+const todosSignal = injectMappedSignal(
+  { todos: todosSignal },
+  {
+    events: {
+      addTodo: () => null as unknown as Todo,
+      removeTodo: () => null as unknown as string,
+    },
+  }
+)
+```
+
+Or pass TypeScript generics:
+
+```ts
+const signal = ecosystem.signal<Todo[], { addTodo: Todo; removeTodo: string }>(
+  []
+)
+```
+
+All Zedux's signal-creating APIs accept all of these methods for typing custom events.
+
+## Signature
+
+<Tabs>
+  {tab1(`As = () => 0`)}
+  {tab2(`declare const As: <T>() => 0 as unknown as T`)}
+</Tabs>
+
+`As` is a no-op function that's only used for type inference. Zedux never calls it.
+
+## See Also
+
+- APIs that can use this util:
+  - [`injectMappedSignal`](../injectors/injectMappedSignal.mdx)
+  - [`injectPromise`](../injectors/injectPromise.mdx)
+  - [`injectSignal`](../injectors/injectSignal.mdx)
+  - [`Ecosystem#signal`](../classes/Ecosystem.mdx#signal)
+- [The Signal events documentation](../classes/Signal.mdx#events)
