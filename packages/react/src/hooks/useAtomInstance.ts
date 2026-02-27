@@ -121,6 +121,12 @@ export const useAtomInstance: {
   const isSelector = is(instance, SelectorInstance)
 
   if (isSelector) {
+    // TODO: This misses the (very rare) case where `render.i` is already set
+    // but the template changed across abandoned concurrent renders, causing
+    // `ecosystem.u` to return a new instance while the old `render.i` becomes
+    // orphaned without being in the set. Fix by also adding the old `render.i`
+    // to the set here when `instance !== render.i && render.i` (and it has no
+    // other observers).
     if (!render.i && !instance.o.size) {
       unmaterializedNodes.add(instance)
     }
@@ -165,6 +171,11 @@ export const useAtomInstance: {
     addEdge()
     render.m = true
 
+    // Selectors created during render that were never subscribed to (e.g. React
+    // concurrent mode discarded the render before mounting) will still be in
+    // this set. `destroy()` respects ref count, so materialized selectors (which
+    // now have observers) will be kept alive; only truly orphaned ones are
+    // cleaned up.
     if (!isQueued) {
       isQueued = true
       ecosystem.asyncScheduler.queue(() => {

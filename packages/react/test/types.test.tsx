@@ -519,6 +519,34 @@ describe('react types', () => {
     >()
   })
 
+  test('AnyAtomInstance and AnyAtomTemplate preserve Template and Node generics', () => {
+    // Before the fix, AnyAtomGenerics<G> would fill Template/Node with `any`
+    // when G didn't include them, causing the explicit override in the
+    // intersection to collapse (T & any = any).
+
+    type ConstrainedInstance = AnyAtomInstance<{ State: string }>
+    type ConstrainedTemplate = AnyAtomTemplate<{ State: string }>
+
+    // Template of a constrained instance should not collapse to `any`
+    expectTypeOf<TemplateOf<ConstrainedInstance>>().not.toBeAny()
+    expectTypeOf<
+      TemplateOf<ConstrainedInstance>
+    >().toEqualTypeOf<ConstrainedTemplate>()
+    expectTypeOf<StateOf<TemplateOf<ConstrainedInstance>>>().toBeString()
+
+    // Node of a constrained template should not collapse to `any`
+    expectTypeOf<NodeOf<ConstrainedTemplate>>().not.toBeAny()
+    expectTypeOf<
+      NodeOf<ConstrainedTemplate>
+    >().toEqualTypeOf<ConstrainedInstance>()
+    expectTypeOf<StateOf<NodeOf<ConstrainedTemplate>>>().toBeString()
+
+    // Concrete instances/templates should still be assignable to constrained types
+    const instance = ecosystem.getInstance(exampleAtom, ['a'])
+    expectTypeOf(instance).toMatchTypeOf<ConstrainedInstance>()
+    expectTypeOf(instance.t).toMatchTypeOf<ConstrainedTemplate>()
+  })
+
   test('accepting templates', () => {
     const allOptionalParamsAtom = atom(
       'allOptionalParams',

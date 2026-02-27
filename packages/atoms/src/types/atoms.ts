@@ -30,14 +30,26 @@ export type AnyAtomApi<G extends Partial<AtomApiGenerics> | 'any' = 'any'> =
 export type AnyAtomInstance<G extends Partial<AtomGenerics> | 'any' = 'any'> =
   AtomInstance<
     G extends Partial<AtomGenerics>
-      ? { Template: AnyAtomTemplate<G> } & AnyAtomGenerics<G>
+      ? { Template: AnyAtomTemplate<G> } & AnyAtomGenerics<
+          G & {
+            Template: G['Template'] extends AnyAtomTemplate
+              ? G['Template']
+              : AnyAtomTemplate<G>
+          }
+        >
       : any
   >
 
 export type AnyAtomTemplate<G extends Partial<AtomGenerics> | 'any' = 'any'> =
   AtomTemplateBase<
     G extends Partial<AtomGenerics>
-      ? { Node: AnyAtomInstance<G> } & AnyAtomGenerics<G>
+      ? { Node: AnyAtomInstance<G> } & AnyAtomGenerics<
+          G & {
+            Node: G['Node'] extends AnyAtomInstance
+              ? G['Node']
+              : AnyAtomInstance<G>
+          }
+        >
       : any
   >
 
