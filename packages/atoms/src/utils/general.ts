@@ -24,7 +24,8 @@ import type {
  * that they don't prevent node destruction.
  *
  * IMPORTANT: Keep these in-sync with the copies in the react package -
- * packages/react/src/utils.ts
+ * packages/react/src/utils.ts - and the machines package =
+ * packages/machines/src/utils.ts
  */
 export const TopPrio = 0
 export const Eventless = 1

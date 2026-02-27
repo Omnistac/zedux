@@ -17,8 +17,7 @@
     "react-dom": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/react": "catalog:",
-    "@zedux/atoms": "2.0.0-rc.12",
-    "@zedux/core": "2.0.0-rc.12"
+    "@zedux/atoms": "2.0.0-rc.12"
   },
   "exports": {
     ".": {
@@ -43,8 +42,7 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@zedux/atoms": "2.0.0-rc.12",
-    "@zedux/core": "2.0.0-rc.12"
+    "@zedux/atoms": "2.0.0-rc.12"
   },
   "repository": {
     "directory": "packages/machines",

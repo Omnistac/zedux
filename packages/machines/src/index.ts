@@ -1,3 +1,3 @@
-export * from './injectMachineStore'
-export * from './MachineStore'
+export * from './injectMachineSignal'
+export * from './MachineSignal'
 export * from './types'

@@ -1,14 +1,7 @@
-import {
-  injectEffect,
-  injectMemo,
-  injectRef,
-  injectSelf,
-  InjectStoreConfig,
-} from '@zedux/atoms'
-import { zeduxTypes } from '@zedux/core'
-import { MachineStore } from './MachineStore'
+import { injectMemo, injectRef, injectSelf } from '@zedux/atoms'
+import { MachineSignal } from './MachineSignal'
 import { MachineHook, MachineStateShape } from './types'
-import { PartialStoreAtomInstance } from '@zedux/stores'
+import { Eventless, EventlessStatic } from './utils'
 
 type ArrToUnion<S extends string[]> = S extends [infer K, ...infer Rest]
   ? Rest extends string[]
@@ -16,7 +9,7 @@ type ArrToUnion<S extends string[]> = S extends [infer K, ...infer Rest]
     : never
   : never
 
-export type InjectMachineStoreParams<
+export type InjectMachineSignalParams<
   States extends MachineState[],
   Context extends Record<string, any> | undefined = undefined
 > = [
@@ -34,7 +27,9 @@ export type InjectMachineStoreParams<
       MapStatesToEvents<States, Context>,
       Context
     >
-  } & InjectStoreConfig
+    hydrate?: boolean
+    reactive?: boolean
+  }
 ]
 
 export interface MachineState<
@@ -107,16 +102,13 @@ type StateNameType<S extends MachineState> = S extends MachineState<
   : never
 
 /**
- * Create a MachineStore. Pass a statesFactory
+ * Create a MachineSignal. Pass a statesFactory.
  *
  * The first state in the state list returned from your statesFactory will
- * become the initial state (`.value`) of the store.
- *
- * Registers an effect that listens to all store changes and calls the
- * configured listeners appropriately.
+ * become the initial state (`.value`) of the signal.
  *
  * ```ts
- * const store = injectMachineStore(state => [
+ * const signal = injectMachineSignal(state => [
  *   state('a')
  *     .on('next', 'b', localGuard)
  *     .onEnter(enterListener)
@@ -127,33 +119,32 @@ type StateNameType<S extends MachineState> = S extends MachineState<
  *
  * Set a universal transition guard via the 3rd `config` object param. This
  * guard will be called every time a valid transition is about to occur. It will
- * be called with the current `.context` value and should return a boolean.
- * Return true to allow the transition, or any falsy value to deny it.
+ * be called with the current state and the next state name and should return a
+ * boolean. Return true to allow the transition, or any falsy value to deny it.
  *
  * Set a universal `onTransition` listener via the 3rd `config` object param.
  * This listener will be called every time the machine transitions to a new
  * state (after the state is updated). It will be called with 2 params: The
- * current MachineStore and the storeEffect of the action that transitioned the
- * store. For example, use `storeEffect.oldState.value` to see what state the
- * machine just transitioned from.
+ * current MachineSignal and the change event containing `newState` and
+ * `oldState`.
  *
  * @param statesFactory Required. A function. Use the received state factory to
  * create a list of states for the machine and specify their transitions,
  * guards, and listeners.
  * @param initialContext Optional. An object or undefined. Will be set as the
- * initial `.context` value of the machine store's state.
- * @param config Optional. An object with 2 additional properties: `guard` and
- * `onTransition`.
+ * initial `.context` value of the machine signal's state.
+ * @param config Optional. An object with additional properties: `guard`,
+ * `onTransition`, and `hydrate`.
  */
-export const injectMachineStore: <
+export const injectMachineSignal: <
   States extends MachineState[],
   Context extends Record<string, any> | undefined = undefined
 >(
-  ...[statesFactory, initialContext, config]: InjectMachineStoreParams<
+  ...[statesFactory, initialContext, config]: InjectMachineSignalParams<
     States,
     Context
   >
-) => MachineStore<
+) => MachineSignal<
   MapStatesToStateNames<States, Context>,
   MapStatesToEvents<States, Context>,
   Context
@@ -161,7 +152,7 @@ export const injectMachineStore: <
   States extends MachineState[],
   Context extends Record<string, any> | undefined = undefined
 >(
-  ...[statesFactory, initialContext, config]: InjectMachineStoreParams<
+  ...[statesFactory, initialContext, config]: InjectMachineSignalParams<
     States,
     Context
   >
@@ -169,9 +160,9 @@ export const injectMachineStore: <
   type EventNames = MapStatesToEvents<States, Context>
   type StateNames = MapStatesToStateNames<States, Context>
 
-  const instance = injectSelf() as PartialStoreAtomInstance
+  const instance = injectSelf()
 
-  const { enterHooks, leaveHooks, store } = injectMemo(() => {
+  const { enterHooks, signal } = injectMemo(() => {
     const enterHooks: Record<
       string,
       MachineHook<StateNames, EventNames, Context>[]
@@ -238,79 +229,67 @@ export const injectMachineStore: <
 
     const [initialState] = statesFactory(createState)
     const hydration = config?.hydrate && instance.e.hydration?.[instance.id]
+    const id = instance.e.makeId('signal', instance)
 
-    const store = new MachineStore<StateNames, EventNames, Context>(
+    const signal = new MachineSignal<StateNames, EventNames, Context>(
+      instance.e,
+      id,
       hydration?.value ?? (initialState.stateName as StateNames),
       states,
       hydration?.context ?? initialContext,
       config?.guard
     )
 
-    return { enterHooks, leaveHooks, store }
+    instance.e.n.set(id, signal)
+
+    type State = MachineStateShape<StateNames, Context>
+
+    signal.on('change', (changeEvent: { newState: State; oldState: State }) => {
+      const { newState, oldState } = changeEvent
+
+      if (newState.value === oldState.value) return
+
+      if (leaveHooks[oldState.value]) {
+        leaveHooks[oldState.value].forEach(callback =>
+          callback(signal, { newState, oldState })
+        )
+      }
+      if (enterHooks[newState.value]) {
+        enterHooks[newState.value].forEach(callback =>
+          callback(signal, { newState, oldState })
+        )
+      }
+      if (config?.onTransition) {
+        config.onTransition(signal, { newState, oldState })
+      }
+    })
+
+    return { enterHooks, leaveHooks, signal }
   }, [])
 
-  const subscribeRef = injectRef<boolean | undefined>()
-  subscribeRef.current = config?.subscribe
+  // Only fire initial onEnter hooks on the first evaluation. onEnter callbacks
+  // may call setContext(), which defers a signal.set(). That triggers
+  // re-evaluation, which would fire onEnter again → infinite loop.
+  const initialEnterFired = injectRef(false)
 
-  injectEffect(
-    () => {
-      const subscription = store.subscribe({
-        effects: storeEffect => {
-          const { action, newState, oldState } = storeEffect
+  if (!initialEnterFired.current) {
+    initialEnterFired.current = true
+    const currentState = signal.v
 
-          if (newState.value === oldState?.value) return
-
-          if (oldState && leaveHooks[oldState.value]) {
-            leaveHooks[oldState.value].forEach(callback =>
-              callback(store, storeEffect)
-            )
-          }
-          if (enterHooks[newState.value]) {
-            enterHooks[newState.value].forEach(callback =>
-              callback(store, storeEffect)
-            )
-          }
-          if (config?.onTransition) {
-            config.onTransition(store, storeEffect)
-          }
-
-          // Nothing to do if the state hasn't changed. Also ignore state updates
-          // during evaluation or that are caused by `zeduxTypes.ignore` actions
-          if (
-            !subscribeRef.current ||
-            newState === oldState ||
-            instance._isEvaluating ||
-            action?.meta === zeduxTypes.ignore
-          ) {
-            return
-          }
-
-          instance.r({ o: oldState })
-
-          // run the scheduler synchronously after any store update
-          if (action?.meta !== zeduxTypes.batch) {
-            instance.e.syncScheduler.flush()
-          }
-        },
-      })
-
-      return () => subscription.unsubscribe()
-    },
-    [],
-    { synchronous: true }
-  )
-
-  const currentState = store.getState()
-
-  if (enterHooks[currentState.value]) {
-    enterHooks[currentState.value].forEach(callback =>
-      callback(store, {
-        action: { type: zeduxTypes.prime },
-        newState: currentState,
-        store,
-      })
-    )
+    if (enterHooks[currentState.value]) {
+      enterHooks[currentState.value].forEach(callback =>
+        callback(signal, {
+          newState: currentState,
+        })
+      )
+    }
   }
 
-  return store
+  // Create a graph edge so the atom reacts to signal state changes
+  signal.get({
+    f: config?.reactive === false ? EventlessStatic : Eventless,
+    op: 'injectMachineSignal',
+  })
+
+  return signal
 }

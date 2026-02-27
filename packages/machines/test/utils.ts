@@ -1,11 +1,16 @@
-import { MachineStore } from '@zedux/machines'
+import { createEcosystem } from '@zedux/atoms'
+import { MachineSignal } from '@zedux/machines'
+
+const ecosystem = createEcosystem({ id: 'machines-test' })
 
 export const getDoorMachine = () =>
-  new MachineStore<
+  new MachineSignal<
     'open' | 'opening' | 'closing' | 'closed',
     'buttonPress' | 'timeout',
     { timeoutId: null | { nestedId: null | number }; other?: string }
   >(
+    ecosystem,
+    ecosystem.makeId('signal'),
     'open',
     {
       open: { buttonPress: { name: 'closing' } },
@@ -20,7 +25,12 @@ export const getDoorMachine = () =>
   )
 
 export const getToggleMachine = () =>
-  new MachineStore('a', {
-    a: { toggle: { name: 'b' } },
-    b: { toggle: { name: 'a' } },
-  })
+  new MachineSignal(
+    ecosystem,
+    ecosystem.makeId('signal'),
+    'a',
+    {
+      a: { toggle: { name: 'b' } },
+      b: { toggle: { name: 'a' } },
+    }
+  )

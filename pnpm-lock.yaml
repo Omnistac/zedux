@@ -252,9 +252,6 @@ importers:
       '@zedux/atoms':
         specifier: 2.0.0-rc.12
         version: link:../atoms
-      '@zedux/core':
-        specifier: 2.0.0-rc.12
-        version: link:../core
       react:
         specifier: 'catalog:'
         version: 19.0.1
