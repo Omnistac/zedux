@@ -1,0 +1,148 @@
+---
+id: injectCallback
+title: injectCallback
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectCallback } from '@zedux/react'
+```
+
+An [injector](../glossary.mdx#injector) for creating memoized callback functions inside atoms. This is the injector equivalent of React's [`useCallback` hook](https://react.dev/reference/react/useCallback).
+
+Like `useCallback`, `injectCallback` returns a memoized version of the callback that only changes when any passed dependencies change.
+
+Unlike React's `useCallback`, this is less useful for performance optimizations since it doesn't usually matter if function references created in an atom [state factory](../glossary.mdx#state-factory) change on subsequent evaluations.
+
+Instead, the main purpose of `injectCallback` is to automatically [batch](../classes/Ecosystem.mdx#batch) and, if the atom is [scoped](../glossary.mdx#scoped-atom), [scope](../classes/Ecosystem.mdx#withscope) the callback.
+
+`injectCallback` is essentially an alias for this:
+
+```ts
+const ecosystem = injectEcosystem()
+const self = injectSelf()
+
+const callback = injectMemo(() => {
+  return (myParam: string) => {
+    return ecosystem.batch(() => {
+      // `.V` is currently where an atom's used scope is stored. We are planning
+      // to change this to a much more user-friendly `.scope` property before v2
+      // officially releases.
+      return ecosystem.withScope(self.V, () => {
+        // ... do stuff here! ...
+      })
+    })
+  }
+}, [someDep])
+
+// equivalent using `injectCallback`:
+const callback = injectCallback(
+  (myParam: string) => {
+    // ... do stuff here! ...
+  },
+  [someDep]
+)
+```
+
+:::warning These are not the joys you're looking for
+While this looks useful, `injectCallback` is rarely needed.
+
+[Exported functions](../classes/AtomApi.mdx#exports) are already automatically batched and scoped. You typically don't need `injectCallback` unless a function is both used locally, e.g. in an [`injectEffect`](./injectEffect.mdx), and exported.
+:::
+
+## Example
+
+```tsx live ecosystemId=injectCallback/example resultVar=App version=2
+const counterAtom = atom('counter', () => {
+  const signal = injectSignal(0)
+
+  const increment = injectCallback(() => {
+    signal.set(state => state + 1)
+  }, []) // `signal` is stable, no need to pass it as a dependency
+
+  const incrementTwice = injectCallback(() => {
+    // the automatic batching prevents excess reevaluations in this case:
+    signal.set(state => state + 1)
+    signal.set(state => state + 1)
+  }, [])
+
+  // uncomment this log and remove `incrementTwice`'s `injectCallback` to see
+  // how batching prevents excess reevaluations:
+  // console.log('reevaluated!', signal.get())
+
+  const decrement = injectCallback(() => {
+    signal.set(state => state - 1)
+  }, [])
+
+  const incrementBy = injectCallback((amount: number) => {
+    signal.set(state => state + amount)
+  }, [])
+
+  return api(signal).setExports(
+    {
+      decrement,
+      increment,
+      incrementBy,
+      incrementTwice,
+    },
+    // since all these exports are already wrapped by `injectCallback`, there's
+    // no need to make `setExports` wrap them again. So we pass `wrap: false`.
+    // This is just a small optimization.
+    { wrap: false }
+  )
+})
+
+function App() {
+  const [count, { decrement, increment, incrementBy, incrementTwice }] =
+    useAtomState(counterAtom)
+
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <button onClick={increment}>+1</button>
+      <button onClick={decrement}>-1</button>
+      <button onClick={() => incrementBy(5)}>+5</button>
+      <button onClick={incrementTwice}>+2</button>
+    </div>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`injectCallback = (callback, deps) => memoizedCallback`)}
+  {tab2(
+    `declare const injectCallback: <Args extends any[] = [], Ret = any>(
+    callback: (...args: Args) => Ret,
+    deps?: InjectorDeps
+  ) => (...args: Args) => Ret`
+  )}
+</Tabs>
+
+<Legend>
+  <Item name="callback">
+    Required. The function to memoize. Can accept any arguments and return any value.
+
+  </Item>
+  <Item name="deps">
+    Optional. An array of values that the callback uses.
+    
+    When these dependencies change on subsequent evaluations, Zedux will swap out the cached callback function reference. If no dependencies change, Zedux returns the previously-cached function.
+
+  </Item>
+  <Item name="Returns">
+    A memoized, auto-[batched](../classes/Ecosystem.mdx#batch), auto-[scoped](../classes/Ecosystem.mdx#withscope) version of the callback function.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `injectMemo` injector](/not-done?path=./injectMemo.mdx)
+- [`ecosystem.batch`](../classes/Ecosystem.mdx#batch)
+- [`ecosystem.withScope`](../classes/Ecosystem.mdx#withscope)
+- Export wrapping is functionally similar and usually preferable to `injectCallback`. See these methods on `AtomApi`:
+  - [`api().setExports`](../classes/AtomApi.mdx#setexports)
+  - [`api().addExports`](../classes/AtomApi.mdx#addexports)
