@@ -15,9 +15,9 @@ export const Tabs = ({ children }: { children: React.ReactElement[] }) => (
   <RawTabs groupId="definition-view">{children}</RawTabs>
 )
 
-export const tab1 = (children: ReactNode) => (
+export const tab1 = (children: ReactNode, useTsx = false) => (
   <TabItem label="Simplified" value="simplified">
-    <Ts>{children}</Ts>
+    {useTsx ? <Tsx>{children}</Tsx> : <Ts>{children}</Ts>}
   </TabItem>
 )
 
