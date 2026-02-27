@@ -1,0 +1,63 @@
+---
+id: createEcosystem
+title: createEcosystem
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { createEcosystem } from '@zedux/react'
+```
+
+Creates an [ecosystem](../classes/Ecosystem.mdx) for managing atoms, selectors, signals, and the graph they form.
+
+## Examples
+
+```ts
+import { createEcosystem } from '@zedux/react'
+
+const rootEcosystem = createEcosystem({ id: 'root' })
+
+const withOverrides = createEcosystem({
+  id: 'withOverrides',
+  overrides: [atomA, atomB],
+})
+
+const withOnReadyFn = createEcosystem({
+  id: 'withOnReadyFn',
+  onReady: ecosystem => {
+    // `onReady` is passed a reference to the ecosystem
+    ecosystem.getNode(myAtom) // preload myAtom
+  },
+})
+
+const forSsr = createEcosystem({ ssr: true })
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`createEcosystem = (config?) => Ecosystem`)}
+  {tab2(`declare const createEcosystem: <
+    Context extends Record<string, any> | undefined = any
+  >(
+    config?: EcosystemConfig<Context>
+  ) => Ecosystem<Context>`)}
+</Tabs>
+
+<Legend>
+  <Item name="config">
+    Optional. An [EcosystemConfig](/not-done?path=../types/EcosystemConfig) object.
+
+    All fields are optional. The `id` is just for debugging and does not have to be unique (though of course uniqueness is recommended).
+
+  </Item>
+  <Item name="Returns">
+    An [Ecosystem](../classes/Ecosystem.mdx) instance, configured with the passed `config`.
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Ecosystems walkthrough](../../../walkthrough/ecosystems.mdx)
+- [The `Ecosystem` class](../classes/Ecosystem.mdx)
