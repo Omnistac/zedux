@@ -7,6 +7,7 @@ import {
   injectMappedSignal,
   injectSignal,
   ion,
+  MappedSignal,
   StateOf,
 } from '@zedux/atoms'
 import { ecosystem } from '../utils/ecosystem'
@@ -537,5 +538,386 @@ describe('mapped signals', () => {
     node1.send({ test: 'a' })
 
     expect(calls).toEqual(['a'])
+  })
+
+  describe('single-signal wrapping', () => {
+    test('wraps a single signal and has correct state', () => {
+      const atom1 = atom('1', () => {
+        const inner = injectSignal({ count: 0, label: 'test' })
+        const wrapped = injectMappedSignal(inner)
+
+        return api(wrapped).setExports({ inner, wrapped })
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+
+      expectTypeOf<StateOf<typeof atom1>>().toEqualTypeOf<{
+        count: number
+        label: string
+      }>()
+
+      expect(node1.get()).toEqual({ count: 0, label: 'test' })
+      expect(node1.exports.wrapped.F).toBe(node1.exports.inner)
+    })
+
+    test('wraps a single signal with primitive state', () => {
+      const atom1 = atom('1', () => {
+        const inner = injectSignal('hello')
+        const wrapped = injectMappedSignal(inner)
+
+        return api(wrapped).setExports({ inner, wrapped })
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+
+      expectTypeOf<StateOf<typeof atom1>>().toEqualTypeOf<string>()
+
+      expect(node1.get()).toBe('hello')
+    })
+
+    test('forward state updates to single inner signal', () => {
+      const values: string[] = []
+
+      const atom1 = atom('1', () => {
+        const inner = injectSignal('a')
+
+        values.push(inner.get())
+
+        const wrapped = injectMappedSignal(inner)
+
+        return wrapped
+      })
+
+      expectTypeOf<StateOf<typeof atom1>>().toEqualTypeOf<string>()
+
+      const node1 = ecosystem.getNode(atom1)
+
+      expect(node1.get()).toBe('a')
+      expect(values).toEqual(['a'])
+
+      node1.set('b')
+
+      expect(node1.get()).toBe('b')
+      expect(values).toEqual(['a', 'b'])
+    })
+
+    test('forward state updates from single inner signal to observers', () => {
+      const atom1 = atom('1', () => {
+        const inner = injectSignal({ nested: 'a' })
+        const wrapped = injectMappedSignal(inner)
+
+        return api(wrapped).setExports({ inner })
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+      const calls: any[] = []
+
+      node1.on('change', ({ newState, oldState }) => {
+        calls.push({ newState, oldState })
+      })
+
+      const expectedState1 = { nested: 'a' }
+
+      expect(node1.get()).toEqual(expectedState1)
+
+      node1.exports.inner.set({ nested: 'b' })
+
+      const expectedState2 = { nested: 'b' }
+
+      expect(node1.get()).toEqual(expectedState2)
+      expect(calls).toEqual([
+        {
+          newState: expectedState2,
+          oldState: expectedState1,
+        },
+      ])
+    })
+
+    test('forward events from/to single inner signal', () => {
+      const atom1 = atom('1', () => {
+        const inner = injectSignal('a', {
+          events: {
+            myEvent: As<string>,
+            otherEvent: As<number>,
+          },
+        })
+
+        const wrapped = injectMappedSignal(inner, {
+          events: {
+            extraEvent: As<boolean>,
+          },
+        })
+
+        return api(wrapped).setExports({ inner, wrapped })
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+      const calls: any[] = []
+
+      node1.exports.inner.on(eventMap => {
+        calls.push(['inner', eventMap])
+      })
+
+      node1.exports.wrapped.on('myEvent', (_, eventMap) => {
+        calls.push(['wrapped myEvent', eventMap])
+      })
+
+      node1.on(eventMap => {
+        calls.push(['node *', eventMap])
+      })
+
+      // sending to the node propagates up to the inner signal then back
+      node1.send('myEvent', 'payload')
+
+      const expectedEvent = { myEvent: 'payload' }
+
+      expect(calls).toEqual([
+        ['inner', expectedEvent],
+        ['wrapped myEvent', expectedEvent],
+        ['node *', expectedEvent],
+      ])
+
+      expectTypeOf<EventsOf<typeof node1>>().toEqualTypeOf<{
+        myEvent: string
+        otherEvent: number
+        extraEvent: boolean
+      }>()
+    })
+
+    test('updates single signal reference when it changes on subsequent reevaluations', () => {
+      const atom1 = atom('1', 'a')
+      const atom2 = ion('2', ({ getNode }) => {
+        const node1 = getNode(atom1)
+        const signal = injectMappedSignal(node1)
+
+        return api(signal).setExports({ signal })
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+      const node2 = ecosystem.getNode(atom2)
+
+      expect(node2.exports.signal.F).toBe(node1)
+
+      node1.destroy(true)
+
+      expect(node2.exports.signal.F).not.toBe(node1)
+      expect(node2.exports.signal.F).toBe(ecosystem.getNode(atom1))
+    })
+
+    test('mutating single-wrapped signal forwards to inner signal', () => {
+      const atom1 = atom('1', () => {
+        const inner = injectSignal({ aa: 1, bb: 2 })
+        const wrapped = injectMappedSignal(inner)
+
+        return api(wrapped).setExports({ inner, wrapped })
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+      const calls: any[] = []
+
+      node1.on('mutate', transactions => {
+        calls.push(['atom mutate', transactions])
+      })
+
+      node1.on('change', event => {
+        calls.push(['atom change', event.newState])
+      })
+
+      node1.exports.wrapped.on('mutate', transactions => {
+        calls.push(['wrapped mutate', transactions])
+      })
+
+      node1.exports.wrapped.on('change', event => {
+        calls.push(['wrapped change', event.newState])
+      })
+
+      node1.exports.inner.on('change', event => {
+        calls.push(['inner change', event.newState])
+      })
+
+      node1.exports.wrapped.mutate(state => {
+        state.aa = 11
+      })
+
+      expect(node1.get()).toEqual({ aa: 11, bb: 2 })
+
+      const expectedTransactions = [{ k: 'aa', v: 11 }]
+      expect(calls).toEqual([
+        ['inner change', { aa: 11, bb: 2 }],
+        ['wrapped mutate', expectedTransactions],
+        ['wrapped change', { aa: 11, bb: 2 }],
+        ['atom mutate', expectedTransactions],
+        ['atom change', { aa: 11, bb: 2 }],
+      ])
+    })
+
+    test('inner mutation events propagate without key prefix', () => {
+      const atom1 = atom('1', () => {
+        const inner = injectSignal({ aa: 1 })
+        const wrapped = injectMappedSignal(inner)
+
+        return api(wrapped).setExports({ inner, wrapped })
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+      const calls: any[] = []
+
+      node1.exports.wrapped.on('mutate', transactions => {
+        calls.push(['wrapped mutate', transactions])
+      })
+
+      node1.on('mutate', transactions => {
+        calls.push(['atom mutate', transactions])
+      })
+
+      node1.exports.inner.mutate(state => {
+        state.aa = 11
+      })
+
+      // transactions should not have a key prefix since this is a single
+      // wrapping - the mapped signal's state IS the inner signal's state
+      const expectedTransactions = [{ k: 'aa', v: 11 }]
+      expect(calls).toEqual([
+        ['wrapped mutate', expectedTransactions],
+        ['atom mutate', expectedTransactions],
+      ])
+    })
+
+    test('atoms can be used as the single wrapped signal', () => {
+      const atom1 = atom('1', 'a')
+
+      const atom2 = ion('2', ({ getNode }) => {
+        const node1 = getNode(atom1)
+        const signal = injectMappedSignal(node1)
+
+        expectTypeOf<StateOf<typeof signal>>().toEqualTypeOf<string>()
+
+        return signal
+      })
+
+      const node1 = ecosystem.getNode(atom2)
+
+      expect(node1.get()).toBe('a')
+
+      ecosystem.getNode(atom1).set('b')
+
+      expect(node1.get()).toBe('b')
+    })
+
+    test('wrapping a MappedSignal in another MappedSignal', () => {
+      const atom1 = atom('1', () => {
+        const signalA = injectSignal(1)
+        const signalB = injectSignal(2)
+        const inner = injectMappedSignal({ a: signalA, b: signalB })
+        const outer = injectMappedSignal(inner)
+
+        return api(outer).setExports({ inner, outer, signalA, signalB })
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+
+      expectTypeOf<StateOf<typeof atom1>>().toEqualTypeOf<{
+        a: number
+        b: number
+      }>()
+
+      expect(node1.get()).toEqual({ a: 1, b: 2 })
+
+      // setting on outer propagates through inner to the original signals
+      node1.set({ a: 10, b: 20 })
+
+      expect(node1.get()).toEqual({ a: 10, b: 20 })
+      expect(node1.exports.signalA.get()).toBe(10)
+      expect(node1.exports.signalB.get()).toBe(20)
+
+      // changing an original signal propagates back up through both layers
+      node1.exports.signalA.set(100)
+
+      expect(node1.get()).toEqual({ a: 100, b: 20 })
+    })
+
+    test('reactive: false prevents reevaluation from single-wrapped signal changes', () => {
+      let evaluations = 0
+
+      const atom1 = atom('1', () => {
+        const signal = injectSignal('a', { reactive: false })
+
+        evaluations++
+        const wrapped = injectMappedSignal(signal, { reactive: false })
+
+        return api(wrapped).setExports({ wrapped, signal })
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+
+      expect(evaluations).toBe(1)
+
+      node1.exports.signal.set('b')
+
+      // atom should not have re-evaluated due to reactive: false
+      expect(evaluations).toBe(1)
+    })
+
+    test('set with function overload works for single-wrapped signal', () => {
+      const atom1 = atom('1', () => {
+        const inner = injectSignal(0)
+        return injectMappedSignal(inner)
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+
+      expect(node1.get()).toBe(0)
+
+      node1.set(prev => prev + 1)
+      expect(node1.get()).toBe(1)
+
+      node1.set(prev => prev + 10)
+      expect(node1.get()).toBe(11)
+    })
+
+    test('type: wrapping signal with events preserves event types', () => {
+      atom('type-test', () => {
+        const inner = injectSignal('a', {
+          events: {
+            customEvent: As<{ data: number }>,
+          },
+        })
+
+        const wrapped = injectMappedSignal(inner)
+
+        expectTypeOf<StateOf<typeof wrapped>>().toEqualTypeOf<string>()
+        expectTypeOf<EventsOf<typeof wrapped>>().toEqualTypeOf<{
+          customEvent: { data: number }
+        }>()
+
+        const wrappedWithExtra = injectMappedSignal(inner, {
+          events: {
+            extra: As<boolean>,
+          },
+        })
+
+        expectTypeOf<EventsOf<typeof wrappedWithExtra>>().toEqualTypeOf<{
+          customEvent: { data: number }
+          extra: boolean
+        }>()
+
+        return wrapped
+      })
+    })
+
+    test('type: MappedSignal with F property is correctly typed', () => {
+      atom('type-test-2', () => {
+        const inner = injectSignal(42)
+        const wrapped = injectMappedSignal(inner)
+
+        // wrapped is a MappedSignal
+        expectTypeOf(wrapped).toMatchTypeOf<MappedSignal>()
+
+        // StateOf extracts the correct state type
+        expectTypeOf<StateOf<typeof wrapped>>().toEqualTypeOf<number>()
+
+        return wrapped
+      })
+    })
   })
 })

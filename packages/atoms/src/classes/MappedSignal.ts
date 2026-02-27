@@ -54,9 +54,15 @@ export class MappedSignal<
 
   /**
    * `I`dsToKeys - maps wrapped signal ids to the keys they control in this
-   * wrapper signal's state.
+   * wrapper signal's state. Not used in single signal wrapping mode.
    */
   public I: Record<string, string> = {}
+
+  /**
+   * signal`M`ap - The map of state properties to signals that control them.
+   * Empty object when wrapping a single signal.
+   */
+  public M: SignalMap = {}
 
   /**
    * `N`extState - tracks changes in wrapped signals as they cause updates in
@@ -64,6 +70,13 @@ export class MappedSignal<
    * evaluates.
    */
   public N?: G['State']
+
+  /**
+   * `F`orwardedSignal - when wrapping a single signal (not a map), this holds
+   * the reference to that single inner signal that state/events are forwarded
+   * to/from.
+   */
+  public F?: Signal<AnyNodeGenerics>
 
   constructor(
     /**
@@ -76,12 +89,15 @@ export class MappedSignal<
      */
     id: string,
 
-    /**
-     * signal`M`ap - The map of state properties to signals that control them
-     */
-    public M: SignalMap
+    map: SignalMap | Signal<AnyNodeGenerics>
   ) {
     super(e, id, undefined, true)
+
+    if ((map as Signal).izn) {
+      this.F = map as Signal<AnyNodeGenerics>
+    } else {
+      this.M = map as SignalMap
+    }
   }
 
   /**
@@ -126,9 +142,13 @@ export class MappedSignal<
     const relevantEvents = getRelevantEvents(events)
 
     if (relevantEvents && Object.keys(relevantEvents).length) {
-      for (const signal of Object.values(this.M)) {
-        if ((signal as Signal | undefined)?.izn) {
-          ;(signal as Signal).send(relevantEvents)
+      if (this.F) {
+        this.F.send(relevantEvents)
+      } else {
+        for (const signal of Object.values(this.M)) {
+          if ((signal as Signal | undefined)?.izn) {
+            ;(signal as Signal).send(relevantEvents)
+          }
         }
       }
     }
@@ -156,6 +176,11 @@ export class MappedSignal<
 
     try {
       const relevantEvents = getRelevantEvents(events)
+
+      if (this.F) {
+        ;(this.F as Signal).set(newState, relevantEvents)
+        return
+      }
 
       for (const [key, value] of Object.entries(newState)) {
         if (value !== this.v[key]) {
@@ -213,25 +238,36 @@ export class MappedSignal<
       super.r(reason)
 
       if (reason.s) {
-        this.N ??= { ...this.v }
+        if (this.F) {
+          // single-signal wrapping - take the value directly
+          this.N = reason.s.v
 
-        this.N![this.I[reason.s.id]] = reason.s.v
+          // propagate mutate events as-is (no key prefix needed)
+          if (!this.C && reason.e?.mutate) {
+            this.b ??= []
+            this.b.push(...(reason.e.mutate as Transaction[]))
+          }
+        } else {
+          this.N ??= { ...this.v }
 
-        // handle the `mutate` event specifically - add the inner node's key to
-        // all transaction `k`ey paths
-        if (!this.C && reason.e?.mutate) {
-          this.b ??= []
+          this.N![this.I[reason.s.id]] = reason.s.v
 
-          const key = this.I[reason.s.id]
+          // handle the `mutate` event specifically - add the inner node's key
+          // to all transaction `k`ey paths
+          if (!this.C && reason.e?.mutate) {
+            this.b ??= []
 
-          this.b.push(
-            ...(reason.e.mutate as Transaction[]).map(transaction => ({
-              ...transaction,
-              k: Array.isArray(transaction.k)
-                ? [key, ...transaction.k]
-                : [key, transaction.k],
-            }))
-          )
+            const key = this.I[reason.s.id]
+
+            this.b.push(
+              ...(reason.e.mutate as Transaction[]).map(transaction => ({
+                ...transaction,
+                k: Array.isArray(transaction.k)
+                  ? [key, ...transaction.k]
+                  : [key, transaction.k],
+              }))
+            )
+          }
         }
       }
     }
@@ -251,9 +287,7 @@ export class MappedSignal<
     }
   }
 
-  public u(map: SignalMap) {
-    const entries = Object.entries(map)
-
+  public u(map: SignalMap | Signal<AnyNodeGenerics>) {
     // create a new graph edge buffer so `.get` calls add deps to this
     // MappedSignal rather than any containing atom
     const prevNode = this.e.cs(this)
@@ -263,6 +297,23 @@ export class MappedSignal<
 
     // we shouldn't need try..catch here - no user code can run when getting
     // these already-defined nodes
+    if (this.F) {
+      const signal = map as Signal
+
+      if (this.l === INITIALIZING) {
+        this.v = signal.get(edgeConfig)
+        setNodeStatus(this, ACTIVE)
+      } else {
+        signal.get(edgeConfig)
+        this.F = signal
+      }
+
+      flushBuffer(prevNode)
+      return
+    }
+
+    const entries = Object.entries(map as SignalMap)
+
     if (this.l === INITIALIZING) {
       this.v = Object.fromEntries(
         entries.map(([key, val]) => {
