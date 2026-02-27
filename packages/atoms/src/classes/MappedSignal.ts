@@ -211,6 +211,7 @@ export class MappedSignal<
       }
     } finally {
       schedulerPost(this.e)
+      this.C = undefined
     }
   }
 
