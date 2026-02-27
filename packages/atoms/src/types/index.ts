@@ -12,6 +12,7 @@ import {
   AnyAtomGenerics,
   AnyAtomInstance,
   AnyAtomTemplate,
+  AnySignal,
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
   ParamsOf,
@@ -376,7 +377,7 @@ export type IonStateFactory<G extends Omit<AtomGenerics, 'Node' | 'Template'>> =
   (
     ecosystem: Ecosystem,
     ...params: G['Params']
-  ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | Signal<G> | G['State']
+  ) => AtomApi<AtomGenericsToAtomApiGenerics<G>> | AnySignal<G> | G['State']
 
 export interface Job {
   /**

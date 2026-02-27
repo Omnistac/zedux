@@ -53,6 +53,17 @@ export type AnyAtomTemplate<G extends Partial<AtomGenerics> | 'any' = 'any'> =
       : any
   >
 
+export type AnySignal<G extends Partial<NodeGenerics> | 'any' = 'any'> = Signal<
+  G extends Partial<NodeGenerics>
+    ? {
+        Events: G extends { Events: infer E } ? E : any
+        Params: G extends { Params: infer P } ? P : any
+        State: G extends { State: infer S } ? S : any
+        Template: G extends { Template: infer T } ? T : any
+      }
+    : any
+>
+
 export type AnyNodeGenerics<
   G extends Partial<NodeGenerics> = { [K in keyof NodeGenerics]: any }
 > = {
@@ -69,7 +80,7 @@ export type AtomApiGenerics = Pick<
 export type AtomGenericsToAtomApiGenerics<
   G extends Pick<AtomGenerics, 'Events' | 'Exports' | 'Promise' | 'State'>
 > = Pick<G, 'Exports' | 'Promise' | 'State'> & {
-  Signal: Signal<Pick<G, 'Events' | 'State'>> | undefined
+  Signal: AnySignal<Pick<G, 'Events' | 'State'>> | undefined
 }
 
 export interface AtomGenerics {

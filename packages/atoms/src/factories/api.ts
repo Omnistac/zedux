@@ -1,5 +1,11 @@
 import { AtomApi } from '../classes/AtomApi'
-import { AtomApiPromise, None, ResolvedStateOf, StateOf } from '../types/index'
+import {
+  AnySignal,
+  AtomApiPromise,
+  None,
+  ResolvedStateOf,
+  StateOf,
+} from '../types/index'
 import { Signal } from '../classes/Signal'
 
 /**
@@ -90,7 +96,7 @@ export const api: {
     State = undefined,
     Exports extends Record<string, any> = None,
     SignalType extends
-      | Signal<{ Events: any; State: State }>
+      | AnySignal<{ State: State }>
       | undefined = undefined
   >(
     value: State
@@ -104,7 +110,7 @@ export const api: {
   State = undefined,
   Exports extends Record<string, any> = None,
   SignalType extends
-    | Signal<{ Events: any; State: State }>
+    | AnySignal<{ State: State }>
     | undefined = undefined,
   PromiseType extends AtomApiPromise = undefined
 >(

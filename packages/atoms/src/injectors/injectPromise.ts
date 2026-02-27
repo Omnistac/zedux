@@ -34,8 +34,10 @@ export interface InjectPromiseAtomApi<
 > extends AtomApi<G> {
   dataSignal: Signal<{
     Events: EventMap
+    Params: undefined
     ResolvedState: Data
     State: Data | undefined
+    Template: undefined
   }>
 
   addExports<NewExports extends Record<string, any>>(
@@ -155,7 +157,9 @@ export const injectPromise: {
       Promise: Promise<Data>
       Signal: MappedSignal<{
         Events: EventMap
+        Params: undefined
         State: Omit<PromiseState<Data>, 'data'> & { data: Data }
+        Template: undefined
       }>
       State: Omit<PromiseState<Data>, 'data'> & { data: Data }
     },
@@ -176,8 +180,10 @@ export const injectPromise: {
       Promise: Promise<Data>
       Signal: MappedSignal<{
         Events: EventMap
+        Params: undefined
         ResolvedState: Omit<PromiseState<Data>, 'data'> & { data: Data }
         State: PromiseState<Data>
+        Template: undefined
       }>
       State: PromiseState<Data>
     },
@@ -204,8 +210,10 @@ export const injectPromise: {
 
   const dataSignal = injectSignal(initialData, signalConfig) as Signal<{
     Events: EventMap
+    Params: undefined
     ResolvedState: Data
     State: Data | undefined
+    Template: undefined
   }>
 
   const signal = injectMappedSignal({
@@ -213,7 +221,9 @@ export const injectPromise: {
     data: dataSignal,
   }) as MappedSignal<{
     Events: EventMap
+    Params: undefined
     State: PromiseState<Data>
+    Template: undefined
   }>
 
   if (
@@ -290,7 +300,9 @@ export const injectPromise: {
       Promise: Promise<Data>
       Signal: MappedSignal<{
         Events: EventMap
+        Params: undefined
         State: PromiseState<Data>
+        Template: undefined
       }>
       State: PromiseState<Data>
     },

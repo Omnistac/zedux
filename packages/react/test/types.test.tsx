@@ -1,8 +1,10 @@
 import { Signal } from '@zedux/atoms/classes/Signal'
+import { ZeduxNode } from '@zedux/atoms/classes/ZeduxNode'
 import {
   AnyAtomGenerics,
   AnyAtomInstance,
   AnyAtomTemplate,
+  AnySignal,
   api,
   atom,
   AtomApi,
@@ -10,9 +12,11 @@ import {
   AtomGetters,
   AtomInstance,
   AtomInstanceRecursive,
+  MappedSignal,
   NodeOf,
   ParamsOf,
   PromiseOf,
+  SelectorInstance,
   StateOf,
   AtomTemplateRecursive,
   TemplateOf,
@@ -46,6 +50,21 @@ import {
 } from '@zedux/react'
 import { expectTypeOf } from 'expect-type'
 import { ecosystem, snapshotNodes } from './utils/ecosystem'
+import { injectEffect, ListenableEvents, NodeGenerics } from '@zedux/react'
+
+function injectListener<
+  G extends NodeGenerics,
+  E extends keyof ListenableEvents<G>
+>(
+  node: ZeduxNode<G>,
+  eventName: E,
+  listener: (
+    event: ListenableEvents<G>[E],
+    eventMap: Partial<ListenableEvents<G>>
+  ) => void
+) {
+  injectEffect(() => node.on(eventName, listener), [])
+}
 
 const exampleEvents = {
   numEvent: As<number>,
@@ -59,6 +78,10 @@ type ExampleEvents = {
 const exampleAtom = atom('example', (p: string) => {
   const signal = injectSignal(p, {
     events: exampleEvents,
+  })
+
+  injectListener(signal, 'numEvent', num => {
+    expectTypeOf<typeof num>().toBeNumber()
   })
 
   return api(signal)
@@ -778,8 +801,10 @@ describe('react types', () => {
         State: PromiseState<number>
         Signal: Signal<{
           Events: None
+          Params: undefined
           ResolvedState: Omit<PromiseState<number>, 'data'> & { data: number }
           State: PromiseState<number>
+          Template: undefined
         }>
       }>
       val8: InjectPromiseAtomApi<
@@ -789,7 +814,9 @@ describe('react types', () => {
           State: Omit<PromiseState<string>, 'data'> & { data: string }
           Signal: Signal<{
             Events: None
+            Params: undefined
             State: Omit<PromiseState<string>, 'data'> & { data: string }
+            Template: undefined
           }>
         },
         None,
@@ -1006,6 +1033,72 @@ describe('react types', () => {
     expectTypeOf<SignalState>().toEqualTypeOf<number>()
 
     expect(ecosystem.get(signal)).toBe(2)
+  })
+
+  test('Signal is assignable to ZeduxNode', () => {
+    const signal = ecosystem.signal(1)
+
+    // Before the fix, Signal.p was `unknown` (from G['Params'] when G doesn't
+    // have Params), which is not assignable to ZeduxNode's `p: undefined`
+    const acceptsNode = <N extends ZeduxNode>(node: N) => node.get()
+
+    const val = acceptsNode(signal)
+
+    expectTypeOf(val).toBeNumber()
+    expectTypeOf(signal.p).toBeUndefined()
+    expectTypeOf(signal.t).toBeUndefined()
+  })
+
+  test('node type assignability', () => {
+    const signal = ecosystem.signal(1)
+    const myAtom = atom('myAtom', 'hello')
+    const instance = ecosystem.getInstance(myAtom)
+    const selectorFn = ({ get }: Ecosystem) => get(myAtom)
+    const selectorNode = ecosystem.getNode(selectorFn)
+
+    const acceptsZeduxNode = <N extends ZeduxNode>(node: N) => node.get()
+    const acceptsSignal = <S extends Signal>(node: S) => node.get()
+    const acceptsAnySignal = <S extends AnySignal>(node: S) => node.get()
+
+    // Signals are assignable to ZeduxNode, Signal, and AnySignal
+    expectTypeOf(acceptsZeduxNode(signal)).toBeNumber()
+    expectTypeOf(acceptsSignal(signal)).toBeNumber()
+    expectTypeOf(acceptsAnySignal(signal)).toBeNumber()
+
+    // MappedSignals are assignable to ZeduxNode, Signal, and AnySignal
+    expectTypeOf<MappedSignal>().toMatchTypeOf<ZeduxNode>()
+    expectTypeOf<MappedSignal>().toMatchTypeOf<Signal>()
+    expectTypeOf<MappedSignal>().toMatchTypeOf<AnySignal>()
+
+    // AtomInstances are assignable to ZeduxNode and AnySignal
+    expectTypeOf(acceptsZeduxNode(instance)).toBeString()
+    expectTypeOf(acceptsAnySignal(instance)).toBeString()
+
+    // SelectorInstances are assignable to ZeduxNode
+    expectTypeOf(acceptsZeduxNode(selectorNode)).toBeString()
+    expectTypeOf<SelectorInstance>().toMatchTypeOf<ZeduxNode>()
+
+    // AnySignal with partial generics constrains State
+    const acceptsNumSignal = <S extends AnySignal<{ State: number }>>(
+      node: S
+    ) => node.get()
+
+    const acceptsStringSignal = <S extends AnySignal<{ State: string }>>(
+      node: S
+    ) => node.get()
+
+    expectTypeOf(acceptsNumSignal(signal)).toBeNumber()
+    // @ts-expect-error instance's state is a string
+    expectTypeOf(acceptsNumSignal(instance)).toBeNumber()
+
+    // @ts-expect-error signal's state is a number
+    expectTypeOf(acceptsStringSignal(signal)).toBeString()
+    expectTypeOf(acceptsStringSignal(instance)).toBeString()
+
+    // AnySignal preserves type info when partially specified
+    type NumSignal = AnySignal<{ State: number }>
+    expectTypeOf<NumSignal>().toMatchTypeOf<Signal>()
+    expectTypeOf<NumSignal>().toMatchTypeOf<ZeduxNode>()
   })
 
   test('wrapper atoms', () => {

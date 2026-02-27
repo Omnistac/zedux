@@ -7,7 +7,7 @@ import {
 } from '@zedux/atoms/types/index'
 import { prefix } from '@zedux/atoms/utils/general'
 import { Ecosystem } from '../Ecosystem'
-import { Signal } from '../Signal'
+import { AnySignal } from '@zedux/atoms/types/index'
 import { getScopeString } from '@zedux/atoms/utils/graph'
 
 export abstract class AtomTemplateBase<
@@ -44,7 +44,7 @@ export abstract class AtomTemplateBase<
      */
     public readonly v: AtomValueOrFactory<
       G & {
-        Signal: Signal<{ State: G['State']; Events: G['Events'] }> | undefined
+        Signal: AnySignal<{ State: G['State']; Events: G['Events'] }> | undefined
       }
     >,
 
