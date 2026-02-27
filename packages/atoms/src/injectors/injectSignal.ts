@@ -50,7 +50,9 @@ export const injectSignal = <
 
     const signal = new Signal<{
       Events: EventMap
+      Params: undefined
       State: State
+      Template: undefined
     }>(
       instance.e,
       id,

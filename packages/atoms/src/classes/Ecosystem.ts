@@ -1012,7 +1012,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
 
     const signal = new Signal<{
       Events: EventMap
+      Params: undefined
       State: State
+      Template: undefined
     }>(this, id, state)
 
     this.n.set(id, signal)

@@ -1,5 +1,4 @@
 import {
-  AtomGenerics,
   GraphEdge,
   Mutatable,
   NodeGenerics,
@@ -21,7 +20,7 @@ import { recursivelyMutate, recursivelyProxy } from './proxies'
 import { getEvaluationContext } from '../utils/evaluationContext'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
-export const doMutate = <G extends Pick<NodeGenerics, 'State' | 'Events'>>(
+export const doMutate = <G extends NodeGenerics>(
   node: Signal<G>,
   isWrapperSignal: boolean,
   mutatable: Mutatable<G['State']>,
@@ -89,19 +88,13 @@ export const doMutate = <G extends Pick<NodeGenerics, 'State' | 'Events'>>(
 }
 
 export class Signal<
-  G extends Pick<AtomGenerics, 'Events' | 'State'> & {
-    Params?: any
-    Template?: any
-  } = {
+  G extends NodeGenerics = {
     Events: any
+    Params: undefined
     State: any
+    Template: undefined
   }
-> extends ZeduxNode<
-  G & {
-    Params: G extends { Params: infer P } ? P : undefined
-    Template: G extends { Template: infer T } ? T : undefined
-  }
-> {
+> extends ZeduxNode<G> {
   /**
    * @see ZeduxNode.o
    */

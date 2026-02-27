@@ -1,8 +1,8 @@
 import {
   AnyNodeGenerics,
-  AtomGenerics,
   InternalEvaluationReason,
   Mutatable,
+  NodeGenerics,
   SendableEvents,
   Settable,
   Transaction,
@@ -29,12 +29,11 @@ const getRelevantEvents = (events?: Record<string, any>) => {
 export type SignalMap = Record<string, Signal<AnyNodeGenerics> | unknown>
 
 export class MappedSignal<
-  G extends Pick<AtomGenerics, 'Events' | 'State'> & {
-    Params?: any
-    Template?: any
-  } = {
+  G extends NodeGenerics = {
     Events: any
+    Params: undefined
     State: any
+    Template: undefined
   }
 > extends Signal<G> {
   /**

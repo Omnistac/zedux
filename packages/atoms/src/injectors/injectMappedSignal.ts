@@ -87,7 +87,9 @@ export function injectMappedSignal<
   config?: InjectSignalConfig<EventMap>
 ): MappedSignal<{
   Events: Prettify<EventsOf<S> & EventMap>
+  Params: undefined
   State: StateOf<S>
+  Template: undefined
 }>
 
 export function injectMappedSignal<
@@ -98,7 +100,9 @@ export function injectMappedSignal<
   config?: InjectSignalConfig<EventMap>
 ): MappedSignal<{
   Events: Prettify<MapAll<M> & EventMap>
+  Params: undefined
   State: { [K in keyof M]: M[K] extends Signal<any> ? StateOf<M[K]> : M[K] }
+  Template: undefined
 }>
 
 export function injectMappedSignal(
