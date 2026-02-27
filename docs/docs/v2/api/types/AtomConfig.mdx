@@ -1,0 +1,130 @@
+---
+id: AtomConfig
+title: AtomConfig
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { AtomConfig } from '@zedux/react'
+```
+
+The last argument passed to the [`atom`](../factories/atom.mdx) and [`ion`](../factories/ion.mdx) factories. This can be used to configure how the atom is hydrated and dehydrated, when it's destroyed, and to give the atom tags for grouping and filtering.
+
+These properties are set on the resulting [atom template](../classes/AtomTemplate.mdx) object.
+
+## Example
+
+```tsx live ecosystemId=AtomConfig/example resultVar=App version=2
+interface UserData {
+  id: number
+  name: string
+  preferences: { theme: string }
+}
+
+const userAtom = atom(
+  'user',
+  {
+    id: 1,
+    name: 'John Doe',
+    preferences: { theme: 'light' },
+  } as UserData,
+  {
+    // Custom dehydration - only save essential data
+    dehydrate: state => ({
+      id: state.id,
+      name: state.name,
+    }),
+
+    // Custom hydration - restore with defaults
+    hydrate: (dehydratedState: any) => ({
+      ...dehydratedState,
+      preferences: { theme: 'light' },
+    }),
+
+    // Keep alive for 5 seconds after last use
+    ttl: 5000,
+
+    // Add tags for filtering/debugging
+    tags: ['user', 'persistent'],
+  }
+)
+
+function App() {
+  const [user, setUser] = useAtomState(userAtom)
+
+  return (
+    <div>
+      <div>User: {user.name}</div>
+      <div>Theme: {user.preferences.theme}</div>
+      <button onClick={() => setUser(u => ({ ...u, name: 'Jane Doe' }))}>
+        Change Name
+      </button>
+    </div>
+  )
+}
+```
+
+## Interface
+
+```ts
+interface AtomConfig<State = any> {
+  dehydrate?: (state: State) => any
+  tags?: string[]
+  hydrate?: (dehydratedState: unknown) => State
+  ttl?: number
+}
+```
+
+<Legend>
+  <Item name="dehydrate">
+    Optional. A function that accepts the current state of the atom and transforms it for serialization/persistence.
+    
+    ```ts
+    dehydrate: (state: State) => any
+    ```
+
+    This is usually used to transform unserializable data types like a JS Map or custom class instance into a serializable format.
+
+    This is called by [`ecosystem.dehydrate`](../classes/Ecosystem.mdx#dehydrate) unless `{ transform: false }` is passed. It runs once for each instance of the atom.
+
+  </Item>
+  <Item name="hydrate">
+    Optional. A function that accepts previously-deserialized data that's been passed to [`ecosystem.hydrate`](../classes/Ecosystem.mdx#hydrate) and transforms it back into the atom's state.
+    
+    ```ts
+    hydrate: (dehydratedState: unknown) => State  
+    ```
+    
+    This is called before Zedux [automatically hydrates](../../advanced/persistence.mdx#automatic-hydration) the atom or when [`injectHydration`](../injectors/injectHydration.mdx) is called without `{ transform: false }`.
+
+  </Item>
+  <Item name="ttl">
+    Optional. Time To Live in milliseconds. Controls how long instances of this atom stay alive after they're no longer used.
+
+    Accepted values:
+
+    - `0` - Destroy immediately, without setting any timeouts, when the last observer of an atom instance is removed. This is the default for [ions](../factories/ion.mdx). It's also how [selectors](../classes/SelectorInstance.mdx#destruction) always behave.
+    - `undefined` or `null` or `-1` - Never auto-destroy. This is the default for normal [atoms](../factories/atom.mdx).
+    - A positive `number` - Destroy after specified milliseconds.
+
+  </Item>
+  <Item name="tags">
+    Optional. An array of strings for categorizing atoms. Useful for filtering, grouping, debugging, or telling plugins which atoms to operate on.
+
+    [`ecosystem.dehydrate`](../classes/Ecosystem.mdx#dehydrate), [`ecosystem.find`](../classes/Ecosystem.mdx#find), and [`ecosystem.findAll`](../classes/Ecosystem.mdx#findall) all have `includeTags` and `excludeTags` options to filter by these tags.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `atom` factory](../factories/atom.mdx)
+- [The `ion` factory](../factories/ion.mdx)
+- [The `AtomTemplate` class](../classes/AtomTemplate.mdx)
+- [the `injectHydration` injector](../injectors/injectHydration.mdx)
+- [`ecosystem.hydrate`](../classes/Ecosystem.mdx#hydrate)
+- [`ecosystem.dehydrate`](../classes/Ecosystem.mdx#dehydrate)
+- [The destruction walkthrough](../../../walkthrough/destruction.mdx)
+- [The configuring atoms walkthrough](../../../walkthrough/configuring-atoms.mdx)
+- [The persistence walkthrough](../../../advanced/persistence.mdx)

@@ -1,0 +1,238 @@
+---
+id: atom
+title: atom
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+import { AtomKeyDesc } from '../classes/AtomTemplate.mdx'
+
+```ts
+import { atom } from '@zedux/react'
+```
+
+Where it all starts. `atom()` is a factory for creating atom templates. Zedux creates atoms from these templates as you use them in various hooks and injectors.
+
+An atom template is actually an instance of [the AtomTemplate class](../classes/AtomTemplate.mdx).
+
+## Example
+
+```tsx live ecosystemId=atom/example resultVar=App version=2
+const simpleAtom = atom('simple', 'Hello, world!')
+
+const complexAtom = atom(
+  'complex',
+  () => {
+    const signal = injectSignal({ date: new Date() })
+
+    injectEffect(() => {
+      const intervalId = setInterval(
+        () => signal.set({ date: new Date() }),
+        1000
+      )
+
+      return () => clearInterval(intervalId)
+    }, [])
+
+    return signal
+  },
+  {
+    flags: ['side-effect'],
+  }
+)
+
+function App() {
+  const simple = useAtomValue(simpleAtom)
+  const { date } = useAtomValue(complexAtom)
+
+  return (
+    <>
+      <div>simple state: {simple}</div>
+      <div>complex state: {date.toLocaleTimeString()}</div>
+    </>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`atom = (key, valueOrFactory, config?) => newAtom`)}
+  {tab2(`declare const atom: {
+    // Query Atoms
+    <
+      State = any,
+      Params extends any[] = [],
+      Exports extends Record<string, any> = None
+    >(
+      key: string,
+      value: (...params: Params) => AtomApi<{
+        Exports: Exports
+        Promise: any
+        Signal: undefined
+        State: Promise<State>
+      }>,
+      config?: AtomConfig<State>
+    ): AtomTemplateRecursive<{
+      State: PromiseState<State>
+      Params: Params
+      Events: None
+      Exports: Exports
+      Promise: Promise<State>
+    }>\n
+    // Signals
+    <
+      StateType,
+      EventsType extends Record<string, any> = None,
+      Params extends any[] = [],
+      Exports extends Record<string, any> = None,
+      PromiseType extends AtomApiPromise = undefined,
+      ResolvedState = StateType
+    >(
+      key: string,
+      value: (...params: Params) =>
+        | Signal<{
+            Events: EventsType
+            Params: any
+            State: StateType
+            Template: any
+          }>
+        | AtomApi<{
+            Exports: Exports
+            Promise: PromiseType
+            Signal: Signal<{
+              Events: EventsType
+              Params: any
+              State: StateType
+              Template: any
+            }>
+            State: StateType
+          }>
+        | Signal<{
+            Events: EventsType
+            Params: any
+            ResolvedState: ResolvedState
+            State: StateType
+            Template: any
+          }>
+        | AtomApi<{
+            Exports: Exports
+            Promise: PromiseType
+            Signal: Signal<{
+              Events: EventsType
+              Params: any
+              ResolvedState: ResolvedState
+              State: StateType
+              Template: any
+            }>
+            State: StateType
+          }>,
+      config?: AtomConfig<StateType>
+    ): AtomTemplateRecursive<{
+      State: StateType
+      Params: Params
+      Events: EventsType
+      Exports: Exports
+      Promise: PromiseType
+      ResolvedState: ResolvedState
+    }>\n
+    // Catch-all
+    <
+      State = any,
+      Params extends any[] = [],
+      Exports extends Record<string, any> = None,
+      Events extends Record<string, any> = None,
+      SignalType extends
+        | Signal<{
+            Events: Events
+            Params: any
+            State: State
+            Template: any
+          }>
+        | undefined = undefined,
+      PromiseType extends AtomApiPromise = undefined
+    >(
+      key: string,
+      value: AtomValueOrFactory<{
+        Exports: Exports
+        Params: Params
+        Promise: PromiseType
+        Signal: SignalType
+        State: State
+      }>,
+      config?: AtomConfig<State>
+    ): AtomTemplateRecursive<{
+      Events: Events
+      Exports: Exports
+      Params: Params
+      Promise: PromiseType
+      State: State
+    }>
+  }
+`)}
+
+</Tabs>
+
+<Legend>
+  <Item name="key">
+    Required. A string.
+
+    This key must be unique **except** when creating [atom overrides](../../../walkthrough/overrides.mdx).
+
+    <AtomKeyDesc />
+
+    :::tip
+    Currently, Zedux leaves it up to you to ensure keys are unique across your codebase. As such, it's recommended to use a namespace-based naming convention - e.g. based on your project's file structure - to minimize the chance of conflicts.
+
+    ```ts
+    const accountDetailsAtom = atom('dashboard/account/details', ...)
+    const registrationFormAtom = atom('signup/registrationForm', ...)
+    ```
+    :::
+
+  </Item>
+  <Item name="valueOrFactory">
+    Required. Can be any of the following:
+
+    - A raw value. Can be anything except a function. When the atom is instantiated, this value as-is will be its initial state.
+
+    - A [state factory](../glossary.mdx#state-factory) function that returns a raw value. That raw value can be anything (including a function). The returned value will be the atom instance's initial state.
+
+    - A state factory function that returns a [signal](../classes/Signal.mdx). When the atom is instantiated, the new atom instance will become a thin wrapper around the returned signal, forwarding events and state changes between it and the atom's own observers.
+
+    - A state factory function that returns an [AtomApi](../classes/AtomApi.mdx) instance.
+
+      The Atom API's value can be any of the following:
+
+      - A raw value. Can be anything. This value will be the atom instance's initial state.
+
+      - A signal. The atom instance will become a thin wrapper around the returned signal, forwarding events and state changes between it and the atom's own observers.
+
+      - A promise. This will turn the atom into a [query atom](../../../walkthrough/query-atoms.mdx).
+
+        The Atom API's exports will be set as the atom instance's `.exports`.
+
+        The Atom API's promise will be set as the atom instance's `.promise`.
+
+        Any [`ttl`](../classes/AtomApi.mdx#ttl) configured in the returned Atom API will control the atom instance's destruction timing.
+
+    When a state factory function is passed, any parameters defined on the function will become the [params](../classes/AtomInstance.mdx#params) of the atom.
+
+  </Item>
+  <Item name="config">
+    Optional. An [AtomConfig](../types/AtomConfig.mdx) object.
+  </Item>
+  <Item name="Returns">
+    An [atom template](../classes/AtomTemplate.mdx).
+
+    Zedux will manage creating and maintaining instances of the atom template as you use it in various hooks, injectors, and ecosystem methods.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `AtomTemplate` class](../classes/AtomTemplate.mdx)
+- [The `AtomApi` class](../classes/AtomApi.mdx)
+- [The `AtomConfig` type](../types/AtomConfig.mdx)
+- [The Quick Start](/not-done?path=../../walkthrough/quick-start.mdx)
+- [The Configuring Atoms walkthrough](../../../walkthrough/configuring-atoms.mdx)
