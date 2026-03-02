@@ -358,4 +358,120 @@ describe('signals', () => {
       ['abcd', { str: 'abcd' }],
     ])
   })
+
+  describe('mutating null/undefined state', () => {
+    test('mutate with object sets state when oldState is null', () => {
+      const signal = ecosystem.signal<{ a: number } | null>(null)
+
+      signal.mutate({ a: 1 })
+
+      expect(signal.get()).toEqual({ a: 1 })
+    })
+
+    test('mutate with object sets state when oldState is undefined', () => {
+      const signal = ecosystem.signal<{ a: number } | undefined>(undefined)
+
+      signal.mutate({ a: 1 })
+
+      expect(signal.get()).toEqual({ a: 1 })
+    })
+
+    test('mutate with function sets state from return value when oldState is null', () => {
+      const signal = ecosystem.signal<{ a: number } | null>(null)
+
+      signal.mutate(() => ({ a: 2 }))
+
+      expect(signal.get()).toEqual({ a: 2 })
+    })
+
+    test('mutate with function passes null to the callback', () => {
+      const signal = ecosystem.signal<{ a: number } | null>(null)
+      let received: any = 'not-called'
+
+      signal.mutate(state => {
+        received = state
+        return { a: 1 }
+      })
+
+      expect(received).toBeNull()
+    })
+
+    test('mutate generates add transactions for each top-level key of an object', () => {
+      const signal = ecosystem.signal<{ a: number; b: string } | null>(null)
+      let transactions: Transaction[] | undefined
+
+      signal.on('mutate', t => {
+        transactions = t
+      })
+
+      signal.mutate({ a: 1, b: 'hello' })
+
+      expect(transactions).toEqual([
+        { k: 'a', v: 1 },
+        { k: 'b', v: 'hello' },
+      ])
+    })
+
+    test('mutate generates add transactions for each element of an array', () => {
+      const signal = ecosystem.signal<string[] | null>(null)
+      let transactions: Transaction[] | undefined
+
+      signal.on('mutate', t => {
+        transactions = t
+      })
+
+      signal.mutate(['a', 'b'])
+
+      expect(transactions).toEqual([
+        { k: '0', v: 'a' },
+        { k: '1', v: 'b' },
+      ])
+    })
+
+    test('mutate generates add transactions for each item in a set', () => {
+      const signal = ecosystem.signal<Set<number> | null>(null)
+      let transactions: Transaction[] | undefined
+
+      signal.on('mutate', t => {
+        transactions = t
+      })
+
+      signal.mutate(new Set([1, 2]))
+
+      expect(transactions).toEqual([
+        { k: 1, v: undefined },
+        { k: 2, v: undefined },
+      ])
+    })
+
+    test('mutate with no resulting state change is a noop', () => {
+      const signal = ecosystem.signal<{ a: number } | null>(null)
+      let called = false
+
+      signal.on('change', () => {
+        called = true
+      })
+
+      signal.mutate(() => null)
+
+      expect(signal.get()).toBeNull()
+      expect(called).toBe(false)
+    })
+
+    test('mutate forwards custom events when oldState is null', () => {
+      const signal = ecosystem.signal(null as { a: number } | null, {
+        events: { custom: As<string> },
+      })
+      let receivedCustom: string | undefined
+
+      signal.on('custom', val => {
+        receivedCustom = val
+      })
+
+      signal.mutate({ a: 1 }, { custom: 'hello' })
+
+      expect(signal.get()).toEqual({ a: 1 })
+      expect(receivedCustom).toBe('hello')
+    })
+  })
 })
