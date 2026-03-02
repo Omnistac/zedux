@@ -140,7 +140,7 @@ const assertNpmIsAuthed = async (): Promise<void> => {
   console.info("Making sure you're authed with npm")
 
   const output = await cmd(
-    'npm_config_registry=https://registry.npmjs.org/ npm whoami'
+    'npm_config_registry=https://registry.npmjs.org/ pnpm whoami'
   )
 
   if (output.code) {
@@ -702,7 +702,7 @@ const npmPublish = async (
   distTag: string
 ): Promise<void> => {
   const failedPackages: string[] = []
-  const tagStr = distTag ? ` --tag ${distTag}` : ''
+  const tagStr = distTag ? ` --tag=${distTag}` : ''
 
   console.info('Publishing packages with npm dist-tag:', distTag || '(none)')
 
@@ -710,7 +710,7 @@ const npmPublish = async (
 
   // publish packages one-by-one (there seemed to be some Nx race condition)
   for (const dir of packages) {
-    const publishCmd = `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ npm publish --access=public${tagStr} --otp=${otp}`
+    const publishCmd = `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ pnpm publish --access=public --otp=${otp}${tagStr}`
 
     let output = await cmd(publishCmd)
 
@@ -718,7 +718,7 @@ const npmPublish = async (
       console.error(`Failed to publish package "${dir}". Output: ${output}`)
       otp = await promptOtp('Publish failed. Enter a new OTP to retry:')
       output = await cmd(
-        `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ npm publish --access=public${tagStr} --otp=${otp}`
+        `cd packages/${dir} && npm_config_registry=https://registry.npmjs.org/ pnpm publish --access=public --otp=${otp}${tagStr}`
       )
     }
 
