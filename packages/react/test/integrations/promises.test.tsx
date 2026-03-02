@@ -324,6 +324,47 @@ describe('injectPromise', () => {
     expect(calls).toEqual(['awaiting', 'resolved', 'awaiting', 'aborted'])
   })
 
+  test('reactive: false prevents atom reevaluation when the promise resolves', async () => {
+    let evaluations = 0
+
+    const atom1 = atom('1', () => {
+      evaluations++
+
+      return injectPromise(
+        () => new Promise<string>(resolve => setTimeout(() => resolve('a'), 1)),
+        [],
+        { reactive: false }
+      )
+    })
+
+    jest.useFakeTimers()
+    const node1 = ecosystem.getNode(atom1)
+
+    expect(evaluations).toBe(1)
+    expect(node1.get()).toEqual({
+      data: undefined,
+      isError: false,
+      isLoading: true,
+      isSuccess: false,
+      status: 'loading',
+    })
+
+    jest.runAllTimers()
+    await Promise.resolve()
+
+    // the signal's state should still update
+    expect(node1.get()).toEqual({
+      data: 'a',
+      isError: false,
+      isLoading: false,
+      isSuccess: true,
+      status: 'success',
+    })
+
+    // but the atom should not have re-evaluated
+    expect(evaluations).toBe(1)
+  })
+
   test('abort is aborted if the promise factory returns the same promise reference', async () => {
     const calls: any[] = []
     const promise = Promise.resolve('a')
