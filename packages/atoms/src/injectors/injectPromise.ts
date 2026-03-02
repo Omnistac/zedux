@@ -208,7 +208,7 @@ export const injectPromise: {
     promise: Promise<Data>
   })
 
-  const dataSignal = injectSignal(initialData, signalConfig) as Signal<{
+  const dataSignal = injectSignal(initialData, { reactive: false }) as Signal<{
     Events: EventMap
     Params: undefined
     ResolvedState: Data
@@ -216,10 +216,13 @@ export const injectPromise: {
     Template: undefined
   }>
 
-  const signal = injectMappedSignal({
-    ...getInitialPromiseState<Data>(),
-    data: dataSignal,
-  }) as MappedSignal<{
+  const signal = injectMappedSignal(
+    {
+      ...getInitialPromiseState<Data>(),
+      data: dataSignal,
+    },
+    signalConfig
+  ) as MappedSignal<{
     Events: EventMap
     Params: undefined
     State: PromiseState<Data>
