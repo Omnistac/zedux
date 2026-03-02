@@ -34,9 +34,43 @@ export const doMutate = <G extends NodeGenerics>(
 
   const oldState = node.v
 
+  if (oldState == null) {
+    const newState =
+      typeof mutatable === 'function'
+        ? (mutatable as (state: G['State']) => any)(oldState)
+        : mutatable
+
+    const transactions: Transaction[] = []
+
+    if (newState && typeof newState === 'object') {
+      const empty = (
+        newState instanceof Set
+          ? new Set()
+          : Array.isArray(newState)
+            ? []
+            : {}
+      ) as G['State']
+
+      recursivelyMutate(
+        recursivelyProxy(empty, { t: transactions, u: () => {} }).p,
+        newState
+      )
+    }
+
+    node.set(
+      newState as Settable<G['State']>,
+      {
+        ...events,
+        mutate: transactions,
+      } as Partial<SendableEvents<G>>
+    )
+
+    return
+  }
+
   if (
     DEV &&
-    (typeof oldState !== 'object' || !oldState) &&
+    typeof oldState !== 'object' &&
     !Array.isArray(oldState) &&
     !((oldState as any) instanceof Set)
   ) {
