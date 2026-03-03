@@ -235,6 +235,125 @@ describe('signals', () => {
     expect(testInstance.getOnce()).toBe(2)
   })
 
+  test('a non-reactively-injected signal propagates multiple consecutive updates', () => {
+    let evaluations = 0
+
+    const testAtom = atom('test', () => {
+      evaluations++
+      const signal = injectSignal(0, { reactive: false })
+
+      return api(signal).setExports({
+        signal,
+        increment: () => signal.set(state => state + 1),
+      })
+    })
+
+    const testInstance = ecosystem.getNode(testAtom)
+
+    expect(evaluations).toBe(1)
+    expect(testInstance.get()).toBe(0)
+
+    // First update - this worked even before the fix
+    testInstance.exports.increment()
+    expect(testInstance.get()).toBe(1)
+    expect(evaluations).toBe(1) // no reevaluation
+
+    // Second update - this failed before the fix because w/wt weren't cleared
+    testInstance.exports.increment()
+    expect(testInstance.get()).toBe(2)
+    expect(evaluations).toBe(1)
+
+    // Third update - verify continued propagation
+    testInstance.exports.increment()
+    expect(testInstance.get()).toBe(3)
+    expect(evaluations).toBe(1)
+  })
+
+  test('a non-reactively-injected signal propagates updates to observers', () => {
+    let evaluations = 0
+
+    const testAtom = atom('test', () => {
+      evaluations++
+      const signal = injectSignal('a', { reactive: false })
+
+      return api(signal).setExports({
+        signal,
+        set: (val: string) => signal.set(val),
+      })
+    })
+
+    const observerAtom = ion('observer', ({ get }) => get(testAtom) + '!')
+
+    const testInstance = ecosystem.getNode(testAtom)
+    const observerInstance = ecosystem.getNode(observerAtom)
+
+    expect(observerInstance.get()).toBe('a!')
+    expect(evaluations).toBe(1)
+
+    testInstance.exports.set('b')
+    expect(testInstance.get()).toBe('b')
+    expect(observerInstance.get()).toBe('b!')
+
+    // Second update must also reach the observer
+    testInstance.exports.set('c')
+    expect(testInstance.get()).toBe('c')
+    expect(observerInstance.get()).toBe('c!')
+
+    testInstance.exports.set('d')
+    expect(testInstance.get()).toBe('d')
+    expect(observerInstance.get()).toBe('d!')
+
+    expect(evaluations).toBe(1) // never reevaluated the source atom
+  })
+
+  test('a non-reactively-injected signal still reevaluates from other sources', () => {
+    let evaluations = 0
+    const depAtom = atom('dep', 1)
+
+    const testAtom = ion('test', ({ get }) => {
+      evaluations++
+      const depVal = get(depAtom)
+      const signal = injectSignal(depVal * 10, { reactive: false })
+
+      return api(signal).setExports({
+        signal,
+        set: (val: number) => signal.set(val),
+      })
+    })
+
+    const testInstance = ecosystem.getNode(testAtom)
+    const depInstance = ecosystem.getNode(depAtom)
+
+    expect(testInstance.get()).toBe(10)
+    expect(evaluations).toBe(1)
+
+    // Signal update (no reevaluation)
+    testInstance.exports.set(99)
+    expect(testInstance.get()).toBe(99)
+    expect(evaluations).toBe(1)
+
+    // Second signal update (no reevaluation) - tests the fix
+    testInstance.exports.set(100)
+    expect(testInstance.get()).toBe(100)
+    expect(evaluations).toBe(1)
+
+    // Dependency update triggers reevaluation (injectSignal is memoized, so
+    // the signal keeps its current value of 100)
+    depInstance.set(2)
+    expect(evaluations).toBe(2)
+    expect(testInstance.get()).toBe(100)
+
+    // After the dependency-triggered reevaluation, non-reactive signal
+    // updates must still propagate
+    testInstance.exports.set(200)
+    expect(testInstance.get()).toBe(200)
+    expect(evaluations).toBe(2)
+
+    testInstance.exports.set(300)
+    expect(testInstance.get()).toBe(300)
+    expect(evaluations).toBe(2)
+  })
+
   test('calling `.get()` in a reactive context registers graph edges', () => {
     const calls: any[] = []
     const atom1 = atom('1', 'a')
