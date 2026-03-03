@@ -85,6 +85,28 @@ import {
   resolveWeight,
 } from '../utils/graph'
 
+/**
+ * Destroy an ephemeral selector (created by `Ecosystem#get`/`getOnce`) and
+ * recursively clean up any transitive selector sources that are also
+ * observerless. Non-selector nodes (atom instances, signals, etc.) are never
+ * cascade-destroyed - they should not be affected by a one-shot evaluation.
+ */
+const destroyEphemeralSelector = (node: ZeduxNode) => {
+  // Snapshot sources before destruction clears them
+  const sources = [...node.s.keys()]
+
+  if (destroyNodeStart(node)) destroyNodeFinish(node, true)
+
+  for (const source of sources) {
+    if (
+      is(source, SelectorInstance) &&
+      !source.o.size
+    ) {
+      destroyEphemeralSelector(source)
+    }
+  }
+}
+
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements EventEmitter
 {
@@ -489,11 +511,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       is(node, SelectorInstance)
     ) {
       const val = node.get()
-
-      // Destroy the ephemeral selector without cascading destruction to its
-      // sources. This selector was only created to compute a value; its
-      // creation and destruction should not affect the rest of the graph.
-      if (destroyNodeStart(node)) destroyNodeFinish(node, true)
+      destroyEphemeralSelector(node)
 
       return val
     }
@@ -606,8 +624,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
     ) {
       const val = node.get()
 
-      // @see the same comment in Ecosystem#get
-      if (destroyNodeStart(node)) destroyNodeFinish(node, true)
+      destroyEphemeralSelector(node)
 
       return val
     }

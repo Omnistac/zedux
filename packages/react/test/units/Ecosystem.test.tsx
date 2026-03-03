@@ -531,19 +531,40 @@ describe('Ecosystem', () => {
       expect(instance.status).toBe('Active')
     })
 
-    test('get() with a selector that reads a selector does not destroy either', () => {
+    test('get() with a selector that reads an observed selector does not destroy it', () => {
       const atom1 = atom('1', () => 1)
       const selector1 = ({ get }: { get: typeof ecosystem.get }) => get(atom1) * 2
 
-      // Pre-cache the selector so it exists in the graph
+      // Pre-cache the selector and give it an active observer so it's not ephemeral
       const selectorNode = ecosystem.getNode(selector1)
       const atomNode = ecosystem.getNode(atom1)
+      const cleanup = selectorNode.on('change', () => {}, { active: true })
 
       // Now use get() with another selector that reads selector1
       const result = ecosystem.get(({ get }) => get(selector1) + 10)
 
       expect(result).toBe(12)
       expect(selectorNode.status).toBe('Active')
+      expect(atomNode.status).toBe('Active')
+
+      cleanup()
+    })
+
+    test('get() does cascade-destroy observerless transitive selectors', () => {
+      const atom1 = atom('1', () => 1)
+      const selector1 = ({ get }: { get: typeof ecosystem.get }) => get(atom1) * 2
+
+      // Pre-cache selector1 - it has no observers other than what the
+      // ephemeral selector will add
+      const selectorNode = ecosystem.getNode(selector1)
+      const atomNode = ecosystem.getNode(atom1)
+
+      const result = ecosystem.get(({ get }) => get(selector1) + 10)
+
+      expect(result).toBe(12)
+      // The observerless selector is cleaned up (it's equally ephemeral)
+      expect(selectorNode.status).toBe('Destroyed')
+      // But the atom survives
       expect(atomNode.status).toBe('Active')
     })
 
