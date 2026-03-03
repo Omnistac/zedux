@@ -78,6 +78,8 @@ import { AsyncScheduler } from './schedulers/AsyncScheduler'
 import { SyncScheduler } from './schedulers/SyncScheduler'
 import { AtomTemplateBase } from './templates/AtomTemplateBase'
 import {
+  destroyNodeFinish,
+  destroyNodeStart,
   handleStateChange,
   handleStateChangeWithEvent,
   resolveWeight,
@@ -487,7 +489,11 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       is(node, SelectorInstance)
     ) {
       const val = node.get()
-      node.destroy()
+
+      // Destroy the ephemeral selector without cascading destruction to its
+      // sources. This selector was only created to compute a value; its
+      // creation and destruction should not affect the rest of the graph.
+      if (destroyNodeStart(node)) destroyNodeFinish(node, true)
 
       return val
     }
@@ -599,7 +605,9 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
       is(node, SelectorInstance)
     ) {
       const val = node.get()
-      node.destroy()
+
+      // @see the same comment in Ecosystem#get
+      if (destroyNodeStart(node)) destroyNodeFinish(node, true)
 
       return val
     }

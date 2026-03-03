@@ -1,4 +1,10 @@
-import { atom, createEcosystem, injectEcosystem, ion } from '@zedux/react'
+import {
+  atom,
+  createEcosystem,
+  injectEffect,
+  injectEcosystem,
+  ion,
+} from '@zedux/react'
 import { ecosystem } from '../utils/ecosystem'
 import { mockConsole } from '../utils/console'
 import { expectTypeOf } from 'expect-type'
@@ -395,5 +401,215 @@ describe('Ecosystem', () => {
 
     expect(ecosystem.findAll({ includeTags: ['example'] })).toEqual([])
     expect(ecosystem.findAll({ excludeTags: ['example'] })).toEqual([signal])
+  })
+
+  describe('ephemeral selector destruction does not cascade', () => {
+    test('get() with an inline selector does not destroy its source atoms', () => {
+      const atom1 = atom('1', () => 'a')
+      // Pre-create the atom instance so it exists in the graph
+      const instance = ecosystem.getNode(atom1)
+
+      // Call get() with a selector outside a reactive context - this creates
+      // an ephemeral selector that reads atom1, then destroys it
+      const result = ecosystem.get(({ get }) => get(atom1))
+
+      expect(result).toBe('a')
+      // The source atom must still be alive
+      expect(instance.status).toBe('Active')
+      expect(ecosystem.n.get('1')).toBe(instance)
+    })
+
+    test('getOnce() with an inline selector does not destroy its source atoms', () => {
+      const atom1 = atom('1', () => 'a')
+      const instance = ecosystem.getNode(atom1)
+
+      const result = ecosystem.getOnce(({ get }) => get(atom1))
+
+      expect(result).toBe('a')
+      expect(instance.status).toBe('Active')
+      expect(ecosystem.n.get('1')).toBe(instance)
+    })
+
+    test('get() does not destroy source atoms that have zero observers', () => {
+      // This is the exact scenario from the bug report: the source atom has
+      // no observers, and the ephemeral selector is its only (transient) one
+      const atom1 = atom('1', () => 'a')
+
+      // getNode creates the instance but nothing observes it
+      const instance = ecosystem.getNode(atom1)
+      expect(instance.o.size).toBe(0)
+
+      const result = ecosystem.get(({ get }) => get(atom1))
+
+      expect(result).toBe('a')
+      expect(instance.status).toBe('Active')
+      expect(instance.o.size).toBe(0)
+    })
+
+    test('get() does not cascade-destroy a chain of zero-observer atoms', () => {
+      const atom1 = atom('1', () => 'a', { ttl: 0 })
+      const atom2 = ion('2', ({ get }) => get(atom1) + 'b', { ttl: 0 })
+
+      // Create both atoms. atom2 observes atom1.
+      const instance2 = ecosystem.getNode(atom2)
+      const instance1 = ecosystem.n.get('1')!
+
+      // Now remove atom2's only external observer (there is none besides
+      // the edge from atom2 -> atom1). atom1 has 1 observer (atom2).
+      expect(instance1.o.size).toBe(1)
+
+      // Use get() with a selector that reads atom2. The ephemeral selector
+      // becomes atom2's only observer. When it's destroyed, atom2 should
+      // not be cascade-destroyed (and therefore atom1 should not either).
+      const result = ecosystem.get(({ get }) => get(atom2))
+
+      expect(result).toBe('ab')
+      expect(instance1.status).toBe('Active')
+      expect(instance2.status).toBe('Active')
+    })
+
+    test('get() does not destroy source atoms even when the selector reads multiple atoms', () => {
+      const atom1 = atom('1', () => 1)
+      const atom2 = atom('2', () => 2)
+      const atom3 = atom('3', () => 3)
+
+      const instance1 = ecosystem.getNode(atom1)
+      const instance2 = ecosystem.getNode(atom2)
+      const instance3 = ecosystem.getNode(atom3)
+
+      const result = ecosystem.get(
+        ({ get }) => get(atom1) + get(atom2) + get(atom3)
+      )
+
+      expect(result).toBe(6)
+      expect(instance1.status).toBe('Active')
+      expect(instance2.status).toBe('Active')
+      expect(instance3.status).toBe('Active')
+    })
+
+    test('the ephemeral selector itself is still destroyed', () => {
+      const atom1 = atom('1', () => 'a')
+      ecosystem.getNode(atom1)
+
+      ecosystem.get(({ get }) => get(atom1))
+
+      // Only the atom should remain in the graph, not the selector
+      const nodeIds = [...ecosystem.n.keys()]
+      expect(nodeIds).toEqual(['1'])
+    })
+
+    test('get() inside injectEffect does not destroy source atoms', () => {
+      const atom1 = atom('1', () => 'value')
+      const atom2 = atom('2', () => {
+        const eco = injectEcosystem()
+
+        injectEffect(() => {
+          // This calls ecosystem.get() with a selector outside evaluation
+          // context (effects run outside evaluation). This must not destroy
+          // atom1.
+          eco.get(({ get }) => get(atom1))
+        }, [])
+
+        return 'b'
+      })
+
+      ecosystem.getNode(atom1)
+      ecosystem.getNode(atom2)
+
+      expect(ecosystem.n.get('1')!.status).toBe('Active')
+      expect(ecosystem.n.get('2')!.status).toBe('Active')
+    })
+
+    test('getOnce() does not cascade-destroy source atoms with zero observers', () => {
+      const atom1 = atom('1', () => 'a')
+      const instance = ecosystem.getNode(atom1)
+      expect(instance.o.size).toBe(0)
+
+      const result = ecosystem.getOnce(({ get }) => get(atom1))
+
+      expect(result).toBe('a')
+      expect(instance.status).toBe('Active')
+    })
+
+    test('get() with a selector that reads a selector does not destroy either', () => {
+      const atom1 = atom('1', () => 1)
+      const selector1 = ({ get }: { get: typeof ecosystem.get }) => get(atom1) * 2
+
+      // Pre-cache the selector so it exists in the graph
+      const selectorNode = ecosystem.getNode(selector1)
+      const atomNode = ecosystem.getNode(atom1)
+
+      // Now use get() with another selector that reads selector1
+      const result = ecosystem.get(({ get }) => get(selector1) + 10)
+
+      expect(result).toBe(12)
+      expect(selectorNode.status).toBe('Active')
+      expect(atomNode.status).toBe('Active')
+    })
+
+    test('source atoms remain functional after ephemeral selector cleanup', () => {
+      const atom1 = atom('1', () => 'a')
+      const instance = ecosystem.getNode(atom1)
+
+      ecosystem.get(({ get }) => get(atom1))
+
+      // The atom should still be fully functional - can set and get values
+      instance.set('b')
+      expect(instance.get()).toBe('b')
+
+      // And can still be observed by new selectors
+      const selectorNode = ecosystem.getNode(
+        ({ get }: { get: typeof ecosystem.get }) => get(atom1) + '!'
+      )
+      expect(selectorNode.get()).toBe('b!')
+
+      // And reactivity should still work
+      instance.set('c')
+      expect(selectorNode.get()).toBe('c!')
+    })
+
+    test('normal (non-ephemeral) selector destruction still cascades', () => {
+      // Ensure the fix doesn't break normal cascade behavior
+      const atom1 = atom('1', () => 'a', { ttl: 0 })
+      const selector1 = ({ get }: { get: typeof ecosystem.get }) => get(atom1)
+
+      const selectorNode = ecosystem.getNode(selector1)
+      const atomNode = ecosystem.n.get('1')!
+
+      // atom1's only observer is selector1
+      expect(atomNode.o.size).toBe(1)
+
+      // Force-destroying the selector should cascade to atom1 (ttl: 0)
+      selectorNode.destroy(true)
+
+      expect(selectorNode.status).toBe('Destroyed')
+      expect(atomNode.status).toBe('Destroyed')
+    })
+
+    test('multiple sequential get() calls do not destroy shared source atoms', () => {
+      const atom1 = atom('1', () => 10)
+      const instance = ecosystem.getNode(atom1)
+
+      // Multiple ephemeral selectors reading the same atom
+      const r1 = ecosystem.get(({ get }) => get(atom1) + 1)
+      const r2 = ecosystem.get(({ get }) => get(atom1) + 2)
+      const r3 = ecosystem.get(({ get }) => get(atom1) + 3)
+
+      expect(r1).toBe(11)
+      expect(r2).toBe(12)
+      expect(r3).toBe(13)
+      expect(instance.status).toBe('Active')
+    })
+
+    test('get() with a selector does not destroy atoms created during selector evaluation', () => {
+      const atom1 = atom('1', () => 'hello')
+
+      // No pre-creation - the atom will be created lazily by the selector
+      const result = ecosystem.get(({ get }) => get(atom1) + ' world')
+
+      expect(result).toBe('hello world')
+      // The atom was created during selector evaluation and must survive
+      expect(ecosystem.n.get('1')!.status).toBe('Active')
+    })
   })
 })

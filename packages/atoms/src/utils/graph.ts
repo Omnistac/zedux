@@ -120,10 +120,13 @@ export const destroyNodeStart = (node: ZeduxNode, force?: boolean) => {
 }
 
 // TODO: merge this into destroyNodeStart. We should be able to
-export const destroyNodeFinish = (node: ZeduxNode) => {
+export const destroyNodeFinish = (
+  node: ZeduxNode,
+  preventCascade?: boolean
+) => {
   // first remove all edges between this node and its sources
   for (const dependency of node.s.keys()) {
-    removeEdge(node, dependency)
+    removeEdge(node, dependency, preventCascade)
   }
 
   // now remove all edges between this node and its observers
@@ -221,7 +224,11 @@ export const markForWeightRecalculation = (node: ZeduxNode) => {
  * means a parent EcosystemProvider may have already unmounted and wiped the
  * whole graph; this edge may already be destroyed.
  */
-export const removeEdge = (observer: ZeduxNode, source: ZeduxNode) => {
+export const removeEdge = (
+  observer: ZeduxNode,
+  source: ZeduxNode,
+  preventCascade?: boolean
+) => {
   // erase graph edge between observer and source
   observer.s.delete(source)
 
@@ -256,7 +263,7 @@ export const removeEdge = (observer: ZeduxNode, source: ZeduxNode) => {
 
   if (observer === source.L) {
     source.L = undefined
-  } else {
+  } else if (!preventCascade) {
     scheduleNodeDestruction(source)
   }
 }

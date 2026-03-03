@@ -6,6 +6,7 @@ import {
   EvaluationReason,
   GenericsOf,
   InvalidateEvent,
+  ion,
   PromiseChangeEvent,
 } from '@zedux/atoms'
 import { useAtomValue } from '@zedux/react'
@@ -253,5 +254,88 @@ describe('events', () => {
       [{ promiseChange: expectedPromiseChangeEvent }],
       [{ change: expectedChangeEvent }],
     ])
+  })
+
+  test('cascade destruction sends cycle events to all destroyed nodes', () => {
+    const atom1 = atom('1', 'a', { ttl: 0 })
+    const atom2 = ion('2', ({ get }) => get(atom1), { ttl: 0 })
+
+    const node1 = ecosystem.getNode(atom1)
+    const node2 = ecosystem.getNode(atom2)
+
+    const calls: any[] = []
+
+    node1.on('cycle', event => {
+      calls.push(['atom1', event.oldStatus, event.newStatus])
+    })
+
+    node2.on('cycle', event => {
+      calls.push(['atom2', event.oldStatus, event.newStatus])
+    })
+
+    // node2 is atom1's only non-passive observer. Force-destroying node2 should:
+    // 1. Remove node2's edge to atom1 (step 1 of destroyNodeFinish)
+    // 2. atom1 now has only its passive listener -> atom1 gets destroyed
+    // 3. atom1's cycle listener receives the Destroyed event
+    // 4. node2's own destruction cycle event fires (step 4 of destroyNodeFinish)
+    node2.destroy(true)
+
+    expect(calls).toEqual([
+      ['atom1', 'Active', 'Destroyed'],
+      ['atom2', 'Active', 'Destroyed'],
+    ])
+
+    expect(node1.o.size).toBe(0)
+    expect(node2.o.size).toBe(0)
+    expect(node1.L).toBe(undefined)
+    expect(node2.L).toBe(undefined)
+  })
+
+  test('change and cycle events both fire when batched together', () => {
+    const atom1 = atom('1', 'a')
+    const node1 = ecosystem.getNode(atom1)
+
+    const calls: any[] = []
+
+    node1.on('change', event => {
+      calls.push(['change', event.oldState, event.newState])
+    })
+
+    node1.on('cycle', event => {
+      calls.push(['cycle', event.oldStatus, event.newStatus])
+    })
+
+    // Batch a state change and a force-destroy together. The listener should
+    // receive both the change event and the cycle event in the same flush.
+    ecosystem.batch(() => {
+      node1.set('b')
+      node1.destroy(true)
+    })
+
+    expect(calls).toEqual([
+      ['change', 'a', 'b'],
+      ['cycle', 'Active', 'Destroyed'],
+    ])
+
+    expect(node1.o.size).toBe(0)
+    expect(node1.L).toBe(undefined)
+  })
+
+  test('catch-all listener receives cycle event on destruction', () => {
+    const atom1 = atom('1', 'a')
+    const node1 = ecosystem.getNode(atom1)
+
+    const calls: any[] = []
+
+    node1.on(eventMap => {
+      calls.push(Object.keys(eventMap))
+    })
+
+    node1.destroy()
+
+    expect(calls).toEqual([['cycle']])
+
+    expect(node1.o.size).toBe(0)
+    expect(node1.L).toBe(undefined)
   })
 })
