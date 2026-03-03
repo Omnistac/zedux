@@ -394,6 +394,7 @@ export class AtomInstance<
       const oldState = this.v
       this.v = this.S!.v // `this.S`ignal must exist if `this.a`lteredEdge does
       this.e.ch(this, oldState)
+      this.w = this.wt = undefined
 
       return
     }
