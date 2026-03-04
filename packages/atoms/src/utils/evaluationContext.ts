@@ -53,17 +53,28 @@ export const bufferEdge = (
   operation: string,
   flags: number
 ) => {
-  const { s } = evaluationContext.n!
-  const existingEdge = s.get(source)
+  const observer = evaluationContext.n!
+  const existingEdge = observer.s.get(source)
 
   if (existingEdge) {
     if (flags < (existingEdge.p || OutOfRange)) existingEdge.p = flags
   } else {
-    s.set(source, {
+    observer.s.set(source, {
       flags: OutOfRange, // set to an out-of-range flag to indicate a new edge
       p: flags,
       operation,
     })
+  }
+
+  // propagate scope eagerly so it's available before flushBuffer. This lets
+  // finalizeScopedNodeId run before initializeNode and flushBuffer, giving all
+  // events the node's real scoped id.
+  if (source.V) {
+    observer.V ??= new Map()
+
+    for (const [key, val] of source.V) {
+      observer.V.set(key, val)
+    }
   }
 }
 

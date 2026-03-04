@@ -384,9 +384,9 @@ export class AtomInstance<
     const { n } = getEvaluationContext()
     this.j()
 
+    finalizeScopedNodeId(this)
     initializeNode(this)
     flushBuffer(n)
-    finalizeScopedNodeId(this)
 
     // hydrate if possible. This must happen after finalizeScopedNodeId so the
     // atom's id has been finalized (e.g. scoped atoms whose id changes after

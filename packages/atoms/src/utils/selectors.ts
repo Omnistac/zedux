@@ -97,14 +97,11 @@ export const runSelector = <G extends SelectorGenerics>(
   node.w = node.wt = undefined
 
   if (isInitializing) {
+    finalizeScopedNodeId(node)
     initializeNode(node)
   }
 
   flushBuffer(prevNode)
-
-  if (isInitializing) {
-    finalizeScopedNodeId(node)
-  }
 }
 
 export const swapSelectorRefs = <G extends SelectorGenerics>(

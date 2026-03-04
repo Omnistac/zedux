@@ -626,6 +626,50 @@ describe('scoped atoms', () => {
     expect(calls).toEqual(['a', [expectedId, 'Active']])
   })
 
+  test('all ecosystem events use the fully-scoped id, including with transitive scope', () => {
+    const calls: any[] = []
+    const context1 = atom('context1', () => 'a')
+    const scope1 = [ecosystem.getNode(context1)]
+
+    // scoped1 has direct scope from inject(context1)
+    const scoped1 = atom('scoped1', () => inject(context1).get())
+
+    // scoped2 depends on scoped1, gaining transitive scope
+    const scoped2 = atom('scoped2', () => injectAtomValue(scoped1))
+
+    const expectedScoped1Id = 'scoped1-@scope(context1)'
+    const expectedScoped2Id = 'scoped2-@scope(context1)'
+
+    ecosystem.on(eventMap => {
+      const event = eventMap.cycle || eventMap.runEnd || eventMap.edge
+
+      if (event) {
+        const type = event.type
+        const id =
+          type === 'edge'
+            ? `${event.observer.id} -> ${event.source.id}`
+            : event.source?.id
+
+        calls.push([type, id])
+      }
+    })
+
+    ecosystem.withScope(scope1, () => ecosystem.getNode(scoped2))
+
+    // cycle fires before edges. All ids are fully-scoped, including transitive
+    // scope from dependencies.
+    expect(calls).toEqual([
+      // scoped1 initializes first (dependency of scoped2)
+      ['cycle', expectedScoped1Id],
+      ['edge', `${expectedScoped1Id} -> context1`],
+      ['runEnd', expectedScoped1Id],
+      // scoped2 initializes second - its id includes transitive scope from scoped1
+      ['cycle', expectedScoped2Id],
+      ['edge', `${expectedScoped2Id} -> ${expectedScoped1Id}`],
+      ['runEnd', expectedScoped2Id],
+    ])
+  })
+
   test('exports and injectCallback capture scope and wrap the passed function in it', () => {
     const contextAtom = atom('context', () => 'a')
     const scopedAtom = atom('scoped', () => inject(contextAtom))

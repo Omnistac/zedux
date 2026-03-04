@@ -37,13 +37,8 @@ const changeScopedNodeId = (
   ecosystem.s ??= {}
   ecosystem.s[templateKey] ??= [...newNode.V!.keys()]
 
-  // strip any existing @scope suffix so this is idempotent (called once in
-  // initializeNode with direct scope, then again in finalizeScopedNodeId after
-  // transitive scope is propagated via addEdge)
-  const baseId = newNode.id.replace(/-@scope\(.*\)$/, '')
-
   // give the new scoped node a `@scope()`-suffixed id
-  newNode.id = `${baseId}-${getScopeString(ecosystem, newNode.V!)}`
+  newNode.id = `${newNode.id}-${getScopeString(ecosystem, newNode.V!)}`
 }
 
 /**
@@ -63,16 +58,8 @@ export const addEdge = (
   // Static sources don't change a node's weight
   if (!(newEdge.flags & Static)) observer.R = resolveWeight
 
-  // scoped atoms propagate their scope to all observers. Any node that uses a
-  // scoped atom was run in a scoped context and needs to remember the used
-  // scope so it can find its scoped atoms when it reevaluates.
-  if (source.V) {
-    observer.V ??= new Map()
-
-    for (const [key, val] of source.V) {
-      observer.V.set(key, val)
-    }
-  }
+  // Note: scope propagation (source.V -> observer.V) is done eagerly in
+  // bufferEdge so scoped ids are finalized before any events fire.
 
   if (isListeningTo(source.e, EDGE)) {
     sendEcosystemEvent(source.e, {
@@ -355,9 +342,9 @@ export const scheduleNodeDestruction = (node: ZeduxNode) =>
   node.o.size - (node.L ? 1 : 0) || node.l !== ACTIVE || node.m()
 
 /**
- * Finalize a scoped node's id after its edges have been flushed. Must be called
- * after `flushBuffer` so transitive scope from `addEdge` is available in
- * `node.V`.
+ * Finalize a scoped node's id. Scope is propagated eagerly in `bufferEdge`, so
+ * `node.V` is fully populated after evaluation. Call this before
+ * `initializeNode` and `flushBuffer` so all events have the real scoped id.
  */
 export const finalizeScopedNodeId = (node: ZeduxNode) => {
   if (node.V && node.t) {
@@ -382,17 +369,6 @@ export const finalizeScopedNodeId = (node: ZeduxNode) => {
  */
 export const initializeNode = (node: ZeduxNode) => {
   node.l = ACTIVE
-
-  // finalize the scoped id from direct scope (set during evaluation via
-  // `inject()`). Transitive scope from addEdge isn't available yet - that's
-  // handled by finalizeScopedNodeId after flushBuffer.
-  if (node.V && node.t) {
-    changeScopedNodeId(
-      node.e,
-      'key' in node.t ? node.t.key : getSelectorKey(node.e, node.t),
-      node
-    )
-  }
 
   if (isListeningTo(node.e, CYCLE)) {
     // ensure the node is findable before sending the cycle event
