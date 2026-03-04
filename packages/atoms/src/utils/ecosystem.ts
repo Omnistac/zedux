@@ -220,17 +220,5 @@ export const scheduleAsync = (ecosystem: Ecosystem, job: Job) =>
     ? ecosystem.asyncScheduler.schedule(job)
     : ecosystem.syncScheduler.j.push(job)
 
-export const scheduleSync = (ecosystem: Ecosystem, job: Job) => {
-  const { n, u } = getEvaluationContext()
-  const target = n || u
-
-  if (target && (job as any).O === target) {
-    // local observer - add to the owning atom's local jobs queue instead of
-    // the main scheduler. These will be drained by weight order in localFlush.
-    ;(target as any).lj.push(job)
-
-    return
-  }
-
+export const scheduleSync = (ecosystem: Ecosystem, job: Job) =>
   ecosystem.syncScheduler.schedule(job)
-}

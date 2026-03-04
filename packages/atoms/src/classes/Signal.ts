@@ -22,37 +22,29 @@ import { getEvaluationContext } from '../utils/evaluationContext'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
 /**
- * Drain local jobs for the given owner node. Sort by weight to resolve
- * diamond dependencies, then run each job. Jobs may add more local jobs
- * (via recursive Signal.set -> localFlush calls), which is fine - the
- * recursive drain handles deeper levels.
+ * Drain local jobs from the scheduler's sorted job queue. Iterates the
+ * scheduler's `j` array (which is already sorted by type and weight via
+ * `schedule()`), finds jobs owned by the evaluating atom, splices them out
+ * and runs them. Recursive signal sets are handled naturally via the `lf`
+ * counter on the owning atom.
  */
-const drainLocalJobs = (target: { lf: number; lj: Job[] }) => {
-  while (target.lj.length) {
-    target.lj.sort((a, b) => (a.W ?? 0) - (b.W ?? 0))
-    const job = target.lj.shift()!
-    job.j()
-  }
-}
-
-/**
- * Flush state changes for a local signal during its owner's evaluation.
- * Increments the local flush counter, schedules dependents, then drains
- * local jobs when the counter returns to 0.
- */
-export const localFlush = (
-  node: Signal<any>,
-  target: { lf: number; lj: Job[] },
-  oldState: any,
-  events?: any
+const flushLocalJobs = (
+  scheduler: { j: Job[]; r: number },
+  owner: ZeduxNode
 ) => {
-  target.lf++
-  schedulerPre(node.e)
-  node.e.ch(node, oldState, events)
-  schedulerPost(node.e)
+  const { j } = scheduler
+  let i = scheduler.r
 
-  if (--target.lf === 0) {
-    drainLocalJobs(target)
+  while (i < j.length) {
+    if ((j[i] as any).O === owner) {
+      const [job] = j.splice(i, 1)
+      job.j()
+      // Restart from scheduler.r - splice shifted indices and job.j() may
+      // have inserted new local jobs via schedule()
+      i = scheduler.r
+    } else {
+      i++
+    }
   }
 }
 
@@ -160,7 +152,12 @@ export const doMutate = <G extends NodeGenerics>(
 
       if (n && node.O === n) {
         // local non-wrapper signal during evaluation - flush locally
-        localFlush(node, n as any, oldState, mutateEvents)
+        ;(n as any).lf++
+        node.e.ch(node, oldState, mutateEvents)
+
+        if (--(n as any).lf === 0) {
+          flushLocalJobs(node.e.syncScheduler, n)
+        }
       } else {
         schedulerPre(node.e)
         node.e.ch(node, oldState, mutateEvents)
@@ -315,11 +312,10 @@ export class Signal<
     settable: Settable<G['State']>,
     events?: Partial<SendableEvents<G>>
   ) {
-    const { n, u } = getEvaluationContext()
-    const target = n || u
+    const { n } = getEvaluationContext()
 
-    if (target) {
-      if (this.O === target || this === target) {
+    if (n) {
+      if (this.O === n) {
         // local signal - set state immediately and flush through local graph
         const oldState = this.v
         const newState = (this.v =
@@ -328,7 +324,12 @@ export class Signal<
             : settable)
 
         if (newState !== oldState) {
-          localFlush(this, target as any, oldState, events)
+          ;(n as any).lf++
+          this.e.ch(this, oldState, events)
+
+          if (--(n as any).lf === 0) {
+            flushLocalJobs(this.e.syncScheduler, n)
+          }
         }
 
         return

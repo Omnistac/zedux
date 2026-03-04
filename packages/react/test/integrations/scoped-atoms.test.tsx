@@ -567,7 +567,7 @@ describe('scoped atoms', () => {
     expect(result1).toBe('a ab abc')
   })
 
-  test('scoped atoms are not hydrated', () => {
+  test('scoped atoms are hydrated using their scoped id', () => {
     const calls: any[] = []
     const context1 = atom('context1', () => 'a')
     const scope1 = [ecosystem.getNode(context1)]
@@ -589,9 +589,10 @@ describe('scoped atoms', () => {
       ecosystem.getNode(scoped1)
     )
 
-    expect(scopedNode1.get()).toBe('a')
+    expect(scopedNode1.get()).toBe('b')
     expect(ecosystem.hydration).toEqual(hydration)
     expect(scopedNode1.id).toBe(expectedId)
+    // factory still only ran once - hydration applied after evaluation
     expect(calls).toEqual(['a'])
   })
 

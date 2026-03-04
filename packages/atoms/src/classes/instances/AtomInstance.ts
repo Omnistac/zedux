@@ -7,7 +7,6 @@ import {
   AtomGenerics,
   AtomGenericsToAtomApiGenerics,
   ExportsInfusedSetter,
-  Job,
   PromiseState,
   PromiseStatus,
   DehydrationFilter,
@@ -220,17 +219,10 @@ export class AtomInstance<
 
   /**
    * `lf` - local flush counter. Tracks the depth of local signal state
-   * updates during this atom's evaluation. When this hits 0, we drain
-   * `lj` (local jobs) to propagate state through the local signal graph.
+   * updates during this atom's evaluation. When this hits 0, local jobs
+   * are drained from the scheduler's job queue.
    */
   public lf = 0
-
-  /**
-   * `lj` - local jobs. Collects evaluation jobs for locally-owned signals
-   * (those with `O === this`) during this atom's evaluation. Drained by
-   * weight order when `lf` hits 0.
-   */
-  public lj: Job[] = []
 
   /**
    * `I`njectors - tracks injector calls from the last time the state factory
@@ -354,7 +346,6 @@ export class AtomInstance<
   ) {
     if (this.S) {
       this.S.set(settable, events)
-      this.v = this.S.v
     } else {
       super.set(settable, events)
     }
@@ -391,17 +382,29 @@ export class AtomInstance<
     const { n } = getEvaluationContext()
     this.j()
 
+    flushBuffer(n)
+    setNodeStatus(this, ACTIVE)
+
     // hydrate if possible. This must happen before flushBuffer so the atom's id
     // hasn't been finalized (e.g. scoped atoms whose id changes after eval).
-    // The self-set (this === ec.n) takes the immediate local path in Signal.set.
     if (!this.H) {
       const hydration = this.e.hydration?.[this.id]
 
-      if (typeof hydration !== 'undefined') this.h(hydration)
+      if (typeof hydration !== 'undefined') {
+        if (this.S) {
+          // Signal-wrapping atoms: direct assignment avoids scheduling a
+          // wasteful re-evaluation (the atom is already an observer of its
+          // signal at this point since edges were just flushed).
+          const val = this.t.hydrate ? this.t.hydrate(hydration) : hydration
+          this.v = val
+          this.S.v = val
+        } else {
+          // Non-signal atoms (including store atoms): go through h() -> set()
+          // so the underlying store/state mechanism is properly updated.
+          this.h(hydration)
+        }
+      }
     }
-
-    flushBuffer(n)
-    setNodeStatus(this, ACTIVE)
   }
 
   /**
