@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@angular/core@16.0.0-next.0':
-    hash: imgmwdc5iuzp5vrjy7dqeeid6i
+    hash: 83adfe5d9a82be0f0fc823652fc4f9aa97fcfff591bf9741f52c2278f29e1153
     path: patches/@angular__core@16.0.0-next.0.patch
 
 importers:
@@ -15,7 +15,7 @@ importers:
     dependencies:
       '@angular/core':
         specifier: 16.0.0-next.0
-        version: 16.0.0-next.0(patch_hash=imgmwdc5iuzp5vrjy7dqeeid6i)(rxjs@7.8.1)(zone.js@0.12.0)
+        version: 16.0.0-next.0(patch_hash=83adfe5d9a82be0f0fc823652fc4f9aa97fcfff591bf9741f52c2278f29e1153)(rxjs@7.8.1)(zone.js@0.12.0)
       '@legendapp/state':
         specifier: ^3.0.0-beta.23
         version: 3.0.0-beta.23(react@19.0.0)
@@ -25,9 +25,6 @@ importers:
       '@reactively/core':
         specifier: ^0.0.8
         version: 0.0.8
-      '@solidjs/reactivity':
-        specifier: ^0.0.9
-        version: 0.0.9
       '@vue/reactivity':
         specifier: ^3.2.47
         version: 3.2.47
@@ -388,9 +385,6 @@ packages:
 
   '@reactively/core@0.0.8':
     resolution: {integrity: sha512-5uAnNf2gQSm3gM7z6Lx079H1/MuDQQI+5aYfwyDFGR9nHZj8yblLY/6aOJVWp+NcBwXVBKuWQ28qWHD9F1qN1w==}
-
-  '@solidjs/reactivity@0.0.9':
-    resolution: {integrity: sha512-duaaHwXTTY/YF+H9AT4ZEiL6H9FwMxQOMrTIDpsRYLBkbl3Y/FKaeoYu7CK4Ontbra6/LAi0DZyb/M6vCcJoMw==}
 
   '@types/chai-subset@1.3.3':
     resolution: {integrity: sha512-frBecisrNGz+F4T6bcc+NLeolfiojh5FxW2klu669+8BARtyQv2C/GkNW6FUodVe4BroGMP/wER/YDGc7rEllw==}
@@ -788,7 +782,7 @@ packages:
 
 snapshots:
 
-  '@angular/core@16.0.0-next.0(patch_hash=imgmwdc5iuzp5vrjy7dqeeid6i)(rxjs@7.8.1)(zone.js@0.12.0)':
+  '@angular/core@16.0.0-next.0(patch_hash=83adfe5d9a82be0f0fc823652fc4f9aa97fcfff591bf9741f52c2278f29e1153)(rxjs@7.8.1)(zone.js@0.12.0)':
     dependencies:
       rxjs: 7.8.1
       tslib: 2.5.0
@@ -948,8 +942,6 @@ snapshots:
       preact: 10.13.2
 
   '@reactively/core@0.0.8': {}
-
-  '@solidjs/reactivity@0.0.9': {}
 
   '@types/chai-subset@1.3.3':
     dependencies:
