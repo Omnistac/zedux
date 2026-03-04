@@ -11,8 +11,8 @@ import {
 import { flushBuffer } from '../utils/evaluationContext'
 import { Ecosystem } from './Ecosystem'
 import { doMutate, Signal } from './Signal'
-import { ACTIVE, EventSent, INITIALIZING, TopPrio } from '../utils/general'
-import { setNodeStatus } from '../utils/graph'
+import { EventSent, INITIALIZING, TopPrio } from '../utils/general'
+import { initializeNode } from '../utils/graph'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
 const getRelevantEvents = (events?: Record<string, any>) => {
@@ -201,11 +201,14 @@ export class MappedSignal<
       // reference (making `this.N` undefined and this whole call a noop) or
       // `this.N` will contain one or more updates for non-signal inner values.
       if (!this.w && this.N) {
-        if (this.e.syncScheduler.I) {
-          // inner signals have updates, but they're deferred. Defer here too
+        if (this.e.syncScheduler.I && !this.O) {
+          // inner signals have deferred updates and this isn't a local signal.
+          // Defer here too
           this.e.syncScheduler.i(() => this.j())
         } else {
-          // No need to involve the scheduler. Update own state now.
+          // Local signal or no deferred updates. Update own state now.
+          // For local signals, this.j() -> super.set() -> Signal.set() takes
+          // the local path, propagating immediately.
           this.j()
         }
       }
@@ -302,7 +305,7 @@ export class MappedSignal<
 
       if (this.l === INITIALIZING) {
         this.v = signal.get(edgeConfig)
-        setNodeStatus(this, ACTIVE)
+        initializeNode(this)
       } else {
         signal.get(edgeConfig)
         this.F = signal
@@ -327,7 +330,7 @@ export class MappedSignal<
         })
       )
 
-      setNodeStatus(this, ACTIVE)
+      initializeNode(this)
     } else {
       for (const [key, val] of entries) {
         if ((val as Signal).izn) {

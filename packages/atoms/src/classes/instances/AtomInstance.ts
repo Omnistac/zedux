@@ -41,6 +41,8 @@ import { AtomTemplateBase } from '../templates/AtomTemplateBase'
 import {
   destroyNodeFinish,
   destroyNodeStart,
+  finalizeScopedNodeId,
+  initializeNode,
   scheduleEventListeners,
   scheduleStaticDependents,
   setNodeStatus,
@@ -218,6 +220,13 @@ export class AtomInstance<
   public H = false
 
   /**
+   * `lf` - local flush counter. Tracks the depth of local signal state
+   * updates during this atom's evaluation. When this hits 0, local jobs
+   * are drained from the scheduler's job queue.
+   */
+  public lf = 0
+
+  /**
    * `I`njectors - tracks injector calls from the last time the state factory
    * ran. Initialized on-demand
    */
@@ -337,7 +346,11 @@ export class AtomInstance<
     settable: Settable<G['State']>,
     events?: Partial<SendableEvents<G>>
   ) {
-    return this.S ? this.S.set(settable, events) : super.set(settable, events)
+    if (this.S) {
+      this.S.set(settable, events)
+    } else {
+      super.set(settable, events)
+    }
   }
 
   /**
@@ -371,15 +384,31 @@ export class AtomInstance<
     const { n } = getEvaluationContext()
     this.j()
 
-    // hydrate if possible
+    finalizeScopedNodeId(this)
+    initializeNode(this)
+    flushBuffer(n)
+
+    // hydrate if possible. This must happen after finalizeScopedNodeId so the
+    // atom's id has been finalized (e.g. scoped atoms whose id changes after
+    // eval).
     if (!this.H) {
       const hydration = this.e.hydration?.[this.id]
 
-      if (typeof hydration !== 'undefined') this.h(hydration)
+      if (typeof hydration !== 'undefined') {
+        if (this.S) {
+          // Signal-wrapping atoms: direct assignment avoids scheduling a
+          // wasteful re-evaluation (the atom is already an observer of its
+          // signal at this point since edges were just flushed).
+          const val = this.t.hydrate ? this.t.hydrate(hydration) : hydration
+          this.v = val
+          this.S.v = val
+        } else {
+          // Non-signal atoms (including store atoms): go through h() -> set()
+          // so the underlying store/state mechanism is properly updated.
+          this.h(hydration)
+        }
+      }
     }
-
-    flushBuffer(n)
-    setNodeStatus(this, ACTIVE)
   }
 
   /**

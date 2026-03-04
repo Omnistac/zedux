@@ -398,6 +398,8 @@ describe('graph', () => {
 
     ecosystem.getNode(atom2)
 
-    expect(calls).toEqual([0, 2])
+    // signal.set(1) is immediate during evaluation, so signal.get() in the
+    // effect returns 1 (not 0), and the effect's set(2) never runs.
+    expect(calls).toEqual([0])
   })
 })

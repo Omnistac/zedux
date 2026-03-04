@@ -15,7 +15,6 @@ import {
 } from '@zedux/atoms/types/index'
 import { Ecosystem } from './Ecosystem'
 import {
-  ACTIVE,
   DESTROYED,
   Eventless,
   ExplicitExternal,
@@ -32,7 +31,13 @@ import {
   ListenableEvents,
 } from '../types/events'
 import { bufferEdge, getEvaluationContext } from '../utils/evaluationContext'
-import { addEdge, addReason, removeEdge, setNodeStatus } from '../utils/graph'
+import {
+  addEdge,
+  addReason,
+  initializeNode,
+  removeEdge,
+  setNodeStatus,
+} from '../utils/graph'
 import { parseOnArgs, shouldScheduleImplicit } from '../utils/events'
 import { scheduleSync } from '../utils/ecosystem'
 
@@ -467,7 +472,7 @@ export class ExternalNode<
   ) {
     super()
     e.n.set(id, this)
-    setNodeStatus(this, ACTIVE)
+    initializeNode(this)
   }
 
   /**

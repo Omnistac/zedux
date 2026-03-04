@@ -373,22 +373,22 @@ describe('signals', () => {
     const node2 = ecosystem.getNode(atom2)
 
     expect(node2.get()).toBe('ab')
-    expect(calls).toEqual(['', 'ab'])
+    expect(calls).toEqual(['ab'])
 
     node1.set('aa')
 
     expect(node2.get()).toBe('aab')
-    expect(calls).toEqual(['', 'ab', 'ab', 'aab'])
+    expect(calls).toEqual(['ab', 'aab'])
 
     node2.set('c') // will flip then flip back; node2's state is always derived
 
     expect(node2.get()).toBe('aab')
-    expect(calls).toEqual(['', 'ab', 'ab', 'aab', 'c', 'aab'])
+    expect(calls).toEqual(['ab', 'aab', 'aab'])
 
     node1.set('aaa')
 
     expect(node2.get()).toBe('aaab')
-    expect(calls).toEqual(['', 'ab', 'ab', 'aab', 'c', 'aab', 'aab', 'aaab'])
+    expect(calls).toEqual(['ab', 'aab', 'aab', 'aaab'])
   })
 
   test('calling `.getOnce()` in a reactive context does not register graph edges', () => {
@@ -412,7 +412,7 @@ describe('signals', () => {
     expect(node2.get()).toBe('ab')
   })
 
-  test('setting a signal during atom evaluation eventually resolves', () => {
+  test('setting a signal during atom evaluation resolves immediately', () => {
     const calls: any[] = []
     const atom1 = atom('1', 1)
 
@@ -431,13 +431,10 @@ describe('signals', () => {
     const node2 = ecosystem.getNode(atom2)
 
     expect(node2.get()).toBe(1)
-    expect(calls).toEqual([
-      [1, 2],
-      [1, 1],
-    ])
+    expect(calls).toEqual([[1, 1]])
   })
 
-  test('multiple deferred state updates run in order', () => {
+  test('multiple immediate state updates run in order', () => {
     const calls: any[] = []
     const atom1 = atom('1', 'a')
 
@@ -472,7 +469,6 @@ describe('signals', () => {
     expect(node1.get()).toBe('abcd')
     expect(node2.get()).toEqual({ str: 'abcd' })
     expect(calls).toEqual([
-      ['a', { str: 'a' }],
       ['a', { str: 'abcd' }],
       ['abcd', { str: 'abcd' }],
     ])

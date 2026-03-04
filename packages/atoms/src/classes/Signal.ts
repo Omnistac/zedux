@@ -1,5 +1,6 @@
 import {
   GraphEdge,
+  Job,
   Mutatable,
   NodeGenerics,
   SendableEvents,
@@ -7,12 +8,12 @@ import {
   Transaction,
   UndefinedEvents,
 } from '../types/index'
-import { ACTIVE, EventSent } from '../utils/general'
+import { EventSent } from '../utils/general'
 import {
   destroyNodeFinish,
   destroyNodeStart,
+  initializeNode,
   scheduleEventListeners,
-  setNodeStatus,
 } from '../utils/graph'
 import { Ecosystem } from './Ecosystem'
 import { ZeduxNode } from './ZeduxNode'
@@ -20,16 +21,49 @@ import { recursivelyMutate, recursivelyProxy } from './proxies'
 import { getEvaluationContext } from '../utils/evaluationContext'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
+/**
+ * Drain local jobs from the scheduler's sorted job queue. Iterates the
+ * scheduler's `j` array (which is already sorted by type and weight via
+ * `schedule()`), finds jobs owned by the evaluating atom, splices them out
+ * and runs them. Recursive signal sets are handled naturally via the `lf`
+ * counter on the owning atom.
+ */
+const flushLocalJobs = (
+  scheduler: { j: Job[]; r: number },
+  owner: ZeduxNode
+) => {
+  const { j } = scheduler
+  let i = scheduler.r
+
+  while (i < j.length) {
+    if ((j[i] as any).O === owner) {
+      const [job] = j.splice(i, 1)
+      job.j()
+      // Restart from scheduler.r - splice shifted indices and job.j() may
+      // have inserted new local jobs via schedule()
+      i = scheduler.r
+    } else {
+      i++
+    }
+  }
+}
+
 export const doMutate = <G extends NodeGenerics>(
   node: Signal<G>,
   isWrapperSignal: boolean,
   mutatable: Mutatable<G['State']>,
   events?: Partial<SendableEvents<G>>
 ) => {
-  if (getEvaluationContext().n) {
-    node.e.syncScheduler.i(() => node.mutate(mutatable, events))
+  const { n } = getEvaluationContext()
 
-    return
+  if (n) {
+    // local signal - bypass deferral, proceed with mutation below
+    if (node.O !== n) {
+      // external signal - defer
+      node.e.syncScheduler.i(() => node.mutate(mutatable, events))
+
+      return
+    }
   }
 
   const oldState = node.v
@@ -109,14 +143,26 @@ export const doMutate = <G extends NodeGenerics>(
         mutate: transactions,
       } as Partial<SendableEvents<G>>)
     } else {
-      node.v = newState
-
-      schedulerPre(node.e)
-      node.e.ch(node, oldState, {
+      const mutateEvents = {
         ...events,
         mutate: transactions,
-      } as Partial<SendableEvents<G>>)
-      schedulerPost(node.e)
+      } as Partial<SendableEvents<G>>
+
+      node.v = newState
+
+      if (n && node.O === n) {
+        // local non-wrapper signal during evaluation - flush locally
+        ;(n as any).lf++
+        node.e.ch(node, oldState, mutateEvents)
+
+        if (--(n as any).lf === 0) {
+          flushLocalJobs(node.e.syncScheduler, n)
+        }
+      } else {
+        schedulerPre(node.e)
+        node.e.ch(node, oldState, mutateEvents)
+        schedulerPost(node.e)
+      }
     }
   }
 }
@@ -157,6 +203,13 @@ export class Signal<
   // @ts-expect-error this is undefined for signals, only defined by subclasses
   public t: G['Template']
 
+  /**
+   * `O`wner - the atom instance that created this signal via `injectSignal` or
+   * `injectMappedSignal`. Used to identify "local" signals whose state updates
+   * should propagate immediately during the owning atom's evaluation.
+   */
+  public O: ZeduxNode | undefined = undefined
+
   public constructor(
     /**
      * @see ZeduxNode.e
@@ -177,7 +230,7 @@ export class Signal<
   ) {
     super()
 
-    deferActiveStatus || setNodeStatus(this, ACTIVE)
+    deferActiveStatus || initializeNode(this)
   }
 
   /**
@@ -259,9 +312,30 @@ export class Signal<
     settable: Settable<G['State']>,
     events?: Partial<SendableEvents<G>>
   ) {
-    const { n, u } = getEvaluationContext()
+    const { n } = getEvaluationContext()
 
-    if (n || u) {
+    if (n) {
+      if (this.O === n) {
+        // local signal - set state immediately and flush through local graph
+        const oldState = this.v
+        const newState = (this.v =
+          typeof settable === 'function'
+            ? (settable as (state: G['State']) => G['State'])(oldState)
+            : settable)
+
+        if (newState !== oldState) {
+          ;(n as any).lf++
+          this.e.ch(this, oldState, events)
+
+          if (--(n as any).lf === 0) {
+            flushLocalJobs(this.e.syncScheduler, n)
+          }
+        }
+
+        return
+      }
+
+      // external signal during evaluation - defer
       this.e.syncScheduler.i(() => this.set(settable, events))
 
       return
