@@ -1,11 +1,11 @@
 import { ReactiveFramework } from "../util/reactiveFramework";
 import {
-  flushSync,
+  batch,
   createEffect,
   createMemo,
   createRoot,
   createSignal,
-} from "@solidjs/reactivity";
+} from "solid-js";
 
 export const xReactivityFramework: ReactiveFramework = {
   name: "x-reactivity",
@@ -24,8 +24,7 @@ export const xReactivityFramework: ReactiveFramework = {
   },
   effect: (fn) => createEffect(fn),
   withBatch: (fn) => {
-    fn();
-    flushSync();
+    batch(fn);
   },
   withBuild: (fn) => createRoot(fn),
 };
