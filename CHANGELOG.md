@@ -1,3 +1,17 @@
+## v2.0.0-rc.14 (Mar 4, 2026)
+
+### New Features:
+
+- `atoms`: immediately flush internal signal updates during atom evaluation (#350)
+- `atoms`: support calling `.mutate` on signals with a nullish value (#347)
+
+### Fixes:
+
+- `atoms`: clean up `MappedSignal#C` when no inner signal changes state (#345)
+- `atoms`: clear evaluation reasons when non-reactive wrapped signals skip evaluation (#348)
+- `atoms`: make `injectPromise` respect `reactive: false` signal config (#346)
+- `atoms`: prevent ephemeral selector auto-destruction from cascading to upstream nodes (#349)
+
 ## v2.0.0-rc.13 (Feb 27, 2026)
 
 ### New Features:
