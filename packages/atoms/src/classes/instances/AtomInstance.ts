@@ -41,6 +41,8 @@ import { AtomTemplateBase } from '../templates/AtomTemplateBase'
 import {
   destroyNodeFinish,
   destroyNodeStart,
+  finalizeScopedNodeId,
+  initializeNode,
   scheduleEventListeners,
   scheduleStaticDependents,
   setNodeStatus,
@@ -382,11 +384,13 @@ export class AtomInstance<
     const { n } = getEvaluationContext()
     this.j()
 
+    initializeNode(this)
     flushBuffer(n)
-    setNodeStatus(this, ACTIVE)
+    finalizeScopedNodeId(this)
 
-    // hydrate if possible. This must happen before flushBuffer so the atom's id
-    // hasn't been finalized (e.g. scoped atoms whose id changes after eval).
+    // hydrate if possible. This must happen after finalizeScopedNodeId so the
+    // atom's id has been finalized (e.g. scoped atoms whose id changes after
+    // eval).
     if (!this.H) {
       const hydration = this.e.hydration?.[this.id]
 

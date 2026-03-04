@@ -8,12 +8,12 @@ import {
   Transaction,
   UndefinedEvents,
 } from '../types/index'
-import { ACTIVE, EventSent } from '../utils/general'
+import { EventSent } from '../utils/general'
 import {
   destroyNodeFinish,
   destroyNodeStart,
+  initializeNode,
   scheduleEventListeners,
-  setNodeStatus,
 } from '../utils/graph'
 import { Ecosystem } from './Ecosystem'
 import { ZeduxNode } from './ZeduxNode'
@@ -230,7 +230,7 @@ export class Signal<
   ) {
     super()
 
-    deferActiveStatus || setNodeStatus(this, ACTIVE)
+    deferActiveStatus || initializeNode(this)
   }
 
   /**

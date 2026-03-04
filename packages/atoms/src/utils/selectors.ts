@@ -7,8 +7,8 @@ import {
 import { schedulerPost, schedulerPre } from './ecosystem'
 import { destroyBuffer, flushBuffer } from './evaluationContext'
 import { isListeningTo, sendEcosystemErrorEvent } from './events'
-import { ACTIVE, ERROR } from './general'
-import { setNodeStatus } from './graph'
+import { ERROR } from './general'
+import { finalizeScopedNodeId, initializeNode } from './graph'
 import type { Ecosystem } from '../classes/Ecosystem'
 import type { SelectorInstance } from '../classes/SelectorInstance'
 
@@ -95,10 +95,15 @@ export const runSelector = <G extends SelectorGenerics>(
   }
 
   node.w = node.wt = undefined
+
+  if (isInitializing) {
+    initializeNode(node)
+  }
+
   flushBuffer(prevNode)
 
   if (isInitializing) {
-    setNodeStatus(node, ACTIVE)
+    finalizeScopedNodeId(node)
   }
 }
 

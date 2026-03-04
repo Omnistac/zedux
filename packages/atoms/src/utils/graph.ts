@@ -37,10 +37,13 @@ const changeScopedNodeId = (
   ecosystem.s ??= {}
   ecosystem.s[templateKey] ??= [...newNode.V!.keys()]
 
-  // give the new scoped node a `@scope()`-suffixed id
-  const scopedId = `${newNode.id}-${getScopeString(ecosystem, newNode.V!)}`
+  // strip any existing @scope suffix so this is idempotent (called once in
+  // initializeNode with direct scope, then again in finalizeScopedNodeId after
+  // transitive scope is propagated via addEdge)
+  const baseId = newNode.id.replace(/-@scope\(.*\)$/, '')
 
-  newNode.id = scopedId
+  // give the new scoped node a `@scope()`-suffixed id
+  newNode.id = `${baseId}-${getScopeString(ecosystem, newNode.V!)}`
 }
 
 /**
@@ -351,15 +354,39 @@ export const scheduleStaticDependents = (
 export const scheduleNodeDestruction = (node: ZeduxNode) =>
   node.o.size - (node.L ? 1 : 0) || node.l !== ACTIVE || node.m()
 
-export const setNodeStatus = (
-  node: ZeduxNode,
-  newStatus: InternalLifecycleStatus
-) => {
-  const oldStatus = node.l
-  node.l = newStatus
+/**
+ * Finalize a scoped node's id after its edges have been flushed. Must be called
+ * after `flushBuffer` so transitive scope from `addEdge` is available in
+ * `node.V`.
+ */
+export const finalizeScopedNodeId = (node: ZeduxNode) => {
+  if (node.V && node.t) {
+    // if initializeNode registered the node under its pre-scoped id, remove
+    // that entry before changing the id
+    if (node.e.n.get(node.id) === node) {
+      node.e.n.delete(node.id)
+    }
 
-  if (node.V && oldStatus === INITIALIZING && node.t) {
-    // scoped nodes change their id after initial evaluation
+    changeScopedNodeId(
+      node.e,
+      'key' in node.t ? node.t.key : getSelectorKey(node.e, node.t),
+      node
+    )
+  }
+}
+
+/**
+ * Handle the INITIALIZING -> ACTIVE transition. Sets status to ACTIVE,
+ * registers in `ecosystem.n`, and fires the cycle event. Call this before
+ * `flushBuffer` so plugins receive cycle(Active) before edge(add) events.
+ */
+export const initializeNode = (node: ZeduxNode) => {
+  node.l = ACTIVE
+
+  // finalize the scoped id from direct scope (set during evaluation via
+  // `inject()`). Transitive scope from addEdge isn't available yet - that's
+  // handled by finalizeScopedNodeId after flushBuffer.
+  if (node.V && node.t) {
     changeScopedNodeId(
       node.e,
       'key' in node.t ? node.t.key : getSelectorKey(node.e, node.t),
@@ -367,40 +394,52 @@ export const setNodeStatus = (
     )
   }
 
-  const isListeningToCycle = isListeningTo(node.e, CYCLE)
+  if (isListeningTo(node.e, CYCLE)) {
+    // ensure the node is findable before sending the cycle event
+    node.e.n.set(node.id, node)
 
-  if (
-    newStatus === DESTROYED ||
-    oldStatus !== INITIALIZING ||
-    isListeningToCycle
-  ) {
-    const reason = {
-      n: newStatus,
-      o: oldStatus,
-      // TODO: adding `r`easons doesn't make sense for cycle events (or anything
-      // but change events). Remove.
+    sendImplicitEcosystemEvent(node.e, {
+      n: ACTIVE,
+      o: INITIALIZING,
       r: node.w,
       s: node,
       t: Cycle,
-    } as const
+    })
+  }
+}
 
-    if (isListeningToCycle) {
-      // ensure this is set before sending the `cycle` ecosystem event for the
-      // new node. It's fine that we set it again to the same ref in other
-      // places.
-      if (oldStatus === INITIALIZING) node.e.n.set(node.id, node)
+/**
+ * Handle non-INITIALIZING status transitions (Active<->Stale, *->Destroyed).
+ * The INITIALIZING -> ACTIVE transition is handled by `initializeNode`.
+ */
+export const setNodeStatus = (
+  node: ZeduxNode,
+  newStatus: InternalLifecycleStatus
+) => {
+  const oldStatus = node.l
+  node.l = newStatus
 
-      sendImplicitEcosystemEvent(node.e, reason)
-    }
+  const reason = {
+    n: newStatus,
+    o: oldStatus,
+    // TODO: adding `r`easons doesn't make sense for cycle events (or anything
+    // but change events). Remove.
+    r: node.w,
+    s: node,
+    t: Cycle,
+  } as const
 
-    if (newStatus === DESTROYED) {
-      // Event observers don't prevent destruction so may still need cleaning up.
-      // Schedule them so they can do so. Also if a node is force-destroyed, it
-      // could still have observers. Inform them of the destruction so they can
-      // recreate their source node.
-      scheduleStaticDependents(reason)
-    } else if (oldStatus !== INITIALIZING) {
-      scheduleEventListeners(reason)
-    }
+  if (isListeningTo(node.e, CYCLE)) {
+    sendImplicitEcosystemEvent(node.e, reason)
+  }
+
+  if (newStatus === DESTROYED) {
+    // Event observers don't prevent destruction so may still need cleaning up.
+    // Schedule them so they can do so. Also if a node is force-destroyed, it
+    // could still have observers. Inform them of the destruction so they can
+    // recreate their source node.
+    scheduleStaticDependents(reason)
+  } else {
+    scheduleEventListeners(reason)
   }
 }
