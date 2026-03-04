@@ -201,11 +201,14 @@ export class MappedSignal<
       // reference (making `this.N` undefined and this whole call a noop) or
       // `this.N` will contain one or more updates for non-signal inner values.
       if (!this.w && this.N) {
-        if (this.e.syncScheduler.I) {
-          // inner signals have updates, but they're deferred. Defer here too
+        if (this.e.syncScheduler.I && !this.O) {
+          // inner signals have deferred updates and this isn't a local signal.
+          // Defer here too
           this.e.syncScheduler.i(() => this.j())
         } else {
-          // No need to involve the scheduler. Update own state now.
+          // Local signal or no deferred updates. Update own state now.
+          // For local signals, this.j() -> super.set() -> Signal.set() takes
+          // the local path, propagating immediately.
           this.j()
         }
       }

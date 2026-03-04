@@ -484,7 +484,7 @@ describe('mapped signals', () => {
     ])
   })
 
-  test("updating a mapped signal during atom evaluation doesn't tear and eventually resolves", () => {
+  test("updating a mapped signal during atom evaluation doesn't tear and resolves immediately", () => {
     const calls: any[] = []
     const atom1 = atom('1', () => 'a')
 
@@ -510,10 +510,9 @@ describe('mapped signals', () => {
     const node2 = ecosystem.getNode(atom2)
 
     expect(node2.get()).toEqual({ a: 'a', b: 'bb' })
+    // local signal set is immediate: mutate resolves within the same eval
     expect(calls).toEqual([
       ['b', 'b'],
-      { a: 'a', b: 'b' },
-      ['bb', 'bb'],
       { a: 'a', b: 'bb' },
     ])
   })

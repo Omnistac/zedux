@@ -111,15 +111,17 @@ export function injectMappedSignal(
 ) {
   const instance = injectSelf()
 
-  const signal = injectMemo(
-    () =>
-      new MappedSignal(
-        instance.e,
-        instance.e.makeId('signal', instance),
-        mapOrSignal
-      ),
-    []
-  )
+  const signal = injectMemo(() => {
+    const s = new MappedSignal(
+      instance.e,
+      instance.e.makeId('signal', instance),
+      mapOrSignal
+    )
+
+    s.O = instance
+
+    return s
+  }, [])
 
   // create a graph edge between the current atom and the new signal
   signal.get({

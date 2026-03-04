@@ -59,6 +59,7 @@ export const injectSignal = <
       typeof state === 'function' ? untrack(state as () => State) : state
     )
 
+    signal.O = instance
     instance.e.n.set(id, signal)
 
     return signal

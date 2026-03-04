@@ -1,5 +1,6 @@
 import {
   GraphEdge,
+  Job,
   Mutatable,
   NodeGenerics,
   SendableEvents,
@@ -20,16 +21,57 @@ import { recursivelyMutate, recursivelyProxy } from './proxies'
 import { getEvaluationContext } from '../utils/evaluationContext'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
+/**
+ * Drain local jobs for the given owner node. Sort by weight to resolve
+ * diamond dependencies, then run each job. Jobs may add more local jobs
+ * (via recursive Signal.set -> localFlush calls), which is fine - the
+ * recursive drain handles deeper levels.
+ */
+const drainLocalJobs = (target: { lf: number; lj: Job[] }) => {
+  while (target.lj.length) {
+    target.lj.sort((a, b) => (a.W ?? 0) - (b.W ?? 0))
+    const job = target.lj.shift()!
+    job.j()
+  }
+}
+
+/**
+ * Flush state changes for a local signal during its owner's evaluation.
+ * Increments the local flush counter, schedules dependents, then drains
+ * local jobs when the counter returns to 0.
+ */
+export const localFlush = (
+  node: Signal<any>,
+  target: { lf: number; lj: Job[] },
+  oldState: any,
+  events?: any
+) => {
+  target.lf++
+  schedulerPre(node.e)
+  node.e.ch(node, oldState, events)
+  schedulerPost(node.e)
+
+  if (--target.lf === 0) {
+    drainLocalJobs(target)
+  }
+}
+
 export const doMutate = <G extends NodeGenerics>(
   node: Signal<G>,
   isWrapperSignal: boolean,
   mutatable: Mutatable<G['State']>,
   events?: Partial<SendableEvents<G>>
 ) => {
-  if (getEvaluationContext().n) {
-    node.e.syncScheduler.i(() => node.mutate(mutatable, events))
+  const { n } = getEvaluationContext()
 
-    return
+  if (n) {
+    // local signal - bypass deferral, proceed with mutation below
+    if (node.O !== n) {
+      // external signal - defer
+      node.e.syncScheduler.i(() => node.mutate(mutatable, events))
+
+      return
+    }
   }
 
   const oldState = node.v
@@ -109,14 +151,21 @@ export const doMutate = <G extends NodeGenerics>(
         mutate: transactions,
       } as Partial<SendableEvents<G>>)
     } else {
-      node.v = newState
-
-      schedulerPre(node.e)
-      node.e.ch(node, oldState, {
+      const mutateEvents = {
         ...events,
         mutate: transactions,
-      } as Partial<SendableEvents<G>>)
-      schedulerPost(node.e)
+      } as Partial<SendableEvents<G>>
+
+      node.v = newState
+
+      if (n && node.O === n) {
+        // local non-wrapper signal during evaluation - flush locally
+        localFlush(node, n as any, oldState, mutateEvents)
+      } else {
+        schedulerPre(node.e)
+        node.e.ch(node, oldState, mutateEvents)
+        schedulerPost(node.e)
+      }
     }
   }
 }
@@ -156,6 +205,13 @@ export class Signal<
    */
   // @ts-expect-error this is undefined for signals, only defined by subclasses
   public t: G['Template']
+
+  /**
+   * `O`wner - the atom instance that created this signal via `injectSignal` or
+   * `injectMappedSignal`. Used to identify "local" signals whose state updates
+   * should propagate immediately during the owning atom's evaluation.
+   */
+  public O: ZeduxNode | undefined = undefined
 
   public constructor(
     /**
@@ -260,8 +316,25 @@ export class Signal<
     events?: Partial<SendableEvents<G>>
   ) {
     const { n, u } = getEvaluationContext()
+    const target = n || u
 
-    if (n || u) {
+    if (target) {
+      if (this.O === target || this === target) {
+        // local signal - set state immediately and flush through local graph
+        const oldState = this.v
+        const newState = (this.v =
+          typeof settable === 'function'
+            ? (settable as (state: G['State']) => G['State'])(oldState)
+            : settable)
+
+        if (newState !== oldState) {
+          localFlush(this, target as any, oldState, events)
+        }
+
+        return
+      }
+
+      // external signal during evaluation - defer
       this.e.syncScheduler.i(() => this.set(settable, events))
 
       return

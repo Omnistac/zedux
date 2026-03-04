@@ -36,7 +36,8 @@ describe('ssr', () => {
 
     const node = ecosystem.getNode(atom1)
 
-    expect(calls).toEqual(['ab', 'ab'])
+    // hydration set is deferred but doesn't trigger a second evaluation
+    expect(calls).toEqual(['ab'])
     expect(node.get()).toBe('ab')
   })
 
