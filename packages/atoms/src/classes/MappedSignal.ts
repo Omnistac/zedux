@@ -240,7 +240,7 @@ export class MappedSignal<
         ((this.E || this.b) &&
           ({
             ...this.E,
-            ...(this.b ? { mutate: this.b } : {}),
+            ...(this.b && { mutate: this.b }),
           } as Partial<SendableEvents<G>>))
     )
     this.w = this.wt = this.C = this.N = this.b = this.E = undefined
