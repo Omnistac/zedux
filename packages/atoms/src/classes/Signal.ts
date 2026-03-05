@@ -17,7 +17,11 @@ import {
 } from '../utils/graph'
 import { Ecosystem } from './Ecosystem'
 import { ZeduxNode } from './ZeduxNode'
-import { recursivelyMutate, recursivelyProxy } from './proxies'
+import {
+  isMutatable,
+  recursivelyMutate,
+  recursivelyProxy,
+} from './proxies'
 import { getEvaluationContext } from '../utils/evaluationContext'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
 
@@ -76,7 +80,7 @@ export const doMutate = <G extends NodeGenerics>(
 
     const transactions: Transaction[] = []
 
-    if (newState && typeof newState === 'object') {
+    if (isMutatable(newState)) {
       const empty = (
         newState instanceof Set
           ? new Set()
@@ -102,15 +106,18 @@ export const doMutate = <G extends NodeGenerics>(
     return
   }
 
-  if (
-    DEV &&
-    typeof oldState !== 'object' &&
-    !Array.isArray(oldState) &&
-    !((oldState as any) instanceof Set)
-  ) {
-    throw new TypeError(
-      'Zedux: signal.mutate only supports native JS objects, arrays, and sets'
-    )
+  if (!isMutatable(oldState)) {
+    const newState =
+      typeof mutatable === 'function'
+        ? (mutatable as (state: G['State']) => any)(oldState)
+        : mutatable
+
+    node.set(newState as Settable<G['State']>, {
+      ...events,
+      mutate: [],
+    } as Partial<SendableEvents<G>>)
+
+    return
   }
 
   const transactions: Transaction[] = []
@@ -126,11 +133,21 @@ export const doMutate = <G extends NodeGenerics>(
   if (typeof mutatable === 'function') {
     const result = (mutatable as (state: G['State']) => any)(proxyWrapper.p)
 
-    // if the callback function doesn't return void, assume it's a partial
-    // state object that represents a set of mutations Zedux needs to apply to
-    // the signal's state.
-    if (result && typeof result === 'object' && !transactions.length) {
-      recursivelyMutate(proxyWrapper.p, result)
+    // if the callback function doesn't return void and no proxy mutations
+    // were made, apply the return value: mutatable values are recursively
+    // applied as mutations; non-mutatable values (primitives, class instances,
+    // etc.) are set as the entire new state.
+    if (!transactions.length && result !== undefined) {
+      if (isMutatable(result)) {
+        recursivelyMutate(proxyWrapper.p, result)
+      } else {
+        node.set(result as Settable<G['State']>, {
+          ...events,
+          mutate: [],
+        } as Partial<SendableEvents<G>>)
+
+        return
+      }
     }
   } else {
     recursivelyMutate(proxyWrapper.p, mutatable)
