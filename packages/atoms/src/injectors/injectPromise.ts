@@ -208,7 +208,9 @@ export const injectPromise: {
     promise: Promise<Data>
   })
 
-  const dataSignal = injectSignal(initialData, { reactive: false }) as Signal<{
+  const dataSignal = injectSignal(initialData, {
+    reactive: false,
+  }) as unknown as Signal<{
     Events: EventMap
     Params: undefined
     ResolvedState: Data
