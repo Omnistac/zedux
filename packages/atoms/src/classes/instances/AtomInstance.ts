@@ -464,11 +464,13 @@ export class AtomInstance<
         if (edge) {
           // the edge between this atom and its wrapped signal needs to be
           // reactive. Track whether we made the `p`endingFlags added by
-          // `injectSignal`/similar non-Static. If we did, we need to make the
-          // edge not reevaluate this atom.
-          this.a = !!(edge.p! & Static) // `.p!` - doesn't matter if undefined
+          // `injectSignal`/similar non-Static. If we did, or if no `.get()`
+          // was called on the signal during evaluation (p == null), we need
+          // to make the edge not reevaluate this atom.
+          this.a = edge.p == null || !!(edge.p & Static)
           edge.p = TopPrio
         } else {
+          this.a = true
           bufferEdge(newFactoryResult, 'implicit', TopPrio)
         }
       }
