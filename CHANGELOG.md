@@ -1,3 +1,15 @@
+## v2.0.0-rc.15 (Mar 5, 2026)
+
+### New Features:
+
+- `atoms`: bundle custom events with change/mutate through MappedSignals (#357)
+- `atoms`: replace arrays instead of deep merging in mutate shorthand (#358)
+- `atoms`: use isPlainObject for smarter mutation proxy handling (#356)
+
+### Fixes:
+
+- `atoms`: prevent edges to signals returned from state factories from causing reevaluations (#355)
+
 ## v2.0.0-rc.14 (Mar 4, 2026)
 
 ### New Features:
