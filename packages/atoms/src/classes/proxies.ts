@@ -4,6 +4,23 @@ import {
   RecursivePartialWithArrayPlucking,
 } from '../types/index'
 
+/**
+ * Checks whether the passed value is a plain old object - not a class
+ * instance, Date, RegExp, etc. Arrays and Sets are handled separately.
+ */
+export const isPlainObject = (value: any) => {
+  if (typeof value !== 'object' || !value) return false
+
+  const prototype = Object.getPrototypeOf(value)
+  if (!prototype) return false // it was created with Object.create(null)
+
+  // If the prototype chain is exactly 1 layer deep, it's likely a normal object
+  return Object.getPrototypeOf(prototype) === null
+}
+
+export const isMutatable = (value: any) =>
+  isPlainObject(value) || Array.isArray(value) || value instanceof Set
+
 export type ParentProxy<State> = {
   t: Transaction[]
   u: (val: State, key?: string) => void
@@ -331,8 +348,13 @@ export function recursivelyMutate<
     if (val && typeof val === 'object') {
       if (prevVal === val) continue
 
-      if (prevVal && typeof prevVal === 'object') {
-        recursivelyMutate(prevVal, val)
+      if (
+        isPlainObject(val)
+          ? isPlainObject(prevVal) || Array.isArray(prevVal)
+          : (Array.isArray(prevVal) && Array.isArray(val)) ||
+            (prevVal instanceof Set && val instanceof Set)
+      ) {
+        recursivelyMutate(prevVal as any, val)
       } else {
         ;(state as any)[key] = val
       }
@@ -355,17 +377,13 @@ export const recursivelyProxy = <State extends MutatableTypes>(
   const isArr = Array.isArray(oldState)
   const isSet = oldState instanceof Set
 
-  if (!isArr && !isSet && (typeof oldState !== 'object' || !oldState)) {
-    return oldState // not proxy-able
+  if (!isArr && !isSet && !isPlainObject(oldState)) {
+    return oldState as any // not proxy-able
   }
-
-  const newState = (
-    isArr ? [...oldState] : isSet ? new Set(oldState) : { ...oldState }
-  ) as State
 
   // @ts-expect-error ts can't handle this apparently
   return new (isArr ? ArrayProxy : isSet ? SetProxy : ObjectProxy)(
-    newState,
+    oldState,
     parent,
     path
   )
