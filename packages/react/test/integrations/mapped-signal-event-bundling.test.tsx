@@ -856,6 +856,293 @@ describe('event bundling through mapped signals', () => {
     })
   })
 
+  describe('.send() propagation through deep nesting', () => {
+    test('.send() from innermost signal propagates through 2 layers with payload', () => {
+      const level1 = atom('level1', () => {
+        const signal = injectSignal(0, { events: { ping: As<string> } })
+        return api(injectMappedSignal(signal)).setExports({ signal })
+      })
+
+      const level2 = ion('level2', ({ getNode }) => {
+        return injectMappedSignal(getNode(level1))
+      })
+
+      const node1 = ecosystem.getNode(level1)
+      const node2 = ecosystem.getNode(level2)
+      const calls: any[] = []
+
+      node1.on('ping', payload => calls.push(['l1', payload]))
+      node2.on('ping', payload => calls.push(['l2', payload]))
+
+      node1.exports.signal.send('ping', 'from-signal')
+
+      expect(calls).toEqual([
+        ['l1', 'from-signal'],
+        ['l2', 'from-signal'],
+      ])
+    })
+
+    test('.send() from innermost signal propagates through 3 layers, all listeners fire', () => {
+      const level1 = atom('level1', () => {
+        const signal = injectSignal(0, { events: { ping: As<string> } })
+        return api(injectMappedSignal(signal)).setExports({ signal })
+      })
+
+      const level2 = ion('level2', ({ getNode }) => {
+        return injectMappedSignal(getNode(level1))
+      })
+
+      const level3 = ion('level3', ({ getNode }) => {
+        return injectMappedSignal(getNode(level2))
+      })
+
+      const node1 = ecosystem.getNode(level1)
+      const node2 = ecosystem.getNode(level2)
+      const node3 = ecosystem.getNode(level3)
+      const calls: any[] = []
+
+      node1.on('ping', payload => calls.push(['l1', payload]))
+      node2.on('ping', payload => calls.push(['l2', payload]))
+      node3.on('ping', payload => calls.push(['l3', payload]))
+
+      node1.exports.signal.send('ping', 'deep-send')
+
+      expect(calls).toEqual([
+        ['l1', 'deep-send'],
+        ['l2', 'deep-send'],
+        ['l3', 'deep-send'],
+      ])
+    })
+
+    test('.send() propagates through 5 layers of alternating single/map-mode', () => {
+      const level1 = atom('level1', () => {
+        const signal = injectSignal(0, { events: { ping: As<string> } })
+        return api(injectMappedSignal(signal)).setExports({ signal })
+      })
+
+      const level2 = ion('level2', ({ getNode }) => {
+        return injectMappedSignal({ l1: getNode(level1) })
+      })
+
+      const level3 = ion('level3', ({ getNode }) => {
+        return injectMappedSignal(getNode(level2))
+      })
+
+      const level4 = ion('level4', ({ getNode }) => {
+        return injectMappedSignal({ l3: getNode(level3) })
+      })
+
+      const level5 = ion('level5', ({ getNode }) => {
+        return injectMappedSignal(getNode(level4))
+      })
+
+      const node1 = ecosystem.getNode(level1)
+      const node2 = ecosystem.getNode(level2)
+      const node3 = ecosystem.getNode(level3)
+      const node4 = ecosystem.getNode(level4)
+      const node5 = ecosystem.getNode(level5)
+      const calls: any[] = []
+
+      node1.on('ping', payload => calls.push(['l1', payload]))
+      node2.on('ping', payload => calls.push(['l2', payload]))
+      node3.on('ping', payload => calls.push(['l3', payload]))
+      node4.on('ping', payload => calls.push(['l4', payload]))
+      node5.on('ping', payload => calls.push(['l5', payload]))
+
+      node1.exports.signal.send('ping', 'five-deep')
+
+      expect(calls).toEqual([
+        ['l1', 'five-deep'],
+        ['l2', 'five-deep'],
+        ['l3', 'five-deep'],
+        ['l4', 'five-deep'],
+        ['l5', 'five-deep'],
+      ])
+    })
+
+    test('.send() from atom instance (not inner signal) propagates through 3 layers', () => {
+      const level1 = atom('level1', () => {
+        return injectSignal(0, { events: { ping: As<string> } })
+      })
+
+      const level2 = ion('level2', ({ getNode }) => {
+        return injectMappedSignal(getNode(level1))
+      })
+
+      const level3 = ion('level3', ({ getNode }) => {
+        return injectMappedSignal(getNode(level2))
+      })
+
+      const node1 = ecosystem.getNode(level1)
+      const node2 = ecosystem.getNode(level2)
+      const node3 = ecosystem.getNode(level3)
+      const calls: any[] = []
+
+      node1.on('ping', payload => calls.push(['l1', payload]))
+      node2.on('ping', payload => calls.push(['l2', payload]))
+      node3.on('ping', payload => calls.push(['l3', payload]))
+
+      // send on the atom instance directly (not the inner signal)
+      node1.send('ping', 'from-atom')
+
+      expect(calls).toEqual([
+        ['l1', 'from-atom'],
+        ['l2', 'from-atom'],
+        ['l3', 'from-atom'],
+      ])
+    })
+
+    test('.send() with map mode at every level propagates through 3 layers', () => {
+      const level1 = atom('level1', () => {
+        const a = injectSignal(0, { events: { ping: As<string> } })
+        const b = injectSignal('b')
+        return api(injectMappedSignal({ a, b })).setExports({ a })
+      })
+
+      const level2 = ion('level2', ({ getNode }) => {
+        const l1 = getNode(level1)
+        const extra = injectSignal(true)
+        return injectMappedSignal({ l1, extra })
+      })
+
+      const level3 = ion('level3', ({ getNode }) => {
+        const l2 = getNode(level2)
+        return injectMappedSignal({ l2 })
+      })
+
+      const node1 = ecosystem.getNode(level1)
+      const node2 = ecosystem.getNode(level2)
+      const node3 = ecosystem.getNode(level3)
+      const calls: any[] = []
+
+      node1.on('ping', payload => calls.push(['l1', payload]))
+      node2.on('ping', payload => calls.push(['l2', payload]))
+      node3.on('ping', payload => calls.push(['l3', payload]))
+
+      node1.exports.a.send('ping', 'map-mode-send')
+
+      expect(calls).toEqual([
+        ['l1', 'map-mode-send'],
+        ['l2', 'map-mode-send'],
+        ['l3', 'map-mode-send'],
+      ])
+    })
+
+    test('.send() does not produce change event at any layer', () => {
+      const level1 = atom('level1', () => {
+        const signal = injectSignal(0, { events: { ping: As<string> } })
+        return api(injectMappedSignal(signal)).setExports({ signal })
+      })
+
+      const level2 = ion('level2', ({ getNode }) => {
+        return injectMappedSignal(getNode(level1))
+      })
+
+      const level3 = ion('level3', ({ getNode }) => {
+        return injectMappedSignal(getNode(level2))
+      })
+
+      const node1 = ecosystem.getNode(level1)
+      const node2 = ecosystem.getNode(level2)
+      const node3 = ecosystem.getNode(level3)
+      const calls: Record<string, any[]> = { l1: [], l2: [], l3: [] }
+
+      node1.on(eventMap => calls.l1.push(Object.keys(eventMap).sort()))
+      node2.on(eventMap => calls.l2.push(Object.keys(eventMap).sort()))
+      node3.on(eventMap => calls.l3.push(Object.keys(eventMap).sort()))
+
+      node1.exports.signal.send('ping', 'no-change')
+
+      // all layers should only see `ping`, never `change`
+      expect(calls.l1).toEqual([['ping']])
+      expect(calls.l2).toEqual([['ping']])
+      expect(calls.l3).toEqual([['ping']])
+    })
+
+    test('.send() each listener fires exactly once through 3 layers', () => {
+      const level1 = atom('level1', () => {
+        const signal = injectSignal(0, { events: { ping: As<string> } })
+        return api(injectMappedSignal(signal)).setExports({ signal })
+      })
+
+      const level2 = ion('level2', ({ getNode }) => {
+        return injectMappedSignal(getNode(level1))
+      })
+
+      const level3 = ion('level3', ({ getNode }) => {
+        return injectMappedSignal(getNode(level2))
+      })
+
+      const node1 = ecosystem.getNode(level1)
+      const node2 = ecosystem.getNode(level2)
+      const node3 = ecosystem.getNode(level3)
+      const counts = { l1: 0, l2: 0, l3: 0 }
+
+      node1.on('ping', () => counts.l1++)
+      node2.on('ping', () => counts.l2++)
+      node3.on('ping', () => counts.l3++)
+
+      node1.exports.signal.send('ping', 'once')
+
+      expect(counts).toEqual({ l1: 1, l2: 1, l3: 1 })
+    })
+
+    test('.send() with object map propagates through 3 layers', () => {
+      const level1 = atom('level1', () => {
+        const signal = injectSignal(0, {
+          events: { eventA: As<string>, eventB: As<number> },
+        })
+        return api(injectMappedSignal(signal)).setExports({ signal })
+      })
+
+      const level2 = ion('level2', ({ getNode }) => {
+        return injectMappedSignal(getNode(level1))
+      })
+
+      const level3 = ion('level3', ({ getNode }) => {
+        return injectMappedSignal(getNode(level2))
+      })
+
+      const node1 = ecosystem.getNode(level1)
+      const node3 = ecosystem.getNode(level3)
+      const calls: any[] = []
+
+      node3.on(eventMap => calls.push(Object.keys(eventMap).sort()))
+
+      node1.exports.signal.send({ eventA: 'a', eventB: 42 })
+
+      expect(calls).toEqual([['eventA', 'eventB']])
+    })
+
+    test('.send() payload integrity through mixed nesting (4 levels)', () => {
+      const level1 = atom('level1', () => {
+        return injectSignal(0, { events: { ping: As<{ id: number }> } })
+      })
+
+      const level2 = ion('level2', ({ getNode }) => {
+        return injectMappedSignal(getNode(level1))
+      })
+
+      const level3 = ion('level3', ({ getNode }) => {
+        return injectMappedSignal({ l2: getNode(level2) })
+      })
+
+      const level4 = ion('level4', ({ getNode }) => {
+        return injectMappedSignal(getNode(level3))
+      })
+
+      const node1 = ecosystem.getNode(level1)
+      const node4 = ecosystem.getNode(level4)
+      const calls: any[] = []
+
+      node4.on('ping', payload => calls.push(payload))
+
+      node1.send('ping', { id: 99 })
+
+      expect(calls).toEqual([{ id: 99 }])
+    })
+  })
+
   describe('edge cases', () => {
     test('set without custom events still works (only change event)', () => {
       const myAtom = atom('myAtom', () => {
