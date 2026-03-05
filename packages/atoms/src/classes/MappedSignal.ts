@@ -52,6 +52,14 @@ export class MappedSignal<
   public b?: Transaction[]
 
   /**
+   * buffered`E`vents - non-mutate events from inner signal state changes that
+   * did _not_ originate from this wrapper signal. We buffer these and send them
+   * bundled with the `change` (and `mutate` if applicable) event when this
+   * wrapper signal's job runs, keeping all events together in one event map.
+   */
+  public E?: Record<string, any>
+
+  /**
    * `I`dsToKeys - maps wrapped signal ids to the keys they control in this
    * wrapper signal's state. Not used in single signal wrapping mode.
    */
@@ -228,9 +236,14 @@ export class MappedSignal<
     // inner signals
     super.set(
       this.N,
-      this.C ?? (this.b && ({ mutate: this.b } as Partial<SendableEvents<G>>))
+      this.C ??
+        ((this.E || this.b) &&
+          ({
+            ...this.E,
+            ...(this.b ? { mutate: this.b } : {}),
+          } as Partial<SendableEvents<G>>))
     )
-    this.w = this.wt = this.C = this.N = this.b = undefined
+    this.w = this.wt = this.C = this.N = this.b = this.E = undefined
   }
 
   /**
@@ -276,17 +289,22 @@ export class MappedSignal<
     }
 
     // forward events from wrapped signals to observers of this wrapper signal.
-    // Use `super.send` for this 'cause `this.send` intercepts events and passes
-    // them the other way (up to wrapped signals)
-    if (
-      reason.e &&
-      !this.C &&
-      (!reason.e.mutate || Object.keys(reason.e).length > 1)
-    ) {
+    if (reason.e && !this.C) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { mutate, ...events } = reason.e
 
-      super.send(events as Partial<G['Events']>)
+      if (Object.keys(events).length) {
+        if (reason.t === EventSent) {
+          // standalone events (no state change) - forward immediately. Use
+          // `super.send` 'cause `this.send` intercepts events and passes them
+          // the other way (up to wrapped signals)
+          super.send(events as Partial<G['Events']>)
+        } else {
+          // state change - buffer events so they arrive bundled with the
+          // `change` (and `mutate` if applicable) event when j() runs
+          this.E = this.E ? { ...this.E, ...events } : events
+        }
+      }
     }
   }
 
