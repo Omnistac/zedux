@@ -5,6 +5,7 @@ import {
   ChangeEvent,
   ZeduxNode,
   injectEcosystem,
+  injectMemo,
   injectSignal,
   ion,
   Signal,
@@ -587,6 +588,131 @@ describe('signals', () => {
 
       expect(signal.get()).toEqual({ a: 1 })
       expect(receivedCustom).toBe('hello')
+    })
+  })
+
+  describe('implicit signal wrapping (no injectSignal)', () => {
+    test('does not reevaluate when the wrapped signal updates', () => {
+      let evaluations = 0
+
+      const testAtom = atom('test', () => {
+        evaluations++
+        const ecosystem = injectEcosystem()
+        const signal = injectMemo(() => ecosystem.signal(0), [])
+
+        return signal
+      })
+
+      const instance = ecosystem.getNode(testAtom)
+
+      expect(evaluations).toBe(1)
+      expect(instance.get()).toBe(0)
+
+      instance.S!.set(1)
+      expect(instance.get()).toBe(1)
+      expect(evaluations).toBe(1)
+
+      instance.S!.set(2)
+      expect(instance.get()).toBe(2)
+      expect(evaluations).toBe(1)
+    })
+
+    test('propagates updates to observers without reevaluating', () => {
+      let evaluations = 0
+
+      const testAtom = atom('test', () => {
+        evaluations++
+        const ecosystem = injectEcosystem()
+        const signal = injectMemo(() => ecosystem.signal('a'), [])
+
+        return signal
+      })
+
+      const observerAtom = ion('observer', ({ get }) => get(testAtom) + '!')
+
+      const instance = ecosystem.getNode(testAtom)
+      const observerInstance = ecosystem.getNode(observerAtom)
+
+      expect(observerInstance.get()).toBe('a!')
+      expect(evaluations).toBe(1)
+
+      instance.S!.set('b')
+      expect(instance.get()).toBe('b')
+      expect(observerInstance.get()).toBe('b!')
+
+      instance.S!.set('c')
+      expect(instance.get()).toBe('c')
+      expect(observerInstance.get()).toBe('c!')
+
+      expect(evaluations).toBe(1)
+    })
+
+    test('still reevaluates from other sources', () => {
+      let evaluations = 0
+      const depAtom = atom('dep', 1)
+
+      const testAtom = ion('test', ({ get }) => {
+        evaluations++
+        const depVal = get(depAtom)
+        const ecosystem = injectEcosystem()
+        const signal = injectMemo(() => ecosystem.signal(depVal * 10), [])
+
+        return signal
+      })
+
+      const instance = ecosystem.getNode(testAtom)
+      const depInstance = ecosystem.getNode(depAtom)
+
+      expect(instance.get()).toBe(10)
+      expect(evaluations).toBe(1)
+
+      // Signal update should not reevaluate
+      instance.S!.set(99)
+      expect(instance.get()).toBe(99)
+      expect(evaluations).toBe(1)
+
+      // Dependency update triggers reevaluation
+      depInstance.set(2)
+      expect(evaluations).toBe(2)
+      // injectMemo keeps the signal, so it retains its current value
+      expect(instance.get()).toBe(99)
+
+      // After the dependency-triggered reevaluation, signal updates must
+      // still not reevaluate (this.a must be re-derived correctly)
+      instance.S!.set(200)
+      expect(instance.get()).toBe(200)
+      expect(evaluations).toBe(2)
+
+      instance.S!.set(300)
+      expect(instance.get()).toBe(300)
+      expect(evaluations).toBe(2)
+    })
+
+    test('works with api() wrapping', () => {
+      let evaluations = 0
+
+      const testAtom = atom('test', () => {
+        evaluations++
+        const ecosystem = injectEcosystem()
+        const signal = injectMemo(() => ecosystem.signal(0), [])
+
+        return api(signal).setExports({
+          increment: () => signal.set(state => state + 1),
+        })
+      })
+
+      const instance = ecosystem.getNode(testAtom)
+
+      expect(evaluations).toBe(1)
+      expect(instance.get()).toBe(0)
+
+      instance.exports.increment()
+      expect(instance.get()).toBe(1)
+      expect(evaluations).toBe(1)
+
+      instance.exports.increment()
+      expect(instance.get()).toBe(2)
+      expect(evaluations).toBe(1)
     })
   })
 })
