@@ -1,7 +1,7 @@
 import {
   Transaction,
   MutatableTypes,
-  RecursivePartialWithArrayPlucking,
+  RecursivePartial,
 } from '../types/index'
 
 /**
@@ -333,7 +333,7 @@ const mutateSet = (prevVal: Set<any>, newVal: Set<any>) => {
  */
 export function recursivelyMutate<
   State extends any[] | Record<string, any> | Set<any>
->(state: State, update: RecursivePartialWithArrayPlucking<State>) {
+>(state: State, update: RecursivePartial<State>) {
   // the `.mutate` shorthand only supports same-type overwrites (no set ->
   // object, array -> set, etc. type changes). So we assume `update` is a set
   // here.
@@ -350,9 +350,8 @@ export function recursivelyMutate<
 
       if (
         isPlainObject(val)
-          ? isPlainObject(prevVal) || Array.isArray(prevVal)
-          : (Array.isArray(prevVal) && Array.isArray(val)) ||
-            (prevVal instanceof Set && val instanceof Set)
+          ? isPlainObject(prevVal)
+          : prevVal instanceof Set && val instanceof Set
       ) {
         recursivelyMutate(prevVal as any, val)
       } else {

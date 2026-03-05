@@ -3,7 +3,6 @@ import { AtomApi } from '../classes/AtomApi'
 import { Ecosystem } from '../classes/Ecosystem'
 import { ZeduxNode } from '../classes/ZeduxNode'
 import { SelectorInstance } from '../classes/SelectorInstance'
-import { Signal } from '../classes/Signal'
 import {
   InternalEvaluationType,
   InternalLifecycleStatus,
@@ -86,7 +85,7 @@ export type SelectorTemplate<State = any, Params extends any[] = any> =
 
 export type AtomStateFactory<
   G extends Pick<AtomGenerics, 'Exports' | 'Params' | 'Promise' | 'State'> & {
-    Signal: Signal | undefined
+    Signal: AnySignal | undefined
   }
 > = (
   ...params: G['Params']
@@ -99,7 +98,7 @@ export type AtomTuple<A extends AnyAtomTemplate> = [A, ParamsOf<A>]
 
 export type AtomValueOrFactory<
   G extends Pick<AtomGenerics, 'Exports' | 'Params' | 'Promise' | 'State'> & {
-    Signal: Signal | undefined
+    Signal: AnySignal | undefined
   }
 > = AtomStateFactory<G> | G['State']
 
@@ -491,12 +490,6 @@ export type PromiseStatus = 'error' | 'loading' | 'success'
 export type RecursivePartial<T> = T extends Record<string, any>
   ? { [P in keyof T]?: RecursivePartial<T[P]> }
   : T
-
-export type RecursivePartialWithArrayPlucking<T> = T extends any[]
-  ? { [K in number]?: RecursivePartialWithArrayPlucking<T[number]> }
-  : T extends Record<string, any>
-    ? { [P in keyof T]?: RecursivePartialWithArrayPlucking<T[P]> }
-    : T
 
 export type Ref<T = any> = MutableRefObject<T>
 

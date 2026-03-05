@@ -74,7 +74,7 @@ export type AtomApiGenerics = Pick<
   AtomGenerics,
   'Exports' | 'Promise' | 'State'
 > & {
-  Signal: Signal | undefined
+  Signal: AnySignal | undefined
 }
 
 export type AtomGenericsToAtomApiGenerics<

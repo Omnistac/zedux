@@ -259,7 +259,7 @@ describe('proxies', () => {
       ],
       [
         [
-          { k: ['arr', '1'], v: 'b' },
+          { k: 'arr', v: ['a', 'b'] },
           { k: ['set', 'b'], v: undefined },
         ],
         {
@@ -269,7 +269,7 @@ describe('proxies', () => {
       ],
       [
         [
-          { k: ['arr', '2'], v: 'c' },
+          { k: 'arr', v: ['a', 'b', 'c'] },
           { k: ['set', 'c'], v: undefined },
         ],
         {
@@ -312,7 +312,10 @@ describe('proxies', () => {
     })
 
     signal.mutate(draft => [draft[0] + 1, draft[1] + 1])
-    signal.mutate({ 2: 30, 3: 40 })
+    signal.mutate(state => {
+      state[2] = 30
+      state[3] = 40
+    })
 
     expect(signal.get()).toEqual([2, 3, 30, 40, 5])
   })
@@ -373,18 +376,11 @@ describe('proxies', () => {
         calls.push(transactions)
       })
 
-      // Array shorthand should work and only create transactions for changed indices
-      signal.mutate({ arr: { 2: 30 } })
+      // Array shorthand fully replaces the array instead of deep merging
       signal.mutate({ arr: [11, 21] })
 
-      expect(signal.get()).toEqual({ arr: [11, 21, 30] })
-      expect(calls).toEqual([
-        [{ k: ['arr', '2'], v: 30 }],
-        [
-          { k: ['arr', '0'], v: 11 },
-          { k: ['arr', '1'], v: 21 },
-        ],
-      ])
+      expect(signal.get()).toEqual({ arr: [11, 21] })
+      expect(calls).toEqual([[{ k: 'arr', v: [11, 21] }]])
     })
   })
 
@@ -615,13 +611,13 @@ describe('proxies', () => {
       expect(result).not.toBeInstanceOf(Config)
     })
 
-    test('plain object can update specific array indices via shorthand', () => {
+    test('plain object replaces array via shorthand', () => {
       const signal = ecosystem.signal<any>({ data: [1, 2, 3] })
 
-      signal.mutate({ data: { 0: 10 } })
+      signal.mutate({ data: { a: 10 } })
 
-      // plain object recurses into array, updating only index 0
-      expect(signal.get().data).toEqual([10, 2, 3])
+      // plain object fully replaces the array
+      expect(signal.get().data).toEqual({ a: 10 })
     })
 
     test('replacing a plain object with an array assigns directly', () => {
@@ -659,7 +655,7 @@ describe('proxies', () => {
       expect(signal.get().nested).toEqual({ a: 100, b: 2 })
 
       signal.mutate({ arr: [11] })
-      expect(signal.get().arr).toEqual([11, 20])
+      expect(signal.get().arr).toEqual([11])
 
       signal.mutate({ set: new Set([2, 3]) })
       expect(signal.get().set).toEqual(new Set([2, 3]))
@@ -764,8 +760,8 @@ describe('proxies', () => {
       // class instance: directly assigned
       expect(signal.get().tag).toBeInstanceOf(Tag)
       expect(signal.get().tag.name).toBe('user')
-      // array: recursively merged (index 1 preserved)
-      expect(signal.get().scores).toEqual([150, 200])
+      // array: fully replaced (no deep merge)
+      expect(signal.get().scores).toEqual([150])
     })
 
     test('proxy does not wrap non-plain objects when accessed via getter', () => {
