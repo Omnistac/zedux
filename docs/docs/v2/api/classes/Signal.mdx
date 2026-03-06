@@ -1,0 +1,472 @@
+---
+id: Signal
+title: Signal
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+The object returned by [`injectSignal`](../injectors/injectSignal). Signals are reactive state containers. Each signal holds a value and provides methods for accessing and updating that value. In Zedux, the term "signal" refers to an instance of this class.
+
+Atoms themselves are signals. That simply means the [AtomInstance](./AtomInstance) class extend this class. An atom can also contain many inner signals. When a signal is returned from an [atom state factory](../factories/atom#valueorfactory), the atom becomes a thin wrapper around the returned signal.
+
+[Mapped signals](./MappedSignal.mdx) are also signals themselves.
+
+As of v2, signals have replaced stores as the primary state container.
+
+## Creation
+
+You never instantiate this class yourself. There are two primary ways to create normal Signals:
+
+### `injectSignal`
+
+The most common way to create a signal inside an atom.
+
+```ts
+const counterAtom = atom('counter', () => {
+  const signal = injectSignal(0)
+
+  return signal // make this signal control this atom's entire state
+})
+```
+
+See [`injectSignal`](../injectors/injectSignal).
+
+### `ecosystem.signal`
+
+For dynamically creating signals anywhere.
+
+```ts
+const counterSignal = myEcosystem.signal(0)
+```
+
+Unlike `injectSignal`, `ecosystem.signal` can be used in loops and if statements. It's useful for creating dynamic lists of signals e.g. in response to state changes. The tradeoff is that you have to manage the signal's lifecycle manually.
+
+See [`Ecosystem#signal`](./Ecosystem#signal)
+
+## Destruction
+
+Signals are always destroyed when they have no more observers. When created via [`injectSignal`](../injectors/injectSignal), this typically means the signal will be destroyed when the injecting atom is destroyed. When created via [`ecosystem.signal`](./Ecosystem#signal), you must either manually add observers or destroy the signal when you're done with it.
+
+```ts
+const exampleAtom = atom('example', () => {
+  const signal = injectSignal('example state')
+
+  return signal
+})
+
+const exampleNode = ecosystem.getNode(exampleAtom)
+exampleNode.destroy() // also destroys the injected signal
+```
+
+## Set/Get
+
+At the most basic level, signals use simple set/get:
+
+```ts
+const signal = injectSignal(0)
+
+// in a callback or effect:
+signal.get() // 0
+signal.set(1)
+signal.get() // 1
+signal.set(state => state + 1) // function overload
+```
+
+When setting a signal's state via `.set`, the passed state will completely replace the current state. This means that nested objects must be spread manually:
+
+```ts
+const signal = injectSignal({ foo: { bar: [1, 2, 3] } })
+
+signal.set(state => ({
+  ...state,
+  foo: {
+    ...state.foo,
+    bar: state.foo.bar.filter(num => num % 2),
+  },
+}))
+```
+
+This can be tedious. For these operations, signals have a better way:
+
+## Mutation
+
+Besides basic sets and gets, signals have one extra superpower: [`signal.mutate`](#mutate). This method introduces immer-style proxy-based mutations to Zedux with an opt-in API - just stick to [`signal.set`](#set) if you don't like immer-style state updates.
+
+```tsx live ecosystemId=signal-mutation-example resultVar=result version=2
+const ecosystem = createEcosystem()
+const signal = ecosystem.signal({ foo: 1, bar: { baz: [1, 3, 5] } })
+
+signal.mutate(draft => {
+  draft.foo = 2
+  draft.bar.baz.splice(1, 1) // delete the `3` from the `bar.baz` array
+})
+
+const result = signal.get()
+```
+
+## Generics
+
+For TypeScript users, signals have the following generics inherited from [`ZeduxNode`](./ZeduxNode#generics):
+
+<Legend>
+  <Item name="G['Events']">
+    See [`ZeduxNode<{ Events }>`](./ZeduxNode#gevents).
+  </Item>
+  <Item name="G['Params']">
+    See [`ZeduxNode<{ Params }>`](./ZeduxNode#gparams).
+  </Item>
+  <Item name="G['State']">
+    See [`ZeduxNode<{ State }>`](./ZeduxNode#gstate).
+  </Item>
+  <Item name="G['Template']">
+    See [`ZeduxNode<{ Template }>`](./ZeduxNode#gtemplate).
+  </Item>
+</Legend>
+
+## Events
+
+Signals double as event emitters. Attach event listeners with `signal.on`. Call the returned cleanup function to remove the listener.
+
+```tsx live ecosystemId=signal-events-example resultVar=Alerter version=2
+const textInputAtom = atom('textInput', () => {
+  const signal = injectSignal('show no alert')
+
+  injectEffect(() => {
+    const cleanup = signal.on('change', event => {
+      if (event.newState === 'show alert') {
+        alert('you called?')
+      }
+    })
+
+    return () => cleanup()
+  }, [])
+
+  return signal
+})
+
+function Alerter() {
+  const [state, setState] = useAtomState(textInputAtom)
+
+  return (
+    <div>
+      <span>Change to say "show alert"</span>
+      <input onChange={event => setState(event.target.value)} value={state} />
+    </div>
+  )
+}
+```
+
+See below for the full list of [built-in events](#built-in-events).
+
+### Custom Events
+
+Built-in events like `change` are fired automatically. You can also specify custom events that your signal accepts via the `events` config option. Use the [`As` util](../utils/As.mdx) to type event payloads:
+
+```ts
+const greetingSignal = ecosystem.signal(null, {
+  events: {
+    hello: As<string>,
+    goodbye: As<string>,
+  },
+})
+```
+
+You can send custom events by themselves via `.send`:
+
+```ts
+// using the above `greetingSignal`:
+greetingSignal.send('hello', 'friend!')
+greetingSignal.send('goodbye', 2) // Type Error: Payload must be a string
+
+// object form accepts multiple events:
+greetingSignal.send({ hello: 'friend!', goodbye: 'friend :(' })
+```
+
+It's very common to send events alongside a state update. To do this, pass an events object as the second parameter to `signal.set` or `signal.mutate`.
+
+This can be useful when you want to tell consumers exactly what changed e.g. to optimize derivation operations. It can also be used to "document" your state updates, improving DX.
+
+```ts
+// this `todo` event will be used to give consumers more information about the
+// state change:
+const todosSignal = ecosystem.signal<Todo[], { todo: Todo }>([])
+
+todosSignal.set(state => [...state, todo], { todo })
+todosSignal.set(state => state.filter(({ id }) => id !== todo.id), { todo })
+todosSignal.mutate(
+  state => {
+    state.push(todo)
+  },
+  { todo }
+)
+```
+
+### Built-In Events
+
+Unlike custom events, built-in events cannot be sent manually via `.send`, `.set`, or `.mutate`. You can only listen to them via `.on`. These events are intrinsic to Zedux itself.
+
+All signals have the following built-in events:
+
+<Legend>
+  <Item name="mutate" suffix="event">
+    Sent whenever [`signal.mutate`](#mutate) is called.
+
+    The payload is an array of [transactions](../types/Transaction.mdx) efficiently documenting the changes made to the signal's state by the `mutate` call.
+
+    ```tsx live noProvide=true resultVar=result version=2
+    const ecosystem = createEcosystem()
+    const signal = ecosystem.signal({
+      todos: []
+    })
+
+    let result: Transaction[] = []
+
+    signal.on('mutate', transactions => {
+      result = transactions
+    })
+
+    signal.mutate(draft => {
+      draft.todos.push({ id: 1, title: 'Master Mutations' })
+    })
+    ```
+
+  </Item>
+</Legend>
+
+All signals also inherit the following built-in events from [`ZeduxNode`](./ZeduxNode#events):
+
+<Legend>
+  <Item name="change" suffix="event">
+    See the [node `change` event](./ZeduxNode#change-event).
+  </Item>
+  <Item name="cycle" suffix="event">
+    See the [node `cycle` event](./ZeduxNode#cycle-event).
+  </Item>
+</Legend>
+
+## Properties
+
+Signals inherit the following **readonly** properties from [`ZeduxNode`](./ZeduxNode#properties):
+
+<Legend>
+  <Item name="id">See [`ZeduxNode#id`](./ZeduxNode#id).</Item>
+  <Item name="params">
+    See [`ZeduxNode#params`](./ZeduxNode#params). This will always be undefined
+    - normal signals don't take params.
+  </Item>
+  <Item name="status">
+    See [`ZeduxNode#status`](./ZeduxNode#status). This will never be "Stale" -
+    normal signals skip from Active to Destroyed.
+  </Item>
+  <Item name="template">
+    See [`ZeduxNode#template`](./ZeduxNode#template). This will always be
+    undefined - normal signals don't have templates.
+  </Item>
+</Legend>
+
+## Methods
+
+Signals have the following unique methods:
+
+<Legend>
+  <Item name="mutate">
+    Creates a proxy that can be mutated immer-style to change the signal's state. Zedux tracks the mutations made to this proxy and immutably updates the signal's state accordingly.
+
+    This is recursive! Zedux will lazily create proxies as needed when you access nested properties.
+
+    Every `mutate` call also causes the signal to fire both a [`change` event](#change-event) and a [`mutate` event](#mutate-event) with an array of [transactions](../types/Transaction.mdx) efficiently documenting the changes made.
+
+    :::important
+    `mutate` can only be called on signals whose state is a JavaScript object, array, or Set.
+    :::
+
+```tsx live ecosystemId=signal-mutate-example resultVar=Counter version=2
+const counterAtom = atom('counter', () => ({ count: 0 }))
+
+function Counter() {
+  // atoms are signals, remember?
+  const signal = useAtomInstance(counterAtom)
+  const { count } = useAtomValue(signal)
+
+  return (
+    <div>
+      <div>count: {count}</div>
+      <button onClick={() => signal.mutate(draft => draft.count++)}>
+        Increment
+      </button>
+      <button onClick={() => signal.mutate(draft => draft.count--)}>
+        Decrement
+      </button>
+    </div>
+  )
+}
+```
+
+    #### Object Shorthand
+
+    `mutate` also has an object overload. This is a convenient shorthand syntax.
+
+    ```ts
+    signal.mutate({ foo: 'bar' })
+    // is equivalent to:
+    signal.mutate(draft => {
+      draft.foo = 'bar'
+    })
+    ```
+
+    You can also use this shorthand form when passing a function. Just don't perform any mutations on the `draft` object and return the shorthand object instead. Zedux will assume you're asking it to apply the returned list of mutations for you:
+
+    ```ts
+    signal.mutate(draft => ({ count: draft.count + 1 }))
+    //
+    ```
+
+    While convenient, these overloads have some quirks:
+
+    - They only make sense for normal objects. Arrays and sets are not supported.
+    - You can't remove properties or set them to `undefined`:
+
+      ```ts
+      // does nothing - Zedux sees `undefined` and skips this value:
+      signal.mutate({ token: undefined })
+
+      signal.mutate(draft => {
+        draft.token = undefined // works!
+        delete draft.token // also works!
+      })
+      ```
+
+    - You can't change object references directly:
+
+      ```ts
+      // does nothing - Zedux recurses into the object and finds no changes:
+      signal.mutate({ postsById: {} })
+
+      signal.mutate(draft => {
+        draft.postsById = {} // works! Sets this property to an empty object.
+      })
+      ```
+
+    #### Limitations
+
+    `mutate` currently only knows how to proxy JavaScript objects, arrays, and Sets. We will probably add support for Maps in the future, but note that you typically don't want to use Maps for immutable state since cloning them is [extremely slow](https://jsbench.me/4ym0jt8pbh).
+
+    Additionally, Zedux only proxies operations that directly operate on the object, array, or Set. Operations that involve searching or iterating over the object and then mutating the result will not be captured.
+
+    We will add support for common use cases like `array.find()` in the future, but some things will likely never be supported since we want to keep Zedux's mutation operations lightning fast.
+
+```ts
+const signal = ecosystem.signal([
+  { text: 'save the galaxy' },
+  { text: 'use the force' },
+])
+
+signal.mutate(draft => {
+  draft[0].text = 'I am your father' // works
+
+  // bug! Zedux doesn't proxy the `find` result, so it misses this mutation:
+  draft.find(({ text }) => text.includes('force')).text = "That's impossible!"
+
+  // instead, do:
+  const index = draft.findIndex(({ text }) => text.includes('force'))
+  draft[index].text = "That's totally possible!"
+})
+```
+
+    Signature:
+
+    ```ts
+    mutate = (mutatable, events?) => void
+    ```
+
+    <Legend>
+      <Item name="mutatable">
+        A function that accepts a "draft" object and can perform mutation operations on it. If any mutations are performed, Zedux ignores the return value.
+
+        If an object is passed, Zedux will recursively iterate through it and set all keys to their values, essentially performing mutations for you.
+
+        If a function is passed, no mutations are performed during the function execution, and an object is returned, Zedux will recursively iterate through the returned object and perform the mutations for you.
+      </Item>
+      <Item name="events">
+        An optional object of [custom events](#custom-events) to emit alongside the mutation.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="set">
+    Completely replaces the signal's state with the passed value. Does nothing if the passed state exactly matches the signal's current state.
+
+    Also accepts a function overload that will receive the current state and should return the new state.
+
+    ```ts
+    const signal = ecosystem.signal(0)
+
+    signal.set(1)
+    signal.set(state => state + 1)
+    signal.get() // 2
+    ```
+
+    Fires the built-in [`change` event](#change-event).
+
+    Signature:
+
+    ```ts
+    set = (settable, events?) => void
+    ```
+
+    <Legend>
+      <Item name="settable">
+        Either the new state or a function that accepts the current state and returns the new state.
+      </Item>
+      <Item name="events">
+        An optional object of [custom events](#custom-events) to emit alongside the mutation.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="send">
+    Sends one or more [custom events](#custom-events) to the signal's event listeners.
+
+    Signature:
+
+    ```ts
+    send = (eventNameOrMap, payload?) => void
+    ```
+
+    <Legend>
+      <Item name="eventNameOrMap">
+        A string or object.
+
+        If a string is passed, it is the name of the event to send. With this overload, the event's payload should be passed as the second argument.
+
+        If an object is passed, each key is the name of an event to send, and the value is the event's payload. With this overload, the second argument is ignored.
+      </Item>
+      <Item name="payload">
+        Optional (required if the event requires it). The payload of the event.
+      </Item>
+    </Legend>
+
+    :::important
+    `send` can only be called on signals whose state is an object. Of course, it doesn't make sense to send anything else :smile:
+    :::
+
+  </Item>
+</Legend>
+
+Signals also inherit the following methods from [`ZeduxNode`](./ZeduxNode#methods):
+
+<Legend>
+  <Item name="destroy">See [`ZeduxNode#destroy`](./ZeduxNode#destroy).</Item>
+  <Item name="get">See [`ZeduxNode#get`](./ZeduxNode#get).</Item>
+  <Item name="getOnce">See [`ZeduxNode#getOnce`](./ZeduxNode#getonce).</Item>
+  <Item name="on">
+    See [`ZeduxNode#on`](./ZeduxNode#on) and the above documentation for [signal
+    events](#events).
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `MappedSignal` class](./MappedSignal.mdx)
+- [The `ZeduxNode` class](./ZeduxNode)
+- [The `AtomInstance` class](./AtomInstance)
