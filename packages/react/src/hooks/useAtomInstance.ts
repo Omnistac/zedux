@@ -26,6 +26,13 @@ import { useReactComponentId } from './useReactComponentId'
 const unmaterializedNodes = new Set<ZeduxNode>()
 let isQueued = false
 
+// Track active Suspense promises so we can defer unmaterializedNodes cleanup
+// while any Suspense is pending. Without this, a component above the Suspense
+// boundary can commit its useEffect and destroy orphaned selectors before
+// suspended components get a chance to materialize them.
+const trackedSuspensePromises = new WeakSet<Promise<any>>()
+let activeSuspenseCount = 0
+
 /**
  * Creates an atom instance for the passed atom template based on the passed
  * params. If an instance has already been created for the passed params, reuses
@@ -180,6 +187,12 @@ export const useAtomInstance: {
       isQueued = true
       ecosystem.asyncScheduler.queue(() => {
         isQueued = false
+
+        // Defer cleanup while any Suspense is active — nodes from suspended
+        // renders are not yet abandoned and may still materialize when the
+        // promise settles.
+        if (activeSuspenseCount > 0) return
+
         unmaterializedNodes.forEach(node => node.destroy())
         unmaterializedNodes.clear()
       })
@@ -205,7 +218,24 @@ export const useAtomInstance: {
     const status = (instance as AtomInstance).promiseStatus
 
     if (status === 'loading') {
-      throw (instance as AtomInstance).promise
+      const p = (instance as AtomInstance).promise!
+
+      if (!trackedSuspensePromises.has(p)) {
+        trackedSuspensePromises.add(p)
+        activeSuspenseCount++
+
+        // Use .then(fn, fn) instead of .finally() to avoid creating an
+        // unhandled rejection when the promise rejects (which is expected —
+        // ErrorBoundary handles it, not this tracking chain).
+        const cleanup = () => {
+          trackedSuspensePromises.delete(p)
+          activeSuspenseCount--
+        }
+
+        p.then(cleanup, cleanup)
+      }
+
+      throw p
     } else if (status === 'error') {
       throw (instance as AtomInstance).promiseError
     }
