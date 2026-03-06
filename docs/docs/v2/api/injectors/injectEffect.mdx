@@ -1,0 +1,272 @@
+---
+id: injectEffect
+title: injectEffect
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectEffect } from '@zedux/react'
+```
+
+An [injector](../glossary.mdx#injector) for running side effects in atoms. Similar to React's [`useEffect` hook](https://react.dev/reference/react/useEffect), it runs a callback function and optionally cleans up after it.
+
+The effect will run on initial atom creation and re-run when any of the specified dependencies change on subsequent evaluations.
+
+When a cleanup function is returned, it will be called when the effect is about to run again or when the atom is destroyed.
+
+## Examples
+
+Run an effect once on initial atom creation:
+
+```tsx live ecosystemId=injectEffect/example resultVar=App version=2
+const timerAtom = atom('timer', () => {
+  const signal = injectSignal(0)
+
+  injectEffect(() => {
+    const interval = setInterval(() => {
+      signal.set(count => count + 1)
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  return signal
+})
+
+function App() {
+  const timer = useAtomValue(timerAtom)
+
+  return <div>Timer: {timer} seconds</div>
+}
+```
+
+Run an effect every time dependencies change:
+
+```tsx live ecosystemId=injectEffect/dependencies resultVar=App version=2
+const counterAtom = atom('counter', () => {
+  const signal = injectSignal(0)
+  const { status } = injectSelf()
+
+  injectEffect(() => {
+    if (status !== 'Initializing') {
+      window.alert(`Value changed to: ${signal.get()}`)
+    }
+  }, [signal.get()])
+
+  return signal
+})
+
+function App() {
+  const [count, setCount] = useAtomState(counterAtom)
+
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <button onClick={() => setCount(state => state + 1)}>
+        Increment Count
+      </button>
+    </div>
+  )
+}
+```
+
+## Effects Run When It's Safe
+
+Proper effect timing is tricky to get right. To make effects as intuitive as possible, Zedux runs effects as soon as it detects that it's "safe" to do so:
+
+- When an atom is created outside React, effects run immediately after the atom (and any other atoms it created) finishes evaluating.
+- When an atom is created during a React render, effects run in a microtask after initial atom evaluation.
+
+This ensures a few things:
+
+- When using atoms outside React, especially in tests, effects can register event listeners before those events fire.
+- When an atom is created during React render, effects don't cause bad React state updates during render.
+
+The bottom line is that **you typically don't need to worry about effect timing**. However, there's one scenario that Zedux can't fully handle by itself: When a test `render`s a test component that creates an atom that has a side effect.
+
+In this case, the effect(s) will be scheduled to run in a microtask (since the atom was created during a React render). Either wait for effects to flush or flush them manually before continuing the test:
+
+- Wait for effects to flush:
+
+  ```tsx
+  const { findByTestId } = render(<MyTestApp />)
+
+  await Promise.resolve() // wait for microtasks to flush
+  ```
+
+- Flush effects manually with [`ecosystem.asyncScheduler`](../classes/Ecosystem.mdx#asyncscheduler):
+
+  ```tsx
+  const { findByTestId } = render(<MyTestApp />)
+
+  ecosystem.asyncScheduler.flush() // flush Zedux effects synchronously
+  ```
+
+  This is safe to run "just in case" whenever you know React isn't currently rendering. So consider baking this into a custom `render` function.
+
+## You Might Not Need an Effect
+
+Many of the principles in React's famous ["You Might Not Need an Effect" doc](https://react.dev/learn/you-might-not-need-an-effect) apply to `injectEffect`.
+
+### Transformations
+
+You don't typically need effects to transform data. Prefer selectors or ions that naturally derive data. Or just do the transformation inline during atom evaluation if it's cheap. Also consider [`injectMemo`](./injectMemo.mdx) if it's less cheap.
+
+Bad example:
+
+```tsx
+const multiplierAtom = atom('multiplier', 2)
+
+const computedAtom = atom('computed', () => {
+  const multiplier = injectAtomValue(multiplierAtom)
+  const signal = injectSignal(0)
+
+  // This is bad practice! You don't need an effect for this:
+  injectEffect(() => {
+    signal.set(10 * multiplier)
+  }, [multiplier])
+
+  return signal
+})
+```
+
+Here are some better approaches:
+
+- Use an [atom selector](../types/SelectorTemplate.mdx):
+
+  ```tsx
+  const getComputed = ({ get }: Ecosystem) => 10 * get(multiplierAtom)
+  ```
+
+- Derive the value directly in an [ion](../factories/ion.mdx):
+
+  ```tsx
+  const computedAtom = ion('computed', ({ get }) => {
+    return 10 * get(multiplierAtom)
+  })
+  ```
+
+- Derive the value directly in an atom:
+
+  ```tsx
+  const computedAtom = atom('computed', () => {
+    const multiplier = injectAtomValue(multiplierAtom)
+
+    return 10 * multiplier
+  })
+  ```
+
+- Use [`injectMemo`](./injectMemo.mdx) if needed:
+
+  ```tsx
+  const computedAtom = atom('computed', () => {
+    const multiplier = injectAtomValue(multiplierAtom)
+
+    // this simple computation obviously doesn't need `injectMemo`
+    return injectMemo(() => 10 * multiplier, [multiplier])
+  })
+  ```
+
+- If the `computed` atom uses a signal for its state, set it during evaluation:
+
+  ```tsx
+  const computedAtom = atom('computed', () => {
+    const multiplier = injectAtomValue(multiplierAtom)
+    const signal = injectSignal(0)
+
+    // if state doesn't change, `.set` is a no-op. So this call is safe. But if
+    // this call could possibly change the state (e.g. if the signal's state is
+    // an object), wrap this in an `if` statement to prevent an infinite
+    // evaluation loop:
+    signal.set(10 * multiplier)
+
+    return signal
+  ```
+
+### Callbacks
+
+Don't use effects to handle user events. Prefer callbacks that kick off side effects directly, avoiding the indirection of `injectEffect`.
+
+Bad example:
+
+```tsx
+const usersAtom = atom('users', () => {
+  const signal = injectSignal({ status: 'idle' })
+
+  injectEffect(() => {
+    if (signal.get().status === 'loading') {
+      // fetch users here...
+    }
+  }, [signal.get().status])
+
+  const fetchUsers = () => {
+    // This is bad practice! You don't need to reroute execution to an effect
+    signal.set({ status: 'loading' })
+  }
+
+  return api(signal).setExports({ fetchUsers })
+})
+```
+
+Instead, kick off the side effect directly in the callback:
+
+```tsx
+const usersAtom = atom('users', () => {
+  const signal = injectSignal({ status: 'idle' }
+
+  const fetchUsers = async () => {
+    signal.set({ status: 'loading' })
+    // fetch users here...
+  }
+
+  return api(signal).setExports({ fetchUsers })
+})
+```
+
+### Async State
+
+Additionally, in Zedux, consider using [`injectPromise`](./injectPromise.mdx) or [query atoms](../../../walkthrough/query-atoms.mdx) instead of `injectEffect` to run async operations and track their state.
+
+## Signature
+
+<Tabs>
+  {tab1(`injectEffect = (callback, deps?, config?) => void`)}
+  {tab2(`declare const injectEffect: (effect: EffectCallback, deps?: InjectorDeps, config?: {
+    synchronous?: boolean;
+}) => void`)}
+</Tabs>
+
+<Legend>
+  <Item name="callback">
+    Required. A function that contains the side effect logic. Can optionally return a cleanup function that will be called when the effect is cleaned up.
+
+  </Item>
+  <Item name="deps">
+    Optional. An array of dependencies. The effect will re-run when any dependency changes.
+    
+    If not provided, the effect runs after every atom evaluation. If an empty array `[]` is provided, the effect only runs once when the atom is first created.
+    
+  </Item>
+  <Item name="config">
+    Optional. An object with the following properties:
+
+    ```ts
+    { synchronous? }
+    ```
+
+    - `synchronous`: A boolean. If `true`, the effect runs immediately, during atom evaluation. Defaults to `false`.
+
+    You typically don't need this! Zedux is very intelligent about when it runs effects. See [above](#effects-run-when-its-safe).
+
+  </Item>
+  <Item name="Returns">
+    Nothing (`void`).
+    
+  </Item>
+</Legend>
+
+## See Also
+
+- [The side effects walkthrough](../../../walkthrough/side-effects.mdx)
+- [The `injectPromise` injector](./injectPromise.mdx)
