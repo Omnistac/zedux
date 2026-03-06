@@ -1,0 +1,76 @@
+---
+id: injectEcosystem
+title: injectEcosystem
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectEcosystem } from '@zedux/react'
+```
+
+An [injector](../glossary.mdx#injector) that returns the [ecosystem](../classes/Ecosystem.mdx) the currently-evaluating atom belongs to.
+
+You can use any methods or properties on the ecosystem either during or after evaluation. Note that the ecosystem's getter methods may register dependencies depending on when they're called:
+
+Calling [`ecosystem.get`](../classes/Ecosystem.mdx#get) during evaluation will register a [dynamic dependency](../glossary.mdx#dynamic-graph-dependency) on the retrieved atom, or selector. Calling [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode) during evaluation will register a [static dependency](../glossary.mdx#static-graph-dependency) on the retrieved atom or selector.
+
+Use [`ecosystem.getOnce`](../classes/Ecosystem.mdx#getonce) to retrieve an atom or selector value without registering a dependency. Use [`ecosystem.getNodeOnce`](../classes/Ecosystem.mdx#getnodeonce) to retrieve an atom or selector instance without registering a dependency.
+
+## Example
+
+```tsx live ecosystemId=injectEcosystem/example resultVar=App version=2
+const helloAtom = atom('hello', 'Hello')
+
+const derivedAtom = atom('derived', () => {
+  const ecosystem = injectEcosystem()
+
+  // register a dynamic dependency on `helloAtom` via `ecosystem.get`
+  const hello = ecosystem.get(helloAtom)
+  const timestamp = new Date().toISOString()
+
+  // set atoms via `ecosystem.getNode(...).set
+  const setSource = (newValue: string) => {
+    ecosystem.getNode(helloAtom).set(newValue)
+  }
+
+  return api(`${hello} at ${timestamp}`).setExports({ setSource })
+})
+
+function App() {
+  const [hello, setHello] = useAtomState(helloAtom)
+  const [derived, { setSource }] = useAtomState(derivedAtom)
+  const ecosystem = useEcosystem()
+
+  return (
+    <div>
+      <div>Source: {hello}</div>
+      <div>Derived: {derived}</div>
+      <button onClick={() => setHello('Goodbye')}>
+        Update Source Directly
+      </button>
+      <button onClick={() => setSource('Updated Indirectly')}>
+        Update Source Indirectly
+      </button>
+    </div>
+  )
+}
+```
+
+<Tabs>
+  {tab1(`injectEcosystem = () => ecosystem`)}
+  {tab2(`declare const injectEcosystem: () => Ecosystem`)}
+</Tabs>
+
+<Legend>
+  <Item name="Returns">
+    An [ecosystem](../classes/Ecosystem.mdx) class instance. This is the
+    ecosystem that controls the currently-evaluating atom.
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `Ecosystem` class](../classes/Ecosystem.mdx)
+- [The `useEcosystem` hook](../hooks/useEcosystem.mdx)
+- [The Ecosystems walkthrough](../../../walkthrough/ecosystems.mdx)
