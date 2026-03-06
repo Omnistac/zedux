@@ -1,6 +1,7 @@
 import {
   api,
   atom,
+  injectAtomValue,
   injectEcosystem,
   injectEffect,
   injectSignal,
@@ -155,7 +156,7 @@ describe('timing', () => {
     expect(calls).toEqual([0, 2])
   })
 
-  test('effect callbacks are batched when run in React', () => {
+  test('effect callbacks are not batched when run in React', () => {
     const calls: any[] = []
 
     const atom1 = atom('1', () => {
@@ -185,6 +186,42 @@ describe('timing', () => {
       ecosystem.asyncScheduler.flush()
     })
 
-    expect(calls).toEqual([0, 2])
+    expect(calls).toEqual([0, 1, 2])
+  })
+
+  test('effect state updates are immediately visible to downstream atoms in React', () => {
+    const evaluations: any[] = []
+
+    const sourceAtom = atom('source', () => {
+      const signal = injectSignal('initial')
+
+      injectEffect(() => {
+        signal.set('updated')
+      }, [])
+
+      return signal
+    })
+
+    const downstreamAtom = atom('downstream', () => {
+      const val = injectAtomValue(sourceAtom)
+      evaluations.push(val)
+
+      return val
+    })
+
+    function Test() {
+      const val = useAtomValue(downstreamAtom)
+
+      return <div>{val}</div>
+    }
+
+    renderInEcosystem(<Test />, { useStrictMode: true })
+
+    act(() => {
+      ecosystem.asyncScheduler.flush()
+    })
+
+    expect(evaluations).toEqual(['initial', 'updated'])
+    expect(ecosystem.get(downstreamAtom)).toBe('updated')
   })
 })
