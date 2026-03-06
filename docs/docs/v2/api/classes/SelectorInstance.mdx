@@ -1,0 +1,161 @@
+---
+id: SelectorInstance
+title: SelectorInstance
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+A cached [selector](/not-done?path=../types/AtomSelector). When a selector is used for the first time in most Zedux hooks, injectors, or ecosystem methods, Zedux caches the selector's result by creating an instance of this class.
+
+Selectors are cached by reference. Each unique [AtomSelector](/not-done?path=../types/AtomSelector) function reference or [AtomSelectorConfig](/not-done?path=../types/AtomSelectorConfig) object creates a unique cached selector instance.
+
+Selectors that take params also create a unique cached selector instance for each unique set of params. This works exactly the same as [atom params](./AtomInstance#params).
+
+Selector instances are graph nodes, meaning this class extends [the `ZeduxNode` class](./ZeduxNode.mdx).
+
+## Creation
+
+You never instantiate this class yourself. Zedux instantiates it automatically as you use [selectors](/not-done?path=../types/AtomSelector) in your app.
+
+```ts
+const getUsername = ({ get }: Ecosystem) => get(userDataAtom).username
+
+// this selector caches the `getUsername` selector, if it isn't cached yet:
+const shoutUsername = ({ get }: Ecosystem) => get(getUsername).toUpperCase()
+
+function MyComponent() {
+  // this hook call caches the `shoutUsername` selector, which in turn caches
+  // the `getUsername` selector:
+  const loudUsername = useAtomValue(shoutUsername)
+
+  // since `shoutUsername` already cached the `getUsername` selector, this hook
+  // call just retrieves the cached value:
+  const username = useAtomValue(getUsername)
+
+  // ...
+}
+```
+
+Parameterized selector example:
+
+```ts
+const getUsersByRole = ({ get }: Ecosystem, role: string) =>
+  get(userListAtom).filter(users => user.role === role)
+
+const groupedUsersAtom = ion('groupedUsers', ({ get }) => {
+  // create two cached selector instances of the `getUsersByRole` selector, one
+  // for each role:
+  const adminUsers = get(getUsersByRole, ['admin'])
+  const moderatorUsers = get(getUsersByRole, ['moderator'])
+
+  return { adminUsers, moderatorUsers }
+})
+```
+
+## Destruction
+
+Selector instances are always destroyed when they're no longer in use. This is the same behavior as atoms configured with [`ttl: 0`](./AtomInstance#ttl). It's also the default behavior of [ions](../factories/ion.mdx).
+
+## Inline Selectors
+
+Since selectors are simply functions, they're easy to create on the fly:
+
+```ts
+function ExampleComponent() {
+  const filteredTodos = useAtomValue(({ get }) =>
+    get(todosAtom).filter(todo => todo.completed)
+  )
+}
+```
+
+While Zedux supports this, it has a few caveats:
+
+- This inline selector function has to run on every render since Zedux can't know whether it closes over any props, state, or other unstable values in the component body. This almost guarantees some unnecessary overhead, though its impact is typically small.
+- The `SelectorInstance` class instance for the inline selector will **not** usually be destroyed/recreated on every render, however Zedux has to run some extra checks to pull this off. This means even more overhead.
+- Zedux has historically had several bugs and edge cases with inline selectors used in React strict/concurrent mode. It just isn't something React is set up to handle well.
+
+As such, it's recommended to either define selector functions outside components or wrap inline selectors in a `useCallback` or `useMemo` hook.
+
+:::note
+The [React compiler](https://react.dev/learn/react-compiler) may fix this by auto-memoizing the selector function reference passed to `useAtomValue` or other hooks. The jury's still out on this, but it could be a huge win.
+:::
+
+## Generics
+
+For TypeScript users, selector instances inherit the following generics from the `ZeduxNode` class:
+
+<Legend>
+  <Item name="G['Params']">
+    See [`ZeduxNode<{ Params }>`](./ZeduxNode.mdx#gparams).
+
+    For selectors, this is a reference to the array of params passed to this selector instance when it was first created.
+
+  </Item>
+  <Item name="G['State']">
+    See [`ZeduxNode<{ State }>`](./ZeduxNode.mdx#gstate).
+
+  </Item>
+  <Item name="G['Template']">
+    See [`ZeduxNode<{ Template }>`](./ZeduxNode.mdx#gtemplate).
+    
+    For selectors, this is a reference to the [AtomSelector](/not-done?path=../types/AtomSelector) function or [AtomSelectorConfig](/not-done?path=../types/AtomSelectorConfig) object that was used to create this selector instance.
+
+  </Item>
+</Legend>
+
+## Events
+
+Selector instances inherit the following built-in events from [`ZeduxNode`](./ZeduxNode.mdx#events):
+
+<Legend>
+  <Item name="change" suffix="event">
+    See the [node `change` event](./ZeduxNode.mdx#change-event).
+
+  </Item>
+  <Item name="cycle" suffix="event">
+    See the [node `cycle` event](./ZeduxNode.mdx#cycle-event).
+
+  </Item>
+</Legend>
+
+## Properties
+
+Selector instances inherit the following **readonly** properties from [`ZeduxNode`](./ZeduxNode.mdx#properties):
+
+<Legend>
+  <Item name="id">See [`ZeduxNode#id`](./ZeduxNode.mdx#id).</Item>
+  <Item name="params">See [`ZeduxNode#params`](./ZeduxNode.mdx#params).</Item>
+  <Item name="status">See [`ZeduxNode#status`](./ZeduxNode.mdx#status).</Item>
+  <Item name="template">
+    See [`ZeduxNode#template`](./ZeduxNode.mdx#template).
+  </Item>
+</Legend>
+
+## Methods
+
+Selector instances inherit the following methods from [`ZeduxNode`](./ZeduxNode.mdx#methods):
+
+<Legend>
+  <Item name="destroy">
+    See [`ZeduxNode#destroy`](./ZeduxNode.mdx#destroy).
+
+  </Item>
+  <Item name="get">
+    See [`ZeduxNode#get`](./ZeduxNode.mdx#get).
+
+  </Item>
+  <Item name="getOnce">
+    See [`ZeduxNode#getOnce`](./ZeduxNode.mdx#getonce).
+
+  </Item>
+  <Item name="on">
+    See [`ZeduxNode#on`](./ZeduxNode.mdx#on) and the above documentation for [selector events](#events).
+  </Item>
+</Legend>
+
+## See Also
+
+- The [selectors walkthrough](../../../walkthrough/selectors.mdx)
+- The "selector template" types:
+  - [The `AtomSelector` type](/not-done?path=../types/AtomSelector)
+  - [The `AtomSelectorConfig` type](/not-done?path=../types/AtomSelectorConfig)
