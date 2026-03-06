@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "lib": ["DOM", "ESNext"],
+    "outDir": "./dist/esm",
+    "paths": {
+      "@zedux/tanstack-react-router": ["./packages/tanstack-react-router/src"],
+      "@zedux/tanstack-react-router/*": [
+        "./packages/tanstack-react-router/src/*"
+      ]
+    }
+  },
+  "include": ["./src", "../../global.d.ts"]
+}
