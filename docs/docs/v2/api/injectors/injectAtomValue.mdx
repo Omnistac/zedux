@@ -1,0 +1,121 @@
+---
+id: injectAtomValue
+title: injectAtomValue
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectAtomValue } from '@zedux/react'
+```
+
+An [injector](../glossary.mdx#injector) that retrieves the value of a cached [atom instance](../classes/AtomInstance.mdx) for a given [atom template](../classes/AtomTemplate.mdx).
+
+Returns the current state of the atom and registers a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) on the retrieved atom instance. The injecting atom will reevaluate when the retrieved atom's state changes.
+
+Creates a new atom instance for the given template (+ params combo if the atom takes [params](../classes/AtomInstance.mdx#params)) if none exists yet.
+
+This injector has an equivalent React hook: [`useAtomValue`](../hooks/useAtomValue.mdx).
+
+:::tip
+While there's nothing wrong with using this injector if you prefer, it's more common to use [`ecosystem.get`](../classes/Ecosystem.mdx#get) to create/retrieve atom instances inside other atoms, especially in [ions](../factories/ion.mdx) where the ecosystem is automatically in scope.
+
+```ts
+const exampleAtom = ion('example', ({ get }) => {
+  // all three of these are exactly equivalent:
+  const value = get(myAtom)
+  const value = injectAtomValue(myAtom)
+  const value = injectEcosystem().get(myAtom)
+})
+```
+
+:::
+
+## Example
+
+```tsx live ecosystemId=injectAtomValue/example resultVar=App version=2
+const nameAtom = atom('name', 'World')
+const countAtom = atom('count', 0)
+
+const greetingAtom = atom('greeting', () => {
+  const name = injectAtomValue(nameAtom)
+  const count = injectAtomValue(countAtom)
+
+  return `Hello, ${name}! Count: ${count}`
+})
+
+function App() {
+  const [name, setName] = useAtomState(nameAtom)
+  const [count, setCount] = useAtomState(countAtom)
+  const greeting = useAtomValue(greetingAtom)
+
+  return (
+    <div>
+      <div>{greeting}</div>
+      <input
+        value={name}
+        onChange={e => setName(e.target.value)}
+        placeholder="Enter name"
+      />
+      <button onClick={() => setCount(c => c + 1)}>Count: {count}</button>
+    </div>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`injectAtomValue = (template, params?, config?) => currentState`)}
+  {tab2(`declare const injectAtomValue: {
+    <A extends AnyAtomTemplate>(template: A, params: ParamsOf<A>): StateOf<A>;
+    <A extends AnyAtomTemplate<{
+        Params: [];
+    }>>(template: A): StateOf<A>;
+    <A extends AnyAtomTemplate>(template: ParamlessTemplate<A>): StateOf<A>;
+    <I extends AnyAtomInstance>(instance: I): StateOf<I>;
+    <S extends Selectable>(template: S, params: ParamsOf<S>): StateOf<S>;
+    <S extends Selectable<any, []>>(template: S): StateOf<S>;
+    <S extends Selectable>(template: ParamlessTemplate<S>): StateOf<S>;
+}`)}
+</Tabs>
+
+<Legend>
+  <Item name="template">
+    Required. The [atom template](../classes/AtomTemplate.mdx) to find or create a cached [instance](../classes/AtomInstance.mdx) of.
+
+    Also accepts an [atom instance](../classes/AtomInstance.mdx) directly. In this case, any passed [`params`](#params) will be ignored and `injectAtomValue` will subscribe to the passed instance.
+
+  </Item>
+  <Item name="params">
+    An array of the atom's [params](../classes/AtomInstance.mdx#params).
+    
+    TypeScript users will see that this is required if the atom has required params.
+
+  </Item>
+  <Item name="config">
+    An object with the following optional property:
+
+    ```ts
+    { operation }
+    ```
+
+    <Legend>
+      <Item name="operation">
+        A string. Default: `'injectAtomValue'`. Used for debugging to describe the reason for creating this graph edge. This default is usually fine.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="Returns">
+    The current state of the atom instance. This will be kept up to date, as the injecting atom will reevaluate if the injected atom's state changes.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [`ecosystem.get`](../classes/Ecosystem.mdx#get)
+- [The `injectAtomState` injector](./injectAtomState.mdx)
+- [The `injectAtomInstance` injector](./injectAtomInstance.mdx)
+- [The `useAtomValue` hook](../hooks/useAtomValue.mdx)
