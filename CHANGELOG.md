@@ -1,3 +1,9 @@
+## v2.0.0-rc.16 (Mar 6, 2026)
+
+### Fixes:
+
+- `react`: defer unmaterializedNodes cleanup during active Suspense (#360)
+
 ## v2.0.0-rc.15 (Mar 5, 2026)
 
 ### New Features:
