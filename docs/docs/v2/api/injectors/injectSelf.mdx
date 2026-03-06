@@ -1,0 +1,83 @@
+---
+id: injectSelf
+title: injectSelf
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectSelf } from '@zedux/react'
+```
+
+An [unrestricted injector](../glossary.mdx#unrestricted-injector) that returns the atom instance that's currently evaluating.
+
+This gives you access to the atom instance object from within the atom itself, allowing you to read properties like the atom's [`.id`](../classes/AtomInstance.mdx#id) or even update, invalidate, or destroy the atom instance. Make sure you only call these methods in a callback, after the atom has been fully initialized.
+
+:::warning
+The atom instance returned by `injectSelf` is not fully initialized on initial evaluation. It may not have a `.exports` or `.promise` set yet - that's the purpose of the atom evaluation! [Scoped atoms](/not-done?path=../../walkthrough/scoped-atoms.mdx) may not even have their real id determined yet.
+
+The types reflect this by returning a `PartialAtomInstance`. On subsequent evaluations, or when used later in a closure, you may check if the atom has been fully initialized and cast it to an `AtomInstance` if so.
+:::
+
+## Example
+
+```tsx live ecosystemId=injectSelf/example resultVar=App version=2
+const selfAwareAtom = atom('selfAware', () => {
+  const self = injectSelf()
+  const signal = injectSignal(0)
+
+  if (self.status === 'Initializing') {
+    console.log('Initializing selfAware atom')
+  }
+
+  const increment = () => signal.set(val => val + 1)
+
+  const logSelf = () => {
+    console.log('Atom ID:', self.id)
+    console.log('Current state:', self.getOnce())
+    console.log('Atom template key:', self.template.key)
+  }
+
+  const destroySelf = () => {
+    console.log('Force-destroying self...')
+    self.destroy(true)
+  }
+
+  return api(signal).setExports({ increment, logSelf, destroySelf })
+})
+
+function App() {
+  const [count, { increment, logSelf, destroySelf }] =
+    useAtomState(selfAwareAtom)
+
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <button onClick={increment}>Increment</button>
+      <button onClick={logSelf}>Log Self Info</button>
+      <button onClick={destroySelf}>Destroy Self</button>
+    </div>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`injectSelf = () => atomInstance`)}
+  {tab2(`declare const injectSelf: () => PartialAtomInstance`)}
+</Tabs>
+
+<Legend>
+  <Item name="Returns">
+    The current [atom instance](../classes/AtomInstance.mdx) reference. Note
+    that some properties may not be fully initialized during the first
+    evaluation.
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `AtomInstance` class](../classes/AtomInstance.mdx)
+- [The `injectAtomInstance` injector](./injectAtomInstance.mdx)
+- [The Atom Lifecycle walkthrough](/not-done?path=../../../walkthrough/atom-lifecycle.mdx)
