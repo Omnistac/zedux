@@ -1,0 +1,189 @@
+---
+id: SelectorTemplate
+title: SelectorTemplate
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import type {
+  AtomSelector,
+  AtomSelectorConfig,
+  SelectorTemplate,
+} from '@zedux/react'
+```
+
+Selectors are the lightweight champions of the Zedux world. They're easy to create and use. They have a small footprint and give you a quick way to tap into Zedux's reactive power.
+
+Unlike [atom templates](../classes/AtomTemplate.mdx), which are instances of a class, "selector templates" in Zedux are just plain functions or objects that define a selection (aka derivation) operation.
+
+The `SelectorTemplate` type is essentially just this:
+
+```ts
+type SelectorTemplate = AtomSelector | AtomSelectorConfig
+```
+
+This type is used by all Zedux APIs that accept selectors. In other words, anywhere you can pass a [selector](#atomselector) function, you can also pass an [`AtomSelectorConfig`](#atomselectorconfig) object.
+
+## `AtomSelector`
+
+A function that takes an [ecosystem](../classes/Ecosystem.mdx) as its first parameter and can return absolutely anything.
+
+```ts
+const getAdminUsers = ({ get }: Ecosystem) =>
+  get(usersAtom).filter(user => user.role === 'admin')
+```
+
+The return value will be cached, using the selector function reference as the cache key. This uses a `WeakMap` internally.
+
+Any [`ecosystem.get`](../classes/Ecosystem.mdx#get) calls inside the selector will automatically create a [dynamic graph dependency](../glossary.mdx#dynamic-graph-dependency) between the selector and the retrieved node. The selector will automatically reevaluate whenever the retrieved node's state changes.
+
+Any [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode) calls inside the selector will automatically create a [static graph dependency](../glossary.mdx#static-graph-dependency) between the selector and the retrieved node. These dependencies will not cause the selector to reevaluate. The main use for this is to prevent the retrieved node from being destroyed while the selector still needs it.
+
+Selectors can take other parameters too. Any parameters after the first `ecosystem` parameter will become the selector's [params](../classes/SelectorInstance.mdx#params).
+
+```ts
+const getUsersByRole = ({ get }, role: string) =>
+  get(usersAtom).filter(user => user.role === role)
+
+// since the `role` param is required, consumers must pass it:
+const adminUsers = useAtomValue(getUsersByRole) // ❌ Error!
+const adminUsers = useAtomValue(getUsersByRole, ['admin']) // ✅
+```
+
+TypeScript will enforce that consumers pass the correct params when using the selector via any hooks, injectors, or ecosystem methods.
+
+## `AtomSelectorConfig`
+
+An object that defines a selector plus some additional configuration:
+
+```ts
+{ argsComparator?, name?, resultsComparator, selector? }
+```
+
+<Legend>
+  <Item name="argsComparator">
+    Optional. A function that receives the params from the last selector run and the latest arguments passed to the selector. It should compare the two and return a boolean indicating whether they should be considered "equal".
+
+    Return true to prevent the selector from reevaluating.
+
+    Return false to allow the selector to reevaluate. In this case, if the params create a different [hash](../classes/ZeduxNode.mdx#params), the selector will be reevaluated.
+
+    This config option is only respected by Zedux's React hooks and only runs after the selector has already evaluated once and is about to reevaluate. Its use is to prevent excess React rerenders from running the selector unnecessarily. This option is a noop when passing selectors to other Zedux APIs like [`ecosystem.get`](../classes/Ecosystem.mdx#get), [`ecosystem.getNode`](../classes/Ecosystem.mdx#getnode), or [`injectAtomValue`](../injectors/injectAtomValue.mdx).
+
+  </Item>
+  <Item name="name">
+    Optional. A string that will be used to create user-friendly [ids](../classes/SelectorInstance.mdx#id) for the selector. This will take precedence over the [`selector`](#selector) function's name.
+
+    This can be useful when programmatically generating selectors, or if you prefer setting the [`selector`](#selector) field to anonymous arrow functions.
+
+  </Item>
+  <Item name="resultsComparator">
+    Optional. A function that receives the previous and latest return values of the selector. Return true if the results should be considered "equal".
+
+    When a selector returns "equivalent" values on subsequent reevaluations, the latest result is discarded, the previous result remains cached, and consumers of the selector are not notified of any change (since there wasn't one).
+
+  </Item>
+  <Item name="selector">
+    Required. The actual [selector function](#atomselector) to run.
+
+    :::note
+    `AtomSelectorConfig` objects are cached by object reference, not by their `selector` function reference.
+    :::
+
+  </Item>
+</Legend>
+
+## Inline Selectors
+
+Since selectors are just functions, it's easy to create them on the fly:
+
+```ts
+const adminUsers = useAtomValue(({ get }) =>
+  get(usersAtom).filter(user => user.role === 'admin')
+)
+```
+
+:::note
+This works for `AtomSelectorConfig` objects too:
+
+```ts
+const adminUsers = useAtomValue(
+  {
+    name: 'getAdminUsersForUsersTable',
+    selector: getUsersByRole,
+  },
+  ['admin']
+)
+```
+
+:::
+
+This is supported, and you typically shouldn't need to worry about it. But since the selector function reference is recreated every render, Zedux has to do extra work to handle this.
+
+Because of this, for larger apps, it's generally recommended to define selectors outside of components, atoms, or other selectors.
+
+This is also useful for debugging, since Zedux uses the selector's function name to generate a user-friendly id for each [instance](../classes/SelectorInstance.mdx) of the selector.
+
+## Refactoring to Ions
+
+Selectors are designed for simple, pure calculations. They always reevaluate when any of their dependencies update. Sometimes you need more control over when/how often a selector evaluates.
+
+It's common to refactor a selector to an ion for better control over memoization details via [`injectMemo`](../injectors/injectMemo.mdx) or even combining [`injectEffect`](../injectors/injectEffect.mdx) with async tools like RxJS to throttle or buffer updates.
+
+```tsx
+// Before (using an atom selector):
+const getUserName = ({ get }: Ecosystem) => get(userAtom).name
+
+// After (using an ion):
+const userNameAtom = ion('userName', ({ get }) => get(userAtom).name)
+
+// Consumers of the selector require minimal changes:
+const userName = useAtomValue(getUserName) // Before
+const userName = useAtomValue(userNameAtom) // After
+```
+
+This is one of the primary reasons why Zedux v2 deprecated many selector-specific APIs like [`useAtomSelector`](../hooks/useAtomSelector.mdx) and [`ecosystem.select`](../classes/Ecosystem.mdx#select).
+
+## Interface
+
+The `SelectorTemplate` type itself is just a union of the `AtomSelector` and `AtomSelectorConfig` types:
+
+```ts
+type AtomSelector<State = any, Params extends any[] = any> = (
+  ecosystem: Ecosystem,
+  ...args: Params
+) => State
+
+interface AtomSelectorConfig<State = any, Params extends any[] = any> {
+  argsComparator?: (
+    newArgs: NoInfer<Params>,
+    oldArgs: NoInfer<Params>
+  ) => boolean
+  name?: string
+  resultsComparator?: (
+    newResult: NoInfer<State>,
+    oldResult: NoInfer<State>
+  ) => boolean
+  selector: AtomSelector<State, Params>
+}
+
+type SelectorTemplate<State = any, Params extends any[] = any> =
+  | AtomSelector<State, Params>
+  | AtomSelectorConfig<State, Params>
+```
+
+<Tabs>
+  {tab1(`interface AtomConfig<State>`)}
+  {tab2(`interface AtomConfig<State = any> {
+  dehydrate?: (state: State) => any
+  tags?: string[]
+  hydrate?: (dehydratedState: unknown) => State
+  ttl?: number
+}`)}
+</Tabs>
+
+## See Also
+
+- [The `SelectorInstance` class](../classes/SelectorInstance.mdx)
+- [The selectors walkthrough](../../../walkthrough/selectors.mdx)
