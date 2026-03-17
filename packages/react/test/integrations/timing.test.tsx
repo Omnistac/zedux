@@ -132,7 +132,7 @@ describe('timing', () => {
     ])
   })
 
-  test('effect callbacks are batched when run outside React', () => {
+  test('effect callbacks are not batched when run outside React', () => {
     const calls: any[] = []
 
     const atom1 = atom('1', () => {
@@ -153,7 +153,7 @@ describe('timing', () => {
     const node1 = ecosystem.getNode(atom1)
 
     expect(node1.get()).toBe(2)
-    expect(calls).toEqual([0, 2])
+    expect(calls).toEqual([0, 1, 2])
   })
 
   test('effect callbacks are not batched when run in React', () => {

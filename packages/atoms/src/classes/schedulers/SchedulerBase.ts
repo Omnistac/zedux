@@ -1,11 +1,10 @@
 import { Job } from '@zedux/atoms/types/index'
-import { Ecosystem } from '../Ecosystem'
 
 /**
  * Run jobs until there are none left. Jobs can add other jobs continuously.
  * They'll all run.
  */
-export const runJobs = (scheduler: SchedulerBase) => {
+export const runJobs = (scheduler: { j: Job[]; r: number }) => {
   const jobs = scheduler.j
   let errors: any[] | undefined
 
@@ -42,16 +41,20 @@ export abstract class SchedulerBase {
   // private _runStartTime?: number
 
   /**
-   * The dynamic list of "full" jobs to run. Full jobs are:
+   * `j`obQueue - The dynamic list of "full" jobs to run. Full jobs are:
    *
    * - Interrupt (1)
    * - EvaluateZeduxNode (2)
    * - UpdateExternalDependent (3)
-   * - RunEffect (4) (includes async jobs that were upgraded to sync jobs)
    */
   public j: Job[] = []
 
-  constructor(private readonly ecosystem: Ecosystem) {}
+  /**
+   * `e`ffectQueue - deferred effect jobs (T: 4) run here instead of in `j` so
+   * they execute outside `runJobs(this)`, allowing state changes within effects
+   * to flush the sync scheduler immediately (unbatched).
+   */
+  public e: { j: Job[]; r: number } = { j: [], r: 0 }
 
   /**
    * Run all jobs immediately. Does nothing if this scheduler is already
@@ -59,6 +62,7 @@ export abstract class SchedulerBase {
    */
   public flush() {
     if (this.r === 0) runJobs(this)
+    if (this.r === 0 && this.e.r === 0 && this.e.j.length) runJobs(this.e)
   }
 
   /**
@@ -107,9 +111,15 @@ export abstract class SchedulerBase {
   public abstract schedule(newJob: Job): void
 
   public unschedule(job: Job) {
-    const index = this.j.indexOf(job, this.r)
+    let index = this.j.indexOf(job, this.r)
 
-    if (index !== -1) this.j.splice(index, 1)
+    if (index !== -1) {
+      this.j.splice(index, 1)
+      return
+    }
+
+    index = this.e.j.indexOf(job, this.e.r)
+    if (index !== -1) this.e.j.splice(index, 1)
   }
 
   public wipe() {
@@ -117,5 +127,6 @@ export abstract class SchedulerBase {
     this.j = this.j.filter(
       job => job.T === 3 // UpdateExternalDependent (3)
     )
+    this.e.j = []
   }
 }
