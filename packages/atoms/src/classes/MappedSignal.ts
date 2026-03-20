@@ -320,12 +320,16 @@ export class MappedSignal<
     // these already-defined nodes
     if (this.F) {
       const signal = map as Signal
-      this.v = signal.get(edgeConfig)
+      const newVal = signal.get(edgeConfig)
 
       if (this.l === INITIALIZING) {
+        this.v = newVal
         initializeNode(this)
       } else {
         this.F = signal
+        const oldState = this.v
+        this.v = newVal
+        newVal === oldState || this.e.ch(this, oldState)
       }
 
       flushBuffer(prevNode)
@@ -349,15 +353,26 @@ export class MappedSignal<
 
       initializeNode(this)
     } else {
+      let newState: any
+
       for (const [key, val] of entries) {
         if ((val as Signal).izn) {
-          // make sure the edge is re-created
-          ;(val as Signal).get(edgeConfig)
+          const newKeyVal = (val as Signal).get(edgeConfig)
 
           // update the (forward) map and reverse map
           this.M[key] = val as Signal
           this.I[(val as Signal).id] = key
+
+          if (newKeyVal !== this.v[key]) {
+            ;(newState ??= { ...this.v })[key] = newKeyVal
+          }
         }
+      }
+
+      if (newState) {
+        const oldState = this.v
+        this.v = newState
+        this.e.ch(this, oldState)
       }
     }
 
