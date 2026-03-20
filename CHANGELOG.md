@@ -1,3 +1,9 @@
+## v2.0.0-rc.17 (Mar 20, 2026)
+
+### Fixes:
+
+- `atoms`: set mapped signal state immediately when switching inner instance (#362)
+
 ## v2.0.0-rc.16 (Mar 6, 2026)
 
 ### Fixes:
