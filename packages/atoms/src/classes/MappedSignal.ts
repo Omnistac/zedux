@@ -320,12 +320,11 @@ export class MappedSignal<
     // these already-defined nodes
     if (this.F) {
       const signal = map as Signal
+      this.v = signal.get(edgeConfig)
 
       if (this.l === INITIALIZING) {
-        this.v = signal.get(edgeConfig)
         initializeNode(this)
       } else {
-        signal.get(edgeConfig)
         this.F = signal
       }
 
