@@ -1,3 +1,9 @@
+## v2.0.0-rc.18 (Mar 20, 2026)
+
+### Fixes:
+
+- `atoms`: notify mapped signal listeners of swap-triggered state update (#364)
+
 ## v2.0.0-rc.17 (Mar 20, 2026)
 
 ### Fixes:
