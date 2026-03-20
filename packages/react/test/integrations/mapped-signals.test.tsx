@@ -286,6 +286,157 @@ describe('mapped signals', () => {
     expect(node2.exports.signal.M.a).toBe(ecosystem.getNode(atom1))
   })
 
+  test('notifies downstream observers when a mapped inner signal reference changes with a different value', () => {
+    const atomA = atom('a', 'value-a')
+    const atomB = atom('b', 'value-b')
+    const selector = atom('selector', 'a' as 'a' | 'b')
+
+    const testAtom = ion('test', ({ get, getNode }) => {
+      const which = get(selector)
+      const node = getNode(which === 'a' ? atomA : atomB)
+      const signal = injectMappedSignal({ key: node })
+
+      return api(signal).setExports({ signal })
+    })
+
+    const testNode = ecosystem.getNode(testAtom)
+    const observerAtom = ion('observer', ({ get }) => get(testAtom).key + '!')
+    const observerNode = ecosystem.getNode(observerAtom)
+
+    expect(testNode.get()).toEqual({ key: 'value-a' })
+    expect(observerNode.get()).toBe('value-a!')
+
+    // switch to a different inner signal with a different value
+    ecosystem.getNode(selector).set('b')
+
+    expect(testNode.get()).toEqual({ key: 'value-b' })
+    expect(observerNode.get()).toBe('value-b!')
+  })
+
+  test('does not trigger spurious updates when mapped signal ref changes but value is the same', () => {
+    const atomA = atom('a', 'same')
+    const atomB = atom('b', 'same')
+    const selector = atom('selector', 'a' as 'a' | 'b')
+    let observerEvals = 0
+
+    const testAtom = ion('test', ({ get, getNode }) => {
+      const which = get(selector)
+      const node = getNode(which === 'a' ? atomA : atomB)
+      const signal = injectMappedSignal({ key: node })
+
+      return api(signal).setExports({ signal })
+    })
+
+    const testNode = ecosystem.getNode(testAtom)
+    const observerAtom = ion('observer', ({ get }) => {
+      observerEvals++
+      return get(testAtom).key
+    })
+    const observerNode = ecosystem.getNode(observerAtom)
+
+    expect(observerNode.get()).toBe('same')
+    expect(observerEvals).toBe(1)
+
+    // switch signal ref, but both have the same value — no downstream update
+    ecosystem.getNode(selector).set('b')
+
+    expect(testNode.get()).toEqual({ key: 'same' })
+    expect(observerNode.get()).toBe('same')
+    expect(observerEvals).toBe(1)
+  })
+
+  test('handles multiple mapped signal references changing simultaneously', () => {
+    const atomA1 = atom('a1', 'a-first')
+    const atomA2 = atom('a2', 'a-second')
+    const atomB1 = atom('b1', 'b-first')
+    const atomB2 = atom('b2', 'b-second')
+    const selector = atom('selector', 1 as 1 | 2)
+
+    const testAtom = ion('test', ({ get, getNode }) => {
+      const which = get(selector)
+      const nodeA = getNode(which === 1 ? atomA1 : atomA2)
+      const nodeB = getNode(which === 1 ? atomB1 : atomB2)
+      const signal = injectMappedSignal({ a: nodeA, b: nodeB })
+
+      return api(signal).setExports({ signal })
+    })
+
+    const testNode = ecosystem.getNode(testAtom)
+    const observerAtom = ion('observer', ({ get }) => {
+      const { a, b } = get(testAtom)
+      return `${a}+${b}`
+    })
+    const observerNode = ecosystem.getNode(observerAtom)
+
+    expect(testNode.get()).toEqual({ a: 'a-first', b: 'b-first' })
+    expect(observerNode.get()).toBe('a-first+b-first')
+
+    ecosystem.getNode(selector).set(2)
+
+    expect(testNode.get()).toEqual({ a: 'a-second', b: 'b-second' })
+    expect(observerNode.get()).toBe('a-second+b-second')
+  })
+
+  test('handles signal reference switching back and forth', () => {
+    const atomA = atom('a', 'value-a')
+    const atomB = atom('b', 'value-b')
+    const selector = atom('selector', 'a' as 'a' | 'b')
+
+    const testAtom = ion('test', ({ get, getNode }) => {
+      const which = get(selector)
+      const node = getNode(which === 'a' ? atomA : atomB)
+      const signal = injectMappedSignal({ key: node })
+
+      return api(signal).setExports({ signal })
+    })
+
+    const testNode = ecosystem.getNode(testAtom)
+
+    expect(testNode.get()).toEqual({ key: 'value-a' })
+
+    ecosystem.getNode(selector).set('b')
+    expect(testNode.get()).toEqual({ key: 'value-b' })
+
+    ecosystem.getNode(selector).set('a')
+    expect(testNode.get()).toEqual({ key: 'value-a' })
+
+    ecosystem.getNode(selector).set('b')
+    expect(testNode.get()).toEqual({ key: 'value-b' })
+  })
+
+  test('preserves unchanged keys when only some mapped signal refs change', () => {
+    const stableAtom = atom('stable', 'stable-value')
+    const atomA = atom('a', 'value-a')
+    const atomB = atom('b', 'value-b')
+    const selector = atom('selector', 'a' as 'a' | 'b')
+
+    const testAtom = ion('test', ({ get, getNode }) => {
+      const which = get(selector)
+      const stableNode = getNode(stableAtom)
+      const dynamicNode = getNode(which === 'a' ? atomA : atomB)
+      const signal = injectMappedSignal({
+        stable: stableNode,
+        dynamic: dynamicNode,
+      })
+
+      return signal
+    })
+
+    const testNode = ecosystem.getNode(testAtom)
+
+    expect(testNode.get()).toEqual({
+      stable: 'stable-value',
+      dynamic: 'value-a',
+    })
+
+    ecosystem.getNode(selector).set('b')
+
+    expect(testNode.get()).toEqual({
+      stable: 'stable-value',
+      dynamic: 'value-b',
+    })
+  })
+
   test('mutating outer signal does not send mutate events to inner signals', () => {
     const { calls, node1 } = setupNestedSignals()
 
@@ -703,7 +854,7 @@ describe('mapped signals', () => {
       expect(node2.exports.signal.F).toBe(ecosystem.getNode(atom1))
     })
 
-    test('picks up the new inner signal value when the signal reference changes on reevaluation', () => {
+    test('notifies downstream observers when single-wrapped signal reference changes on reevaluation', () => {
       const atomA = atom('a', 'value-a')
       const atomB = atom('b', 'value-b')
       const selector = atom('selector', 'a' as 'a' | 'b')
@@ -717,8 +868,11 @@ describe('mapped signals', () => {
       })
 
       const testNode = ecosystem.getNode(testAtom)
+      const observerAtom = ion('observer', ({ get }) => get(testAtom) + '!')
+      const observerNode = ecosystem.getNode(observerAtom)
 
       expect(testNode.get()).toBe('value-a')
+      expect(observerNode.get()).toBe('value-a!')
       expect(testNode.exports.signal.F).toBe(ecosystem.getNode(atomA))
 
       // switch to a different inner signal with a different value
@@ -726,9 +880,10 @@ describe('mapped signals', () => {
 
       expect(testNode.exports.signal.F).toBe(ecosystem.getNode(atomB))
       expect(testNode.get()).toBe('value-b')
+      expect(observerNode.get()).toBe('value-b!')
     })
 
-    test('picks up new value when inner signal reference changes after the old signal was updated', () => {
+    test('notifies downstream observers when single-wrapped signal reference changes after update', () => {
       const atom1 = atom('1', 'initial')
       const testAtom = ion('test', ({ getNode }) => {
         const node1 = getNode(atom1)
@@ -739,12 +894,16 @@ describe('mapped signals', () => {
 
       const node1 = ecosystem.getNode(atom1)
       const testNode = ecosystem.getNode(testAtom)
+      const observerAtom = ion('observer', ({ get }) => get(testAtom) + '!')
+      const observerNode = ecosystem.getNode(observerAtom)
 
       expect(testNode.get()).toBe('initial')
+      expect(observerNode.get()).toBe('initial!')
 
       // update the inner signal's value
       node1.set('changed')
       expect(testNode.get()).toBe('changed')
+      expect(observerNode.get()).toBe('changed!')
 
       // destroy atom1 - it gets recreated with the default value 'initial'
       node1.destroy(true)
@@ -752,6 +911,64 @@ describe('mapped signals', () => {
       const newNode1 = ecosystem.getNode(atom1)
       expect(newNode1).not.toBe(node1)
       expect(testNode.get()).toBe('initial')
+      expect(observerNode.get()).toBe('initial!')
+    })
+
+    test('does not trigger spurious updates when single-wrapped signal ref changes but value is the same', () => {
+      const atomA = atom('a', 'same')
+      const atomB = atom('b', 'same')
+      const selector = atom('selector', 'a' as 'a' | 'b')
+      let observerEvals = 0
+
+      const testAtom = ion('test', ({ get, getNode }) => {
+        const which = get(selector)
+        const node = getNode(which === 'a' ? atomA : atomB)
+        const signal = injectMappedSignal(node)
+
+        return api(signal).setExports({ signal })
+      })
+
+      const testNode = ecosystem.getNode(testAtom)
+      const observerAtom = ion('observer', ({ get }) => {
+        observerEvals++
+        return get(testAtom)
+      })
+      const observerNode = ecosystem.getNode(observerAtom)
+
+      expect(observerNode.get()).toBe('same')
+      expect(observerEvals).toBe(1)
+
+      // switch signal ref, but both have the same value — no downstream update
+      ecosystem.getNode(selector).set('b')
+
+      expect(testNode.get()).toBe('same')
+      expect(observerNode.get()).toBe('same')
+      expect(observerEvals).toBe(1)
+    })
+
+    test('handles single-wrapped signal reference switching back and forth', () => {
+      const atomA = atom('a', 'value-a')
+      const atomB = atom('b', 'value-b')
+      const selector = atom('selector', 'a' as 'a' | 'b')
+
+      const testAtom = ion('test', ({ get, getNode }) => {
+        const which = get(selector)
+        const node = getNode(which === 'a' ? atomA : atomB)
+        return injectMappedSignal(node)
+      })
+
+      const testNode = ecosystem.getNode(testAtom)
+
+      expect(testNode.get()).toBe('value-a')
+
+      ecosystem.getNode(selector).set('b')
+      expect(testNode.get()).toBe('value-b')
+
+      ecosystem.getNode(selector).set('a')
+      expect(testNode.get()).toBe('value-a')
+
+      ecosystem.getNode(selector).set('b')
+      expect(testNode.get()).toBe('value-b')
     })
 
     test('mutating single-wrapped signal forwards to inner signal', () => {
