@@ -703,6 +703,57 @@ describe('mapped signals', () => {
       expect(node2.exports.signal.F).toBe(ecosystem.getNode(atom1))
     })
 
+    test('picks up the new inner signal value when the signal reference changes on reevaluation', () => {
+      const atomA = atom('a', 'value-a')
+      const atomB = atom('b', 'value-b')
+      const selector = atom('selector', 'a' as 'a' | 'b')
+
+      const testAtom = ion('test', ({ get, getNode }) => {
+        const which = get(selector)
+        const node = getNode(which === 'a' ? atomA : atomB)
+        const signal = injectMappedSignal(node)
+
+        return api(signal).setExports({ signal })
+      })
+
+      const testNode = ecosystem.getNode(testAtom)
+
+      expect(testNode.get()).toBe('value-a')
+      expect(testNode.exports.signal.F).toBe(ecosystem.getNode(atomA))
+
+      // switch to a different inner signal with a different value
+      ecosystem.getNode(selector).set('b')
+
+      expect(testNode.exports.signal.F).toBe(ecosystem.getNode(atomB))
+      expect(testNode.get()).toBe('value-b')
+    })
+
+    test('picks up new value when inner signal reference changes after the old signal was updated', () => {
+      const atom1 = atom('1', 'initial')
+      const testAtom = ion('test', ({ getNode }) => {
+        const node1 = getNode(atom1)
+        const signal = injectMappedSignal(node1)
+
+        return api(signal).setExports({ signal })
+      })
+
+      const node1 = ecosystem.getNode(atom1)
+      const testNode = ecosystem.getNode(testAtom)
+
+      expect(testNode.get()).toBe('initial')
+
+      // update the inner signal's value
+      node1.set('changed')
+      expect(testNode.get()).toBe('changed')
+
+      // destroy atom1 - it gets recreated with the default value 'initial'
+      node1.destroy(true)
+
+      const newNode1 = ecosystem.getNode(atom1)
+      expect(newNode1).not.toBe(node1)
+      expect(testNode.get()).toBe('initial')
+    })
+
     test('mutating single-wrapped signal forwards to inner signal', () => {
       const atom1 = atom('1', () => {
         const inner = injectSignal({ aa: 1, bb: 2 })
