@@ -733,6 +733,147 @@ describe('scoped atoms', () => {
     expect(mock).toHaveBeenCalledTimes(1)
   })
 
+  test('inject works in selectors with provided atoms', async () => {
+    const parentAtom = atom('parent', () => 1)
+
+    const scopedSelector = ({ get }: Ecosystem) => {
+      const instance = inject(parentAtom)
+
+      return instance.get() + get(parentAtom)
+    }
+
+    function Child() {
+      const val = useAtomValue(scopedSelector)
+
+      return <div data-testid="child">{val}</div>
+    }
+
+    function Parent() {
+      const parentInstance = useAtomInstance(parentAtom)
+
+      return (
+        <AtomProvider instance={parentInstance}>
+          <Child />
+        </AtomProvider>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Parent />)
+    const child = await findByTestId('child')
+
+    expect(child).toHaveTextContent('2')
+
+    act(() => {
+      ecosystem.getNode(parentAtom).set(5)
+    })
+
+    expect(child).toHaveTextContent('10')
+  })
+
+  test('inject works in selectors with React context values', async () => {
+    const context = createContext(1)
+
+    const scopedSelector = () => {
+      const value = inject(context)
+
+      return value * 2
+    }
+
+    function Child() {
+      const val = useAtomValue(scopedSelector)
+
+      return <div data-testid="child">{val}</div>
+    }
+
+    function Parent() {
+      const [state, setState] = useState(1)
+
+      return (
+        <context.Provider value={state}>
+          <Child />
+          <button
+            data-testid="button"
+            onClick={() => setState(state => state + 1)}
+          >
+            Update
+          </button>
+        </context.Provider>
+      )
+    }
+
+    const { findByTestId } = renderInEcosystem(<Parent />)
+    const button = await findByTestId('button')
+    const child = await findByTestId('child')
+
+    expect(child).toHaveTextContent('2')
+
+    act(() => {
+      button.click()
+    })
+
+    expect(child).toHaveTextContent('4')
+  })
+
+  test('inject works in selectors with ecosystem.withScope', () => {
+    const contextAtom = atom('context', () => 'a')
+
+    const scopedSelector = () => {
+      const instance = inject(contextAtom)
+
+      return `scoped:${instance.get()}`
+    }
+
+    const scope = [ecosystem.getNode(contextAtom)]
+
+    const result = ecosystem.withScope(scope, () =>
+      ecosystem.get(scopedSelector)
+    )
+
+    expect(result).toBe('scoped:a')
+  })
+
+  test('inject in selectors creates scoped selector ids', () => {
+    const parentAtom = atom('parent', (val: number) => val)
+
+    const scopedSelector = () => {
+      const instance = inject(parentAtom)
+
+      return instance.get()
+    }
+
+    const scope1 = new Map([[parentAtom, ecosystem.getNode(parentAtom, [1])]])
+    const scope2 = new Map([[parentAtom, ecosystem.getNode(parentAtom, [2])]])
+
+    // use getNode to keep selector instances alive
+    const node1 = ecosystem.withScope(scope1, () =>
+      ecosystem.getNode(scopedSelector)
+    )
+    const node2 = ecosystem.withScope(scope2, () =>
+      ecosystem.getNode(scopedSelector)
+    )
+
+    expect(node1.get()).toBe(1)
+    expect(node2.get()).toBe(2)
+    expect(node1.id).not.toBe(node2.id)
+    expect(node1.id).toContain('@scope(parent-[1])')
+    expect(node2.id).toContain('@scope(parent-[2])')
+  })
+
+  test('inject in selectors throws outside a scoped context', () => {
+    const mock = mockConsole('error')
+    const atom1 = atom('1', () => 'a')
+
+    const scopedSelector = () => {
+      inject(atom1)
+      return 'test'
+    }
+
+    expect(() => ecosystem.get(scopedSelector)).toThrow(
+      /Scoped atom was used outside a scoped context/
+    )
+    expect(mock).toHaveBeenCalledTimes(1)
+  })
+
   test('`AtomTemplate#getNodeId` can return scoped strings', () => {
     const template = atom('1', (id?: string) => id)
 
