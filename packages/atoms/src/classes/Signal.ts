@@ -77,13 +77,11 @@ export const doMutate = <G extends NodeGenerics>(
 
     const transactions: Transaction[] = []
 
-    if (isMutatable(newState)) {
+    if (Array.isArray(newState)) {
+      transactions.push({ k: [], v: newState })
+    } else if (isMutatable(newState)) {
       const empty = (
-        newState instanceof Set
-          ? new Set()
-          : Array.isArray(newState)
-            ? []
-            : {}
+        newState instanceof Set ? new Set() : {}
       ) as G['State']
 
       recursivelyMutate(
@@ -135,7 +133,10 @@ export const doMutate = <G extends NodeGenerics>(
     // applied as mutations; non-mutatable values (primitives, class instances,
     // etc.) are set as the entire new state.
     if (!transactions.length && result !== undefined) {
-      if (isMutatable(result)) {
+      if (Array.isArray(result)) {
+        newState = result
+        transactions.push({ k: [], v: result })
+      } else if (isMutatable(result)) {
         recursivelyMutate(proxyWrapper.p, result)
       } else {
         node.set(result as Settable<G['State']>, {
@@ -146,6 +147,9 @@ export const doMutate = <G extends NodeGenerics>(
         return
       }
     }
+  } else if (Array.isArray(mutatable)) {
+    newState = mutatable as G['State']
+    transactions.push({ k: [], v: mutatable })
   } else {
     recursivelyMutate(proxyWrapper.p, mutatable)
   }

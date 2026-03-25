@@ -528,7 +528,7 @@ describe('signals', () => {
       ])
     })
 
-    test('mutate generates add transactions for each element of an array', () => {
+    test('mutate replaces array state directly with a single transaction', () => {
       const signal = ecosystem.signal<string[] | null>(null)
       let transactions: Transaction[] | undefined
 
@@ -538,10 +538,8 @@ describe('signals', () => {
 
       signal.mutate(['a', 'b'])
 
-      expect(transactions).toEqual([
-        { k: '0', v: 'a' },
-        { k: '1', v: 'b' },
-      ])
+      expect(transactions).toEqual([{ k: [], v: ['a', 'b'] }])
+      expect(signal.get()).toEqual(['a', 'b'])
     })
 
     test('mutate generates add transactions for each item in a set', () => {

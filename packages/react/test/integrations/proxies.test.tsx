@@ -1,4 +1,11 @@
-import { api, As, atom, injectSignal, Transaction } from '@zedux/atoms'
+import {
+  api,
+  As,
+  atom,
+  injectMappedSignal,
+  injectSignal,
+  Transaction,
+} from '@zedux/atoms'
 import { ecosystem } from '../utils/ecosystem'
 
 describe('proxies', () => {
@@ -317,7 +324,21 @@ describe('proxies', () => {
       state[3] = 40
     })
 
-    expect(signal.get()).toEqual([2, 3, 30, 40, 5])
+    expect(signal.get()).toEqual([2, 3, 30, 40])
+  })
+
+  test('function-form returning an array generates a single transaction', () => {
+    const calls: any[] = []
+    const signal = ecosystem.signal([1, 2, 3])
+
+    signal.on('mutate', transactions => {
+      calls.push(transactions)
+    })
+
+    signal.mutate(draft => [draft[0] + 10, draft[1] + 10])
+
+    expect(signal.get()).toEqual([11, 12])
+    expect(calls).toEqual([[{ k: [], v: [11, 12] }]])
   })
 
   describe('recursivelyMutate optimizations', () => {
@@ -382,6 +403,44 @@ describe('proxies', () => {
       expect(signal.get()).toEqual({ arr: [11, 21] })
       expect(calls).toEqual([[{ k: 'arr', v: [11, 21] }]])
     })
+
+    test('top-level array replaces instead of deep merging', () => {
+      const calls: any[] = []
+      const signal = ecosystem.signal([{ a: 1, b: 2 }, { c: 3 }])
+
+      signal.on('mutate', transactions => {
+        calls.push(transactions)
+      })
+
+      signal.mutate([{ a: 5 }])
+
+      // should replace entire array, not deep merge { a: 5 } into { a: 1, b: 2 }
+      expect(signal.get()).toEqual([{ a: 5 }])
+      expect(calls).toEqual([[{ k: [], v: [{ a: 5 }] }]])
+    })
+  })
+
+  test('mapped signal prefixes array replacement transaction with inner key', () => {
+    const testAtom = atom('mappedArr', () => {
+      const arrSignal = injectSignal([1, 2, 3])
+      const signal = injectMappedSignal({ arr: arrSignal })
+
+      return api(signal).setExports({ arrSignal })
+    })
+
+    const node = ecosystem.getNode(testAtom)
+    const calls: any[] = []
+
+    node.on('mutate', transactions => {
+      calls.push(transactions)
+    })
+
+    node.exports.arrSignal.mutate([10, 20])
+
+    expect(node.get()).toEqual({ arr: [10, 20] })
+    expect(calls).toEqual([[{ k: ['arr'], v: [10, 20] }]])
+
+    ecosystem.dehydrate({ exclude: [testAtom] })
   })
 
   describe('non-plain object handling', () => {
