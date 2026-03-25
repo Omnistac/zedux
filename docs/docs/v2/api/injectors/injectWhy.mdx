@@ -1,0 +1,94 @@
+---
+id: injectWhy
+title: injectWhy
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+An [unrestricted injector](../glossary.mdx#unrestricted-injector) that returns an array of [reasons](../types/EvaluationReason.mdx) that explain why the current atom is evaluating.
+
+This is essentially an alias for the following:
+
+```ts
+const reasons = injectEcosystem().why()
+```
+
+As an injector, `injectWhy` can only be used in atoms. To see why a selector is evaluating, use [`ecosystem.why()`](../classes/Ecosystem.mdx#why).
+
+## Example
+
+```tsx live ecosystemId=injectWhy/example resultVar=App version=2
+const sourceAtom = atom('source', () => 1)
+
+const exampleAtom = atom('example', () => {
+  const signal = injectSignal(1)
+  const sourceInstance = injectAtomInstance(sourceAtom)
+  const reasons = injectWhy()
+  const reasonsRef = injectRef(reasons)
+
+  const composedSignal = injectMappedSignal({
+    ownState: signal,
+    sourceState: sourceInstance,
+  })
+
+  reasonsRef.current = reasons
+
+  return api(composedSignal).setExports({ reasonsRef, signal })
+})
+
+function App() {
+  const [state, { reasonsRef, signal }] = useAtomState(exampleAtom)
+  const [source, setSource] = useAtomState(sourceAtom)
+
+  return (
+    <div>
+      <p>
+        Own State: {state.ownState}. Source State: {state.sourceState}.
+      </p>
+      <button onClick={() => setSource(source => source + 1)}>
+        Increment Source
+      </button>
+      <button onClick={() => signal.set(val => val + 1)}>Increment Own</button>
+      <p>Operations:</p>
+      <ul>
+        {reasonsRef.current.map(reason => (
+          <li key={reason.operation}>{reason.operation}</li>
+        ))}
+      </ul>
+      <p>New state for each source:
+      <pre>
+        {reasonsRef.current
+          .map(reason => JSON.stringify(reason.newState))
+          .join('\n')}
+      </pre>
+    </div>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`injectWhy = () => evaluationReasons`)}
+  {tab2(`declare const injectWhy: () => EvaluationReason[]`)}
+</Tabs>
+
+<Legend>
+  <Item name="Returns">
+    An array of [EvaluationReasons](../types/EvaluationReason.mdx) that explain why the current atom is evaluating.
+
+    Returns an empty array on the initial evaluation (and only on the initial evaluation). This can be used to determine if this is the first evaluation. But it's recommended to use [`injectSelf`](./injectSelf.mdx) instead:
+
+    ```ts
+    // both of these mean it's the first evaluation. Prefer `injectSelf`:
+    injectSelf().status === 'Initializing'
+    injectWhy().length === 0
+    ```
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [`ecosystem.why()`](../classes/Ecosystem.mdx#why)
+- [The `EvaluationReason` type](../types/EvaluationReason.mdx)

@@ -1,0 +1,46 @@
+---
+id: getDefaultEcosystem
+title: getDefaultEcosystem
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { getDefaultEcosystem } from '@zedux/react'
+```
+
+Returns the [default ecosystem](../classes/Ecosystem.mdx#default-ecosystem). Creates it if it doesn't exist yet.
+
+## Example
+
+```tsx live ecosystemId=example/getDefaultEcosystem resultVar=id version=2
+import { getDefaultEcosystem } from '@zedux/react'
+
+const ecosystem = getDefaultEcosystem()
+const { id } = ecosystem
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`getDefaultEcosystem = () => Ecosystem`)}
+  {tab2(`declare const getDefaultEcosystem: () => Ecosystem<any>`)}
+</Tabs>
+
+<Legend>
+
+  <Item name="Returns">
+    An [Ecosystem](../classes/Ecosystem.mdx) instance.
+    
+    The first time this is called, the default ecosystem will be created and cached in Zedux's module state. Subsequent calls will return the cached instance.
+  </Item>
+  
+</Legend>
+
+## See Also
+
+- [The Ecosystems walkthrough](../../../walkthrough/ecosystems.mdx)
+- [The `Ecosystem` class](../classes/Ecosystem.mdx)
+- [The `<EcosystemProvider>` component](../components/EcosystemProvider.mdx)
+- [The `createEcosystem()` factory](../factories/createEcosystem.mdx)
+- [The `useEcosystem()` hook](../hooks/useEcosystem.mdx)

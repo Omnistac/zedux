@@ -1,0 +1,80 @@
+---
+id: injectRef
+title: injectRef
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectRef } from '@zedux/react'
+```
+
+An [injector](../glossary.mdx#injector) for creating mutable reference objects inside atoms. Similar to React's `useRef`, it returns a mutable ref object whose `.current` property can be used to store any value that persists across atom evaluations.
+
+Changing a ref's `.current` property does not trigger re-evaluations of the atom or its dependents.
+
+## Example
+
+```tsx live ecosystemId=injectRef/example resultVar=App version=2
+const timerAtom = atom('timer', () => {
+  const signal = injectSignal(0)
+  const intervalRef = injectRef<NodeJS.Timeout | null>(null)
+
+  const start = injectCallback(() => {
+    if (intervalRef.current) return // Already running
+
+    intervalRef.current = setInterval(() => {
+      signal.set(count => count + 1)
+    }, 100)
+  }, [])
+
+  const stop = injectCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+  }, [])
+
+  const reset = injectCallback(() => {
+    stop()
+    signal.set(0)
+  }, [stop])
+
+  return api(signal).setExports({ start, stop, reset })
+})
+
+function App() {
+  const [time, { start, stop, reset }] = useAtomState(timerAtom)
+
+  return (
+    <div>
+      <div>Time: {(time / 10).toFixed(1)}s</div>
+      <button onClick={start}>Start</button>
+      <button onClick={stop}>Stop</button>
+      <button onClick={reset}>Reset</button>
+    </div>
+  )
+}
+```
+
+<Tabs>
+  {tab1(`injectRef = (initialValue?) => refObject`)}
+  {tab2(`declare const injectRef: <T = undefined>(
+   initialValue?: T
+) => MutableRefObject<T>`)}
+</Tabs>
+
+<Legend>
+  <Item name="initialValue">
+    Optional. The initial value to set on the ref's `.current` property.
+  </Item>
+  <Item name="Returns">
+    A mutable ref object with a `.current` property that can be read or modified
+    at any time.
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `injectCallback` injector](./injectCallback.mdx)
+- [The `injectMemo` injector](./injectMemo.mdx)

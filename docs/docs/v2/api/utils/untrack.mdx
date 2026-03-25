@@ -1,0 +1,72 @@
+---
+id: untrack
+title: untrack
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { untrack } from '@zedux/react'
+```
+
+A utility function that prevents Zedux from registering graph edges during the execution of a callback. This is useful when you want to read atom state without creating dependencies.
+
+Note that [`node.getOnce`](../classes/ZeduxNode.mdx#getonce), [`ecosystem.getOnce`](../classes/Ecosystem.mdx#getonce), and [`ecosystem.getNodeOnce`](../classes/Ecosystem.mdx#getnodeonce) have this same behavior of never creating dependencies, but are more explicit at the point of call. It's typically recommended to use those in places that should never register dependencies.
+
+:::tip
+Avoid this unless you're sure you need it. Most Zedux APIs are reactive by default, and that's a good thing!
+:::
+
+## Example
+
+```tsx live ecosystemId=untrack/example resultVar=App version=2
+const sourceAtom = atom('source', 0)
+
+const derivedAtom = atom('derived', () => {
+  const sourceInstance = injectAtomInstance(sourceAtom)
+
+  // This read won't create a graph dependency between derivedAtom and sourceAtom
+  const dependent = untrack(() => sourceInstance.get())
+
+  // This atom will not reevaluate when sourceAtom changes,
+  return dependent + 2
+})
+
+function App() {
+  const [source, setSource] = useAtomState(sourceAtom)
+  const derived = useAtomValue(derivedAtom)
+
+  return (
+    <div>
+      <div>Source: {source}</div>
+      <div>Derived: {derived} (never updates)</div>
+      <button onClick={() => setSource(s => s + 1)}>Update Source</button>
+    </div>
+  )
+}
+```
+
+Remove the `untrack` call in the above example to see the derived state update when the source state changes.
+
+Note that this example could use `sourceInstance.getOnce()` instead to get the same effect.
+
+<Tabs>
+  {tab1(`untrack = (callback) => result`)}
+  {tab2(`declare const untrack: <T>(callback: () => T) => T`)}
+</Tabs>
+
+<Legend>
+  <Item name="callback">
+    Required. A function to execute without tracking dependencies.
+  </Item>
+  <Item name="Returns">
+    The result of calling the callback function, returned as-is.
+  </Item>
+</Legend>
+
+## See Also
+
+- [The graph walkthrough](../../../walkthrough/the-graph.mdx)
+- [`ZeduxNode#getOnce`](../classes/ZeduxNode.mdx#getonce)
+- [`Ecosystem#getOnce`](../classes/Ecosystem.mdx#getonce)
+- [`Ecosystem#getNodeOnce`](../classes/Ecosystem.mdx#getnodeonce)
