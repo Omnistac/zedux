@@ -1,3 +1,9 @@
+## v2.0.0-rc.19 (Mar 25, 2026)
+
+### New Features:
+
+- `atoms`: support AtomSelectors in MappedSignal (#369)
+
 ## v2.0.0-rc.18 (Mar 20, 2026)
 
 ### Fixes:
