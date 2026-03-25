@@ -1,5 +1,5 @@
 import { MappedSignal, SignalMap } from '../classes/MappedSignal'
-import { Signal } from '../classes/Signal'
+import { ZeduxNode } from '../classes/ZeduxNode'
 import {
   AnyNonNullishValue,
   EventsOf,
@@ -13,7 +13,7 @@ import { injectMemo } from './injectMemo'
 import { injectSelf } from './injectSelf'
 
 type MapAll<M extends SignalMap> = MapEventsToPayloads<{
-  [K in keyof M]: M[K] extends Signal<any> ? EventsOf<M[K]> : None
+  [K in keyof M]: M[K] extends ZeduxNode<any> ? EventsOf<M[K]> : None
 }>
 
 type MapEventsToPayloads<Events extends Record<string, any>> = TupleToEvents<
@@ -80,15 +80,15 @@ type UnionToTuple<T> = UnionToIntersection<
  * {@link injectSignal}
  */
 export function injectMappedSignal<
-  S extends Signal<any>,
+  N extends ZeduxNode<any>,
   EventMap extends Record<string, any> = None
 >(
-  signal: S,
+  node: N,
   config?: InjectSignalConfig<EventMap>
 ): MappedSignal<{
-  Events: Prettify<EventsOf<S> & EventMap>
+  Events: Prettify<EventsOf<N> & EventMap>
   Params: undefined
-  State: StateOf<S>
+  State: StateOf<N>
   Template: undefined
 }>
 
@@ -101,12 +101,12 @@ export function injectMappedSignal<
 ): MappedSignal<{
   Events: Prettify<MapAll<M> & EventMap>
   Params: undefined
-  State: { [K in keyof M]: M[K] extends Signal<any> ? StateOf<M[K]> : M[K] }
+  State: { [K in keyof M]: M[K] extends ZeduxNode<any> ? StateOf<M[K]> : M[K] }
   Template: undefined
 }>
 
 export function injectMappedSignal(
-  mapOrSignal: SignalMap | Signal<any>,
+  mapOrSignal: SignalMap | ZeduxNode<any>,
   config?: InjectSignalConfig<any>
 ) {
   const instance = injectSelf()

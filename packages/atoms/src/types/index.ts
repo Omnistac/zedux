@@ -192,6 +192,7 @@ export interface GetNode {
     edgeConfig?: GraphEdgeConfig
   ): S extends SelectorTemplate
     ? SelectorInstance<{
+        Events: any
         Params: ParamsOf<S>
         State: StateOf<S>
         Template: S
@@ -200,6 +201,7 @@ export interface GetNode {
 
   <S extends Selectable<any, []>>(template: S): S extends SelectorTemplate
     ? SelectorInstance<{
+        Events: any
         Params: ParamsOf<S>
         State: StateOf<S>
         Template: S
@@ -210,6 +212,7 @@ export interface GetNode {
     template: ParamlessTemplate<S>
   ): S extends SelectorTemplate
     ? SelectorInstance<{
+        Events: any
         Params: ParamsOf<S>
         State: StateOf<S>
         Template: S
@@ -505,6 +508,7 @@ export type Scope = Map<
 export type Selectable<State = any, Params extends any[] = any> =
   | SelectorTemplate<State, Params>
   | SelectorInstance<{
+      Events: any
       Params: Params
       State: State
       Template: SelectorTemplate<State, Params>

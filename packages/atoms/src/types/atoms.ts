@@ -144,6 +144,7 @@ export type NodeOf<A extends AnyAtomTemplate | Selectable<any, any>> =
       : ZeduxNode<G>
     : A extends Selectable<infer State, infer Params>
     ? SelectorInstance<{
+        Events: any
         Params: Params
         State: State
         Template: SelectorTemplate<State, Params>
@@ -187,7 +188,7 @@ export type ResolvedStateOf<A extends AnyAtomTemplate | ZeduxNode> =
     ? R
     : StateOf<A>
 
-export type SelectorGenerics = Pick<AtomGenerics, 'State'> & {
+export type SelectorGenerics = Pick<AtomGenerics, 'Events' | 'State'> & {
   Params: any[]
   Template: SelectorTemplate
 }

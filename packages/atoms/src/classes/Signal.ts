@@ -6,14 +6,11 @@ import {
   SendableEvents,
   Settable,
   Transaction,
-  UndefinedEvents,
 } from '../types/index'
-import { EventSent } from '../utils/general'
 import {
   destroyNodeFinish,
   destroyNodeStart,
   initializeNode,
-  scheduleEventListeners,
 } from '../utils/graph'
 import { Ecosystem } from './Ecosystem'
 import { ZeduxNode } from './ZeduxNode'
@@ -282,37 +279,6 @@ export class Signal<
     events?: Partial<SendableEvents<G>>
   ) {
     doMutate(this, false, mutatable, events)
-  }
-
-  public send<E extends UndefinedEvents<G['Events']>>(eventName: E): void
-
-  public send<E extends keyof G['Events']>(
-    eventName: E,
-    payload: G['Events'][E]
-  ): void
-
-  public send<E extends Partial<G['Events']>>(events: E): void
-
-  /**
-   * Manually notify this signal's event listeners of an event. Accepts an
-   * object to send multiple events at once.
-   *
-   * ```ts
-   * signal.send({ eventA: 'payload for a', eventB: 'payload for b' })
-   * ```
-   */
-  public send<E extends keyof G['Events']>(
-    eventNameOrMap: E | Partial<G['Events']>,
-    payload?: G['Events'][E]
-  ) {
-    // TODO: maybe safeguard against users sending unrecognized events here
-    // (especially `send`ing an ImplicitEvent would break everything)
-    const events =
-      typeof eventNameOrMap === 'object'
-        ? eventNameOrMap
-        : { [eventNameOrMap]: payload }
-
-    scheduleEventListeners({ e: events, s: this, t: EventSent })
   }
 
   /**
