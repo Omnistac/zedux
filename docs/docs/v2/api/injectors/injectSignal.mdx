@@ -1,0 +1,85 @@
+---
+id: injectSignal
+title: injectSignal
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+An [injector](../glossary#injector) that creates and returns a stable [`Signal`](../classes/Signal) instance. The reference will never change for the lifetime of the injecting atom.
+
+Registers a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the injected signal. By default, every state change in the injected signal will trigger a reevaluation of the current atom.
+
+Unless you register other dependencies, the injecting atom will typically be the only observer of the injected signal. That means the signal will be destroyed when the injecting atom is destroyed.
+
+## Examples
+
+```ts
+const simpleSignal = injectSignal(0)
+const functionOverload = injectSignal(() => createExpensiveInitialState())
+const functionIsState = injectSignal(() => () => 'but why (prefer exports)')
+const nonReactive = injectSignal('my state', { reactive: false })
+const withCustomEvents = injectSignal([] as Message[], {
+  events: {
+    message: As<Message>,
+  },
+})
+const passingGenerics = injectSignal<Message[], { message: Message }>([])
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`injectSignal = (initialState, config?) => Signal`)}
+  {tab2(`declare const injectSignal: <
+    State,
+    EventMap extends Record<string, any> = {}
+  >(
+    state: (() => State) | State,
+    config?: InjectSignalConfig<EventMap>
+  ) => Signal<{
+    Events: EventMap
+    State: State
+  }>`)}
+</Tabs>
+
+<Legend>
+  <Item name="initialState">
+    Required. The initial state of the signal. Can be absolutely anything.
+
+    If a function is passed, Zedux will call it to retrieve the initial state
+    of the signal.
+
+    This value is only used on initial evaluation. It will be ignored on all
+    subsequent evaluations.
+
+  </Item>
+  <Item name="config">
+    Optional. An object with the following optional properties:
+
+    ```ts
+    { events, reactive }
+    ```
+
+    <Legend>
+      <Item name="events">
+        An object mapping event names to [`As<MyType>`](/not-done?path=../utils/As) where [`As`](/not-done?path=../utils/As) is Zedux's [`As`](/not-done?path=../utils/As) util and `MyType` is the payload type of the event.
+
+        This payload must always be passed when the event is sent. Specify [`As<undefined>`](/not-done?path=../utils/As) to allow no payload.
+      </Item>
+      <Item name="reactive">
+        A boolean. Default: `true`.
+
+        Pass `false` to prevent the injecting atom from registering a [dynamic graph dependency](../glossary#dynamic-graph-dependency) on the injected signal. The atom will still register a [static graph dependency](../glossary#static-graph-dependency) on the injected signal.
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="Returns">
+    A stable [`Signal`](../classes/Signal) instance.
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `Signal` class](../classes/Signal)
+- [`injectMappedSignal`](/not-done?path=./injectMappedSignal)
