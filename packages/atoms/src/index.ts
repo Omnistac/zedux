@@ -46,6 +46,7 @@ export const setInternals = (internals: Internals) => {
 export const zi = {
   a: scheduleStaticDependents,
   b: destroyNodeStart,
+  c: getEvaluationContext,
   D: DESTROYED,
   d: destroyBuffer,
   e: destroyNodeFinish,

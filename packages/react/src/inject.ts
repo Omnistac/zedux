@@ -1,4 +1,4 @@
-import { AtomTemplateBase, injectSelf, NodeOf } from '@zedux/atoms'
+import { AtomTemplateBase, NodeOf, zi } from '@zedux/atoms'
 import { Context } from 'react'
 
 export const inject = <T extends Context<any> | AtomTemplateBase>(
@@ -8,9 +8,16 @@ export const inject = <T extends Context<any> | AtomTemplateBase>(
   : T extends AtomTemplateBase
   ? NodeOf<T>
   : never => {
-  const instance = injectSelf()
-  instance.V ??= new Map()
-  const prevValue = instance.V.get(context)
+  const node = zi.c().n
+
+  if (DEV && !node) {
+    throw new Error(
+      'Zedux: `inject` can only be used in atom state factories and selectors'
+    )
+  }
+
+  node!.V ??= new Map()
+  const prevValue = node!.V.get(context)
 
   const resolvedPrevValue =
     prevValue?.constructor?.name === WeakRef.name
@@ -22,15 +29,15 @@ export const inject = <T extends Context<any> | AtomTemplateBase>(
   // with different context values)
   if (typeof resolvedPrevValue !== 'undefined') return resolvedPrevValue
 
-  if (!instance.e.S) {
+  if (!node!.e.S) {
     throw new Error(
-      `Scoped atom was used outside a scoped context. This atom needs to be used by a React component or inside \`ecosystem.withScope\``
+      `Scoped atom was used outside a scoped context. This atom or selector needs to be used by a React component or inside \`ecosystem.withScope\``
     )
   }
 
-  // This atom is initializing in a scoped context (e.g. a React hook or
+  // This node is initializing in a scoped context (e.g. a React hook or
   // `ecosystem.withScope` call). Get the provided value
-  const value = instance.e.S(instance.e, context)
+  const value = node!.e.S(node!.e, context)
 
   if (typeof value === 'undefined') {
     throw new Error(
@@ -50,7 +57,7 @@ export const inject = <T extends Context<any> | AtomTemplateBase>(
     weakValue = value
   }
 
-  instance.V.set(context, weakValue)
+  node!.V.set(context, weakValue)
 
   return value
 }
