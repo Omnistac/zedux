@@ -159,5 +159,51 @@ module.exports = {
       },
     ],
     'Migration Guides': ['migrations/v2'],
+    '🚧 v2 beta docs': {
+      API: [
+        {
+          type: 'category',
+          label: 'Classes',
+          items: [
+            'v2/api/classes/AtomApi',
+            'v2/api/classes/AtomInstance',
+            'v2/api/classes/AtomTemplate',
+            'v2/api/classes/Ecosystem',
+            'v2/api/classes/MappedSignal',
+            'v2/api/classes/SelectorInstance',
+            'v2/api/classes/Signal',
+            'v2/api/classes/ZeduxNode',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Components',
+          items: [
+            'v2/api/components/AtomProvider',
+            'v2/api/components/EcosystemProvider',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Factories',
+          items: [
+            'v2/api/factories/api',
+            'v2/api/factories/atom',
+            'v2/api/factories/ion',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Hooks',
+          items: ['v2/api/hooks/useEcosystem'],
+        },
+        {
+          type: 'category',
+          label: 'Injectors',
+          items: ['v2/api/injectors/injectSignal'],
+        },
+        'v2/api/glossary',
+      ],
+    },
   },
 }
