@@ -218,7 +218,7 @@ export const schedulerPost = (ecosystem: Ecosystem) =>
 export const scheduleAsync = (ecosystem: Ecosystem, job: Job) =>
   ecosystem.S?.t === 'react'
     ? ecosystem.asyncScheduler.schedule(job)
-    : ecosystem.syncScheduler.j.push(job)
+    : ecosystem.syncScheduler.e.j.push(job)
 
 export const scheduleSync = (ecosystem: Ecosystem, job: Job) =>
   ecosystem.syncScheduler.schedule(job)

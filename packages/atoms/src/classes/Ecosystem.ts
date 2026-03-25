@@ -110,7 +110,7 @@ const destroyEphemeralSelector = (node: ZeduxNode) => {
 export class Ecosystem<Context extends Record<string, any> | undefined = any>
   implements EventEmitter
 {
-  public asyncScheduler = new AsyncScheduler(this)
+  public asyncScheduler = new AsyncScheduler()
   public complexParams = false
 
   // @ts-expect-error context can be specifically undefined, and that's its type
@@ -139,7 +139,7 @@ export class Ecosystem<Context extends Record<string, any> | undefined = any>
   public onReady: EcosystemConfig<Context>['onReady']
   public overrides: Record<string, AnyAtomTemplate> = {}
   public ssr = false
-  public syncScheduler = new SyncScheduler(this)
+  public syncScheduler = new SyncScheduler()
   public tags: string[] | undefined = undefined
 
   /**
