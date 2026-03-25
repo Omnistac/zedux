@@ -1,0 +1,71 @@
+---
+id: useAtomSelector
+title: useAtomSelector
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+:::warning Deprecated
+As of v2, this hook is deprecated. Use [`useAtomValue`](./useAtomValue.mdx) instead - it now handles all Zedux's reactive primitives, making refactoring between them easier.
+:::
+
+```ts
+import { useAtomSelector } from '@zedux/react'
+```
+
+A React hook that retrieves a cached [atom selector](../types/SelectorTemplate.mdx) value. If the selector is not cached yet, `useAtomSelector` caches it by creating a new [selector instance](../classes/SelectorInstance.mdx) and returns the value.
+
+If the selector takes params, TypeScript will enforce that those are passed correctly.
+
+## Examples
+
+```tsx live ecosystemId=useAtomSelector/example resultVar=Count version=2
+const countAtom = atom('count', 0)
+const getDoubledCount = ({ get }) => get(countAtom) * 2
+
+function Count() {
+  const [count, setCount] = useAtomState(countAtom)
+  const doubledCount = useAtomSelector(getDoubledCount)
+
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <div>Doubled count: {doubledCount}</div>
+      <button onClick={() => setCount(count + 1)}>+</button>
+      <button onClick={() => setCount(count - 1)}>-</button>
+    </div>
+  )
+}
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`useAtomSelector = (template, params?) => selectedValue`)}
+  {tab2(
+    `declare const useAtomSelector: <S extends Selectable>(template: S, ...args: ParamsOf<S>) => StateOf<S>`
+  )}
+</Tabs>
+
+<Legend>
+  <Item name="template">
+    Required. Either a [selector function](../types/AtomSelector.mdx) or an [atom selector config object](../types/AtomSelectorConfig.mdx).
+
+    See [the `SelectorTemplate` type](../types/SelectorTemplate.mdx) for more details.
+
+  </Item>
+  <Item name="params">
+    The selector's [params](../classes/SelectorInstance.mdx#params) spread into the rest of the arguments to `useAtomSelector`. Note that this is different from [`useAtomValue`](./useAtomValue.mdx) (and all Zedux APIs in v2) where params are passed via the second argument as an array.
+
+    Required if the selector has required parameters.
+
+  </Item>
+  <Item name="Returns">
+    The cached value of the resolved [selector instance](../classes/SelectorInstance.mdx) for the passed [selector template](../types/SelectorTemplate.mdx) + [params](../classes/SelectorInstance.mdx#params) combo.
+  </Item> 
+</Legend>
+
+## See Also
+
+- [The `useAtomValue` hook](./useAtomValue.mdx)
+- [The Selectors walkthrough](/not-done?path=../../walkthrough/selectors.mdx)
