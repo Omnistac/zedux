@@ -62,7 +62,7 @@ module.exports = {
       },
       items: [
         {
-          to: 'docs/walkthrough/quick-start',
+          to: 'docs/v1/walkthrough/quick-start',
           activeBasePath: 'docs',
           label: 'Docs',
           position: 'left',
@@ -77,6 +77,10 @@ module.exports = {
           to: 'blog',
           label: 'Blog',
           position: 'left',
+        },
+        {
+          type: 'custom-versionSelector',
+          position: 'right',
         },
         {
           href: 'https://github.com/Omnistac/zedux',
@@ -97,11 +101,11 @@ module.exports = {
           items: [
             {
               label: 'Walkthrough',
-              to: 'docs/walkthrough/quick-start',
+              to: 'docs/v1/walkthrough/quick-start',
             },
             {
               label: 'API',
-              to: 'docs/api/api-overview',
+              to: 'docs/v1/api/api-overview',
             },
           ],
         },
@@ -131,15 +135,54 @@ module.exports = {
       copyright: `Copyright © 2017-${new Date().getFullYear()} Omnistac. Built with Docusaurus.`,
     },
   },
-  plugins: [PathsPlugin],
+  plugins: [
+    PathsPlugin,
+
+    // v1 docs (frozen)
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'v1',
+        path: 'docs/v1',
+        routeBasePath: 'docs/v1',
+        sidebarPath: require.resolve('./sidebars-v1.js'),
+        editUrl: 'https://github.com/Omnistac/zedux/edit/master/docs/docs/v1/',
+      },
+    ],
+
+    // v2 docs (current stable)
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'v2',
+        path: 'docs/v2',
+        routeBasePath: 'docs/v2',
+        sidebarPath: require.resolve('./sidebars-v2.js'),
+        editUrl: 'https://github.com/Omnistac/zedux/edit/master/docs/docs/v2/',
+      },
+    ],
+
+    // next docs (unreleased/development)
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'next',
+        path: 'docs/next',
+        routeBasePath: 'docs/next',
+        sidebarPath: require.resolve('./sidebars-next.js'),
+        editUrl: 'https://github.com/Omnistac/zedux/edit/master/docs/docs/next/',
+      },
+    ],
+
+    // Version resolver for unversioned /docs/... URLs
+    require.resolve('./plugins/docs-version-resolver'),
+  ],
   presets: [
     [
       '@docusaurus/preset-classic',
       {
-        docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/Omnistac/zedux/edit/master/docs/',
-        },
+        // Docs are handled by the plugins above
+        docs: false,
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
