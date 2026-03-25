@@ -7,11 +7,12 @@ import { ZeduxNode } from './ZeduxNode'
 
 export class SelectorInstance<
   G extends SelectorGenerics = {
+    Events: any
     Params: any[]
     State: any
     Template: any
   }
-> extends ZeduxNode<G & { Events: any }> {
+> extends ZeduxNode<G> {
   public static $$typeof = Symbol.for(`${prefix}/SelectorInstance`)
 
   /**

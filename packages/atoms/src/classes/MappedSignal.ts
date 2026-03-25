@@ -11,6 +11,7 @@ import {
 import { flushBuffer } from '../utils/evaluationContext'
 import { Ecosystem } from './Ecosystem'
 import { doMutate, Signal } from './Signal'
+import { ZeduxNode } from './ZeduxNode'
 import { EventSent, INITIALIZING, TopPrio } from '../utils/general'
 import { initializeNode } from '../utils/graph'
 import { schedulerPost, schedulerPre } from '../utils/ecosystem'
@@ -26,7 +27,7 @@ const getRelevantEvents = (events?: Record<string, any>) => {
   return events
 }
 
-export type SignalMap = Record<string, Signal<AnyNodeGenerics> | unknown>
+export type SignalMap = Record<string, ZeduxNode<AnyNodeGenerics> | unknown>
 
 export class MappedSignal<
   G extends NodeGenerics = {
@@ -83,7 +84,7 @@ export class MappedSignal<
    * the reference to that single inner signal that state/events are forwarded
    * to/from.
    */
-  public F?: Signal<AnyNodeGenerics>
+  public F?: ZeduxNode<AnyNodeGenerics>
 
   constructor(
     /**
@@ -96,12 +97,12 @@ export class MappedSignal<
      */
     id: string,
 
-    map: SignalMap | Signal<AnyNodeGenerics>
+    map: SignalMap | ZeduxNode<AnyNodeGenerics>
   ) {
     super(e, id, undefined, true)
 
-    if ((map as Signal).izn) {
-      this.F = map as Signal<AnyNodeGenerics>
+    if ((map as ZeduxNode).izn) {
+      this.F = map as ZeduxNode<AnyNodeGenerics>
     } else {
       this.M = map as SignalMap
     }
@@ -152,9 +153,9 @@ export class MappedSignal<
       if (this.F) {
         this.F.send(relevantEvents)
       } else {
-        for (const signal of Object.values(this.M)) {
-          if ((signal as Signal | undefined)?.izn) {
-            ;(signal as Signal).send(relevantEvents)
+        for (const node of Object.values(this.M)) {
+          if ((node as ZeduxNode | undefined)?.izn) {
+            ;(node as ZeduxNode).send(relevantEvents)
           }
         }
       }
@@ -185,22 +186,22 @@ export class MappedSignal<
       const relevantEvents = getRelevantEvents(events)
 
       if (this.F) {
-        ;(this.F as Signal).set(newState, relevantEvents)
+        ;(this.F as Signal).set?.(newState, relevantEvents)
         return
       }
 
       for (const [key, value] of Object.entries(newState)) {
         if (value !== this.v[key]) {
-          const signal = this.M[key]
+          const node = this.M[key]
 
-          if (!(signal as Signal | undefined)?.izn) {
+          if (!(node as ZeduxNode | undefined)?.izn || !(node as Signal).set) {
             if (!this.N) this.N = { ...this.v }
 
             this.N![key] = value
             continue
           }
 
-          ;(signal as Signal).set(value, relevantEvents)
+          ;(node as Signal).set(value, relevantEvents)
         }
       }
 
@@ -308,7 +309,7 @@ export class MappedSignal<
     }
   }
 
-  public u(map: SignalMap | Signal<AnyNodeGenerics>) {
+  public u(map: SignalMap | ZeduxNode<AnyNodeGenerics>) {
     // create a new graph edge buffer so `.get` calls add deps to this
     // MappedSignal rather than any containing atom
     const prevNode = this.e.cs(this)
@@ -319,14 +320,14 @@ export class MappedSignal<
     // we shouldn't need try..catch here - no user code can run when getting
     // these already-defined nodes
     if (this.F) {
-      const signal = map as Signal
-      const newVal = signal.get(edgeConfig)
+      const node = map as ZeduxNode
+      const newVal = node.get(edgeConfig)
 
       if (this.l === INITIALIZING) {
         this.v = newVal
         initializeNode(this)
       } else {
-        this.F = signal
+        this.F = node
         const oldState = this.v
         this.v = newVal
         newVal === oldState || this.e.ch(this, oldState)
@@ -341,13 +342,13 @@ export class MappedSignal<
     if (this.l === INITIALIZING) {
       this.v = Object.fromEntries(
         entries.map(([key, val]) => {
-          if (!(val as Signal | undefined)?.izn) return [key, val as any]
+          if (!(val as ZeduxNode | undefined)?.izn) return [key, val as any]
 
           // update the `I`dsToKeys map. No need to update the signal`M`ap here,
           // it was just set in the constructor.
-          this.I[(val as Signal).id] = key
+          this.I[(val as ZeduxNode).id] = key
 
-          return [key, (val as Signal).get(edgeConfig)]
+          return [key, (val as ZeduxNode).get(edgeConfig)]
         })
       )
 
@@ -356,12 +357,12 @@ export class MappedSignal<
       let newState: any
 
       for (const [key, val] of entries) {
-        if ((val as Signal).izn) {
-          const newKeyVal = (val as Signal).get(edgeConfig)
+        if ((val as ZeduxNode).izn) {
+          const newKeyVal = (val as ZeduxNode).get(edgeConfig)
 
           // update the (forward) map and reverse map
-          this.M[key] = val as Signal
-          this.I[(val as Signal).id] = key
+          this.M[key] = val as ZeduxNode
+          this.I[(val as ZeduxNode).id] = key
 
           if (newKeyVal !== this.v[key]) {
             ;(newState ??= { ...this.v })[key] = newKeyVal

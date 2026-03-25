@@ -12,11 +12,13 @@ import {
   NodeFilterOptions,
   NodeGenerics,
   Scope,
+  UndefinedEvents,
 } from '@zedux/atoms/types/index'
 import { Ecosystem } from './Ecosystem'
 import {
   DESTROYED,
   Eventless,
+  EventSent,
   ExplicitExternal,
   INITIALIZING,
   InternalLifecycleStatus,
@@ -36,6 +38,7 @@ import {
   addReason,
   initializeNode,
   removeEdge,
+  scheduleEventListeners,
   setNodeStatus,
 } from '../utils/graph'
 import { parseOnArgs, shouldScheduleImplicit } from '../utils/events'
@@ -205,6 +208,35 @@ export abstract class ZeduxNode<G extends NodeGenerics = AnyNodeGenerics>
 
       return () => observer.D(eventName, notify)
     }
+  }
+
+  public send<E extends UndefinedEvents<G['Events']>>(eventName: E): void
+
+  public send<E extends keyof G['Events']>(
+    eventName: E,
+    payload: G['Events'][E]
+  ): void
+
+  public send<E extends Partial<G['Events']>>(events: E): void
+
+  /**
+   * Manually notify this node's event listeners of an event. Accepts an
+   * object to send multiple events at once.
+   *
+   * ```ts
+   * node.send({ eventA: 'payload for a', eventB: 'payload for b' })
+   * ```
+   */
+  public send<E extends keyof G['Events']>(
+    eventNameOrMap: E | Partial<G['Events']>,
+    payload?: G['Events'][E]
+  ) {
+    const events =
+      typeof eventNameOrMap === 'object'
+        ? eventNameOrMap
+        : { [eventNameOrMap]: payload }
+
+    scheduleEventListeners({ e: events, s: this, t: EventSent })
   }
 
   /**
