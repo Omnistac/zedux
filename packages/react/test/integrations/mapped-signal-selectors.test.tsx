@@ -500,6 +500,210 @@ describe('mapped signal selectors', () => {
     })
   })
 
+  describe('selector swapping', () => {
+    test('swapping a selector instance notifies downstream when new state differs', () => {
+      const atomA = atom('a', 10)
+      const atomB = atom('b', 20)
+      const which = atom('which', 'a' as 'a' | 'b')
+
+      const selectorA = ({ get }: { get: any }) => get(atomA) * 2
+      const selectorB = ({ get }: { get: any }) => get(atomB) * 3
+
+      const testAtom = ion('test', ({ get, getNode }) => {
+        const sel = get(which) === 'a' ? selectorA : selectorB
+        const selectorNode = getNode(sel)
+        const signal = injectSignal('static')
+
+        const mapped = injectMappedSignal({
+          derived: selectorNode,
+          value: signal,
+        })
+
+        return api(mapped).setExports({ mapped })
+      })
+
+      const testNode = ecosystem.getNode(testAtom)
+      const observerAtom = ion('observer', ({ get }) => get(testAtom).derived)
+      const observerNode = ecosystem.getNode(observerAtom)
+
+      expect(testNode.get()).toEqual({ derived: 20, value: 'static' })
+      expect(observerNode.get()).toBe(20)
+
+      const changes: any[] = []
+      testNode.on('change', (e: any) => changes.push(e.newState))
+
+      // swap selector: selectorA (10*2=20) -> selectorB (20*3=60)
+      ecosystem.getNode(which).set('b')
+
+      expect(testNode.get()).toEqual({ derived: 60, value: 'static' })
+      expect(observerNode.get()).toBe(60)
+      expect(changes).toEqual([{ derived: 60, value: 'static' }])
+    })
+
+    test('swapping a selector does not notify downstream when new state matches', () => {
+      const atomA = atom('a', 5)
+      const atomB = atom('b', 5)
+      const which = atom('which', 'a' as 'a' | 'b')
+      let observerEvals = 0
+
+      // both selectors return the same value
+      const selectorA = ({ get }: { get: any }) => get(atomA)
+      const selectorB = ({ get }: { get: any }) => get(atomB)
+
+      const testAtom = ion('test', ({ get, getNode }) => {
+        const sel = get(which) === 'a' ? selectorA : selectorB
+        const selectorNode = getNode(sel)
+
+        return injectMappedSignal({ val: selectorNode })
+      })
+
+      const testNode = ecosystem.getNode(testAtom)
+      const observerAtom = ion('observer', ({ get }) => {
+        observerEvals++
+        return get(testAtom).val
+      })
+      const observerNode = ecosystem.getNode(observerAtom)
+
+      expect(observerNode.get()).toBe(5)
+      expect(observerEvals).toBe(1)
+
+      // swap selector ref, but both have state=5 — no downstream update
+      ecosystem.getNode(which).set('b')
+
+      expect(testNode.get()).toEqual({ val: 5 })
+      expect(observerNode.get()).toBe(5)
+      expect(observerEvals).toBe(1)
+    })
+
+    test('after swap, updates come from new selector and not the old one', () => {
+      const atomA = atom('a', 'from-a')
+      const atomB = atom('b', 'from-b')
+      const which = atom('which', 'a' as 'a' | 'b')
+
+      const selectorA = ({ get }: { get: any }) => get(atomA)
+      const selectorB = ({ get }: { get: any }) => get(atomB)
+
+      const testAtom = ion('test', ({ get, getNode }) => {
+        const sel = get(which) === 'a' ? selectorA : selectorB
+        const selectorNode = getNode(sel)
+
+        return injectMappedSignal({ val: selectorNode })
+      })
+
+      const testNode = ecosystem.getNode(testAtom)
+
+      const changes: any[] = []
+      testNode.on('change', (e: any) => changes.push(e.newState))
+
+      expect(testNode.get()).toEqual({ val: 'from-a' })
+
+      // swap to selectorB
+      ecosystem.getNode(which).set('b')
+      changes.length = 0 // clear the swap change
+
+      // update old source - should NOT affect testNode
+      ecosystem.getNode(atomA).set('a-updated')
+
+      expect(testNode.get()).toEqual({ val: 'from-b' })
+      expect(changes).toEqual([])
+
+      // update new source - SHOULD affect testNode
+      ecosystem.getNode(atomB).set('b-updated')
+
+      expect(testNode.get()).toEqual({ val: 'b-updated' })
+      expect(changes).toEqual([{ val: 'b-updated' }])
+    })
+
+    test('swapping selector in single-signal wrapping mode', () => {
+      const atomA = atom('a', 100)
+      const atomB = atom('b', 200)
+      const which = atom('which', 'a' as 'a' | 'b')
+
+      const selectorA = ({ get }: { get: any }) => get(atomA)
+      const selectorB = ({ get }: { get: any }) => get(atomB)
+
+      const testAtom = ion('test', ({ get, getNode }) => {
+        const sel = get(which) === 'a' ? selectorA : selectorB
+        return injectMappedSignal(getNode(sel))
+      })
+
+      const testNode = ecosystem.getNode(testAtom)
+      const observerAtom = ion('observer', ({ get }) => get(testAtom) + 1)
+      const observerNode = ecosystem.getNode(observerAtom)
+
+      expect(testNode.get()).toBe(100)
+      expect(observerNode.get()).toBe(101)
+
+      // swap
+      ecosystem.getNode(which).set('b')
+
+      expect(testNode.get()).toBe(200)
+      expect(observerNode.get()).toBe(201)
+
+      // updates from new source propagate
+      ecosystem.getNode(atomB).set(300)
+
+      expect(testNode.get()).toBe(300)
+      expect(observerNode.get()).toBe(301)
+
+      // updates from old source do NOT propagate
+      ecosystem.getNode(atomA).set(999)
+
+      expect(testNode.get()).toBe(300)
+      expect(observerNode.get()).toBe(301)
+    })
+
+    test('swapping selector in atom-wrapped mapped signal propagates to outer atom observers', () => {
+      const atomA = atom('a', 'val-a')
+      const atomB = atom('b', 'val-b')
+      const which = atom('which', 'a' as 'a' | 'b')
+
+      const selectorA = ({ get }: { get: any }) => get(atomA)
+      const selectorB = ({ get }: { get: any }) => get(atomB)
+
+      const innerAtom = ion('inner', ({ get, getNode }) => {
+        const sel = get(which) === 'a' ? selectorA : selectorB
+        const selectorNode = getNode(sel)
+        const signal = injectSignal('fixed')
+
+        return injectMappedSignal({ sel: selectorNode, sig: signal })
+      })
+
+      const outerAtom = ion('outer', ({ getNode }) => {
+        const innerNode = getNode(innerAtom)
+        return injectMappedSignal(innerNode)
+      })
+
+      const outerNode = ecosystem.getNode(outerAtom)
+
+      const outerChanges: any[] = []
+      outerNode.on('change', (e: any) => outerChanges.push(e.newState))
+
+      expect(outerNode.get()).toEqual({ sel: 'val-a', sig: 'fixed' })
+
+      // swap the inner selector
+      ecosystem.getNode(which).set('b')
+
+      expect(outerNode.get()).toEqual({ sel: 'val-b', sig: 'fixed' })
+      expect(outerChanges).toEqual([{ sel: 'val-b', sig: 'fixed' }])
+
+      outerChanges.length = 0
+
+      // new source updates reach outer
+      ecosystem.getNode(atomB).set('val-b-updated')
+
+      expect(outerNode.get()).toEqual({ sel: 'val-b-updated', sig: 'fixed' })
+      expect(outerChanges).toEqual([{ sel: 'val-b-updated', sig: 'fixed' }])
+
+      // old source updates do NOT reach outer
+      outerChanges.length = 0
+      ecosystem.getNode(atomA).set('val-a-updated')
+
+      expect(outerNode.get()).toEqual({ sel: 'val-b-updated', sig: 'fixed' })
+      expect(outerChanges).toEqual([])
+    })
+  })
+
   describe('atom wrapping propagation', () => {
     test('setting outer atom propagates through inner atom mapped signal, ignoring selectors', () => {
       const sourceAtom = atom('source', 100)
