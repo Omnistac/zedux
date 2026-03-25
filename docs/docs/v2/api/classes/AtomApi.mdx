@@ -1,0 +1,385 @@
+---
+id: AtomApi
+title: AtomApi
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+Atom APIs dynamically define certain integral properties of an atom. These properties do not fit well in the [injector paradigm](../glossary#injector), as they define key characteristics of the atom itself.
+
+These properties include an atom's state (or [wrapped signal](./AtomInstance.mdx#signal-wrappers)), exports, suspense promise, and custom TTL configuration.
+
+**New in v2:** Properties added to an AtomApi do not have to be stable references. See [`.exports`](#exports) for details.
+
+:::note
+The properties don't _have_ to be stable; Zedux will just ignore the new references on subsequent evaluations.
+:::
+
+## Creation
+
+Create AtomApis with [the `api()` factory](/not-done?path=../factories/api).
+
+```ts
+import { api } from '@zedux/react'
+
+const myApi = api()
+const withValue = api('some value')
+const withStore = api(createStore())
+const withExports = api(val).setExports({ ...myExports })
+const withPromise = api(val).setPromise(myPromise)
+const fromApi = api(myApi)
+const addingExports = api(withExports).addExports({ ...moreExports })
+const overwritingExports = api(withExports).setExports({ ...newExports })
+```
+
+While this can be called anywhere, an atom api can only define properties for an atom when it's returned from the atom's [state factory](../factories/atom#valueorfactory). It's most common to return the result of `api()` directly:
+
+```ts
+const exampleAtom = atom('example', () => {
+  const signal = injectSignal('some signal')
+
+  const someExport = () => doSomethingWith(signal)
+
+  return api(signal).setExports({ someExport })
+})
+```
+
+## Usage
+
+AtomApis can be used to pass stores, promises, and exports around. Ultimately, you'll return only one AtomApi from the state factory.
+
+```ts
+import { api, atom, injectStore } from '@zedux/react'
+
+const withEvaluator = atom('withEvaluator', () => {
+  return api('initial state')
+})
+
+const withStore = atom('withStore', () => {
+  const store = injectStore('initial state')
+
+  return api(store)
+})
+
+const withExports = atom('withExports', () => {
+  const store = injectStore('initial state')
+
+  return api(store).setExports({
+    someProp: () => 'some val',
+  })
+})
+
+const composingApis = atom('composingApis', () => {
+  const injectedApi = injectSomethingThatReturnsAnApi()
+
+  return api(injectedApi).addExports({
+    additionalExport: () => 'some val',
+  })
+})
+```
+
+**New in v2:** Since Zedux wraps exported functions by default, you can selectively use [`.addExports`](#addexports) to add exports without wrapping them.
+
+```ts
+const exampleAtom = atom('example', () => {
+  const signal = injectSignal('initial state')
+  const state = signal.get()
+
+  return api(store)
+    .setExports(
+      {
+        wrappedExport: () => state, // accessing unstable values is fine for wrapped exports
+      },
+      { wrap: true } // the default
+    )
+    .addExports(
+      {
+        unwrappedExport: () => state, // this value will become stale when `signal` changes
+      },
+      { wrap: false }
+    )
+})
+```
+
+A rare use case for this is when consumers need access to an exact, unwrapped function reference. But you shouldn't typically need this.
+
+## Generics
+
+For TypeScript users, `AtomApi`s have a single type generic called the `AtomApiGenerics`. This is similar to [`ZeduxNode`s `NodeGenerics`](./ZeduxNode.mdx#generics).
+
+You can pull this generic information off any AtomApi by using various `*Of` type helpers. Comprehensive example:
+
+```ts
+const exampleAtom = atom('example', () => {
+  const signal = injectSignal<string, { test: boolean }>('example state')
+
+  const exampleApi = api(signal).setExports({
+    exampleExport: () => signal.get(),
+  })
+
+  // `EventsOf` knows how to reach through the `G['Signal']` generic to get the
+  // signal's events:
+  type ExampleEvents = EventsOf<typeof exampleApi>
+  type ExampleExports = ExportsOf<typeof exampleApi>
+  type ExamplePromise = PromiseOf<typeof exampleApi>
+  type ExampleState = StateOf<typeof exampleApi>
+
+  // NOTE: There is no `SignalOf` type helper, since `EventsOf` or `StateOf` is
+  // usually all you need. You can create your own if needed:
+  type SignalOf<A extends AnyAtomApi> = A extends AtomApi<infer G>
+    ? G['Signal']
+    : never
+
+  // then use like so:
+  type ExampleSignal = SignalOf<typeof exampleApi>
+
+  return exampleApi
+})
+```
+
+Full list of keys on the `AtomApiGenerics` (`G`) type generic:
+
+<Legend>
+  <Item name="G['Exports']">
+    The combined object type of all exports set via [`setExports`](#setexports) and/or [`addExports`](#addexports).
+
+  </Item>
+  <Item name="G['Promise']">
+    The type of the promise set via [`setPromise`](#setpromise).
+
+  </Item>
+  <Item name="G['Signal']">
+    The full type of the signal passed to the [`api()`](/not-done?path=../factories/api) factory (if any). This has the signal's [`G['Events']`](./Signal#generics) and [`G['State']`](./Signal#generics) intact.
+
+  </Item>
+  <Item name="G['State']">
+    The type that will become the state of the atom instance, if this AtomApi is
+    returned from a state factory. This type is inferred based on the value
+    passed to the [`api()`](/not-done?path=../factories/api) factory:
+    
+    - If a raw value is passed, this type will be inferred directly from it.
+    
+    - If a promise is passed, this type will be the promise's resolved value type.
+    
+    - If a [signal](./Signal) is passed, this type will be the signal's state type.
+    
+    </Item>
+</Legend>
+
+## Properties
+
+AtomApis expose the following **readonly** properties:
+
+<Legend>
+
+  <Item name="exports">
+    An object, or `undefined` if no exports were set.
+
+    These are the exports added to this AtomApi via [`setExports`](#setexports) and/or [`addExports`](#addexports).
+
+    When an AtomApi is returned from a state factory, these will become the atom instance's [`.exports`](./AtomInstance#exports).
+
+    **New in v2:** These exports can change on subsequent evaluations - they no longer have to be stable references. Exports are not part of the atom's state, meaning they don't trigger updates in consumers when changed. However, Zedux works around this by wrapping exported functions. See [`addExports`](#addexports) and [`setExports`](#setexports) for more information.
+
+  </Item>
+  <Item name="promise">
+    The promise set via [`.setPromise`](#setpromise).
+
+    Unless the AtomApi's `.value` is a promise (creating a "query atom"), this promise will be set as the atom instance's suspense `.promise` (if this AtomApi is returned from the state factory). For query atoms, this property is ignored.
+
+    :::note
+    The atom's `.promise` is considered "stateful", meaning it will trigger updates in consumers when changed on subsequent evaluations. Unlike [`.value`](#value) changes, promise changes will also trigger updates for [static dependents](../glossary#static-graph-dependency) of the atom.
+    :::
+
+  </Item>
+  <Item name="signal">
+    If this AtomApi's `.value` is a [signal](./Signal), the signal will also be assigned to this property. This is mostly for convenience when working with TypeScript, since the `.value` property won't retain all the type information of the exact signal used.
+
+  </Item>
+  <Item name="ttl">
+    The value set via [`api.setTtl`](#setttl). See [`api.setTtl`](#setttl) for possible values.
+
+  </Item>
+  <Item name="value">
+    A reference to the value passed to the [`api()` factory](/not-done?path=../factories/api) itself. Can be any raw value, a promise, or a [signal](./Signal) (including a [mapped signal](/not-done?path=./MappedSignal) or even another [atom instance](./AtomInstance.mdx)).
+
+    If it's a signal and this AtomApi is returned from a state factory, the signal should be a stable reference that won't change on subsequent evaluations, e.g. by using [`injectSignal`](../injectors/injectSignal).
+
+  </Item>
+</Legend>
+
+## Methods
+
+<Legend>
+  <Item name="addExports">
+    Merges an object of "exported" values into any already-set [exports](#exports) on this AtomApi. If no exports have been set yet on this AtomApi, `.addExports()` sets the exports.
+
+    ```ts
+    api('val')
+      .addExports({ a: 1 })
+      .addExports({ b: 2 })
+      .addExports({ a: 3 })
+    // .exports // { a: 3, b: 2 }
+    ```
+
+    Signature:
+
+    ```ts
+    addExports = (exports, config?) => api
+    ```
+
+    <Legend>
+      <Item name="exports">
+        An object mapping export names to their values. Can contain anything. These will be merged into the AtomApi's existing exports, if any.
+
+        See [`AtomInstance#exports`](./AtomInstance#exports) for more information.
+
+      </Item>
+      <Item name="config">
+        Optional. An object with a single, optional property:
+
+        ```ts
+        { wrap?: boolean }
+        ```
+
+        - `wrap`: Default: `true`. If true, Zedux will detect any exported plain functions and wrap them in a new function that automatically [batches](./Ecosystem#batch) and, if the atom is scoped, [scopes](./Ecosystem#withscope) them with the currently-evaluating atom instance's scope.
+
+          Zedux also uses this wrapper function to swap out export implementations while keeping the function provided to consumers stable. See [this PR](https://github.com/Omnistac/zedux/pull/256) for more info.
+
+          Pass `false` to prevent this behavior. You shouldn't normally need this, but there are some use cases where it's useful - e.g. avoiding batching or micro-optimizing atoms that are created millions of times (since this wrapping has a tiny bit of overhead).
+
+          This wrapping only occurs if `addExports` is called during atom evaluation and only on the initial evaluation of that atom, so overhead is minimal.
+
+      </Item>
+      <Item name="Returns">
+        The AtomApi for chaining.
+
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="setExports">
+    The main way to set an AtomApi's exports. Sets the passed object of "exported" values as the AtomApi's [exports](#exports). Overwrites any previously-set exports on this AtomApi.
+
+    If this AtomApi is returned from a state factory, these exports will be set as the atom instance's [`.exports`](#exports).
+
+    ```ts
+    const initialExports = api(val).setExports({ ...myExports })
+    const overwriteExports = api(initialExports).setExports({ ...newExports })
+    ```
+
+    Signature:
+
+    ```ts
+    setExports = (exports, config?) => api
+    ```
+
+    <Legend>
+      <Item name="exports">
+        An object mapping export names to their values. Can contain anything. These will overwrite the AtomApi's existing exports, if any.
+
+        See [`AtomInstance#exports`](./AtomInstance#exports) for more information.
+      </Item>
+      <Item name="config">
+        Optional. An object with a single, optional property:
+
+        ```ts
+        { wrap?: boolean }
+        ```
+
+        - `wrap`: Default: `true`. If true, Zedux will detect any exported plain functions and wrap them in a new function that automatically [batches](./Ecosystem#batch) and, if the atom is scoped, [scopes](./Ecosystem#withscope) them with the currently-evaluating atom instance's scope.
+
+          Zedux also uses this wrapper function to swap out export implementations while keeping the function provided to consumers stable. See [this PR](https://github.com/Omnistac/zedux/pull/256) for more info.
+
+          Pass `false` to prevent this behavior. You shouldn't normally need this, but there are some use cases where it's useful - e.g. avoiding batching or micro-optimizing atoms that are created millions of times (since this wrapping has a tiny bit of overhead).
+
+          This wrapping only occurs if `setExports` is called during atom evaluation and only on the initial evaluation of that atom, so overhead is minimal.
+
+      </Item>
+      <Item name="Returns">
+        The AtomApi for chaining.
+
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="setPromise">
+    Sets the [`.promise`](#promise) property of this AtomApi.
+
+    If this AtomApi is returned from a state factory, the promise will be set as the atom instance's [`.promise`](#promise) and will be used to cause React to suspend.
+
+    This promise does not have to be a stable reference, though you should be conscious of when its reference changes since any components using the atom instance will re-suspend when the promise changes (if this AtomApi is returned from the state factory).
+
+    ```ts
+    const promiseApi = api(val).setPromise(myPromise)
+    promiseApi.setPromise(myNewPromise) // overwrite myPromise
+    ```
+
+    Signature:
+
+    ```ts
+    setPromise = (promise) => api
+    ```
+
+    <Legend>
+      <Item name="promise">
+        Required. A promise.
+
+      </Item>
+      <Item name="Returns">
+        The AtomApi for chaining.
+
+      </Item>
+    </Legend>
+
+  </Item>
+  <Item name="setTtl">
+    Accepts a number (in milliseconds), promise, or observable, or a function that returns a number (in milliseconds), promise, or observable. This will be set as the AtomApi's `.ttl` property.
+
+    If this AtomApi is returned from a state factory, this will be set as the [atom instance's TTL](./AtomInstance#ttl), overriding any [atom template-level TTL](./AtomTemplate#ttl).
+
+    This is far more flexible than atom-template-level ttl, which can only be a number in milliseconds.
+
+    - When a number is set, Zedux will set a timeout for `ttl` milliseconds. When that timeout times out, if the atom instance is still unused, Zedux will destroy it. A ttl of `0` will skip the timeout and clean up immediately.
+    - When a promise is set, Zedux will wait for that promise to resolve before cleaning up the atom instance.
+    - When an observable is set, Zedux will wait for that observable to emit before cleaning up the atom instance.
+
+    In all cases, if the atom instance is used again while Zedux is awaiting the ok for cleanup, cleanup will be cancelled, and the instance's [`status`](./AtomInstance#status) will transition from Stale back to Active.
+
+    ```ts
+    const withNumberTtl = api().setTtl(1000)
+    const withPromiseTtl = api().setTtl(myPromise)
+    const withObservableTtl = api().setTtl(myRxJsObservable$)
+
+    // when the ttl is dynamic, determined after the atom instance is created, use
+    // a function:
+    const withFunctionAndNumberTtl = api().setTtl(() => 1000)
+    const withFunctionAndPromiseTtl = api().setTtl(() => myPromise)
+    const withFunctionAndObservableTtl = api().setTtl(() => myRxJsObservable$)
+    ```
+
+    Signature:
+
+    ```ts
+    setTtl = (ttl) => api
+    ```
+
+    <Legend>
+      <Item name="ttl">
+        Required. A number, promise, or observable, or a function that returns a number, promise, or observable.
+
+      </Item>
+      <Item name="Returns">
+        The AtomApi for chaining.
+
+      </Item>
+    </Legend>
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [The Atom APIs walkthrough](../../../walkthrough/atom-apis)
+- [The `api()` factory](/not-done?path=../factories/api)
+- [The `AtomInstance` class](./AtomInstance)
