@@ -1,0 +1,121 @@
+---
+id: injectMemo
+title: injectMemo
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { injectMemo } from '@zedux/react'
+```
+
+An [injector](../glossary.mdx#injector) that memoizes a value and returns it. This is the injector equivalent of React's [`useMemo()`](https://react.dev/reference/react/useMemo) hook. Like `useMemo()`, `injectMemo()` will return the same value on subsequent evaluations of the atom.
+
+When any of the passed dependencies change on a subsequent evaluation, the value will be recomputed and will replace the previously cached value.
+
+## Example
+
+```tsx live ecosystemId=injectMemo/example resultVar=Seconds version=2
+const multiplierAtom = atom('multiplier', () => 2)
+
+const secondsAtom = atom('seconds', () => {
+  const ecosystem = injectEcosystem()
+  const signal = injectSignal(10)
+
+  // empty deps = only run once:
+  const initialValue = injectMemo(() => signal.get(), [])
+
+  // no deps = auto-track the `signal` and `multiplierAtom` deps
+  const multipliedValue = injectMemo(
+    () => signal.get() * ecosystem.get(multiplierAtom)
+  )
+
+  injectEffect(() => {
+    const intervalId = setInterval(() => signal.set(val => val + 1), 1000)
+
+    return () => clearInterval(intervalId)
+  }, [])
+
+  const mappedSignal = injectMappedSignal({
+    initialValue,
+    liveValue: signal,
+    multipliedValue,
+  })
+
+  // update this every time in case `multipliedValue` changed:
+  mappedSignal.mutate({ initialValue, multipliedValue })
+
+  return mappedSignal
+})
+
+function Seconds() {
+  const { initialValue, liveValue, multipliedValue } = useAtomValue(secondsAtom)
+  const multiplierInstance = useAtomInstance(multiplierAtom)
+
+  return (
+    <>
+      <div>Seconds: {liveValue}</div>
+      <div>Initial Value: {initialValue}</div>
+      <div>Multiplied Value: {multipliedValue}</div>
+      <button onClick={() => multiplierInstance.set(val => val + 1)}>
+        Increment Multiplier
+      </button>
+    </>
+  )
+}
+```
+
+Miscellaneous:
+
+```ts
+const constantVal = injectMemo(() => getExpensiveVal(), [])
+
+const changesWhenDepsChange = injectMemo(getExpensiveVal, [depA, depB])
+
+// automatically reevaluate this factory when `mySignal` or `myFilter` change
+// and make the injecting atom reevaluate.
+const autoTrackedDeps = injectMemo(() =>
+  mySignal.get().sort().filter(myFilter.get())
+)
+```
+
+## Signature
+
+<Tabs>
+  {tab1(`injectMemo = (valueFactory, deps?)`)}
+  {tab2(`declare const injectMemo: <Value = any>(
+  valueFactory: () => Value,
+  deps?: InjectorDeps
+) => Value`)}
+</Tabs>
+
+<Legend>
+  <Item name="valueFactory">
+    Required. A function that returns the value to memoize.
+
+    This function is called on initial evaluation and again every time any dependencies change on subsequent evaluations.
+
+    If no deps are passed, this function's execution will create a [reactive context](../glossary.mdx#reactive-context) that automatically tracks [`node.get()`](../classes/ZeduxNode.mdx#get), [`ecosystem.get()`](../classes/Ecosystem.mdx#get), and [`ecosystem.getNode()`](../classes/Signal.mdx#getmany) calls. When any [dynamic dependencies](../glossary.mdx#dynamic-graph-dependency) change, the `valueFactory` will reevaluate and, if the value changes, trigger a reevaluation of the injecting atom. Internally, `injectMemo` is just creating a [selector instance](../classes/SelectorInstance.mdx) and drawing a dynamic graph edge between it and the injecting atom.
+
+  </Item>
+  <Item name="deps">
+    Optional (though you'll always want to pass it). An array containing absolutely anything.
+
+    If any items in this array change on a subsequent evaluation, the previously memoized value will be discarded and the `valueFactory` will be called again to produce a new value.
+
+    Pass an empty array to prevent the value from ever changing, as long as this atom instance is alive.
+
+    If not passed, the `valueFactory` will become a [reactive context](../glossary.mdx#reactive-context) (see [above](#valuefactory))
+
+  </Item>
+  <Item name="Returns">
+    The memoized value returned from the `valueFactory`.
+    
+  </Item>
+</Legend>
+
+## See Also
+
+- [React's `useMemo()` reference](https://react.dev/reference/react/useMemo)
+- [`injectCallback()`](./injectCallback.mdx)
+- [`injectPromise()`](/not-done?path=./injectPromise.mdx)
