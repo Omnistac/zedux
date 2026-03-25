@@ -1,0 +1,162 @@
+---
+id: AtomTemplate
+title: AtomTemplate
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+export const AtomKeyDesc = () => (
+  <>
+    <p>
+      The key will be used to create a unique id for each atom instance. It is
+      also the key to Dependency Injection - it's how ecosystems know which atom
+      templates to override.
+    </p>
+    <p>
+      Keys also improve DX - many errors will log the key of the atom they
+      originated in. Keys also help with a codebase's grepability.
+    </p>
+  </>
+)
+
+The object returned from [the `atom()` factory](../factories/atom). Instances of this class are passed to most of Zedux's hooks and injectors.
+
+An atom template defines a skeleton that Zedux will use to create [atom instances](./AtomInstance) on demand.
+
+## Creation
+
+Use [the `atom()` factory](../factories/atom) to create atom templates:
+
+```ts
+import { AtomTemplate, atom } from '@zedux/react'
+
+const exampleAtom = atom('example', 'initial state')
+
+exampleAtom instanceof AtomTemplate // true
+```
+
+:::note
+The `_____Atom` naming convention comes from Jotai. If it's confusing (templates aren't atoms after all...), you don't have to use it. Feel free to create your own.
+
+For example, here's a convention using `PascalCase$` for templates and `camelCase$` for instances:
+
+```ts
+const Example$ = atom('example', 'initial state')
+const example$ = ecosystem.getNode(Example$)
+
+example$.get() // 'initial state'
+```
+
+:::
+
+## Extending
+
+When creating your own, custom atom types, you'll usually want to extend this class. Creating your own atom types is an advanced feature and we're not currently documenting it as the internals of these classes may change.
+
+## Properties
+
+<Legend>
+
+  <Item name="dehydrate">
+    A function. Can be undefined.
+
+    A reference to the [`dehydrate` atom config option](/not-done?path=../types/AtomConfig#dehydrate) passed to [the `atom()` factory](../factories/atom), if any.
+
+  </Item>
+  <Item name="tags">
+    An array of strings. Can be undefined.
+
+    A reference to the [`tags` atom config option](/not-done?path=../types/AtomConfig#tags) passed to [the `atom()` factory](../factories/atom), if any.
+
+    If the ecosystem has [tags configured](./Ecosystem#tags), these tags will be checked against the ecosystem's to warn about unsafe atom templates being used in certain environments.
+
+  </Item>
+  <Item name="hydrate">
+    A function. Can be undefined.
+
+    A reference to the [`hydrate` atom config option](/not-done?path=../types/AtomConfig#hydrate) passed to [`atom()`](../factories/atom), if any.
+
+  </Item>
+  <Item name="key">
+    A string.
+
+    This is the key string passed as the first argument to [the `atom()` factory](../factories/atom).
+
+    <AtomKeyDesc />
+
+  </Item>
+  <Item name="ttl">
+    A number. Can be undefined.
+
+    This is the [`ttl` atom config option](/not-done?path=../types/AtomConfig#ttl) passed to [the `atom()` factory](../factories/atom), if any.
+
+    If not set, instances of this atom will live forever unless configured with [`.setTtl()`](./AtomApi#setttl) on an AtomApi returned by the state factory.
+
+    - Set to <code>-1</code> to make this atom's instances live forever.
+    - Set to <code>0</code> to destroy all instances of this atom as soon as they go stale.
+    - Set to any positive integer to make atoms live in a stale state for{' '}
+      <code>&lt;ttl&gt;</code> milliseconds before being cleaned up.
+
+    If set, this option will still be overridden by any `ttl` [set on an AtomApi](./AtomApi#setttl) returned by the state factory.
+
+  </Item>
+</Legend>
+
+## Methods
+
+<Legend>
+
+  <Item name="getNodeId">
+    Gets the id that an instance of this atom template would have given a set of params.
+
+    Signature:
+
+    ```ts
+    getNodeId = (ecosystem, params?) => id
+    ```
+
+    <Legend>
+      <Item name="ecosystem">
+        Required. Your [ecosystem](./Ecosystem).
+      </Item>
+      <Item name="params">
+        Optional (required if the atom takes params). An array of atom params that will be turned into a predictable hash.
+
+        See [`ecosystem.hash()`](./Ecosystem#hash) and [`instance.params`](./AtomInstance#params) for more.
+      </Item>
+    </Legend>
+
+    Accepts an ecosystem and an array of atom params (required if the atom takes params, `undefined` if not). Uses the ecosystem's id generator to generate a predictable hash of the atom template's key + params combo.
+
+    Zedux uses this internally to generate atom instance ids. You won't typically call this except in some advanced use cases. To find a cached atom instance via its template + params, prefer [`ecosystem.find()`](./Ecosystem#find).
+
+  </Item>
+  <Item name="override">
+    Creates a clone of this atom template, but with a different value.
+
+    Signature:
+
+    ```ts
+    override = (newValue) => newAtom
+    ```
+
+    Accepts any of the same [value types](../factories/atom#value) that [the `atom()` factory](../factories/atom) accepts. The state, promise, and exports type of the new value should match the corresponding types in the overridden atom. TypeScript will enforce this.
+
+    Returns the new atom template. See the [overrides walkthrough](../../../walkthrough/overrides) for more details.
+
+  </Item>
+</Legend>
+
+## See Also
+
+- [`atom()`](../factories/atom)
+- [The Configuring Atoms walkthrough](../../../walkthrough/configuring-atoms)
+- [The `AtomInstance` class](./AtomInstance.mdx)
+- Hooks and injectors that accept atom templates:
+  - [`useAtomContext`](../hooks/useAtomContext.mdx)
+  - [`useAtomInstance`](../hooks/useAtomInstance.mdx)
+  - [`useAtomState`](../hooks/useAtomState.mdx)
+  - [`useAtomValue`](../hooks/useAtomValue.mdx)
+  - [`injectAtomInstance`](../injectors/injectAtomInstance.mdx)
+  - [`injectAtomState`](/not-done?path=../injectors/injectAtomState.mdx)
+  - [`injectAtomValue`](/not-done?path=../injectors/injectAtomValue.mdx)
