@@ -1,0 +1,72 @@
+---
+id: setInternals
+title: setInternals
+---
+
+import { Legend, Item, Link, Tabs, Ts, tab1, tab2 } from '@site/src/all'
+
+```ts
+import { setInternals } from '@zedux/react'
+```
+
+A utility function that sets Zedux's internal state to the state previously retrieved from [`getInternals`](./getInternals.mdx). This is primarily used for sharing state between multiple Zedux instances, such as in child windows or iframe scenarios.
+
+:::warning Advanced Usage
+This is an advanced utility that modifies Zedux internals. Use with caution and only when necessary.
+:::
+
+## Example
+
+```ts
+// in the parent window:
+import { getInternals } from '@zedux/react'
+
+window.getZeduxInternals = getInternals
+
+// In a child window:
+const parentInternals = window.opener.getZeduxInternals()
+setInternals(parentInternals)
+
+// Now the Zedux instance in this window shares its internal state with the
+// parent window's Zedux instance.
+```
+
+If you're using the [default ecosystem](../classes/Ecosystem.mdx#default-ecosystem), this is all you need to do to share all your state across windows. But when using custom ecosystems, you'll typically want to share that across windows as well:
+
+```tsx
+// in the parent window:
+import { createEcosystem } from '@zedux/react'
+
+window.rootEcosystem = createEcosystem()
+
+// In a child window:
+const rootEcosystem = window.opener.rootEcosystem
+
+// And use it as normal, e.g. providing it to an <EcosystemProvider>:
+function ChildWindow() {
+  return (
+    <EcosystemProvider ecosystem={rootEcosystem}>
+      <Routes />
+    </EcosystemProvider>
+  )
+}
+```
+
+<Tabs>
+  {tab1(`setInternals = (internals) => void`)}
+  {tab2(`declare const setInternals: (internals: {
+    c: EvaluationContext
+    g: Ecosystem
+  }) => void`)}
+</Tabs>
+
+<Legend>
+  <Item name="internals">
+    Required. An internals object previously retrieved from
+    [`getInternals()`](./getInternals.mdx).
+  </Item>
+</Legend>
+
+## See Also
+
+- [The `getInternals` utility](./getInternals.mdx)
