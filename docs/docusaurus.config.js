@@ -33,19 +33,38 @@ module.exports = {
   tagline: 'A Molecular State Engine for React',
   url: 'https://zedux.dev',
   baseUrl: '/',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/brand/favicon.svg',
+  headTags: [
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'theme-color',
+        content: '#ffffff',
+        media: '(prefers-color-scheme: light)',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'theme-color',
+        content: '#000000',
+        media: '(prefers-color-scheme: dark)',
+      },
+    },
+  ],
   organizationName: 'Omnistac',
   projectName: 'zedux',
   deploymentBranch: 'gh-pages',
-  stylesheets: [
-    'https://fonts.googleapis.com/css2?family=Quicksand&display=swap',
-    'https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap',
-  ],
   scripts: [],
   trailingSlash: false,
   /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
   themeConfig: {
-    image: 'img/zedux-icon-300x300.png',
+    image: 'img/brand/zedux-icon-black.svg',
+    colorMode: {
+      defaultMode: 'light',
+      disableSwitch: false,
+      respectPrefersColorScheme: true,
+    },
     metadata: [
       { name: 'og:type', content: 'article' },
       { name: 'twitter:card', content: 'summary' },
@@ -55,10 +74,11 @@ module.exports = {
       },
     ],
     navbar: {
-      title: 'Home',
+      hideOnScroll: false,
       logo: {
         alt: 'Zedux Logo',
-        src: 'img/logo.png',
+        src: 'img/brand/zedux-icon-black.svg',
+        srcDark: 'img/brand/zedux-icon-white.svg',
       },
       items: [
         {
@@ -93,7 +113,7 @@ module.exports = {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: 'Learn',
           items: [
             {
               label: 'Walkthrough',
@@ -103,32 +123,27 @@ module.exports = {
               label: 'API',
               to: 'docs/api/api-overview',
             },
+            {
+              label: 'Examples',
+              to: 'examples',
+            },
           ],
         },
-        // {
-        //   title: 'Community',
-        //   items: [
-        //     {
-        //       label: 'Stack Overflow',
-        //       href: 'https://stackoverflow.com/questions/tagged/zedux',
-        //     },
-        //   ],
-        // },
         {
-          title: 'Social',
+          title: 'Community',
           items: [
             {
               label: 'GitHub',
               href: 'https://github.com/Omnistac/zedux',
             },
             {
-              label: "Lead Maintainer's Twitter (DMs open!)",
-              href: 'https://twitter.com/josh_claunch',
+              label: 'Discussions',
+              href: 'https://github.com/Omnistac/zedux/discussions',
             },
           ],
         },
       ],
-      copyright: `Copyright © 2017-${new Date().getFullYear()} Omnistac. Built with Docusaurus.`,
+      copyright: `Copyright © 2017-${new Date().getFullYear()} Omnistac. Zedux is released under the MIT License.`,
     },
   },
   plugins: [PathsPlugin],
@@ -146,5 +161,23 @@ module.exports = {
       },
     ],
   ],
-  themes: ['@docusaurus/theme-live-codeblock'],
+  themes: [
+    '@docusaurus/theme-live-codeblock',
+    [
+      require.resolve('@easyops-cn/docusaurus-search-local'),
+      {
+        docsRouteBasePath: 'docs',
+        hashed: true,
+        highlightSearchTermsOnTargetPage: true,
+        indexBlog: false,
+        indexDocs: true,
+        indexPages: false,
+        language: ['en'],
+        searchBarShortcut: true,
+        searchBarShortcutHint: true,
+        searchResultContextMaxLength: 80,
+        searchResultLimits: 8,
+      },
+    ],
+  ],
 }

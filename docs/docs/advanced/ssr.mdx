@@ -28,7 +28,7 @@ In SSR mode, effects created via `injectEffect` don't run. This exactly mimics t
 
 ## Server Dehydration
 
-As you've probably guessed, use `ecosystem.dehydrate()` to grab the initial state snapshot from the server. An example using an Express-esque route handler:
+As you've probably guessed, use `ecosystem.dehydrate()` to grab the initial state snapshot from the server. Here's an example using a typical server route handler:
 
 ```tsx
 import { createEcosystem } from '@zedux/react'

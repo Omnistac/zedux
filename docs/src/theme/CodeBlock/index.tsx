@@ -6,6 +6,7 @@
  */
 
 import { usePrismTheme } from '@docusaurus/theme-common'
+import BrowserOnly from '@docusaurus/BrowserOnly'
 import styled, { css } from '@site/src/ssc'
 import CodeBlock from '@theme-init/CodeBlock'
 import Prism from 'prismjs'
@@ -62,23 +63,39 @@ const renderTokens = (tokens: (string | Prism.Token)[]) =>
     </span>
   ))
 
+const CodeBlockFallback = ({ children, className, language }: any) => (
+  <div className="theme-code-block">
+    <pre className={`prism-code ${className || `language-${language || 'text'}`}`}>
+      <code>{children}</code>
+    </pre>
+  </div>
+)
+
 const withLiveEditor = (Component: typeof CodeBlock) => {
   function WrappedComponent(props: any) {
     const theme = usePrismTheme()
 
     if (props.live) {
       return (
-        <Sandbox
-          {...Object.fromEntries(
-            props.metastring?.split(' ').map(str => str.split('='))
+        <BrowserOnly fallback={<CodeBlockFallback {...props} />}>
+          {() => (
+            <Sandbox
+              {...Object.fromEntries(
+                props.metastring?.split(' ').map(str => str.split('='))
+              )}
+            >
+              {props.children}
+            </Sandbox>
           )}
-        >
-          {props.children}
-        </Sandbox>
+        </BrowserOnly>
       )
     }
 
-    return <Component {...props} />
+    return (
+      <BrowserOnly fallback={<CodeBlockFallback {...props} />}>
+        {() => <Component {...props} />}
+      </BrowserOnly>
+    )
 
     const tokens = Prism.tokenize(
       props.children,
