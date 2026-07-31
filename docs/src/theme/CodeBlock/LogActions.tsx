@@ -23,7 +23,7 @@ const Backdrop = styled.div`
 const Button = styled.button`
   background: none;
   border: none;
-  color: #fff;
+  color: inherit;
   cursor: pointer;
 `
 
@@ -31,7 +31,7 @@ const Dropdown = styled.button`
   align-items: center;
   background: transparent;
   border: none;
-  color: #fff;
+  color: inherit;
   cursor: pointer;
   display: flex;
   flex-flow: row nowrap;
@@ -40,9 +40,11 @@ const Dropdown = styled.button`
 `
 
 const Option = styled.span`
-  background: #ffa359;
-  border-radius: 5px;
-  box-shadow: 5px 5px 8px #0004;
+  background: var(--zedux-button-background);
+  border: 1px solid var(--zedux-button-border);
+  border-radius: 3px;
+  box-shadow: 0 0.75rem 2rem #0004;
+  color: var(--zedux-button-color);
   cursor: pointer;
   padding: 0.2rem 1rem;
   white-space: nowrap;
@@ -66,7 +68,7 @@ const Options = styled.span`
 `
 
 const Wrapper = styled.span`
-  border: 1px solid #fff;
+  border: 1px solid currentColor;
   border-radius: 3px;
   display: flex;
   flex-flow: row nowrap;
@@ -89,7 +91,7 @@ const CaretDownIcon = () => (
     height="8"
     viewBox="0 0 12 8"
   >
-    <path fill="transparent" stroke="#fff" d="M0 0 L 6 8 L 12 0" />
+    <path fill="transparent" stroke="currentColor" d="M0 0 L 6 8 L 12 0" />
   </svg>
 )
 

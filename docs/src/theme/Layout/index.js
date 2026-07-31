@@ -4,9 +4,11 @@ import Layout from '@theme-original/Layout'
 import { ThemeProvider } from '@site/src/ssc'
 
 const OutputStyleTag = ({ tag }) => {
-  if (typeof window !== 'undefined') return null // this is only for SSR
-
-  return <style data-ssc="true">{tag.innerHTML}</style>
+  return (
+    <style data-ssc="true" suppressHydrationWarning>
+      {typeof window === 'undefined' ? tag.innerHTML : ''}
+    </style>
+  )
 }
 
 export default function LayoutWrapper(props) {

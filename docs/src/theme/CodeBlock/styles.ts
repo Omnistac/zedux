@@ -5,7 +5,7 @@ import styled, { css } from '@site/src/ssc'
 export const EditorWrapper = styled.div`
   display: flex;
   flex-flow: row nowrap;
-  font-family: 'Source Code Pro', monospace;
+  font-family: var(--ifm-font-family-monospace);
   font-size: var(--ifm-code-font-size);
   letter-spacing: -0.3px;
   max-height: 500px;
@@ -13,7 +13,7 @@ export const EditorWrapper = styled.div`
 `
 
 export const Gutter = styled.div`
-  border-bottom-left-radius: 12px;
+  border-bottom-left-radius: var(--ifm-pre-border-radius);
   display: flex;
   flex-flow: column nowrap;
   height: fit-content;
@@ -31,8 +31,9 @@ export const Gutter = styled.div`
 
 export const Header = styled.div`
   align-items: center;
-  background: #ffa359;
-  border-radius: 12px 12px 0 0;
+  background: var(--zedux-code-background);
+  border-bottom: 1px solid var(--zedux-code-border);
+  border-radius: var(--ifm-pre-border-radius) var(--ifm-pre-border-radius) 0 0;
   color: #fff;
   display: flex;
   flex-flow: row nowrap;
@@ -58,23 +59,23 @@ export const HeaderText = styled.span`
 `
 
 export const ResetButton = styled.button`
-  background: #fff;
-  border: none;
+  background: transparent;
+  border: 1px solid currentColor;
   border-radius: 3px;
-  color: #ff4545;
+  color: inherit;
   cursor: pointer;
   font-size: 0.8em;
   padding: 2px 1rem;
 
   &:hover {
-    background: #fffb;
+    opacity: 0.75;
   }
 `
 
 export const Result = styled.div`
   background: #fff;
-  border-bottom-right-radius: 12px;
-  box-shadow: inset 4px 4px 6px #888;
+  border-bottom-right-radius: var(--ifm-pre-border-radius);
+  border-left: 1px solid var(--zedux-code-border);
   color: #1c1e21;
   color-scheme: light;
   max-height: 500px;
@@ -86,7 +87,7 @@ export const Result = styled.div`
 export const StyledEditable = styled(Editable)<{
   $sscProps: ReturnType<typeof usePrismTheme>
 }>`
-  background: #2b313a;
+  background: var(--zedux-code-background);
   flex: 1;
   height: fit-content;
   min-height: 100%;
@@ -127,9 +128,10 @@ export const StyledEditable = styled(Editable)<{
 `
 
 export const Wrapper = styled.section`
-  background: #474c54;
-  border-radius: 12px;
-  box-shadow: 10px 10px 7px rgba(0, 0, 0, 0.4);
+  background: var(--zedux-code-background);
+  border: 1px solid var(--zedux-code-border);
+  border-radius: var(--ifm-pre-border-radius);
+  box-shadow: none;
   display: grid;
   grid-template-columns: minmax(180px, 13fr) minmax(140px, 6fr);
   grid-template-rows: auto auto;

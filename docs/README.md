@@ -1,33 +1,46 @@
-# Website
+# Zedux website
 
-This website is built using [Docusaurus 2](https://v2.docusaurus.io/), a modern static website generator.
+The website and documentation at [zedux.dev](https://zedux.dev/) are built with
+[Docusaurus](https://docusaurus.io/).
 
-### Installation
+## Local development
 
-```
-$ yarn
-```
+From the repository root, install the website dependencies:
 
-### Local Development
-
-```
-$ yarn start
+```sh
+pnpm docs:install
 ```
 
-This command starts a local development server and open up a browser window. Most changes are reflected live without having to restart the server.
+Then start the development-only server:
 
-### Build
-
-```
-$ yarn build
+```sh
+pnpm docs:dev
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+Open [http://localhost:3000](http://localhost:3000). Docusaurus watches the
+website source, documentation, blog posts, styles, and sidebar configuration;
+changes are reflected in the browser without rebuilding the production site.
 
-### Deployment
+The website is an independent pnpm workspace under `docs/`. If you are already
+in that directory, the equivalent commands are `pnpm install --frozen-lockfile`
+and `pnpm start`.
 
+## Production build
+
+From the repository root:
+
+```sh
+pnpm docs:build
 ```
-$ GIT_USER=<Your GitHub username> USE_SSH=true yarn deploy
+
+This generates the static site in `docs/build/` and catches broken links and
+other production-only build errors.
+
+## Deployment
+
+```sh
+GIT_USER=<your-github-username> pnpm --dir docs deploy
 ```
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+Deployment is handled separately from the development server and publishes to
+the `gh-pages` branch.

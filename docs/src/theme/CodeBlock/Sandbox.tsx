@@ -335,7 +335,13 @@ export const Sandbox = ({
     >
       <Wrapper>
         <Header>
-          <img src={`${baseUrl}img/zedux-icon-75x75.png`} />
+          <img
+            alt=""
+            aria-hidden="true"
+            height="16"
+            src={`${baseUrl}img/logo.png`}
+            width="16"
+          />
           <HeaderText>Live Sandbox</HeaderText>
           <HeaderActions>
             <LogActions ecosystem={ecosystem} Zedux={Zedux} />
@@ -358,6 +364,7 @@ export const Sandbox = ({
             ))}
           </Gutter>
           <StyledEditable
+            aria-label="Live sandbox code editor"
             decorate={decorate}
             onKeyDown={event => onKeyDown(editor, event)}
             placeholder="Write some code..."

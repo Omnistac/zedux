@@ -1,0 +1,558 @@
+.home {
+  overflow: hidden;
+}
+
+.hero {
+  background: var(--ifm-background-color);
+  min-height: 44rem;
+  padding: 5rem 0;
+  position: relative;
+}
+
+.heroBackground {
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+}
+
+.heroBackground img {
+  filter: saturate(1.35) contrast(1.12);
+  height: auto;
+  left: calc(50% + min(20vw, 18rem));
+  max-width: none;
+  opacity: 1;
+  position: absolute;
+  right: auto;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(34rem, 48vw, 44rem);
+}
+
+.moleculeOnDark {
+  display: none;
+}
+
+:global(html[data-theme='dark']) .moleculeOnLight {
+  display: none;
+}
+
+:global(html[data-theme='dark']) .moleculeOnDark {
+  display: block;
+  filter: saturate(1.45) contrast(1.12) brightness(1.12);
+  opacity: 1;
+}
+
+.heroOverlay {
+  background:
+    linear-gradient(
+      90deg,
+      var(--ifm-background-color) 0%,
+      color-mix(in srgb, var(--ifm-background-color) 90%, transparent) 28%,
+      color-mix(in srgb, var(--ifm-background-color) 25%, transparent) 46%,
+      transparent 65%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 82%,
+      var(--ifm-background-color) 100%
+    );
+  inset: 0;
+  position: absolute;
+}
+
+.heroContainer {
+  position: relative;
+  z-index: 1;
+}
+
+.brandRow {
+  align-items: flex-end;
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.wordmark {
+  display: block;
+  height: auto;
+  position: relative;
+  width: 13rem;
+}
+
+.wordmark img {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.wordmarkDark {
+  display: none !important;
+}
+
+:global(html[data-theme='dark']) .wordmarkLight {
+  display: none;
+}
+
+:global(html[data-theme='dark']) .wordmarkDark {
+  display: block !important;
+}
+
+.version {
+  font-size: 0.875rem;
+  line-height: 1;
+  padding-bottom: 0.2rem;
+}
+
+.heroGrid {
+  align-items: center;
+  display: grid;
+  gap: 4rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+}
+
+.heroCopy {
+  max-width: 35rem;
+}
+
+.heroCopy h1 {
+  font-size: clamp(3rem, 4vw, 4rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+  margin: 0;
+}
+
+.heroCopy > p {
+  font-size: 1.125rem;
+  line-height: 1.55;
+  margin: 1.5rem 0 0;
+  max-width: 31rem;
+}
+
+.heroActions {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-top: 2.5rem;
+  max-width: 31rem;
+  width: 100%;
+}
+
+.installCommand {
+  align-items: center;
+  backdrop-filter: blur(18px) saturate(140%);
+  background: rgb(20 24 28 / 68%);
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 0.25rem;
+  box-shadow: 0 0.75rem 2.5rem rgb(0 0 0 / 10%);
+  color: #d7dfec;
+  display: flex;
+  font-size: 0.875rem;
+  margin: 0;
+  min-height: 3rem;
+  overflow: auto;
+  padding: 0.8rem 1rem;
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.installCommand code {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-family: var(--ifm-font-family-monospace);
+  padding: 0;
+}
+
+.primaryButton {
+  align-items: center;
+  background: var(--zedux-button-background);
+  border: 1px solid var(--zedux-button-border);
+  border-radius: 0.25rem;
+  color: var(--zedux-button-color);
+  display: flex;
+  font-size: 0.875rem;
+  justify-content: center;
+  min-height: 3rem;
+  min-width: 6.75rem;
+  padding: 0.75rem;
+  text-decoration: none;
+  transition: background 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.primaryButton:hover {
+  background: var(--zedux-button-hover-background);
+  color: var(--zedux-button-hover-color);
+  text-decoration: none;
+}
+
+.primaryButton:active {
+  transform: translateY(1px);
+}
+
+.primaryButton svg,
+.learningCard svg {
+  height: 1rem;
+  width: 1rem;
+}
+
+.exampleCode {
+  border-radius: 0.5rem;
+  min-width: 0;
+}
+
+.exampleCode :global(.theme-code-block) {
+  --prism-background-color: transparent !important;
+
+  backdrop-filter: blur(18px) saturate(140%);
+  background: rgb(20 24 28 / 88%) !important;
+  border: 1px solid rgb(255 255 255 / 24%);
+  box-shadow: 0 1.25rem 4rem rgb(0 0 0 / 12%) !important;
+  margin: 0;
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.exampleCode :global(pre) {
+  background: transparent !important;
+}
+
+:global(html[data-theme='dark']) .installCommand,
+:global(html[data-theme='dark']) .exampleCode :global(.theme-code-block) {
+  background: rgb(13 16 18 / 88%) !important;
+  border-color: rgb(255 255 255 / 20%);
+}
+
+.features,
+.learn {
+  padding: 5rem 0;
+}
+
+.sectionGrid {
+  align-items: start;
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: minmax(15rem, 0.72fr) minmax(0, 1.55fr);
+}
+
+.sectionHeading {
+  padding-right: 2rem;
+  position: sticky;
+}
+
+.eyebrow {
+  color: var(--zedux-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+}
+
+.sectionHeading h2,
+.learnHeader h2 {
+  font-size: clamp(2rem, 3vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.featureCards {
+  border: 1px solid var(--zedux-border);
+  border-radius: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.featureCard {
+  margin: 0;
+  min-height: 12rem;
+  padding: 2rem;
+}
+
+.featureCard:nth-child(odd) {
+  border-right: 1px solid var(--zedux-border);
+}
+
+.featureCard:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--zedux-border);
+}
+
+.featureCard h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0 0 1.25rem;
+}
+
+.featureCard p {
+  color: var(--zedux-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.learn {
+  background: var(--zedux-surface);
+  border-top: 1px solid var(--zedux-border);
+}
+
+.learnHeader {
+  max-width: 40rem;
+}
+
+.learningCards {
+  border-bottom: 1px solid var(--zedux-border);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 3rem;
+}
+
+.learningCard {
+  align-items: center;
+  border-top: 1px solid var(--zedux-border);
+  color: var(--ifm-font-color-base);
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(8rem, 0.65fr) minmax(16rem, 1.35fr) auto;
+  min-height: 16rem;
+  padding: 2rem;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.learningCard:nth-child(odd) {
+  border-right: 1px solid var(--zedux-border);
+}
+
+.learningCard:hover {
+  background: var(--zedux-surface-hover);
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+}
+
+.learningCardHeader,
+.learningCard strong,
+.learningCard small {
+  display: block;
+}
+
+.learningCard strong {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.learningCard small {
+  color: var(--zedux-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+  max-width: 25rem;
+}
+
+.learningMetrics {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.learningMetric {
+  align-items: center;
+  display: grid;
+  font-size: 0.75rem;
+  gap: 0.65rem;
+  grid-template-columns: 4.2rem minmax(8rem, 1fr) 1.1rem;
+}
+
+.learningMetric > span:first-child {
+  color: var(--zedux-text-secondary);
+}
+
+.metricNodes {
+  align-items: center;
+  color: var(--zedux-molecule-active);
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  height: 1.35rem;
+  position: relative;
+}
+
+.metricNodes::before {
+  background: var(--zedux-border-strong);
+  content: '';
+  height: 1px;
+  left: 0.25rem;
+  position: absolute;
+  right: 0.25rem;
+  top: 50%;
+}
+
+.metricNode,
+.metricNodeActive {
+  background: var(--ifm-background-color);
+  border: 1px solid var(--zedux-border-strong);
+  border-radius: 50%;
+  height: 0.55rem;
+  justify-self: center;
+  position: relative;
+  width: 0.55rem;
+  z-index: 1;
+}
+
+.metricNodeActive {
+  background: currentColor;
+  border-color: currentColor;
+  box-shadow: 0 0 0 2px var(--ifm-background-color);
+}
+
+.metricNode:nth-child(3n + 2),
+.metricNodeActive:nth-child(3n + 2) {
+  transform: translateY(-0.2rem);
+}
+
+.metricNode:nth-child(3n),
+.metricNodeActive:nth-child(3n) {
+  transform: translateY(0.2rem);
+}
+
+.metricScore {
+  color: var(--zedux-text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.learningCardArrow {
+  align-self: start;
+  display: flex;
+}
+
+@media (max-width: 996px) {
+  .hero {
+    min-height: auto;
+    padding: 4rem 0;
+  }
+
+  .heroGrid,
+  .sectionGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .heroCopy {
+    max-width: 42rem;
+  }
+
+  .heroActions {
+    max-width: 100%;
+  }
+
+  .sectionHeading {
+    max-width: 40rem;
+    padding: 0;
+    position: static;
+  }
+
+  .heroBackground img {
+    left: auto;
+    right: -5rem;
+    transform: translateY(-50%);
+    width: 34rem;
+  }
+
+  .heroOverlay {
+    background: linear-gradient(
+      180deg,
+      transparent 82%,
+      var(--ifm-background-color) 100%
+    );
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    padding: 3rem 0;
+  }
+
+  .brandRow {
+    margin-bottom: 2rem;
+  }
+
+  .wordmark {
+    width: 9rem;
+  }
+
+  .heroGrid {
+    gap: 3rem;
+  }
+
+  .heroCopy h1 {
+    font-size: 2.5rem;
+  }
+
+  .heroCopy > p {
+    font-size: 1rem;
+  }
+
+  .features,
+  .learn {
+    padding: 3.5rem 0;
+  }
+
+  .featureCards,
+  .learningCards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .featureCard,
+  .featureCard:nth-child(-n + 2),
+  .featureCard:nth-child(odd) {
+    border-bottom: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .featureCard:not(:last-child) {
+    border-bottom: 1px solid var(--zedux-border);
+  }
+
+  .learningCard,
+  .learningCard:nth-child(odd) {
+    border-bottom: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .learningCard:not(:last-child) {
+    border-bottom: 1px solid var(--zedux-border);
+  }
+
+  .featureCard {
+    min-height: auto;
+    padding: 1.5rem;
+  }
+
+  .learningCard {
+    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: auto;
+    padding: 1.5rem;
+  }
+
+  .learningMetrics {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .learningCardArrow {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .learningMetric {
+    grid-template-columns: 4.2rem minmax(0, 1fr) 1.1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryButton,
+  .learningCard {
+    transition: none;
+  }
+}
