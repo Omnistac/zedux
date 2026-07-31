@@ -33,7 +33,7 @@ module.exports = {
   tagline: 'A Molecular State Engine for React',
   url: 'https://zedux.dev',
   baseUrl: '/',
-  favicon: 'img/brand/favicon.svg',
+  favicon: 'img/favicon.ico',
   headTags: [
     {
       tagName: 'meta',
@@ -59,7 +59,7 @@ module.exports = {
   trailingSlash: false,
   /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
   themeConfig: {
-    image: 'img/brand/zedux-icon-black.svg',
+    image: 'img/zedux-icon-300x300.png',
     colorMode: {
       defaultMode: 'light',
       disableSwitch: false,
@@ -77,8 +77,8 @@ module.exports = {
       hideOnScroll: false,
       logo: {
         alt: 'Zedux Logo',
-        src: 'img/brand/zedux-icon-black.svg',
-        srcDark: 'img/brand/zedux-icon-white.svg',
+        src: 'img/logo.png',
+        srcDark: 'img/logo-white.png',
       },
       items: [
         {

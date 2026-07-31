@@ -339,7 +339,7 @@ export const Sandbox = ({
             alt=""
             aria-hidden="true"
             height="16"
-            src={`${baseUrl}img/brand/zedux-icon-black.svg`}
+            src={`${baseUrl}img/logo.png`}
             width="16"
           />
           <HeaderText>Live Sandbox</HeaderText>
